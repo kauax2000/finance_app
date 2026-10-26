@@ -180,21 +180,6 @@ describe("migração projetos: o projeto, a carteira de projeto e os modelos", (
         expect(achadas).toEqual(CATEGORIAS)
     })
 
-    it("Ruling 1: a privada não leva projeto, e o resto do guardar_privado é o do 7B", () => {
-        const fn = ultima("guardar_privado")
-        expect(fn).toMatch(/and new\.installment_plan_id is null\s+and new\.project_id is null/)
-        const privado = lerFonte("supabase/migrations/20261030120000_privado.sql").replace(/--.*$/gm, "")
-        const antes = privado.match(/create or replace function public\.guardar_privado\(\)[\s\S]*?\$\$[\s\S]*?\$\$/)![0]
-        expect(fn.replace(/\n\s+and new\.project_id is null/, "")).toBe(antes)
-
-        const gatilho = sql.match(/create trigger guardar_privado\s+([\s\S]*?);/)
-        expect(gatilho).not.toBeNull()
-        expect(gatilho![1]).toMatch(
-            /^before insert or update of is_private, description, category_id, capture_meta, payment_method, payment_credit_card_id,\s+subscription_id, installment_plan_id, type, workspace_id, project_id\s+on public\.transactions\s+for each row execute function public\.guardar_privado\(\)$/,
-        )
-        expect(sql).toMatch(/revoke all on function public\.guardar_privado\(\) from public, anon, authenticated;/)
-    })
-
     it("só acrescenta: nenhum drop de tabela, coluna, função ou constraint", () => {
         expect(sql).not.toMatch(/drop (table|column|function|constraint|index|view)\b/i)
         for (const m of sql.matchAll(/drop (policy|trigger) if exists ("[^"]+"|\w+) on [\w.]+;/g)) {

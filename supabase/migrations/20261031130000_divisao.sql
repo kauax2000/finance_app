@@ -44,14 +44,10 @@ begin
   if tg_op = 'UPDATE'
      and old.paid_by is not null
      and new.paid_by is not distinct from old.paid_by
-     and new.workspace_id is not distinct from old.workspace_id
-     and new.is_private is not distinct from old.is_private then
+     and new.workspace_id is not distinct from old.workspace_id then
     -- Quem pagou não está em jogo: editar a descrição de uma despesa antiga
     -- não muda o saldo de ninguém, mesmo que o pagador tenha saído.
     null;
-  elsif new.is_private then
-    -- Ruling 4: a privada é paga pelo autor, e só ele tem parte nela.
-    new.paid_by := v_autor;
   elsif v_papel = 'guest' then
     -- O convidado nunca é quem pagou: o responsável dele, ou o dono quando o
     -- responsável saiu (`on delete set null`).
@@ -80,7 +76,7 @@ begin
   end if;
 
   -- A linha nasce automática. Ruling 10: as partes à mão deixam de valer
-  -- quando o valor, o tipo, a carteira ou o privado mudam, venha a mudança de
+  -- quando o valor, o tipo ou a carteira mudam, venha a mudança de
   -- onde vier — também de um update cru que liga `shares_manual` e muda o valor
   -- na mesma frase, que congelaria partes com a soma antiga. Elas voltam ao
   -- automático, e o gatilho de depois as refaz. O par à mão só sobrevive ao que
@@ -92,7 +88,6 @@ begin
     new.amount is distinct from old.amount
     or new.type is distinct from old.type
     or new.workspace_id is distinct from old.workspace_id
-    or new.is_private is distinct from old.is_private
     or (new.date is distinct from old.date and not exists (
       select 1 from public.workspaces w
       where w.id = new.workspace_id
@@ -100,11 +95,6 @@ begin
         and (new.date at time zone 'America/Sao_Paulo')::date >= w.split_since
     ))
   ) then
-    new.shares_manual := false;
-  end if;
-  -- Ruling 4: a privada fica inteira com o autor. O `definir_partes` a recusa,
-  -- e um update cru com `shares_manual` também não a congela dividida.
-  if new.is_private then
     new.shares_manual := false;
   end if;
 
@@ -326,10 +316,9 @@ revoke all on function public.dividir_em_partes(bigint, jsonb, uuid) from public
 -- pelo de `workspace_installment_plans` (Ruling 6).
 --
 -- Ruling 2: lê só `amount`, `paid_by`, `type`, `date`, `workspace_id`,
--- `installment_plan_id`, `is_private`, `user_id` e `shares_manual`, colunas que
--- o mascaramento do 7B não toca. Só escreve em `transaction_shares`: convive
--- com o `guardar_privado`/`guardar_privado_depois` em qualquer ordem e não
--- dispara gatilho nenhum.
+-- `installment_plan_id`, `user_id` (quem pagou, sem `paid_by`) e
+-- `shares_manual`. Só escreve em `transaction_shares`, e não dispara gatilho
+-- nenhum.
 --
 -- A despesa ganha partes numa carteira `split`, com data a partir de
 -- `split_since`, quando não é à mão. Fora disso, as automáticas saem — menos
@@ -339,11 +328,10 @@ revoke all on function public.dividir_em_partes(bigint, jsonb, uuid) from public
 --
 -- As partes nascem na escrita, entre os adultos daquele momento: a despesa
 -- lançada antes de outro adulto entrar fica com quem estava (lacuna, Ruling 7).
--- A privada (Ruling 4) tem uma parte só, inteira do autor. Sem `paid_by` (a
--- linha de antes da migração, ou a conta de quem pagou apagada), quem pagou é o
--- autor, a mesma regra do `saldos_da_carteira`: o centavo que sobra e o pago
--- caem na mesma pessoa, e Σ saldo = 0. Com os pesos do
--- plano que deixam quem pagou de fora, o centavo que sobra vai para o menor
+-- Sem `paid_by` (a linha de antes da migração, ou a conta de quem pagou
+-- apagada), quem pagou é o autor, a mesma regra do `saldos_da_carteira`: o
+-- centavo que sobra e o pago caem na mesma pessoa, e Σ saldo = 0. Com os pesos
+-- do plano que deixam quem pagou de fora, o centavo que sobra vai para o menor
 -- `user_id` entre os participantes do plano, e não para quem pagou.
 create or replace function public.refazer_partes(p_transaction_id uuid)
 returns void
@@ -354,19 +342,17 @@ as $$
 declare
   v_valor numeric;
   v_pagador uuid;
-  v_autor uuid;
   v_tipo text;
   v_data timestamptz;
   v_ws uuid;
   v_plano uuid;
-  v_privada boolean;
   v_manual boolean;
   v_modo text;
   v_desde date;
   v_pesos jsonb;
 begin
-  select t.amount, coalesce(t.paid_by, t.user_id), t.user_id, t.type, t.date, t.workspace_id, t.installment_plan_id, t.is_private, t.shares_manual
-  into v_valor, v_pagador, v_autor, v_tipo, v_data, v_ws, v_plano, v_privada, v_manual
+  select t.amount, coalesce(t.paid_by, t.user_id), t.type, t.date, t.workspace_id, t.installment_plan_id, t.shares_manual
+  into v_valor, v_pagador, v_tipo, v_data, v_ws, v_plano, v_manual
   from public.transactions t
   where t.id = p_transaction_id;
   if not found or v_manual then
@@ -391,12 +377,6 @@ begin
   end if;
 
   delete from public.transaction_shares s where s.transaction_id = p_transaction_id;
-
-  if v_privada then
-    insert into public.transaction_shares (transaction_id, user_id, amount)
-    values (p_transaction_id, v_autor, v_valor);
-    return;
-  end if;
 
   -- Os pesos do plano da parcela, entre os adultos que ele cita; senão, os da
   -- carteira, entre todos os adultos. O convidado nunca tem parte. As
@@ -467,12 +447,11 @@ $$;
 
 revoke all on function public.gerar_partes() from public, anon, authenticated;
 
--- `date`, `shares_manual` e `is_private` entram na lista: a despesa que muda
--- de dia cruza o `split_since`, o `definir_partes(…, null)` volta ao
--- automático por aqui, e marcar como privada a deixa só com o autor.
+-- `date` e `shares_manual` entram na lista: a despesa que muda de dia cruza o
+-- `split_since`, e o `definir_partes(…, null)` volta ao automático por aqui.
 drop trigger if exists gerar_partes on public.transactions;
 create trigger gerar_partes
-  after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual, is_private
+  after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual
   on public.transactions
   for each row execute function public.gerar_partes();
 
@@ -522,24 +501,19 @@ set search_path = ''
 as $$
 declare
   v_ws uuid;
-  v_privada boolean;
   v_valor numeric;
   v_tipo text;
   v_data timestamptz;
   v_desde date;
   v_soma numeric;
 begin
-  select t.workspace_id, t.is_private, t.amount, t.type, t.date
-  into v_ws, v_privada, v_valor, v_tipo, v_data
+  select t.workspace_id, t.amount, t.type, t.date
+  into v_ws, v_valor, v_tipo, v_data
   from public.transactions t
   where t.id = p_transaction_id;
 
   if v_ws is null or not public.is_workspace_adult(v_ws) then
     raise exception 'not a workspace adult' using errcode = '42501';
-  end if;
-  -- Ruling 4: a privada fica inteira com o autor; ninguém a divide à mão.
-  if v_privada then
-    raise exception 'PRIVADO_NAO_PERMITIDO' using errcode = 'P0001';
   end if;
 
   if p_partes is null then

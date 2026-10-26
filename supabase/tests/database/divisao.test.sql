@@ -4,7 +4,7 @@
 -- testes: depois do primeiro `set_config`, os claims seguem valendo mesmo com
 -- `reset role`, e o `garantir_escrita` consulta o plano da carteira.
 begin;
-select plan(37);
+select plan(32);
 
 -- 1. o algoritmo (Foco de revisão 1) -------------------------------------------
 select is(
@@ -69,9 +69,6 @@ insert into public.transactions (id, user_id, workspace_id, type, amount, descri
   ('00000000-0000-4000-d400-000000000002', '00000000-0000-4000-d200-000000000004', '00000000-0000-4000-d300-000000000001', 'expense', 30, 'Lanche', 'pix'),
   ('00000000-0000-4000-d400-000000000004', '00000000-0000-4000-d200-000000000003', '00000000-0000-4000-d300-000000000001', 'expense', 60, 'Gás', 'pix');
 
-insert into public.transactions (id, user_id, workspace_id, type, amount, description, payment_method, is_private) values
-  ('00000000-0000-4000-d400-000000000003', '00000000-0000-4000-d200-000000000002', '00000000-0000-4000-d300-000000000001', 'expense', 50, 'Presente', 'pix', true);
-
 select is(
   (select sum(amount) from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000001'),
   100.00::numeric,
@@ -97,18 +94,6 @@ select is(
   'o convidado não tem parte nenhuma'
 );
 
-select results_eq(
-  $$select user_id, amount from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000003'$$,
-  $$values ('00000000-0000-4000-d200-000000000002'::uuid, 50.00::numeric)$$,
-  'a privada (is_private) tem uma parte só, inteira do autor'
-);
-
-select is(
-  (select paid_by from public.transactions where id = '00000000-0000-4000-d400-000000000003'),
-  '00000000-0000-4000-d200-000000000002'::uuid,
-  'quem pagou a privada é o autor'
-);
-
 -- 3. as partes à mão -----------------------------------------------------------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000001","role":"authenticated"}', true);
@@ -120,15 +105,6 @@ select throws_ok(
     ]'::jsonb)$$,
   'P0001', 'PARTES_NAO_FECHAM',
   'partes que não somam o valor são recusadas'
-);
-
-select throws_ok(
-  $$select public.definir_partes('00000000-0000-4000-d400-000000000003', '[
-      {"user_id":"00000000-0000-4000-d200-000000000001","amount":25},
-      {"user_id":"00000000-0000-4000-d200-000000000002","amount":25}
-    ]'::jsonb)$$,
-  'P0001', 'PRIVADO_NAO_PERMITIDO',
-  'a privada não se divide à mão'
 );
 
 select throws_ok(
@@ -222,30 +198,7 @@ select throws_ok(
   'um peso sem a chave weight é recusado'
 );
 
--- 5. marcar e desmarcar a privada ----------------------------------------------
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000003","role":"authenticated"}', true);
-update public.transactions set is_private = true where id = '00000000-0000-4000-d400-000000000004';
-reset role;
-
-select results_eq(
-  $$select user_id, amount from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000004'$$,
-  $$values ('00000000-0000-4000-d200-000000000003'::uuid, 60.00::numeric)$$,
-  'marcar como privada deixa uma parte só, do autor'
-);
-
-set local role authenticated;
-update public.transactions set is_private = false where id = '00000000-0000-4000-d400-000000000004';
-reset role;
-
-select is(
-  (select array_agg(amount order by user_id) from public.transaction_shares
-   where transaction_id = '00000000-0000-4000-d400-000000000004'),
-  array[20.00, 20.00, 20.00]::numeric[],
-  'desmarcar a privada divide de novo entre os adultos'
-);
-
--- 5b. Ruling 10: o update cru que liga a marca e muda o valor numa frase só ----
+-- 5. Ruling 10: o update cru que liga a marca e muda o valor numa frase só -----
 -- Sem a regra, as partes de R$ 60,00 ficariam congeladas numa despesa de R$ 90,00.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000003","role":"authenticated"}', true);

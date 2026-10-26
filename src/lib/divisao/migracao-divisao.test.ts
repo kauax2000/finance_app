@@ -117,7 +117,7 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         )
         const g = gatilho("gerar_partes")
         expect(g).toMatch(
-            /^after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual, is_private\s+on public\.transactions\s+for each row execute function public\.gerar_partes\(\)$/,
+            /^after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual\s+on public\.transactions\s+for each row execute function public\.gerar_partes\(\)$/,
         )
         // Toda origem passa: sem `when`, sem depender de quem chama.
         expect(g).not.toMatch(/\bwhen\b/)
@@ -125,34 +125,12 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         expect(sql).toMatch(/revoke all on function public\.gerar_partes\(\) from public, anon, authenticated;/)
     })
 
-    it("Ruling 2: as partes não leem o que o 7B mascara e só escrevem em transaction_shares", () => {
+    it("Ruling 2: as partes só escrevem em transaction_shares", () => {
         for (const nome of ["gerar_partes", "refazer_partes"]) {
             const fn = ultima(nome)
-            expect(fn, nome).not.toMatch(/description|category_id|capture_meta|transacoes_privadas/)
             const escritas = [...fn.matchAll(/\b(insert into|update|delete from) (public\.\w+)/g)].map((m) => m[2])
             expect(new Set(escritas), nome).toEqual(new Set(["public.transaction_shares"]))
         }
-    })
-
-    it("Ruling 4: a privada tem uma parte só, inteira do autor, que é quem pagou", () => {
-        const fn = ultima("refazer_partes")
-        expect(fn).toMatch(/t\.is_private/)
-        expect(fn).toMatch(
-            /if v_privada then\s+insert into public\.transaction_shares \(transaction_id, user_id, amount\)\s+values \(p_transaction_id, v_autor, v_valor\);\s+return;/,
-        )
-        // A privada sai antes dos pesos: ninguém divide o que não pode ver.
-        expect(fn.indexOf("if v_privada then")).toBeLessThan(fn.indexOf("p.split_weights"))
-
-        const pagou = ultima("definir_quem_pagou")
-        expect(pagou).toMatch(/elsif new\.is_private then\s+new\.paid_by := v_autor;/)
-        expect(pagou).toMatch(/and new\.is_private is not distinct from old\.is_private/)
-        expect(pagou).toMatch(/or new\.is_private is distinct from old\.is_private/)
-        // Nada legítimo deixa partes à mão numa privada: nem um update cru.
-        expect(pagou).toMatch(/if new\.is_private then\s+new\.shares_manual := false;\s+end if;/)
-
-        const definir = ultima("definir_partes")
-        expect(definir).toMatch(/if v_privada then\s+raise exception 'PRIVADO_NAO_PERMITIDO'/)
-        expect(definir.indexOf("if v_privada then")).toBeLessThan(definir.indexOf("if p_partes is null then"))
     })
 
     it("Ruling 5: os pesos do plano são validados na escrita, e as partes não quebram com um valor ruim", () => {
@@ -306,7 +284,7 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
     it("I1: sem paid_by, quem pagou é o autor, nas partes e no saldo (Σ saldo = 0)", () => {
         const refazer = ultima("refazer_partes")
         expect(refazer).toMatch(
-            /select t\.amount, coalesce\(t\.paid_by, t\.user_id\), t\.user_id, t\.type, t\.date, t\.workspace_id, t\.installment_plan_id, t\.is_private, t\.shares_manual\s+into v_valor, v_pagador,/,
+            /select t\.amount, coalesce\(t\.paid_by, t\.user_id\), t\.type, t\.date, t\.workspace_id, t\.installment_plan_id, t\.shares_manual\s+into v_valor, v_pagador,/,
         )
         // O plano refaz pela mesma função: o pagador é resolvido num lugar só.
         expect(ultima("refazer_partes_do_plano")).toMatch(/perform public\.refazer_partes\(v_id\);/)
@@ -322,7 +300,7 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         expect(fn).not.toMatch(/old\.shares_manual/)
         const bloco = fn.match(/elsif new\.shares_manual and \(([\s\S]*?)\) then\s+new\.shares_manual := false;/)
         expect(bloco).not.toBeNull()
-        for (const coluna of ["amount", "type", "workspace_id", "is_private"]) {
+        for (const coluna of ["amount", "type", "workspace_id"]) {
             expect(bloco![1], coluna).toContain(`new.${coluna} is distinct from old.${coluna}`)
         }
     })
@@ -364,7 +342,7 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         }
     })
 
-    it("I4: o pgTAP da divisão cobre os exemplos, o convidado, a privada, o manual e quem saiu", () => {
+    it("I4: o pgTAP da divisão cobre os exemplos, o convidado, o manual e quem saiu", () => {
         const pg = lerFonte("supabase/tests/database/divisao.test.sql")
         expect(pg).toMatch(/^-- pgTAP/)
         expect(pg).toMatch(/begin;\nselect plan\(\d+\);/)
@@ -373,18 +351,15 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
             "dividir_em_partes(10000",
             "dividir_em_partes(1000",
             "sponsor_user_id",
-            "is_private",
             "PARTES_NAO_FECHAM",
             "PESOS_INVALIDOS",
             "saldos_da_carteira",
             "saiu",
-            "PRIVADO_NAO_PERMITIDO",
             "set split_mode = 'pooled'",
             "antes do split_since",
             "volta ao automático",
             "sem a chave weight",
             "pula a linha à mão",
-            "desmarcar a privada",
             "paid_by nulo",
             "disable trigger definir_quem_pagou",
             "shares_manual = true, amount",

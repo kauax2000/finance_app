@@ -32,7 +32,7 @@ function targetId(mutation: OfflineMutation) {
 /**
  * Apagar o que já não existe chega ao mesmo fim: nenhuma linha afetada é
  * sucesso. Com `conferir`, 0 linhas relê a linha: se ela ainda está lá, a RLS
- * barrou sem erro (a privada de outra pessoa, Bloco 7B), e não é sucesso.
+ * barrou sem erro (a linha de outro, para o convidado), e não é sucesso.
  */
 export async function deleteById(
     table: Table,

@@ -13,7 +13,6 @@ import {
 } from "@/lib/supabase-errors"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { localYmdFromDate } from "@/lib/transaction-date"
-import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 
 type SupabaseBrowserClient = typeof supabase
 
@@ -54,7 +53,6 @@ export type CcTxAnalyticsRow = Pick<
     | "category_id"
     | "subscription_id"
     | "installment_plan_id"
-    | "is_private"
 > & {
     user_id?: string
     category?: CcCategoryEmbed | null
@@ -66,8 +64,8 @@ export const CREDIT_CARD_EXPENSE_SELECT =
 
 /**
  * Card detail analytics: full category embed + subscription / installment links.
- * `*` e não a lista: a coluna que ainda não existe no banco (o `is_private` do
- * 7B; antes, `subscription_id`) só não vem (Ruling 8 do 7B).
+ * `*` e não a lista: a coluna que ainda não existe no banco (antes,
+ * `subscription_id`) só não vem (Ruling 8 do 7B).
  */
 export const CREDIT_CARD_ANALYTICS_SELECT = "*,category:categories(id,name,color,icon)"
 
@@ -174,7 +172,6 @@ export function ccAnalyticsRowsToListTransactions(
         subscription_id: row.subscription_id ?? null,
         installment_plan_id: row.installment_plan_id ?? null,
         installment_sequence: row.installment_sequence ?? null,
-        is_private: row.is_private === true,
         // A linha sintética só alimenta a lista; o detalhe relê a transação com "*".
         source: "app",
         needs_review: false,
@@ -235,13 +232,7 @@ export async function fetchCreditCardExpenseRowsForCard(
     if (error) {
         return { rows: [], error }
     }
-    // A privada do autor volta com os detalhes dele (Bloco 7B): a conferência
-    // do titular casa pela descrição real.
-    const linhas = await juntarDetalhesPrivados(
-        client,
-        (data ?? []) as Array<CcTxAnalyticsRow & { user_id: string }>,
-    )
-    return { rows: linhas.map(normalizeCcTxAnalyticsRow), error: null }
+    return { rows: (data ?? []).map(normalizeCcTxAnalyticsRow), error: null }
 }
 
 export async function fetchCreditCardInvoicePaymentsForCard(

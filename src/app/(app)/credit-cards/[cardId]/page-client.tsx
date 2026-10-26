@@ -1,6 +1,5 @@
 "use client"
 
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -118,7 +117,6 @@ export default function CreditCardDetailPageClient() {
 
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const rotulo = useRotuloDaTransacao()
 
     const [card, setCard] = useState<CreditCard | null>(null)
     const [ccAnalyticsRows, setCcAnalyticsRows] = useState<CcTxAnalyticsRow[]>([])
@@ -947,7 +945,7 @@ export default function CreditCardDetailPageClient() {
                                             pendingTransactionDelete.date
                                         )}{" "}
                                         —{" "}
-                                        {rotulo(pendingTransactionDelete) ||
+                                        {pendingTransactionDelete.description ||
                                             pendingTransactionDelete.category?.name ||
                                             "Sem descrição"}
                                     </li>

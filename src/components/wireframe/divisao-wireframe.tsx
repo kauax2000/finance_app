@@ -68,8 +68,7 @@ function useAdultos(workspaceId: string) {
 /**
  * "Quem pagou" do formulário de despesa (Decisão 4): só numa carteira
  * dividida, só para o adulto, e só entre os adultos. O padrão é quem lança; o
- * salvar só manda a escolha quando ela muda alguma coisa. A privada o esconde
- * (quem paga é a autora).
+ * salvar só manda a escolha quando ela muda alguma coisa.
  */
 export function QuemPagouWireframe({ valor, onChange }: { valor: string; onChange: (id: string) => void }) {
     const ws = useDivisao()
@@ -225,9 +224,7 @@ function Partes({ t, ws }: { t: Transaction; ws: string }) {
                             <p>{dados.manual ? "Partes escritas à mão." : "Partes automáticas, pelos pesos; o centavo que sobra fica com quem pagou."}</p>
                         </>
                     )}
-                    {t.is_private ? (
-                        <p>Gasto privado: a parte é inteira de quem lançou, e não se divide à mão.</p>
-                    ) : dados.partes.length > 0 && !editando ? (
+                    {dados.partes.length > 0 && !editando ? (
                         <div className="flex flex-wrap gap-2">
                             <button
                                 type="button"

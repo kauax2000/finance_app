@@ -15,7 +15,6 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { usePrivadaAlheia, useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { ROUTES, creditCardDetailPath } from "@/config/navigation"
 import {
     DataTable,
@@ -395,7 +394,6 @@ function TransactionRowContextMenu({
     selected,
     enableSelection,
     enableActions,
-    alheia,
     openTransactionDetail,
     setSelectedIds,
     onDeleteSingle,
@@ -407,8 +405,6 @@ function TransactionRowContextMenu({
     selected: boolean
     enableSelection: boolean
     enableActions: boolean
-    /** A privada de outra pessoa: sem Editar nem Excluir. */
-    alheia: boolean
     openTransactionDetail: TransactionsTableProps["openTransactionDetail"]
     setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>
     onDeleteSingle?: (t: Transaction) => void
@@ -460,14 +456,12 @@ function TransactionRowContextMenu({
                 <ArrowRightIcon aria-hidden />
                 Abrir
             </ContextMenuItem>
-            {alheia ? null : (
-                <ContextMenuItem
-                    onSelect={() => openTransactionDetail(transaction, { edit: true })}
-                >
-                    <PencilIcon aria-hidden />
-                    Editar
-                </ContextMenuItem>
-            )}
+            <ContextMenuItem
+                onSelect={() => openTransactionDetail(transaction, { edit: true })}
+            >
+                <PencilIcon aria-hidden />
+                Editar
+            </ContextMenuItem>
             {enableSelection ? (
                 <ContextMenuItem
                     onSelect={() =>
@@ -483,7 +477,7 @@ function TransactionRowContextMenu({
                     {selected ? "Desmarcar" : "Selecionar"}
                 </ContextMenuItem>
             ) : null}
-            {enableActions && onDeleteSingle && !alheia ? (
+            {enableActions && onDeleteSingle ? (
                 <>
                     <ContextMenuSeparator />
                     <ContextMenuItem
@@ -505,26 +499,22 @@ const noopSetSelectedIds: React.Dispatch<
 
 const col = dataTableColumns<Transaction>()
 
-/** O rótulo da linha: "Gasto pessoal de {nome}" na privada de outra pessoa (Bloco 7B). */
-type Rotulo = (t: Transaction) => string
-
-const descriptionOf = (t: Transaction, rotulo: Rotulo) =>
-    rotulo(t) || t.category?.name || "Sem descrição"
+const descriptionOf = (t: Transaction) =>
+    t.description || t.category?.name || "Sem descrição"
 
 const signedAmountOf = (t: Transaction) =>
     t.type === "income" ? Number(t.amount) : -Number(t.amount)
 
 /** O nome da linha nos rótulos ("Editar Mercado, 12/03"): a data desempata as homônimas. */
-const rowLabelOf = (t: Transaction, rotulo: Rotulo) =>
-    `${descriptionOf(t, rotulo)}, ${formatTransactionDayPtBr(t.date)}`
+const rowLabelOf = (t: Transaction) =>
+    `${descriptionOf(t)}, ${formatTransactionDayPtBr(t.date)}`
 
 /** A coluna que agrupa por mês — e a única ordenação em que o mês faz sentido. */
 const DATE_COLUMN: TransactionsTableSortKey = "date"
 
 function transactionColumns(
     enableSort: boolean,
-    invoicePaidByCardClose: ReadonlySet<string>,
-    rotulo: Rotulo
+    invoicePaidByCardClose: ReadonlySet<string>
 ): DataTableColumnDef<Transaction>[] {
     return [
         {
@@ -545,7 +535,7 @@ function transactionColumns(
             enableSorting: false,
             cell: ({ row }) => {
                 const t = row.original
-                const descText = descriptionOf(t, rotulo)
+                const descText = descriptionOf(t)
                 return (
                     <span className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5">
                         <span
@@ -686,13 +676,11 @@ export function TransactionsTable({
     mobile = true,
 }: TransactionsTableProps) {
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
-    const rotulo = useRotuloDaTransacao()
-    const privadaAlheia = usePrivadaAlheia()
     const pageSize = pageSizeProp ?? Math.max(transactions.length, 1)
 
     const columns = React.useMemo(
-        () => transactionColumns(enableSort, invoicePaidByCardClose, rotulo),
-        [enableSort, invoicePaidByCardClose, rotulo]
+        () => transactionColumns(enableSort, invoicePaidByCardClose),
+        [enableSort, invoicePaidByCardClose]
     )
 
     // Só conta e só apaga o que está na tela: uma seleção feita antes de trocar o
@@ -716,7 +704,7 @@ export function TransactionsTable({
         {
             label: "Editar",
             icon: <PencilIcon aria-hidden />,
-            disabled: (rows) => rows.length !== 1 || privadaAlheia(rows[0]),
+            disabled: (rows) => rows.length !== 1,
             onSelect: ([t]) => {
                 if (t) openTransactionDetail(t, { edit: true })
             },
@@ -739,7 +727,7 @@ export function TransactionsTable({
             label: "Editar",
             icon: <PencilIcon aria-hidden />,
             primary: true,
-            hidden: (t) => isProjectedTransactionRow(t) || privadaAlheia(t),
+            hidden: isProjectedTransactionRow,
             onSelect: (t) => openTransactionDetail(t, { edit: true }),
         },
         {
@@ -747,7 +735,7 @@ export function TransactionsTable({
             icon: <TrashIcon aria-hidden />,
             primary: true,
             variant: "destructive",
-            hidden: (t) => isProjectedTransactionRow(t) || privadaAlheia(t),
+            hidden: isProjectedTransactionRow,
             onSelect: (t) => onDeleteSingle?.(t),
         },
     ]
@@ -761,7 +749,7 @@ export function TransactionsTable({
                 columns={columns}
                 data={transactions}
                 getRowId={(t) => t.id}
-                getRowLabel={(t) => rowLabelOf(t, rotulo)}
+                getRowLabel={rowLabelOf}
                 manual={{
                     rowCount: totalCount ?? transactions.length,
                     sorting: true,
@@ -811,12 +799,11 @@ export function TransactionsTable({
                     isProjectedTransactionRow(t) ? null : (
                         <TransactionRowContextMenu
                             transaction={t}
-                            title={descriptionOf(t, rotulo)}
+                            title={descriptionOf(t)}
                             alvos={targets.map((x) => x.id)}
                             selected={selected}
                             enableSelection={enableSelection}
                             enableActions={enableActions}
-                            alheia={privadaAlheia(t)}
                             openTransactionDetail={openTransactionDetail}
                             setSelectedIds={setSelectedIds}
                             onDeleteSingle={onDeleteSingle}

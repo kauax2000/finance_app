@@ -47,7 +47,6 @@ export function buildTransactionRow(
         recurring_interval: payload.recurringInterval,
         payment_method: payload.paymentMethod,
         payment_credit_card_id: payload.paymentCreditCardId,
-        ...(payload.isPrivate != null ? { is_private: payload.isPrivate } : {}),
         ...(payload.projectId !== undefined ? { project_id: payload.projectId } : {}),
         ...(payload.paidBy !== undefined ? { paid_by: payload.paidBy } : {}),
     }
@@ -91,7 +90,7 @@ async function saveTransactionOnline(
                     "Não foi possível atualizar a transação.",
             }
         }
-        // A RLS filtra sem erro (a privada de outra pessoa, Bloco 7B): 0 linhas não é salvo.
+        // A RLS filtra sem erro (a linha de outro, para o convidado): 0 linhas não é salvo.
         if (!data?.length) return { ok: false, errorMessage: NADA_MUDOU }
 
         return { ok: true }

@@ -49,7 +49,7 @@ export async function processTransactionNotification(
   const { data: txRow, error: txErr } = await supabaseAdmin
     .from('transactions')
     .select(
-      'id, user_id, workspace_id, type, amount, description, subscription_id, installment_plan_id, import_batch_id, is_private'
+      'id, user_id, workspace_id, type, amount, description, subscription_id, installment_plan_id, import_batch_id'
     )
     .eq('id', transactionId)
     .maybeSingle()
@@ -111,10 +111,7 @@ export async function processTransactionNotification(
 
   const actorName = displayActorName(actorProfile)
   const amountLabel = currencyBRL(Number(tx.amount))
-  // A privada (Bloco 7B) chega mascarada; o aviso diz de quem é, como a tela.
-  const description = tx.is_private
-    ? `Gasto pessoal de ${actorName}`
-    : tx.description?.trim() || 'Sem descrição'
+  const description = tx.description?.trim() || 'Sem descrição'
   const title = `${actorName} adicionou uma despesa`
   const msgBody = `${amountLabel} — ${description}`
   const href = `/transactions?txn=${tx.id}`

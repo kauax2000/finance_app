@@ -5,7 +5,6 @@ const filtros: Array<[string, string, unknown]> = []
 
 vi.mock("@/lib/supabase", () => ({
     supabase: {
-        auth: { getSession: async () => ({ data: { session: { user: { id: "eu" } } } }) },
         from: (tabela: string) => {
             const q = {
                 select: () => q,
@@ -86,25 +85,5 @@ describe("exportarTudo", () => {
         expect(texto).toContain("ponto e vírgula (;) e números com vírgula decimal")
         expect(filtros).toContainEqual(["transactions", "workspace_id", ["w1", "w2"]])
         expect(filtros).toContainEqual(["bill_instances", "bill_id", ["b1"]])
-    })
-})
-
-describe("exportarTudo — gasto privado (Bloco 7B)", () => {
-    it("a privada de quem exporta sai com a descrição e a categoria dela; a de outra pessoa, mascarada", async () => {
-        tabelas.transactions = [
-            { id: "p1", user_id: "eu", is_private: true, description: "Gasto pessoal", category_id: null },
-            { id: "p2", user_id: "ana", is_private: true, description: "Gasto pessoal", category_id: null },
-        ]
-        // A RLS só devolve as do autor: o mock devolve só a dele.
-        tabelas.transacoes_privadas = [
-            { transaction_id: "p1", user_id: "eu", description: "Farmácia", category_id: "c1", capture_meta: null },
-        ]
-        const blob = await exportarTudo([{ id: "w1", name: "Casa" }])
-        const texto = new TextDecoder().decode(new Uint8Array(await blob.arrayBuffer()))
-        expect(texto).toContain("Farmácia;c1")
-        expect(texto).toMatch(/p2;ana;[^\n]*;Gasto pessoal;/)
-        expect(texto.split("Farmácia").length).toBe(2)
-        expect(filtros).toContainEqual(["transacoes_privadas", "workspace_id", ["w1"]])
-        delete tabelas.transacoes_privadas
     })
 })

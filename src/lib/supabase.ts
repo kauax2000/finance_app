@@ -77,7 +77,7 @@ export interface CreditCard {
     is_active: boolean
     /** O nome do cartão na Wallet do iPhone, aprendido em "A conferir". Opcional: as consultas de colunas explícitas não o trazem. */
     wallet_alias?: string | null
-    /** O adulto titular do cartão (Bloco 7B); nulo é o cartão da casa, onde o privado não vale. Opcional: as consultas de colunas explícitas não o trazem. */
+    /** O adulto titular do cartão (Bloco 7B); nulo é o cartão da casa. Opcional: as consultas de colunas explícitas não o trazem. */
     holder_user_id?: string | null
     created_at: string
     updated_at: string
@@ -328,8 +328,6 @@ export interface Transaction {
     import_batch_id: string | null
     /** O que a captura recebeu e não casou. Opcional: as consultas de colunas explícitas não o trazem. */
     capture_meta?: TransactionCaptureMeta | null
-    /** Gasto privado (Bloco 7B): na linha fica 'Gasto pessoal', e os detalhes moram em `transacoes_privadas`, que só o autor lê. Opcional: as consultas de colunas explícitas não o trazem. */
-    is_private?: boolean
     /** Projeto da carteira (Bloco 7C). Opcional: as consultas de colunas explícitas não o trazem. */
     project_id?: string | null
     /** Quem pagou (Bloco 7C): o autor, ou o responsável do convidado; preenchido pelo banco. Opcional pelo mesmo motivo. */

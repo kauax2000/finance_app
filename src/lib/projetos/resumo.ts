@@ -4,7 +4,7 @@
  * Só despesa entra; tudo em centavos, para a soma não arredondar errado.
  */
 
-/** A chave do lançamento sem categoria em `porCategoria` (a privada chega sem). */
+/** A chave do lançamento sem categoria em `porCategoria`. */
 export const SEM_CATEGORIA = ""
 
 export type LancamentoDoResumo = { amount: number; type: string; category_id: string | null; user_id: string }

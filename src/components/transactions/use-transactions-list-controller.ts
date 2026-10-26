@@ -18,7 +18,6 @@ import {
 } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import { supabase, type Transaction } from "@/lib/supabase"
 import {
     deleteTransactionsByIds,
@@ -846,11 +845,8 @@ export function useTransactionsListController(
                     return
                 }
 
-                // A privada do autor abre com os detalhes dele (Bloco 7B).
-                const [linha] = await juntarDetalhesPrivados(supabase, [data as Transaction])
-                if (cancelled) return
                 setDidAutoOpenTxn(true)
-                openTransactionDetail(linha)
+                openTransactionDetail(data as Transaction)
             }
 
             const nextParams = new URLSearchParams(searchParams.toString())

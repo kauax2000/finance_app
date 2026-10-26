@@ -1,6 +1,5 @@
 "use client"
 
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { useEffect, useRef, useState } from "react"
 import {
     EmptyState,
@@ -197,7 +196,6 @@ export default function TransactionsPage() {
     const shell = useGlobalShellDialogsOptional()
     // A assinatura é da casa: o convidado (Bloco 7A) só lança.
     const convidado = !useWorkspace().isAdulto
-    const rotulo = useRotuloDaTransacao()
     useEffect(() => {
         const frase = consumirParametroFrase(searchParams)
         if (frase == null || !shell) return
@@ -587,7 +585,7 @@ export default function TransactionsPage() {
                                                     .date
                                             )}{" "}
                                             —{" "}
-                                            {rotulo(pendingDelete.transaction) ||
+                                            {pendingDelete.transaction.description ||
                                                 pendingDelete.transaction
                                                     .category?.name ||
                                                 "Sem descrição"}
@@ -633,7 +631,7 @@ export default function TransactionsPage() {
                                                     )
                                                 }
                                                 const line =
-                                                    rotulo(t) ||
+                                                    t.description ||
                                                     t.category?.name ||
                                                     "Sem descrição"
                                                 return (

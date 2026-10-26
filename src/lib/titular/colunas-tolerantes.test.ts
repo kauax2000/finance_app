@@ -7,18 +7,15 @@ import { lerFonte, semComentarios } from "@/test/fonte"
  * Ruling 8 do 7B: o front 2.0 roda contra um banco sem a migração do bloco
  * (o dev usa produção). Uma coluna que ainda não existe num `select` de
  * colunas explícitas, num filtro ou numa tabela nova derruba a consulta
- * (`42703`/`PGRST204`/`PGRST205`): ela só entra por `*`, ou pelos leitores
- * tolerantes abaixo, que só consultam quando já há uma privada na mão. As
- * colunas do 7C (projeto, propósito e modo da carteira, quem pagou e as
+ * (`42703`/`PGRST204`/`PGRST205`): ela só entra por `*`. As colunas do 7C (projeto, propósito e modo da carteira, quem pagou e as
  * partes) seguem a mesma regra. As tabelas e as RPCs novas do 7C só entram em
  * arquivo que trata a ausência delas (`PGRST205` da tabela, `PGRST202` da RPC).
  */
-const COLUNAS = "is_private|holder_user_id|project_id|purpose|starts_on|ends_on|budget_total|split_mode|paid_by|shares_manual|split_since|split_weights"
+const COLUNAS = "holder_user_id|project_id|purpose|starts_on|ends_on|budget_total|split_mode|paid_by|shares_manual|split_since|split_weights"
 const NOVAS = new RegExp(`\\b(${COLUNAS})\\b`)
 const TABELAS_NOVAS = /\.from\(\s*["'`](projects|transaction_shares|settlements|workspace_split_weights)["'`]/g
 const RPCS_NOVAS = /\.rpc\(\s*["'`](criar_carteira_de_modelo|definir_partes|saldos_da_carteira)["'`]/g
 const EMBRULHADA = /tabelaTolerante(<[^()]*>)?\(\s*supabase\s*$/
-const TOLERANTES = new Set(["src/lib/privado/detalhes.ts", "src/lib/cofre/exportar.ts"])
 
 function fontes(dir: string): string[] {
     return readdirSync(dir).flatMap((nome) => {
@@ -51,9 +48,6 @@ function achadosDe(arquivo: string): string[] {
     if (!texto.includes("PGRST202")) {
         for (const m of texto.matchAll(RPCS_NOVAS)) achados.push(m[0])
     }
-    if (!TOLERANTES.has(arquivo)) {
-        for (const m of texto.matchAll(/\.from\(\s*["'`]transacoes_privadas/g)) achados.push(m[0])
-    }
     return achados
 }
 
@@ -63,12 +57,5 @@ describe("Ruling 8: as colunas, as tabelas e as RPCs do 7B e do 7C não entram s
             arquivos.map((a) => [a, achadosDe(a)] as const).filter(([, x]) => x.length),
         )
         expect(ofensores).toEqual({})
-    })
-
-    it("os tolerantes só leem transacoes_privadas depois de achar uma privada", () => {
-        for (const arquivo of TOLERANTES) {
-            const texto = semComentarios(lerFonte(arquivo))
-            expect(texto, arquivo).toMatch(/if \(!(linhas|ids)\.(some\(\(\w\) => \w\.is_private\)|length)\) return/)
-        }
     })
 })

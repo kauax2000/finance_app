@@ -108,7 +108,6 @@ const FICAM_COM_MEMBRO: Record<string, string> = {
     tem_cobertura: "o assento do plano conta o convidado (Decisão 1)",
     workspace_plan: "lê só os donos",
     avisos_de_teste_pendentes: "lê só os donos, pela service role",
-    guardar_privado: "o gatilho do 7B confere o papel do autor da linha (role in owner, member), não o de quem chama",
     conferir_titular: "o gatilho do 7B confere que o titular do cartão é adulto da carteira",
     conferencia_liberada: "o helper do 7B: o dono, ou o titular do cartão; não devolve dado",
     definir_quem_pagou: "o gatilho do 7C lê o papel do autor da linha (o convidado paga pelo responsável), não o de quem chama",
@@ -393,8 +392,7 @@ describe("migração papéis: o convidado e o adulto", () => {
 
     it("estado final: transactions e attachments só citam membro junto do ramo do autor", () => {
         const autorTx = /user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)/
-        // O 7B (20261030120000) acrescenta o privado ao ramo do adulto do update e do delete.
-        const adulto = String.raw`public\.is_workspace_adult\(workspace_id\)(?: and \(not is_private or user_id = \(select auth\.uid\(\)\)\)\))?`
+        const adulto = String.raw`public\.is_workspace_adult\(workspace_id\)`
         for (const comando of ["select", "update", "delete"]) {
             const p = politicaFinal("public.transactions", comando)
             expect(p.texto, comando).toMatch(new RegExp(`${adulto} or`))

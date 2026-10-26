@@ -1,6 +1,5 @@
 "use client"
 
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import {
     EmptyState,
     EmptyStateActions,
@@ -64,7 +63,6 @@ export function CategoryEmbeddedTransactions({
     yearMonth?: string
 }) {
     const c = controller
-    const rotulo = useRotuloDaTransacao()
 
     const {
         user: _user,
@@ -566,7 +564,7 @@ export function CategoryEmbeddedTransactions({
                                                     pendingDelete.transaction.date
                                                 )}{" "}
                                                 —{" "}
-                                                {rotulo(pendingDelete.transaction) ||
+                                                {pendingDelete.transaction.description ||
                                                     pendingDelete.transaction.category?.name ||
                                                     "Sem descrição"}
                                             </li>
@@ -590,7 +588,7 @@ export function CategoryEmbeddedTransactions({
                                                     )
                                                 }
                                                 const line =
-                                                    rotulo(t) || t.category?.name || "Sem descrição"
+                                                    t.description || t.category?.name || "Sem descrição"
                                                 return (
                                                     <li key={id}>
                                                         {formatTransactionDayPtBr(t.date)} — {line}

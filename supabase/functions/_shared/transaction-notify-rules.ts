@@ -8,8 +8,6 @@ export type TransactionNotifyRow = {
   subscription_id?: string | null
   installment_plan_id?: string | null
   import_batch_id?: string | null
-  /** Gasto privado (Bloco 7B): a descrição na linha é a máscara. */
-  is_private?: boolean | null
 }
 
 export type WorkspaceNotifyContext = {

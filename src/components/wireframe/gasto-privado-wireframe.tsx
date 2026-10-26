@@ -1,76 +1,19 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { useId } from "react"
 
-import { useAuth } from "@/components/providers"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { useWorkspace } from "@/components/workspace-provider"
-import { MASCARA_PRIVADA } from "@/lib/privado/detalhes"
-import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
-import { nomeDoMembro } from "@/lib/privado/use-rotulo-da-transacao"
-import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
+import { useMemberDirectoryQuery, type MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 import { supabase } from "@/lib/supabase"
 
 const campo = "border border-muted-foreground/60 bg-transparent px-1 text-foreground"
 
-/**
- * A chave "Privado" do lançamento (Bloco 7B). Quando não vale, fica
- * desabilitada com o motivo embaixo: a mesma regra do gatilho
- * (`podeSerPrivado`), dita antes de salvar. Na privada cuja regra deixou de
- * valer (Ruling 10), o salvar fica preso até a autora corrigir o método ou
- * tocar em "Deixar de ser privado": nada é desmarcado por ela.
- */
-export function PrivadoWireframe({
-    marcado,
-    onChange,
-    regra,
-    eraPrivada = false,
-}: {
-    marcado: boolean
-    onChange: (v: boolean) => void
-    regra: PodeSerPrivado
-    eraPrivada?: boolean
-}) {
-    const motivoId = useId()
-    const { user } = useAuth()
-    const { currentWorkspaceId } = useWorkspace()
-    const diretorio = useMemberDirectoryQuery(currentWorkspaceId)
-    const meuNome = nomeDoMembro(diretorio.data?.find((m) => m.user_id === user?.id))
-    const presa = eraPrivada && marcado && !regra.pode
-    const desmarcadaAqui = eraPrivada && !marcado && !regra.pode
-    return (
-        <WireframeBox bloco={7} titulo="Gasto privado">
-            <label className="flex items-center gap-2 text-foreground">
-                <input
-                    type="checkbox"
-                    checked={marcado && (regra.pode || presa)}
-                    disabled={!regra.pode}
-                    aria-describedby={motivoId}
-                    onChange={(e) => onChange(e.target.checked)}
-                />
-                Privado
-            </label>
-            <p id={motivoId} role={presa ? "alert" : undefined}>
-                {regra.pode
-                    ? `Os outros adultos veem só "${MASCARA_PRIVADA} de ${meuNome}" e o valor; o valor entra em todos os totais.`
-                    : presa
-                      ? `Este gasto não pode mais ser privado: ${regra.motivo} Corrija a forma de pagamento ou deixe de ser privado para salvar.`
-                      : desmarcadaAqui
-                        ? "Ao salvar, deixa de ser privado: a descrição e a categoria voltam a aparecer para os outros adultos."
-                        : regra.motivo}
-            </p>
-            {presa ? (
-                <button
-                    type="button"
-                    className="border border-muted-foreground/60 px-2 text-foreground"
-                    onClick={() => onChange(false)}
-                >
-                    Deixar de ser privado
-                </button>
-            ) : null}
-        </WireframeBox>
-    )
+/** O nome do adulto, como o Painel o escreve: nome, o começo do e-mail, ou "Membro". */
+function nomeDoMembro(m: Pick<MemberDirectoryRow, "full_name" | "email"> | undefined): string {
+    const nome = m?.full_name?.trim()
+    if (nome) return nome
+    return m?.email?.trim().split("@")[0] || "Membro"
 }
 
 /**
@@ -130,8 +73,7 @@ export function TitularDoCartaoWireframe({
             </label>
             {adultos.isError ? <p role="alert">Não foi possível carregar os adultos da carteira.</p> : null}
             <p>
-                Com titular, a fatura do banco e a conferência ficam só com o titular e o dono, e o titular pode marcar
-                compras do cartão como privadas.
+                Com titular, a fatura do banco e a conferência ficam só com o titular e o dono.
             </p>
         </WireframeBox>
     )

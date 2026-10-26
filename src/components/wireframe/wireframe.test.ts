@@ -336,15 +336,13 @@ describe("Previsão (Bloco 5)", () => {
 describe("Projetos e modelos de carteira (Bloco 7C)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
 
-  it("o project_id só vai quando muda algo, e a privada e a receita não o levam (M7)", async () => {
+  it("o project_id só vai quando muda algo, e a receita não o leva (M7)", async () => {
     const { projetoDoSalvar } = await import("@/components/transactions/transaction-form-use")
-    expect(projetoDoSalvar({ escolhido: "", original: undefined, privado: false, type: "expense" })).toBeUndefined()
-    expect(projetoDoSalvar({ escolhido: "p1", original: undefined, privado: false, type: "expense" })).toBe("p1")
-    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: false, type: "expense" })).toBeUndefined()
-    expect(projetoDoSalvar({ escolhido: "", original: "p1", privado: false, type: "expense" })).toBeNull()
-    expect(projetoDoSalvar({ escolhido: "p1", original: undefined, privado: true, type: "expense" })).toBeUndefined()
-    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: true, type: "expense" })).toBeNull()
-    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: false, type: "income" })).toBeNull()
+    expect(projetoDoSalvar({ escolhido: "", original: undefined, type: "expense" })).toBeUndefined()
+    expect(projetoDoSalvar({ escolhido: "p1", original: undefined, type: "expense" })).toBe("p1")
+    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", type: "expense" })).toBeUndefined()
+    expect(projetoDoSalvar({ escolhido: "", original: "p1", type: "expense" })).toBeNull()
+    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", type: "income" })).toBeNull()
   })
 
   it("sem a tabela ou a RPC no banco, a leitura é indisponível e não quebra (Ruling 8)", async () => {
@@ -354,13 +352,6 @@ describe("Projetos e modelos de carteira (Bloco 7C)", () => {
     await expect(tabelaTolerante(resposta([1], null))).resolves.toEqual({ disponivel: true, dados: [1] })
     await expect(tabelaTolerante(resposta(null, { code: "42501", message: "x" }))).rejects.toThrow()
     expect(fonte("src/lib/projetos/dados.ts")).toMatch(/RPC_AUSENTE = new Set\(\["PGRST202"/)
-  })
-
-  it("marcar a privada limpa o projeto, e o seletor some nela", () => {
-    expect(fonte("src/components/transactions/transaction-form-use.tsx")).toMatch(/setIsPrivateBruto\(v\)\s*if \(v\) setProjectId\(""\)/)
-    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toMatch(
-      /!isPrivate &&[\s\S]{0,200}<ProjetoDoLancamentoWireframe/,
-    )
   })
 
   it("o Painel da carteira de projeto troca o seguro pelo resumo", () => {
@@ -457,13 +448,12 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
   const W = "src/components/wireframe/divisao-wireframe.tsx"
 
-  it("o paid_by só vai quando a pessoa troca o padrão; nunca na privada nem na receita", async () => {
+  it("o paid_by só vai quando a pessoa troca o padrão; nunca na receita", async () => {
     const { pagadorDoSalvar } = await import("@/components/transactions/transaction-form-use")
-    const a = { padrao: "eu", privado: false, type: "expense" as const }
+    const a = { padrao: "eu", type: "expense" as const }
     expect(pagadorDoSalvar({ ...a, escolhido: "" })).toBeUndefined()
     expect(pagadorDoSalvar({ ...a, escolhido: "eu" })).toBeUndefined()
     expect(pagadorDoSalvar({ ...a, escolhido: "ana" })).toBe("ana")
-    expect(pagadorDoSalvar({ ...a, escolhido: "ana", privado: true })).toBeUndefined()
     expect(pagadorDoSalvar({ ...a, escolhido: "ana", type: "income" })).toBeUndefined()
   })
 
@@ -479,11 +469,11 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
     expect(buildTransactionRow(ctx, { ...base, paidBy: "ana" })).toHaveProperty("paid_by", "ana")
   })
 
-  it("Quem pagou: só na carteira dividida, para o adulto, entre os adultos, e some na privada", () => {
+  it("Quem pagou: só na carteira dividida, para o adulto, entre os adultos", () => {
     const w = fonte(W)
     expect(w).toContain('currentWorkspace?.split_mode === "split" && isAdulto')
     expect(fonte("src/lib/divisao/dados.ts")).toContain('.in("role", ["owner", "member"])')
-    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toMatch(/!isPrivate &&[\s\S]{0,200}<QuemPagouWireframe/)
+    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toContain("<QuemPagouWireframe")
   })
 
   it("as partes mostradas vêm de transaction_shares, e o editor confere o fechamento antes do definir_partes", () => {

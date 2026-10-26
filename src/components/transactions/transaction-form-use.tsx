@@ -5,7 +5,6 @@ import { supabase, type Category, type CreditCard, type Transaction, type Transa
 import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useAuth } from "@/components/providers"
-import { podeSerPrivado, privadaPresa, privadoDoSalvar } from "@/lib/privado/pode-ser-privado"
 import { pesosDigitados } from "@/lib/divisao/partes"
 import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
@@ -82,7 +81,6 @@ function fotografar(r: Rascunho): string {
         r.installmentTotal,
         r.installmentPerAmount,
         r.installmentCount,
-        r.isPrivate,
         r.projectId,
         r.paidBy,
         r.pesosDaParcelada,
@@ -107,8 +105,6 @@ type Rascunho = {
     installmentPerAmount: string
     installmentCount: string
     installmentEditScope: "slice" | "plan"
-    /** Gasto privado (Bloco 7B). */
-    isPrivate: boolean
     /** O projeto da despesa (Bloco 7C); `""` sem projeto. */
     projectId: string
     /** Quem pagou (Bloco 7C); `""` é o padrão (quem lança, ou o de antes na edição). */
@@ -119,30 +115,28 @@ type Rascunho = {
 
 /**
  * O `paid_by` que o salvar manda (Bloco 7C, Ruling 8): só quando a pessoa
- * trocou o padrão. Na privada e na receita nunca: o banco põe a autora.
+ * trocou o padrão. Na receita nunca: o banco põe a autora.
  */
 export function pagadorDoSalvar(a: {
     escolhido: string
     padrao: string
-    privado: boolean
     type: "income" | "expense"
 }): string | undefined {
-    if (a.privado || a.type !== "expense" || !a.escolhido) return undefined
+    if (a.type !== "expense" || !a.escolhido) return undefined
     return a.escolhido === a.padrao ? undefined : a.escolhido
 }
 
 /**
  * O `project_id` que o salvar manda (Bloco 7C, Ruling 8): só quando muda
  * alguma coisa — um projeto escolhido na criação, ou trocado e tirado na
- * edição. A privada e a receita não levam projeto (M7).
+ * edição. A receita não leva projeto (M7).
  */
 export function projetoDoSalvar(a: {
     escolhido: string
     original: string | null | undefined
-    privado: boolean
     type: "income" | "expense"
 }): string | null | undefined {
-    const novo = a.privado || a.type !== "expense" ? null : a.escolhido || null
+    const novo = a.type !== "expense" ? null : a.escolhido || null
     return novo === (a.original ?? null) ? undefined : novo
 }
 
@@ -238,15 +232,9 @@ export function useTransactionForm({
     const [installmentEditScope, setInstallmentEditScope] = useState<
         "slice" | "plan"
     >("slice")
-    const [isPrivate, setIsPrivateBruto] = useState(false)
     const [projectId, setProjectId] = useState("")
     const [paidBy, setPaidBy] = useState("")
     const [pesosDaParcelada, setPesosDaParcelada] = useState<Record<string, string> | null>(null)
-    // Marcar a privada limpa o projeto (M7): a privada não leva projeto.
-    const setIsPrivate = useCallback((v: boolean) => {
-        setIsPrivateBruto(v)
-        if (v) setProjectId("")
-    }, [])
     // As dúvidas da frase rápida aplicada; `null` sem frase. O salvar leva a
     // origem `quick_text` e a marca de "a conferir" (Decisão 14).
     const [duvidasDaFrase, setDuvidasDaFrase] = useState<string[] | null>(null)
@@ -312,7 +300,6 @@ export function useTransactionForm({
                       : "",
                   installmentCount: p ? String(p.total_installments) : DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
-                  isPrivate: editingTransaction.is_private === true,
                   projectId: editingTransaction.project_id ?? "",
                   paidBy: "",
                   pesosDaParcelada: null,
@@ -336,7 +323,6 @@ export function useTransactionForm({
                   installmentPerAmount: "",
                   installmentCount: DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
-                  isPrivate: false,
                   projectId: "",
                   paidBy: "",
                   pesosDaParcelada: null,
@@ -356,7 +342,6 @@ export function useTransactionForm({
         setInstallmentPerAmount(v.installmentPerAmount)
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
-        setIsPrivateBruto(v.isPrivate)
         setProjectId(v.projectId)
         setPaidBy(v.paidBy)
         setPesosDaParcelada(v.pesosDaParcelada)
@@ -406,34 +391,9 @@ export function useTransactionForm({
     const isInstallmentCreate =
         !editingTransaction && formKind === "installment"
 
-    // O "Privado" (Bloco 7B): só na despesa de quem a lançou, e só depois de o
-    // papel chegar; na edição de uma privada, também na receita, para dizer
-    // por que ela não vale mais. O salvar só manda `is_private` ao marcar ou
-    // desmarcar (`privadoDoSalvar`, Ruling 8), e a privada cuja regra deixou
-    // de valer segura o salvar (`privadaPresa`, Ruling 10).
-    const { user } = useAuth()
-    const autorId = editingTransaction?.user_id ?? user?.id ?? ""
     // Quem pagou, sem escolha (Bloco 7C): o de antes na edição; senão, quem lança.
-    const pagadorPadrao = editingTransaction?.paid_by ?? autorId
-    const eraPrivada = editingTransaction?.is_private === true
-    const regraDoPrivado =
-        (type === "expense" || eraPrivada) &&
-        papel != null &&
-        Boolean(user) &&
-        autorId === user?.id &&
-        (!editingTransaction || editingTransaction.is_private !== undefined)
-            ? podeSerPrivado({
-                  papel,
-                  metodo: paymentMethod,
-                  cartao: creditCards.find((c) => c.id === paymentCreditCardId) ?? null,
-                  autorId,
-                  receita: type === "income",
-                  vinculado:
-                      formKind === "installment" ||
-                      Boolean(editingTransaction?.installment_plan_id || editingTransaction?.subscription_id),
-              })
-            : null
-    const motivoDaPresa = privadaPresa({ marcado: isPrivate, regra: regraDoPrivado, eraPrivada })
+    const { user } = useAuth()
+    const pagadorPadrao = editingTransaction?.paid_by ?? editingTransaction?.user_id ?? user?.id ?? ""
 
     const isInstallmentPlanEdit =
         Boolean(editingTransaction?.installment_plan_id) &&
@@ -705,11 +665,6 @@ export function useTransactionForm({
             return
         }
 
-        if (motivoDaPresa) {
-            toastError(motivoDaPresa, { id: TRANSACTION_SAVE_TOAST_ID })
-            return
-        }
-
         const { paymentMethod: pm, paymentCreditCardId: pcc } = formaDoPayload({
             type,
             paymentMethod,
@@ -728,18 +683,12 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
-            isPrivate: privadoDoSalvar({
-                marcado: isPrivate,
-                regra: regraDoPrivado,
-                eraPrivada,
-            }),
             projectId: projetoDoSalvar({
                 escolhido: projectId,
                 original: editingTransaction?.project_id,
-                privado: isPrivate,
                 type,
             }),
-            paidBy: pagadorDoSalvar({ escolhido: paidBy, padrao: pagadorPadrao, privado: isPrivate, type }),
+            paidBy: pagadorDoSalvar({ escolhido: paidBy, padrao: pagadorPadrao, type }),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
@@ -830,10 +779,6 @@ export function useTransactionForm({
         fotoInicial,
         aplicarFoto,
         setFotoDoRecibo,
-        isPrivate,
-        setIsPrivate,
-        regraDoPrivado,
-        eraPrivada,
         projectId,
         setProjectId,
         paidBy: paidBy || pagadorPadrao,
@@ -865,7 +810,6 @@ export function useTransactionForm({
 
     const submitDisabled =
         saving ||
-        motivoDaPresa != null ||
         (needsCreditCard &&
             (isInstallmentCreate ||
                 isInstallmentPlanEdit ||
@@ -887,7 +831,6 @@ export function useTransactionForm({
         installmentPerAmount,
         installmentCount,
         installmentEditScope,
-        isPrivate,
         projectId,
         paidBy,
         pesosDaParcelada,

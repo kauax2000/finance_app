@@ -18,16 +18,7 @@ export type Lanc = {
   installment_plan_id: string | null
   ligadoAConta: boolean
   needs_review: boolean
-  /**
-   * Gasto privado (Bloco 7B): a linha chega mascarada ('Gasto pessoal', sem
-   * categoria). Os detectores a ignoram — o "Gasto pessoal" repetido viraria
-   * recorrência falsa. O valor continua nos totais (a fatura).
-   */
-  is_private?: boolean
 }
-
-/** Os lançamentos que os detectores leem: sem as privadas. */
-const visiveis = (lancs: Lanc[]) => lancs.filter((l) => !l.is_private)
 
 // ── Datas e números ──────────────────────────────────────────────────────────
 
@@ -134,7 +125,7 @@ export function detectarRecorrencias(
   category_id: string | null
 }> {
   const atual = ym(hojeYmd)
-  const soltos = visiveis(lancs).filter(
+  const soltos = lancs.filter(
     (l) =>
       l.type === 'expense' && !l.subscription_id && !l.installment_plan_id && !l.ligadoAConta && l.dateYmd <= hojeYmd,
   )
@@ -190,7 +181,7 @@ export function detectarAtipicos(
 ): Array<{ chave: string; alvo: 'categoria' | 'descricao'; nome: string; mes: number; media3: number; categoriaId?: string }> {
   const atual = ym(hojeYmd)
   const anteriores = [1, 2, 3].map((n) => somaMeses(atual, -n))
-  const despesas = visiveis(lancs).filter((l) => l.type === 'expense' && l.dateYmd <= hojeYmd)
+  const despesas = lancs.filter((l) => l.type === 'expense' && l.dateYmd <= hojeYmd)
   const saida: ReturnType<typeof detectarAtipicos> = []
   const avaliar = (
     alvo: 'categoria' | 'descricao',
@@ -232,7 +223,7 @@ export function detectarDuplicidades(
   opcoes: { desdeYmd?: string; valorMinimo?: number } = {},
 ): Array<{ chave: string; ids: [string, string]; valor: number; descricao: string; dataYmd: string }> {
   const { desdeYmd = '', valorMinimo = 0 } = opcoes
-  const candidatos = visiveis(lancs).filter(
+  const candidatos = lancs.filter(
     (l) => l.type === 'expense' && !l.installment_plan_id && l.dateYmd >= desdeYmd && l.amount >= valorMinimo,
   )
   const grupos = agrupar(candidatos, (l) => {
@@ -270,7 +261,7 @@ export function detectarPrecoDeAssinatura(
   hojeYmd: string,
 ): Array<{ chave: string; assinaturaId: string; nome: string; de: number; para: number; lancamentoId: string }> {
   const desde = menosDias(hojeYmd, 40)
-  const soltos = visiveis(lancs)
+  const soltos = lancs
     .filter(
       (l) =>
         l.type === 'expense' && !l.subscription_id && !l.installment_plan_id && l.dateYmd >= desde && l.dateYmd <= hojeYmd,
@@ -342,7 +333,7 @@ export function detectarSazonais(
   if (hojeYmd.slice(5) > '02-15') return []
   const de = `${ano - 1}-01-01`
   const ate = `${ano - 1}-03-31`
-  const passados = visiveis(lancs).filter((l) => l.type === 'expense' && l.dateYmd >= de && l.dateYmd <= ate)
+  const passados = lancs.filter((l) => l.type === 'expense' && l.dateYmd >= de && l.dateYmd <= ate)
   const contas = contasAtivas.map(normalizarDescricao)
   const saida: ReturnType<typeof detectarSazonais> = []
   for (const termo of TERMOS_SAZONAIS) {

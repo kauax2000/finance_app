@@ -25,7 +25,6 @@ import { importarLancamentos, type ItemImportavel, prepararItens } from "@/lib/i
 import { lerValorBr } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
 import { pdfParaTexto } from "@/lib/import/pdf-texto"
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import type { ItemBanco } from "@/lib/import/tipos"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { statementTotalsKeys } from "@/lib/queries/keys"
@@ -82,11 +81,10 @@ function Lista({ titulo, linhas }: { titulo: string; linhas: ReactNode[] }) {
     )
 }
 
-/** `mascara`: a linha do banco que casou com a privada de outra pessoa diz só de quem é (Bloco 7B). */
-const linhaBanco = (i: ItemBanco, mascara?: string) =>
-    `${formatYmdPtBr(i.data)} · ${mascara ?? i.descricao}${i.parcela ? ` (${i.parcela.k}/${i.parcela.n})` : ""} · ${i.estorno ? "−" : ""}${currencyBRL(i.valor)}`
-const linhaApp = (a: LancamentoParaConferir, mascara?: string) =>
-    `${formatYmdPtBr(a.date)} · ${mascara ?? a.description ?? "(sem descrição)"} · ${a.type === "income" ? "−" : ""}${currencyBRL(a.amount)}`
+const linhaBanco = (i: ItemBanco) =>
+    `${formatYmdPtBr(i.data)} · ${i.descricao}${i.parcela ? ` (${i.parcela.k}/${i.parcela.n})` : ""} · ${i.estorno ? "−" : ""}${currencyBRL(i.valor)}`
+const linhaApp = (a: LancamentoParaConferir) =>
+    `${formatYmdPtBr(a.date)} · ${a.description ?? "(sem descrição)"} · ${a.type === "income" ? "−" : ""}${currencyBRL(a.amount)}`
 
 export function ConferirFaturaWireframe({
     card,
@@ -104,19 +102,6 @@ export function ConferirFaturaWireframe({
 }) {
     const queryClient = useQueryClient()
     const { papel } = useWorkspace()
-    const rotulo = useRotuloDaTransacao()
-    // As privadas de outra pessoa: o id do app e o "Gasto pessoal de {nome}".
-    const mascaras = useMemo(
-        () =>
-            new Map(
-                transactions.flatMap((t) =>
-                    t.is_private && t.user_id && t.user_id !== userId
-                        ? [[t.id, rotulo({ is_private: true, user_id: t.user_id, description: t.description })] as const]
-                        : [],
-                ),
-            ),
-        [transactions, userId, rotulo],
-    )
     const ciclos = useMemo(() => ciclosFechados(card.closing_day), [card.closing_day])
     const [fechamento, setFechamento] = useState(ciclos[0].fechamento)
     const ciclo = ciclos.find((c) => c.fechamento === fechamento) ?? ciclos[0]
@@ -477,7 +462,7 @@ export function ConferirFaturaWireframe({
                     <Lista
                         titulo="Bate"
                         linhas={conferencia.bate.map((p) => (
-                            <li key={p.app.id}>{linhaBanco(p.banco, mascaras.get(p.app.id))}</li>
+                            <li key={p.app.id}>{linhaBanco(p.banco)}</li>
                         ))}
                     />
                     <Lista
@@ -515,14 +500,14 @@ export function ConferirFaturaWireframe({
                     <Lista
                         titulo="Só no app"
                         linhas={conferencia.soNoApp.map((a) => (
-                            <li key={a.id}>{linhaApp(a, mascaras.get(a.id))}</li>
+                            <li key={a.id}>{linhaApp(a)}</li>
                         ))}
                     />
                     <Lista
                         titulo="Valor diferente"
                         linhas={conferencia.valorDiferente.map((p) => (
                             <li key={p.app.id}>
-                                banco {linhaBanco(p.banco, mascaras.get(p.app.id))} / app {linhaApp(p.app, mascaras.get(p.app.id))}
+                                banco {linhaBanco(p.banco)} / app {linhaApp(p.app)}
                             </li>
                         ))}
                     />
@@ -530,7 +515,7 @@ export function ConferirFaturaWireframe({
                         titulo="Parcela fora de sequência"
                         linhas={conferencia.parcelaForaDeSequencia.map((p) => (
                             <li key={p.app.id}>
-                                banco {linhaBanco(p.banco, mascaras.get(p.app.id))} / app parcela {p.app.installment_sequence}
+                                banco {linhaBanco(p.banco)} / app parcela {p.app.installment_sequence}
                             </li>
                         ))}
                     />

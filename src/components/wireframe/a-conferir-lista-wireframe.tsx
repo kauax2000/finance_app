@@ -11,8 +11,6 @@ import { aConferirKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { supabase, type Transaction, type TransactionSource } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
-import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 
 const LIMITE = 50
 
@@ -32,7 +30,7 @@ const ROTULO_DA_ORIGEM: Record<TransactionSource, string> = {
     recurring: "Recorrente",
 }
 
-type Item = Pick<Transaction, "id" | "date" | "description" | "amount" | "type" | "source" | "user_id" | "is_private">
+type Item = Pick<Transaction, "id" | "date" | "description" | "amount" | "type" | "source">
 
 /**
  * "A conferir" (Bloco 3A, Decisão 5): os lançamentos `needs_review` da carteira,
@@ -45,23 +43,20 @@ export function AConferirListaWireframe({ workspaceId }: { workspaceId: string }
     const searchParams = useSearchParams()
     const [pendente, setPendente] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
-    const rotulo = useRotuloDaTransacao()
 
     const lista = useQuery({
         queryKey: aConferirKeys.list(workspaceId),
         queryFn: async () => {
             const { data, error, count } = await supabase
                 .from("transactions")
-                .select("*", { count: "exact" })
+                .select("id, date, description, amount, type, source", { count: "exact" })
                 .eq("workspace_id", workspaceId)
                 .eq("needs_review", true)
                 .order("date", { ascending: false })
                 .order("created_at", { ascending: false })
                 .limit(LIMITE)
             if (error) throw error
-            // A privada do autor volta com os detalhes dele (Bloco 7B).
-            const itens = await juntarDetalhesPrivados(supabase, (data ?? []) as Item[])
-            return { itens, total: count ?? data?.length ?? 0 }
+            return { itens: (data ?? []) as Item[], total: count ?? data?.length ?? 0 }
         },
     })
 
@@ -112,7 +107,7 @@ export function AConferirListaWireframe({ workspaceId }: { workspaceId: string }
                         {itens.map((t) => (
                             <li key={t.id} className="flex flex-wrap items-center gap-2 border-b border-dashed border-muted-foreground/60 pb-2">
                                 <span>{formatDatePtBr(t.date)}</span>
-                                <span className="text-foreground">{rotulo(t) || "(sem descrição)"}</span>
+                                <span className="text-foreground">{t.description || "(sem descrição)"}</span>
                                 <span className="nums text-foreground">
                                     {signedCurrencyBRL(t.type === "expense" ? -Number(t.amount) : Number(t.amount))}
                                 </span>

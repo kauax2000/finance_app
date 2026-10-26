@@ -214,14 +214,10 @@ Deno.serve(async (req: Request) => {
   // depois de casar o cartão); uma família tem poucas. Se crescer, casar antes.
   const historicos = await Promise.all(
     carteirasDaPessoa.map((w: string) => {
-      // A privada (Bloco 7B) fica fora: a de outra pessoa não pode ensinar o
-      // casamento, e a da própria chega mascarada ('Gasto pessoal', sem
-      // categoria), sem nada para casar.
       const q = admin
         .from('transactions')
         .select('description, category_id, payment_method, payment_credit_card_id, date, type')
         .eq('workspace_id', w)
-        .eq('is_private', false)
       return (convidadoEm.has(w) ? q.eq('user_id', userId) : q)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })

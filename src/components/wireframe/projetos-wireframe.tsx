@@ -359,7 +359,8 @@ export function opcoesDoProjeto(lista: Project[], valor: string): Project[] {
 /**
  * O projeto no formulário de despesa (Decisão 1): o convidado também escolhe
  * (a RLS deixa ler). Só os ativos, mais o atual se ele foi arquivado depois.
- * Sem projeto nenhum, não aparece. Quem esconde na privada é o formulário (M7).
+ * Sem projeto nenhum, não aparece. Quem esconde na receita e na parcelada é
+ * o formulário (M7).
  */
 export function ProjetoDoLancamentoWireframe({ valor, onChange }: { valor: string; onChange: (id: string) => void }) {
     const { currentWorkspaceId } = useWorkspace()

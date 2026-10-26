@@ -77,10 +77,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
-import { PrivadoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
-import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import { equalInstallmentsFromPortion, splitTotalAcrossInstallments } from "@/lib/installment-amounts"
@@ -273,12 +271,6 @@ export type TransactionFormFieldsProps = {
     fotoInicial?: File
     aplicarFoto?: (c: CamposDaFrase) => void
     setFotoDoRecibo?: (foto: File) => void
-    /** O "Privado" (Bloco 7B): `null` esconde a chave. */
-    isPrivate?: boolean
-    setIsPrivate?: (v: boolean) => void
-    regraDoPrivado?: PodeSerPrivado | null
-    /** A linha editada já era privada: com a regra que não vale mais, segura o salvar (Ruling 10). */
-    eraPrivada?: boolean
     /** O projeto da despesa (Bloco 7C); sem `setProjectId`, o seletor não aparece. */
     projectId?: string
     setProjectId?: (id: string) => void
@@ -362,10 +354,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         aplicarFrase,
         fotoInicial,
         aplicarFoto,
-        isPrivate,
-        setIsPrivate,
-        regraDoPrivado,
-        eraPrivada = false,
         setFotoDoRecibo,
         projectId = "",
         setProjectId,
@@ -957,28 +945,17 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 </Field>
             ) : null}
 
-            {regraDoPrivado && setIsPrivate ? (
-                <PrivadoWireframe
-                    marcado={Boolean(isPrivate)}
-                    onChange={setIsPrivate}
-                    regra={regraDoPrivado}
-                    eraPrivada={eraPrivada}
-                />
-            ) : null}
-
-            {/* A privada esconde o projeto (M7); a parcelada e o plano não o levam. */}
+            {/* A parcelada e o plano não levam projeto (M7). */}
             {setProjectId &&
             type === "expense" &&
-            !isPrivate &&
             formKind !== "installment" &&
             !(hasInstallmentPlan && installmentEditScope === "plan") ? (
                 <ProjetoDoLancamentoWireframe valor={projectId} onChange={setProjectId} />
             ) : null}
 
-            {/* Quem pagou (Bloco 7C): a privada é paga pela autora; a parcelada e o plano seguem quem lança. */}
+            {/* Quem pagou (Bloco 7C): a parcelada e o plano seguem quem lança. */}
             {setPaidBy &&
             type === "expense" &&
-            !isPrivate &&
             formKind !== "installment" &&
             !(hasInstallmentPlan && installmentEditScope === "plan") ? (
                 <QuemPagouWireframe valor={paidBy} onChange={setPaidBy} />

@@ -1347,51 +1347,6 @@ export type Database = {
           },
         ]
       }
-      transacoes_privadas: {
-        Row: {
-          capture_meta: Json | null
-          category_id: string | null
-          description: string | null
-          transaction_id: string
-          updated_at: string
-          user_id: string
-          workspace_id: string
-        }
-        Insert: {
-          capture_meta?: Json | null
-          category_id?: string | null
-          description?: string | null
-          transaction_id: string
-          updated_at?: string
-          user_id: string
-          workspace_id: string
-        }
-        Update: {
-          capture_meta?: Json | null
-          category_id?: string | null
-          description?: string | null
-          transaction_id?: string
-          updated_at?: string
-          user_id?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transacoes_privadas_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transacoes_privadas_transaction_id_fkey"
-            columns: ["transaction_id"]
-            isOneToOne: true
-            referencedRelation: "transactions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       transaction_shares: {
         Row: {
           amount: number
@@ -1431,7 +1386,6 @@ export type Database = {
           import_batch_id: string | null
           installment_plan_id: string | null
           installment_sequence: number | null
-          is_private: boolean
           is_recurring: boolean | null
           needs_review: boolean
           paid_by: string | null
@@ -1459,7 +1413,6 @@ export type Database = {
           import_batch_id?: string | null
           installment_plan_id?: string | null
           installment_sequence?: number | null
-          is_private?: boolean
           is_recurring?: boolean | null
           needs_review?: boolean
           paid_by?: string | null
@@ -1487,7 +1440,6 @@ export type Database = {
           import_batch_id?: string | null
           installment_plan_id?: string | null
           installment_sequence?: number | null
-          is_private?: boolean
           is_recurring?: boolean | null
           needs_review?: boolean
           paid_by?: string | null
@@ -2126,10 +2078,7 @@ export type Database = {
         Args: { p_token_hash: string; p_user_email: string; p_user_id: string }
         Returns: Json
       }
-      anexo_oculto: {
-        Args: { p_statement_total_id: string; p_transaction_id: string }
-        Returns: boolean
-      }
+      anexo_oculto: { Args: { p_statement_total_id: string }; Returns: boolean }
       app_today: { Args: never; Returns: string }
       avisos_de_teste_pendentes: {
         Args: never

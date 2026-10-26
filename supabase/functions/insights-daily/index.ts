@@ -72,7 +72,7 @@ const DUPLICIDADE_DIAS = 30
 const DUPLICIDADE_VALOR_MINIMO = 10
 
 const TX_COLUMNS =
-  'id,type,amount,date,description,category_id,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,needs_review,source,is_private'
+  'id,type,amount,date,description,category_id,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,needs_review,source'
 
 type TxRow = CardTxRow & {
   id: string
@@ -82,7 +82,6 @@ type TxRow = CardTxRow & {
   installment_sequence: number | null
   needs_review: boolean
   source: string | null
-  is_private: boolean | null
 }
 
 /** `holder_user_id` (Bloco 7B): o cartão com titular; nulo é o da casa. */
@@ -146,7 +145,6 @@ function lancDe(t: TxRow, ligadas: Set<string>): Lanc {
     installment_plan_id: t.installment_plan_id,
     ligadoAConta: ligadas.has(t.id),
     needs_review: t.needs_review,
-    is_private: t.is_private === true,
   }
 }
 

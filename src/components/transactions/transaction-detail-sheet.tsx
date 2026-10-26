@@ -1,6 +1,5 @@
 "use client"
 
-import { usePrivadaAlheia, useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
 import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
@@ -107,8 +106,6 @@ export function TransactionDetailSheet({
     onLaunchEditConsumed,
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
-    const rotulo = useRotuloDaTransacao()
-    const privadaAlheia = usePrivadaAlheia()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] =
         useState<TransactionInstallmentPlanRef | null>(null)
@@ -200,9 +197,9 @@ export function TransactionDetailSheet({
     useEffect(() => {
         if (!open || !launchInEditMode) return
         // eslint-disable-next-line react-hooks/set-state-in-effect -- open sheet directly in edit from row action
-        if (!t || !privadaAlheia(t)) setDetailMode("edit")
+        setDetailMode("edit")
         onLaunchEditConsumed?.()
-    }, [open, launchInEditMode, onLaunchEditConsumed, t, privadaAlheia])
+    }, [open, launchInEditMode, onLaunchEditConsumed])
 
     if (!t) {
         return null
@@ -254,9 +251,7 @@ export function TransactionDetailSheet({
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
-                        {/* O ⋯ abre como menu também no telefone, na escala do toque. Na
-                            privada de outra pessoa não há o que editar nem apagar. */}
-                        {privadaAlheia(t) ? null : (
+                        {/* O ⋯ abre como menu também no telefone, na escala do toque. */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
@@ -274,7 +269,7 @@ export function TransactionDetailSheet({
                                 size="sm"
                                 header={
                                     <DropdownMenuHeader
-                                        title={rotulo(t).trim() || t.category?.name || "Sem descrição"}
+                                        title={t.description?.trim() || t.category?.name || "Sem descrição"}
                                         description={`${formatTransactionDayPtBr(t.date)} · ${signedCurrencyBRL(
                                             isIncome ? Number(t.amount) : -Number(t.amount)
                                         )}`}
@@ -295,7 +290,6 @@ export function TransactionDetailSheet({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        )}
                         <Button
                             type="button"
                             variant="tertiary"
@@ -352,7 +346,7 @@ export function TransactionDetailSheet({
                     <div className="space-y-3 text-sm">
                         <CardField label="Descrição">
                             <p className="line-clamp-4 break-words text-foreground">
-                                {rotulo(t).trim() || "—"}
+                                {t.description?.trim() || "—"}
                             </p>
                         </CardField>
 

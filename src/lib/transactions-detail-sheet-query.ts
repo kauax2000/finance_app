@@ -1,4 +1,3 @@
-import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import type { CreditCard, Transaction } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -51,9 +50,7 @@ export async function fetchTransactionForDetailSheet(
     if (!data) {
         return { transaction: null, errorMessage: null }
     }
-    // A privada do autor volta com a descrição e a categoria dele: a folha e
-    // o formulário de edição leem daqui (Bloco 7B).
-    const [row] = await juntarDetalhesPrivados(client, [data as unknown as Transaction])
+    const row = data as unknown as Transaction
     const [withCard] = attachPaymentCards([row], args.creditCards)
     return { transaction: withCard ?? null, errorMessage: null }
 }
