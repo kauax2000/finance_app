@@ -276,7 +276,8 @@ describe("migração papéis: o convidado e o adulto", () => {
 
     it("accept_workspace_invite grava o papel do convite e o responsável do convidado", () => {
         const fn = ultima("accept_workspace_invite")
-        expect(ULTIMA.get("accept_workspace_invite")!.arquivo).toBe(MIGRACAO)
+        // O Bloco 9 a redefine com a recusa do ex-convidado e as mesmas regras daqui.
+        expect(ULTIMA.get("accept_workspace_invite")!.arquivo).toBe("20261102120000_bloco9.sql")
         expect(fn).toMatch(/security definer\s+set search_path = ''/)
         expect(fn).toMatch(/insert into public\.workspace_members \(workspace_id, user_id, role, sponsor_user_id\)/)
         expect(fn).toMatch(/values \(v_invite\.workspace_id, p_user_id, v_invite\.role,\s+case when v_invite\.role = 'guest' then v_invite\.created_by end\)/)

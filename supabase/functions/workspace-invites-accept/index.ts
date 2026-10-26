@@ -108,6 +108,10 @@ Deno.serve(async (req: Request) => {
       return json(400, { error: 'Invite exhausted' })
     case 'invalid_user':
       return json(400, { error: 'Authenticated user has no email' })
+    // Bloco 9 (#60): quem saiu como convidado não volta por link. A RPC antiga
+    // nunca devolve esse status, então esta Edge sobe antes da migração.
+    case 'ex_convidado':
+      return json(403, { error: 'Peça ao dono um convite por e-mail.' })
     case 'already_member':
       return json(200, { ok: true, workspace_id: workspaceId, already_member: true })
     case 'accepted':

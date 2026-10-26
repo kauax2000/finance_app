@@ -32,12 +32,18 @@ const COLUNAS: Record<string, string> = {
     nfse_para: "text",
 }
 
-/** Decisão 11: a "só leitura" cobre estas tabelas, e esta migração não mexe nisso. */
+/**
+ * Decisão 11: a "só leitura" cobre estas tabelas, e esta migração não mexe
+ * nisso. O Bloco 9 (#79) acrescenta projeto, peso e limite.
+ */
 const GATILHOS_ESCRITA = [
     "attachments",
+    "projects",
     "settlements",
     "transactions",
     "workspace_installment_plans",
+    "workspace_member_limits",
+    "workspace_split_weights",
     "workspace_subscriptions",
 ]
 

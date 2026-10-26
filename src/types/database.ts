@@ -234,18 +234,21 @@ export type Database = {
       billing_avisos: {
         Row: {
           enviado_em: string
+          pendente: boolean
           referencia: string
           tipo: string
           user_id: string
         }
         Insert: {
           enviado_em?: string
+          pendente?: boolean
           referencia: string
           tipo: string
           user_id: string
         }
         Update: {
           enviado_em?: string
+          pendente?: boolean
           referencia?: string
           tipo?: string
           user_id?: string
@@ -1625,6 +1628,32 @@ export type Database = {
           },
         ]
       }
+      workspace_ex_convidados: {
+        Row: {
+          saiu_em: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          saiu_em?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          saiu_em?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_ex_convidados_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_installment_plans: {
         Row: {
           billing_anchor_day: number | null
@@ -2173,7 +2202,9 @@ export type Database = {
       }
       criar_plano_parcelado: {
         Args: {
+          p_capture_meta?: Json
           p_category_id: string
+          p_client_id?: string
           p_description: string
           p_final_installment_amount: number
           p_installment_amount: number

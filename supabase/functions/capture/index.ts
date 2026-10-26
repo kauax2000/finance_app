@@ -279,6 +279,10 @@ Deno.serve(async (req: Request) => {
       p_next_billing_date: linha.date.slice(0, 10),
       p_source: linha.source,
       p_needs_review: true,
+      // A chave e a capture_meta vão na 1ª parcela dentro da RPC: com o mesmo
+      // `client_id`, dois retries simultâneos dão um plano só (Bloco 9, #23).
+      p_client_id: clientId,
+      p_capture_meta: linha.capture_meta,
     })
     if (planoRpcErr) return json(500, { error: internalError('capture: plano parcelado', planoRpcErr) })
     const { data: primeira, error: primErr } = await admin
@@ -301,14 +305,12 @@ Deno.serve(async (req: Request) => {
         anexo: foto ? false : null,
       })
     }
-    // O plano não tem `client_id`: a chave e a capture_meta vão na 1ª parcela,
-    // e o retry a acha pela busca de cima.
-    // ponytail: dois retries simultâneos criam dois planos (o 2º update esbarra
-    // na chave única e só vira log); um retry depois do outro não duplica.
-    const meta = { client_id: clientId, capture_meta: linha.capture_meta }
-    const { error: metaErr } = await admin.from('transactions').update(meta).eq('id', (primeira as Gravado).id)
-    if (metaErr) console.error('capture: chave do plano', metaErr)
-    gravado = { ...(primeira as Gravado), capture_meta: linha.capture_meta }
+    // O plano não tem `client_id`: a chave está na 1ª parcela, e o retry a
+    // acha pela busca de cima.
+    // ponytail: o 2º de dois retries simultâneos recebe o plano do 1º e também
+    // conta como novo (a foto vira um 2º anexo, os avisos têm dedupe); devolver
+    // `{ id, novo }` da RPC fecha isso, se aparecer.
+    gravado = primeira as Gravado
     novo = true
   } else {
     const { data: inseridos, error: insErr } = await admin
