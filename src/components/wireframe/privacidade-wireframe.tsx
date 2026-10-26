@@ -3,7 +3,7 @@ import { ROUTES } from "@/config/navigation"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
 /** Atualize a data sempre que o texto da política mudar. */
-const ATUALIZADA_EM = "23/10/2026"
+const ATUALIZADA_EM = "26/10/2026"
 
 /**
  * A política de privacidade mínima (Bloco 3B, Decisão 13): pública, sem
@@ -60,6 +60,27 @@ export function PrivacidadeWireframe() {
                     Os dados moram no Supabase, o banco e o armazenamento do app. Os membros de uma carteira veem os
                     dados dela. Ninguém de fora vê.
                 </p>
+
+                <h2 className="font-bold text-foreground">A cobrança do plano</h2>
+                <ul className="list-disc space-y-1 pl-5">
+                    <li>
+                        O pagamento é feito pelo <strong>Asaas</strong>, a empresa brasileira de pagamentos que processa
+                        a cobrança. O cartão você digita na página do Asaas: ele nunca passa pelo app.
+                    </li>
+                    <li>
+                        O CPF que você informa em Planos vai direto ao Asaas, que o exige para a cobrança, junto com o
+                        nome e o e-mail. O app não guarda o CPF.
+                    </li>
+                    <li>
+                        Do Asaas, guardamos só o token do cartão (um código que o Asaas devolve e que só ele sabe
+                        usar), os 4 últimos dígitos, a bandeira e o identificador do seu cadastro lá. Guardamos também o
+                        endereço IP da compra, porque o Asaas o pede na renovação anual.
+                    </li>
+                    <li>
+                        A nota fiscal de serviço (NFS-e) de cada ano pago é emitida pelo Asaas, com os dados do
+                        cadastro de lá.
+                    </li>
+                </ul>
 
                 <h2 className="font-bold text-foreground">Inteligência artificial</h2>
                 <p>

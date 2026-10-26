@@ -114,9 +114,9 @@ As regras do direito de uso (status, provedores, cobertura, "só leitura", aviso
    - Uma falha tenta de novo no dia seguinte.
 6. **Hospedagem:** Vercel Pro (US$ 20/mês) no dia em que a cobrança ligar, porque o Hobby proíbe uso comercial. Não há migração para Cloudflare. É ação do dono, registrada no roteiro.
 7. **Ligar a cobrança é o último passo:** `billing_lancar()` roda junto com o 2.0 indo para `main`. Ela é só da `service_role`: roda no SQL Editor do painel.
-8. **A renovação acontece um dia antes do fim, não no fim.** `tem_plano_proprio` deixa de contar uma linha `active` assim que `current_period_end <= now()`, e o cron roda uma vez por dia. Renovar no fim deixaria quem paga em "só leitura" por até um dia a cada aniversário. Por isso:
-   - `acaoDoDia` devolve `'renovar'` a partir de `fim - 1 dia`;
-   - uma cobrança aceita mas ainda não confirmada grava `grace_until = fim + 7 dias` sem mudar o `status` (Tarefa 2, `aguardandoConfirmacao`);
+8. **A renovação começa dois dias antes do fim, não no fim** (era um dia; a Ruling 20 deu duas chances antes do fim). `tem_plano_proprio` deixa de contar uma linha `active` assim que `current_period_end <= now()`, e o cron roda uma vez por dia. Renovar no fim deixaria quem paga em "só leitura" por até um dia a cada aniversário. Por isso:
+   - `acaoDoDia` devolve `'renovar'` a partir de `fim - 2 dias` (Ruling 20), e o aviso de renovação vale de `fim - 7` a `fim - 2 dias`;
+   - uma cobrança aceita mas ainda não confirmada grava `grace_until = fim + 7 dias` e leva um `past_due` a `active` (Tarefa 2, `aguardandoConfirmacao`, com a Ruling 4);
    - a migração redefine `tem_plano_proprio` para contar também `active` com `grace_until > now()`.
 
    Assim, nem a espera pelo webhook nem a recusa do cartão (que já cai em `past_due` dentro da tolerância) tiram o plano antes da hora.
@@ -132,7 +132,7 @@ As regras do direito de uso (status, provedores, cobertura, "só leitura", aviso
 3. **Dado de cartão ou CPF onde não deve.** Nenhuma Edge recebe número de cartão. O CPF não vai a tabela nem a log. O `card_token`, o `asaas_customer_id` e o `ultimo_ip` não são legíveis pelo cliente: o cliente lê só por `meu_plano()`. (Tarefa 1, teste de fonte. Tarefa 3, teste de que o corpo enviado ao Asaas não tem `creditCard`.)
 4. **Renovação sem token.** Sem `card_token`, a renovação vira `past_due` com o aviso "atualize seu cartão", e nunca cobra às cegas. (Tarefa 2, `acaoDoDia`. Tarefa 6, teste de fonte.)
 5. **Preço de fundador perdido por engano.** Uma renovação, e um `past_due` recuperado, mantêm o `price_cents` da linha. Só uma compra depois de `expired` recalcula o preço. (Tarefa 3, `planoDoCheckout`.)
-6. **Só leitura no dia da renovação.** Quem paga em dia nunca fica em "só leitura" no aniversário: a renovação começa um dia antes, e a espera pelo webhook mantém o plano pela `grace_until`. (Tarefa 1, teste de fonte de `tem_plano_proprio`. Tarefa 2, `acaoDoDia` em `fim - 1 dia` e `aguardandoConfirmacao`.)
+6. **Só leitura no dia da renovação.** Quem paga em dia nunca fica em "só leitura" no aniversário: a renovação começa dois dias antes (Ruling 20), e a espera pelo webhook mantém o plano pela `grace_until`. (Tarefa 1, teste de fonte de `tem_plano_proprio`. Tarefa 2, `acaoDoDia` em `fim - 2 dias` e `aguardandoConfirmacao`.)
 7. **Convidado ou menor pagando.** A `billing-checkout` recusa quem é `guest` em alguma carteira, antes de criar cliente ou cobrança no Asaas. (Tarefa 3, teste de fonte da ordem.)
 
 ---
