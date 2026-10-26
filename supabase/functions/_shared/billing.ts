@@ -86,28 +86,40 @@ export function cpfValido(cpf: string): boolean {
 
 /** Um link de pagamento criado há menos que isso ainda vale: o checkout o devolve em vez de cobrar de novo. */
 const VALIDADE_DO_CHECKOUT_MS = DIA_MS
+/**
+ * Um `checkout_criado_em` mais novo que isso e sem link é uma tentativa em
+ * andamento: outro checkout que reivindicou a linha, ou o cron cobrando o
+ * cartão (a Tarefa 6 grava a data antes de chamar o Asaas).
+ */
+const TENTATIVA_EM_ANDAMENTO_MS = 2 * 60 * 1000
 
 export type PlanoDoCheckout =
   | { tipo: 'bloqueado' }
   | { tipo: 'reusar' }
+  | { tipo: 'aguardar' }
   | { tipo: 'novo'; centavos: number; fundador: boolean; renovacao: boolean }
 
 /**
- * O que o checkout faz com a linha da pessoa. Só uma compra depois de `expired`
- * (ou sem linha) recalcula o preço; o `past_due` recuperado mantém o da linha.
+ * O que o checkout faz com a linha da pessoa. `temLink` diz se a linha guarda a
+ * `checkout_url`. Só uma compra depois de `expired` (ou sem linha) recalcula o
+ * preço; o `past_due` recuperado, e o `active` vencido (Ruling 6), mantêm o da
+ * linha.
  */
-export function planoDoCheckout(sub: Assinatura | null, agora: Date): PlanoDoCheckout {
+export function planoDoCheckout(sub: Assinatura | null, agora: Date, temLink: boolean): PlanoDoCheckout {
   if (sub?.status === 'active') {
     // A cobrança aceita espera a confirmação: um checkout novo cobraria duas vezes.
     if (sub.grace_until) return { tipo: 'bloqueado' }
     if (sub.cancel_at_period_end) return { tipo: 'bloqueado' }
     if (!sub.current_period_end || new Date(sub.current_period_end) > agora) return { tipo: 'bloqueado' }
   }
-  if (
-    (sub?.status === 'pending' || sub?.status === 'past_due') && sub.checkout_criado_em &&
-    agora.getTime() - new Date(sub.checkout_criado_em).getTime() < VALIDADE_DO_CHECKOUT_MS
-  ) return { tipo: 'reusar' }
-  if (sub?.status === 'past_due') {
+  // Daqui para baixo, um `active` está vencido: só acontece com o cron parado.
+  const vencida = sub?.status === 'past_due' || sub?.status === 'active'
+  if ((vencida || sub?.status === 'pending') && sub.checkout_criado_em) {
+    const idade = agora.getTime() - new Date(sub.checkout_criado_em).getTime()
+    if (temLink && idade < VALIDADE_DO_CHECKOUT_MS) return { tipo: 'reusar' }
+    if (!temLink && idade < TENTATIVA_EM_ANDAMENTO_MS) return { tipo: 'aguardar' }
+  }
+  if (vencida) {
     return {
       tipo: 'novo',
       centavos: sub.price_cents ?? (sub.founder ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS),
@@ -116,6 +128,37 @@ export function planoDoCheckout(sub: Assinatura | null, agora: Date): PlanoDoChe
     }
   }
   return { tipo: 'novo', ...precoPara(agora), renovacao: false }
+}
+
+/** Uma cobrança em aberto no Asaas (PENDING ou OVERDUE), como `GET /payments` a devolve. */
+export type CobrancaAberta = Pagamento & { value: number; dueDate: string; invoiceUrl: string }
+
+/**
+ * O que fazer com as cobranças em aberto da linha antes de criar outra
+ * (Ruling 7): um parcelamento nosso, do mesmo cliente e com o total pedido, é
+ * reusado pela 1ª parcela; todo o resto é removido, um item por parcelamento
+ * (a remoção do parcelamento leva as 12 parcelas). O total soma as parcelas
+ * em aberto, vencidas ou não.
+ */
+export function triagemDasAbertas(
+  abertas: CobrancaAberta[],
+  centavos: number,
+  cliente: string,
+): { reusar: CobrancaAberta | null; remover: CobrancaAberta[] } {
+  const grupos = new Map<string, CobrancaAberta[]>()
+  for (const c of abertas) {
+    const chave = c.installment ?? c.id
+    grupos.set(chave, [...(grupos.get(chave) ?? []), c])
+  }
+  let reusar: CobrancaAberta | null = null
+  const remover: CobrancaAberta[] = []
+  for (const grupo of grupos.values()) {
+    const primeira = grupo.reduce((a, b) => (b.dueDate < a.dueDate ? b : a))
+    const total = grupo.reduce((soma, c) => soma + Math.round(c.value * 100), 0)
+    if (!reusar && primeira.installment && primeira.customer === cliente && total === centavos) reusar = primeira
+    else remover.push(primeira)
+  }
+  return { reusar, remover }
 }
 
 /**

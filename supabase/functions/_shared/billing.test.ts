@@ -4,6 +4,7 @@ import {
   aguardandoConfirmacao,
   ARREPENDIMENTO_DIAS,
   type Assinatura,
+  type CobrancaAberta,
   AVISO_RENOVACAO_DIAS,
   AVISOS,
   cpfValido,
@@ -16,6 +17,7 @@ import {
   podeReembolsar,
   precoPara,
   TOLERANCIA_DIAS,
+  triagemDasAbertas,
 } from './billing.ts'
 
 const DIA = 24 * 60 * 60 * 1000
@@ -377,41 +379,41 @@ const AGORA = new Date('2027-03-01T12:00:00Z') // depois do fim do preço de fun
 
 Deno.test('planoDoCheckout: active esperando a confirmação de uma cobrança aceita é bloqueado', () => {
   const grace = iso(em(7 * DIA))
-  assertEquals(planoDoCheckout(sub({ grace_until: grace }), AGORA), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub({ grace_until: grace }), AGORA, false), { tipo: 'bloqueado' })
   // mesmo com o fim já passado: um checkout novo cobraria duas vezes
-  assertEquals(planoDoCheckout(sub({ grace_until: grace }), em(DIA)), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub({ grace_until: grace }), em(DIA), false), { tipo: 'bloqueado' })
 })
 
 Deno.test('planoDoCheckout: active no período, ou manual sem fim, é bloqueado', () => {
-  assertEquals(planoDoCheckout(sub(), AGORA), { tipo: 'bloqueado' })
-  assertEquals(planoDoCheckout(sub({ provider: 'manual', current_period_end: null }), AGORA), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub(), AGORA, false), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub({ provider: 'manual', current_period_end: null }), AGORA, false), { tipo: 'bloqueado' })
 })
 
 Deno.test('planoDoCheckout: active com cancelamento marcado é bloqueado (a tela oferece desfazer)', () => {
-  assertEquals(planoDoCheckout(sub({ cancel_at_period_end: true }), AGORA), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub({ cancel_at_period_end: true }), AGORA, false), { tipo: 'bloqueado' })
 })
 
 Deno.test('planoDoCheckout: pending ou past_due com checkout de menos de 24 h reusa o link', () => {
   const criado = iso(new Date(AGORA.getTime() - 23 * 60 * 60 * 1000))
-  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: criado }), AGORA), { tipo: 'reusar' })
-  assertEquals(planoDoCheckout(sub({ status: 'past_due', checkout_criado_em: criado }), AGORA), { tipo: 'reusar' })
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: criado }), AGORA, true), { tipo: 'reusar' })
+  assertEquals(planoDoCheckout(sub({ status: 'past_due', checkout_criado_em: criado }), AGORA, true), { tipo: 'reusar' })
 })
 
 Deno.test('planoDoCheckout: past_due mantém o preço de fundador da linha depois de 31/01/2027', () => {
   const antigo = iso(new Date(AGORA.getTime() - 25 * 60 * 60 * 1000))
   const linha = sub({ status: 'past_due', price_cents: 23880, founder: true, checkout_criado_em: antigo })
-  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
+  assertEquals(planoDoCheckout(linha, AGORA, false), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
 })
 
 Deno.test('planoDoCheckout: past_due sem price_cents cai no preço do founder da linha', () => {
   const linha = sub({ status: 'past_due', price_cents: null, founder: true })
-  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
+  assertEquals(planoDoCheckout(linha, AGORA, false), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
 })
 
 Deno.test('planoDoCheckout: expired volta ao preço do dia', () => {
   const linha = sub({ status: 'expired', price_cents: 23880, founder: true })
-  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
-  assertEquals(planoDoCheckout(linha, new Date('2026-12-01T12:00:00Z')), {
+  assertEquals(planoDoCheckout(linha, AGORA, false), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
+  assertEquals(planoDoCheckout(linha, new Date('2026-12-01T12:00:00Z'), false), {
     tipo: 'novo',
     centavos: 23880,
     fundador: true,
@@ -420,13 +422,96 @@ Deno.test('planoDoCheckout: expired volta ao preço do dia', () => {
 })
 
 Deno.test('planoDoCheckout: sem linha, ou pending antigo, é compra nova pelo preço do dia', () => {
-  assertEquals(planoDoCheckout(null, AGORA), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
+  assertEquals(planoDoCheckout(null, AGORA, false), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
   const antigo = iso(new Date(AGORA.getTime() - 25 * 60 * 60 * 1000))
-  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: antigo }), AGORA), {
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: antigo }), AGORA, false), {
     tipo: 'novo',
     centavos: 35880,
     fundador: false,
     renovacao: false,
   })
-  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: null }), AGORA).tipo, 'novo')
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: null }), AGORA, false).tipo, 'novo')
+})
+
+Deno.test('planoDoCheckout (Ruling 6): active vencido, sem carência nem cancelamento, é past_due com o preço da linha', () => {
+  const linha = sub({ current_period_end: '2027-02-20T12:00:00Z', founder: true, price_cents: 23880 })
+  assertEquals(planoDoCheckout(linha, AGORA, false), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
+  const criado = iso(new Date(AGORA.getTime() - 60 * 60 * 1000))
+  assertEquals(planoDoCheckout({ ...linha, checkout_criado_em: criado }, AGORA, true), { tipo: 'reusar' })
+})
+
+Deno.test('planoDoCheckout: checkout recente sem link não é reusado; com menos de 2 minutos, aguarda', () => {
+  const ha = (ms: number) => iso(new Date(AGORA.getTime() - ms))
+  const linha = (criado: string) => sub({ status: 'past_due', checkout_criado_em: criado })
+  assertEquals(planoDoCheckout(linha(ha(60 * 1000)), AGORA, false), { tipo: 'aguardar' })
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: ha(60 * 1000) }), AGORA, false), {
+    tipo: 'aguardar',
+  })
+  // passados 2 minutos sem link, a tentativa morreu: compra de novo (o checkout lista antes de criar)
+  assertEquals(planoDoCheckout(linha(ha(3 * 60 * 1000)), AGORA, false), {
+    tipo: 'novo',
+    centavos: 35880,
+    fundador: false,
+    renovacao: true,
+  })
+  // com link, mas de mais de 24 h, também
+  assertEquals(planoDoCheckout(linha(ha(25 * 60 * 60 * 1000)), AGORA, true).tipo, 'novo')
+})
+
+// triagemDasAbertas
+
+const aberta = (x: Partial<CobrancaAberta> = {}): CobrancaAberta => ({
+  id: 'pay_1',
+  installment: 'inst_1',
+  customer: 'cus_1',
+  externalReference: 'sub-1',
+  status: 'PENDING',
+  value: 19.9,
+  dueDate: '2026-11-01',
+  invoiceUrl: 'https://asaas/i/pay_1',
+  ...x,
+})
+const parcelas = (inst: string, valor: number, x: Partial<CobrancaAberta> = {}) =>
+  Array.from({ length: 12 }, (_, i) =>
+    aberta({
+      id: `${inst}_${i + 1}`,
+      installment: inst,
+      value: valor,
+      dueDate: `2027-${String(i + 1).padStart(2, '0')}-01`,
+      invoiceUrl: `https://asaas/i/${inst}_${i + 1}`,
+      ...x,
+    }))
+
+Deno.test('triagemDasAbertas: nada aberto, nada a fazer', () => {
+  assertEquals(triagemDasAbertas([], 23880, 'cus_1'), { reusar: null, remover: [] })
+})
+
+Deno.test('triagemDasAbertas: o parcelamento com o mesmo total e o mesmo cliente é reusado pela 1ª parcela', () => {
+  const abertas = parcelas('inst_a', 19.9).reverse()
+  const t = triagemDasAbertas(abertas, 23880, 'cus_1')
+  assertEquals(t.reusar?.id, 'inst_a_1')
+  assertEquals(t.remover, [])
+})
+
+Deno.test('triagemDasAbertas: parte vencida (OVERDUE) e parte em aberto somam o total', () => {
+  const abertas = parcelas('inst_a', 19.9).map((c, i) => i < 2 ? { ...c, status: 'OVERDUE' } : c)
+  assertEquals(triagemDasAbertas(abertas, 23880, 'cus_1').reusar?.id, 'inst_a_1')
+})
+
+Deno.test('triagemDasAbertas: outro valor, outro cliente, avulsa ou um segundo igual são removidos, um por parcelamento', () => {
+  const abertas = [
+    ...parcelas('inst_caro', 29.9),
+    ...parcelas('inst_outro', 19.9, { customer: 'cus_2' }),
+    aberta({ id: 'pay_avulsa', installment: null, value: 238.8 }),
+    ...parcelas('inst_ok', 19.9),
+    ...parcelas('inst_ok2', 19.9),
+  ]
+  const t = triagemDasAbertas(abertas, 23880, 'cus_1')
+  assertEquals(t.reusar?.id, 'inst_ok_1')
+  assertEquals(t.remover.map((c) => [c.id, c.installment]), [
+    ['inst_caro_1', 'inst_caro'],
+    ['inst_outro_1', 'inst_outro'],
+    ['pay_avulsa', null],
+    ['inst_ok2_1', 'inst_ok2'],
+  ])
 })

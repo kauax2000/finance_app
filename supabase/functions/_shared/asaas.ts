@@ -3,7 +3,7 @@
  * a pessoa digita o cartão na fatura do Asaas, e a renovação usa só o
  * `creditCardToken` que ele devolveu.
  */
-import { type Pagamento, PARCELAS } from './billing.ts'
+import { type CobrancaAberta, type Pagamento, PARCELAS } from './billing.ts'
 
 export type AsaasConfig = { url: string; chave: string }
 /** `incerto`: o prazo estourou e o Asaas pode ter processado o pedido (Ruling 5). */
@@ -24,7 +24,7 @@ export function configDoAsaas(): AsaasConfig | null {
 
 export async function asaas<T>(
   cfg: AsaasConfig,
-  metodo: 'GET' | 'POST',
+  metodo: 'GET' | 'POST' | 'DELETE',
   caminho: string,
   corpo?: unknown,
   prazoMs = PRAZO_MS,
@@ -88,6 +88,44 @@ export function criarCobranca(cfg: AsaasConfig, c: {
     ...(c.token ? { creditCardToken: c.token, remoteIp: c.ip } : {}),
   }
   return asaas(cfg, 'POST', '/payments', corpo, c.token ? PRAZO_CARTAO_MS : PRAZO_MS)
+}
+
+/**
+ * As cobranças em aberto de uma linha (`externalReference` = id da linha), as
+ * vencidas inclusive: a fatura do cartão aceita pagamento depois do vencimento.
+ */
+// ponytail: uma página de 100 por status, sem paginar; um parcelamento são 12 parcelas
+export async function listarCobrancasAbertas(
+  cfg: AsaasConfig,
+  referencia: string,
+): Promise<RespostaAsaas<CobrancaAberta[]>> {
+  const todas: CobrancaAberta[] = []
+  for (const status of ['PENDING', 'OVERDUE']) {
+    const r = await asaas<{ data?: CobrancaAberta[] }>(
+      cfg,
+      'GET',
+      `/payments?externalReference=${encodeURIComponent(referencia)}&status=${status}&limit=100`,
+    )
+    if (!r.ok) return r
+    todas.push(...(r.dados.data ?? []))
+  }
+  return { ok: true, dados: todas }
+}
+
+export function buscarCobranca(cfg: AsaasConfig, id: string): Promise<RespostaAsaas<CobrancaAberta>> {
+  return asaas(cfg, 'GET', `/payments/${encodeURIComponent(id)}`)
+}
+
+/** Tira do ar uma cobrança em aberto: o parcelamento inteiro, se ela é parcela de um. */
+export function removerCobranca(
+  cfg: AsaasConfig,
+  c: { id: string; installment: string | null },
+): Promise<RespostaAsaas<unknown>> {
+  return asaas(
+    cfg,
+    'DELETE',
+    c.installment ? `/installments/${encodeURIComponent(c.installment)}` : `/payments/${encodeURIComponent(c.id)}`,
+  )
 }
 
 export function estornarParcelamento(cfg: AsaasConfig, parcelamento: string): Promise<RespostaAsaas<unknown>> {

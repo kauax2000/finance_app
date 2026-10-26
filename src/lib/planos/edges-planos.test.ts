@@ -76,13 +76,48 @@ describe("Edge billing-checkout", () => {
 
     it("o CPF não vai a log, a tabela nem a resposta", () => {
         const f = fonte(CHECKOUT)
-        const chamadas = (re: RegExp) => [...f.matchAll(re)].map((m) => m[0])
-        for (const c of chamadas(/console\.\w+\([^)]*\)/g)) expect(c).not.toMatch(/cpf/i)
-        for (const c of chamadas(/internalError\([^)]*\)/g)) expect(c).not.toMatch(/cpf/i)
-        for (const c of chamadas(/json\(\d+, \{[^}]*\}\)/g)) expect(c).not.toMatch(/cpf\b(?! inválido)/i)
-        const upsert = f.slice(f.indexOf(".upsert("), f.indexOf("onConflict"))
-        expect(upsert).not.toMatch(/cpf/i)
-        expect(f.match(/\bcpf\b/g)?.length).toBe(5) // declarar, ler do corpo, validar (2) e mandar ao cliente
+        const linhas = f.split("\n")
+        for (const l of linhas.filter((l) => /console\.|internalError\(/.test(l))) expect(l).not.toMatch(/cpf/i)
+        for (const l of linhas.filter((l) => /json\(\d+/.test(l))) expect(l.slice(l.search(/json\(\d+/)).replace("CPF inválido.", "")).not.toMatch(/cpf/i)
+        for (const l of linhas.filter((l) => /\.(update|upsert|insert)\(/.test(l))) expect(l).not.toMatch(/cpf/i)
+        // o CPF só sai pelo criarCliente
+        const usos = linhas.filter((l) => /\bcpf\b/.test(l))
+        expect(usos.filter((l) => !/let cpf|\{ nome, cpf \}|cpfValido\(cpf\)|criarCliente\(/.test(l))).toEqual([])
+    })
+
+    it("reivindica a linha antes de chamar o Asaas, e nunca a grava sem condição", () => {
+        const f = fonte(CHECKOUT)
+        const reivindica = f.indexOf(".eq('status', linha.status)")
+        expect(reivindica).toBeGreaterThan(-1)
+        expect(f.indexOf("criarCliente(cfg")).toBeGreaterThan(reivindica)
+        expect(f).toContain(".is('asaas_customer_id', null)")
+        // a única gravação sem condição é a da linha que ainda não existe
+        expect(f.match(/\.upsert\(/g)?.length).toBe(1)
+        expect(f).toContain("ignoreDuplicates: true")
+        // a gravação final só vale se a reivindicação ainda é desta chamada
+        expect(f.split(".eq('checkout_criado_em', reivindicado)").length - 1).toBeGreaterThanOrEqual(2)
+        expect(f).toContain("Seu plano mudou agora. Abra Planos de novo.")
+        expect(f).toContain("Estamos tentando renovar com seu cartão. Tente de novo em alguns minutos.")
+    })
+
+    it("lista antes de criar: reusa, remove ou espera a confirmação (Ruling 7)", () => {
+        const f = fonte(CHECKOUT)
+        const lista = f.indexOf("listarCobrancasAbertas(cfg")
+        const remove = f.indexOf("removerCobranca(cfg")
+        const cria = f.indexOf("criarCobranca(cfg")
+        expect(lista).toBeGreaterThan(-1)
+        expect(remove).toBeGreaterThan(lista)
+        expect(cria).toBeGreaterThan(remove)
+        expect(f).toContain("buscarCobranca(cfg, linha.checkout_ref)")
+        expect(f).toContain("Seu pagamento está sendo confirmado.")
+        expect(f).toContain("triagemDasAbertas(")
+    })
+
+    it("a cobrança que falhou, incerta ou não, solta a linha e volta 502", () => {
+        const f = fonte(CHECKOUT)
+        const falha = f.slice(f.indexOf("if (!cobranca.ok)"), f.indexOf("if (!cobranca.ok)") + 200)
+        expect(falha).toContain("await soltar()")
+        expect(falha).toContain("SEM_RESPOSTA()")
     })
 
     it("não manda dado de cartão e nem token: o cartão é digitado na fatura", () => {
@@ -95,7 +130,9 @@ describe("Edge billing-checkout", () => {
         const f = fonte(CHECKOUT)
         expect(f).toContain("req.headers.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 45)")
         expect(f).toContain("onConflict: 'user_id'")
-        expect(f).toContain("checkout_url: cobranca.dados.invoiceUrl")
+        expect(f).toContain("...(ip ? { ultimo_ip: ip } : {})")
+        expect(f).toContain("checkout_url: url")
+        expect(f).toContain("referencia: linha.id")
         expect(f).toContain("retorno: `${appBase}/plans?pago=1`")
         expect(f).toContain("vencimento: formatYmd(appTodayYmd())")
     })

@@ -2,11 +2,14 @@ import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import {
   agendarNota,
   asaas,
+  buscarCobranca,
   type AsaasConfig,
   configDoAsaas,
   criarCliente,
   criarCobranca,
   estornarParcelamento,
+  listarCobrancasAbertas,
+  removerCobranca,
 } from './asaas.ts'
 
 const CFG: AsaasConfig = { url: 'https://api-sandbox.asaas.com/v3', chave: 'chave-de-teste' }
@@ -243,6 +246,79 @@ Deno.test('agendarNota: POST /invoices do parcelamento, valor total e impostos z
       municipalServiceCode: '01.07',
       municipalServiceName: 'Suporte técnico',
       taxes: { retainIss: false, iss: 0, cofins: 0, csll: 0, inss: 0, ir: 0, pis: 0 },
+    })
+  })
+})
+
+const ABERTA = (x: Record<string, unknown> = {}) => ({
+  id: 'pay_1',
+  installment: 'inst_1',
+  customer: 'cus_1',
+  externalReference: 'sub-1',
+  status: 'PENDING',
+  value: 19.9,
+  dueDate: '2026-11-01',
+  invoiceUrl: 'https://sandbox.asaas.com/i/pay_1',
+  ...x,
+})
+
+Deno.test('listarCobrancasAbertas: PENDING e OVERDUE da referência, juntas', async () => {
+  await comFetch((url) =>
+    json(200, {
+      object: 'list',
+      hasMore: false,
+      data: url.includes('status=PENDING') ? [ABERTA()] : [ABERTA({ id: 'pay_0', status: 'OVERDUE' })],
+    }), async (pedidos) => {
+    const r = await listarCobrancasAbertas(CFG, 'sub 1')
+    assertEquals(r.ok && r.dados.map((c) => c.id), ['pay_1', 'pay_0'])
+    assertEquals(pedidos.map((p) => [p.init.method, p.url]), [
+      ['GET', 'https://api-sandbox.asaas.com/v3/payments?externalReference=sub%201&status=PENDING&limit=100'],
+      ['GET', 'https://api-sandbox.asaas.com/v3/payments?externalReference=sub%201&status=OVERDUE&limit=100'],
+    ])
+  })
+})
+
+Deno.test('listarCobrancasAbertas: uma falha devolve a falha, sem lista parcial', async () => {
+  await comFetch(
+    (url) => url.includes('OVERDUE') ? json(500, {}) : json(200, { data: [ABERTA()] }),
+    async () => {
+      const r = await listarCobrancasAbertas(CFG, 'sub-1')
+      assertEquals(r.ok, false)
+    },
+  )
+})
+
+Deno.test('listarCobrancasAbertas: resposta sem data é lista vazia', async () => {
+  await comFetch(() => json(200, { object: 'list' }), async () => {
+    assertEquals(await listarCobrancasAbertas(CFG, 'sub-1'), { ok: true, dados: [] })
+  })
+})
+
+Deno.test('buscarCobranca: GET /payments/{id}', async () => {
+  await comFetch(() => json(200, ABERTA({ status: 'CONFIRMED' })), async (pedidos) => {
+    const r = await buscarCobranca(CFG, 'pay_1')
+    assertEquals(r.ok && r.dados.status, 'CONFIRMED')
+    assertEquals([pedidos[0].init.method, pedidos[0].url], ['GET', 'https://api-sandbox.asaas.com/v3/payments/pay_1'])
+  })
+})
+
+Deno.test('removerCobranca: o parcelamento inteiro pelo installment; a avulsa pelo id', async () => {
+  await comFetch(() => json(200, { deleted: true }), async (pedidos) => {
+    assertEquals((await removerCobranca(CFG, { id: 'pay_1', installment: 'inst_1' })).ok, true)
+    assertEquals((await removerCobranca(CFG, { id: 'pay_2', installment: null })).ok, true)
+    assertEquals(pedidos.map((p) => [p.init.method, p.url, p.init.body]), [
+      ['DELETE', 'https://api-sandbox.asaas.com/v3/installments/inst_1', undefined],
+      ['DELETE', 'https://api-sandbox.asaas.com/v3/payments/pay_2', undefined],
+    ])
+  })
+})
+
+Deno.test('removerCobranca: a recusa do Asaas volta como falha', async () => {
+  await comFetch(() => json(400, { errors: [{ description: 'Não é possível remover.' }] }), async () => {
+    assertEquals(await removerCobranca(CFG, { id: 'pay_1', installment: 'inst_1' }), {
+      ok: false,
+      status: 400,
+      erros: ['Não é possível remover.'],
     })
   })
 })

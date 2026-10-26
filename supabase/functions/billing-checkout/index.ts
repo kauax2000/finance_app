@@ -5,12 +5,32 @@
  * tabela, log nem resposta.
  *
  * Ordem: método → JWT → config → corpo → nome e CPF → convidado → linha →
- * cliente do Asaas → linha gravada → cobrança → link gravado.
+ * reivindicação da linha → cliente do Asaas → o que já está aberto no Asaas
+ * (Ruling 7) → cobrança nova ou reusada → linha gravada.
+ *
+ * Contra cobrança dupla: a linha é reivindicada (compare-and-swap no `status`
+ * e no `checkout_criado_em` lidos) antes de qualquer chamada ao Asaas, e toda
+ * gravação depois disso só vale enquanto a reivindicação é desta chamada.
+ * Perdeu a disputa, ou a linha mudou no meio (webhook, cron), a resposta sai
+ * do estado relido.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { configDoAsaas, criarCliente, criarCobranca } from '../_shared/asaas.ts'
+import {
+  buscarCobranca,
+  configDoAsaas,
+  criarCliente,
+  criarCobranca,
+  listarCobrancasAbertas,
+  removerCobranca,
+} from '../_shared/asaas.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
-import { type Assinatura, cpfValido, planoDoCheckout } from '../_shared/billing.ts'
+import {
+  type Assinatura,
+  cpfValido,
+  planoDoCheckout,
+  type PlanoDoCheckout,
+  triagemDasAbertas,
+} from '../_shared/billing.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 
@@ -28,6 +48,17 @@ function json(status: number, payload: unknown): Response {
 
 const MAX_CORPO = 4096
 const SEM_RESPOSTA = () => json(502, { error: 'O Asaas não respondeu. Tente de novo em instantes.' })
+const MUDOU = () => json(409, { error: 'Seu plano mudou agora. Abra Planos de novo.' })
+
+/** A resposta de quando não há cobrança a criar. */
+function respostaDoEstado(plano: Exclude<PlanoDoCheckout, { tipo: 'novo' }>, url: string | null): Response {
+  if (plano.tipo === 'reusar' && url) return json(200, { url })
+  if (plano.tipo === 'aguardar') {
+    return json(409, { error: 'Estamos tentando renovar com seu cartão. Tente de novo em alguns minutos.' })
+  }
+  if (plano.tipo === 'bloqueado') return json(409, { error: 'Você já tem um plano ativo.' })
+  return MUDOU()
+}
 
 // Um erro solto viraria 500 sem CORS, que o navegador mostra como "Sem conexão".
 Deno.serve(async (req: Request) => {
@@ -54,6 +85,7 @@ async function atender(req: Request): Promise<Response> {
 
   const cfg = configDoAsaas()
   const appBase = Deno.env.get('APP_BASE_URL')?.trim().replace(/\/+$/, '')
+  if (!appBase) console.error('billing-checkout: APP_BASE_URL ausente')
   if (!cfg || !appBase) return json(503, { error: 'A assinatura ainda não está disponível.' })
 
   const bruto = await lerCorpo(req, MAX_CORPO)
@@ -83,69 +115,152 @@ async function atender(req: Request): Promise<Response> {
     return json(409, { error: 'Seu acesso vem de quem te convidou. Peça para essa pessoa cuidar do plano.' })
   }
 
-  const { data: linha, error: lErr } = await admin
-    .from('billing_subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle()
-  if (lErr) return json(500, { error: internalError('billing-checkout: linha', lErr) })
-
-  const agora = new Date()
-  const plano = planoDoCheckout(linha as Assinatura | null, agora)
-  if (plano.tipo === 'bloqueado') return json(409, { error: 'Você já tem um plano ativo.' })
-  if (plano.tipo === 'reusar') {
-    if (!linha?.checkout_url) return json(500, { error: internalError('billing-checkout', 'checkout sem url') })
-    return json(200, { url: linha.checkout_url })
+  const lerLinha = async () => {
+    const { data, error } = await admin.from('billing_subscriptions').select('*').eq('user_id', userId).maybeSingle()
+    if (error) throw new Error(`billing-checkout: linha: ${error.message}`)
+    return data
+  }
+  /** Perdeu a disputa ou a linha mudou: responde pelo estado de agora. */
+  const peloEstadoDeAgora = async () => {
+    const atual = await lerLinha()
+    const p = planoDoCheckout(atual as Assinatura | null, new Date(), !!atual?.checkout_url)
+    return p.tipo === 'novo' ? MUDOU() : respostaDoEstado(p, atual?.checkout_url ?? null)
   }
 
-  let cliente: string | null = linha?.asaas_customer_id ?? null
+  // Sem linha, ela nasce vazia (sem preço nem link); quem a disputar perde na reivindicação.
+  const linha = (await lerLinha()) ?? await (async () => {
+    const { error } = await admin
+      .from('billing_subscriptions')
+      .upsert({ user_id: userId, provider: 'asaas', status: 'pending' }, { onConflict: 'user_id', ignoreDuplicates: true })
+    if (error) throw new Error(`billing-checkout: linha nova: ${error.message}`)
+    const nova = await lerLinha()
+    if (!nova) throw new Error('billing-checkout: linha nova não apareceu')
+    return nova
+  })()
+
+  const agora = new Date()
+  const plano = planoDoCheckout(linha as Assinatura, agora, !!linha.checkout_url)
+  if (plano.tipo !== 'novo') return respostaDoEstado(plano, linha.checkout_url)
+
+  // A reivindicação: só uma chamada passa daqui com o mesmo estado lido.
+  const reivindicado = agora.toISOString()
+  const reivindicacao = admin
+    .from('billing_subscriptions')
+    .update({ checkout_criado_em: reivindicado, checkout_url: null })
+    .eq('id', linha.id)
+    .eq('status', linha.status)
+  const { data: minha, error: rErr } = await (linha.checkout_criado_em
+    ? reivindicacao.eq('checkout_criado_em', linha.checkout_criado_em)
+    : reivindicacao.is('checkout_criado_em', null)).select('id')
+  if (rErr) throw new Error(`billing-checkout: reivindicar: ${rErr.message}`)
+  if (!minha?.length) return await peloEstadoDeAgora()
+
+  /** Devolve a linha como estava, para a próxima tentativa não esperar a reivindicação vencer. */
+  const soltar = async () => {
+    const { error } = await admin
+      .from('billing_subscriptions')
+      .update({ checkout_criado_em: linha.checkout_criado_em })
+      .eq('id', linha.id)
+      .eq('checkout_criado_em', reivindicado)
+    if (error) console.error('billing-checkout: soltar', error.message)
+  }
+
+  let cliente: string | null = linha.asaas_customer_id
   if (!cliente) {
     const r = await criarCliente(cfg, { nome: nomeLimpo, cpf, email: auth.user.email ?? null, userId })
     // Só o status: a mensagem do Asaas poderia repetir o CPF.
     if (!r.ok) {
       console.error('billing-checkout: criarCliente', r.status)
+      await soltar()
       return SEM_RESPOSTA()
     }
-    cliente = r.dados.id
+    const { data: gravou, error } = await admin
+      .from('billing_subscriptions')
+      .update({ asaas_customer_id: r.dados.id })
+      .eq('id', linha.id)
+      .is('asaas_customer_id', null)
+      .select('id')
+    if (error) throw new Error(`billing-checkout: cliente: ${error.message}`)
+    // Outro pedido gravou um cliente antes: vale o dele, e o nosso fica sem cobrança no Asaas.
+    cliente = gravou?.length ? r.dados.id : (await lerLinha())?.asaas_customer_id ?? null
+    if (!cliente) throw new Error('billing-checkout: cliente não gravado')
   }
 
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 45) || null
-  const { data: gravada, error: uErr } = await admin
-    .from('billing_subscriptions')
-    .upsert({
-      user_id: userId,
-      provider: 'asaas',
-      status: plano.renovacao ? 'past_due' : 'pending',
-      price_cents: plano.centavos,
-      founder: plano.fundador,
-      asaas_customer_id: cliente,
-      ultimo_ip: ip,
-    }, { onConflict: 'user_id' })
-    .select('id')
-    .single()
-  if (uErr || !gravada) return json(500, { error: internalError('billing-checkout: upsert', uErr) })
+  // Ruling 7: a fatura do checkout anterior já paga espera o webhook; cobrar de novo seria em dobro.
+  if (linha.checkout_ref) {
+    const r = await buscarCobranca(cfg, linha.checkout_ref)
+    if (!r.ok && r.status !== 404) {
+      console.error('billing-checkout: buscarCobranca', r.status, r.erros)
+      await soltar()
+      return SEM_RESPOSTA()
+    }
+    const paga = r.ok && (r.dados.status === 'CONFIRMED' || r.dados.status === 'RECEIVED')
+    if (paga && r.dados.installment && r.dados.installment !== linha.provider_ref) {
+      await soltar()
+      return json(409, { error: 'Seu pagamento está sendo confirmado.' })
+    }
+  }
 
-  const cobranca = await criarCobranca(cfg, {
-    cliente,
-    centavos: plano.centavos,
-    referencia: gravada.id,
-    vencimento: formatYmd(appTodayYmd()),
-    retorno: `${appBase}/plans?pago=1`,
-  })
-  if (!cobranca.ok) {
-    console.error('billing-checkout: criarCobranca', cobranca.status, cobranca.erros)
+  // Ruling 7: o que está aberto no Asaas é reusado (mesmo total) ou tirado do ar antes de criar outra.
+  const abertas = await listarCobrancasAbertas(cfg, linha.id)
+  if (!abertas.ok) {
+    console.error('billing-checkout: listarCobrancasAbertas', abertas.status, abertas.erros)
+    await soltar()
     return SEM_RESPOSTA()
   }
+  const { reusar, remover } = triagemDasAbertas(abertas.dados, plano.centavos, cliente)
+  for (const c of remover) {
+    const r = await removerCobranca(cfg, c)
+    if (!r.ok) {
+      console.error('billing-checkout: removerCobranca', r.status, r.erros)
+      await soltar()
+      return SEM_RESPOSTA()
+    }
+  }
 
-  const { error: cErr } = await admin
+  let ref: string
+  let url: string
+  if (reusar) {
+    ref = reusar.id
+    url = reusar.invoiceUrl
+  } else {
+    const cobranca = await criarCobranca(cfg, {
+      cliente,
+      centavos: plano.centavos,
+      referencia: linha.id,
+      vencimento: formatYmd(appTodayYmd()),
+      retorno: `${appBase}/plans?pago=1`,
+    })
+    // Incerta (prazo estourado) ou não: a próxima tentativa lista antes de criar e acha a órfã.
+    if (!cobranca.ok) {
+      console.error('billing-checkout: criarCobranca', cobranca.status, cobranca.erros)
+      await soltar()
+      return SEM_RESPOSTA()
+    }
+    ref = cobranca.dados.id
+    url = cobranca.dados.invoiceUrl
+  }
+
+  // Um `past_due` (ou `active` vencido, Ruling 6) segue no status lido: nunca vira `pending`.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 45) || null
+  const { data: gravada, error: wErr } = await admin
     .from('billing_subscriptions')
     .update({
-      checkout_ref: cobranca.dados.id,
-      checkout_url: cobranca.dados.invoiceUrl,
-      checkout_criado_em: agora.toISOString(),
+      provider: 'asaas',
+      status: plano.renovacao ? linha.status : 'pending',
+      price_cents: plano.centavos,
+      founder: plano.fundador,
+      ...(ip ? { ultimo_ip: ip } : {}),
+      checkout_ref: ref,
+      checkout_url: url,
     })
-    .eq('id', gravada.id)
-  if (cErr) return json(500, { error: internalError('billing-checkout: link', cErr) })
+    .eq('id', linha.id)
+    .eq('status', linha.status)
+    .eq('checkout_criado_em', reivindicado)
+    .select('id')
+  if (wErr) throw new Error(`billing-checkout: gravar: ${wErr.message}`)
+  // A linha mudou no meio (o webhook ativou, o cron cobrou): a fatura fica aberta e a próxima tentativa a acha.
+  if (!gravada?.length) return await peloEstadoDeAgora()
 
-  return json(200, { url: cobranca.dados.invoiceUrl })
+  return json(200, { url })
 }
