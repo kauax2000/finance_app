@@ -66,6 +66,19 @@ describe("proximosAvisos", () => {
         expect(linha(r, "Fatura vencendo").proximo).toBe("02/11/2026")
     })
 
+    it("o vencimento cai no mês do fechamento quando vence depois dele, e nunca no passado", () => {
+        const vence = (closingDay: number, dueDay: number, dia: Date) =>
+            linha(proximosAvisos({ prefs, cartoes: [{ nome: "A", closingDay, dueDay }], proximaConta: null, hoje: dia }), "Fatura vencendo").proximo
+        // Fecha 5, vence 25: em 20/10 vence 25/10 (da fatura de 05/10); em 26/10, 25/11.
+        expect(vence(5, 25, new Date(2026, 9, 20))).toBe("25/10/2026")
+        expect(vence(5, 25, new Date(2026, 9, 26))).toBe("25/11/2026")
+        // Fecha 28, vence 10: em 01/11 vence 10/11 (da fatura de 28/10).
+        expect(vence(28, 10, new Date(2026, 10, 1))).toBe("10/11/2026")
+        // Fecha 30, vence 29: em 28/02 vence hoje a fatura de 30/01, com o
+        // fechamento de fevereiro grampeado no mesmo dia.
+        expect(vence(30, 29, new Date(2026, 1, 28))).toBe("28/02/2026")
+    })
+
     it("sem cartão, as datas de cartão saem null", () => {
         const r = proximosAvisos({ prefs, cartoes: [], proximaConta: null, hoje })
         expect(linha(r, "Fatura fechando").proximo).toBeNull()

@@ -88,7 +88,7 @@ type InvoiceBadge = {
     card: CreditCard
     cardId: string
     closeYmd: string | null
-    /** Estimado: o mês seguinte ao fechamento, no `due_day` do cartão. */
+    /** Estimado: o primeiro `due_day` do cartão depois do fechamento (no mesmo mês ou no seguinte). */
     dueYmd: string | null
 }
 

@@ -17,7 +17,7 @@ describe("faturaPrevista", () => {
             closeYmd: "2027-02-28",
             dueYmd: "2027-03-31",
         })
-        expect(faturaPrevista(cartao("x", 20, 31), "2027-01", d).dueYmd).toBe("2027-02-28")
+        expect(faturaPrevista(cartao("x", 20, 31), "2027-02", d).dueYmd).toBe("2027-02-28")
     })
 
     it("o estorno de R$ 50 abate a fatura prevista", () => {
@@ -32,7 +32,7 @@ describe("faturaPrevista", () => {
         expect(faturaPrevista(c, "2026-11", d)).toEqual({
             total: 250,
             closeYmd: "2026-11-10",
-            dueYmd: "2026-12-20",
+            dueYmd: "2026-11-20",
             usaTotalDoBanco: false,
             status: "open",
         })

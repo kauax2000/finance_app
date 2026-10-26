@@ -55,7 +55,9 @@ describe("fluxoDoMes — a tabela de casos da spec §10", () => {
     })
 
     it("4. a fatura que vence no último dia (due_day 31 em novembro) entra no mês; a seguinte não", () => {
-        const c = cartao("c", 20, 31)
+        // Fecha 31 e vence 31: o vencimento grampeado não cabe depois do
+        // fechamento no mesmo mês, então vai ao último dia do mês seguinte.
+        const c = cartao("c", 31, 31)
         const d = dados({
             hojeYmd: "2026-11-10",
             cartoes: [c],
@@ -66,7 +68,7 @@ describe("fluxoDoMes — a tabela de casos da spec §10", () => {
             {
                 cardId: "c",
                 nome: "Cartão c",
-                closeYmd: "2026-10-20",
+                closeYmd: "2026-10-31",
                 dueYmd: "2026-11-30",
                 total: 400,
                 paga: false,
@@ -111,11 +113,11 @@ describe("fluxoDoMes — a tabela de casos da spec §10", () => {
         const d = dados({
             hojeYmd: "2026-11-25",
             cartoes: [c],
-            transacoes: [noCartao("expense", 300, "2026-10-01", "c")],
-            faturasPagas: new Set([statementTotalKey("c", "2026-10-10")]),
+            transacoes: [noCartao("expense", 300, "2026-11-01", "c")],
+            faturasPagas: new Set([statementTotalKey("c", "2026-11-10")]),
         })
         const nov = fluxoDoMes(d, "2026-11")
-        expect(nov.faturas).toMatchObject([{ closeYmd: "2026-10-10", dueYmd: "2026-11-20", total: 300, paga: true }])
+        expect(nov.faturas).toMatchObject([{ closeYmd: "2026-11-10", dueYmd: "2026-11-20", total: 300, paga: true }])
         expect(nov.sai).toBe(300)
     })
 })
@@ -159,7 +161,8 @@ describe("seguroParaGastar", () => {
 
 describe("projecaoMensal", () => {
     it("10. o plano que termina no 3º mês aparece em fimDeParcelamentos, e o primeiro mês negativo é o certo", () => {
-        const c = cartao("c", 10, 20)
+        // Fecha 10 e vence 5: o vencimento cai no mês seguinte ao fechamento.
+        const c = cartao("c", 10, 5)
         const d = dados({
             hojeYmd: "2026-11-10",
             cartoes: [c],
@@ -178,7 +181,7 @@ describe("projecaoMensal", () => {
                     final_installment_amount: 400,
                     next_billing_date: "2026-11-20",
                 }),
-                // Cartão, 2x 6000 em 15/11 e 15/12: vencem em 20/01 e 20/02.
+                // Cartão, 2x 6000 em 15/11 e 15/12: vencem em 05/01 e 05/02.
                 plano({
                     id: "tv",
                     description: "TV",
@@ -200,7 +203,7 @@ describe("projecaoMensal", () => {
             ["2027-03", 5000],
             ["2027-04", 5000],
         ])
-        // A TV no cartão termina no caixa em fevereiro (a fatura de 10/01 vence em 20/02), não em
+        // A TV no cartão termina no caixa em fevereiro (a fatura de 10/01 vence em 05/02), não em
         // dezembro, o mês da última compra.
         expect(p.meses.map((m) => m.fimDeParcelamentos)).toEqual([
             [],
@@ -217,7 +220,7 @@ describe("projecaoMensal", () => {
     it("10b. a parcela no cartão antes do fechamento termina no caixa um mês depois da compra", () => {
         const d = dados({
             hojeYmd: "2026-11-01",
-            cartoes: [cartao("c", 10, 20)],
+            cartoes: [cartao("c", 25, 5)],
             planos: [
                 plano({
                     id: "fone",
@@ -230,7 +233,7 @@ describe("projecaoMensal", () => {
                 }),
             ],
         })
-        // Compra em 05/11, fecha em 10/11, vence em 20/12.
+        // Compra em 05/11, fecha em 25/11, vence em 05/12.
         expect(projecaoMensal(d, 2).meses.map((m) => m.fimDeParcelamentos)).toEqual([
             [],
             [{ planoId: "fone", descricao: "Fone" }],
@@ -256,8 +259,8 @@ describe("fluxoDoMes — bordas", () => {
         })
         const nov = fluxoDoMes(d, "2026-11")
         expect(nov.despesas.previstas).toBe(100)
-        // A cobrança de 07/10 está na fatura de 10/10, que vence em 20/11.
-        expect(nov.faturas.map((f) => [f.closeYmd, f.total])).toEqual([["2026-10-10", 40]])
+        // A cobrança de 07/11 está na fatura de 10/11, que vence em 20/11.
+        expect(nov.faturas.map((f) => [f.closeYmd, f.total])).toEqual([["2026-11-10", 40]])
     })
 
     it("com o cron atrasado, a cobrança de ontem ainda não lançada entra no mês", () => {

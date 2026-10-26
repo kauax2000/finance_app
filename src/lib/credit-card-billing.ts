@@ -203,12 +203,18 @@ export function creditCardInvoiceSlotLabelPt(slot: CreditCardInvoiceSlot): strin
 }
 
 /**
- * Estimated due date for the invoice that closed on `closeDate`.
- * Heuristic: due in the month after the close month, on min(dueDay, daysInMonth).
+ * Estimated due date for the invoice that closed on `closeDate`: the first
+ * min(dueDay, daysInMonth) strictly after the close — in the close month when
+ * it fits (closes 5, due 25 → 25 of the same month), otherwise the next month
+ * (closes 28, due 10 → 10 of the next month). When February clamps the close
+ * and the due to the same day, the due goes to March. Twin of
+ * `estimatedDueYmdForClose` in `supabase/functions/_shared/credit-card-cycle.ts`.
  */
 export function estimatedDueDateForClose(closeDate: Date, dueDay: number): Date {
     const y = closeDate.getFullYear()
     const m0 = closeDate.getMonth()
+    const sameMonth = Math.min(dueDay, daysInMonth(y, m0))
+    if (sameMonth > closeDate.getDate()) return localNoonDate(y, m0, sameMonth)
     let dueM0 = m0 + 1
     let dueY = y
     if (dueM0 > 11) {

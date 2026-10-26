@@ -187,3 +187,38 @@ describe("buildPaymentEventsForMonth recurring income", () => {
         expect(build(base)).toHaveLength(1)
     })
 })
+
+describe("buildPaymentEventsForMonth card due", () => {
+    const card = (id: string, closing_day: number, due_day: number) => ({
+        id,
+        workspace_id: "w",
+        user_id: "u",
+        name: id,
+        last_four: "1234",
+        brand: null,
+        credit_limit: null,
+        closing_day,
+        due_day,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+    })
+    const dues = (ym: string, cards: CreditCard[]) =>
+        buildPaymentEventsForMonth(ym, {
+            todayYmd: `${ym}-01`,
+            subscriptions: [],
+            installmentPlans: [],
+            creditCards: cards,
+            transactions: [],
+        })
+            .filter((e) => e.kind === "card_due")
+            .map((e) => `${e.metaId}:${e.dateYmd}`)
+
+    it("mostra o vencimento que vem do fechamento do mês anterior (fecha 28, vence 10)", () => {
+        expect(dues("2026-11", [card("a", 28, 10)])).toEqual(["a:2026-11-10"])
+    })
+
+    it("mostra o vencimento que vem do fechamento do mesmo mês (fecha 5, vence 25)", () => {
+        expect(dues("2026-10", [card("b", 5, 25)])).toEqual(["b:2026-10-25"])
+    })
+})

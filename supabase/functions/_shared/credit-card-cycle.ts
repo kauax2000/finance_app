@@ -209,8 +209,16 @@ export function filterRangeEndIso(ymd: Ymd): string {
   return `${formatYmd(ymd)}T23:59:59.999Z`
 }
 
-/** Estimated due for the invoice that closed on `closeYmd` (month after close, clamped due day). */
+/**
+ * Estimated due for the invoice that closed on `closeYmd`: the first
+ * min(dueDay, daysInMonth) strictly after the close — in the close month when
+ * it fits, otherwise the next month (clamped). February clamping close and due
+ * to the same day sends the due to March. Twin of `estimatedDueDateForClose`
+ * in `src/lib/credit-card-billing.ts`.
+ */
 export function estimatedDueYmdForClose(closeYmd: Ymd, dueDay: number): Ymd {
+  const sameMonth = Math.min(dueDay, daysInMonth(closeYmd.y, closeYmd.m))
+  if (sameMonth > closeYmd.d) return { y: closeYmd.y, m: closeYmd.m, d: sameMonth }
   let y = closeYmd.y
   let m = closeYmd.m + 1
   if (m > 12) {
@@ -219,6 +227,12 @@ export function estimatedDueYmdForClose(closeYmd: Ymd, dueDay: number): Ymd {
   }
   const d = Math.min(dueDay, daysInMonth(y, m))
   return { y, m, d }
+}
+
+/** O vencimento da fatura que fechou em `closeYmd`, quando ele cai no mês de `month`; senão `null`. */
+export function estimatedDueYmdInMonth(closeYmd: Ymd, dueDay: number, month: Ymd): Ymd | null {
+  const due = estimatedDueYmdForClose(closeYmd, dueDay)
+  return due.y === month.y && due.m === month.m ? due : null
 }
 
 export function diffCalendarDays(from: Ymd, to: Ymd): number {
@@ -243,10 +257,12 @@ export function appTodayYmd(now: Date = new Date()): Ymd {
 
 /**
  * Próximo vencimento em ou depois de `today`, com o fechamento da fatura que ele
- * paga. Começa um ciclo antes do último fechamento: o vencimento é no mês
- * seguinte ao fechamento, e entre o fechamento novo e esse vencimento a fatura
- * que vence ainda é a anterior (fecha 3, vence 10: em 05/11 vence 10/11, da
- * fatura de 03/10). Começar no último fechamento pulava esse vencimento.
+ * paga. Começa um ciclo antes do último fechamento: quando o vencimento cai no
+ * mês seguinte ao fechamento, entre o fechamento novo e esse vencimento a
+ * fatura que vence ainda é a anterior (fecha 28, vence 10: em 01/11 vence
+ * 10/11, da fatura de 28/10). Começar no último fechamento pulava esse
+ * vencimento. Quando vence depois do fechamento no mesmo mês, o laço anda até
+ * ele (fecha 3, vence 10: em 05/11 vence 10/11, da fatura de 03/11).
  */
 export function nextPaymentDueCycleOnOrAfter(
   today: Ymd,

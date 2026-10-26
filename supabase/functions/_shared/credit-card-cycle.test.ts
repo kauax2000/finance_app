@@ -9,6 +9,7 @@ import {
   cardInvoiceNetInWindow,
   escolherTotal,
   estimatedDueYmdForClose,
+  estimatedDueYmdInMonth,
   formatYmd,
   isoPrefixYmd,
   nextPaymentDueCycleOnOrAfter,
@@ -62,15 +63,38 @@ Deno.test('appTodayYmd uses the America/Sao_Paulo calendar day', () => {
 })
 
 Deno.test('nextPaymentDueCycleOnOrAfter devolve o vencimento e a fatura que ele paga', () => {
-  // Fecha dia 3, vence dia 10: em 05/11 o próximo vencimento é 10/11, da fatura de 03/10.
+  // Fecha dia 3, vence dia 10: o vencimento cai no mês do fechamento. Em
+  // 05/11 o próximo vencimento é 10/11, da fatura de 03/11.
   const r = nextPaymentDueCycleOnOrAfter(ymd('2026-11-05'), 3, 10)
-  assertEquals([formatYmd(r.close), formatYmd(r.due)], ['2026-10-03', '2026-11-10'])
-  // Passado o vencimento, a próxima é a fatura de 03/11.
+  assertEquals([formatYmd(r.close), formatYmd(r.due)], ['2026-11-03', '2026-11-10'])
+  // Passado o vencimento, a próxima é a fatura de 03/12.
   const s = nextPaymentDueCycleOnOrAfter(ymd('2026-11-11'), 3, 10)
-  assertEquals([formatYmd(s.close), formatYmd(s.due)], ['2026-11-03', '2026-12-10'])
+  assertEquals([formatYmd(s.close), formatYmd(s.due)], ['2026-12-03', '2026-12-10'])
   // Fecha 25, vence 5: em 26/10 vence 05/11, da fatura de 25/10.
   const t = nextPaymentDueCycleOnOrAfter(ymd('2026-10-26'), 25, 5)
   assertEquals([formatYmd(t.close), formatYmd(t.due)], ['2026-10-25', '2026-11-05'])
+  // Fecha 28, vence 10 (o cartão do dono): em 01/11 vence 10/11, da fatura de 28/10.
+  const u = nextPaymentDueCycleOnOrAfter(ymd('2026-11-01'), 28, 10)
+  assertEquals([formatYmd(u.close), formatYmd(u.due)], ['2026-10-28', '2026-11-10'])
+  // Fecha 30, vence 29: em 28/02 vence hoje a fatura de 30/01, mesmo com o
+  // fechamento de fevereiro (grampeado em 28) no mesmo dia.
+  const v = nextPaymentDueCycleOnOrAfter(ymd('2026-02-28'), 30, 29)
+  assertEquals([formatYmd(v.close), formatYmd(v.due)], ['2026-01-30', '2026-02-28'])
+})
+
+Deno.test('estimatedDueYmdInMonth: o vencimento da fatura, só quando ele cai no mês', () => {
+  const out = { y: 2026, m: 10, d: 1 }
+  const f = (close: string, dueDay: number) => {
+    const due = estimatedDueYmdInMonth(ymd(close), dueDay, out)
+    return due ? formatYmd(due) : null
+  }
+  // Fechou e venceu em outubro.
+  assertEquals(f('2026-10-05', 25), '2026-10-25')
+  // Fechou em setembro e venceu em outubro.
+  assertEquals(f('2026-09-28', 10), '2026-10-10')
+  // Fechou e venceu em setembro; fechou em outubro e vence em novembro.
+  assertEquals(f('2026-09-05', 25), null)
+  assertEquals(f('2026-10-28', 10), null)
 })
 
 Deno.test('sumCardExpensesInWindow soma em centavos só as despesas do cartão na janela', () => {

@@ -57,9 +57,9 @@ describe("impactoDaParcela", () => {
         expect(impactoDaParcela(dezParcelas, dados({ hojeYmd: HOJE, cartoes: [c1] })).percentualDaRenda).toBeNull()
     })
 
-    it("o primeiro mês negativo passa a ser o do vencimento da 1ª fatura com a parcela (fecha 05/12, vence 15/01)", () => {
+    it("o primeiro mês negativo passa a ser o do vencimento da 1ª fatura com a parcela (fecha 05/12, vence 15/12)", () => {
         const i = impactoDaParcela(dezParcelas, dados({ hojeYmd: HOJE, cartoes: [c1] }))
-        expect(i.primeiroMesNegativo).toEqual({ antes: null, depois: "2027-01" })
+        expect(i.primeiroMesNegativo).toEqual({ antes: null, depois: "2026-12" })
     })
 
     it("o limite: R$ 2.000 com R$ 500 usados deixa R$ 1.500, e uma compra de R$ 3.000 não cabe", () => {

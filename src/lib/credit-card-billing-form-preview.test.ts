@@ -31,7 +31,8 @@ describe("computeBillingFormPreview", () => {
         expect(preview!.closeDate.getFullYear()).toBe(2026)
         expect(preview!.closeDate.getMonth()).toBe(2)
         expect(preview!.closeDate.getDate()).toBe(10)
-        expect(preview!.dueDate.getMonth()).toBe(3)
+        // Vence dia 15, depois do fechamento: no mesmo mês.
+        expect(preview!.dueDate.getMonth()).toBe(2)
         expect(preview!.dueDate.getDate()).toBe(15)
     })
 

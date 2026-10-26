@@ -14,6 +14,7 @@ import {
 } from "@/lib/credit-card-installment-projection"
 import {
     estimatedDueDateForClose,
+    previousStatementCloseBefore,
     statementCloseInMonth,
 } from "@/lib/credit-card-billing"
 import {
@@ -265,12 +266,16 @@ export function buildPaymentEventsForMonth(
                 status: eventStatus(closeYmd, todayYmd),
                 metaId: card.id,
             })
-            const due = estimatedDueDateForClose(close, card.due_day)
-            const dueYmd = localYmdFromDate(due)
-            if (
-                compareYmd(dueYmd, monthStartYmd) >= 0 &&
-                compareYmd(dueYmd, monthEndYmd) <= 0
-            ) {
+            // O vencimento do mês vem do fechamento do mês anterior (vence
+            // antes do dia do fechamento) ou do mesmo mês (vence depois dele).
+            for (const c of [previousStatementCloseBefore(close, card.closing_day), close]) {
+                const dueYmd = localYmdFromDate(estimatedDueDateForClose(c, card.due_day))
+                if (
+                    compareYmd(dueYmd, monthStartYmd) < 0 ||
+                    compareYmd(dueYmd, monthEndYmd) > 0
+                ) {
+                    continue
+                }
                 out.push({
                     id: `due-${card.id}-${dueYmd}`,
                     dateYmd: dueYmd,

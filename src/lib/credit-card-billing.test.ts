@@ -113,12 +113,20 @@ describe("classifyPurchaseVsToday", () => {
 })
 
 describe("estimatedDueDateForClose", () => {
-    it("due in month after close", () => {
+    it("due in the close month when the due day comes after the close", () => {
         const close = localNoonDate(2026, 2, 10) // Mar 10
         const due = estimatedDueDateForClose(close, 15)
         expect(due.getFullYear()).toBe(2026)
-        expect(due.getMonth()).toBe(3)
+        expect(due.getMonth()).toBe(2)
         expect(due.getDate()).toBe(15)
+    })
+
+    it("due in the month after close when the due day is on or before the close", () => {
+        const close = localNoonDate(2026, 2, 10) // Mar 10
+        const due = estimatedDueDateForClose(close, 5)
+        expect(due.getFullYear()).toBe(2026)
+        expect(due.getMonth()).toBe(3)
+        expect(due.getDate()).toBe(5)
     })
 })
 

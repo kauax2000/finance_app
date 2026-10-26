@@ -1,5 +1,5 @@
 {
-  "$comment": "Vetores dourados de calendário de billing. Validados por: src/lib/billing-calendar-parity.test.ts (cliente), supabase/functions/_shared/credit-card-cycle.test.ts (edge) e supabase/tests/database/billing_calendar_parity.test.sql + billing_anchor.test.sql (SQL next_subscription_billing_date). Ao mudar regra de stepping/fechamento, atualize os 3 juntos.",
+  "$comment": "Vetores dourados de calendário de billing. Validados por: src/lib/billing-calendar-parity.test.ts (cliente), supabase/functions/_shared/credit-card-cycle.test.ts (edge) e supabase/tests/database/billing_calendar_parity.test.sql + billing_anchor.test.sql (SQL next_subscription_billing_date). Ao mudar regra de stepping/fechamento, atualize os 3 juntos. O vencimento (estimated_due_for_close) é o primeiro min(due_day, dias do mês) estritamente depois do fechamento: no mês do fechamento se couber, senão no seguinte (fechamento e vencimento grampeados no mesmo dia em fevereiro vão a março).",
   "subscription_stepping_anchored": [
     { "from": "2026-02-28", "interval": "monthly", "anchor_day": 31, "expected": "2026-03-31" },
     { "from": "2026-02-28", "interval": "bimonthly", "anchor_day": 31, "expected": "2026-04-30" },
@@ -34,6 +34,13 @@
     { "close": "2026-01-31", "due_day": 10, "expected_due": "2026-02-10" },
     { "close": "2026-01-31", "due_day": 31, "expected_due": "2026-02-28" },
     { "close": "2026-12-25", "due_day": 5, "expected_due": "2027-01-05" },
-    { "close": "2024-01-31", "due_day": 30, "expected_due": "2024-02-29" }
+    { "close": "2024-01-31", "due_day": 30, "expected_due": "2024-02-29" },
+    { "close": "2026-10-05", "due_day": 25, "expected_due": "2026-10-25" },
+    { "close": "2026-10-03", "due_day": 10, "expected_due": "2026-10-10" },
+    { "close": "2026-10-28", "due_day": 10, "expected_due": "2026-11-10" },
+    { "close": "2026-10-10", "due_day": 10, "expected_due": "2026-11-10" },
+    { "close": "2026-02-28", "due_day": 30, "expected_due": "2026-03-30" },
+    { "close": "2026-12-05", "due_day": 31, "expected_due": "2026-12-31" },
+    { "close": "2026-12-28", "due_day": 10, "expected_due": "2027-01-10" }
   ]
 }

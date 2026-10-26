@@ -39,7 +39,7 @@ export const CREDIT_CARD_BILLING_FORM = {
                 id: "due",
                 title: "Dia de vencimento",
                 paragraphs: [
-                    "Dia em que você costuma pagar. O app estima essa data no mês seguinte ao fechamento — referência para planejar, não substitui o extrato do banco.",
+                    "Dia em que você costuma pagar. O app estima essa data no primeiro desse dia depois do fechamento: no mesmo mês, se o vencimento vem depois do fechamento, senão no mês seguinte — referência para planejar, não substitui o extrato do banco.",
                 ],
             },
             {

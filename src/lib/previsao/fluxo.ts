@@ -111,7 +111,8 @@ export function fluxoDoMes(dados: DadosDaPrevisao, ym: string): FluxoDoMes {
         }
     }
 
-    // Faturas que vencem no mês: o vencimento cai no mês seguinte ao fechamento.
+    // Faturas que vencem no mês: o vencimento cai no mês do fechamento (vence
+    // depois do dia do fechamento) ou no seguinte, então o mês anterior e o atual.
     const faturas: FaturaDoMes[] = []
     for (const card of dados.cartoes) {
         if (!card.is_active) continue

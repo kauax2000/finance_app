@@ -62,11 +62,20 @@ function menorData(datas: Date[]): Date | null {
     return datas.reduce<Date | null>((a, d) => (a && compareCalendarDates(a, d) <= 0 ? a : d), null)
 }
 
-/** Fecha estritamente depois de `hoje`; vence hoje ou depois (a fatura já fechada conta). */
+/**
+ * Fecha estritamente depois de `hoje`; vence hoje ou depois (a fatura já fechada
+ * conta). O vencimento anda para a frente a partir de dois ciclos antes, como o
+ * `nextPaymentDueCycleOnOrAfter` da Edge: ele pode cair no mês do fechamento
+ * ou no seguinte.
+ */
 function datasDoCartao(c: Cartao, hoje: Date): { fecha: Date; vence: Date } {
     const fecha = nextCloseAfter(hoje, c.closingDay)
-    const dueAnterior = estimatedDueDateForClose(previousStatementCloseBefore(fecha, c.closingDay), c.dueDay)
-    const vence = compareCalendarDates(dueAnterior, hoje) >= 0 ? dueAnterior : estimatedDueDateForClose(fecha, c.dueDay)
+    let close = previousStatementCloseBefore(previousStatementCloseBefore(fecha, c.closingDay), c.closingDay)
+    let vence = estimatedDueDateForClose(close, c.dueDay)
+    while (compareCalendarDates(vence, hoje) < 0) {
+        close = nextCloseAfter(close, c.closingDay)
+        vence = estimatedDueDateForClose(close, c.dueDay)
+    }
     return { fecha, vence }
 }
 

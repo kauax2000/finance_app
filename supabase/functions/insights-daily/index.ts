@@ -14,7 +14,7 @@ import {
   daysInMonth,
   diffCalendarDays,
   escolherTotal,
-  estimatedDueYmdForClose,
+  estimatedDueYmdInMonth,
   filterRangeEndIso,
   filterRangeStartIso,
   formatYmd,
@@ -256,7 +256,8 @@ async function relatorioDoMes(
   const inicio = inicioDoMes(hoje, 1)
   const fim = fimDoMes(inicio)
   const mes = formatYmd(inicio).slice(0, 7)
-  // A fatura que vence no mês fechou no mês antes dele.
+  // A fatura que vence no mês fechou no mês antes dele (vence antes do dia do
+  // fechamento) ou no próprio mês (vence depois dele).
   const fechouAntes = inicioDoMes(hoje, 2)
 
   const [totais, contas, faturas] = await Promise.all([
@@ -287,7 +288,7 @@ async function relatorioDoMes(
         .select('id,credit_card_id,statement_close_date,paid_at')
         .eq('workspace_id', workspaceId)
         .gte('statement_close_date', formatYmd(fechouAntes))
-        .lte('statement_close_date', formatYmd(fimDoMes(fechouAntes)))
+        .lte('statement_close_date', formatYmd(fim))
         .order('id', { ascending: true })
         .range(a, b)
     ),
@@ -309,7 +310,8 @@ async function relatorioDoMes(
     const card = cartoes.get(p.credit_card_id)
     const close = isoPrefixYmd(String(p.statement_close_date))
     if (!card || !close || !p.paid_at) continue
-    if (diaDeBrasilia(p.paid_at) <= formatYmd(estimatedDueYmdForClose(close, Number(card.due_day)))) avisos += 1
+    const vence = estimatedDueYmdInMonth(close, Number(card.due_day), inicio)
+    if (vence && diaDeBrasilia(p.paid_at) <= formatYmd(vence)) avisos += 1
   }
 
   return {

@@ -58,11 +58,11 @@ function totalDoBanco(statement_close_date: string, bank_total: number) {
 }
 
 describe("projectVirtualCreditCardBills", () => {
-    it("a conta é a fatura fechada, que vence no mês seguinte", () => {
+    it("a conta é a fatura fechada, que vence depois do fechamento (no mesmo mês)", () => {
         const [conta, ...resto] = projetar([compra("2026-09-05", 200), compra("2026-09-12", 50)])
         expect(resto).toHaveLength(0)
         expect(conta.statement_close_date_ymd).toBe("2026-09-10")
-        expect(conta.due_date_ymd).toBe("2026-10-15")
+        expect(conta.due_date_ymd).toBe("2026-09-15")
         expect(conta.amount_estimated).toBe(200)
     })
 
