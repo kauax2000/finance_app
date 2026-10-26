@@ -160,13 +160,15 @@ export async function apagarUm(
     const lidas = await supabase.from("transactions").select("id,created_at,needs_review").in("id", lista)
     if (lidas.error) return falha(lidas.error, "Não foi possível ler os lançamentos.")
     const linhas = (lidas.data as Array<{ id: string; created_at: string; needs_review: boolean }> | null) ?? []
-    // Sem a leitura dos anexos, conta 0: o desempate cai no revisado e no mais antigo.
     const anexados = await supabase.from("attachments").select("transaction_id").in("transaction_id", lista)
+    // Sem saber dos anexos, apagar poderia levar o lançamento que tem um: aborta.
+    if (anexados.error) return falha(anexados.error, "Não foi possível ler os anexos.")
     const comAnexo = (anexados.data as Array<{ transaction_id: string }> | null) ?? []
     const alvo = qualApagar(
         linhas.map((l) => ({ ...l, anexos: comAnexo.filter((x) => x.transaction_id === l.id).length })),
     )
-    // Só um sobrou: a duplicata já foi desfeita, só falta marcar.
+    // Só um sobrou: a duplicata já foi desfeita, só falta marcar. (A RLS também esconde linhas de
+    // quem não pode ler; o papel não está à mão aqui, então os dois casos se tratam igual.)
     if (!alvo) return marcarDepois(insight)
     const descricao = texto(insight.payload.descricao) ?? "o lançamento"
     if (!confirmar(`Apagar um dos dois lançamentos de ${descricao}? O que tem anexo, ou já foi revisado, fica.`))

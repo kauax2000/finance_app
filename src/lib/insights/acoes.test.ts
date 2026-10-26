@@ -251,6 +251,23 @@ describe("apagarUm", () => {
         expect(marcouUsado()).toBe(true)
     })
 
+    it("erro ao ler os anexos: aborta sem apagar", async () => {
+        db.state.results.push(
+            {
+                data: [
+                    { id: "b-2", created_at: "2026-10-20T10:00:00Z", needs_review: false },
+                    { id: "a-1", created_at: "2026-10-20T11:00:00Z", needs_review: false },
+                ],
+                error: null,
+            },
+            { data: null, error: { message: "falhou" } },
+        )
+        const r = await apagarUm(dup, () => true)
+        expect(r.ok).toBe(false)
+        expect(mut.deleteTransactionById).not.toHaveBeenCalled()
+        expect(marcouUsado()).toBe(false)
+    })
+
     it("com erro ao apagar, não marca", async () => {
         lidas()
         mut.deleteTransactionById.mockResolvedValue({ ok: false, errorMessage: "Falhou." })

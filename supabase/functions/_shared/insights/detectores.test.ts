@@ -275,6 +275,16 @@ Deno.test('preço: nome só contido exige o mesmo método e o mesmo cartão; nom
   assertEquals(detectarPrecoDeAssinatura([nomeIgual], amazon, HOJE).map((x) => x.lancamentoId), ['n1'])
 })
 
+Deno.test('preço: método nulo dos dois lados casa o nome contido; nulo de um lado só não', () => {
+  const sem = [{ id: 'sub-x', name: 'Amazon', amount: 14.9, is_active: true, kind: 'expense', payment_method: null, payment_credit_card_id: null }]
+  const nulo = l({ id: 'z1', dateYmd: '2026-10-02', amount: 16.9, description: 'Amazon compra', payment_method: null, payment_credit_card_id: null })
+  assertEquals(detectarPrecoDeAssinatura([nulo], sem, HOJE).map((x) => x.lancamentoId), ['z1'])
+  const comMetodo = l({ dateYmd: '2026-10-02', amount: 16.9, description: 'Amazon compra', payment_method: 'pix', payment_credit_card_id: null })
+  assertEquals(detectarPrecoDeAssinatura([comMetodo], sem, HOJE), [])
+  const comSub = [{ ...sem[0], payment_method: 'pix' }]
+  assertEquals(detectarPrecoDeAssinatura([nulo], comSub, HOJE), [])
+})
+
 // ── Parcelas acabando ────────────────────────────────────────────────────────
 
 const plano = (p: Partial<Parameters<typeof detectarParcelasAcabando>[0][number]>) => ({
