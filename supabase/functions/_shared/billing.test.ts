@@ -10,6 +10,7 @@ import {
   cpfValido,
   efeitoDoEvento,
   falhaNaRenovacao,
+  pagamentoEmDobro,
   type Mudanca,
   type Pagamento,
   PARCELAS,
@@ -526,4 +527,30 @@ Deno.test('triagemDasAbertas: outro valor, outro cliente, avulsa ou um segundo i
     ['pay_avulsa', null],
     ['inst_ok2_1', 'inst_ok2'],
   ])
+})
+
+// pagamentoEmDobro (Ruling 8)
+
+Deno.test('pagamentoEmDobro: outro parcelamento confirmado numa linha paga, fora da janela, é em dobro', () => {
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), em(-30 * DIA)), true)
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', pag(), sub(), em(-2 * DIA - 1)), true)
+})
+
+Deno.test('pagamentoEmDobro: na janela da renovação é renovação, não dobro', () => {
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), em(-2 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ grace_until: iso(em(7 * DIA)) }), em(DIA)), false)
+})
+
+Deno.test('pagamentoEmDobro: o mesmo parcelamento, sem parcelamento ou de outra linha não é dobro', () => {
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: 'inst-velho' }), sub(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: null }), sub(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ externalReference: 'sub-2' }), sub(), em(-30 * DIA)), false)
+})
+
+Deno.test('pagamentoEmDobro: só numa linha active e só com pagamento confirmado', () => {
+  for (const status of ['pending', 'past_due', 'expired'] as const) {
+    assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ status }), em(-30 * DIA)), false)
+  }
+  assertEquals(pagamentoEmDobro('PAYMENT_REFUNDED', pag(), sub(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CREATED', pag(), sub(), em(-30 * DIA)), false)
 })

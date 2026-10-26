@@ -210,6 +210,20 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
   return null
 }
 
+/**
+ * Ruling 8: um pagamento confirmado de outro parcelamento numa linha `active`,
+ * que o `efeitoDoEvento` ignora (fora da janela da renovação), é cobrança em
+ * dobro: o webhook o estorna na hora.
+ */
+export function pagamentoEmDobro(evento: string, pagamento: Pagamento, sub: Assinatura, agora: Date): boolean {
+  return (evento === 'PAYMENT_CONFIRMED' || evento === 'PAYMENT_RECEIVED') &&
+    sub.status === 'active' &&
+    pagamento.externalReference === sub.id &&
+    !!pagamento.installment &&
+    pagamento.installment !== sub.provider_ref &&
+    efeitoDoEvento(evento, pagamento, sub, agora) === null
+}
+
 /** O que o cron diário faz com a linha hoje. A renovação começa um dia antes do fim (Decisão 8). */
 export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'renovar' | 'expirar' | null {
   if (sub.provider !== 'asaas' || !sub.current_period_end) return null

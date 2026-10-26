@@ -77,6 +77,10 @@ verify_jwt = false
 [functions.billing-checkout]
 verify_jwt = false
 
+# O webhook do Asaas: não tem JWT; a função confere o `asaas-access-token`.
+[functions.asaas-webhook]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]

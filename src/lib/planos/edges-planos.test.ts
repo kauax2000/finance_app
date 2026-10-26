@@ -141,3 +141,74 @@ describe("Edge billing-checkout", () => {
         expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.billing-checkout\]\s*\nverify_jwt = false/)
     })
 })
+
+const WEBHOOK = "supabase/functions/asaas-webhook/index.ts"
+
+describe("Edge asaas-webhook", () => {
+    it("confere o token do Asaas antes de tocar no banco, e só o token errado volta 401", () => {
+        const f = fonte(WEBHOOK)
+        const token = f.indexOf("secretMatches(Deno.env.get('ASAAS_WEBHOOK_TOKEN'), req.headers.get('asaas-access-token'))")
+        expect(token).toBeGreaterThan(-1)
+        expect(f.indexOf("from(")).toBeGreaterThan(token)
+        expect(f.indexOf("createClient(")).toBeGreaterThan(token)
+        expect(f.match(/json\(401/g)?.length).toBe(1)
+        expect(f).toContain("lerCorpo(req, 65536)")
+        expect(f).not.toContain("Access-Control-Allow-Origin")
+    })
+
+    it("grava o evento antes de mudar a linha, e o repetido volta 200", () => {
+        const f = fonte(WEBHOOK)
+        const evento = f.indexOf(".from('billing_events').insert(")
+        const linha = f.indexOf(".from('billing_subscriptions').update(")
+        expect(evento).toBeGreaterThan(-1)
+        expect(linha).toBeGreaterThan(evento)
+        expect(f).toContain("'23505'")
+        expect(f).toContain("repetido: true")
+    })
+
+    it("ignora com 200 o cliente diferente do da linha, e decide pelo efeitoDoEvento", () => {
+        const f = fonte(WEBHOOK)
+        expect(f).toContain("payment.customer !== linha.asaas_customer_id")
+        expect(f).toContain("efeitoDoEvento(")
+        expect(f).toContain("checkout_url: null")
+    })
+
+    it("a gravação da linha é condicional ao updated_at lido", () => {
+        const f = fonte(WEBHOOK)
+        expect(f).toContain(".eq('updated_at', linha.updated_at)")
+    })
+
+    it("o erro de banco apaga o evento e volta 500, para o Asaas tentar de novo", () => {
+        const f = fonte(WEBHOOK)
+        const apaga = f.indexOf(".from('billing_events').delete()")
+        expect(apaga).toBeGreaterThan(-1)
+        expect(f).toContain("json(500")
+    })
+
+    it("Ruling 8: estorna o pagamento em dobro só depois do pagamentoEmDobro, e a falha apaga o evento", () => {
+        const f = fonte(WEBHOOK)
+        const dobro = f.indexOf("pagamentoEmDobro(")
+        const estorno = f.indexOf("estornarParcelamento(cfg")
+        expect(dobro).toBeGreaterThan(-1)
+        expect(estorno).toBeGreaterThan(dobro)
+        expect(f).toContain("installment !== linha.provider_ref")
+        const falha = f.slice(estorno, estorno + 600)
+        expect(falha).toContain("esquecer(")
+        expect(falha).toContain("json(500")
+        expect(f).toContain("Cobrança em dobro devolvida")
+        expect(f).toContain("Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.")
+        expect(f).toContain("type: 'system'")
+        expect(f).toContain("essencial: true")
+        expect(f).toContain("metadata: { href: '/plans' }")
+        expect(f).toContain(".eq('type', 'personal')")
+    })
+
+    it("o CPF não vai a log", () => {
+        const f = fonte(WEBHOOK)
+        for (const l of f.split("\n").filter((l) => /console\.|internalError\(/.test(l))) expect(l).not.toMatch(/cpf/i)
+    })
+
+    it("a Edge está no config sem JWT", () => {
+        expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.asaas-webhook\]\s*\nverify_jwt = false/)
+    })
+})
