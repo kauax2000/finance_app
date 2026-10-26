@@ -501,6 +501,7 @@ export const AVISOS = {
 
 /** Os avisos de texto fixo: ficam pendentes em `billing_avisos` até a entrega dar certo (#87). */
 export type TipoDeAvisoFixo = 'fim' | 'reembolso' | 'estorno'
+export const TIPOS_DE_AVISO_FIXO: TipoDeAvisoFixo[] = ['fim', 'reembolso', 'estorno']
 
 /** O texto de um aviso pendente, para o reenvio; `null` para os que dependem da linha. */
 export function avisoFixo(tipo: string): { titulo: string; corpo: string } | null {
@@ -513,11 +514,17 @@ export function avisoFixo(tipo: string): { titulo: string; corpo: string } | nul
 /**
  * O estorno pendente concluído pelo cron (#87 c): o parcelamento ativado é o
  * do plano pago, e o estorno dele é o reembolso do arrependimento; o nunca
- * ativado é a cobrança em dobro. Decide pelo registro, não pelo
- * `provider_ref` de agora, que uma compra nova troca.
+ * ativado é a cobrança em dobro. Decide pelo registro, porque uma compra nova
+ * troca o `provider_ref`. Mas o `provider_ref` de agora também conta: o
+ * registro do plano pode ter ficado sem `ativado_em` (a marca falhou), e o
+ * estorno dele nunca é cobrança em dobro (Ruling 8 exige o nunca ativado de
+ * outro parcelamento).
  */
-export function textoDoEstornoConcluido(p: { ativado_em: string | null }): 'reembolso' | 'estorno' {
-  return p.ativado_em ? 'reembolso' : 'estorno'
+export function textoDoEstornoConcluido(
+  p: { installment: string; ativado_em: string | null },
+  linha: { provider_ref: string | null },
+): 'reembolso' | 'estorno' {
+  return p.ativado_em != null || p.installment === linha.provider_ref ? 'reembolso' : 'estorno'
 }
 
 export type CarteiraDoAviso = { id: string; type: string | null; role: string; created_at: string | null }

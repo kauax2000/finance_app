@@ -178,7 +178,7 @@ describe("Edge billing-daily", () => {
         expect(feito).toBeGreaterThan(pede)
         expect(expira).toBeGreaterThan(feito)
         // #87 (c): o texto sai do registro, não do provider_ref de agora (uma compra nova o troca)
-        expect(s).toContain("if (textoDoEstornoConcluido(p) === 'reembolso')")
+        expect(s).toContain("if (textoDoEstornoConcluido(p, linha) === 'reembolso')")
         expect(s).not.toContain("p.installment === linha.provider_ref")
         expect(s.slice(expira)).toContain(".eq('status', 'active')")
         expect(s.slice(expira)).toContain(".eq('provider_ref', p.installment)")
@@ -187,7 +187,7 @@ describe("Edge billing-daily", () => {
     it("o estorno da cobrança em dobro leva o aviso do webhook, uma vez, e o reembolso não", () => {
         const f = fonte(DIARIO)
         const s = funcao(f, "refazerEstornos")
-        const ramo = s.indexOf("if (textoDoEstornoConcluido(p) === 'reembolso')")
+        const ramo = s.indexOf("if (textoDoEstornoConcluido(p, linha) === 'reembolso')")
         const aviso = s.indexOf("avisarFixo(ctx, { user_id: linha.user_id, tipo: 'estorno', referencia: p.installment })")
         expect(aviso).toBeGreaterThan(ramo)
         expect(s.slice(ramo, aviso)).toContain("return\n      }")
@@ -313,7 +313,7 @@ describe("Edge billing-daily", () => {
 
     it("I4 / Ruling 16: o reembolso concluído pelo cron avisa, uma vez por parcelamento", () => {
         const s = funcao(fonte(DIARIO), "refazerEstornos")
-        const ramo = s.slice(s.indexOf("if (textoDoEstornoConcluido(p) === 'reembolso')"), s.indexOf("tipo: 'estorno'"))
+        const ramo = s.slice(s.indexOf("if (textoDoEstornoConcluido(p, linha) === 'reembolso')"), s.indexOf("tipo: 'estorno'"))
         const aviso = ramo.indexOf("avisarFixo(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment })")
         expect(aviso).toBeGreaterThan(ramo.indexOf("status: 'expired'"))
     })
@@ -728,6 +728,8 @@ describe("Edge billing-cancel", () => {
     it("I4 / Ruling 16: o reembolso concluído por este toque avisa, essencial e deduplicado", () => {
         const f = fonte(CANCEL)
         const r = funcao(f, "reembolsar")
+        // o registro que faltou é o parcelamento do plano ativo: nasce ativado, e o cron o lê como reembolso
+        expect(r).toContain(".insert({ installment: ref, subscription_id: linha.id, ativado_em: agora.toISOString() })")
         expect(r.indexOf("concluiu = true")).toBeGreaterThan(r.indexOf("estorno_status: 'feito'"))
         // #87: a mesma reivindicação do cron, pendente até a entrega dar certo
         expect(r.indexOf("if (concluiu) await avisarUmaVez(admin, { user_id: linha.user_id, tipo: 'reembolso', referencia: ref }, email)")).toBeGreaterThan(r.indexOf("status: 'expired'"))
@@ -764,6 +766,13 @@ describe("#81: o cliente do Asaas atualizado no checkout", () => {
         expect(falha).toContain("if (!r.ok) console.error('billing-checkout: atualizarCliente', r.status)")
         expect(falha).not.toContain("return")
         expect(falha).not.toContain("soltar()")
+    })
+
+    it("o roteiro manda as migrações até a do Bloco 9 antes das Edges, e lista o módulo novo", () => {
+        const r = lerFonte("supabase/BLOCO_8_DEPLOYMENT.md")
+        expect(r.match(/até `20261102120000_bloco9\.sql`/g)?.length).toBeGreaterThanOrEqual(2)
+        expect(r).toContain("`_shared/aviso-de-cobranca.ts`")
+        expect(r).not.toContain("Nenhum módulo antigo do `_shared` mudou")
     })
 
     it("o verbo do Asaas está nas perguntas do §0 do roteiro", () => {
@@ -812,6 +821,7 @@ describe("#87: os avisos de cobrança que não se perdem", () => {
         expect(r.slice(reivindica)).toContain(".eq('enviado_em', a.enviado_em)")
         expect(r).toContain("if (!minha?.length) return")
         expect(r.indexOf("entregarPendente(ctx.admin, a)")).toBeGreaterThan(reivindica)
-        expect(r).toContain("if (!avisoFixo(a.tipo)) return")
+        expect(r).toContain(".in('tipo', TIPOS_DE_AVISO_FIXO)")
+        expect(r).not.toContain("avisoFixo(")
     })
 })

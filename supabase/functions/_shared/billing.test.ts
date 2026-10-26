@@ -861,8 +861,14 @@ Deno.test('destinoDoAviso: a carteira pessoal de outra pessoa não conta como pe
 })
 
 Deno.test('textoDoEstornoConcluido: o parcelamento ativado é o reembolso; o nunca ativado, a cobrança em dobro', () => {
-  assertEquals(textoDoEstornoConcluido({ ativado_em: '2026-10-01T12:00:00Z' }), 'reembolso')
-  assertEquals(textoDoEstornoConcluido({ ativado_em: null }), 'estorno')
+  const linha = { provider_ref: 'inst-novo' }
+  assertEquals(textoDoEstornoConcluido({ installment: 'inst-1', ativado_em: '2026-10-01T12:00:00Z' }, linha), 'reembolso')
+  assertEquals(textoDoEstornoConcluido({ installment: 'inst-1', ativado_em: null }, linha), 'estorno')
+  assertEquals(textoDoEstornoConcluido({ installment: 'inst-1', ativado_em: null }, { provider_ref: null }), 'estorno')
+})
+
+Deno.test('textoDoEstornoConcluido: o parcelamento do plano sem ativado_em (a marca que falhou) ainda é o reembolso', () => {
+  assertEquals(textoDoEstornoConcluido({ installment: 'inst-1', ativado_em: null }, { provider_ref: 'inst-1' }), 'reembolso')
 })
 
 Deno.test('avisoFixo: só fim, reembolso e estorno têm texto fixo', () => {

@@ -169,8 +169,11 @@ async function reembolsar(
 
   if (registro?.estorno_status !== 'feito') {
     // Todo parcelamento nosso já está no registro (Ruling 9); este insert só cobre o que faltou.
+    // É o provider_ref de uma linha ativa: nasce ativado, e o cron o lê como reembolso, nunca como dobro.
     if (!registro) {
-      const { error } = await admin.from('billing_parcelamentos').insert({ installment: ref, subscription_id: linha.id })
+      const { error } = await admin
+        .from('billing_parcelamentos')
+        .insert({ installment: ref, subscription_id: linha.id, ativado_em: agora.toISOString() })
       if (error && error.code !== '23505') throw new Error(`parcelamento novo: ${error.message}`)
     }
 

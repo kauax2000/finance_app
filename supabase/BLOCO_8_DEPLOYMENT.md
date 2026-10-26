@@ -210,8 +210,9 @@ projeto de produção.** O "Assinar" só aparece com a cobrança lançada, e lan
 em produção é o §6, no lançamento do 2.0. Produção também não mistura a chave
 do Sandbox com dado real.
 
-**1. As migrações.** O ramo precisa de todas as migrações até esta, com a string
-de conexão dele, que fica fora do repositório:
+**1. As migrações.** O ramo precisa de todas as migrações, até `20261102120000_bloco9.sql`
+(a do Bloco 9 cria `billing_avisos.pendente`, que as quatro Edges leem), com a
+string de conexão dele, que fica fora do repositório:
 
 ```bash
 supabase db push --db-url "<string de conexão do ramo>"
@@ -484,9 +485,10 @@ supabase db push --linked
 ```
 
 Este é o de produção: só com o pedido explícito do dono, depois do §1. Aplica
-`20261101120000_cobranca_asaas.sql` (e, antes dela, as que ainda não subiram).
-**A migração vai antes de qualquer uma das quatro Edges**: todas leem as colunas
-e as tabelas novas.
+`20261101120000_cobranca_asaas.sql` (e, antes dela, as que ainda não subiram),
+e as que vêm depois, até `20261102120000_bloco9.sql`.
+**As migrações vão antes de qualquer uma das quatro Edges**: todas leem as
+colunas e as tabelas novas, e `billing_avisos.pendente` vem da do Bloco 9.
 
 Ela só acrescenta: `add column if not exists`, `create table if not exists`, o
 `create or replace` das duas funções e o do gatilho do `updated_at` de
@@ -648,8 +650,11 @@ pode esperar a tokenização aprovada: até o 2.0 ir para `main`, ninguém chega
 **As funções.** Os comandos desta seção não levam `--project-ref`: vão para o
 projeto ligado, **que é o de produção**. Só com o pedido explícito do dono. O
 `_shared` vai embutido em cada função no deploy. Os módulos
-novos deste bloco são `_shared/billing.ts` e `_shared/asaas.ts`, e só estas
-quatro funções os importam. Nenhum módulo antigo do `_shared` mudou.
+novos deste bloco são `_shared/billing.ts`, `_shared/asaas.ts` e
+`_shared/aviso-de-cobranca.ts` (o destino, a entrega e a reivindicação dos
+avisos de plano; #87 do Bloco 9), e só estas quatro funções os importam. O
+`aviso-de-cobranca.ts` usa o `deliver-notification.ts` e o
+`notification-email.ts` sem mudá-los.
 
 ```bash
 supabase functions deploy billing-checkout asaas-webhook billing-cancel billing-daily --use-api

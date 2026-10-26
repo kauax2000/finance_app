@@ -25,7 +25,6 @@ import {
   aguardandoConfirmacao,
   type Assinatura,
   AVISOS,
-  avisoFixo,
   checkoutPendente,
   efeitoDoEvento,
   falhaNaRenovacao,
@@ -35,6 +34,7 @@ import {
   type Parcelamento,
   resultadoDaCobranca,
   textoDoEstornoConcluido,
+  TIPOS_DE_AVISO_FIXO,
   triagemDasAbertas,
   vereditoDaEspera,
 } from '../_shared/billing.ts'
@@ -565,7 +565,7 @@ async function refazerEstornos(ctx: Ctx): Promise<void> {
       if (!marcou?.length) return
       ctx.n.estornos += 1
 
-      if (textoDoEstornoConcluido(p) === 'reembolso') {
+      if (textoDoEstornoConcluido(p, linha) === 'reembolso') {
         // Ruling 13: o reembolso termina aqui. Zero linhas: o PAYMENT_REFUNDED do webhook já expirou.
         const { error: eErr } = await admin
           .from('billing_subscriptions')
@@ -678,6 +678,7 @@ async function reenviarAvisos(ctx: Ctx): Promise<void> {
       .from('billing_avisos')
       .select('*')
       .eq('pendente', true)
+      .in('tipo', TIPOS_DE_AVISO_FIXO)
       .lt('enviado_em', limite)
       .order('user_id')
       .order('tipo')
@@ -687,7 +688,6 @@ async function reenviarAvisos(ctx: Ctx): Promise<void> {
 
   await forEachLimit(pendentes, FAN_OUT_CONCURRENCY, async (a) => {
     try {
-      if (!avisoFixo(a.tipo)) return
       const { data: minha, error } = await ctx.admin
         .from('billing_avisos')
         .update({ enviado_em: ctx.iso })
