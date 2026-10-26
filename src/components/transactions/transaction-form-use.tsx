@@ -6,6 +6,7 @@ import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useAuth } from "@/components/providers"
 import { podeSerPrivado, privadaPresa, privadoDoSalvar } from "@/lib/privado/pode-ser-privado"
+import { pesosDigitados } from "@/lib/divisao/partes"
 import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
@@ -83,6 +84,8 @@ function fotografar(r: Rascunho): string {
         r.installmentCount,
         r.isPrivate,
         r.projectId,
+        r.paidBy,
+        r.pesosDaParcelada,
     ])
 }
 
@@ -108,6 +111,24 @@ type Rascunho = {
     isPrivate: boolean
     /** O projeto da despesa (Bloco 7C); `""` sem projeto. */
     projectId: string
+    /** Quem pagou (Bloco 7C); `""` é o padrão (quem lança, ou o de antes na edição). */
+    paidBy: string
+    /** Os pesos próprios da parcelada nova (Bloco 7C); `null` usa os da carteira. */
+    pesosDaParcelada: Record<string, string> | null
+}
+
+/**
+ * O `paid_by` que o salvar manda (Bloco 7C, Ruling 8): só quando a pessoa
+ * trocou o padrão. Na privada e na receita nunca: o banco põe a autora.
+ */
+export function pagadorDoSalvar(a: {
+    escolhido: string
+    padrao: string
+    privado: boolean
+    type: "income" | "expense"
+}): string | undefined {
+    if (a.privado || a.type !== "expense" || !a.escolhido) return undefined
+    return a.escolhido === a.padrao ? undefined : a.escolhido
 }
 
 /**
@@ -219,6 +240,8 @@ export function useTransactionForm({
     >("slice")
     const [isPrivate, setIsPrivateBruto] = useState(false)
     const [projectId, setProjectId] = useState("")
+    const [paidBy, setPaidBy] = useState("")
+    const [pesosDaParcelada, setPesosDaParcelada] = useState<Record<string, string> | null>(null)
     // Marcar a privada limpa o projeto (M7): a privada não leva projeto.
     const setIsPrivate = useCallback((v: boolean) => {
         setIsPrivateBruto(v)
@@ -291,6 +314,8 @@ export function useTransactionForm({
                   installmentEditScope: "slice",
                   isPrivate: editingTransaction.is_private === true,
                   projectId: editingTransaction.project_id ?? "",
+                  paidBy: "",
+                  pesosDaParcelada: null,
               }
             : {
                   formKind: kindInicial,
@@ -313,6 +338,8 @@ export function useTransactionForm({
                   installmentEditScope: "slice",
                   isPrivate: false,
                   projectId: "",
+                  paidBy: "",
+                  pesosDaParcelada: null,
               }
         setFormKind(v.formKind)
         setType(v.type)
@@ -331,6 +358,8 @@ export function useTransactionForm({
         setInstallmentEditScope(v.installmentEditScope)
         setIsPrivateBruto(v.isPrivate)
         setProjectId(v.projectId)
+        setPaidBy(v.paidBy)
+        setPesosDaParcelada(v.pesosDaParcelada)
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
@@ -384,6 +413,8 @@ export function useTransactionForm({
     // de valer segura o salvar (`privadaPresa`, Ruling 10).
     const { user } = useAuth()
     const autorId = editingTransaction?.user_id ?? user?.id ?? ""
+    // Quem pagou, sem escolha (Bloco 7C): o de antes na edição; senão, quem lança.
+    const pagadorPadrao = editingTransaction?.paid_by ?? autorId
     const eraPrivada = editingTransaction?.is_private === true
     const regraDoPrivado =
         (type === "expense" || eraPrivada) &&
@@ -536,6 +567,12 @@ export function useTransactionForm({
                     ? paymentCreditCardId || null
                     : null
 
+            const pesosDoPlano = pesosDaParcelada ? pesosDigitados(pesosDaParcelada) : undefined
+            if (pesosDoPlano === null) {
+                toastError("Cada peso precisa ser maior que zero.", { id: TRANSACTION_SAVE_TOAST_ID })
+                return
+            }
+
             const plano = await onSaveInstallmentPlan({
                 categoryId: categoryId || null,
                 description: description.trim() ? description.trim() : null,
@@ -545,6 +582,7 @@ export function useTransactionForm({
                 totalInstallments: n,
                 installmentAmount,
                 finalInstallmentAmount,
+                ...(pesosDoPlano ? { splitWeights: pesosDoPlano } : {}),
                 ...origemDaFrase(duvidasDaFrase, false, categoryId, fonteDaFrase),
             })
 
@@ -701,6 +739,7 @@ export function useTransactionForm({
                 privado: isPrivate,
                 type,
             }),
+            paidBy: pagadorDoSalvar({ escolhido: paidBy, padrao: pagadorPadrao, privado: isPrivate, type }),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
@@ -797,6 +836,10 @@ export function useTransactionForm({
         eraPrivada,
         projectId,
         setProjectId,
+        paidBy: paidBy || pagadorPadrao,
+        setPaidBy,
+        pesosDaParcelada,
+        setPesosDaParcelada,
     }
 
     const formTitle = transactionFormTitle({
@@ -846,6 +889,8 @@ export function useTransactionForm({
         installmentEditScope,
         isPrivate,
         projectId,
+        paidBy,
+        pesosDaParcelada,
     }
     // A foto escolhida também é rascunho: fechar pergunta "Descartar alterações?".
     const isDirty =

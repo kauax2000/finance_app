@@ -79,6 +79,7 @@ import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { PrivadoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
+import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
 import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
@@ -281,6 +282,12 @@ export type TransactionFormFieldsProps = {
     /** O projeto da despesa (Bloco 7C); sem `setProjectId`, o seletor não aparece. */
     projectId?: string
     setProjectId?: (id: string) => void
+    /** Quem pagou (Bloco 7C); sem `setPaidBy`, o seletor não aparece. */
+    paidBy?: string
+    setPaidBy?: (id: string) => void
+    /** Os pesos próprios da parcelada nova (Bloco 7C); `null` usa os da carteira. */
+    pesosDaParcelada?: Record<string, string> | null
+    setPesosDaParcelada?: (v: Record<string, string> | null) => void
 }
 
 /**
@@ -362,6 +369,10 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         setFotoDoRecibo,
         projectId = "",
         setProjectId,
+        paidBy = "",
+        setPaidBy,
+        pesosDaParcelada = null,
+        setPesosDaParcelada,
     } = props
 
     const isMobile = useIsMobile()
@@ -718,6 +729,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         {installmentPreview ?? "Informe o valor e o número de parcelas."}
                     </p>
                     {planoProposto ? <ImpactoDaParcela proposto={planoProposto} /> : null}
+                    {segmentMode === "create" && setPesosDaParcelada ? (
+                        <PesosDaParceladaWireframe valor={pesosDaParcelada} onChange={setPesosDaParcelada} />
+                    ) : null}
                 </div>
             ) : (
                 <FormInput
@@ -959,6 +973,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             formKind !== "installment" &&
             !(hasInstallmentPlan && installmentEditScope === "plan") ? (
                 <ProjetoDoLancamentoWireframe valor={projectId} onChange={setProjectId} />
+            ) : null}
+
+            {/* Quem pagou (Bloco 7C): a privada é paga pela autora; a parcelada e o plano seguem quem lança. */}
+            {setPaidBy &&
+            type === "expense" &&
+            !isPrivate &&
+            formKind !== "installment" &&
+            !(hasInstallmentPlan && installmentEditScope === "plan") ? (
+                <QuemPagouWireframe valor={paidBy} onChange={setPaidBy} />
             ) : null}
         </div>
     )

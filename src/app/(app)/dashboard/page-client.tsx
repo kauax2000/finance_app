@@ -24,6 +24,7 @@ import { JornadaCartaoWireframe } from "@/components/wireframe/jornada-cartao-wi
 import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { SeguroDoPainelWireframe } from "@/components/wireframe/seguro-para-gastar-wireframe"
 import { ResumoDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
+import { SaldoEAcertoWireframe } from "@/components/wireframe/divisao-wireframe"
 import { InsightsDoPainel } from "@/components/wireframe/insights-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
@@ -321,6 +322,9 @@ export default function DashboardPageClient() {
             ) : (
                 <SeguroDoPainelWireframe workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} />
             )}
+
+            {/* O saldo da carteira dividida (Bloco 7C): só para os adultos; o próprio quadro confere. */}
+            <SaldoEAcertoWireframe />
 
             <InsightsDoPainel workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} categorias={d.categories} />
 

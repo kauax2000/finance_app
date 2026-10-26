@@ -26,6 +26,8 @@ export type TransactionFormSavePayload = {
     isPrivate?: boolean
     /** O projeto (Bloco 7C); sem ele, a coluna fica como está, e `null` o tira. */
     projectId?: string | null
+    /** Quem pagou (Bloco 7C); sem ele, o banco põe o padrão ou deixa o de antes. */
+    paidBy?: string
 }
 
 /**
@@ -47,6 +49,8 @@ export type InstallmentPlanFormSavePayload = {
     /** A origem da frase ou da IA: marca as parcelas lançadas na hora. */
     source?: TransactionSource
     needsReview?: boolean
+    /** Os pesos próprios da parcelada (Bloco 7C, Ruling 6): gravados no plano depois de criá-lo. */
+    splitWeights?: { user_id: string; weight: number }[]
 }
 
 /** O que criar a compra parcelada devolve: `false` na falha; o `planId` da RPC no sucesso. */

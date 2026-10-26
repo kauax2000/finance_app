@@ -8,12 +8,14 @@ import { LembreteConferirWireframe } from "@/components/wireframe/a-conferir-lem
 import { InsightsAvisoWireframe } from "@/components/wireframe/insights-wireframe"
 import { IaConfiguracoesWireframe } from "@/components/wireframe/ia-configuracoes-wireframe"
 import { DatasDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
+import { ModoEPesosDaCarteiraWireframe } from "@/components/wireframe/divisao-wireframe"
 
 export default function SettingsPage() {
     return (
         <div className="min-w-0 max-w-full space-y-5">
             <WorkspaceAppearanceSettings />
             <DatasDaCarteiraProjetoWireframe />
+            <ModoEPesosDaCarteiraWireframe />
             <ThemeSettings />
             <PwaSettingsSection />
             <NotificationPreferences />

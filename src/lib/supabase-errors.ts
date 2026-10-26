@@ -78,6 +78,13 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
     projeto_arquivado: "Este projeto está arquivado e não aceita lançamento novo.",
     modelo_desconhecido: "Escolha um dos modelos da lista.",
     carteira_pessoal_ausente: "Sua carteira pessoal não foi encontrada.",
+    // Bloco 7C, a divisão.
+    partes_nao_fecham: "As partes precisam somar o valor da despesa.",
+    partes_invalidas: "Cada parte precisa ser de um adulto da carteira, uma por pessoa, sem valor negativo.",
+    partes_fora_da_divisao: "Esta despesa não entra na divisão: só despesa de carteira dividida, a partir do dia em que ela passou a dividir.",
+    pesos_invalidos: "Os pesos precisam ser maiores que zero, um por adulto da carteira.",
+    pagador_invalido: "Quem pagou precisa ser adulto da carteira.",
+    "not a workspace adult": "Só os adultos da carteira fazem isso.",
 }
 
 /**

@@ -110,3 +110,38 @@ describe("primeiraParcelaDoPlano", () => {
         })
     })
 })
+
+describe("persistInstallmentPlanCreate: os pesos da parcelada (Bloco 7C)", () => {
+    it("grava split_weights no plano depois da RPC, e só com pesos próprios", async () => {
+        const passos: string[] = []
+        const select = vi.fn(() => Promise.resolve({ data: [{ id: "plan-1" }], error: null }))
+        const eq = vi.fn((coluna: string, valor: string) => {
+            passos.push(`eq:${coluna}=${valor}`)
+            return { select }
+        })
+        const update = vi.fn((linha: Record<string, unknown>) => {
+            passos.push(`update:${JSON.stringify(linha)}`)
+            return { eq }
+        })
+        const supabase = {
+            rpc: vi.fn(() => {
+                passos.push("rpc")
+                return Promise.resolve({ data: "plan-1", error: null })
+            }),
+            from: vi.fn(() => ({ update })),
+        }
+        const pesos = [
+            { user_id: "a", weight: 2 },
+            { user_id: "b", weight: 1 },
+        ]
+        await persistInstallmentPlanCreate({
+            supabase: supabase as never,
+            user: { id: "u" } as never,
+            workspaceId: "ws-1",
+            payload: { ...payload, splitWeights: pesos },
+            onAfterSuccess: async () => {},
+        })
+        expect(passos).toEqual(["rpc", `update:${JSON.stringify({ split_weights: pesos })}`, "eq:id=plan-1"])
+        expect(supabase.rpc).toHaveBeenCalledWith("create_workspace_installment_plan", expect.not.objectContaining({ p_split_weights: expect.anything() }))
+    })
+})

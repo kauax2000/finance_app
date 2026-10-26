@@ -440,3 +440,68 @@ describe("Carteira de projeto, fix 1 (Bloco 7C)", () => {
     expect(buildTransactionRow(ctx, { ...base, projectId: "p1" })).toHaveProperty("project_id", "p1")
   })
 })
+
+describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
+  const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
+  const W = "src/components/wireframe/divisao-wireframe.tsx"
+
+  it("o paid_by só vai quando a pessoa troca o padrão; nunca na privada nem na receita", async () => {
+    const { pagadorDoSalvar } = await import("@/components/transactions/transaction-form-use")
+    const a = { padrao: "eu", privado: false, type: "expense" as const }
+    expect(pagadorDoSalvar({ ...a, escolhido: "" })).toBeUndefined()
+    expect(pagadorDoSalvar({ ...a, escolhido: "eu" })).toBeUndefined()
+    expect(pagadorDoSalvar({ ...a, escolhido: "ana" })).toBe("ana")
+    expect(pagadorDoSalvar({ ...a, escolhido: "ana", privado: true })).toBeUndefined()
+    expect(pagadorDoSalvar({ ...a, escolhido: "ana", type: "income" })).toBeUndefined()
+  })
+
+  it("buildTransactionRow: o paid_by só entra quando vem", async () => {
+    const { buildTransactionRow } = await import("@/lib/transactions/mutations")
+    const base = {
+      editingId: null, categoryId: null, type: "expense" as const, amount: 10, description: null,
+      dateIso: "2026-10-25T12:00:00.000Z", isRecurring: false, recurringInterval: null,
+      paymentMethod: null, paymentCreditCardId: null,
+    }
+    const ctx = { userId: "u", workspaceId: "w" }
+    expect(buildTransactionRow(ctx, base)).not.toHaveProperty("paid_by")
+    expect(buildTransactionRow(ctx, { ...base, paidBy: "ana" })).toHaveProperty("paid_by", "ana")
+  })
+
+  it("Quem pagou: só na carteira dividida, para o adulto, entre os adultos, e some na privada", () => {
+    const w = fonte(W)
+    expect(w).toContain('currentWorkspace?.split_mode === "split" && isAdulto')
+    expect(fonte("src/lib/divisao/dados.ts")).toContain('.in("role", ["owner", "member"])')
+    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toMatch(/!isPrivate &&[\s\S]{0,200}<QuemPagouWireframe/)
+  })
+
+  it("as partes mostradas vêm de transaction_shares, e o editor confere o fechamento antes do definir_partes", () => {
+    expect(fonte("src/lib/divisao/dados.ts")).toMatch(/from\("transaction_shares"\)\.select\("\*"\)\.eq\("transaction_id", transactionId\)/)
+    const w = fonte(W)
+    expect(w).toMatch(/if \(!fecha\) return setAviso\(PARTES_NAO_FECHAM\)\s*void gravar\(/)
+    expect(w).toContain("gravar(null)")
+    expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<PartesDaDespesaWireframe transaction={t} />")
+  })
+
+  it("o modo e os pesos são do dono; o saldo é do adulto, no Painel, com quem saiu marcado", () => {
+    const w = fonte(W)
+    expect(w).toMatch(/currentWorkspace\.type === "personal" \|\| !isWorkspaceOwner\(currentWorkspace\.id\)/)
+    expect(w).toContain("saiu da carteira")
+    expect(w).toContain("a.created_by === meuId")
+    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<ModoEPesosDaCarteiraWireframe />")
+    expect(fonte("src/app/(app)/dashboard/page-client.tsx")).toContain("<SaldoEAcertoWireframe />")
+  })
+
+  it("os pesos da parcelada vão por update no plano, depois da RPC, sem mudar a assinatura dela", () => {
+    const p = fonte("src/components/transactions/transaction-form-persistence.ts")
+    expect(p).toMatch(/\.from\("workspace_installment_plans"\)\s*\.update\(\{ split_weights: payload\.splitWeights \}\)\s*\.eq\("id", id\)/)
+    expect(p.indexOf('"create_workspace_installment_plan"')).toBeLessThan(p.indexOf("split_weights: payload.splitWeights"))
+    expect(p).not.toContain("p_split_weights")
+  })
+
+  it("a etiqueta de cada peça", () => {
+    const w = fonte(W)
+    for (const t of ["Quem pagou", "Partes desta despesa", "Modo e pesos da carteira", "Saldo e acerto", "Pesos desta parcelada"]) {
+      expect(w).toContain(`titulo="${t}"`)
+    }
+  })
+})

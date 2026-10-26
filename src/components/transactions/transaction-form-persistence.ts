@@ -66,6 +66,24 @@ export async function persistInstallmentPlanCreate(options: {
         if (error) console.error("origem das parcelas:", error)
     }
 
+    // A regra da parcelada mora no plano (Ruling 6): os pesos vão logo depois
+    // de criá-lo, e o banco redivide as parcelas já lançadas. Falhando, o plano
+    // fica com os pesos da carteira.
+    if (id && payload.splitWeights) {
+        const { data, error } = await supabase
+            .from("workspace_installment_plans")
+            .update({ split_weights: payload.splitWeights })
+            .eq("id", id)
+            .select("id")
+        if (error || !data?.length) {
+            if (error) console.error("pesos do plano:", error)
+            toastError(
+                formatSupabasePostgrestError(error) ??
+                    "A compra foi registrada, mas os pesos próprios não: ela divide pelos pesos da carteira."
+            )
+        }
+    }
+
     void invokeEdgeJson("evaluate-budgets", {
         body: {
             category_id: payload.categoryId,

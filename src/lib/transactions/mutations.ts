@@ -49,6 +49,7 @@ export function buildTransactionRow(
         payment_credit_card_id: payload.paymentCreditCardId,
         ...(payload.isPrivate != null ? { is_private: payload.isPrivate } : {}),
         ...(payload.projectId !== undefined ? { project_id: payload.projectId } : {}),
+        ...(payload.paidBy !== undefined ? { paid_by: payload.paidBy } : {}),
     }
 }
 

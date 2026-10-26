@@ -17,6 +17,7 @@ const COLUNAS = "is_private|holder_user_id|project_id|purpose|starts_on|ends_on|
 const NOVAS = new RegExp(`\\b(${COLUNAS})\\b`)
 const TABELAS_NOVAS = /\.from\(\s*["'`](projects|transaction_shares|settlements|workspace_split_weights)["'`]/g
 const RPCS_NOVAS = /\.rpc\(\s*["'`](criar_carteira_de_modelo|definir_partes|saldos_da_carteira)["'`]/g
+const EMBRULHADA = /tabelaTolerante(<[^()]*>)?\(\s*supabase\s*$/
 const TOLERANTES = new Set(["src/lib/privado/detalhes.ts", "src/lib/cofre/exportar.ts"])
 
 function fontes(dir: string): string[] {
@@ -41,7 +42,11 @@ function achadosDe(arquivo: string): string[] {
         achados.push(m[0])
     }
     if (!texto.includes("PGRST205")) {
-        for (const m of texto.matchAll(TABELAS_NOVAS)) achados.push(m[0])
+        for (const m of texto.matchAll(TABELAS_NOVAS)) {
+            // A consulta embrulhada no `tabelaTolerante` (src/lib/projetos/dados.ts) já trata a ausência.
+            if (EMBRULHADA.test(texto.slice(Math.max(0, m.index - 200), m.index))) continue
+            achados.push(m[0])
+        }
     }
     if (!texto.includes("PGRST202")) {
         for (const m of texto.matchAll(RPCS_NOVAS)) achados.push(m[0])
