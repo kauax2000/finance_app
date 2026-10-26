@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { isEdgeInvokeTransportFailure } from "@/lib/edge-errors"
 import { supabase, type WorkspaceRole } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
 import { doze } from "./precos"
@@ -39,29 +40,60 @@ export async function buscarMeuPlano(): Promise<MeuPlano> {
   }
 }
 
-/** A Edge que ainda não subiu (404 do gateway) não aparece como erro solto. */
-function semEdge(e: unknown): unknown {
-  return e instanceof Error && /não encontrada \(404\)/.test(e.message) ? new Error("Ainda não disponível.") : e
+/** O erro das ações do plano: a mensagem já é a que a tela mostra, em português. */
+export class ErroDoPlano extends Error {}
+
+export const FALHA_DO_SERVIDOR = "Não foi possível falar com o servidor. Tente de novo."
+
+/**
+ * Só a frase que a Edge mandou (o `Error` simples do `invokeEdgeJson`) chega à
+ * tela. A Edge que ainda não subiu (o 404 do gateway) é "Ainda não disponível.";
+ * falha de rede, `TypeError` e o fallback em inglês viram `FALHA_DO_SERVIDOR`.
+ */
+function traduzir(e: unknown): ErroDoPlano {
+  if (e instanceof ErroDoPlano) return e
+  if (!(e instanceof Error) || e.constructor !== Error || !e.message) return new ErroDoPlano(FALHA_DO_SERVIDOR)
+  if (/não encontrada \(404\)/.test(e.message)) return new ErroDoPlano("Ainda não disponível.")
+  if (isEdgeInvokeTransportFailure(e) || /^Edge function failed/i.test(e.message)) return new ErroDoPlano(FALHA_DO_SERVIDOR)
+  return new ErroDoPlano(e.message)
+}
+
+/** Só um endereço `https:` é aberto: o checkout do Asaas. */
+export function urlDoPagamento(u: unknown): string | null {
+  if (typeof u !== "string") return null
+  try {
+    return new URL(u).protocol === "https:" ? u : null
+  } catch {
+    return null
+  }
 }
 
 /** Abre o checkout do Asaas: devolve a URL. O CPF vai só neste corpo. */
 export async function assinar(nome: string, cpf: string): Promise<string> {
+  let r: { url?: unknown } | null
   try {
-    const { url } = await invokeEdgeJson<{ url: string }>("billing-checkout", { body: { nome, cpf } })
-    return url
+    r = await invokeEdgeJson<{ url?: unknown } | null>("billing-checkout", { body: { nome, cpf } })
   } catch (e) {
-    throw semEdge(e)
+    throw traduzir(e)
   }
+  const url = urlDoPagamento(r?.url)
+  if (!url) throw new ErroDoPlano("Não foi possível abrir o pagamento. Tente de novo.")
+  return url
 }
 
 /** Devolve a `mensagem` do 202 (o reembolso pedido e ainda não confirmado), ou `null`. */
 export async function alterarAssinatura(acao: "cancelar" | "desfazer" | "reembolsar"): Promise<string | null> {
   try {
-    const r = await invokeEdgeJson<{ ok: boolean; mensagem?: string }>("billing-cancel", { body: { acao } })
-    return r?.mensagem ?? null
+    const r = await invokeEdgeJson<{ ok?: boolean; mensagem?: unknown } | null>("billing-cancel", { body: { acao } })
+    return typeof r?.mensagem === "string" ? r.mensagem : null
   } catch (e) {
-    throw semEdge(e)
+    throw traduzir(e)
   }
+}
+
+/** A volta do checkout terminou: o status mudou, ou já é um plano ativo sem renovação à espera. */
+export function retornoConcluido(inicial: MeuPlano, atual: MeuPlano): boolean {
+  return atual.status !== inicial.status || (atual.status === "active" && !atual.carencia_ate)
 }
 
 /**
@@ -69,17 +101,25 @@ export async function alterarAssinatura(acao: "cancelar" | "desfazer" | "reembol
  * `onAuthStateChange` cobre a montagem) e quando a janela volta ao foco. Em
  * erro, `plano` fica nulo: nada de aviso falso.
  */
-export function usePlano(): { plano: MeuPlano | null; carregando: boolean } {
+export function usePlano(): { plano: MeuPlano | null; carregando: boolean; recarregar: () => Promise<MeuPlano | null> } {
   const [estado, setEstado] = useState<{ plano: MeuPlano | null; carregando: boolean }>({ plano: null, carregando: true })
+  const buscarRef = useRef<() => Promise<MeuPlano | null>>(() => Promise.resolve(null))
 
   useEffect(() => {
     let vivo = true
     let usuario: string | null | undefined
     const buscar = () =>
       buscarMeuPlano().then(
-        (plano) => vivo && setEstado({ plano, carregando: false }),
-        () => vivo && setEstado((e) => ({ ...e, carregando: false })),
+        (plano) => {
+          if (vivo) setEstado({ plano, carregando: false })
+          return plano
+        },
+        () => {
+          if (vivo) setEstado((e) => ({ ...e, carregando: false }))
+          return null
+        },
       )
+    buscarRef.current = buscar
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_evento, sessao) => {
@@ -99,7 +139,9 @@ export function usePlano(): { plano: MeuPlano | null; carregando: boolean } {
     }
   }, [])
 
-  return estado
+  // Lê de novo e devolve o plano lido (`null` em erro); a tela mostra sempre o do hook.
+  const recarregar = useCallback(() => buscarRef.current(), [])
+  return { ...estado, recarregar }
 }
 
 export const fundadoresAbertos = (agora: Date) => agora.getTime() < Date.parse(FIM_FUNDADORES)
@@ -113,18 +155,22 @@ export type AcaoDoPlano = "assinar" | "atualizar_cartao" | "cancelar" | "desfaze
 
 type Resumo = { titulo: string; linhas: string[]; acoes: AcaoDoPlano[] }
 
-/** DD/MM no fuso de quem lê. */
-const diaMes = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
+const DIA_MES_BRASILIA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" })
+
+/** DD/MM no horário de Brasília, como o backend conta os dias. */
+const diaMes = (iso: string) => DIA_MES_BRASILIA.format(new Date(iso))
 
 /**
  * O que a tela mostra e oferece. As ações seguem o `status` (Decisão 9): um
  * `past_due` pede o cartão mesmo com a `origem` já em teste, convite ou nenhuma.
- * O convidado não assina (Decisão 10); o servidor recusa também.
+ * O convidado não assina (Decisão 10); o servidor recusa também. Com o papel
+ * ainda carregando (`null`), nenhuma ação aparece.
  */
 export function resumoDoPlano(p: MeuPlano, agora: Date, papel: WorkspaceRole | null): Resumo {
   const r = resumoBase(p, agora)
-  if (papel === "guest") return { ...r, acoes: [] }
-  if (!p.checkout_url) return r
+  if (papel === null || papel === "guest") return { ...r, acoes: [] }
+  // Um past_due cancelado acaba na tolerância: não há o que continuar pagando.
+  if (!p.checkout_url || (p.status === "past_due" && p.cancelar_no_fim)) return r
   return { ...r, acoes: ["pagar_pendente", ...r.acoes.filter((a) => a !== "assinar" && a !== "atualizar_cartao")] }
 }
 

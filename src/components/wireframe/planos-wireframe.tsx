@@ -7,13 +7,16 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { ROUTES } from "@/config/navigation"
 import {
+    ErroDoPlano,
+    FALHA_DO_SERVIDOR,
     alterarAssinatura,
     assinar,
-    buscarMeuPlano,
     doze,
     fundadoresAbertos,
     precoDoDia,
     resumoDoPlano,
+    retornoConcluido,
+    urlDoPagamento,
     usePlano,
     type MeuPlano,
 } from "@/lib/planos/plano"
@@ -29,54 +32,65 @@ const ROTULO = {
 
 const AVISO_REEMBOLSO = "O valor volta para o cartão em até 10 dias úteis e a conta volta ao estado de antes da compra."
 
-const mensagemDe = (e: unknown) => (e instanceof Error ? e.message : "Não foi possível concluir. Tente de novo.")
+const ESPERA_ESGOTADA = "Ainda não recebemos a confirmação do Asaas. Isso pode levar alguns minutos; atualize a página depois."
+
+// Só a frase do servidor (já traduzida em `plano.ts`) chega à tela.
+const mensagemDe = (e: unknown) => (e instanceof ErroDoPlano ? e.message : FALHA_DO_SERVIDOR)
 
 /**
  * O plano da pessoa (Blocos 4 e 8): o que ela tem hoje, o preço do dia e as
  * ações — assinar ou trocar o cartão (o checkout do Asaas), cancelar, desfazer,
  * reembolsar e continuar um pagamento aberto. Na volta do pagamento (`?pago=1`)
- * a tela consulta o plano até ele sair de `pending`.
+ * a tela consulta o plano enquanto o status não muda (o `pending` da compra, o
+ * `past_due` do cartão novo).
  */
 export function PlanosWireframe() {
-    const { plano: carregado, carregando } = usePlano()
+    const { plano, carregando, recarregar } = usePlano()
     const { papel } = useWorkspace()
-    const [atual, setAtual] = useState<MeuPlano | null>(null)
     const [ocupado, setOcupado] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const [aviso, setAviso] = useState<string | null>(null)
-    const [confirmando, setConfirmando] = useState(false)
+    const [retorno, setRetorno] = useState<"confirmando" | "esgotado" | null>(null)
     const [nome, setNome] = useState("")
     const [cpf, setCpf] = useState("")
 
-    const plano = atual ?? carregado
     const agora = new Date()
     const resumo = plano ? resumoDoPlano(plano, agora, papel) : null
     const fundador = fundadoresAbertos(agora)
     const acoes = resumo?.acoes ?? []
-    const checkoutUrl = acoes.includes("pagar_pendente") ? plano?.checkout_url : null
+    const checkoutUrl = acoes.includes("pagar_pendente") ? urlDoPagamento(plano?.checkout_url) : null
     const formulario = acoes.includes("assinar") ? "Assinar" : acoes.includes("atualizar_cartao") ? "Atualizar cartão" : null
+    // A renovação mantém o preço da linha (o de fundador, inclusive); a compra nova paga o do dia.
+    const precoDoFormulario = plano?.status === "past_due" ? (plano.preco_centavos ?? precoDoDia(agora)) : precoDoDia(agora)
 
-    // A volta do checkout: a cada 5 s, por até 2 min, enquanto o webhook não confirma.
+    // A volta do checkout: lê já, e a cada 5 s por até 2 min, enquanto o status
+    // não muda em relação ao da chegada.
     useEffect(() => {
         if (new URLSearchParams(window.location.search).get("pago") !== "1") return
-        setConfirmando(true)
-        const inicio = Date.now()
-        const parar = () => {
-            window.clearInterval(id)
-            setConfirmando(false)
+        let vivo = true
+        void (async () => {
+            const inicio = Date.now()
+            let inicial: MeuPlano | null = null
+            while (vivo) {
+                const p = await recarregar()
+                if (!vivo) return
+                if (p) {
+                    inicial ??= p
+                    if (retornoConcluido(inicial, p)) break
+                }
+                if (Date.now() - inicio >= 120_000) {
+                    setRetorno("esgotado")
+                    return
+                }
+                setRetorno("confirmando")
+                await new Promise((r) => window.setTimeout(r, 5_000))
+            }
+            if (vivo) setRetorno(null)
+        })()
+        return () => {
+            vivo = false
         }
-        const id = window.setInterval(() => {
-            if (Date.now() - inicio >= 120_000) return parar()
-            buscarMeuPlano().then(
-                (p) => {
-                    setAtual(p)
-                    if (p.status !== "pending") parar()
-                },
-                () => undefined,
-            )
-        }, 5_000)
-        return () => window.clearInterval(id)
-    }, [])
+    }, [recarregar])
 
     async function onAssinar(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -104,8 +118,7 @@ export function PlanosWireframe() {
         } catch (err) {
             setErro(mensagemDe(err))
         }
-        // O plano novo; se a leitura falhar, o foco da janela busca de novo.
-        await buscarMeuPlano().then(setAtual, () => undefined)
+        await recarregar()
         setOcupado(false)
     }
 
@@ -121,7 +134,8 @@ export function PlanosWireframe() {
                     ))}
                 </div>
             ) : null}
-            {confirmando ? <p role="status">Confirmando o pagamento…</p> : null}
+            {retorno === "confirmando" ? <p role="status">Confirmando o pagamento…</p> : null}
+            {retorno === "esgotado" ? <p role="status">{ESPERA_ESGOTADA}</p> : null}
 
             <p>
                 {`Preço de hoje: ${doze(precoDoDia(agora))}`}
@@ -160,7 +174,7 @@ export function PlanosWireframe() {
                             onChange={(e) => setCpf(e.target.value)}
                         />
                     </label>
-                    <p>O pagamento abre no Asaas, em 12x no cartão. O CPF vai direto para ele; não o guardamos.</p>
+                    <p>{`O pagamento abre no Asaas: ${doze(precoDoFormulario)} no cartão. O CPF vai direto para ele; não o guardamos.`}</p>
                     <button type="submit" disabled={ocupado} className={botao}>
                         {ocupado ? "Abrindo…" : formulario}
                     </button>
