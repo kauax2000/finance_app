@@ -138,6 +138,54 @@ Deno.test('efeitoDoEvento: passados os 7 dias de tolerância, é compra nova a p
   assertEquals(m?.reembolsavel_ate, iso(new Date(agora.getTime() + 7 * DIA)))
 })
 
+Deno.test('efeitoDoEvento (Ruling 3): parcela atrasada do parcelamento X depois da renovação Y é ignorada', () => {
+  // Y foi confirmada em fim − 1 dia: a linha está paga até fim + 1 ano.
+  const renovada = sub({ provider_ref: 'inst-Y', current_period_end: '2028-03-10T15:00:00.000Z' })
+  const x = pag({ installment: 'inst-X' })
+  assertEquals(efeitoDoEvento('PAYMENT_RECEIVED', x, renovada, em(3 * DIA)), null)
+  assertEquals(efeitoDoEvento('PAYMENT_CONFIRMED', x, renovada, em(30 * DIA)), null)
+})
+
+Deno.test('efeitoDoEvento (Ruling 3): parcela atrasada depois de uma compra nova Z feita após expirar é ignorada', () => {
+  const compraZ = sub({ provider_ref: 'inst-Z', current_period_end: '2027-06-01T12:00:00.000Z' })
+  assertEquals(efeitoDoEvento('PAYMENT_RECEIVED', pag({ installment: 'inst-X' }), compraZ, new Date('2026-06-20T12:00:00Z')), null)
+})
+
+Deno.test('efeitoDoEvento (Ruling 3): a janela abre em fim − 2 dias', () => {
+  assertEquals(efeitoDoEvento('PAYMENT_CONFIRMED', pag(), sub(), em(-2 * DIA - 1)), null)
+  assertEquals(efeitoDoEvento('PAYMENT_CONFIRMED', pag(), sub(), em(-2 * DIA))?.current_period_end, '2028-03-10T15:00:00.000Z')
+})
+
+Deno.test('efeitoDoEvento: o vaivém X/Y do revisor não estende nada', () => {
+  // A linha renovada para Y; chegam, alternados, os RECEIVED mensais de X e de Y.
+  let s = sub({ provider_ref: 'inst-Y', current_period_end: '2028-03-10T15:00:00.000Z' })
+  for (const [i, inst] of ['inst-X', 'inst-Y', 'inst-X', 'inst-Y'].entries()) {
+    const m = efeitoDoEvento('PAYMENT_RECEIVED', pag({ installment: inst }), s, em((3 + 30 * i) * DIA))
+    assertEquals(m, null)
+    s = { ...s, ...m }
+  }
+  assertEquals([s.provider_ref, s.current_period_end], ['inst-Y', '2028-03-10T15:00:00.000Z'])
+})
+
+for (const [nome, quando, status] of [
+  ['fim − 1 dia', -DIA, 'active'],
+  ['fim + 3 dias', 3 * DIA, 'past_due'],
+] as const) {
+  Deno.test(`efeitoDoEvento: renovação confirmada em ${nome} estende uma vez só, do fim antigo`, () => {
+    const antes = sub({ status, provider_ref: 'inst-X' })
+    const m = efeitoDoEvento('PAYMENT_CONFIRMED', pag({ installment: 'inst-Y' }), antes, em(quando))
+    assertEquals(m?.current_period_end, '2028-03-10T15:00:00.000Z')
+    const depois = { ...antes, ...m }
+    // As outras parcelas de Y e as de X que ainda chegam não mexem mais.
+    for (const inst of ['inst-Y', 'inst-X']) {
+      for (const e of ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED']) {
+        assertEquals(efeitoDoEvento(e, pag({ installment: inst }), depois, em(quando + DIA)), null)
+        assertEquals(efeitoDoEvento(e, pag({ installment: inst }), depois, em(quando + 32 * DIA)), null)
+      }
+    }
+  })
+}
+
 Deno.test('efeitoDoEvento: a 2ª parcela do mesmo parcelamento não muda nada', () => {
   const s = sub({ provider_ref: 'inst-novo' })
   assertEquals(efeitoDoEvento('PAYMENT_CONFIRMED', pag(), s, em(30 * DIA)), null)
@@ -222,6 +270,12 @@ Deno.test('acaoDoDia past_due: expira no grace_until; senão renova se a última
   assertEquals(acaoDoDia(s(), em(7 * DIA)), 'expirar')
 })
 
+Deno.test('acaoDoDia past_due sem grace_until: o limite é fim + 7 dias', () => {
+  const s = sub({ status: 'past_due' })
+  assertEquals(acaoDoDia(s, em(7 * DIA - 1)), 'renovar')
+  assertEquals(acaoDoDia(s, em(7 * DIA)), 'expirar')
+})
+
 Deno.test('acaoDoDia: pending e expired não têm ação', () => {
   assertEquals(acaoDoDia(sub({ status: 'pending' }), em(0)), null)
   assertEquals(acaoDoDia(sub({ status: 'expired' }), em(0)), null)
@@ -238,9 +292,19 @@ Deno.test('falhaNaRenovacao: a tolerância não se estende a cada tentativa', ()
   assertEquals(falhaNaRenovacao(s, em(5 * DIA)), { status: 'past_due', grace_until: iso(em(7 * DIA)) })
 })
 
-Deno.test('aguardandoConfirmacao: só grace_until = fim + 7 dias, status intacto', () => {
-  assertEquals(aguardandoConfirmacao(sub()), { grace_until: iso(em(7 * DIA)) })
+Deno.test('aguardandoConfirmacao: active com grace_until = fim + 7 dias', () => {
+  assertEquals(aguardandoConfirmacao(sub()), { status: 'active', grace_until: iso(em(7 * DIA)) })
   assertThrows(() => aguardandoConfirmacao(sub({ current_period_end: null })))
+})
+
+Deno.test('aguardandoConfirmacao (Ruling 4): um past_due com a nova tentativa aceita não é cobrado de novo', () => {
+  const s = sub({ status: 'past_due', grace_until: iso(em(7 * DIA)), checkout_criado_em: iso(em(DIA)) })
+  assertEquals(acaoDoDia(s, em(3 * DIA)), 'renovar') // sem a mudança, cobraria de novo
+  const esperando = { ...s, ...aguardandoConfirmacao(s) }
+  assertEquals(esperando.status, 'active')
+  assertEquals(acaoDoDia(esperando, em(3 * DIA)), null)
+  assertEquals(acaoDoDia(esperando, em(6 * DIA)), null)
+  assertEquals(acaoDoDia(esperando, em(7 * DIA)), 'expirar')
 })
 
 Deno.test('podeReembolsar: só active dentro do prazo', () => {
@@ -270,6 +334,17 @@ Deno.test('AVISOS.renovacao: preço de fundador e cartão sem final', () => {
   )
 })
 
+Deno.test('AVISOS.renovacao: sem price_cents, o fundador cai no preço de fundador', () => {
+  assertEquals(
+    espaco(AVISOS.renovacao(sub({ price_cents: null, founder: true }), '1234').corpo),
+    'A renovação é de 12x de R$ 19,90 no cartão final 1234. Cancelar é em 1 toque, em Planos.',
+  )
+  assertEquals(
+    espaco(AVISOS.renovacao(sub({ price_cents: null, founder: false }), null).corpo),
+    'A renovação é de 12x de R$ 29,90. Cancelar é em 1 toque, em Planos.',
+  )
+})
+
 Deno.test('AVISOS.renovacao: sem card_token, pede para confirmar o cartão', () => {
   assertEquals(
     espaco(AVISOS.renovacao(sub({ card_token: null }), '1234').corpo),
@@ -281,6 +356,10 @@ Deno.test('AVISOS.cartao: a data é a do grace_until, no dia de Brasília', () =
   const a = AVISOS.cartao(sub({ grace_until: '2027-03-18T02:00:00.000Z' })) // 17/03, 23:00 em Brasília
   assertEquals(a.titulo, 'Não conseguimos renovar seu plano')
   assertEquals(a.corpo, 'Atualize o cartão em Planos até 17/03. Depois disso, a conta fica em só leitura.')
+})
+
+Deno.test('AVISOS.cartao: sem grace_until, sem data', () => {
+  assertEquals(AVISOS.cartao(sub()).corpo, 'Atualize o cartão em Planos. Depois disso, a conta fica em só leitura.')
 })
 
 Deno.test('AVISOS.fim', () => {

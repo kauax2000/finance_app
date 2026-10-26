@@ -6,9 +6,14 @@
 import { type Pagamento, PARCELAS } from './billing.ts'
 
 export type AsaasConfig = { url: string; chave: string }
-export type RespostaAsaas<T> = { ok: true; dados: T } | { ok: false; status: number; erros: string[] }
+/** `incerto`: o prazo estourou e o Asaas pode ter processado o pedido (Ruling 5). */
+export type RespostaAsaas<T> =
+  | { ok: true; dados: T }
+  | { ok: false; status: number; erros: string[]; incerto?: true }
 
 const PRAZO_MS = 15_000
+/** A cobrança no cartão pede pelo menos 60 s, pela orientação do Asaas. */
+export const PRAZO_CARTAO_MS = 60_000
 
 export function configDoAsaas(): AsaasConfig | null {
   const url = Deno.env.get('ASAAS_API_URL')?.trim()
@@ -22,6 +27,7 @@ export async function asaas<T>(
   metodo: 'GET' | 'POST',
   caminho: string,
   corpo?: unknown,
+  prazoMs = PRAZO_MS,
 ): Promise<RespostaAsaas<T>> {
   let res: Response
   try {
@@ -29,11 +35,13 @@ export async function asaas<T>(
       method: metodo,
       headers: { access_token: cfg.chave, 'Content-Type': 'application/json', 'User-Agent': 'finance-app' },
       body: corpo === undefined ? undefined : JSON.stringify(corpo),
-      signal: AbortSignal.timeout(PRAZO_MS),
+      signal: AbortSignal.timeout(prazoMs),
     })
   } catch (e) {
-    const prazo = e instanceof DOMException && e.name === 'TimeoutError'
-    return { ok: false, status: 0, erros: [prazo ? 'O Asaas não respondeu a tempo.' : 'Falha de rede ao chamar o Asaas.'] }
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      return { ok: false, status: 0, incerto: true, erros: ['O Asaas não respondeu a tempo.'] }
+    }
+    return { ok: false, status: 0, erros: ['Falha de rede ao chamar o Asaas.'] }
   }
   const json = await res.json().catch(() => null)
   if (res.ok) {
@@ -68,7 +76,7 @@ export function criarCobranca(cfg: AsaasConfig, c: {
   token?: string
   ip?: string | null
 }): Promise<RespostaAsaas<Pagamento & { invoiceUrl: string }>> {
-  return asaas(cfg, 'POST', '/payments', {
+  const corpo = {
     customer: c.cliente,
     billingType: 'CREDIT_CARD',
     installmentCount: PARCELAS,
@@ -78,7 +86,8 @@ export function criarCobranca(cfg: AsaasConfig, c: {
     externalReference: c.referencia,
     ...(c.retorno ? { callback: { successUrl: c.retorno, autoRedirect: true } } : {}),
     ...(c.token ? { creditCardToken: c.token, remoteIp: c.ip } : {}),
-  })
+  }
+  return asaas(cfg, 'POST', '/payments', corpo, c.token ? PRAZO_CARTAO_MS : PRAZO_MS)
 }
 
 export function estornarParcelamento(cfg: AsaasConfig, parcelamento: string): Promise<RespostaAsaas<unknown>> {

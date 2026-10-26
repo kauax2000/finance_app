@@ -13,6 +13,12 @@ export const AVISO_RENOVACAO_DIAS = 7
 export const ARREPENDIMENTO_DIAS = 7
 /** Uma cobrança criada há menos que isso ainda espera o webhook: não cobra de novo. */
 const ESPERA_DO_CHECKOUT_DIAS = 2
+/**
+ * Só cobramos a renovação a partir de `fim - 1 dia`; com a folga do webhook, um
+ * pagamento de outro parcelamento antes de `fim - 2 dias` numa linha paga é
+ * parcela atrasada do parcelamento anterior, não renovação (Ruling 3).
+ */
+const JANELA_DA_RENOVACAO_DIAS = 2
 
 const DIA_MS = 24 * 60 * 60 * 1000
 
@@ -91,8 +97,9 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
     // Sem parcelamento não é cobrança nossa; com o mesmo, já foi ativado.
     if (!parcelamento || parcelamento === sub.provider_ref) return null
     const fimAntigo = sub.current_period_end ? new Date(sub.current_period_end) : null
-    const renovacao = (sub.status === 'active' || sub.status === 'past_due') && fimAntigo !== null &&
-      maisDias(fimAntigo, TOLERANCIA_DIAS) > agora
+    const emDia = (sub.status === 'active' || sub.status === 'past_due') && fimAntigo !== null
+    if (emDia && agora < maisDias(fimAntigo, -JANELA_DA_RENOVACAO_DIAS)) return null
+    const renovacao = emDia && maisDias(fimAntigo!, TOLERANCIA_DIAS) > agora
     const mudanca: Mudanca = {
       status: 'active',
       provider_ref: parcelamento,
@@ -155,14 +162,20 @@ export function falhaNaRenovacao(sub: Assinatura, agora: Date): Mudanca {
   return { status: 'past_due', grace_until: sub.grace_until ?? maisDias(base, TOLERANCIA_DIAS).toISOString() }
 }
 
-/** O Asaas aceitou a cobrança da renovação, e falta o webhook: o plano segue até `fim + 7 dias` (Decisão 8). */
+/**
+ * O Asaas aceitou a cobrança da renovação, e falta o webhook: o plano segue até
+ * `fim + 7 dias` (Decisão 8). Um `past_due` volta a `active` para o ramo da
+ * Ruling 2 assumir e nada ser cobrado de novo na espera (Ruling 4).
+ */
 export function aguardandoConfirmacao(sub: Assinatura): Mudanca {
   if (!sub.current_period_end) throw new Error('aguardandoConfirmacao: assinatura sem current_period_end')
-  return { grace_until: maisDias(new Date(sub.current_period_end), TOLERANCIA_DIAS).toISOString() }
+  return { status: 'active', grace_until: maisDias(new Date(sub.current_period_end), TOLERANCIA_DIAS).toISOString() }
 }
 
 const parcela = (sub: Assinatura) =>
-  `${PARCELAS}x de ${currencyBRL((sub.price_cents ?? PRECO_FAMILIA_CENTAVOS) / (PARCELAS * 100))}`
+  `${PARCELAS}x de ${currencyBRL(
+    (sub.price_cents ?? (sub.founder ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS)) / (PARCELAS * 100),
+  )}`
 
 /** "DD/MM" no horário de Brasília. */
 const diaMes = (iso: string) => {

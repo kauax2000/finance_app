@@ -92,6 +92,7 @@ Deno.test('asaas: o prazo estourado vira status 0', async () => {
     assertEquals(r.ok, false)
     if (!r.ok) {
       assertEquals(r.status, 0)
+      assertEquals(r.incerto, true)
       assertEquals(r.erros, ['O Asaas não respondeu a tempo.'])
     }
   })
@@ -102,6 +103,44 @@ Deno.test('asaas: falha de rede vira status 0', async () => {
     throw new TypeError('error sending request')
   }, async () => {
     assertEquals(await asaas(CFG, 'GET', '/x'), { ok: false, status: 0, erros: ['Falha de rede ao chamar o Asaas.'] })
+  })
+})
+
+async function comPrazos(corpo: (prazos: number[]) => Promise<void>) {
+  const original = AbortSignal.timeout
+  const prazos: number[] = []
+  AbortSignal.timeout = (ms: number) => {
+    prazos.push(ms)
+    return original.call(AbortSignal, ms)
+  }
+  try {
+    await comFetch(() => json(200, { id: 'x' }), () => corpo(prazos))
+  } finally {
+    AbortSignal.timeout = original
+  }
+}
+
+Deno.test('prazo: 60 s na cobrança por token, 15 s no resto', async () => {
+  await comPrazos(async (prazos) => {
+    await criarCobranca(CFG, { ...COBRANCA, token: 'tok_1', ip: '203.0.113.7' })
+    await criarCobranca(CFG, COBRANCA)
+    await criarCliente(CFG, { nome: 'Ana', cpf: '12345678909', email: null, userId: 'u-1' })
+    await estornarParcelamento(CFG, 'inst_1')
+    await asaas(CFG, 'GET', '/x')
+    assertEquals(prazos, [60_000, 15_000, 15_000, 15_000, 15_000])
+  })
+})
+
+Deno.test('criarCobranca por token: o prazo estourado volta incerto', async () => {
+  await comFetch(() => {
+    throw new DOMException('Signal timed out.', 'TimeoutError')
+  }, async () => {
+    assertEquals(await criarCobranca(CFG, { ...COBRANCA, token: 'tok_1', ip: '203.0.113.7' }), {
+      ok: false,
+      status: 0,
+      incerto: true,
+      erros: ['O Asaas não respondeu a tempo.'],
+    })
   })
 })
 
@@ -147,10 +186,17 @@ Deno.test('criarCobranca: retorno vira o callback com redirecionamento', async (
 Deno.test('criarCobranca: com token, manda creditCardToken e remoteIp, nunca creditCard', async () => {
   await comFetch(() => json(200, {}), async (pedidos) => {
     await criarCobranca(CFG, { ...COBRANCA, token: 'tok_1', ip: '203.0.113.7' })
-    const c = pedidos[0].corpo!
-    assertEquals(c.creditCardToken, 'tok_1')
-    assertEquals(c.remoteIp, '203.0.113.7')
-    assertEquals(c.callback, undefined)
+    assertEquals(pedidos[0].corpo, {
+      customer: 'cus_1',
+      billingType: 'CREDIT_CARD',
+      installmentCount: 12,
+      totalValue: 238.8,
+      dueDate: '2026-11-01',
+      description: 'Finance App — Plano Família (anual)',
+      externalReference: 'sub-1',
+      creditCardToken: 'tok_1',
+      remoteIp: '203.0.113.7',
+    })
   })
 })
 
