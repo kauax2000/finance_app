@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildCategoryCommitmentsForMonth } from "./category-commitments"
+import { buildCategoryCommitmentsForMonth, despesaPorCategoria, totalDasDespesas } from "./category-commitments"
 
 const creditCards = [{ id: "card", closing_day: 28 }]
 
@@ -305,5 +305,41 @@ describe("buildCategoryCommitmentsForMonth recurring income", () => {
 
     it("an absent kind still counts as expense", () => {
         expect(run(base).c1?.projectedSubscriptionsTotal).toBe(5000)
+    })
+})
+
+describe("totalDasDespesas", () => {
+    it("soma só as categorias de despesa: o estorno antigo numa de receita não abate", () => {
+        const categorias = [
+            { id: "mercado", type: "expense" as const },
+            { id: "lazer", type: "expense" as const },
+            { id: "salario", type: "income" as const },
+        ]
+        expect(totalDasDespesas(categorias, { mercado: 70, salario: -30, sumida: 5 })).toBe(70)
+    })
+})
+
+describe("despesaPorCategoria (o gráfico do Painel)", () => {
+    const linha = (type: "income" | "expense", amount: number, category_id: string | null) => ({
+        type,
+        amount,
+        category_id,
+        payment_method: "credit_card" as const,
+        payment_credit_card_id: "c1",
+    })
+    const categorias = [
+        { id: "mercado", name: "Mercado", type: "expense" as const, color: null },
+        { id: "salario", name: "Salário", type: "income" as const, color: null },
+    ]
+
+    it("abate o estorno no cartão da categoria de despesa; o sem categoria não abate", () => {
+        const rows = despesaPorCategoria(
+            [linha("expense", 100, "mercado"), linha("income", 30, "mercado"), linha("expense", 8, null), linha("income", 5, null)],
+            categorias,
+        )
+        expect(rows.map((r) => [r.id, r.value])).toEqual([
+            ["mercado", 70],
+            ["__none__", 8],
+        ])
     })
 })

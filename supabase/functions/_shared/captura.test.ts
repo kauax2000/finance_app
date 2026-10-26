@@ -144,6 +144,26 @@ Deno.test('estorno sem cartão fica a conferir e não herda a forma do históric
   assertEquals(r.linha.payment_credit_card_id, null)
 })
 
+Deno.test('estorno no cartão preenche a categoria pelo histórico de despesa', () => {
+  const r = ok(
+    montarLancamento(
+      { text: 'estorno 30 mercado nubank' },
+      ctx({
+        cartoes: [cartao('c-nu', 'Nubank', PADRAO)],
+        historicoPorCarteira: {
+          [PADRAO]: [
+            hist('Mercado', 'cat-mercado', { payment_method: 'credit_card', payment_credit_card_id: 'c-nu' }),
+            hist('Mercado', 'cat-reemb', { type: 'income', date: '2026-04-05T12:00:00.000Z' }),
+          ],
+        },
+      }),
+    ),
+  )
+  assertEquals(r.linha.type, 'income')
+  assertEquals(r.linha.payment_credit_card_id, 'c-nu')
+  assertEquals(r.linha.category_id, 'cat-mercado')
+})
+
 Deno.test('montarLancamento: sem valor devolve 422 com a mensagem exata', () => {
   assertEquals(montarLancamento({ text: 'mercado nubank' }, ctx()), {
     ok: false,

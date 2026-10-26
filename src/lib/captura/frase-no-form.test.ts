@@ -82,6 +82,15 @@ describe("camposDaFrase", () => {
         expect(c).toMatchObject({ tipo: "income", estorno: true, creditCardId: "card-nu" })
     })
 
+    it("estorno no cartão: a categoria vem do histórico de despesa", () => {
+        const historico = [
+            linha({ description: "Mercado", category_id: "cat-mercado", type: "expense" }),
+            linha({ description: "Mercado", category_id: "cat-reemb", type: "income", date: "2026-04-05T12:00:00.000Z" }),
+        ]
+        const c = camposDaFrase("estorno 30 mercado nubank", HOJE, [nubank], historico)
+        expect(c).toMatchObject({ estorno: true, creditCardId: "card-nu", categoryId: "cat-mercado" })
+    })
+
     it("estorno sem cartão: dúvida no cartão e sem a forma do histórico", () => {
         const historico = [linha({ description: "Uber", category_id: "cat-reemb", type: "income" })]
         const c = camposDaFrase("estorno 30 uber", HOJE, [nubank], historico)

@@ -1,5 +1,6 @@
 import { roundCents } from "@/lib/money-brl"
 import type {
+    Category,
     CreditCard,
     Transaction,
     WorkspaceInstallmentPlan,
@@ -9,8 +10,8 @@ import { localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
-    ehEstornoNoCartao,
     projectedChargeCountsInExpenseMonth,
+    sinalNaDespesa,
     projectedSubscriptionCountsInExpenseMonth,
     transactionCountsInExpenseMonth,
     type CreditCardClosingLookup,
@@ -91,14 +92,13 @@ export function buildCategoryCommitmentsForMonth(args: {
 
     // O estorno no cartão abate a categoria dele no mês do fechamento.
     for (const t of args.transactions) {
-        const estorno = ehEstornoNoCartao(t)
-        if (t.type !== "expense" && !estorno) continue
+        const sinal = sinalNaDespesa(t)
+        if (!sinal) continue
         const categoryId = t.category_id
         if (!categoryId) continue
         if (!transactionCountsInExpenseMonth(t, args.yearMonth, closingLookup)) continue
         const b = ensureBucket(out, categoryId)
-        const valor = Number(t.amount) || 0
-        b.postedTotal += estorno ? -valor : valor
+        b.postedTotal += sinal * (Number(t.amount) || 0)
     }
 
     const installmentDedupe = buildGlobalInstallmentDedupeKeys(args.transactions)
@@ -181,4 +181,62 @@ export function buildCategoryCommitmentsForMonth(args: {
         }
     }
     return out
+}
+
+/**
+ * O total do mês da tela de Categorias: só as categorias de despesa. O estorno
+ * antigo, gravado numa de receita, deixaria um balde negativo abatendo o total.
+ */
+export function totalDasDespesas(
+    categories: Pick<Category, "id" | "type">[],
+    spendByCategoryId: Record<string, number>,
+): number {
+    return categories
+        .filter((c) => c.type === "expense")
+        .reduce((sum, c) => sum + (spendByCategoryId[c.id] ?? 0), 0)
+}
+
+/**
+ * O gráfico "Despesa por categoria" do Painel: as linhas já no mês (o estorno no
+ * cartão pelo fechamento). O estorno abate a categoria de despesa dele; sem
+ * categoria ele não tem de onde abater.
+ */
+export function despesaPorCategoria(
+    transactions: Pick<
+        Transaction,
+        "type" | "amount" | "category_id" | "payment_method" | "payment_credit_card_id"
+    >[],
+    categories: Pick<Category, "id" | "name" | "type" | "color">[],
+): { id: string; name: string; value: number; color: string }[] {
+    const spendById = new Map<string, number>()
+    for (const t of transactions) {
+        const sinal = sinalNaDespesa(t)
+        if (!sinal || (sinal < 0 && !t.category_id)) continue
+        const id = t.category_id ?? "__none__"
+        spendById.set(id, (spendById.get(id) ?? 0) + sinal * Number(t.amount))
+    }
+
+    const rows: { id: string; name: string; value: number; color: string }[] = categories
+        .filter((c) => c.type === "expense")
+        .map((c) => ({
+            id: c.id,
+            name: c.name,
+            value: roundCents(spendById.get(c.id) ?? 0),
+            // Sem cor gravada, quem decide é a rampa do gráfico (ver `resolveFill`).
+            color: c.color ?? "",
+        }))
+
+    rows.push({
+        id: "__none__",
+        name: "Sem categoria",
+        value: roundCents(spendById.get("__none__") ?? 0),
+        color: "",
+    })
+
+    rows.sort((a, b) => {
+        if (b.value !== a.value) return b.value - a.value
+        return a.name.localeCompare(b.name, "pt-BR")
+    })
+
+    return rows
 }

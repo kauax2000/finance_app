@@ -98,6 +98,7 @@ export function ImportarExtratoWireframe({
     }
 
     async function aplicar(lidos: ItemBanco[], puladas: number) {
+        if (!destino) return
         setPendente("lendo")
         setAviso(null)
         const [historico, cats] = await Promise.all([
@@ -117,7 +118,7 @@ export function ImportarExtratoWireframe({
         }
         const existentes = (cats.data ?? []) as Categoria[]
         setCategorias(existentes)
-        setNovas(categoriasQueFaltam(lidos, existentes).map((c) => ({ ...c, clientId: crypto.randomUUID() })))
+        setNovas(categoriasQueFaltam(lidos, existentes, destino).map((c) => ({ ...c, clientId: crypto.randomUUID() })))
         setItens(prepararItens(lidos, historico.data ?? []))
         setIgnoradas(puladas)
         setBatchId(crypto.randomUUID())
@@ -171,7 +172,7 @@ export function ImportarExtratoWireframe({
             const r = await importarLancamentos(
                 supabase,
                 { userId, workspaceId },
-                comCategoriaDaPlanilha(itens, [...categorias, ...criadas]),
+                comCategoriaDaPlanilha(itens, [...categorias, ...criadas], destino),
                 destino,
                 modo === "planilha" ? "import_sheet" : "import_statement",
                 batchId,

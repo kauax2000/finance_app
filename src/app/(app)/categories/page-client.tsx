@@ -82,7 +82,7 @@ import {
     periodBoundsFromYearMonth,
     shiftYearMonth,
 } from "@/lib/budget-month"
-import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
+import { buildCategoryCommitmentsForMonth, totalDasDespesas } from "@/lib/category-commitments"
 
 export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNew?: boolean }) {
     const pathname = usePathname()
@@ -560,11 +560,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         void fetchBudgetsAndSpend()
     }
 
-    // Só as categorias de despesa: o estorno antigo, gravado numa de receita,
-    // não abate o total.
-    const totalMonthSpend = categories
-        .filter((c) => c.type === "expense")
-        .reduce((sum, c) => sum + (spendByCategoryId[c.id] ?? 0), 0)
+    const totalMonthSpend = totalDasDespesas(categories, spendByCategoryId)
 
     const expenseSpendRankById = (() => {
         const rows = expenseFiltered.map((c) => ({

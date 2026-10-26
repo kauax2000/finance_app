@@ -9,7 +9,11 @@ import type {
 import { monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
 import { ehEstornoNoCartao } from "../../supabase/functions/_shared/credit-card-cycle"
 
-export { ehEstornoNoCartao }
+export {
+    ehEstornoNoCartao,
+    sinalNaDespesa,
+    tipoDaCategoria,
+} from "../../supabase/functions/_shared/credit-card-cycle"
 
 export type CreditCardClosingLookup = Map<string, number>
 

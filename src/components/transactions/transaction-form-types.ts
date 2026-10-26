@@ -1,5 +1,6 @@
 import type { PaymentMethod } from "@/lib/payment-methods"
 import type { TransactionSource } from "@/lib/supabase"
+import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 
 /** O número de parcelas com que a Parcelada abre. */
 export const DEFAULT_INSTALLMENT_COUNT = "12"
@@ -68,12 +69,14 @@ export type InstallmentPlanUpdatePayload = {
 }
 
 /**
- * O tipo das categorias que o lançamento oferece. O estorno no cartão é uma
- * receita, mas escolhe uma categoria de despesa: ele abate o orçamento dela.
+ * A categoria escolhida é de outro tipo que o lançamento pede (`tipoDaCategoria`):
+ * o estorno no cartão antigo, gravado numa de receita, por exemplo. Ela sai do
+ * formulário, e uma categoria que a lista não tem não é julgada.
  */
-export function tipoDaCategoria(
-    type: "income" | "expense",
-    estornoCartaoId: string | null,
-): "income" | "expense" {
-    return type === "income" && estornoCartaoId ? "expense" : type
+export function categoriaForaDoTipo(
+    r: { type: "income" | "expense"; estornoCartaoId: string | null; categoryId: string },
+    categorias: { id: string; type: "income" | "expense" }[],
+): boolean {
+    const cat = r.categoryId ? categorias.find((c) => c.id === r.categoryId) : undefined
+    return cat != null && cat.type !== tipoDaCategoria(r.type, r.estornoCartaoId)
 }

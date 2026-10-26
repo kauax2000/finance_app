@@ -126,7 +126,8 @@ export type CardTxRow = {
 
 /**
  * Despesas no cartão com data em [start, end] (inclusivo), somadas em centavos.
- * `categoryId` undefined soma todas; null, só as sem categoria.
+ * `categoryId` undefined soma todas; null, só as sem categoria. Com uma
+ * categoria, o estorno no cartão dela abate (o alerta de categoria do ciclo).
  */
 export function sumCardExpensesInWindow(
   rows: CardTxRow[],
@@ -138,7 +139,8 @@ export function sumCardExpensesInWindow(
   const endK = formatYmd(win.end)
   let cents = 0
   for (const t of rows) {
-    if (t.type !== 'expense') continue
+    const sinal = typeof categoryId === 'string' ? sinalNaDespesa(t) : t.type === 'expense' ? 1 : 0
+    if (!sinal) continue
     if (t.payment_method !== 'credit_card') continue
     if (t.payment_credit_card_id !== cardId) continue
     const ymd = isoPrefixYmd(t.date)
@@ -146,7 +148,7 @@ export function sumCardExpensesInWindow(
     const k = formatYmd(ymd)
     if (k < startK || k > endK) continue
     if (categoryId !== undefined && (t.category_id ?? null) !== categoryId) continue
-    cents += Math.round(Number(t.amount || 0) * 100)
+    cents += sinal * Math.round(Number(t.amount || 0) * 100)
   }
   return cents / 100
 }
@@ -182,6 +184,32 @@ export function ehEstornoNoCartao(t: {
   payment_credit_card_id?: string | null
 }): boolean {
   return t.type === 'income' && t.payment_method === 'credit_card' && !!t.payment_credit_card_id
+}
+
+/**
+ * O peso da linha na despesa de uma categoria: a despesa soma (1), o estorno no
+ * cartão abate (−1) e o resto fica fora (0). Quem soma decide se a categoria é
+ * de despesa (o estorno antigo foi gravado numa de receita).
+ */
+export function sinalNaDespesa(t: {
+  type: string
+  payment_method?: string | null
+  payment_credit_card_id?: string | null
+}): 1 | -1 | 0 {
+  if (t.type === 'expense') return 1
+  return ehEstornoNoCartao(t) ? -1 : 0
+}
+
+/**
+ * O tipo da categoria que o lançamento escolhe. O estorno no cartão é uma
+ * receita, mas escolhe uma categoria de despesa: ele abate o orçamento dela.
+ * `cartaoDoEstorno` é o cartão do estorno, ou null.
+ */
+export function tipoDaCategoria(
+  type: 'income' | 'expense',
+  cartaoDoEstorno: string | null,
+): 'income' | 'expense' {
+  return type === 'income' && cartaoDoEstorno ? 'expense' : type
 }
 
 /** Fatura na janela: despesas − estornos, em centavos. Pode ser negativa (saldo credor). */

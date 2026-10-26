@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { calendarYmdToStorageIso } from "@/lib/transaction-date"
 import type { TablesInsert } from "@/types/database"
 import { sugerirCategoria } from "./categoria-pelo-historico"
@@ -33,17 +34,26 @@ export function prepararItens(
 
 type CategoriaPorNome = { id: string; name: string; type: "income" | "expense" }
 
-const tipoDoItem = (i: ItemBanco): "income" | "expense" => (i.estorno ? "income" : "expense")
+/**
+ * O tipo da categoria do item: na conta o crédito é receita; na fatura do cartão
+ * o estorno escolhe a categoria de despesa da compra, que ele abate.
+ */
+const tipoDoItem = (i: ItemBanco, destino: DestinoImportacao): "income" | "expense" =>
+    tipoDaCategoria(i.estorno ? "income" : "expense", destino.tipo === "cartao" ? destino.cardId : null)
 const chave = (nome: string, tipo: "income" | "expense") => `${tipo}:${normalizarDescricao(nome)}`
 
 /**
  * A planilha traz a categoria por nome: ela vale sobre a do histórico quando casa
  * com uma categoria do tipo do sinal, sem acento nem caixa. O `clientId` fica.
  */
-export function comCategoriaDaPlanilha(itens: ItemImportavel[], categorias: CategoriaPorNome[]): ItemImportavel[] {
+export function comCategoriaDaPlanilha(
+    itens: ItemImportavel[],
+    categorias: CategoriaPorNome[],
+    destino: DestinoImportacao,
+): ItemImportavel[] {
     const porChave = new Map(categorias.map((c) => [chave(c.name, c.type), c.id]))
     return itens.map((i) => {
-        const id = i.categoria ? porChave.get(chave(i.categoria, tipoDoItem(i))) : undefined
+        const id = i.categoria ? porChave.get(chave(i.categoria, tipoDoItem(i, destino))) : undefined
         return id ? { ...i, categoryId: id } : i
     })
 }
@@ -52,16 +62,18 @@ export function comCategoriaDaPlanilha(itens: ItemImportavel[], categorias: Cate
 export function categoriasQueFaltam(
     itens: ItemBanco[],
     categorias: CategoriaPorNome[],
+    destino: DestinoImportacao,
 ): Array<{ nome: string; tipo: "income" | "expense" }> {
     const vistas = new Set(categorias.map((c) => chave(c.name, c.type)))
     const faltam: Array<{ nome: string; tipo: "income" | "expense" }> = []
     for (const i of itens) {
         const nome = i.categoria?.trim()
         if (!nome || !normalizarDescricao(nome)) continue
-        const k = chave(nome, tipoDoItem(i))
+        const tipo = tipoDoItem(i, destino)
+        const k = chave(nome, tipo)
         if (vistas.has(k)) continue
         vistas.add(k)
-        faltam.push({ nome, tipo: tipoDoItem(i) })
+        faltam.push({ nome, tipo })
     }
     return faltam
 }

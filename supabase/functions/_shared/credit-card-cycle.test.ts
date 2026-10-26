@@ -8,6 +8,7 @@ import {
   appTodayYmd,
   cardInvoiceNetInWindow,
   ehEstornoNoCartao,
+  sinalNaDespesa,
   escolherTotal,
   estimatedDueYmdForClose,
   estimatedDueYmdInMonth,
@@ -18,6 +19,7 @@ import {
   statementCloseYmdForPurchaseYmd,
   statementTotalKey,
   sumCardRefundsInWindow,
+  tipoDaCategoria,
   type Ymd,
 } from './credit-card-cycle.ts'
 
@@ -151,6 +153,32 @@ Deno.test('ehEstornoNoCartao: a receita no crédito com o cartão', () => {
   assertEquals(ehEstornoNoCartao({ ...t, payment_credit_card_id: null }), false)
 })
 
+Deno.test('sinalNaDespesa: a despesa soma, o estorno no cartão abate, o resto fica fora', () => {
+  const t = { type: 'income', payment_method: 'credit_card', payment_credit_card_id: 'c1' }
+  assertEquals(sinalNaDespesa({ ...t, type: 'expense' }), 1)
+  assertEquals(sinalNaDespesa(t), -1)
+  assertEquals(sinalNaDespesa({ ...t, payment_method: 'pix' }), 0)
+})
+
+Deno.test('tipoDaCategoria: o estorno no cartão escolhe categoria de despesa', () => {
+  assertEquals(tipoDaCategoria('income', 'c1'), 'expense')
+  assertEquals(tipoDaCategoria('income', null), 'income')
+  assertEquals(tipoDaCategoria('expense', null), 'expense')
+})
+
+Deno.test('sumCardExpensesInWindow com a categoria abate o estorno dela (o alerta do ciclo)', () => {
+  const row = (type: string, amount: number, category_id: string | null) => ({
+    amount, type, date: '2026-10-06T12:00:00.000Z', payment_method: 'credit_card',
+    payment_credit_card_id: 'c1', category_id,
+  })
+  const rows = [row('expense', 100, 'mercado'), row('income', 30, 'mercado'), row('income', 9, null), row('expense', 4, null)]
+  const win = { start: ymd('2026-10-04'), end: ymd('2026-11-03') }
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win, 'mercado'), 70)
+  // Sem categoria o estorno não tem de onde abater; sem o filtro, a soma é só da despesa.
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win, null), 4)
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win), 104)
+})
+
 Deno.test('a fatura abate o estorno com categoria de despesa como antes', () => {
   const row = (type: string, amount: number, category_id: string | null) => ({
     amount, type, date: '2026-10-06T12:00:00.000Z', payment_method: 'credit_card',
@@ -158,7 +186,6 @@ Deno.test('a fatura abate o estorno com categoria de despesa como antes', () => 
   })
   const win = { start: ymd('2026-10-04'), end: ymd('2026-11-03') }
   assertEquals(cardInvoiceNetInWindow([row('expense', 100, 'mercado'), row('income', 30, 'mercado')], 'c1', win), 70)
-  assertEquals(sumCardExpensesInWindow([row('expense', 100, 'mercado'), row('income', 30, 'mercado')], 'c1', win, 'mercado'), 100)
 })
 
 Deno.test('escolherTotal: sem total do banco, vale o calculado', () => {

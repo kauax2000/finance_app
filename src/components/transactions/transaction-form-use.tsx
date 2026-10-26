@@ -29,7 +29,7 @@ import { transactionFormTitle } from "@/components/transactions/transaction-form
 import {
     DEFAULT_INSTALLMENT_COUNT,
     TRANSACTION_SAVE_TOAST_ID,
-    tipoDaCategoria,
+    categoriaForaDoTipo,
     type InstallmentPlanFormSavePayload,
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
@@ -370,10 +370,11 @@ export function useTransactionForm({
     }, [active])
 
     useEffect(() => {
-        const cat = categories.find((c) => c.id === categoryId)
-        if (categoryId && cat && cat.type !== tipoDaCategoria(type, estornoCartaoId)) {
-            setCategoryId("")
-        }
+        if (!categoriaForaDoTipo({ type, estornoCartaoId, categoryId }, categories)) return
+        setCategoryId("")
+        // A categoria que já nasceu fora do tipo (o estorno antigo, numa de
+        // receita) sai também da fotografia: abrir não suja o formulário.
+        setSnapshot((s) => (s && categoriaForaDoTipo(s, categories) ? { ...s, categoryId: "" } : s))
     }, [type, estornoCartaoId, categories, categoryId])
 
     useEffect(() => {

@@ -13,6 +13,7 @@ import {
   type FormaDePagamento,
   type LinhaHistorico,
 } from './frase.ts'
+import { tipoDaCategoria } from './credit-card-cycle.ts'
 import type { CamposIA } from './ia.ts'
 import type { Provedor } from './ia-config.ts'
 import { moneyBRL } from './notification-copy.ts'
@@ -278,7 +279,12 @@ export function montarLancamento(
   // Regra 2: sem descrição de verdade, o histórico não tem o que casar.
   const historico = duvidas.includes('descricao')
     ? null
-    : preencherPeloHistorico(descricao, tipo, ctx.historicoPorCarteira[carteira] ?? [])
+    : // O estorno no cartão busca a categoria da compra, no histórico de despesa.
+      preencherPeloHistorico(
+        descricao,
+        tipoDaCategoria(tipo, estorno ? (cartao?.id ?? null) : null),
+        ctx.historicoPorCarteira[carteira] ?? [],
+      )
 
   // Estorno sem cartão não herda a forma do histórico (um pix de lá não é a fatura).
   const paymentMethod = forma

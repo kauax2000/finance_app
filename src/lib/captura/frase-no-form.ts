@@ -15,6 +15,7 @@ import {
     type LinhaHistorico,
 } from "@/lib/captura/frase"
 import type { CamposIA } from "@/lib/ia/ler"
+import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { fraseHistoricoKeys } from "@/lib/queries/keys"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import { supabase, type TransactionSource } from "@/lib/supabase"
@@ -147,7 +148,12 @@ function camposDaInterpretacao(
     // Sem descrição de verdade, o histórico não tem o que casar.
     const doHistorico = duvidas.includes("descricao")
         ? null
-        : preencherPeloHistorico(descricao, f.tipo, historico)
+        : // O estorno no cartão busca a categoria da compra, no histórico de despesa.
+          preencherPeloHistorico(
+              descricao,
+              tipoDaCategoria(f.tipo, f.estorno ? (cartao?.id ?? null) : null),
+              historico,
+          )
 
     let paymentMethod: PaymentMethod | null = null
     let creditCardId: string | null = null

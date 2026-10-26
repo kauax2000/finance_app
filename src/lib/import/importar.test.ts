@@ -190,13 +190,16 @@ describe("categoria da planilha, pelo nome", () => {
         { id: "sal", name: "Salário", type: "income" as const },
     ]
 
+    const conta = { tipo: "conta", paymentMethod: "pix" } as const
+    const cartao = { tipo: "cartao", cardId: "k1" } as const
+
     it("casa sem acento nem caixa, no tipo do sinal, e mantém o clientId", () => {
         const itens = [
             item({ clientId: "a", categoria: "ALIMENTACAO", categoryId: "historico" }),
             item({ clientId: "b", categoria: "salario", estorno: true, categoryId: null }),
             item({ clientId: "c", categoryId: "historico" }),
         ]
-        const r = comCategoriaDaPlanilha(itens, categorias)
+        const r = comCategoriaDaPlanilha(itens, categorias, conta)
         expect(r.map((i) => [i.clientId, i.categoryId])).toEqual([
             ["a", "alim"],
             ["b", "sal"],
@@ -204,22 +207,39 @@ describe("categoria da planilha, pelo nome", () => {
         ])
     })
 
+    it("no cartão o estorno casa a categoria de despesa", () => {
+        const itens = [
+            item({ clientId: "a", categoria: "Alimentação", estorno: true, categoryId: null }),
+            item({ clientId: "b", categoria: "Salário", estorno: true, categoryId: null }),
+        ]
+        const r = comCategoriaDaPlanilha(itens, categorias, cartao)
+        expect(r.map((i) => [i.clientId, i.categoryId])).toEqual([
+            ["a", "alim"],
+            ["b", null],
+        ])
+    })
+
     it("o que não existe no tipo do sinal falta, uma vez por nome", () => {
         const itens = [
             item({ categoria: "Pet" }),
             item({ categoria: " pet " }),
-            item({ categoria: "Alimentação", estorno: true }),
+            item({ categoria: "Bônus", estorno: true }),
             item({ categoria: "Alimentacao" }),
             item({}),
         ]
-        expect(categoriasQueFaltam(itens, categorias)).toEqual([
+        expect(categoriasQueFaltam(itens, categorias, conta)).toEqual([
             { nome: "Pet", tipo: "expense" },
-            { nome: "Alimentação", tipo: "income" },
+            { nome: "Bônus", tipo: "income" },
         ])
     })
 
+    it("no cartão o estorno não cria a categoria de receita: a de despesa já existe", () => {
+        const itens = [item({ categoria: "Alimentação", estorno: true }), item({ categoria: "Pet", estorno: true })]
+        expect(categoriasQueFaltam(itens, categorias, cartao)).toEqual([{ nome: "Pet", tipo: "expense" }])
+    })
+
     it("um nome que normaliza para vazio não vira categoria", () => {
-        expect(categoriasQueFaltam([item({ categoria: "--" }), item({ categoria: " ! " })], categorias)).toEqual([])
+        expect(categoriasQueFaltam([item({ categoria: "--" }), item({ categoria: " ! " })], categorias, conta)).toEqual([])
     })
 })
 

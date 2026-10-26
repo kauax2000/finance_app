@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { buildCardCycleSnapshot, localNoonDate } from "./credit-card-billing"
 import {
+    aggregateByCategory,
     buildCategoryComparisonRows,
     buildCreditCardInvoiceAnalytics,
 } from "./credit-card-invoice-analytics"
@@ -135,5 +136,37 @@ describe("buildCreditCardInvoiceAnalytics (percentuais com estorno)", () => {
         expect(a.openExpenseTotal).toBe(200)
         expect(a.summaryText).not.toContain("Nenhum gasto")
         expect(a.summaryText).toContain("Casa")
+    })
+})
+
+describe("aggregateByCategory e o estorno no cartão", () => {
+    const linha = (
+        type: "income" | "expense",
+        amount: number,
+        category: { id: string; type: "income" | "expense" } | null,
+    ) => ({
+        id: `${type}-${amount}`,
+        type,
+        amount,
+        date: "2026-03-16T12:00:00.000Z",
+        description: null,
+        payment_method: "credit_card" as const,
+        payment_credit_card_id: "c1",
+        installment_sequence: null,
+        installment_plan_id: null,
+        subscription_id: null,
+        category_id: category?.id ?? null,
+        category: category ? { id: category.id, name: category.id, color: null, icon: null, type: category.type } : null,
+    })
+
+    it("abate o estorno da categoria de despesa; o de receita e o sem categoria não entram", () => {
+        const mercado = { id: "mercado", type: "expense" as const }
+        const rows = [
+            linha("expense", 100, mercado),
+            linha("income", 30, mercado),
+            linha("income", 20, { id: "salario", type: "income" }),
+            linha("income", 5, null),
+        ]
+        expect(aggregateByCategory(rows).map((c) => [c.categoryId, c.total])).toEqual([["mercado", 70]])
     })
 })

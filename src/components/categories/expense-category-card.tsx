@@ -36,8 +36,11 @@ function isMomFlat(now: number, prev: number): boolean {
     return rel <= 0.05
 }
 
-function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
+function MomComparisonBadge(props: { now: number; prev: number }) {
     const base = "max-w-full min-w-0 shrink-0 px-2 py-0.5 text-2xs font-medium"
+    // O estorno no cartão pode deixar o gasto negativo: ele lê como zero.
+    const now = Math.max(0, props.now)
+    const prev = Math.max(0, props.prev)
 
     if (prev <= 0 && now <= 0) {
         const label = "Sem gasto"
@@ -137,7 +140,9 @@ export function ExpenseCategoryCard({
         ? Math.max(0, Math.round((spent / limit) * 100))
         : 0
 
-    const sharePct = totalMonthSpend > 0 ? Math.min(100, (spent / totalMonthSpend) * 100) : 0
+    // O gasto negativo (estorno maior que as compras) lê como zero, na barra e no texto.
+    const gastoNaTela = Math.max(0, spent)
+    const sharePct = totalMonthSpend > 0 ? Math.min(100, (gastoNaTela / totalMonthSpend) * 100) : 0
 
     const shareInsight = (() => {
         if (totalMonthSpend <= 0) {
@@ -290,7 +295,7 @@ export function ExpenseCategoryCard({
                         {hasBudget ? (
                             <>
                                 <Progress
-                                    value={spent}
+                                    value={gastoNaTela}
                                     max={limit}
                                     bands={BUDGET_BANDS}
                                     size="sm"

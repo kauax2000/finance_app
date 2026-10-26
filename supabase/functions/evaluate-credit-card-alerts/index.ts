@@ -390,6 +390,9 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
     if (!threshold || threshold <= 0) continue
 
     const catKey = alert.category_id ?? null
+    // O estorno no cartão da categoria abate o gasto dela no ciclo, como no
+    // orçamento. No `main` nenhuma receita tem categoria de despesa, então o
+    // alerta dele não muda (o abatimento só baixa o gasto, nunca dispara).
     const spendCat = sumCardExpensesInWindow(rows, cardId, openWin, catKey)
     if (spendCat < threshold) continue
 

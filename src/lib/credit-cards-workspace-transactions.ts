@@ -21,6 +21,8 @@ export type CcCategoryEmbed = {
     name: string
     color: string | null
     icon: string | null
+    /** Decide se o estorno no cartão abate a categoria na quebra da fatura. */
+    type?: "income" | "expense"
 }
 
 export type CcTxRow = Pick<
@@ -67,7 +69,7 @@ export const CREDIT_CARD_EXPENSE_SELECT =
  * `*` e não a lista: a coluna que ainda não existe no banco (antes,
  * `subscription_id`) só não vem (Ruling 8 do 7B).
  */
-export const CREDIT_CARD_ANALYTICS_SELECT = "*,category:categories(id,name,color,icon)"
+export const CREDIT_CARD_ANALYTICS_SELECT = "*,category:categories(id,name,color,icon,type)"
 
 export const RECENT_CC_TX_CAP = 20
 

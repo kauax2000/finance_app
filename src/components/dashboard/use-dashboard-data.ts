@@ -14,6 +14,7 @@ import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { toastError } from "@/lib/toast"
 import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate, transactionCalendarParts, transactionLocalYmd } from "@/lib/transaction-date"
 import { buildCardMonthlyInvoiceSnapshot } from "@/lib/credit-card-billing"
+import { despesaPorCategoria } from "@/lib/category-commitments"
 import {
     aggregateIncomeExpenseForMonth,
     buildCreditCardClosingLookup,
@@ -468,39 +469,10 @@ export function useDashboardData() {
         return aggregateIncomeExpenseForMonth(rows, prevCalendarYm, creditCardClosingLookup)
     }, [prevTransactions, prevCalendarYm, creditCardClosingLookup, calendarYm, todayYmd])
 
-    const expenseByCategory = useMemo(() => {
-        const spendById = new Map<string, number>()
-        for (const t of transactionsInRange) {
-            if (t.type !== "expense") continue
-            const id = t.category_id ?? "__none__"
-            spendById.set(id, (spendById.get(id) ?? 0) + Number(t.amount))
-        }
-
-        const expenseCats = categories.filter((c) => c.type === "expense")
-
-        const rows: { id: string; name: string; value: number; color: string }[] =
-            expenseCats.map((c) => ({
-                id: c.id,
-                name: c.name,
-                value: spendById.get(c.id) ?? 0,
-                // Sem cor gravada, quem decide é a rampa do gráfico (ver `resolveFill`).
-                color: c.color ?? "",
-            }))
-
-        rows.push({
-            id: "__none__",
-            name: "Sem categoria",
-            value: spendById.get("__none__") ?? 0,
-            color: "",
-        })
-
-        rows.sort((a, b) => {
-            if (b.value !== a.value) return b.value - a.value
-            return a.name.localeCompare(b.name, "pt-BR")
-        })
-
-        return rows
-    }, [transactionsInRange, categories])
+    const expenseByCategory = useMemo(
+        () => despesaPorCategoria(transactionsInRange, categories),
+        [transactionsInRange, categories],
+    )
 
     const pendingBillRows = pendingBillsDashboardQuery.data ?? []
 

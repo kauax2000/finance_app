@@ -9,7 +9,7 @@
  */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- `@ts-expect-error` quebraria o `deno check`, onde a linha não tem erro.
 // @ts-ignore TS5097: o Deno exige a extensão; o tsc do app chega aqui pelo teste de paridade.
-import { type CardTxRow, ehEstornoNoCartao, formatYmd, isoPrefixYmd, statementCloseYmdForPurchaseYmd } from './credit-card-cycle.ts'
+import { type CardTxRow, formatYmd, isoPrefixYmd, sinalNaDespesa, statementCloseYmdForPurchaseYmd } from './credit-card-cycle.ts'
 
 export function gastoDaCategoriaNoMes(
   rows: CardTxRow[],
@@ -19,8 +19,8 @@ export function gastoDaCategoriaNoMes(
 ): number {
   let cents = 0
   for (const t of rows) {
-    const estorno = ehEstornoNoCartao(t)
-    if ((t.type !== 'expense' && !estorno) || t.category_id !== categoryId) continue
+    const sinal = sinalNaDespesa(t)
+    if (!sinal || t.category_id !== categoryId) continue
     const day = isoPrefixYmd(t.date)
     if (!day) continue
     const closingDay =
@@ -29,8 +29,7 @@ export function gastoDaCategoriaNoMes(
         : undefined
     const attributed = closingDay == null ? day : statementCloseYmdForPurchaseYmd(day, closingDay)
     if (formatYmd(attributed).slice(0, 7) !== ym) continue
-    const valor = Math.round(Number(t.amount || 0) * 100)
-    cents += estorno ? -valor : valor
+    cents += sinal * Math.round(Number(t.amount || 0) * 100)
   }
   return cents / 100
 }

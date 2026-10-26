@@ -11,6 +11,7 @@ import {
 import {
     Field,
     FieldControl,
+    FieldDescription,
     FieldLabel,
     FieldRow,
     FieldTitle,
@@ -77,7 +78,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
-import { tipoDaCategoria } from "@/components/transactions/transaction-form-types"
+import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
@@ -787,6 +788,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         </FormPickerPopoverFooter>
                     </FormPickerPopoverContent>
                 </Popover>
+                {type === "income" && estornoCartaoId ? (
+                    <FieldDescription>No estorno, a categoria é a da compra (de despesa).</FieldDescription>
+                ) : null}
             </Field>
 
             <FormInput

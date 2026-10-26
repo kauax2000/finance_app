@@ -4,6 +4,7 @@
  */
 
 import { roundCents } from "@/lib/money-brl"
+import { sinalNaDespesa } from "@/lib/expense-month-attribution"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
 import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
 import {
@@ -171,14 +172,20 @@ function categoryMetaFromTx(tx: CcTxAnalyticsRow): {
     }
 }
 
+/**
+ * A fatura por categoria: a despesa soma e o estorno no cartão abate a
+ * categoria de despesa dele. O de receita (o estorno antigo) e o sem categoria
+ * não entram.
+ */
 export function aggregateByCategory(rows: CcTxAnalyticsRow[]): CategoryAggregate[] {
     const map = new Map<string, CategoryAggregate>()
     for (const tx of rows) {
-        if (tx.type !== "expense") continue
+        const sinal = sinalNaDespesa(tx)
+        if (!sinal || (sinal < 0 && tx.category?.type !== "expense")) continue
         const mapKey = tx.category_id ?? "__none__"
         const meta = categoryMetaFromTx(tx)
         const cur = map.get(mapKey)
-        const amt = Number(tx.amount)
+        const amt = sinal * Number(tx.amount)
         if (!cur) {
             map.set(mapKey, {
                 categoryId: tx.category_id,
@@ -699,7 +706,8 @@ export function buildCreditCardInvoiceAnalytics(
 
     const sliceOpen = sumByInvoiceSlice(openRows)
     const sliceLastClosed = sumByInvoiceSlice(lastClosedRows)
-    // As categorias só somam despesas; o percentual divide pelo mesmo bruto.
+    // As categorias somam as despesas e abatem o estorno da categoria; o
+    // percentual divide pelo bruto das despesas.
     const openExpenseTotal = roundCents(sliceOpen.installments_recurring + sliceOpen.one_off)
     const lastClosedExpenseTotal = roundCents(
         sliceLastClosed.installments_recurring + sliceLastClosed.one_off
