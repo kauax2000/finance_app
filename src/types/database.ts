@@ -252,6 +252,24 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_events: {
+        Row: {
+          id: string
+          recebido_em: string
+          tipo: string
+        }
+        Insert: {
+          id: string
+          recebido_em?: string
+          tipo: string
+        }
+        Update: {
+          id?: string
+          recebido_em?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       billing_settings: {
         Row: {
           enforced_since: string | null
@@ -269,50 +287,80 @@ export type Database = {
       }
       billing_subscriptions: {
         Row: {
+          asaas_customer_id: string | null
           cancel_at_period_end: boolean
+          card_brand: string | null
+          card_last4: string | null
+          card_token: string | null
+          checkout_criado_em: string | null
+          checkout_ref: string | null
+          checkout_url: string | null
           created_at: string
           current_period_end: string | null
           founder: boolean
           grace_until: string | null
           id: string
           interval: string
+          nfse_para: string | null
           plan: string
           price_cents: number | null
           provider: string
           provider_ref: string | null
+          reembolsavel_ate: string | null
           status: string
+          ultimo_ip: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
           cancel_at_period_end?: boolean
+          card_brand?: string | null
+          card_last4?: string | null
+          card_token?: string | null
+          checkout_criado_em?: string | null
+          checkout_ref?: string | null
+          checkout_url?: string | null
           created_at?: string
           current_period_end?: string | null
           founder?: boolean
           grace_until?: string | null
           id?: string
           interval?: string
+          nfse_para?: string | null
           plan?: string
           price_cents?: number | null
           provider: string
           provider_ref?: string | null
+          reembolsavel_ate?: string | null
           status: string
+          ultimo_ip?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
           cancel_at_period_end?: boolean
+          card_brand?: string | null
+          card_last4?: string | null
+          card_token?: string | null
+          checkout_criado_em?: string | null
+          checkout_ref?: string | null
+          checkout_url?: string | null
           created_at?: string
           current_period_end?: string | null
           founder?: boolean
           grace_until?: string | null
           id?: string
           interval?: string
+          nfse_para?: string | null
           plan?: string
           price_cents?: number | null
           provider?: string
           provider_ref?: string | null
+          reembolsavel_ate?: string | null
           status?: string
+          ultimo_ip?: string | null
           updated_at?: string
           user_id?: string
         }
