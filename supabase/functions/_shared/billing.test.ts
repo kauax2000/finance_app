@@ -732,13 +732,13 @@ Deno.test('resultadoDaCobranca: confirmada ativa; aceita espera', () => {
   assertEquals(resultadoDaCobranca({ ok: true, dados: { status: 'PENDING' } }), 'esperar')
 })
 
-Deno.test('resultadoDaCobranca (Ruling 18 e 26): só o outro 4xx é recusa; rede, prazo e 200 ilegível esperam', () => {
+Deno.test('resultadoDaCobranca (Ruling 18 e 26): só o outro 4xx é recusa; 5xx, rede, prazo e 200 ilegível esperam', () => {
   for (const status of [400, 402, 404, 422, 499]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'recusada')
-  for (const status of [0, 200]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'esperar')
+  for (const status of [0, 200, 500, 502, 503, 504]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'esperar')
 })
 
-Deno.test('resultadoDaCobranca (I4 / Ruling 26): chave, limite, prazo do servidor e 5xx soltam a tentativa, sem recusa', () => {
-  for (const status of [401, 403, 408, 429, 500, 502, 503, 504]) {
+Deno.test('resultadoDaCobranca (I4 / Ruling 26): chave, limite e prazo do servidor soltam a tentativa, sem recusa', () => {
+  for (const status of [401, 403, 408, 429]) {
     assertEquals(resultadoDaCobranca({ ok: false, status }), 'soltar')
   }
 })

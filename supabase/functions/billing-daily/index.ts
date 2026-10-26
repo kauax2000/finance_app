@@ -380,7 +380,7 @@ async function renovar(ctx: Ctx, linha: Linha): Promise<void> {
 
   // Depois da cobrança, nada lança: a gravação vale se a reivindicação ainda é desta chamada.
   const resultado = resultadoDaCobranca(cobranca)
-  // Ruling 26: 401, 403, 408, 429 e 5xx não são o cartão. Devolve a tentativa, sem aviso, e amanhã tenta de novo.
+  // Ruling 26: 401, 403, 408 e 429 não são o cartão nem cobraram. Devolve a tentativa, sem aviso, e amanhã tenta de novo.
   if (!cobranca.ok && resultado === 'soltar') return await soltar('cobrança por token', cobranca.status, cobranca.erros)
   if (cobranca.ok && resultado === 'ativar') {
     if (await aplicarPagamento(ctx, linha, cobranca.dados, gravar)) return
@@ -388,7 +388,7 @@ async function renovar(ctx: Ctx, linha: Linha): Promise<void> {
     console.error('billing-daily: confirmada sem efeito', linha.id, cobranca.dados.id)
   }
 
-  // Aceita e ainda não confirmada, ou incerta (Ruling 5 e 18): o plano segue pela grace_until (Ruling 4).
+  // Aceita e ainda não confirmada, ou incerta (5xx, rede, prazo; Ruling 5, 18 e 26): o plano segue pela grace_until (Ruling 4).
   if (cobranca.ok || resultado !== 'recusada') {
     if (!cobranca.ok) console.error('billing-daily: cobrança incerta', linha.id, cobranca.status, cobranca.erros)
     if (await gravar(aguardandoConfirmacao(linha))) ctx.n.aguardando += 1

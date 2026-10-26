@@ -376,16 +376,17 @@ export function checkoutPendente(
 
 /**
  * Ruling 18 e 26: o que a resposta da cobrança por token quer dizer. 401, 403,
- * 408, 429 e 5xx não são o cartão: a chave, o limite ou o Asaas fora do ar —
- * `'soltar'` devolve a tentativa e o cron tenta no dia seguinte, sem aviso. Só
- * os outros 4xx são recusa (o Asaas não cria a cobrança recusada); rede, prazo
- * estourado ou 200 ilegível podem ter cobrado, e esperam.
+ * 408 e 429 não são o cartão nem cobraram: a chave ou o limite — `'soltar'`
+ * devolve a tentativa e o cron tenta no dia seguinte, sem aviso. Só os outros
+ * 4xx são recusa (o Asaas não cria a cobrança recusada); 5xx, rede, prazo
+ * estourado ou 200 ilegível podem ter cobrado, e esperam (a verificação da
+ * Ruling 19 confere no dia seguinte).
  */
 export function resultadoDaCobranca(
   r: { ok: true; dados: { status: string } } | { ok: false; status: number },
 ): 'ativar' | 'esperar' | 'recusada' | 'soltar' {
   if (r.ok) return r.dados.status === 'CONFIRMED' || r.dados.status === 'RECEIVED' ? 'ativar' : 'esperar'
-  if ([401, 403, 408, 429].includes(r.status) || r.status >= 500) return 'soltar'
+  if ([401, 403, 408, 429].includes(r.status)) return 'soltar'
   return r.status >= 400 && r.status < 500 ? 'recusada' : 'esperar'
 }
 

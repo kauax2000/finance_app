@@ -114,7 +114,7 @@ describe("Edge billing-daily", () => {
         expect(remove).toBeGreaterThan(triagem)
         expect(cobra).toBeGreaterThan(remove)
         expect(r).toContain("reusar ? [reusar, ...remover] : remover")
-        // a falha de leitura ou remoção não cobra: devolve a data de antes (e o 401/429/5xx da cobrança, Ruling 26)
+        // a falha de leitura ou remoção não cobra: devolve a data de antes (e o 401/403/408/429 da cobrança, Ruling 26)
         expect(r.match(/return await soltar\(/g)?.length).toBe(4)
     })
 
@@ -254,7 +254,7 @@ describe("Edge billing-daily", () => {
         expect(fonte(DIARIO)).not.toMatch(/marcarAtivado\(ctx, [^,)]+\)/)
     })
 
-    it("I4 / Ruling 26: 401/403/408/429 e 5xx da cobrança por token soltam a tentativa, sem aviso nem past_due", () => {
+    it("I4 / Ruling 26: 401/403/408/429 da cobrança por token soltam a tentativa, sem aviso nem past_due; 5xx espera", () => {
         const r = funcao(fonte(DIARIO), "renovar")
         const solta = r.indexOf("if (!cobranca.ok && resultado === 'soltar') return await soltar('cobrança por token', cobranca.status, cobranca.erros)")
         expect(solta).toBeGreaterThan(r.indexOf("const resultado = resultadoDaCobranca(cobranca)"))
@@ -266,7 +266,8 @@ describe("Edge billing-daily", () => {
         expect(soltar).toContain("update({ checkout_criado_em: linha.checkout_criado_em })")
         expect(soltar).toContain(".eq('checkout_criado_em', iso)")
         const regra = fonte("supabase/functions/_shared/billing.ts")
-        expect(regra).toContain("if ([401, 403, 408, 429].includes(r.status) || r.status >= 500) return 'soltar'")
+        expect(regra).toContain("if ([401, 403, 408, 429].includes(r.status)) return 'soltar'")
+        expect(regra).not.toMatch(/r\.status >= 500\) return 'soltar'/)
     })
 
     it("I1 / Ruling 18: só o resultado 'recusada' (4xx) vira past_due e aviso do cartão", () => {

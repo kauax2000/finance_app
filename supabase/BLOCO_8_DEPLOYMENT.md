@@ -153,8 +153,9 @@ o que der:
     e não deixa cobrança criada, como a avulsa? Como simular no Sandbox a
     recusa de um token válido (os cartões de recusa do Sandbox não geram
     token)? O código conta como recusa só o 4xx que não é 401, 403, 408 nem
-    429: esses quatro e o 5xx soltam a tentativa e o cron tenta no dia seguinte,
-    sem aviso (Ruling 26).
+    429: esses quatro soltam a tentativa e o cron tenta no dia seguinte, sem
+    aviso (Ruling 26). Um 5xx é incerto: a linha espera e é conferida no dia
+    seguinte (Ruling 19).
 11. **O estorno do parcelamento inteiro** (`POST /v3/installments/{id}/refund`)
     manda um `PAYMENT_REFUNDED` por parcela? O código expira a linha no
     primeiro e ignora os outros.
@@ -860,8 +861,8 @@ conferência no outro dia antes de procurar o problema.
 | Log | O que é |
 |---|---|
 | `renovação recusada` | O Asaas devolveu um 4xx que não é 401, 403, 408 nem 429 na cobrança por token: o cartão recusou. A linha vai a `past_due` e a pessoa recebe o aviso do cartão |
-| `cobrança por token` | 401, 403 (chave errada), 408, 429 (limite de requisições) ou 5xx na cobrança por token (Ruling 26): nada foi cobrado e a pessoa não recebe aviso; a tentativa volta e o cron tenta no dia seguinte. Repetido em muitas linhas, confira o `ASAAS_API_KEY` e o ambiente: enquanto isso, quem passa do fim fica sem renovar |
-| `cobrança incerta` | Rede ou prazo estourado na cobrança por token: a linha espera e é conferida no dia seguinte |
+| `cobrança por token` | 401, 403 (chave errada), 408 ou 429 (limite de requisições) na cobrança por token (Ruling 26): nada foi cobrado e a pessoa não recebe aviso; a tentativa volta e o cron tenta no dia seguinte. Repetido em muitas linhas, confira o `ASAAS_API_KEY` e o ambiente: enquanto isso, quem passa do fim fica sem renovar |
+| `cobrança incerta` | Rede, 5xx ou prazo estourado na cobrança por token: a linha espera e é conferida no dia seguinte |
 | `fatura do checkout paga sem o webhook, aplicando` | O webhook da fatura paga pelo checkout não chegou, e o cron aplicou o pagamento (I2), na renovação ou antes de expirar um `past_due`. Repetido, confira a fila do webhook no painel |
 | `parcelamento desconhecido` | Um pagamento com a nossa referência e o cliente da linha, de um parcelamento fora do registro e que não ativa a linha: a parcela atrasada de um período que passou, ou uma cobrança feita à mão. Não ativa nem estorna nada; uma cobrança em dobro de verdade se devolve pelo painel |
 | `pagamento em dobro, estornando` | Um segundo pagamento no período já pago está sendo devolvido: confira o estorno no painel |
