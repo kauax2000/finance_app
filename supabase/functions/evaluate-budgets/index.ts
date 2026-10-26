@@ -421,8 +421,10 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
   const months = [...budgets.values()].map((b) => b.period_start.slice(0, 7)).sort()
   const win = { start: margemDoMes(months[0]).start, end: margemDoMes(months[months.length - 1]).end }
   // A despesa e o estorno no cartão da categoria, como a tela de Categorias; a
-  // outra receita `gastoDaCategoriaNoMes` ignora. No `main` nenhuma receita tem
-  // categoria de despesa, então o aviso dele não muda.
+  // outra receita `gastoDaCategoriaNoMes` ignora. O front de `main` não grava
+  // estorno com categoria de despesa, mas o 2.0 grava no mesmo banco:
+  // republicada, a Edge abate esses estornos também para o `main`. É de
+  // propósito, e só baixa o gasto (nunca dispara um aviso a mais).
   const { data: txRows, error: sumErr } = await supabaseAdmin
     .from('transactions')
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')

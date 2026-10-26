@@ -198,8 +198,11 @@ export function aggregateByCategory(rows: CcTxAnalyticsRow[]): CategoryAggregate
             cur.total += amt
         }
     }
+    // O estorno num ciclo sem compra da categoria a deixaria negativa (ou zerada):
+    // ela sai da lista, e o centro do gráfico soma só as fatias mostradas.
     return [...map.values()]
         .map((c) => ({ ...c, total: roundCents(c.total) }))
+        .filter((c) => c.total > 0)
         .sort((a, b) => b.total - a.total)
 }
 
@@ -220,8 +223,12 @@ export function buildCategoryComparisonRows(
     for (const c of lastClosed) {
         prevById.set(c.categoryId, c.total)
     }
-    return open.map((c) => {
-        const prev = c.categoryId != null ? (prevById.get(c.categoryId) ?? 0) : (prevById.get(null) ?? 0)
+    // Só linha com gasto: participação e variação nunca saem abaixo de 0% e −100%.
+    return open.filter((c) => c.total > 0).map((c) => {
+        const prev = Math.max(
+            0,
+            c.categoryId != null ? (prevById.get(c.categoryId) ?? 0) : (prevById.get(null) ?? 0),
+        )
         const shareOpenPct = openTotal > 0 ? (c.total / openTotal) * 100 : 0
         const shareLastClosedPct =
             lastClosedTotal > 0 ? (prev / lastClosedTotal) * 100 : 0

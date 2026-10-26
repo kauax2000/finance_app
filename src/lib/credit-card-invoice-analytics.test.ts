@@ -169,4 +169,19 @@ describe("aggregateByCategory e o estorno no cartão", () => {
         ]
         expect(aggregateByCategory(rows).map((c) => [c.categoryId, c.total])).toEqual([["mercado", 70]])
     })
+
+    it("o estorno num ciclo sem compra da categoria não deixa linha negativa", () => {
+        const mercado = { id: "mercado", type: "expense" as const }
+        const lazer = { id: "lazer", type: "expense" as const }
+        const aberto = aggregateByCategory([linha("income", 30, mercado), linha("expense", 50, lazer)])
+        expect(aberto.map((c) => [c.categoryId, c.total])).toEqual([["lazer", 50]])
+        // No ciclo anterior Mercado teve 100: a comparação não sai negativa.
+        const anterior = aggregateByCategory([linha("expense", 100, mercado)])
+        const linhas = buildCategoryComparisonRows(aberto, anterior, 50, 100)
+        for (const r of linhas) {
+            expect(r.total).toBeGreaterThan(0)
+            expect(r.shareOpenPct).toBeGreaterThanOrEqual(0)
+            expect(r.deltaVsPriorPct ?? 0).toBeGreaterThanOrEqual(-100)
+        }
+    })
 })

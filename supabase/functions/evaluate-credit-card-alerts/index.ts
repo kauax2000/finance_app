@@ -391,8 +391,10 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
 
     const catKey = alert.category_id ?? null
     // O estorno no cartão da categoria abate o gasto dela no ciclo, como no
-    // orçamento. No `main` nenhuma receita tem categoria de despesa, então o
-    // alerta dele não muda (o abatimento só baixa o gasto, nunca dispara).
+    // orçamento. O front de `main` não grava estorno com categoria de despesa,
+    // mas o 2.0 grava no mesmo banco: republicada, a Edge abate esses estornos
+    // também para quem usa o `main`. É de propósito, e só baixa o gasto (nunca
+    // dispara um alerta que não dispararia).
     const spendCat = sumCardExpensesInWindow(rows, cardId, openWin, catKey)
     if (spendCat < threshold) continue
 
