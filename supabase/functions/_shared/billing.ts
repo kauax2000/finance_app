@@ -498,3 +498,37 @@ export const AVISOS = {
     }
   },
 }
+
+/** Os avisos de texto fixo: ficam pendentes em `billing_avisos` até a entrega dar certo (#87). */
+export type TipoDeAvisoFixo = 'fim' | 'reembolso' | 'estorno'
+
+/** O texto de um aviso pendente, para o reenvio; `null` para os que dependem da linha. */
+export function avisoFixo(tipo: string): { titulo: string; corpo: string } | null {
+  if (tipo === 'fim') return AVISOS.fim()
+  if (tipo === 'reembolso') return AVISOS.reembolso()
+  if (tipo === 'estorno') return AVISOS.estorno()
+  return null
+}
+
+/**
+ * O estorno pendente concluído pelo cron (#87 c): o parcelamento ativado é o
+ * do plano pago, e o estorno dele é o reembolso do arrependimento; o nunca
+ * ativado é a cobrança em dobro. Decide pelo registro, não pelo
+ * `provider_ref` de agora, que uma compra nova troca.
+ */
+export function textoDoEstornoConcluido(p: { ativado_em: string | null }): 'reembolso' | 'estorno' {
+  return p.ativado_em ? 'reembolso' : 'estorno'
+}
+
+export type CarteiraDoAviso = { id: string; type: string | null; role: string; created_at: string | null }
+
+/**
+ * A carteira onde o aviso de plano entra (#87 b): a pessoal, senão a mais
+ * antiga em que a pessoa é dona, senão qualquer uma (a mais antiga). `null`
+ * sem nenhuma: o aviso vai só por e-mail.
+ */
+export function destinoDoAviso(carteiras: CarteiraDoAviso[]): string | null {
+  const peso = (c: CarteiraDoAviso) => c.role !== 'owner' ? 2 : c.type === 'personal' ? 0 : 1
+  const data = (c: CarteiraDoAviso) => c.created_at ? new Date(c.created_at).getTime() : Infinity
+  return [...carteiras].sort((a, b) => peso(a) - peso(b) || data(a) - data(b))[0]?.id ?? null
+}

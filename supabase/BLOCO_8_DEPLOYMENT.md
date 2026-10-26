@@ -35,7 +35,9 @@ reembolso:
     de 7 dias);
   - `billing-daily`, estendida: além do aviso do dia 12 do teste, refaz os
     estornos pendentes, avisa a renovação, renova pelo token do cartão, confere
-    a renovação em espera, expira o plano e agenda a NFS-e;
+    a renovação em espera, expira o plano, agenda a NFS-e e reenvia os avisos
+    de texto fixo que ficaram pendentes (`billing_avisos.pendente`, da
+    migração do Bloco 9: as Edges desta lista sobem depois dela);
 - no front do 2.0: o formulário de assinar e de atualizar o cartão em `/plans`,
   o "Continuar o pagamento", a volta por `/plans?pago=1`, cancelar, desfazer e
   o reembolso, tudo no wireframe dos planos; e as frases novas em
@@ -54,7 +56,7 @@ primeira vez que esse código fala com o Asaas.**
 **A cobrança fica desligada até o lançamento do 2.0** (§6). Com
 `billing_settings.enforced_since` nulo, todo mundo é `familia` e ninguém é
 barrado. Uma coisa não depende do interruptor: os passos do Asaas no
-`billing-daily` (estornos, renovação, NFS-e) rodam todo dia, de propósito,
+`billing-daily` (estornos, renovação, NFS-e, reenvio dos avisos) rodam todo dia, de propósito,
 para o Sandbox funcionar antes do lançamento. Sem linha do Asaas no banco, eles
 não fazem nada.
 
@@ -171,6 +173,12 @@ o que der:
     `PENDING`, `AWAITING_RISK_ANALYSIS` e `AUTHORIZED`; qualquer outro
     (`REFUSED`, `REPROVED_BY_RISK_ANALYSIS`, `OVERDUE`, estornada) conta como
     renovação que não aconteceu, e a pessoa recebe o aviso do cartão (I1).
+15. **PUT ou POST em `/v3/customers/{id}`?** A cada compra, o checkout manda
+    o nome e o CPF de agora ao cliente que já existe (#81 do Bloco 9; a NFS-e
+    usa o cadastro dele), com `PUT` e o mesmo corpo da criação, sem a
+    `externalReference`. A documentação já mostrou `POST` nesse caminho. Se o
+    Sandbox recusar o `PUT` (404 ou 405), o verbo muda em `_shared/asaas.ts`
+    (`atualizarCliente`). Uma falha ali só vai ao log e não segura a compra.
 
 Anote as respostas fora do repositório. Uma resposta que contradiz o que o
 código faz é um bloqueio: o código muda antes do §6.
@@ -868,7 +876,8 @@ conferência no outro dia antes de procurar o problema.
 | `pagamento em dobro, estornando` | Um segundo pagamento no período já pago está sendo devolvido: confira o estorno no painel |
 | `NFS-e pulada` · `agendarNota` | A nota não saiu: segredo faltando, ou o Asaas recusou (4xx: a reivindicação volta e o cron tenta amanhã) |
 | `NFS-e incerta, confira no painel antes de emitir` | Rede, 5xx ou prazo ao agendar a nota. A nota é reivindicada (`nfse_para`) antes do pedido, para nunca sair duas vezes; por isso o cron não tenta de novo. Confira em Notas fiscais e, se ela não estiver lá, agende à mão |
-| `aviso sem carteira pessoal` | A pessoa não tem carteira pessoal, e o aviso não saiu |
+| `aviso de cobrança: entrega` · `aviso fim pendente` (e `reembolso`, `estorno`) | Um aviso de texto fixo não saiu e ficou `pendente` em `billing_avisos`: o `billing-daily` o reenvia depois de 1 hora (#87 do Bloco 9). Sem carteira nenhuma, o aviso vai só por e-mail. Repetido todo dia para a mesma pessoa, confira o e-mail dela e o `RESEND_API_KEY` |
+| `billing-checkout: atualizarCliente` | O Asaas recusou a atualização do nome e do CPF do cliente (só o status vai ao log). A compra seguiu, e a NFS-e sai com o cadastro antigo: confira o verbo (§0, pergunta 15) |
 
 ## 9. Compatibilidade com o front de `main`
 

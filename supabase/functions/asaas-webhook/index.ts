@@ -19,16 +19,15 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { configDoAsaas, estornarNoAsaas } from '../_shared/asaas.ts'
+import { avisarUmaVez } from '../_shared/aviso-de-cobranca.ts'
 import {
   type Assinatura,
-  AVISOS,
   efeitoDoEvento,
   eventoDaLinha,
   type Pagamento,
   pagamentoEmDobro,
   type Parcelamento,
 } from '../_shared/billing.ts'
-import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
@@ -288,40 +287,7 @@ async function estornar(admin: Admin, linha: Linha, registro: Parcelamento): Pro
     .eq('installment', parcelamento)
   if (fErr) console.error('asaas-webhook: marcar o estorno', linha.id, parcelamento, fErr.message)
 
-  await avisarDoEstorno(admin, linha.user_id)
+  // #87: o aviso fica pendente até a entrega dar certo; o billing-daily reenvia.
+  await avisarUmaVez(admin, { user_id: linha.user_id, tipo: 'estorno', referencia: parcelamento })
   return json(200, { ok: true, estornado: true })
-}
-
-/** O estorno já foi pedido: uma falha no aviso só vai ao log. */
-async function avisarDoEstorno(admin: Admin, userId: string): Promise<void> {
-  try {
-    const { data: carteira, error } = await admin
-      .from('workspaces')
-      .select('id')
-      .eq('created_by', userId)
-      .eq('type', 'personal')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    if (error || !carteira) {
-      console.error('asaas-webhook: aviso sem carteira pessoal', userId, error?.message)
-      return
-    }
-    const { data: pessoa } = await admin.auth.admin.getUserById(userId)
-    const { titulo, corpo } = AVISOS.estorno()
-    const entregue = await deliverNotification({
-      supabaseAdmin: admin,
-      userId,
-      userEmail: pessoa?.user?.email ?? null,
-      workspaceId: carteira.id,
-      type: 'system',
-      title: titulo,
-      body: corpo,
-      metadata: { href: '/plans' },
-      essencial: true,
-    })
-    if (!entregue.ok) console.error('asaas-webhook: aviso', userId, entregue.error)
-  } catch (e) {
-    console.error('asaas-webhook: aviso', userId, e instanceof Error ? e.message : e)
-  }
 }

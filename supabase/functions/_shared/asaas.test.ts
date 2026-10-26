@@ -5,6 +5,7 @@ import {
   buscarCobranca,
   buscarParcelamento,
   type AsaasConfig,
+  atualizarCliente,
   configDoAsaas,
   criarCliente,
   criarCobranca,
@@ -165,6 +166,30 @@ Deno.test('criarCliente: só dígitos no CPF, referência e notificações do As
       externalReference: 'u-1',
       notificationDisabled: true,
     })
+  })
+})
+
+Deno.test('atualizarCliente: PUT no cliente, o mesmo corpo do criarCliente sem a referência (#81)', async () => {
+  await comFetch(() => json(200, { id: 'cus_1' }), async (pedidos) => {
+    const r = await atualizarCliente(CFG, 'cus_1', { nome: 'Ana Souza', cpf: '123.456.789-09', email: 'ana@exemplo.com' })
+    assertEquals(r, { ok: true, dados: { id: 'cus_1' } })
+    assertEquals(pedidos.length, 1)
+    assertEquals(pedidos[0].url, 'https://api-sandbox.asaas.com/v3/customers/cus_1')
+    assertEquals(pedidos[0].init.method, 'PUT')
+    assertEquals(pedidos[0].corpo, {
+      name: 'Ana Souza',
+      cpfCnpj: '12345678909',
+      email: 'ana@exemplo.com',
+      notificationDisabled: true,
+    })
+  })
+})
+
+Deno.test('atualizarCliente: o id vai codificado no caminho, e a recusa volta como erro', async () => {
+  await comFetch(() => json(400, { errors: [{ description: 'CPF inválido' }] }), async (pedidos) => {
+    const r = await atualizarCliente(CFG, 'cus/1', { nome: 'Ana', cpf: '12345678909', email: null })
+    assertEquals(r, { ok: false, status: 400, erros: ['CPF inválido'] })
+    assertEquals(pedidos[0].url, 'https://api-sandbox.asaas.com/v3/customers/cus%2F1')
   })
 })
 

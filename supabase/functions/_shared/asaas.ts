@@ -30,7 +30,7 @@ export function configDoAsaas(): AsaasConfig | null {
 
 export async function asaas<T>(
   cfg: AsaasConfig,
-  metodo: 'GET' | 'POST' | 'DELETE',
+  metodo: 'GET' | 'POST' | 'PUT' | 'DELETE',
   caminho: string,
   corpo?: unknown,
   prazoMs = PRAZO_MS,
@@ -69,6 +69,25 @@ export function criarCliente(
     cpfCnpj: c.cpf.replace(/\D/g, ''),
     email: c.email,
     externalReference: c.userId,
+    notificationDisabled: true,
+  })
+}
+
+/**
+ * #81: o nome e o CPF de uma compra nova chegam ao cliente que já existe (a
+ * NFS-e usa o cadastro dele). O mesmo corpo do `criarCliente`, sem a
+ * `externalReference`. O verbo é `PUT` (Ruling 3 do Bloco 9); o Sandbox
+ * confirma (§0 do roteiro do Bloco 8).
+ */
+export function atualizarCliente(
+  cfg: AsaasConfig,
+  id: string,
+  c: { nome: string; cpf: string; email: string | null },
+): Promise<RespostaAsaas<{ id: string }>> {
+  return asaas(cfg, 'PUT', `/customers/${encodeURIComponent(id)}`, {
+    name: c.nome,
+    cpfCnpj: c.cpf.replace(/\D/g, ''),
+    email: c.email,
     notificationDisabled: true,
   })
 }

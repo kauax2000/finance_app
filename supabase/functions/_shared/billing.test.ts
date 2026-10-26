@@ -2,6 +2,7 @@ import { assertEquals, assertThrows } from 'jsr:@std/assert@1.0.19'
 import {
   acaoDoDia,
   aguardandoConfirmacao,
+  avisoFixo,
   ARREPENDIMENTO_DIAS,
   type Assinatura,
   type CobrancaAberta,
@@ -9,6 +10,7 @@ import {
   AVISOS,
   checkoutPendente,
   cpfValido,
+  destinoDoAviso,
   efeitoDoEvento,
   eventoDaLinha,
   falhaNaRenovacao,
@@ -25,6 +27,7 @@ import {
   podeReembolsar,
   precoPara,
   resultadoDaCobranca,
+  textoDoEstornoConcluido,
   TOLERANCIA_DIAS,
   triagemDasAbertas,
   vereditoDaEspera,
@@ -834,4 +837,37 @@ Deno.test('eventoDaLinha (N1): customer nulo nunca casa com a linha sem cliente,
     assertEquals(eventoDaLinha({ provider, asaas_customer_id: 'cus-1' }, { customer: 'cus-1' }), false)
   }
   assertEquals(eventoDaLinha({ provider: 'asaas', asaas_customer_id: 'cus-1' }, nulo), false)
+})
+
+// Os avisos de cobrança (#87 do Bloco 9)
+
+Deno.test('destinoDoAviso: a carteira pessoal, senão a mais antiga em que é dona, senão qualquer uma', () => {
+  const pessoal = { id: 'w-pessoal', type: 'personal', role: 'owner', created_at: '2026-05-01T00:00:00Z' }
+  const donaNova = { id: 'w-dona-nova', type: 'shared', role: 'owner', created_at: '2026-04-01T00:00:00Z' }
+  const donaVelha = { id: 'w-dona-velha', type: 'shared', role: 'owner', created_at: '2026-01-01T00:00:00Z' }
+  const membroVelho = { id: 'w-membro', type: 'shared', role: 'member', created_at: '2025-01-01T00:00:00Z' }
+  const convidado = { id: 'w-convidado', type: 'shared', role: 'guest', created_at: '2025-06-01T00:00:00Z' }
+  assertEquals(destinoDoAviso([membroVelho, donaVelha, pessoal, donaNova]), 'w-pessoal')
+  assertEquals(destinoDoAviso([membroVelho, donaNova, donaVelha]), 'w-dona-velha')
+  assertEquals(destinoDoAviso([convidado, membroVelho]), 'w-membro')
+  assertEquals(destinoDoAviso([convidado]), 'w-convidado')
+  assertEquals(destinoDoAviso([]), null)
+})
+
+Deno.test('destinoDoAviso: a carteira pessoal de outra pessoa não conta como pessoal', () => {
+  const alheia = { id: 'w-alheia', type: 'personal', role: 'member', created_at: '2025-01-01T00:00:00Z' }
+  const dona = { id: 'w-dona', type: 'shared', role: 'owner', created_at: '2026-01-01T00:00:00Z' }
+  assertEquals(destinoDoAviso([alheia, dona]), 'w-dona')
+})
+
+Deno.test('textoDoEstornoConcluido: o parcelamento ativado é o reembolso; o nunca ativado, a cobrança em dobro', () => {
+  assertEquals(textoDoEstornoConcluido({ ativado_em: '2026-10-01T12:00:00Z' }), 'reembolso')
+  assertEquals(textoDoEstornoConcluido({ ativado_em: null }), 'estorno')
+})
+
+Deno.test('avisoFixo: só fim, reembolso e estorno têm texto fixo', () => {
+  assertEquals(avisoFixo('fim'), AVISOS.fim())
+  assertEquals(avisoFixo('reembolso'), AVISOS.reembolso())
+  assertEquals(avisoFixo('estorno'), AVISOS.estorno())
+  for (const tipo of ['renovacao', 'cartao', 'teste', 'outro']) assertEquals(avisoFixo(tipo), null)
 })

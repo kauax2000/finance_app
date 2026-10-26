@@ -3,6 +3,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 const fonte = (caminho: string) => semComentarios(lerFonte(caminho))
 const DIARIO = "supabase/functions/billing-daily/index.ts"
+const AVISO = "supabase/functions/_shared/aviso-de-cobranca.ts"
 
 describe("Edge billing-daily", () => {
     it("só o cron chama, pelo x-cron-secret", () => {
@@ -19,7 +20,7 @@ describe("Edge billing-daily", () => {
         const teste = f.indexOf("if (config?.enforced_since) await passo(ctx, 'teste', () => avisarDoTeste(ctx))")
         expect(teste).toBeGreaterThan(config)
         expect(funcao(f, "avisarDoTeste")).toContain("avisos_de_teste_pendentes")
-        for (const p of ["estornos', () => refazerEstornos(ctx))", "renovação', () => renovarAssinaturas(ctx))", "NFS-e', () => emitirNotas(ctx))"]) {
+        for (const p of ["estornos', () => refazerEstornos(ctx))", "renovação', () => renovarAssinaturas(ctx))", "NFS-e', () => emitirNotas(ctx))", "avisos', () => reenviarAvisos(ctx))"]) {
             expect(f).toContain(`\n  await passo(ctx, '${p}`)
             expect(f.indexOf(p)).toBeGreaterThan(teste)
         }
@@ -29,15 +30,17 @@ describe("Edge billing-daily", () => {
 
     it("todo aviso é essencial, do tipo system, com o link para os planos", () => {
         const f = fonte(DIARIO)
-        expect(f.match(/deliverNotification\(/g)?.length).toBe(1)
-        const enviar = funcao(f, "enviar")
+        // #87: a entrega e o destino moram num lugar só, para o cron, o webhook e o cancelar
+        expect(f).not.toContain("deliverNotification(")
+        const a = fonte(AVISO)
+        expect(a.match(/deliverNotification\(/g)?.length).toBe(1)
+        const enviar = funcao(a, "enviarAviso")
         expect(enviar).toContain("deliverNotification(")
         expect(enviar).toContain("essencial: true")
         expect(enviar).toContain("type: 'system'")
         expect(enviar).toContain("metadata: { href: '/plans' }")
         expect(f).toContain("avisoDoTeste(")
-        expect(funcao(f, "destinoDe")).toContain(".eq('type', 'personal')")
-        expect(funcao(f, "destinoDe")).toContain("auth.admin.getUserById(userId)")
+        expect(f).toContain("enviarAviso(ctx.admin, dedupe.user_id, destino, aviso)")
     })
 
     it("os avisos são deduplicados por período, e a entrega que falha libera o dedupe", () => {
@@ -51,10 +54,13 @@ describe("Edge billing-daily", () => {
         const entregar = funcao(f, "entregar")
         expect(entregar.split("await releaseDedupe(admin, dedupe)").length - 1).toBe(2)
         expect(entregar).toContain("claimDedupe(admin, dedupe)")
-        expect(funcao(f, "avisar")).toContain("const referencia = (linha.current_period_end ?? ctx.iso).slice(0, 10)")
+        expect(f).toContain("function referenciaDoPeriodo(ctx: Ctx, linha: Linha): string {\n  return (linha.current_period_end ?? ctx.iso).slice(0, 10)")
+        expect(funcao(f, "avisar")).toContain("referencia: referenciaDoPeriodo(ctx, linha)")
         expect(f).toContain("avisar(ctx, linha, 'renovacao', AVISOS.renovacao(linha, linha.card_last4))")
         expect(f.match(/avisar\(ctx, linha, 'cartao', AVISOS\.cartao\(\{ \.\.\.linha, \.\.\.falha \}\)\)/g)?.length).toBe(3)
-        expect(funcao(f, "expirar")).toContain("avisar(ctx, linha, 'fim', AVISOS.fim())")
+        // #87: o 'fim' fica pendente até a entrega dar certo, e não libera o dedupe
+        expect(funcao(f, "expirar")).toContain("avisarFixo(ctx, { user_id: linha.user_id, tipo: 'fim', referencia: referenciaDoPeriodo(ctx, linha) })")
+        expect(f).not.toContain("AVISOS.fim()")
     })
 
     it("lê as assinaturas do Asaas em todas as páginas, e uma linha que falha não para as outras", () => {
@@ -65,7 +71,7 @@ describe("Edge billing-daily", () => {
         expect(ler).toContain("acaoDoDia(linha, ctx.agora)")
         // todo fan-out tem o seu try/catch por item
         const laços = f.match(/forEachLimit\(/g)?.length ?? 0
-        expect(laços).toBe(4)
+        expect(laços).toBe(5)
         expect(f.match(/FAN_OUT_CONCURRENCY, async \(\w+\) => \{\n\s*try \{/g)?.length).toBe(laços)
     })
 
@@ -171,7 +177,9 @@ describe("Edge billing-daily", () => {
         expect(pede).toBeGreaterThan(tentativa)
         expect(feito).toBeGreaterThan(pede)
         expect(expira).toBeGreaterThan(feito)
-        expect(s).toContain("if (p.installment === linha.provider_ref)")
+        // #87 (c): o texto sai do registro, não do provider_ref de agora (uma compra nova o troca)
+        expect(s).toContain("if (textoDoEstornoConcluido(p) === 'reembolso')")
+        expect(s).not.toContain("p.installment === linha.provider_ref")
         expect(s.slice(expira)).toContain(".eq('status', 'active')")
         expect(s.slice(expira)).toContain(".eq('provider_ref', p.installment)")
     })
@@ -179,12 +187,14 @@ describe("Edge billing-daily", () => {
     it("o estorno da cobrança em dobro leva o aviso do webhook, uma vez, e o reembolso não", () => {
         const f = fonte(DIARIO)
         const s = funcao(f, "refazerEstornos")
-        const aviso = s.indexOf("AVISOS.estorno()")
-        expect(aviso).toBeGreaterThan(s.indexOf("if (p.installment === linha.provider_ref)"))
-        expect(s.slice(s.indexOf("if (p.installment === linha.provider_ref)"), aviso)).toContain("return\n      }")
+        const ramo = s.indexOf("if (textoDoEstornoConcluido(p) === 'reembolso')")
+        const aviso = s.indexOf("avisarFixo(ctx, { user_id: linha.user_id, tipo: 'estorno', referencia: p.installment })")
+        expect(aviso).toBeGreaterThan(ramo)
+        expect(s.slice(ramo, aviso)).toContain("return\n      }")
         expect(s).toContain("if (!marcou?.length) return")
-        expect(f.match(/AVISOS\.estorno\(\)/g)?.length).toBe(1)
-        expect(fonte(WEBHOOK)).toContain("AVISOS.estorno()")
+        // a mesma reivindicação do webhook: tipo 'estorno' por parcelamento
+        expect(f).not.toContain("AVISOS.estorno()")
+        expect(fonte(WEBHOOK)).toContain("avisarUmaVez(admin, { user_id: linha.user_id, tipo: 'estorno', referencia: parcelamento })")
     })
 
     it("a NFS-e: uma por parcelamento pago, sem os segredos pula com um console.error", () => {
@@ -303,9 +313,9 @@ describe("Edge billing-daily", () => {
 
     it("I4 / Ruling 16: o reembolso concluído pelo cron avisa, uma vez por parcelamento", () => {
         const s = funcao(fonte(DIARIO), "refazerEstornos")
-        const ramo = s.slice(s.indexOf("if (p.installment === linha.provider_ref)"), s.indexOf("AVISOS.estorno()"))
-        expect(ramo.indexOf("AVISOS.reembolso()")).toBeGreaterThan(ramo.indexOf("status: 'expired'"))
-        expect(ramo).toContain("entregar(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment }, destino, AVISOS.reembolso())")
+        const ramo = s.slice(s.indexOf("if (textoDoEstornoConcluido(p) === 'reembolso')"), s.indexOf("tipo: 'estorno'"))
+        const aviso = ramo.indexOf("avisarFixo(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment })")
+        expect(aviso).toBeGreaterThan(ramo.indexOf("status: 'expired'"))
     })
 
     it("I5 / Ruling 21: a NFS-e passa pelo notaPendente, com o estorno do registro", () => {
@@ -360,7 +370,7 @@ describe("Edge billing-checkout", () => {
         for (const l of linhas.filter((l) => /\.(update|upsert|insert)\(/.test(l))) expect(l).not.toMatch(/cpf/i)
         // o CPF só sai pelo criarCliente
         const usos = linhas.filter((l) => /\bcpf\b/.test(l))
-        expect(usos.filter((l) => !/let cpf|\{ nome, cpf \}|cpfValido\(cpf\)|criarCliente\(/.test(l))).toEqual([])
+        expect(usos.filter((l) => !/let cpf|\{ nome, cpf \}|cpfValido\(cpf\)|criarCliente\(|atualizarCliente\(/.test(l))).toEqual([])
     })
 
     it("reivindica a linha antes de chamar o Asaas, e nunca a grava sem condição", () => {
@@ -589,19 +599,18 @@ describe("Edge asaas-webhook", () => {
         expect(estornar).toContain("estorno_status: 'feito'")
         expect(estornar).toContain(".is('estorno_status', null)")
         expect(estornar.indexOf("estorno_status: 'pendente'")).toBeLessThan(estornar.indexOf("estornarNoAsaas(cfg"))
-        expect(estornar.indexOf("avisarDoEstorno(")).toBeGreaterThan(estornar.indexOf("estorno_status: 'feito'"))
+        expect(estornar.indexOf("avisarUmaVez(admin, { user_id: linha.user_id, tipo: 'estorno', referencia: parcelamento })")).toBeGreaterThan(estornar.indexOf("estorno_status: 'feito'"))
     })
 
-    it("o aviso do estorno é essencial, do tipo system, na carteira pessoal", () => {
+    it("o aviso do estorno passa pela reivindicação compartilhada (#87)", () => {
         const f = fonte(WEBHOOK)
-        expect(f).toContain("AVISOS.estorno()")
+        expect(f).toContain("import { avisarUmaVez } from '../_shared/aviso-de-cobranca.ts'")
+        expect(f).not.toContain("deliverNotification(")
+        expect(f).not.toContain("'personal'")
+        expect(f).not.toContain("avisarDoEstorno")
         const billing = fonte("supabase/functions/_shared/billing.ts")
         expect(billing).toContain("Cobrança em dobro devolvida")
         expect(billing).toContain("Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.")
-        expect(f).toContain("type: 'system'")
-        expect(f).toContain("essencial: true")
-        expect(f).toContain("metadata: { href: '/plans' }")
-        expect(f).toContain(".eq('type', 'personal')")
     })
 
     it("o CPF não vai a log", () => {
@@ -720,20 +729,89 @@ describe("Edge billing-cancel", () => {
         const f = fonte(CANCEL)
         const r = funcao(f, "reembolsar")
         expect(r.indexOf("concluiu = true")).toBeGreaterThan(r.indexOf("estorno_status: 'feito'"))
-        expect(r.indexOf("if (concluiu) await avisarDoReembolso(admin, linha.user_id, email, ref)")).toBeGreaterThan(r.indexOf("status: 'expired'"))
-        const a = funcao(f, "avisarDoReembolso")
-        expect(a).toContain("tipo: 'reembolso', referencia: ref")
-        expect(a.indexOf(".from('billing_avisos').insert(dedupe)")).toBeLessThan(a.indexOf("deliverNotification("))
-        expect(a).toContain("'23505'")
-        expect(a).toContain("AVISOS.reembolso()")
-        expect(a).toContain("essencial: true")
-        expect(a).toContain("type: 'system'")
-        expect(a).toContain("metadata: { href: '/plans' }")
-        expect(a).toContain(".eq('type', 'personal')")
-        expect(a).toContain("await soltar()")
+        // #87: a mesma reivindicação do cron, pendente até a entrega dar certo
+        expect(r.indexOf("if (concluiu) await avisarUmaVez(admin, { user_id: linha.user_id, tipo: 'reembolso', referencia: ref }, email)")).toBeGreaterThan(r.indexOf("status: 'expired'"))
+        expect(f).toMatch(/import \{[^}]*\bavisarUmaVez\b[^}]*\} from '\.\.\/_shared\/aviso-de-cobranca\.ts'/)
+        expect(f).not.toContain("deliverNotification(")
+        expect(f).not.toContain("'personal'")
+        expect(f).not.toContain(".from('billing_avisos')")
     })
 
     it("a Edge está no config sem JWT", () => {
         expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.billing-cancel\]\s*\nverify_jwt = false/)
+    })
+})
+
+/** O corpo de uma função exportada, até a próxima declaração de topo. */
+function exportada(f: string, nome: string): string {
+    const inicio = f.indexOf(`export async function ${nome}(`)
+    expect(inicio, nome).toBeGreaterThan(-1)
+    const proxima = f.slice(inicio + 1).search(/\n(export |async function |function |const |type )/)
+    return f.slice(inicio, proxima === -1 ? undefined : inicio + 1 + proxima)
+}
+
+describe("#81: o cliente do Asaas atualizado no checkout", () => {
+    it("com o cliente gravado, atualiza nome e CPF antes da cobrança; a falha só registra o status e segue", () => {
+        const f = fonte(CHECKOUT)
+        const criar = f.indexOf("if (!cliente) {")
+        const atualizar = f.indexOf("atualizarCliente(cfg, cliente, { nome: nomeLimpo, cpf, email: auth.user.email ?? null })")
+        expect(criar).toBeGreaterThan(-1)
+        expect(atualizar).toBeGreaterThan(criar)
+        expect(f.slice(criar, atualizar)).toContain("} else {")
+        expect(f.indexOf("buscarCobranca(cfg")).toBeGreaterThan(atualizar)
+        expect(f.indexOf("criarCobranca(cfg")).toBeGreaterThan(atualizar)
+        const falha = f.slice(atualizar, f.indexOf("\n  }\n", atualizar))
+        expect(falha).toContain("if (!r.ok) console.error('billing-checkout: atualizarCliente', r.status)")
+        expect(falha).not.toContain("return")
+        expect(falha).not.toContain("soltar()")
+    })
+
+    it("o verbo do Asaas está nas perguntas do §0 do roteiro", () => {
+        expect(lerFonte("supabase/BLOCO_8_DEPLOYMENT.md")).toContain("PUT ou POST em `/v3/customers/{id}`?")
+    })
+})
+
+describe("#87: os avisos de cobrança que não se perdem", () => {
+    it("o destino é um só, pela ordem do destinoDoAviso, e sem carteira vai só por e-mail", () => {
+        const a = fonte(AVISO)
+        const d = exportada(a, "destinoDe")
+        expect(d).toContain(".from('workspace_members')")
+        expect(d).toContain("destinoDoAviso(")
+        expect(d).toContain("auth.admin.getUserById(userId)")
+        const e = exportada(a, "enviarAviso")
+        expect(e.indexOf("sendEmailResend(")).toBeGreaterThan(e.indexOf("if (destino.workspaceId)"))
+        for (const edge of [DIARIO, WEBHOOK, CANCEL]) expect(fonte(edge)).not.toContain("'personal'")
+    })
+
+    it("o aviso de texto fixo nasce pendente, e só a entrega que deu certo o marca entregue", () => {
+        const a = fonte(AVISO)
+        const u = exportada(a, "avisarUmaVez")
+        const claim = u.indexOf(".from('billing_avisos').insert({ ...chave, pendente: true })")
+        expect(claim).toBeGreaterThan(-1)
+        expect(u).toContain("'23505'")
+        expect(u.indexOf("entregarPendente(admin, chave, email)")).toBeGreaterThan(claim)
+        const p = exportada(a, "entregarPendente")
+        const envio = p.indexOf("enviarAviso(admin, chave.user_id, destino, aviso)")
+        expect(envio).toBeGreaterThan(-1)
+        expect(p.indexOf("update({ pendente: false })")).toBeGreaterThan(envio)
+        // a falha não libera a reivindicação: o billing-daily reenvia
+        expect(a).not.toContain(".delete()")
+    })
+
+    it("o billing-daily reenvia os pendentes com mais de 1 hora, reivindicando pelo enviado_em lido", () => {
+        const f = fonte(DIARIO)
+        const r = funcao(f, "reenviarAvisos")
+        expect(r).toContain("new Date(ctx.agora.getTime() - UMA_HORA_MS).toISOString()")
+        expect(r).toContain("todasAsPaginas<")
+        expect(r).toContain(".from('billing_avisos')")
+        expect(r).toContain(".eq('pendente', true)")
+        expect(r).toContain(".lt('enviado_em', limite)")
+        const reivindica = r.indexOf(".update({ enviado_em: ctx.iso })")
+        expect(reivindica).toBeGreaterThan(-1)
+        expect(r.slice(reivindica)).toContain(".eq('pendente', true)")
+        expect(r.slice(reivindica)).toContain(".eq('enviado_em', a.enviado_em)")
+        expect(r).toContain("if (!minha?.length) return")
+        expect(r.indexOf("entregarPendente(ctx.admin, a)")).toBeGreaterThan(reivindica)
+        expect(r).toContain("if (!avisoFixo(a.tipo)) return")
     })
 })

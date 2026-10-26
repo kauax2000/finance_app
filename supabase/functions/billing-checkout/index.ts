@@ -5,7 +5,8 @@
  * tabela, log nem resposta.
  *
  * Ordem: método → JWT → config → corpo → nome e CPF → convidado → linha →
- * reivindicação da linha → cliente do Asaas → o que já está aberto no Asaas
+ * reivindicação da linha → cliente do Asaas (criado, ou atualizado com o nome
+ * e o CPF de agora) → o que já está aberto no Asaas
  * (Ruling 7) → cobrança nova ou reusada → parcelamento registrado (Ruling 9) →
  * linha gravada.
  *
@@ -17,6 +18,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import {
+  atualizarCliente,
   buscarCobranca,
   configDoAsaas,
   criarCliente,
@@ -193,6 +195,11 @@ async function atender(req: Request): Promise<Response> {
     // Outro pedido gravou um cliente antes: vale o dele, e o nosso fica sem cobrança no Asaas.
     cliente = gravou?.length ? r.dados.id : (await lerLinha())?.asaas_customer_id ?? null
     if (!cliente) throw new Error('billing-checkout: cliente não gravado')
+  } else {
+    // #81: o nome e o CPF desta compra chegam ao cliente que já existe (a NFS-e usa o cadastro dele).
+    // Só o status vai ao log, e a falha não segura a compra.
+    const r = await atualizarCliente(cfg, cliente, { nome: nomeLimpo, cpf, email: auth.user.email ?? null })
+    if (!r.ok) console.error('billing-checkout: atualizarCliente', r.status)
   }
 
   // Ruling 7: a fatura do checkout anterior já paga espera o webhook; cobrar de novo seria em dobro.

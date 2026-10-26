@@ -2,7 +2,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
-import { deliverNotification } from '../_shared/deliver-notification.ts'
+import {
+  type AdminDoAviso,
+  avisarUmaVez,
+  type ChaveDoAviso,
+  destinoDe,
+  type Destino,
+  entregarPendente,
+  enviarAviso,
+} from '../_shared/aviso-de-cobranca.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
@@ -17,6 +25,7 @@ import {
   aguardandoConfirmacao,
   type Assinatura,
   AVISOS,
+  avisoFixo,
   checkoutPendente,
   efeitoDoEvento,
   falhaNaRenovacao,
@@ -25,6 +34,7 @@ import {
   type Pagamento,
   type Parcelamento,
   resultadoDaCobranca,
+  textoDoEstornoConcluido,
   triagemDasAbertas,
   vereditoDaEspera,
 } from '../_shared/billing.ts'
@@ -46,7 +56,8 @@ import {
 // 3. as assinaturas do Asaas pela `acaoDoDia`: aviso de renovação, renovação
 //    pelo token do cartão, a verificação da renovação em espera (Ruling 19) e
 //    fim do plano — sempre, inclusive no Sandbox antes do lançamento;
-// 4. a NFS-e de cada período pago, depois da janela de arrependimento.
+// 4. a NFS-e de cada período pago, depois da janela de arrependimento;
+// 5. os avisos de texto fixo que ficaram pendentes (#87 do Bloco 9).
 // Um passo que falha não para os outros, e uma linha que falha não para as
 // outras. Só o cron chama: sem CORS nem OPTIONS.
 
@@ -66,11 +77,9 @@ type AvisoPendente = {
 }
 
 type DedupeRow = { user_id: string; tipo: string; referencia: string }
+type AvisoGuardado = ChaveDoAviso & { enviado_em: string }
 
-/** O cliente de serviço, com o pedaço do `auth` que o aviso usa (o e-mail da pessoa). */
-type Admin = SupabaseAdminClient & {
-  auth: { admin: { getUserById(id: string): Promise<{ data: { user: { email?: string | null } | null } }> } }
-}
+type Admin = AdminDoAviso
 type Linha = Assinatura & {
   asaas_customer_id: string | null
   ultimo_ip: string | null
@@ -80,7 +89,6 @@ type Linha = Assinatura & {
   updated_at: string
 }
 type Aviso = { titulo: string; corpo: string }
-type Destino = { email: string | null; workspaceId: string }
 type Contas = {
   avisos: number
   failures: number
@@ -124,27 +132,12 @@ function erro(ctx: Ctx, onde: string, id: string, e: unknown): void {
   ctx.n.failures += 1
 }
 
-/** Todo aviso do cron: essencial, do tipo system, com o link para os planos. */
-async function enviar(ctx: Ctx, userId: string, destino: Destino, aviso: Aviso) {
-  return await deliverNotification({
-    supabaseAdmin: ctx.admin,
-    userId,
-    userEmail: destino.email,
-    workspaceId: destino.workspaceId,
-    type: 'system',
-    title: aviso.titulo,
-    body: aviso.corpo,
-    metadata: { href: '/plans' },
-    essencial: true,
-  })
-}
-
 /** Um aviso por `(pessoa, tipo, referência)`: a entrega que falha libera o dedupe. */
 async function entregar(ctx: Ctx, dedupe: DedupeRow, destino: Destino, aviso: Aviso): Promise<void> {
   const { admin } = ctx
   try {
     if (!(await claimDedupe(admin, dedupe))) return
-    const delivered = await enviar(ctx, dedupe.user_id, destino, aviso)
+    const delivered = await enviarAviso(ctx.admin, dedupe.user_id, destino, aviso)
     if (!delivered.ok) {
       await releaseDedupe(admin, dedupe)
       erro(ctx, `entrega ${dedupe.tipo}`, dedupe.user_id, delivered.error)
@@ -157,30 +150,26 @@ async function entregar(ctx: Ctx, dedupe: DedupeRow, destino: Destino, aviso: Av
   }
 }
 
-/** A carteira pessoal e o e-mail da pessoa. */
-async function destinoDe(ctx: Ctx, userId: string): Promise<Destino | null> {
-  const { data: carteira, error } = await ctx.admin
-    .from('workspaces')
-    .select('id')
-    .eq('created_by', userId)
-    .eq('type', 'personal')
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-  if (error || !carteira) {
-    erro(ctx, 'aviso sem carteira pessoal', userId, error?.message ?? 'sem carteira')
-    return null
-  }
-  const { data: pessoa } = await ctx.admin.auth.admin.getUserById(userId)
-  return { email: pessoa?.user?.email ?? null, workspaceId: carteira.id }
+/** Conta o resultado de um aviso de texto fixo; o pendente o cron reenvia. */
+function contarAviso(ctx: Ctx, tipo: string, userId: string, r: 'entregue' | 'pendente' | 'repetido' | 'falhou'): void {
+  if (r === 'entregue') ctx.n.avisos += 1
+  else if (r !== 'repetido') erro(ctx, `aviso ${tipo} ${r}`, userId, r)
 }
 
-/** Os avisos da assinatura, um por período: `renovacao`, `cartao` e `fim` pela data do `current_period_end`. */
-async function avisar(ctx: Ctx, linha: Linha, tipo: 'renovacao' | 'cartao' | 'fim', aviso: Aviso): Promise<void> {
-  const destino = await destinoDe(ctx, linha.user_id)
-  if (!destino) return
-  const referencia = (linha.current_period_end ?? ctx.iso).slice(0, 10)
-  await entregar(ctx, { user_id: linha.user_id, tipo, referencia }, destino, aviso)
+/** Os avisos de texto fixo (#87): pendentes até a entrega dar certo, sem liberar o dedupe. */
+async function avisarFixo(ctx: Ctx, chave: ChaveDoAviso): Promise<void> {
+  contarAviso(ctx, chave.tipo, chave.user_id, await avisarUmaVez(ctx.admin, chave))
+}
+
+/** O período de um aviso da assinatura: a data do `current_period_end`. */
+function referenciaDoPeriodo(ctx: Ctx, linha: Linha): string {
+  return (linha.current_period_end ?? ctx.iso).slice(0, 10)
+}
+
+/** Os avisos da assinatura que dependem da linha, um por período: `renovacao` e `cartao`. */
+async function avisar(ctx: Ctx, linha: Linha, tipo: 'renovacao' | 'cartao', aviso: Aviso): Promise<void> {
+  const destino = await destinoDe(ctx.admin, linha.user_id)
+  await entregar(ctx, { user_id: linha.user_id, tipo, referencia: referenciaDoPeriodo(ctx, linha) }, destino, aviso)
 }
 
 async function avisarDoTeste(ctx: Ctx): Promise<void> {
@@ -488,7 +477,7 @@ async function expirar(ctx: Ctx, linha: Linha): Promise<void> {
   if (error) throw new Error(`expirar: ${error.message}`)
   if (!data?.length) return
   ctx.n.expiradas += 1
-  await avisar(ctx, linha, 'fim', AVISOS.fim())
+  await avisarFixo(ctx, { user_id: linha.user_id, tipo: 'fim', referencia: referenciaDoPeriodo(ctx, linha) })
 }
 
 async function renovarAssinaturas(ctx: Ctx): Promise<void> {
@@ -518,9 +507,9 @@ async function renovarAssinaturas(ctx: Ctx): Promise<void> {
 
 /**
  * Os estornos 'pendente' (Ruling 10 e 13), uma tentativa por hora no máximo:
- * `estornarNoAsaas` lê o parcelamento antes de pedir. Concluído, o do
- * `provider_ref` é o reembolso do arrependimento, expira a linha e avisa; o de outro
- * parcelamento é a cobrança em dobro e leva o aviso do webhook.
+ * `estornarNoAsaas` lê o parcelamento antes de pedir. Concluído, o ativado
+ * é o reembolso do arrependimento, expira a linha e avisa; o nunca ativado é
+ * a cobrança em dobro e leva o aviso do webhook (`textoDoEstornoConcluido`).
  */
 async function refazerEstornos(ctx: Ctx): Promise<void> {
   const limite = new Date(ctx.agora.getTime() - UMA_HORA_MS).toISOString()
@@ -576,7 +565,7 @@ async function refazerEstornos(ctx: Ctx): Promise<void> {
       if (!marcou?.length) return
       ctx.n.estornos += 1
 
-      if (p.installment === linha.provider_ref) {
+      if (textoDoEstornoConcluido(p) === 'reembolso') {
         // Ruling 13: o reembolso termina aqui. Zero linhas: o PAYMENT_REFUNDED do webhook já expirou.
         const { error: eErr } = await admin
           .from('billing_subscriptions')
@@ -594,19 +583,12 @@ async function refazerEstornos(ctx: Ctx): Promise<void> {
           .eq('provider_ref', p.installment)
         if (eErr) throw new Error(`expirar: ${eErr.message}`)
         // Ruling 16: expirada aqui ou pelo webhook, a marca 'feito' acima é desta chamada; o dedupe é por parcelamento.
-        const destino = await destinoDe(ctx, linha.user_id)
-        if (destino) {
-          await entregar(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment }, destino, AVISOS.reembolso())
-        }
+        await avisarFixo(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment })
         return
       }
 
-      // Ruling 8: a cobrança em dobro voltou ao cartão; o mesmo aviso do webhook, uma vez (a marca acima é a trava).
-      const destino = await destinoDe(ctx, linha.user_id)
-      if (!destino) return
-      const entregue = await enviar(ctx, linha.user_id, destino, AVISOS.estorno())
-      if (entregue.ok) ctx.n.avisos += 1
-      else erro(ctx, 'aviso do estorno', linha.user_id, entregue.error)
+      // Ruling 8: a cobrança em dobro voltou ao cartão; a mesma reivindicação do webhook, uma vez por parcelamento.
+      await avisarFixo(ctx, { user_id: linha.user_id, tipo: 'estorno', referencia: p.installment })
     } catch (e) {
       erro(ctx, 'estorno', p.installment, e)
     }
@@ -683,6 +665,47 @@ async function emitirNotas(ctx: Ctx): Promise<void> {
   })
 }
 
+/**
+ * #87: os avisos de texto fixo pendentes há mais de 1 hora (a entrega falhou,
+ * ou o processo morreu no meio). A tentativa é reivindicada pelo `enviado_em`
+ * lido, que vira a hora desta tentativa: dois disparos do cron não reenviam o
+ * mesmo aviso, e o que falhar de novo espera mais 1 hora.
+ */
+async function reenviarAvisos(ctx: Ctx): Promise<void> {
+  const limite = new Date(ctx.agora.getTime() - UMA_HORA_MS).toISOString()
+  const pendentes = await todasAsPaginas<AvisoGuardado>((de, ate) =>
+    ctx.admin
+      .from('billing_avisos')
+      .select('*')
+      .eq('pendente', true)
+      .lt('enviado_em', limite)
+      .order('user_id')
+      .order('tipo')
+      .order('referencia')
+      .range(de, ate)
+  )
+
+  await forEachLimit(pendentes, FAN_OUT_CONCURRENCY, async (a) => {
+    try {
+      if (!avisoFixo(a.tipo)) return
+      const { data: minha, error } = await ctx.admin
+        .from('billing_avisos')
+        .update({ enviado_em: ctx.iso })
+        .eq('user_id', a.user_id)
+        .eq('tipo', a.tipo)
+        .eq('referencia', a.referencia)
+        .eq('pendente', true)
+        .eq('enviado_em', a.enviado_em)
+        .select('user_id')
+      if (error) throw new Error(`reivindicar: ${error.message}`)
+      if (!minha?.length) return
+      contarAviso(ctx, a.tipo, a.user_id, await entregarPendente(ctx.admin, a))
+    } catch (e) {
+      erro(ctx, 'reenvio de aviso', a.user_id, e)
+    }
+  })
+}
+
 async function passo(ctx: Ctx, nome: string, fn: () => Promise<void>): Promise<void> {
   try {
     await fn()
@@ -721,6 +744,7 @@ Deno.serve(async (req: Request) => {
   await passo(ctx, 'estornos', () => refazerEstornos(ctx))
   await passo(ctx, 'renovação', () => renovarAssinaturas(ctx))
   await passo(ctx, 'NFS-e', () => emitirNotas(ctx))
+  await passo(ctx, 'avisos', () => reenviarAvisos(ctx))
 
   return json(200, { ok: true, ...ctx.n })
 })
