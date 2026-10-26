@@ -483,19 +483,31 @@ const parcelas = (inst: string, valor: number, x: Partial<CobrancaAberta> = {}) 
     }))
 
 Deno.test('triagemDasAbertas: nada aberto, nada a fazer', () => {
-  assertEquals(triagemDasAbertas([], 23880, 'cus_1'), { reusar: null, remover: [] })
+  assertEquals(triagemDasAbertas([], 23880, 'cus_1', null), { reusar: null, remover: [] })
 })
 
 Deno.test('triagemDasAbertas: o parcelamento com o mesmo total e o mesmo cliente é reusado pela 1ª parcela', () => {
   const abertas = parcelas('inst_a', 19.9).reverse()
-  const t = triagemDasAbertas(abertas, 23880, 'cus_1')
+  const t = triagemDasAbertas(abertas, 23880, 'cus_1', null)
   assertEquals(t.reusar?.id, 'inst_a_1')
   assertEquals(t.remover, [])
 })
 
-Deno.test('triagemDasAbertas: parte vencida (OVERDUE) e parte em aberto somam o total', () => {
+Deno.test('triagemDasAbertas: com uma parcela vencida (OVERDUE), o parcelamento é removido, nunca reusado', () => {
   const abertas = parcelas('inst_a', 19.9).map((c, i) => i < 2 ? { ...c, status: 'OVERDUE' } : c)
-  assertEquals(triagemDasAbertas(abertas, 23880, 'cus_1').reusar?.id, 'inst_a_1')
+  const t = triagemDasAbertas(abertas, 23880, 'cus_1', null)
+  assertEquals(t.reusar, null)
+  assertEquals(t.remover.map((c) => c.installment), ['inst_a'])
+})
+
+Deno.test('triagemDasAbertas: o parcelamento que está sendo pago (provider_ref) nunca é tocado', () => {
+  const abertas = [...parcelas('inst_pago', 29.9), ...parcelas('inst_pago2', 19.9).map((c) => ({ ...c, status: 'OVERDUE' }))]
+  assertEquals(triagemDasAbertas(abertas, 23880, 'cus_1', 'inst_pago'), {
+    reusar: null,
+    remover: [abertas[12]],
+  })
+  // nem reusado, mesmo com o total pedido
+  assertEquals(triagemDasAbertas(parcelas('inst_pago', 19.9), 23880, 'cus_1', 'inst_pago'), { reusar: null, remover: [] })
 })
 
 Deno.test('triagemDasAbertas: outro valor, outro cliente, avulsa ou um segundo igual são removidos, um por parcelamento', () => {
@@ -506,7 +518,7 @@ Deno.test('triagemDasAbertas: outro valor, outro cliente, avulsa ou um segundo i
     ...parcelas('inst_ok', 19.9),
     ...parcelas('inst_ok2', 19.9),
   ]
-  const t = triagemDasAbertas(abertas, 23880, 'cus_1')
+  const t = triagemDasAbertas(abertas, 23880, 'cus_1', null)
   assertEquals(t.reusar?.id, 'inst_ok_1')
   assertEquals(t.remover.map((c) => [c.id, c.installment]), [
     ['inst_caro_1', 'inst_caro'],

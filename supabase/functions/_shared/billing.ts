@@ -135,18 +135,22 @@ export type CobrancaAberta = Pagamento & { value: number; dueDate: string; invoi
 
 /**
  * O que fazer com as cobranças em aberto da linha antes de criar outra
- * (Ruling 7): um parcelamento nosso, do mesmo cliente e com o total pedido, é
- * reusado pela 1ª parcela; todo o resto é removido, um item por parcelamento
- * (a remoção do parcelamento leva as 12 parcelas). O total soma as parcelas
- * em aberto, vencidas ou não.
+ * (Ruling 7): um parcelamento nosso, do mesmo cliente, com o total pedido e
+ * todo PENDING, é reusado pela 1ª parcela; todo o resto é removido, um item por
+ * parcelamento (a remoção do parcelamento leva as 12 parcelas). Com uma parcela
+ * OVERDUE ele é removido e trocado, para ninguém receber uma fatura morta. O
+ * parcelamento que está sendo pago (`pago`, o `provider_ref` da linha) nunca é
+ * tocado.
  */
 export function triagemDasAbertas(
   abertas: CobrancaAberta[],
   centavos: number,
   cliente: string,
+  pago: string | null,
 ): { reusar: CobrancaAberta | null; remover: CobrancaAberta[] } {
   const grupos = new Map<string, CobrancaAberta[]>()
   for (const c of abertas) {
+    if (pago && c.installment === pago) continue
     const chave = c.installment ?? c.id
     grupos.set(chave, [...(grupos.get(chave) ?? []), c])
   }
@@ -155,8 +159,10 @@ export function triagemDasAbertas(
   for (const grupo of grupos.values()) {
     const primeira = grupo.reduce((a, b) => (b.dueDate < a.dueDate ? b : a))
     const total = grupo.reduce((soma, c) => soma + Math.round(c.value * 100), 0)
-    if (!reusar && primeira.installment && primeira.customer === cliente && total === centavos) reusar = primeira
-    else remover.push(primeira)
+    const emDia = grupo.every((c) => c.status === 'PENDING')
+    if (!reusar && emDia && primeira.installment && primeira.customer === cliente && total === centavos) {
+      reusar = primeira
+    } else remover.push(primeira)
   }
   return { reusar, remover }
 }

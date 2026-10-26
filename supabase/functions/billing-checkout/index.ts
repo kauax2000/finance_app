@@ -208,7 +208,7 @@ async function atender(req: Request): Promise<Response> {
     await soltar()
     return SEM_RESPOSTA()
   }
-  const { reusar, remover } = triagemDasAbertas(abertas.dados, plano.centavos, cliente)
+  const { reusar, remover } = triagemDasAbertas(abertas.dados, plano.centavos, cliente, linha.provider_ref)
   for (const c of remover) {
     const r = await removerCobranca(cfg, c)
     if (!r.ok) {
