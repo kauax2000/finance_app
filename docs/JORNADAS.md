@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em dezessete jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em dezoito jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7B, "gasto privado e titular do cartão": a chave Privado no lançamento do adulto (Pix, débito, dinheiro ou um cartão de que ele é titular), que deixa os outros adultos verem só "Gasto pessoal de {nome}" e o valor, com o valor em todos os totais; o titular do cartão, escolhido pelo dono entre os adultos da carteira; a conferência da fatura e o PDF de um cartão com titular abertos só ao titular e ao dono; e os avisos, os insights e a captura que não leem o original, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7B, "gasto privado e titular do cartão": a chave Privado no lançamento do adulto (Pix, débito, dinheiro ou um cartão de que ele é titular), que deixa os outros adultos verem só "Gasto pessoal de {nome}" e o valor, com o valor em todos os totais; o titular do cartão, escolhido pelo dono entre os adultos da carteira; a conferência da fatura e o PDF de um cartão com titular abertos só ao titular e ao dono; e os avisos, os insights e a captura que não leem o original, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7C, "projetos, modelos de carteira e divisão da conta": a regra de escolha entre projeto e carteira, os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento (e o "Criar a Casa" do primeiro uso), o projeto (`/projetos`, com o resumo e o arquivar), a carteira de projeto sem Previsão nem orçamento do mês, e a divisão por quem pagou: o modo da carteira, os pesos, as partes que o banco gera, o saldo e o acerto, com as telas em wireframe, nenhuma Edge nova e ainda não publicado (`supabase/BLOCO_7C_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -53,7 +53,8 @@ banco.
 15. [Papéis: dono, membro e convidado](#15-papéis-dono-membro-e-convidado)
 16. [Limite por pessoa](#16-limite-por-pessoa)
 17. [Gasto privado e titular do cartão](#17-gasto-privado-e-titular-do-cartão)
-18. [Lacunas encontradas](#18-lacunas-encontradas)
+18. [Projetos, modelos de carteira e divisão](#18-projetos-modelos-de-carteira-e-divisão)
+19. [Lacunas encontradas](#19-lacunas-encontradas)
 
 ---
 
@@ -144,6 +145,16 @@ flowchart LR
     G17 -->|"Gasto pessoal de Fulana na lista e na conferência"| G5
     G17 -->|"aviso da despesa privada e da fatura do titular"| G3
     G17 -->|"insight da fatura do cartão com titular"| G14
+
+    G2 -->|"Nova carteira: a regra e os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento"| G18(("G18 Projetos e divisão"))
+    G12 -->|"/comecar: Criar a Casa, no primeiro uso"| G18
+    G3 -->|"item Projetos, só o adulto"| G18
+    G5 -->|"projeto da despesa, quem pagou e as partes"| G18
+    G18 -->|"a carteira criada vira a atual; o resumo da carteira de projeto e o saldo e o acerto"| G4
+    G18 -->|"a carteira de projeto não copia orçamento"| G9
+    G18 -.->|"a carteira de projeto não tem previsão: o link do seguro some"| G13
+    G15 -->|"o convidado não vê projetos, partes nem saldo; o responsável paga por ele"| G18
+    G18 -.->|"uma privada não leva projeto; a privada tem uma parte só"| G17
 ```
 
 ---
@@ -297,6 +308,7 @@ flowchart TD
     switcher -->|"Criar carteira"| createDlg(["Nome, ícone, cor"])
     createDlg -->|"Salvar"| createRpc[("RPC create_shared_workspace")] --> newCurrent(["Nova carteira vira a atual"])
     createDlg -->|"Cancelar"| switcher
+    createDlg -.->|"a regra da escolha e os modelos de carteira"| G18a(("G18a Criar com um modelo"))
 
     settings["/settings"] --> owner{"É dona da carteira?"}
     owner -->|"sim"| edit(["Editar nome, ícone, cor"])
@@ -370,6 +382,7 @@ flowchart TD
 | Lista de membros e convites (Bloco 7A) | O selo mostra Dono, Membro ou Convidado (`rotuloDoPapel`); o convite por e-mail pendente mostra o papel; a troca de papel é da linha do membro e só do dono (ver 15a). O membro adulto também lê a seção Limites (ver 16) | `src/app/(app)/members/page-client.tsx`, `src/components/members/workspace-invite-dialog.tsx` |
 | IA e privacidade (Bloco 3B) | Configurações mostra o wireframe "IA": "IA: Groq e Cloudflare, grátis, sem treino", o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/wireframe/ia-configuracoes-wireframe.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
+| Modelos de carteira (Bloco 7C) | Criar carteira ganha a regra da escolha e os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento, que criam pela RPC `criar_carteira_de_modelo` (com as categorias e o modo de cada um); "Sem modelo" segue o `create_shared_workspace`. Ver a jornada 18 | `src/components/workspace/project-form-dialog.tsx`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx` |
 
 ---
 
@@ -394,8 +407,9 @@ flowchart TD
     sidebar --> nav6["/credit-cards"]
     sidebar --> nav7["/members"]
     sidebar --> nav8["/settings"]
+    sidebar -->|"só o adulto, depois de Cartões"| nav9["/projetos"]
     sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Planos, Cofre aberto, Sair"])
-    bottom -->|"aba Você, com o avatar"| mePage["/me: Carteira (Assinaturas, Contas, Cartões, Membros) · Conta (Minha conta, Cofre aberto, Configurações)"]
+    bottom -->|"aba Você, com o avatar"| mePage["/me: Carteira (Assinaturas, Contas, Cartões, Projetos, Membros) · Conta (Minha conta, Cofre aberto, Configurações)"]
     mePage -->|"linha da página"| meDest["Tela de um item da página, com o voltar a /me no lugar do sino"]
     meDest -->|"voltar"| mePage
     userMenu --> G10(("G10 Conta"))
@@ -476,6 +490,7 @@ flowchart TD
 | Navegação do convidado (Bloco 7A) | Com o papel `guest`, a lateral, a barra de baixo, a página Você, o menu da conta e a paleta (⌘K) mostram só Painel, Transações, Categorias e Cartões (mais Minha conta, Configurações, Planos e Cofre), e uma rota fora da lista leva a `/dashboard` (ver 15). Com o papel a caminho, só os itens comuns aos dois papéis | `src/lib/papeis/rotas-do-convidado.ts`, `src/components/layout/convidado-route-guard.tsx` |
 | Aviso do limite da pessoa (Bloco 7A) | O aviso do limite é do tipo `budget` com `metadata.kind: 'member_limit'` (a preferência é `notify_budget`) e o `href` por papel: `/members#limites` para dono e membro, `/dashboard` para o convidado (ver 16) | `supabase/functions/evaluate-budgets/index.ts` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
+| Projetos na navegação (Bloco 7C) | "Projetos" (`FolderIcon`, `ROUTES.PROJETOS`) entra na lateral depois de Cartões e, no telefone, no grupo Carteira da página `/me`; o convidado não vê o item nem abre a rota (Ruling 3 do bloco). O título do telefone em `/projetos/{id}` é "Projeto" e o voltar leva a `/projetos`. A lateral acende um item também nas subpáginas dele, por prefixo (`/projetos/{id}`, `/credit-cards/{id}`, as de Configurações) | `src/config/navigation.ts`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx`, `src/components/layout/app-sidebar.tsx` |
 | Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
 
 ---
@@ -519,7 +534,13 @@ flowchart TD
     conferir --> G5c(("G5c A conferir"))
     blocks --> insightsBox(["WIREFRAME Insights: a caixa da carteira, até 20 novos e vistos, com uma ação ou Entendi"])
     insightsBox -->|"ação, Entendi ou Não mostrar mais este tipo"| G14(("G14 Insights"))
-    blocks --> seguroMes{"Mês do seletor é o corrente?"}
+    blocks --> carteiraProj{"A carteira é de projeto? (Bloco 7C)"}
+    carteiraProj -->|"sim, e a pessoa é adulta"| resumoProj(["WIREFRAME Carteira de projeto, no lugar do seguro para gastar: gasto, falta, por categoria e por pessoa"])
+    resumoProj -.-> G18c(("G18c Carteira de projeto"))
+    carteiraProj -->|"não: carteira do dia a dia"| seguroMes{"Mês do seletor é o corrente?"}
+    blocks --> saldoQ{"Carteira dividida e a pessoa é adulta? (Bloco 7C)"}
+    saldoQ -->|"sim"| saldoCard(["WIREFRAME Saldo e acerto: tem a receber, deve ou está em dia, a sugestão e Acertar"])
+    saldoCard -.-> G18d(("G18d Dividir e acertar"))
     seguroMes -->|"sim, seguro abaixo de 10% da renda"| seguroBaixo[("RPC registrar_insight: seguro baixo, uma vez por sessão, carteira e mês")]
     seguroBaixo --> insightsBox
     seguroMes -->|"sim"| seguroCard(["WIREFRAME Seguro para gastar, compacto: o valor, por dia e o regime"])
@@ -558,6 +579,8 @@ flowchart TD
 | "Em aberto" e "prevista" (Bloco 5) | O "em aberto" das faturas do Painel segue o `buildCardMonthlyInvoiceSnapshot`: **não** soma as assinaturas do cartão que ainda vão cair. A fatura "prevista" da previsão (`faturaPrevista`) soma. São dois números com dois nomes; a revisão de tela decide se o "em aberto" passa a ser o previsto | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/previsao/fatura-prevista.ts` |
 | Fatura e estorno (Bloco 2) | Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (`credit_card_statement_totals`); a aberta segue o calculado. O estorno no cartão (receita com `payment_method = 'credit_card'`) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede `source`, `needs_review` e `import_batch_id`: sem a migração do Bloco 2, o Painel não carrega | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/fatura/total-com-banco.ts`, `src/lib/expense-month-attribution.ts`, `src/lib/queries/use-transactions-range.ts` |
 | Painel do convidado (Bloco 7A) | Com `guest`, `PainelPorPapel` troca o Painel da casa pelo wireframe dele: o limite do mês, o total, as dez últimas transações e "Lançar despesa" (ver 15b). Dono e membro seguem no Painel da casa. A caixa de insights, o seguro para gastar e as faturas não existem para ele | `src/components/dashboard/painel-por-papel.tsx` |
+| Carteira de projeto no Painel (Bloco 7C) | Com `purpose = 'project'`, o Painel do adulto troca o cartão "Seguro para gastar" pelo resumo da carteira (gasto, falta do orçamento total, por categoria e por pessoa, somando a carteira inteira); o convidado não o vê. Sem o seguro, some o único link para a Previsão. Ver a jornada 18 | `src/app/(app)/dashboard/page-client.tsx`, `src/components/wireframe/projetos-wireframe.tsx` |
+| Saldo e acerto (Bloco 7C) | Antes da caixa de insights, o wireframe "Saldo e acerto" aparece só numa carteira `split` e só para o adulto: o saldo de cada pessoa (`saldos_da_carteira`), a sugestão de quem paga quem, o "Acertar" que grava em `settlements` e o histórico. O saldo pode levar até 60 s para refletir uma despesa recém-salva: salvar uma transação não invalida a consulta dele. Ver a jornada 18 | `src/components/wireframe/divisao-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
 
 ---
 
@@ -657,6 +680,9 @@ flowchart TD
     catPick -->|"Gerenciar categorias"| G9(("G9 /categories"))
     expense -->|"forma: cartão de crédito"| cardPick(["Seletor de cartão"])
     expense -.->|"autor adulto: Pix, débito, dinheiro ou cartão de que é titular, chave Privado"| G17(("G17 Gasto privado"))
+    expense -.->|"projeto ativo na carteira: seletor Projeto"| G18b(("G18b Projeto"))
+    expense -.->|"carteira dividida e adulto: Quem pagou"| G18d(("G18d Dividir e acertar"))
+    inst -.->|"carteira dividida: pesos desta parcelada"| G18d
     cardPick -->|"Cadastrar cartão ou sem cartões"| G6(("G6 /credit-cards"))
     cardPick -.->|"sem cartão escolhido"| disabled(["Salvar desativado"])
 
@@ -674,6 +700,8 @@ flowchart TD
     saveTx -->|"erro"| keep(["Aviso; formulário continua aberto"])
     saveTx -->|"sucesso"| after[("Edges evaluate-budgets, evaluate-credit-card-alerts")]
     saveTx -.->|"com a foto do recibo"| fotoAnexo[("A foto vira anexo do lançamento; falhando, o lançamento fica")]
+    saveTx -.->|"qualquer origem: paid_by e, na carteira dividida, as partes"| partesTrg[("Triggers definir_quem_pagou e gerar_partes")]
+    partesTrg -.-> G18d
     saveTx -.->|"despesa manual, no insert"| notifyTrg[("Trigger transactions_notify_created: Edge notify-transaction-created avisa os membros")]
     after --> toast(["Transação criada; listas recarregam"])
     toast -->|"Ver, só online"| txOpen(("G5b Detalhe /transactions?txn=id"))
@@ -693,6 +721,7 @@ flowchart TD
     review -->|"Confirmar"| reviewOk[("needs_review = false")] --> view
     review -->|"Lembrar 'nome' como este cartão, com o cartão escolhido"| walletAlias[("credit_cards.wallet_alias")] --> view
     review -->|"Desfazer importação do lote, confirmado"| reviewUndo[("Apaga o lote por import_batch_id")] --> sheetShut(["O detalhe fecha"])
+    view -.->|"carteira dividida, adulto: Partes desta despesa"| G18d
     view --> attach(["WIREFRAME Anexos: lista, anexar foto ou PDF, abrir, apagar"])
     attach -->|"Anexar"| attachCheck{"Tipo aceito, até 10 MB e dentro da cota de 25 MB?"}
     attachCheck -->|"não"| attachErr(["Mensagem antes do envio"])
@@ -828,6 +857,7 @@ flowchart TD
 | Avaliadores pelo servidor (Bloco 3A) | `evaluate-budgets` e `evaluate-credit-card-alerts` aceitam o Bearer da service role ou o `x-cron-secret` (`isServiceAuthorized`, agora em `_shared/service-auth.ts`), além do JWT da pessoa; pelo servidor, o corpo traz o `workspace_id`, e a checagem de membro é pulada | `supabase/functions/_shared/service-auth.ts`, `supabase/functions/evaluate-budgets/`, `supabase/functions/evaluate-credit-card-alerts/` |
 | Anexos (Bloco 2) | No detalhe, a seção de anexos: WebP, JPEG, PNG ou PDF, até 10 MB, e 25 MB por carteira; a foto vira WebP de lado maior 1600 px. O objeto mora em `<workspace_id>/<uuid>.<ext>` no bucket privado `attachments`, e a cota conta o tamanho real do objeto (`attachments_enforce_quota`). Se a linha falha depois do envio, o objeto é apagado. "Abrir" pede uma URL assinada de 3600 s numa aba aberta no clique; com o popup bloqueado, a seção mostra o link "Abrir anexo" com a URL assinada (`target="_blank"`), e a pessoa não sai do app. Excluir a transação avulsa apaga os objetos; em lote, parcelada ou offline, quem apaga é o cron semanal | `src/components/wireframe/anexos-wireframe.tsx`, `src/lib/anexos.ts`, `src/lib/transactions/mutations.ts`, `supabase/migrations/20261022130000_anexos.sql` |
 | Gasto privado (Bloco 7B) | A chave "Privado" do formulário (só na despesa da própria pessoa) grava `is_private`; os outros adultos leem "Gasto pessoal de {nome}" e o valor, sem categoria, e só o autor edita ou exclui. Ver a jornada 17 | `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/lib/privado/` |
+| Projeto, quem pagou e as partes (Bloco 7C) | O formulário de despesa ganha o seletor "Projeto (opcional)" (os projetos ativos da carteira; some na receita, na parcelada, no escopo "plano" e na privada) e, numa carteira dividida, "Quem pagou" (só os adultos; some na privada, na parcelada e na receita). O corpo de escrita só manda `project_id` e `paid_by` quando a pessoa escolheu algo que difere do padrão (Ruling 8 do 7B). A parcelada nova ganha "Pesos desta parcelada", gravados no plano logo depois do RPC. A folha de detalhe ganha "Partes desta despesa". Quem pagou e as partes são do banco, em gatilho, para toda origem de escrita. Ver a jornada 18 | `src/components/transactions/transaction-form-fields.tsx`, `src/components/transactions/transaction-form-use.tsx`, `src/components/transactions/transaction-detail-sheet.tsx`, `src/components/wireframe/divisao-wireframe.tsx` |
 | Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |
 
 ---
@@ -1145,6 +1175,7 @@ flowchart TD
 | Orçamento que se repete (Bloco 5) | O formulário da categoria de despesa ganha o wireframe "Repetir todo mês" (ligado por padrão), que grava `budgets.repeats`. Sem novo valor, o upsert não roda e só a repetição do orçamento já salvo muda (`definirRepeticao`). O padrão do banco é `true`; só o mês corrente foi marcado na migração, e o histórico ficou `false`. `copiar_orcamentos_do_mes(p_period_start, p_workspace_id)` copia a linha do mês anterior com `repeats` para o mês dado, **uma vez por carteira e mês**: o marcador `orcamentos_copiados` entra antes e é ele que impede o orçamento apagado no mês de voltar. O mês que já tem a categoria não ganha outra (`on conflict do nothing` na chave única), a categoria apagada já levou o orçamento pela FK em cascata, e os avisos (`threshold_*`) nascem nulos. Roda pelo cron `orcamentos-do-mes` (`5 3 1 * *`, 00:05 em Brasília) e pelo RPC `garantir_orcamentos_do_mes(p_workspace_id)`, que confere o membro e a Categorias e o Painel chamam ao abrir | `src/components/wireframe/orcamento-repete-wireframe.tsx`, `src/lib/category-budget-ops.ts`, `src/hooks/use-garantir-orcamentos-do-mes.ts`, `supabase/migrations/20261026120000_previsao.sql` |
 | Aviso pelo mês do fechamento (Bloco 5) | `evaluate-budgets` soma a categoria no mês pelo `gastoDaCategoriaNoMes` (`_shared/orcamento-mes.ts`): a despesa fora do cartão conta pelo dia; a do cartão, pelo mês do **fechamento** da fatura da compra. É a mesma regra do `postedTotal` de `buildCategoryCommitmentsForMonth`, travada pelos vetores dourados (`orcamento-mes-vectors.json`). A receita (o estorno no cartão também) não entra: **a categoria não abate o estorno**, como a tela. Os chamadores (formulário, edição, conta paga, a fila offline e a `capture`) mandam `payment_method` e `payment_credit_card_id`, e a Edge avalia o orçamento do mês do fechamento. O front antigo de `main` não manda: a Edge avalia o dia e o fechamento da compra em cada cartão da carteira | `supabase/functions/evaluate-budgets/index.ts`, `supabase/functions/_shared/orcamento-mes.ts`, `src/lib/fixtures/orcamento-mes-vectors.json` |
 | Botão direito | No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua | `src/components/categories/category-card-context-menu.tsx` |
+| Carteira de projeto (Bloco 7C) | Numa carteira `purpose = 'project'` o orçamento do mês não vale: `copiar_orcamentos_do_mes` (o cron do dia 1) e `garantir_orcamentos_do_mes` (a abertura do Painel e de Categorias) a pulam, e nenhuma linha vai a `orcamentos_copiados`. O planejamento dela é o orçamento total da carteira (jornada 18c) | `supabase/migrations/20261031120000_projetos.sql` |
 
 ---
 
@@ -1292,6 +1323,7 @@ flowchart TD
     p3 -->|"Ajustar as preferências"| sets["/settings"]
     p4 -->|"Convidar"| members["/members"]
     p4 -->|"Concluir"| concl
+    comecar -.->|"sem carteira compartilhada: Criar a Casa"| G18a(("G18a Criar a Casa"))
     comecar -->|"Pular"| concl
     concl -->|"sucesso"| dash
 
@@ -1329,6 +1361,7 @@ flowchart TD
 | Entrada no menu | `ROUTES.COFRE` entra em `ACCOUNT_MENU_PROFILE_LINK_ITEMS` como "Cofre aberto": a linha do grupo Conta de `/me` (no telefone, a única entrada) e o item do menu do usuário do desktop, depois de Minha conta e Planos. A aba "Você" fica ativa em `/cofre` (`isVoceTabActive`). `/piloto` e `/comecar` não têm entrada no menu | `src/components/layout/account-menu-links.ts`, `src/config/mobile-navigation.ts`, `src/config/navigation.ts` |
 | Título da tela | `APP_PAGE_TITLES` ganhou `/piloto` ("Piloto Automático"), `/cofre` ("Cofre aberto") e `/comecar` ("Começar") | `src/config/navigation.ts` |
 | Privacidade | `/privacidade` diz que o teste de 14 dias não pede cartão, que o plano é guardado (tipo, situação e fim do período) e liga ao Cofre aberto, onde se exporta tudo e se apaga a conta | `src/components/wireframe/privacidade-wireframe.tsx` |
+| Criar a Casa (Bloco 7C) | No alto de `/comecar`, quem ainda não é dono de nenhuma carteira compartilhada vê o wireframe "Criar a Casa", que chama o modelo `casa` e troca para a carteira nova. Não é um dos 4 passos nem redireciona ninguém: só aparece, e some para quem já é dono. O `handle_new_user` não mudou. Ver a jornada 18 | `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/app/(app)/comecar/page.tsx` |
 
 ---
 
@@ -1380,6 +1413,7 @@ flowchart TD
 | Impacto da parcela | Ver 5, "Impacto da parcela (Bloco 5)": o mesmo núcleo, com um plano sintético. O limite é o do banco: faturas fechadas não pagas, o lançado na aberta e todas as parcelas futuras, **sem** assinaturas | `src/lib/previsao/impacto-parcela.ts` |
 | Alerta de fatura alta | No cron diário `credit-card-calendar-alerts` (12:00 UTC), para cada cartão ativo: a fatura em aberto mais as parcelas que ainda caem nela contra a média das 3 últimas fechadas (o total do banco, se gravado; a fatura sem movimento não conta). Acima de 120% (120% exatos não) e com 3 fechadas, avisa. Tipo `credit_card` e preferência `notify_credit_cards`, `metadata.href` `/previsao`, dedupe `cal:trending_high:{fechamento}:c:{cartão}` (uma vez por ciclo). A consulta é própria e paginada: falhar não derruba os outros avisos do calendário. **A mensagem diz o valor previsto e quanto ele passa da média, mas não diz quanto sobra no mês do vencimento**: isso exigiria reescrever o seguro em Deno, uma segunda conta; a pessoa vê o seguro em `/previsao` | `supabase/functions/credit-card-calendar-alerts/index.ts`, `supabase/functions/_shared/fatura-tendencia.ts`, `supabase/functions/_shared/notification-copy.ts` |
 | Paridade | A projeção de parcelas do alerta espelha `sumProjectedCreditCardInstallmentsInWindow` do cliente, travada por `fatura-tendencia-vectors.json`; o gasto do orçamento, por `orcamento-mes-vectors.json` | `src/lib/fatura-tendencia-parity.test.ts`, `src/lib/orcamento-mes-parity.test.ts` |
+| Carteira de projeto (Bloco 7C) | A carteira de projeto não tem previsão, mas só o link some: o Painel dela troca o "Seguro para gastar" pelo resumo, e esse cartão era a única porta. A rota `/previsao` aberta direto, o insight de seguro baixo e o quadro de impacto da parcela no formulário ainda calculam nela (lacuna 73) | `src/app/(app)/dashboard/page-client.tsx` |
 
 ---
 
@@ -1480,6 +1514,8 @@ carteira. A coluna "privadas" da spec é do Bloco 7B (jornada 17).
 | O próprio limite | vê | vê | vê |
 | Convites e membros | gerencia | não | não |
 | Marcar um gasto como privado | sim (o dele) | sim (o dele) | não |
+| Projetos, partes, saldo e acerto (Bloco 7C) | gerencia | gerencia | não vê; só escolhe o projeto na despesa dele |
+| Modo da divisão e pesos (Bloco 7C) | edita | não edita (a tela é do dono) | não |
 
 ### 15a. Trocar o papel
 
@@ -1550,6 +1586,7 @@ flowchart TD
 | Assentos | O convidado ocupa um assento do Plano Família: a cobertura é dos 5 primeiros membros de quem assina, de qualquer papel (`tem_cobertura` não mudou). O filho coberto tem também o Família na própria carteira pessoal | `supabase/migrations/20261025120000_planos.sql` |
 | Sem plano nada se desliga | `garantir_escrita` não mexe em RLS: sem plano, o convidado continua restrito e o limite dele continua visível | `supabase/migrations/20261029120000_papeis.sql` |
 | A lista de membros | O convidado lê quem divide a casa com ele (`workspace_member_directory`: nome, foto e e-mail; a política de leitura de `workspace_members`, com os papéis e o responsável): fica de membro **de propósito**, porque ele precisa dos nomes (o autor das despesas, quem recebe aviso). A tela de Membros não existe para ele, mas a API responde (lacuna 59) | `supabase/migrations/20261029120000_papeis.sql`, `src/lib/papeis/migracao-papeis.test.ts` |
+| O convidado e a divisão (Bloco 7C) | O convidado não vê `/projetos`, o resumo da carteira de projeto, as partes, o saldo nem o modo. A despesa dele tem `paid_by` igual ao responsável e nenhuma parte, e ele não entra no saldo. Pela API ele ainda lê `projects` (inclusive o `budget_total`, lacuna 74) e não lê `transaction_shares`, `settlements` nem `workspace_split_weights` | `supabase/migrations/20261031120000_projetos.sql`, `supabase/migrations/20261031130000_divisao.sql` |
 
 ---
 
@@ -1604,6 +1641,7 @@ flowchart TD
 | O destino de "Ver limite" | Dono e membro vão a `/members#limites`; o convidado, a `/dashboard`. Na caixa de insights o destino sai do papel de quem lê **agora** (`destinoDoInsightDeLimite`), e não de um papel guardado no payload; no aviso do sino, do papel do destinatário na hora do envio | `src/lib/papeis/papeis.ts`, `src/lib/insights/acoes.ts`, `supabase/functions/_shared/limite-pessoa.ts` |
 | A tela | A seção Limites de Membros (só para o adulto) lista o gasto do mês contra o limite de cada pessoa (lido pelo cliente com `lerLancamentosDoMes`, paginado, o mês e o anterior). Só o dono vê o campo (texto com vírgula, de R$ 0,01 até R$ 9.999.999.999,99) e "Salvar" / "Tirar limite"; o dono pode dar limite a si mesmo. Se a leitura falha, o estado neutro diz que os limites ainda não estão disponíveis | `src/components/wireframe/limites-wireframe.tsx`, `src/lib/limites/limites.ts` |
 | Insights do convidado | `limite_pessoa` entra nos checks de `insights.kind` e `insights_silenciados.kind` (o tipo pode ser silenciado). O convidado recebe o dele; o dono, um por pessoa que passou | `supabase/migrations/20261029130000_limites.sql` |
+| Limite e quem pagou (Bloco 7C) | O limite segue contando as despesas que a pessoa **lançou** (`user_id`), e não as que pagou (`paid_by`): a despesa do convidado que o responsável paga continua no limite do convidado | `supabase/functions/_shared/limite-pessoa.ts` |
 
 ---
 
@@ -1740,7 +1778,201 @@ flowchart TD
 
 ---
 
-## 18. Lacunas encontradas
+## 18. Projetos, modelos de carteira e divisão
+
+Duas ideias do Bloco 7C, em wireframe. A primeira é o **propósito** da carteira. A
+regra mostrada ao escolher é esta: "Vai usar o cartão da casa e são as mesmas
+pessoas? É um projeto. Gente de fora ou dinheiro separado? É uma carteira." Um
+**projeto** é um rótulo dentro da carteira (as mesmas pessoas e o mesmo cartão,
+com período e orçamento próprios); uma **carteira de projeto** é o espaço
+separado, sem Previsão nem orçamento do mês. Os **modelos** (Casa, Casal,
+Pessoal, Viagem, Reforma e Evento) criam a carteira já com as categorias. A
+segunda ideia é a **divisão**: numa carteira dividida, cada despesa tem quem
+pagou (`paid_by`) e partes entre os adultos, e o saldo de cada pessoa é o que
+pagou menos o que lhe cabe, mais os acertos. O convidado nunca entra no saldo: o
+responsável paga por ele. Quatro caminhos: criar a carteira com um modelo e a
+Casa do primeiro uso (18a), o projeto (18b), a carteira de projeto (18c) e
+dividir e acertar (18d).
+
+### 18a. Criar uma carteira: os modelos e a Casa
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    switcher(["Seletor de carteira: Criar carteira"]) --> dlg(["Nova carteira"])
+    dlg --> regra(["WIREFRAME Modelos de carteira: a regra, Vai usar o cartão da casa e são as mesmas pessoas? É um projeto. Gente de fora ou dinheiro separado? É uma carteira."])
+    regra --> escolha{"Qual modelo?"}
+    escolha -->|"Sem modelo"| semModelo[("RPC create_shared_workspace: nome, ícone e cor, como sempre")]
+    escolha -->|"Pessoal"| pessoal(["Abrir a Pessoal: sem nome e sem aparência"])
+    pessoal --> pessoalRpc[("RPC criar_carteira_de_modelo pessoal: devolve a carteira pessoal que já existe, não cria nada")]
+    escolha -->|"Casa, Casal, Viagem, Reforma ou Evento"| modeloRpc[("RPC criar_carteira_de_modelo, security invoker: grava purpose e split_mode, semeia as categorias do modelo e marca o assistente de categorias como concluído")]
+    modeloRpc -->|"MODELO_DESCONHECIDO, WORKSPACE_NAME_REQUIRED ou NOT_AUTHENTICATED"| erro(["A frase em português, e o diálogo continua aberto"])
+    modeloRpc -.->|"banco sem a migração: PGRST202"| indisp(["Ainda não disponível, e nada é criado"])
+    modeloRpc -->|"sucesso"| aparencia[("updateWorkspace: o ícone e a cor que a pessoa escolheu valem sobre os do modelo")]
+    aparencia --> tipo{"É modelo de projeto: Viagem, Reforma ou Evento?"}
+    tipo -->|"não: Casa ou Casal"| nova(["A carteira nova vira a atual"])
+    tipo -->|"sim"| datas(["WIREFRAME Datas e orçamento total da carteira de projeto"])
+    datas -->|"Salvar ou Agora não"| nova
+    semModelo -->|"sucesso"| nova
+    pessoalRpc --> nova
+    nova --> G4(("G4 Painel"))
+    nova -.-> G2(("G2 Carteiras"))
+
+    comecar["/comecar"] --> dona{"É dona de alguma carteira compartilhada?"}
+    dona -->|"sim"| semPasso(["Sem o passo"])
+    dona -->|"não"| casa(["WIREFRAME Criar a Casa: a carteira do dia a dia, para dividir com quem mora com você"])
+    casa -->|"Criar a Casa"| casaRpc[("RPC criar_carteira_de_modelo casa, com o nome Casa")]
+    casaRpc -->|"sucesso"| troca(["A Casa vira a atual"])
+    casaRpc -.->|"banco sem a migração"| indisp
+    troca --> G4
+    comecar -.-> G12(("G12 Confiança e o começo"))
+```
+
+### 18b. Projeto: criar, lançar, o resumo e arquivar
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    menu(["Lateral: Projetos. No telefone, a página Você, grupo Carteira"]) --> lista["/projetos"]
+    lista --> papel{"Dono ou membro?"}
+    papel -->|"convidado: a rota não está na lista dele"| guestDash(("G15b Painel do convidado"))
+    papel -->|"sim"| ler[("select em projects da carteira atual, tolerante à tabela ausente")]
+    ler -.->|"banco sem a tabela: PGRST205"| indisp(["Ainda não disponível"])
+    ler --> ativos(["Ativos e Arquivados: nome, período e orçamento"])
+    ativos -->|"Criar projeto: nome, começa em, termina em, orçamento total"| criar[("insert em projects, created_by = auth.uid()")]
+    criar --> lista
+    ativos -->|"o nome do projeto"| det["/projetos/id"]
+    det --> resumo(["WIREFRAME Projeto: gasto, falta do orçamento, por categoria e por pessoa"])
+    det -->|"Salvar a edição"| edit[("update de name, starts_on, ends_on e budget_total")]
+    edit --> det
+    det -->|"Arquivar, confirmado"| arq[("update de archived_at")]
+    arq --> arquivado(["Arquivado: sai dos Ativos e do seletor das despesas novas"])
+    arquivado -->|"Desarquivar"| desarq[("archived_at nulo")]
+    desarq --> det
+
+    form(("G5b Formulário de despesa")) --> quando{"Despesa, sem privado, fora da parcelada e do plano?"}
+    quando -->|"não"| semSeletor(["Sem o seletor, e o projeto escolhido antes é descartado"])
+    quando -->|"sim, e há projeto ativo"| seletor(["WIREFRAME Projeto opcional: os ativos, mais o atual se foi arquivado depois"])
+    seletor -->|"Salvar com projeto"| tx[("transactions.project_id: só vai no corpo quando muda algo")]
+    tx --> gat[("Triggers same_ws_project_id e recusar_projeto_arquivado")]
+    gat -->|"projeto de outra carteira"| erroWs(["A escrita é recusada"])
+    gat -->|"vínculo novo com projeto arquivado"| erroArq(["PROJETO_ARQUIVADO: Este projeto está arquivado e não aceita lançamento novo."])
+    gat -->|"vale"| entra(["O lançamento entra no resumo do projeto"])
+    entra -.-> resumo
+    privada(("G17 Gasto privado")) -.->|"uma privada não leva projeto: PRIVADO_NAO_PERMITIDO"| gat
+```
+
+### 18c. Carteira de projeto
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    modelo(("G18a Viagem, Reforma ou Evento")) --> ws[("workspaces: purpose project, split_mode split, starts_on, ends_on e budget_total só aqui")]
+    ws --> config["/settings"]
+    config --> dono{"É dona da carteira?"}
+    dono -->|"sim"| datas(["WIREFRAME Datas e orçamento total: o fim não vem antes do começo, orçamento maior que zero, vazio grava nulo"])
+    dono -->|"não"| semEditor(["Sem o editor"])
+    datas -->|"Salvar"| upd[("update em workspaces, e zero linhas diz Nada mudou")]
+
+    ws --> painel["/dashboard"]
+    painel --> adulto{"A pessoa é adulta?"}
+    adulto -->|"sim"| resumo(["WIREFRAME Carteira de projeto, no lugar do seguro para gastar: gasto, falta, por categoria e por pessoa"])
+    adulto -->|"convidado"| nada(["Nada monta, e o Painel dele é o do 7A"])
+    resumo --> lanc[("Despesas da carteira inteira, lidas por páginas")]
+
+    ws --> orc[("copiar_orcamentos_do_mes e garantir_orcamentos_do_mes pulam a carteira de projeto")]
+    orc --> semOrc(["Nenhum orçamento é copiado para ela, no dia 1 nem ao abrir o Painel"])
+    semOrc -.-> G9(("G9 Categorias e orçamentos"))
+    resumo -.->|"o link do seguro some do Painel"| G13(("G13 Previsão"))
+    G13 -.->|"a rota /previsao aberta direto ainda abre numa carteira de projeto"| prev["/previsao"]
+```
+
+### 18d. Dividir e acertar
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    config["/settings: Modo e pesos da carteira"] --> dono{"É dona, e a carteira não é a pessoal?"}
+    dono -->|"não"| semModo(["Sem o editor"])
+    dono -->|"sim"| modo(["WIREFRAME Modo e pesos: pote único ou dividida, e um peso por adulto"])
+    modo -->|"Salvar o modo"| modoDb[("workspaces.split_mode")]
+    modoDb --> since[("Trigger carimbar_split_since: o dia em que virou split na primeira vez, nunca se perde")]
+    modo -->|"Salvar os pesos"| pesosDb[("workspace_split_weights, só os que mudaram: sem linha, o peso vale 1")]
+    modoDb -.->|"trocar o modo não apaga nada"| partesDb
+
+    form(("G5b Formulário de despesa")) --> divide{"Carteira dividida e a pessoa é adulta?"}
+    divide -->|"não"| semQuem(["Sem Quem pagou"])
+    divide -->|"sim, despesa que não é privada nem parcelada"| quem(["WIREFRAME Quem pagou: só os adultos, e o padrão é quem lança"])
+    quem --> salvar[("insert ou update em transactions, com paid_by só se mudou")]
+    divide -->|"parcelada nova"| pesosPlano(["WIREFRAME Pesos desta parcelada, ou os da carteira"])
+    pesosPlano --> plano[("RPC create_workspace_installment_plan e, logo depois, update de split_weights do plano")]
+    plano --> planoTrg[("Trigger refazer_partes_do_plano: refaz as parcelas automáticas")]
+    salvar --> pagoTrg[("Trigger definir_quem_pagou: o autor, ou o responsável se o autor é convidado. Privada é do autor. Fora dos adultos, PAGADOR_INVALIDO")]
+    pagoTrg --> partesTrg[("Trigger gerar_partes, depois de gravar: despesa, carteira split, data desde split_since, partes não escritas à mão")]
+    partesTrg --> partesDb[("transaction_shares: floor de valor vezes peso sobre a soma dos pesos, e o resto de centavos para quem pagou")]
+    planoTrg --> partesDb
+
+    partesDb --> detalhe(["WIREFRAME Partes desta despesa, no detalhe: quem pagou, a parte de cada um, automática ou à mão"])
+    detalhe -->|"Editar à mão"| soma{"A soma fecha o valor?"}
+    soma -->|"não"| naoFecha(["Salvar desabilitado, e o banco diria PARTES_NAO_FECHAM"])
+    soma -->|"sim"| definir[("RPC definir_partes: shares_manual true")]
+    detalhe -->|"Voltar ao automático"| auto[("RPC definir_partes com nulo: shares_manual false, e as partes são refeitas")]
+    detalhe -.->|"privada: uma parte, inteira do autor, e não se divide"| bloqueio(["PRIVADO_NAO_PERMITIDO na edição à mão"])
+    definir --> partesDb
+    auto --> partesDb
+
+    painel["/dashboard"] --> saldo(["WIREFRAME Saldo e acerto, só para adultos: tem a receber, deve ou está em dia"])
+    partesDb --> saldoRpc[("RPC saldos_da_carteira: pago menos partes mais acertos, só os adultos e quem saiu, marcado. O convidado nunca")]
+    saldoRpc --> saldo
+    saldo --> sugestao(["Sugestão: o maior devedor paga ao maior credor, até zerar"])
+    sugestao -->|"Usar esta sugestão"| acertar
+    saldo -->|"Acertar: de, para, valor, data e nota"| acertar[("insert em settlements: dois adultos e created_by da pessoa, e o garantir_escrita")]
+    acertar --> saldo
+    saldo -->|"Apagar o próprio acerto, confirmado"| apagar[("delete em settlements, só de quem criou")]
+    apagar --> saldo
+    acertar -.->|"o Pix acontece fora do app, de propósito"| fora(["Fora do app"])
+    saldo -.->|"quem saiu da carteira aparece como Ex-membro"| exm(["Sem nome na tela"])
+```
+
+### Os modelos de carteira
+
+| Modelo | Propósito e modo | Categorias |
+|---|---|---|
+| Casa | Dia a dia (`everyday`), pote único (`pooled`) | Despesa: Mercado, Contas da casa, Transporte, Saúde, Lazer, Educação e Outros. Receita: Salário e Outros |
+| Casal | Dia a dia (`everyday`), dividida (`split`) | As mesmas da Casa |
+| Pessoal | Não cria nada | Nenhuma: aponta para a carteira pessoal que o cadastro já criou |
+| Viagem | Projeto (`project`), dividida (`split`) | Despesa: Passagens, Hospedagem, Alimentação, Passeios, Transporte e Outros |
+| Reforma | Projeto (`project`), dividida (`split`) | Despesa: Material, Mão de obra, Projeto, Móveis e Outros |
+| Evento | Projeto (`project`), dividida (`split`) | Despesa: Local, Comida e bebida, Decoração, Convites, Fornecedores e Outros |
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| A regra e os modelos (Bloco 7C) | A frase mostrada ao escolher é a da spec, literal: "Vai usar o cartão da casa e são as mesmas pessoas? É um projeto. Gente de fora ou dinheiro separado? É uma carteira." Os seis modelos são Casa (dia a dia, pote único), Casal (dia a dia, dividida), Pessoal, e Viagem, Reforma e Evento (projeto, dividida). "Sem modelo" segue o `create_shared_workspace` de antes | `src/lib/projetos/modelos.ts`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/components/workspace/project-form-dialog.tsx` |
+| O modelo no banco (Bloco 7C) | `criar_carteira_de_modelo(p_modelo, p_nome)` é `security invoker`, para a RLS e o `created_by = auth.uid()` valerem, e cria pelo mesmo caminho do `create_shared_workspace`: a carteira com `purpose`, `split_mode` e `categories_onboarding_completed_at = now()` (o assistente de categorias não abre), o vínculo de dono e as categorias na forma do `handle_new_user`. Erros: `NOT_AUTHENTICATED`, `MODELO_DESCONHECIDO`, `WORKSPACE_NAME_REQUIRED` e `CARTEIRA_PESSOAL_AUSENTE`. A Pessoal devolve a carteira pessoal mais antiga e não cria nada. O ícone e a cor que a pessoa escolheu valem sobre os do modelo (`updateWorkspace` depois da RPC) | `supabase/migrations/20261031120000_projetos.sql` |
+| O primeiro uso cria a Casa (Bloco 7C) | Em `/comecar`, quem ainda não é dono de nenhuma carteira compartilhada vê "Criar a Casa" (`CriarACasaWireframe`), que chama o modelo `casa` com o nome "Casa" e troca para ela. O `handle_new_user` não mudou, porque o `main` depende dele | `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/app/(app)/comecar/page.tsx` |
+| O projeto (Bloco 7C) | `projects(workspace_id, name, starts_on, ends_on, budget_total, archived_at, created_by)`. O nome não é vazio, o fim não vem antes do começo e o orçamento é maior que zero ou nulo. RLS: **select de qualquer membro, o convidado incluído** (ele marca a despesa dele); insert, update e delete só do adulto, e o insert exige `created_by = auth.uid()`. O update é por coluna (`name`, `starts_on`, `ends_on`, `budget_total`, `archived_at`): a carteira e o autor não se trocam. A tela de projetos é só do adulto (Ruling 3 do bloco) | `supabase/migrations/20261031120000_projetos.sql`, `src/components/wireframe/projetos-wireframe.tsx` |
+| O lançamento no projeto (Bloco 7C) | `transactions.project_id` (`on delete set null`: apagar o projeto solta os lançamentos). `same_ws_project_id` exige o projeto da mesma carteira. `recusar_projeto_arquivado` recusa só o **vínculo novo** (insert, ou update que muda o `project_id`) com `PROJETO_ARQUIVADO`: editar um lançamento que já era do projeto passa. Uma privada não leva projeto (`PRIVADO_NAO_PERMITIDO`, Ruling 1 do bloco): o `guardar_privado` ganhou `project_id is null` na régua, e o formulário esconde o seletor ao marcar "Privado". O seletor também não aparece na receita, na parcelada nem no escopo "plano" | `supabase/migrations/20261031120000_projetos.sql`, `src/components/transactions/transaction-form-fields.tsx` |
+| O resumo (Bloco 7C) | `resumoDoProjeto` soma só as despesas, em centavos: o gasto, o que falta do orçamento (nulo sem orçamento, **negativo** quando o gasto passa dele: "Passou do orçamento em…"), a quebra por categoria (a privada, sem categoria, cai em "Sem categoria") e a por pessoa. O detalhe lê o projeto com as transações embutidas; o resumo da carteira de projeto lê as despesas da carteira por páginas (`fetchAllRows`), sem o teto de 1.000 linhas. A pessoa é o autor (`user_id`), e não quem pagou (lacuna 77) | `src/lib/projetos/resumo.ts`, `src/lib/projetos/dados.ts` |
+| A carteira de projeto (Bloco 7C) | `workspaces.purpose` (`everyday`, o padrão, ou `project`), mais `starts_on`, `ends_on` e `budget_total`, que o check `workspaces_project_fields` deixa nulos fora do `project`. Com `project`: `copiar_orcamentos_do_mes` (o cron do dia 1) e `garantir_orcamentos_do_mes` (a abertura do Painel) pulam a carteira, e o Painel do adulto troca o "seguro para gastar" pelo resumo dela, o que tira o único link para a Previsão. As datas e o orçamento total só o dono edita, em Configurações e no passo depois de criar o modelo (`camposDaCarteiraProjeto`) | `supabase/migrations/20261031120000_projetos.sql`, `src/app/(app)/dashboard/page-client.tsx`, `src/lib/projetos/modelos.ts` |
+| O banco sem a migração (Bloco 7C, Ruling 8 do 7B) | O 2.0 roda contra um banco sem as migrações do 7C: `tabelaTolerante` e `rpcTolerante` devolvem "Ainda não disponível" para a tabela ou a RPC ausente (`PGRST205`, `PGRST204`, `PGRST200`, `42P01`, `42703`; `PGRST202`, `42883`), o corpo de escrita só manda `project_id` e `paid_by` quando mudam algo, e o seletor de projeto some do formulário. Um teste de fonte tranca | `src/lib/projetos/dados.ts`, `src/lib/privado/colunas-tolerantes.test.ts` |
+| Quem pagou (Bloco 7C) | `transactions.paid_by` (`on delete set null`). O `main` não o manda, e um `default` de coluna não lê outra coluna: o padrão vem do gatilho `definir_quem_pagou` (`before insert or update`). É o autor; o **responsável** (`sponsor_user_id`) quando o autor é convidado, ou o dono mais antigo se o responsável saiu; e a privada é sempre do autor. Um pagador que não é adulto: `PAGADOR_INVALIDO`. Uma edição que não mexe em `paid_by` nem na carteira não o toca. A tela só oferece os adultos e só manda `paid_by` quando difere do padrão; a parcelada e o plano seguem o autor | `supabase/migrations/20261031130000_divisao.sql`, `src/components/wireframe/divisao-wireframe.tsx` |
+| O modo e o `split_since` (Bloco 7C) | `workspaces.split_mode` é `pooled` (o padrão) ou `split`; o dono o muda pela política de `update` de `workspaces`. `split_since` é carimbado por `carimbar_split_since` na primeira vez que o modo vira `split` (e no insert dos modelos que já nascem `split`) e **nunca se perde**: a despesa de antes dele não ganha parte, e voltar a `pooled` e depois a `split` mantém o dia | `supabase/migrations/20261031130000_divisao.sql` |
+| Os pesos (Bloco 7C) | `workspace_split_weights(workspace_id, user_id, weight > 0)`: sem linha, o peso vale 1, a divisão igual. A regra da parcelada mora no plano: `workspace_installment_plans.split_weights`, um array de `{ user_id, weight }` (nulo vale os pesos da carteira). `validar_pesos_do_plano` recusa na escrita (`PESOS_INVALIDOS`) o array vazio, o elemento sem `weight` numérico, o `user_id` que não é adulto da carteira, o peso menor ou igual a zero e a pessoa repetida. A tela grava os pesos logo depois do RPC `create_workspace_installment_plan` (a assinatura dele não mudou: o `main` o chama), e mudar `split_weights` refaz as partes automáticas das parcelas (`refazer_partes_do_plano`). Apagar o plano solta as parcelas, que passam aos pesos da carteira (lacuna 71). O peso digitado vai de 0,01 a 9999,99, com vírgula | `supabase/migrations/20261031130000_divisao.sql`, `src/lib/divisao/partes.ts`, `src/components/transactions/transaction-form-persistence.ts` |
+| O algoritmo (Bloco 7C) | `dividir_em_partes(total em centavos, pesos, pagador)`, num lugar só: em centavos; a parte de cada um é `floor(total × peso ÷ soma dos pesos)`; os centavos que sobram vão **inteiros** para quem pagou; se quem pagou não está entre os pesos (um plano que o deixa de fora), vão para o menor `user_id`. R$ 100,00 entre três de peso igual: 33,33, 33,33 e 33,34. Pesos 2 e 1 em R$ 10,00: 6,66 e 3,34 se quem pagou tem peso 1, e 6,67 e 3,33 se tem peso 2. A tela nunca calcula as partes: só confere as escritas à mão (`partesFecham`) | `supabase/migrations/20261031130000_divisao.sql`, `supabase/tests/database/divisao.test.sql` |
+| Quando há partes (Bloco 7C) | `gerar_partes` (`after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual, is_private`) chama `refazer_partes`, que só escreve em `transaction_shares`. A despesa ganha partes numa carteira `split`, com a data (em `America/Sao_Paulo`) a partir de `split_since` e as partes não escritas à mão; fora disso, as automáticas saem. A divisão é entre os **adultos** (dono e membro) daquele momento, pelos pesos do plano da parcela ou da carteira. A **privada** tem uma parte só, inteira do autor (Ruling 4: ninguém divide o que não pode ver; o valor segue em todos os totais). Vale para toda origem de escrita, porque é gatilho: a tela, a fila offline, a importação, a captura, o cron de assinatura e de parcela, `pay_bill_instance` e os `virar_*`. A despesa lançada antes de outro adulto entrar fica com quem estava (lacuna 70) | `supabase/migrations/20261031130000_divisao.sql`, `src/lib/divisao/migracao-divisao.test.ts` |
+| O convidado fora do saldo (Bloco 7C) | A despesa do convidado tem `paid_by` igual ao responsável. O convidado não entra nos pesos (só `owner` e `member`), então nunca tem parte, e a `saldos_da_carteira` não o lista. O limite por pessoa (jornada 16) segue contando pelo autor, não por `paid_by` | `supabase/migrations/20261031130000_divisao.sql`, `supabase/functions/_shared/limite-pessoa.ts` |
+| Trocar o modo (Bloco 7C) | De `split` para `pooled` nada se apaga: as partes ficam guardadas e o saldo some da tela (a divisão só aparece em `split`); a despesa que já tinha partes as mantém em dia, e a lançada no pote único não ganha nenhuma. De volta a `split`, elas valem de novo, e `pooled → split → pooled → split` não duplica nada. Mudar a despesa de carteira apaga as partes da carteira antiga. Mudar os pesos da carteira ou quem é adulto só vale para a frente (lacuna 76) | `supabase/migrations/20261031130000_divisao.sql`, `src/components/wireframe/divisao-wireframe.tsx` |
+| Partes à mão (Bloco 7C) | `definir_partes(p_transaction_id, p_partes)` é `security definer` e só do adulto; o corpo é `[{ user_id, amount }]`. Cada um é adulto, aparece uma vez, tem até 2 casas e não é negativo (`PARTES_INVALIDAS`); a soma diferente do valor, no centavo, é `PARTES_NAO_FECHAM`; a despesa fora da divisão é `PARTES_FORA_DA_DIVISAO`; a privada é `PRIVADO_NAO_PERMITIDO`. Marca `shares_manual` antes de trocar as partes, para o gatilho não as refazer. `null` volta ao automático. Mudar o valor, o tipo, a carteira ou o privado também devolve a linha ao automático | `supabase/migrations/20261031130000_divisao.sql`, `src/lib/divisao/dados.ts` |
+| O saldo (Bloco 7C) | `saldos_da_carteira(p_workspace_id)`, só do adulto: `pago` é a soma do valor das despesas com partes (desde `split_since`) cujo `paid_by` é a pessoa, `partes` é a soma das partes dela, `acertos` é o que ela pagou menos o que recebeu em acertos, e `saldo = pago − partes + acertos`; positivo quer dizer que os outros devem a ela. Lista os adultos de hoje e **quem aparece** nas partes, nos pagamentos ou nos acertos da carteira, com `saiu` para quem não é mais adulto, e por isso a soma dos saldos é sempre 0. Como a RPC pede um adulto logado, o SQL Editor não a chama | `supabase/migrations/20261031130000_divisao.sql`, `src/lib/divisao/partes.ts` |
+| O acerto (Bloco 7C) | `settlements(from_user, to_user, amount > 0, settled_on, note, created_by)`, com `from_user <> to_user`. Select e insert do adulto (o insert pede `created_by = auth.uid()` e as duas pessoas adultas da carteira), delete só de quem criou, sem update (quem errou apaga e lança de novo), e o `garantir_escrita` barra o acerto de uma carteira só de leitura. A sugestão (`sugestaoDeAcerto`) faz o maior devedor pagar ao maior credor, até zerar. **O Pix acontece fora do app, de propósito** (lacuna 75) | `supabase/migrations/20261031130000_divisao.sql`, `src/lib/divisao/partes.ts` |
+| A onda final (Bloco 7C) | Ficam para a onda final de correções do bloco: o acerto com quem saiu (a política de insert de `settlements` passa a aceitar quem aparece em `saldos_da_carteira`, com a tela junto) e os pesos só do dono (as políticas de `workspace_split_weights` passam a `is_workspace_owner`). Até lá, o insert exige dois adultos atuais e qualquer adulto escreve os pesos pela API | `supabase/BLOCO_7C_DEPLOYMENT.md` |
+| Navegação (Bloco 7C) | `ROUTES.PROJETOS` e `projetoDetailPath`. "Projetos" (`FolderIcon`) entra na lateral depois de Cartões e, no telefone, no grupo Carteira da página `/me`. O convidado não vê o item nem abre a rota (fica fora da lista dele). O título do telefone em `/projetos/{id}` é "Projeto" e o voltar leva a `/projetos`. A lateral acende o item também nas subpáginas (`/projetos/{id}`, `/credit-cards/{id}`, as de Configurações), por prefixo | `src/config/navigation.ts`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx`, `src/components/layout/app-sidebar.tsx` |
+
+---
+
+## 19. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1809,6 +2041,15 @@ continuam aqui para registro.
 | 66 | G6, G17 | O titular e o autor só são conferidos ao gravar. Quem era titular e saiu da carteira ou virou convidado continua com o `holder_user_id` no banco: o titular que saiu some dos avisos, e a conferência fica só com o dono. As privadas de um autor que virou convidado seguem mascaradas, e ele só consegue desmarcá-las. |
 | 68 | G3, G14, G17 | Os avisos e os insights gravados **antes** de a compra virar privada ficam com o texto original: o `body` de `notifications` ("R$ 120 — Farmácia X") e o `payload` de `insights` (o nome da recorrência, a descrição da duplicidade, `payload.lancamentos`) continuam legíveis por todo adulto que já os recebia. Marcar privado não os apaga nem os reescreve; só o que é gerado depois sai mascarado. |
 | 67 | G2, G3, G4, G5, G6, G14, G15, G17 | O Bloco 7B (gasto privado e titular do cartão) está no repositório, com as telas em wireframe, e **nada foi publicado**. O SQL da migração nunca rodou contra um banco (nem o pgTAP roda aqui): valide o gatilho num ramo de teste antes da produção, em especial o `set_config` local do upsert. A migração sobe antes das Edges `insights-daily`, `credit-card-calendar-alerts`, `evaluate-credit-card-alerts`, `capture` e `notify-transaction-created`, que leem `is_private` e `holder_user_id`; o front do 2.0 roda sem a migração (Ruling 8): `supabase/BLOCO_7B_DEPLOYMENT.md`. |
+| 69 | G2, G3, G4, G5, G12, G13, G15, G17, G18 | O Bloco 7C (projetos, modelos de carteira e divisão da conta) está no repositório, com as telas em wireframe, e **nada foi publicado**. O SQL das duas migrações nunca rodou contra um banco (nem o pgTAP roda aqui): valide-as num ramo de teste, com o `divisao.test.sql` (26 casos) e as três contas do algoritmo, antes da produção. Antes de tudo, `select count(*) from public.transaction_splits` tem de dar 0, ou a migração se recusa. Nenhuma Edge muda; o front do 2.0 roda sem as migrações (Ruling 8 do 7B). O acerto com quem saiu e os pesos só do dono ficam para a onda final de correções: `supabase/BLOCO_7C_DEPLOYMENT.md`. |
+| 70 | G18 | A despesa lançada antes de outro adulto entrar na carteira dividida fica com quem estava: as partes nascem na escrita, entre os adultos daquele momento, e não são refeitas quando alguém entra. Só a edição de uma destas colunas refaz as partes: valor, data, tipo, quem pagou, carteira, plano de parcelas ou o marcador de privada. |
+| 71 | G5, G18 | Apagar o plano da compra parcelada direto na tabela (o botão do app apaga as parcelas junto) solta as parcelas (`on delete set null` em `installment_plan_id`), e o gatilho das partes as redivide pelos pesos da carteira: os pesos próprios do plano se perdem. |
+| 72 | G18 | Quem saiu da carteira aparece como "Ex-membro", sem nome, porque o diretório de membros só lista quem está dentro: duas pessoas que saíram leem igual. O saldo dele continua na lista (marcado "saiu da carteira") para a soma fechar em 0, mas o app não grava acerto com ele até a onda final, e a parte dele sai quando as partes de uma despesa são editadas à mão (o `definir_partes` só aceita adultos). A linha anterior à migração, sem `paid_by`, também lê "Ex-membro" em "Pagou" até a primeira edição. |
+| 73 | G13, G18 | A carteira de projeto não tem previsão, mas só o link do Painel some: `/previsao` aberta direto ainda abre nela, e o insight de seguro baixo e o quadro de impacto da parcela no formulário seguem calculando. A rota não tem guarda própria. |
+| 74 | G15, G18 | O convidado lê o `budget_total` de um projeto pela API: a política de leitura de `projects` é de membro, de propósito, para ele marcar a despesa dele. A tela dele não mostra projeto, orçamento nem resumo (Ruling 3 do bloco). |
+| 75 | G18 | O acerto grava só o registro. O Pix (ou a transferência) acontece **fora do app, de propósito**: o app não move dinheiro, não confirma que ele chegou e não cobra ninguém. |
+| 76 | G18 | Mudar os pesos da carteira, o peso do plano ou quem é adulto vale só para a frente: as partes já gravadas não são refeitas, e a despesa só ganha as partes novas quando é editada. O mesmo vale para a despesa lançada no dia da virada do modo, antes dela, e para a lançada no pote único depois de a carteira voltar a `split`: ficam sem parte e fora do saldo até serem editadas. |
+| 77 | G5, G18 | O resumo do projeto agrupa "por pessoa" pelo autor (`user_id`), e não por `paid_by`: a despesa do convidado conta para o convidado, e não para o responsável que paga. O projeto escolhido também se perde em silêncio quando a pessoa troca a despesa para Parcelada ou para o escopo "plano": o seletor some, e a parcelada não leva projeto. |
 
 ### Fechadas na rodada de acesso (set/2026)
 

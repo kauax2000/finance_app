@@ -52,19 +52,21 @@ def table(block):
 
 diagrams = re.findall(r"```mermaid\n(.*?)```", md, re.S)
 tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
-# 27 tabelas: a da legenda, dezessete de "Regras técnicas" mais a dos papéis e a de quem vê o quê (as
-# novas, T11, T12, T13, T14, T16, T17 e T19, são as jornadas 11 e 12 do Bloco 4, a 13 do Bloco 5, a 14
-# do Bloco 6B, a 15 e a 16 do Bloco 7A e a 17 do Bloco 7B; a T15 é a tabela de papéis da jornada 15 e a
-# T18 a de quem vê o quê da 17), a de lacunas abertas e as seis de lacunas fechadas. As de lacunas ficam no fim do arquivo e o template as escreve à mão,
-# então não deslocam nenhum índice de @@Tn@@.
+# 29 tabelas: a da legenda, dezoito de "Regras técnicas" mais a dos papéis, a de quem vê o quê e a dos
+# modelos de carteira (as novas, T11, T12, T13, T14, T16, T17, T19 e T21, são as jornadas 11 e 12 do
+# Bloco 4, a 13 do Bloco 5, a 14 do Bloco 6B, a 15 e a 16 do Bloco 7A, a 17 do Bloco 7B e a 18 do
+# Bloco 7C; a T15 é a tabela de papéis da jornada 15, a T18 a de quem vê o quê da 17 e a T20 a dos
+# modelos de carteira da 18), a de lacunas abertas e as seis de lacunas fechadas. As de lacunas ficam
+# no fim do arquivo e o template as escreve à mão, então não deslocam nenhum índice de @@Tn@@.
 # 22 diagramas: o 5c (captura e "A conferir", Bloco 3A) entrou como @@D9@@ e
 # deslocou os de Cartões em diante (@@D10@@ a @@D14@@). Os dois do Bloco 4
 # (@@D15@@, Plano e só leitura, e @@D16@@, Confiança) vêm depois do da Conta, o
 # do Bloco 5 (@@D17@@, Previsão) e o do Bloco 6B (@@D18@@, Insights) vêm depois, e os três do
 # Bloco 7A (@@D19@@, Trocar o papel, @@D20@@, O app do convidado, e @@D21@@, Limite por pessoa) e
-# os três do Bloco 7B vêm por último (@@D22@@, Lançar um gasto privado, @@D23@@, Titular do cartão,
-# e @@D24@@, Conferir a fatura de um cartão com titular).
-assert len(diagrams) == 25 and len(tables) == 27, (len(diagrams), len(tables))
+# os três do Bloco 7B (@@D22@@, Lançar um gasto privado, @@D23@@, Titular do cartão, e @@D24@@,
+# Conferir a fatura de um cartão com titular) e os quatro do Bloco 7C vêm por último (@@D25@@,
+# Criar uma carteira, @@D26@@, Projeto, @@D27@@, Carteira de projeto, e @@D28@@, Dividir e acertar).
+assert len(diagrams) == 29 and len(tables) == 29, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out

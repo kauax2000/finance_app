@@ -606,5 +606,5 @@ responsável que paga pelo convidado também são do 7C. A carteira pessoal cont
 sendo a privacidade total, e a chave não a distingue. As lacunas conhecidas (o
 filtro e a busca pelo original, a categoria e o orçamento, o titular que não se
 tira sozinho, o objeto do anexo que fica até a limpeza, o insight da fatura só
-com o titular e os donos, o titular que saiu) estão na seção 18 de
+com o titular e os donos, o titular que saiu) estão na seção 19 de
 `docs/JORNADAS.md`.
