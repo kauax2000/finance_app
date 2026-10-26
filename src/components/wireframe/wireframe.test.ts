@@ -356,7 +356,7 @@ describe("Projetos e modelos de carteira (Bloco 7C)", () => {
 
   it("o Painel da carteira de projeto troca o seguro pelo resumo", () => {
     expect(fonte("src/app/(app)/dashboard/page-client.tsx")).toMatch(
-      /currentWorkspace\?\.purpose === "project" \? \(\s*<ResumoDaCarteiraProjetoWireframe[\s\S]*?<SeguroDoPainelWireframe/,
+      /currentWorkspace\?\.purpose === "project" \? \([\s\S]*?<ResumoDaCarteiraProjetoWireframe[\s\S]*?<SeguroDoPainelWireframe/,
     )
   })
 
@@ -374,5 +374,69 @@ describe("Projetos e modelos de carteira (Bloco 7C)", () => {
     expect(html).toContain("WIREFRAME · Bloco 7 · Modelos de carteira")
     expect(html).toContain(REGRA_DA_ESCOLHA)
     for (const r of ["Casa", "Casal", "Pessoal", "Viagem", "Reforma", "Evento"]) expect(html).toContain(r)
+  })
+})
+
+describe("Carteira de projeto, fix 1 (Bloco 7C)", () => {
+  const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
+
+  it("I1: o dono edita as datas e o orçamento da carteira, nas configurações e logo depois de criar", () => {
+    expect(fonte("src/lib/projetos/dados.ts")).toMatch(/from\("workspaces"\)\s*\.update\(campos\)\s*\.eq\("id", workspaceId\)/)
+    const w = fonte("src/components/wireframe/projetos-wireframe.tsx")
+    expect(w).toContain("isWorkspaceOwner(alvo.id)")
+    expect(w).toContain("camposDaCarteiraProjeto(")
+    expect(w).toContain("formatMoneyBrlInput(")
+    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<DatasDaCarteiraProjetoWireframe />")
+    expect(fonte("src/components/workspace/project-form-dialog.tsx")).toContain("<DatasDaCarteiraProjetoWireframe")
+  })
+
+  it("I2: o resumo da carteira lê todas as páginas", () => {
+    expect(fonte("src/lib/projetos/dados.ts")).toMatch(/fetchAllRows<LancamentoDoResumo>\([\s\S]*?\.order\("id"\)\s*\.range\(from, to\)/)
+  })
+
+  it("I3: o convidado não monta o resumo da carteira de projeto", () => {
+    expect(fonte("src/app/(app)/dashboard/page-client.tsx")).toMatch(
+      /currentWorkspace\?\.purpose === "project" \? \(\s*isAdulto \? \(\s*<ResumoDaCarteiraProjetoWireframe/,
+    )
+  })
+
+  it("o seletor: só os ativos, mais o atual arquivado", async () => {
+    const { opcoesDoProjeto } = await import("./projetos-wireframe")
+    const p = (id: string, archived_at: string | null) => ({ id, archived_at }) as never
+    const lista = [p("a", null), p("b", "2026-10-01"), p("c", "2026-10-02")]
+    expect(opcoesDoProjeto(lista, "").map((x: { id: string }) => x.id)).toEqual(["a"])
+    expect(opcoesDoProjeto(lista, "b").map((x: { id: string }) => x.id)).toEqual(["a", "b"])
+  })
+
+  it("PROJETO_ARQUIVADO em português", async () => {
+    const { formatSupabasePostgrestError } = await import("@/lib/supabase-errors")
+    expect(formatSupabasePostgrestError({ message: "PROJETO_ARQUIVADO", code: "P0001" })).toBe(
+      "Este projeto está arquivado e não aceita lançamento novo.",
+    )
+  })
+
+  it("rpcTolerante: sem a RPC, indisponível; com ela, os dados", async () => {
+    const { supabase } = await import("@/lib/supabase")
+    const { rpcTolerante } = await import("@/lib/projetos/dados")
+    const cliente = supabase as unknown as { rpc: unknown }
+    cliente.rpc = vi.fn().mockResolvedValueOnce({ data: null, error: { code: "PGRST202", message: "x" } })
+    await expect(rpcTolerante("criar_carteira_de_modelo", {})).resolves.toEqual({ disponivel: false })
+    cliente.rpc = vi.fn().mockResolvedValueOnce({ data: "ws-1", error: null })
+    await expect(rpcTolerante("criar_carteira_de_modelo", {})).resolves.toEqual({ disponivel: true, dados: "ws-1" })
+    cliente.rpc = vi.fn().mockResolvedValueOnce({ data: null, error: { code: "P0001", message: "MODELO_DESCONHECIDO" } })
+    await expect(rpcTolerante("criar_carteira_de_modelo", {})).rejects.toThrow("Escolha um dos modelos da lista.")
+  })
+
+  it("buildTransactionRow: o project_id só entra quando vem", async () => {
+    const { buildTransactionRow } = await import("@/lib/transactions/mutations")
+    const base = {
+      editingId: null, categoryId: null, type: "expense" as const, amount: 10, description: null,
+      dateIso: "2026-10-25T12:00:00.000Z", isRecurring: false, recurringInterval: null,
+      paymentMethod: null, paymentCreditCardId: null,
+    }
+    const ctx = { userId: "u", workspaceId: "w" }
+    expect(buildTransactionRow(ctx, base)).not.toHaveProperty("project_id")
+    expect(buildTransactionRow(ctx, { ...base, projectId: null })).toHaveProperty("project_id", null)
+    expect(buildTransactionRow(ctx, { ...base, projectId: "p1" })).toHaveProperty("project_id", "p1")
   })
 })

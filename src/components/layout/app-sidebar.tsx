@@ -56,8 +56,9 @@ export function AppSidebar() {
         setPathAnterior(pathname)
         setDestino(null)
     }
+    // A subpágina acende o item dela (o detalhe do cartão, do projeto, da categoria).
     const ativo = (href: string) =>
-        destino ? destino === href : isExactPath(pathname, href)
+        destino ? destino === href : isExactPath(pathname, href) || pathname.startsWith(`${href}/`)
     const irPara = (href: string) => (e: React.MouseEvent) => {
         // Abrir em outra aba (⌘, Ctrl, Shift, botão do meio) não troca a página daqui.
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return

@@ -11,6 +11,7 @@ import { currencyBRL } from "@/lib/formatters"
 import {
     AINDA_NAO_DISPONIVEL,
     criarProjeto,
+    editarCarteiraProjeto,
     editarProjeto,
     lancamentosDaCarteira,
     lerProjeto,
@@ -18,9 +19,12 @@ import {
     type CamposDoProjeto,
     type Tolerante,
 } from "@/lib/projetos/dados"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
+import { camposDaCarteiraProjeto } from "@/lib/projetos/modelos"
 import { resumoDoProjeto, SEM_CATEGORIA, type ResumoDoProjeto } from "@/lib/projetos/resumo"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { supabase, type Project, type Workspace } from "@/lib/supabase"
+import { NADA_MUDOU } from "@/lib/supabase-errors"
 import { formatDatePtBr } from "@/lib/transaction-date"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
@@ -347,6 +351,11 @@ export function ResumoDaCarteiraProjetoWireframe({ workspace }: { workspace: Wor
     )
 }
 
+/** As opções do seletor: os ativos, mais o escolhido se ele foi arquivado depois. */
+export function opcoesDoProjeto(lista: Project[], valor: string): Project[] {
+    return lista.filter((p) => !p.archived_at || p.id === valor)
+}
+
 /**
  * O projeto no formulário de despesa (Decisão 1): o convidado também escolhe
  * (a RLS deixa ler). Só os ativos, mais o atual se ele foi arquivado depois.
@@ -359,15 +368,9 @@ export function ProjetoDoLancamentoWireframe({ valor, onChange }: { valor: strin
         enabled: Boolean(currentWorkspaceId),
         queryFn: () => listarProjetos(currentWorkspaceId as string),
     })
-    if (!lista.data) return null
-    if (!lista.data.disponivel) {
-        return (
-            <WireframeBox bloco={7} titulo="Projeto">
-                <p>{AINDA_NAO_DISPONIVEL}</p>
-            </WireframeBox>
-        )
-    }
-    const opcoes = lista.data.dados.filter((p) => !p.archived_at || p.id === valor)
+    // Sem a tabela no banco, o formulário fica como era: só as telas inteiras dizem "Ainda não disponível".
+    if (!lista.data?.disponivel) return null
+    const opcoes = opcoesDoProjeto(lista.data.dados, valor)
     if (opcoes.length === 0) return null
     return (
         <WireframeBox bloco={7} titulo="Projeto">
@@ -383,6 +386,91 @@ export function ProjetoDoLancamentoWireframe({ valor, onChange }: { valor: strin
                     ))}
                 </select>
             </label>
+        </WireframeBox>
+    )
+}
+
+/**
+ * As datas e o orçamento total da carteira de projeto (spec §12: "datas e
+ * orçamento total, sem ciclo"), só para o dono. Mora nas Configurações e no
+ * passo depois de criar uma carteira de um modelo de projeto. Sem `workspace`,
+ * vale a carteira atual; fora do `project` ou sem ser dono, nada aparece.
+ */
+export function DatasDaCarteiraProjetoWireframe({ workspace, onSalvo }: { workspace?: Workspace; onSalvo?: () => void }) {
+    const { currentWorkspace, isWorkspaceOwner, refreshWorkspaces } = useWorkspace()
+    const alvo = workspace ?? currentWorkspace
+    if (!alvo || alvo.purpose !== "project" || !isWorkspaceOwner(alvo.id)) return null
+    return <FormularioDaCarteiraProjeto key={alvo.id} alvo={alvo} refresh={refreshWorkspaces} onSalvo={onSalvo} />
+}
+
+function FormularioDaCarteiraProjeto({
+    alvo,
+    refresh,
+    onSalvo,
+}: {
+    alvo: Workspace
+    refresh: () => Promise<unknown>
+    onSalvo?: () => void
+}) {
+    const [inicio, setInicio] = useState(alvo.starts_on ?? "")
+    const [fim, setFim] = useState(alvo.ends_on ?? "")
+    const [orcamento, setOrcamento] = useState(alvo.budget_total != null ? formatMoneyBrlInput(Number(alvo.budget_total)) : "")
+    const [pendente, setPendente] = useState(false)
+    const [aviso, setAviso] = useState<string | null>(null)
+
+    async function onSubmit(e: FormEvent) {
+        e.preventDefault()
+        const r = camposDaCarteiraProjeto({ inicio, fim, orcamento })
+        if (!r.ok) {
+            setAviso(r.erro)
+            return
+        }
+        setPendente(true)
+        setAviso(null)
+        try {
+            const salvo = await editarCarteiraProjeto(alvo.id, r.campos)
+            if (!salvo.disponivel) setAviso(AINDA_NAO_DISPONIVEL)
+            else if (!salvo.dados?.length) setAviso(NADA_MUDOU)
+            else {
+                await refresh()
+                setAviso("Salvo.")
+                onSalvo?.()
+            }
+        } catch (erro) {
+            setAviso(mensagem(erro))
+        } finally {
+            setPendente(false)
+        }
+    }
+
+    return (
+        <WireframeBox bloco={7} titulo="Datas e orçamento da carteira de projeto">
+            <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-2">
+                <label className="flex flex-col">
+                    Começa em (opcional)
+                    <input className={campo} type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+                </label>
+                <label className="flex flex-col">
+                    Termina em (opcional)
+                    <input className={campo} type="date" min={inicio || undefined} value={fim} onChange={(e) => setFim(e.target.value)} />
+                </label>
+                <label className="flex flex-col">
+                    Orçamento total em R$ (opcional)
+                    <input
+                        className={campo}
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        value={orcamento}
+                        onChange={(e) => setOrcamento(e.target.value)}
+                    />
+                </label>
+                <div>
+                    <button type="submit" className={botao} disabled={pendente}>
+                        {pendente ? "Salvando…" : "Salvar datas e orçamento"}
+                    </button>
+                </div>
+                {aviso ? <p role="status">{aviso}</p> : null}
+            </form>
         </WireframeBox>
     )
 }

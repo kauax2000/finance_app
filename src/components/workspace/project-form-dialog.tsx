@@ -15,8 +15,11 @@ import {
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { randomWorkspaceAccentColor, type WorkspaceIconKey } from "@/lib/workspace-icons"
 import { ModelosDeCarteiraWireframe } from "@/components/wireframe/modelos-de-carteira-wireframe"
+import { DatasDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
+import { Button } from "@/components/ui/button"
+import type { Workspace } from "@/lib/supabase"
 import { AINDA_NAO_DISPONIVEL, criarCarteiraDeModelo } from "@/lib/projetos/dados"
-import type { ModeloDeCarteira } from "@/lib/projetos/modelos"
+import { MODELOS_DE_CARTEIRA, type ModeloDeCarteira } from "@/lib/projetos/modelos"
 
 export type ProjectFormDialogProps = {
     open: boolean
@@ -28,7 +31,7 @@ export function ProjectFormDialog({
     open,
     onOpenChange,
 }: ProjectFormDialogProps) {
-    const { createWorkspace, refreshWorkspaces, setCurrentWorkspaceId, error: contextError } = useWorkspace()
+    const { createWorkspace, updateWorkspace, refreshWorkspaces, setCurrentWorkspaceId, error: contextError } = useWorkspace()
     // A carteira criada espera o diálogo terminar de sair para virar a atual.
     const criada = useRef<string | null>(null)
 
@@ -38,6 +41,8 @@ export function ProjectFormDialog({
         randomWorkspaceAccentColor()
     )
     const [modelo, setModelo] = useState<ModeloDeCarteira | null>(null)
+    // A carteira de um modelo de projeto, já criada: o passo das datas e do orçamento.
+    const [carteiraDeProjeto, setCarteiraDeProjeto] = useState<Workspace | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const [localError, setLocalError] = useState<string | null>(null)
 
@@ -68,9 +73,16 @@ export function ProjectFormDialog({
                     setLocalError(AINDA_NAO_DISPONIVEL)
                     return
                 }
-                await refreshWorkspaces()
                 criada.current = r.dados
-                onOpenChange(false)
+                // O ícone e a cor que a pessoa escolheu valem sobre os do modelo.
+                if (modelo !== "pessoal") {
+                    await updateWorkspace(r.dados, { icon, icon_background_color: previewColor })
+                }
+                const lista = await refreshWorkspaces()
+                const nova = lista.find((w) => w.id === r.dados)
+                const deProjeto = MODELOS_DE_CARTEIRA.find((m) => m.id === modelo)?.purpose === "project"
+                if (deProjeto && nova) setCarteiraDeProjeto(nova)
+                else onOpenChange(false)
             } catch (e) {
                 setLocalError(e instanceof Error ? e.message : "Não foi possível criar a carteira.")
             } finally {
@@ -117,32 +129,55 @@ export function ProjectFormDialog({
                 <DialogHeader>
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>
-                <CustomForm
-                    pending={submitting}
-                    onSubmit={(e) => void handleSubmit(e)}
-                    className="flex min-h-0 flex-1 flex-col"
-                >
-                    <DialogBody>
-                        <ModelosDeCarteiraWireframe modelo={modelo} onModeloChange={setModelo} />
-                        <WorkspaceAppearanceFormFields
-                            name={name}
-                            onNameChange={setName}
-                            icon={icon}
-                            onIconChange={setIcon}
-                            previewColor={previewColor}
-                            onPreviewColorChange={setPreviewColor}
-                            displayError={displayError}
-                            idPrefix="project-dialog-create"
-                            previewHint="Assim ela aparece na barra lateral e nos menus."
-                        />
-                    </DialogBody>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <FormCancel>Cancelar</FormCancel>
-                        </DialogClose>
-                        <FormSubmit>Criar carteira</FormSubmit>
-                    </DialogFooter>
-                </CustomForm>
+                {carteiraDeProjeto ? (
+                    <>
+                        <DialogBody>
+                            <DatasDaCarteiraProjetoWireframe
+                                workspace={carteiraDeProjeto}
+                                onSalvo={() => onOpenChange(false)}
+                            />
+                        </DialogBody>
+                        <DialogFooter>
+                            <Button variant="secondary" type="button" onClick={() => onOpenChange(false)}>
+                                Agora não
+                            </Button>
+                        </DialogFooter>
+                    </>
+                ) : (
+                    <CustomForm
+                        pending={submitting}
+                        onSubmit={(e) => void handleSubmit(e)}
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
+                        <DialogBody>
+                            <ModelosDeCarteiraWireframe
+                                modelo={modelo}
+                                onModeloChange={setModelo}
+                                erro={modelo === "pessoal" ? displayError : null}
+                            />
+                            {/* A Pessoal não cria nada: sem nome nem aparência. */}
+                            {modelo === "pessoal" ? null : (
+                                <WorkspaceAppearanceFormFields
+                                    name={name}
+                                    onNameChange={setName}
+                                    icon={icon}
+                                    onIconChange={setIcon}
+                                    previewColor={previewColor}
+                                    onPreviewColorChange={setPreviewColor}
+                                    displayError={displayError}
+                                    idPrefix="project-dialog-create"
+                                    previewHint="Assim ela aparece na barra lateral e nos menus."
+                                />
+                            )}
+                        </DialogBody>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <FormCancel>Cancelar</FormCancel>
+                            </DialogClose>
+                            <FormSubmit>{modelo === "pessoal" ? "Abrir a Pessoal" : "Criar carteira"}</FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                )}
             </DialogContent>
         </Dialog>
     )

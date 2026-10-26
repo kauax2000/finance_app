@@ -1,3 +1,4 @@
+import { parseMoneyBrl } from "@/lib/money-brl"
 import type { WorkspacePurpose, WorkspaceSplitMode } from "@/lib/supabase"
 
 /** A regra mostrada ao escolher (spec §12, literal). */
@@ -24,3 +25,26 @@ export const MODELOS_DE_CARTEIRA: readonly DefinicaoDeModelo[] = [
     { id: "reforma", rotulo: "Reforma", descricao: "Uma obra com orçamento próprio, dividida.", purpose: "project", split_mode: "split" },
     { id: "evento", rotulo: "Evento", descricao: "Uma festa ou evento, com as despesas divididas.", purpose: "project", split_mode: "split" },
 ]
+
+export type CamposDaCarteiraProjeto = { starts_on: string | null; ends_on: string | null; budget_total: number | null }
+
+/**
+ * O que o formulário da carteira de projeto grava (spec §12: "datas e
+ * orçamento total, sem ciclo"). O dinheiro vem em pt-BR; vazio é nulo; o fim
+ * não vem antes do começo (o check `workspaces_project_fields` não confere isso).
+ */
+export function camposDaCarteiraProjeto(a: {
+    inicio: string
+    fim: string
+    orcamento: string
+}): { ok: true; campos: CamposDaCarteiraProjeto } | { ok: false; erro: string } {
+    const inicio = a.inicio || null
+    const fim = a.fim || null
+    if (inicio && fim && fim < inicio) return { ok: false, erro: "O fim não pode vir antes do começo." }
+    let orcamento: number | null = null
+    if (a.orcamento.trim()) {
+        orcamento = parseMoneyBrl(a.orcamento)
+        if (orcamento == null || orcamento <= 0) return { ok: false, erro: "O orçamento total precisa ser maior que zero." }
+    }
+    return { ok: true, campos: { starts_on: inicio, ends_on: fim, budget_total: orcamento } }
+}

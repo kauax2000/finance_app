@@ -45,6 +45,7 @@ function defaultMobileTitle(
     ) {
         return "Detalhes da categoria"
     }
+    if (/^\/projetos\/[^/]+$/.test(pathname)) return "Projeto"
     if (titleMode === "dashboard") {
         return DASHBOARD_PAGE_TITLES[pathname] ?? "Painel"
     }

@@ -17,9 +17,12 @@ const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foregr
 export function ModelosDeCarteiraWireframe({
     modelo,
     onModeloChange,
+    erro = null,
 }: {
     modelo: ModeloDeCarteira | null
     onModeloChange: (m: ModeloDeCarteira | null) => void
+    /** O erro do salvar quando os campos de aparência estão escondidos (a Pessoal). */
+    erro?: string | null
 }) {
     return (
         <WireframeBox bloco={7} titulo="Modelos de carteira">
@@ -41,7 +44,8 @@ export function ModelosDeCarteiraWireframe({
                 ))}
             </fieldset>
             {modelo === "pessoal" ? <p>A Pessoal não cria nada: abre a carteira pessoal que você já tem.</p> : null}
-            {modelo && modelo !== "pessoal" ? <p>Com um modelo, as categorias, o ícone e a cor são os dele.</p> : null}
+            {modelo && modelo !== "pessoal" ? <p>Com um modelo, as categorias e o modo da divisão são os dele.</p> : null}
+            {erro ? <p role="alert">{erro}</p> : null}
         </WireframeBox>
     )
 }

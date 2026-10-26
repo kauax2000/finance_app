@@ -8,7 +8,8 @@
  */
 import { supabase, type Project } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import type { ModeloDeCarteira } from "@/lib/projetos/modelos"
+import { fetchAllRows } from "@/lib/queries/fetch-all-rows"
+import type { CamposDaCarteiraProjeto, ModeloDeCarteira } from "@/lib/projetos/modelos"
 import type { LancamentoDoResumo } from "@/lib/projetos/resumo"
 
 export const AINDA_NAO_DISPONIVEL = "Ainda não disponível"
@@ -80,14 +81,23 @@ export function criarCarteiraDeModelo(modelo: ModeloDeCarteira, nome: string) {
     return rpcTolerante<string>("criar_carteira_de_modelo", { p_modelo: modelo, p_nome: nome })
 }
 
-/** As despesas de uma carteira de projeto, para o resumo do Painel. Sem coluna do 7C. */
-export async function lancamentosDaCarteira(workspaceId: string): Promise<LancamentoDoResumo[]> {
-    // ponytail: uma página só (o teto do PostgREST, 1000 linhas); paginar quando uma carteira de projeto passar disso.
-    const { data, error } = await supabase
-        .from("transactions")
-        .select("amount, type, category_id, user_id")
-        .eq("workspace_id", workspaceId)
-        .eq("type", "expense")
-    if (error) throw new Error(formatSupabasePostgrestError(error) ?? error.message)
-    return (data ?? []) as LancamentoDoResumo[]
+/**
+ * As datas e o orçamento total da carteira de projeto: um update simples (a
+ * política do dono deixa). Sem as colunas no banco, indisponível.
+ */
+export function editarCarteiraProjeto(workspaceId: string, campos: CamposDaCarteiraProjeto) {
+    return tabelaTolerante<{ id: string }[]>(supabase.from("workspaces").update(campos).eq("id", workspaceId).select("id"))
+}
+
+/** As despesas de uma carteira de projeto, para o resumo do Painel, todas as páginas. Sem coluna do 7C. */
+export function lancamentosDaCarteira(workspaceId: string): Promise<LancamentoDoResumo[]> {
+    return fetchAllRows<LancamentoDoResumo>((from, to) =>
+        supabase
+            .from("transactions")
+            .select("id, amount, type, category_id, user_id")
+            .eq("workspace_id", workspaceId)
+            .eq("type", "expense")
+            .order("id")
+            .range(from, to),
+    )
 }

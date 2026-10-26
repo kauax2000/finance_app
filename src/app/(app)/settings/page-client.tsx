@@ -7,11 +7,13 @@ import { ThemeSettings } from "@/components/settings/theme-settings"
 import { LembreteConferirWireframe } from "@/components/wireframe/a-conferir-lembrete-wireframe"
 import { InsightsAvisoWireframe } from "@/components/wireframe/insights-wireframe"
 import { IaConfiguracoesWireframe } from "@/components/wireframe/ia-configuracoes-wireframe"
+import { DatasDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
 
 export default function SettingsPage() {
     return (
         <div className="min-w-0 max-w-full space-y-5">
             <WorkspaceAppearanceSettings />
+            <DatasDaCarteiraProjetoWireframe />
             <ThemeSettings />
             <PwaSettingsSection />
             <NotificationPreferences />

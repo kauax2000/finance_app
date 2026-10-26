@@ -101,6 +101,7 @@ export default function DashboardPageClient() {
     const {
         currentWorkspace,
         currentWorkspaceId,
+        isAdulto,
         loading: workspaceLoading,
         error: workspaceError,
         refreshWorkspaces,
@@ -311,9 +312,12 @@ export default function DashboardPageClient() {
                 onCalendarYmChange={d.setCalendarYm}
             />
 
-            {/* A carteira de projeto (Bloco 7C) não tem previsão: o resumo dela no lugar do seguro. */}
+            {/* A carteira de projeto (Bloco 7C) não tem previsão: o resumo dela no lugar do seguro.
+                O convidado não o vê: o orçamento é da casa, e a RLS só lhe devolve as dele. */}
             {currentWorkspace?.purpose === "project" ? (
-                <ResumoDaCarteiraProjetoWireframe workspace={currentWorkspace} />
+                isAdulto ? (
+                    <ResumoDaCarteiraProjetoWireframe workspace={currentWorkspace} />
+                ) : null
             ) : (
                 <SeguroDoPainelWireframe workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} />
             )}
