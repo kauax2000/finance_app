@@ -3,12 +3,13 @@
  * `{ acao }`:
  * - `cancelar` liga `cancel_at_period_end` no `active` e no `past_due`
  *   (Ruling 11). Um `active` com `grace_until` está com a renovação cobrada e
- *   esperando a confirmação, e é recusado (Ruling 12).
+ *   esperando a confirmação, e é recusado (Ruling 12); uma cobrança que
+ *   começou há menos de 5 minutos também (o cron pode estar cobrando o token).
  * - `desfazer` desliga, enquanto o plano não acabou.
  * - `reembolsar` é o arrependimento de 7 dias (`podeReembolsar`): estorna o
  *   parcelamento inteiro do `provider_ref` pela regra da Ruling 10 e, só depois
- *   do estorno confirmado, expira a linha. Um pedido que estourou o prazo ou foi
- *   recusado fica 'pendente' e volta 202; o `billing-daily` o conclui e expira a
+ *   do estorno confirmado, expira a linha. Toda falha depois da reivindicação
+ *   fica 'pendente' e volta 202 (o pedido foi feito dentro do prazo); o `billing-daily` o conclui e expira a
  *   linha (Ruling 13).
  *
  * Toda gravação é condicional ao estado lido: se o webhook ou o cron mudou a
@@ -90,7 +91,10 @@ async function atender(req: Request): Promise<Response> {
 }
 
 async function cancelar(admin: SupabaseAdminClient, linha: Linha | null, agora: Date): Promise<Response> {
-  const pode = linha ? podeCancelar(linha) : 'nao'
+  const pode = linha ? podeCancelar(linha, agora) : 'nao'
+  if (pode === 'cobrando') {
+    return json(409, { error: 'Estamos renovando seu plano agora. Tente cancelar daqui a alguns minutos.' })
+  }
   if (pode === 'renovando') {
     return json(409, {
       error:
@@ -107,7 +111,10 @@ async function cancelar(admin: SupabaseAdminClient, linha: Linha | null, agora: 
     .eq('id', linha.id)
     .eq('status', linha.status)
     .eq('cancel_at_period_end', false)
-  q = linha.grace_until === null ? q.is('grace_until', null) : q.eq('grace_until', linha.grace_until)
+  // A cobrança do cron que começou depois da leitura grava `checkout_criado_em`: também não vale.
+  for (const col of ['grace_until', 'checkout_criado_em'] as const) {
+    q = linha[col] === null ? q.is(col, null) : q.eq(col, linha[col])
+  }
   const { data, error } = await q.select('id')
   if (error) throw new Error(`cancelar: ${error.message}`)
   return data?.length ? json(200, { ok: true }) : MUDOU()
@@ -166,21 +173,14 @@ async function reembolsar(admin: SupabaseAdminClient, linha: Linha | null, agora
     if (!meu?.length) {
       registro = await lerRegistro()
       if (registro?.subscription_id !== linha.id) throw new Error('o parcelamento é de outra linha')
-      if (registro?.estorno_status === 'pendente') return REEMBOLSO_PEDIDO()
+      // Só o estorno confirmado expira a linha: o toque que ainda está pedindo volta 202.
+      if (registro?.estorno_status !== 'feito') return REEMBOLSO_PEDIDO()
     } else {
       const r = await estornarNoAsaas(cfg, ref, linha.asaas_customer_id)
       if (!r.ok) {
+        // O pedido foi feito dentro do prazo: fica pendente em toda falha, e o billing-daily lê antes de pedir.
         console.error('billing-cancel: reembolso', r.etapa, linha.id, ref, r.status, r.erros)
-        // O pedido pode ter chegado ao Asaas: fica pendente, e o billing-daily lê antes de pedir de novo.
-        if (r.etapa === 'estorno') return REEMBOLSO_PEDIDO()
-        // Nada foi pedido: a reivindicação é solta, e a pessoa tenta de novo.
-        const { error: sErr } = await admin
-          .from('billing_parcelamentos')
-          .update({ estorno_status: null })
-          .eq('installment', ref)
-          .eq('estorno_status', 'pendente')
-        if (sErr) console.error('billing-cancel: soltar', linha.id, ref, sErr.message)
-        return json(502, { error: 'O Asaas não respondeu. Tente de novo em instantes.' })
+        return REEMBOLSO_PEDIDO()
       }
       // Falhou a marca, o billing-daily lê o parcelamento, acha o estorno e marca.
       const { error: fErr } = await admin

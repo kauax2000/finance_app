@@ -307,11 +307,13 @@ describe("Edge billing-cancel", () => {
     it("cancelar: active e past_due, recusa a renovação esperando confirmação (Ruling 11 e 12)", () => {
         const f = fonte(CANCEL)
         const c = funcao(f, "cancelar")
-        expect(c).toContain("podeCancelar(linha)")
         expect(c).toContain("A renovação deste ano já foi cobrada e está sendo confirmada. Depois de confirmada, você pode cancelar a próxima.")
         expect(c).toContain("Não há assinatura para cancelar.")
         expect(c).toContain(".eq('status', linha.status)")
-        expect(c).toContain(".is('grace_until', null)")
+        expect(c).toContain("for (const col of ['grace_until', 'checkout_criado_em'] as const)")
+        expect(c).toContain("q = linha[col] === null ? q.is(col, null) : q.eq(col, linha[col])")
+        expect(c).toContain("podeCancelar(linha, agora)")
+        expect(c).toContain("Estamos renovando seu plano agora. Tente cancelar daqui a alguns minutos.")
         expect(funcao(f, "desfazer")).toContain("podeDesfazer(linha, agora)")
     })
 
@@ -347,8 +349,19 @@ describe("Edge billing-cancel", () => {
         const r = funcao(f, "reembolsar")
         // o pendente responde antes de qualquer chamada ao Asaas
         expect(r.indexOf("registro?.estorno_status === 'pendente'")).toBeLessThan(r.indexOf("estornarNoAsaas(cfg"))
-        expect(r).toContain("if (r.etapa === 'estorno') return REEMBOLSO_PEDIDO()")
         expect(r.slice(r.indexOf("if (!r.ok)"), r.indexOf("estorno_status: 'feito'"))).not.toContain("status: 'expired'")
+    })
+
+    it("reembolsar: nenhuma falha solta a reivindicação, e o toque que perdeu só expira com 'feito' (I1)", () => {
+        const r = funcao(fonte(CANCEL), "reembolsar")
+        expect(r).not.toContain("estorno_status: null")
+        expect(r).not.toContain("json(502")
+        const falha = r.slice(r.indexOf("if (!r.ok)"), r.indexOf("estorno_status: 'feito'"))
+        expect(falha).toContain("return REEMBOLSO_PEDIDO()")
+        expect(falha).not.toContain("etapa ===")
+        const perdeu = r.slice(r.indexOf("if (!meu?.length)"), r.indexOf("} else {", r.indexOf("if (!meu?.length)")))
+        expect(perdeu).toContain("if (registro?.estorno_status !== 'feito') return REEMBOLSO_PEDIDO()")
+        expect(r.indexOf("!== 'feito') return REEMBOLSO_PEDIDO()")).toBeLessThan(r.indexOf("status: 'expired'"))
     })
 
     it("a Edge está no config sem JWT", () => {

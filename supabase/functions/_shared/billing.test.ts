@@ -303,12 +303,24 @@ Deno.test('acaoDoDia: pending e expired não têm ação', () => {
 // podeCancelar / podeDesfazer
 
 Deno.test('podeCancelar: active e past_due do Asaas; o active com grace_until está renovando (Ruling 12)', () => {
-  assertEquals(podeCancelar(sub()), 'sim')
-  assertEquals(podeCancelar(sub({ status: 'past_due', grace_until: iso(em(7 * DIA)) })), 'sim')
-  assertEquals(podeCancelar(sub({ grace_until: iso(em(7 * DIA)) })), 'renovando')
-  assertEquals(podeCancelar(sub({ provider: 'manual' })), 'nao')
-  assertEquals(podeCancelar(sub({ status: 'pending' })), 'nao')
-  assertEquals(podeCancelar(sub({ status: 'expired' })), 'nao')
+  const agora = em(-3 * DIA)
+  assertEquals(podeCancelar(sub(), agora), 'sim')
+  assertEquals(podeCancelar(sub({ status: 'past_due', grace_until: iso(em(7 * DIA)) }), em(3 * DIA)), 'sim')
+  assertEquals(podeCancelar(sub({ grace_until: iso(em(7 * DIA)) }), agora), 'renovando')
+  assertEquals(podeCancelar(sub({ provider: 'manual' }), agora), 'nao')
+  assertEquals(podeCancelar(sub({ status: 'pending' }), agora), 'nao')
+  assertEquals(podeCancelar(sub({ status: 'expired' }), agora), 'nao')
+})
+
+Deno.test('podeCancelar: a cobrança iniciada há menos de 5 min pode estar em voo', () => {
+  const agora = em(-DIA)
+  const ha = (ms: number) => iso(new Date(agora.getTime() - ms))
+  assertEquals(podeCancelar(sub({ checkout_criado_em: ha(30_000) }), agora), 'cobrando')
+  assertEquals(podeCancelar(sub({ checkout_criado_em: ha(5 * 60_000 - 1) }), agora), 'cobrando')
+  assertEquals(podeCancelar(sub({ status: 'past_due', checkout_criado_em: ha(60_000) }), agora), 'cobrando')
+  assertEquals(podeCancelar(sub({ checkout_criado_em: ha(5 * 60_000) }), agora), 'sim')
+  assertEquals(podeCancelar(sub({ checkout_criado_em: ha(2 * DIA) }), agora), 'sim')
+  assertEquals(podeCancelar(sub({ provider: 'manual', checkout_criado_em: ha(30_000) }), agora), 'nao')
 })
 
 Deno.test('podeDesfazer: só cancelado, até o fim do período ou da tolerância do past_due', () => {

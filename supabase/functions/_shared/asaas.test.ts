@@ -265,7 +265,8 @@ Deno.test('estornarNoAsaas: GET e depois o POST do estorno', async () => {
 
 Deno.test('estornarNoAsaas: outro cliente ou leitura falha não pede estorno', async () => {
   await comFetch(() => json(200, { id: 'inst_1', customer: 'cus_2' }), async (pedidos) => {
-    assertEquals((await estornarNoAsaas(CFG, 'inst_1', 'cus_1')).ok, false)
+    const r = await estornarNoAsaas(CFG, 'inst_1', 'cus_1')
+    assertEquals(r.ok ? null : [r.etapa, r.status], ['cliente', 0])
     assertEquals(pedidos.length, 1)
   })
   await comFetch(() => json(500, {}), async (pedidos) => {

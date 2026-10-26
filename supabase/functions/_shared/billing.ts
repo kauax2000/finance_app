@@ -282,15 +282,24 @@ export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'r
 const limiteDoAtraso = (sub: Assinatura, fim: Date) =>
   sub.grace_until ? new Date(sub.grace_until) : maisDias(fim, TOLERANCIA_DIAS)
 
+/** A cobrança por token leva até `PRAZO_CARTAO_MS` (60 s); 5 min cobrem ela e a gravação do resultado. */
+const COBRANCA_EM_VOO_MS = 5 * 60 * 1000
+
 /**
  * O "cancelar em 1 toque": vale no `active` e no `past_due` (Ruling 11) do
  * Asaas. `'renovando'` é um `active` com `grace_until`: a renovação foi cobrada
  * e espera a confirmação, que desligaria o cancelamento em silêncio (Ruling 12).
+ * `'cobrando'` é um `checkout_criado_em` de menos de 5 min: a cobrança pode
+ * estar em voo.
  */
-export function podeCancelar(sub: Assinatura): 'sim' | 'renovando' | 'nao' {
-  if (sub.provider !== 'asaas') return 'nao'
-  if (sub.status === 'active') return sub.grace_until ? 'renovando' : 'sim'
-  return sub.status === 'past_due' ? 'sim' : 'nao'
+export function podeCancelar(sub: Assinatura, agora: Date): 'sim' | 'renovando' | 'cobrando' | 'nao' {
+  if (sub.provider !== 'asaas' || (sub.status !== 'active' && sub.status !== 'past_due')) return 'nao'
+  // A cobrança por token pode estar em voo (até 60 s) e a confirmação desligaria o cancelamento.
+  if (sub.checkout_criado_em && agora.getTime() - new Date(sub.checkout_criado_em).getTime() < COBRANCA_EM_VOO_MS) {
+    return 'cobrando'
+  }
+  if (sub.status === 'active' && sub.grace_until) return 'renovando'
+  return 'sim'
 }
 
 /** Desfazer o cancelamento enquanto o plano não acabou: o período, ou a tolerância de um `past_due`. */
