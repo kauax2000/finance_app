@@ -349,5 +349,5 @@ contas de teste (uma dona e uma membro), numa carteira compartilhada de teste:
 
 **O que fica de fora, de propósito.** A carteira pessoal continua sendo a
 privacidade total. As lacunas conhecidas (o objeto do anexo que fica até a
-limpeza, o insight da fatura só com o titular e os donos) estão na seção 19 de
+limpeza, o insight da fatura só com o titular e os donos) estão na seção 20 de
 `docs/JORNADAS.md`.

@@ -48,3 +48,7 @@ Deno.test('mcp: lançamento parcelado fecha o centavo na última', () => {
   const r = monta({ valor: 100, parcelas: 3, cartao: '2222' }) as { parcelas: unknown }
   assertEquals(r.parcelas, { total: 3, valor_parcela: 33.33, valor_final: 33.34, primeira: '2026-10-27' })
 })
+
+Deno.test('mcp: lançamento recusa parcela de zero centavo', () => {
+  assertEquals(monta({ valor: 0.05, parcelas: 10, cartao: '2222' }), { erro: 'Valor pequeno demais para parcelar em 10x.' })
+})

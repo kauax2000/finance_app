@@ -846,4 +846,4 @@ contas de teste (uma dona e uma membro) e uma convidada da dona:
 retroativa, quem saiu da carteira continuar no saldo até alguém acertar com ele
 (lacuna 72) e a
 Previsão de uma carteira de projeto aberta direto (lacuna 73). As lacunas
-conhecidas estão na seção 19 de `docs/JORNADAS.md`.
+conhecidas estão na seção 20 de `docs/JORNADAS.md`.

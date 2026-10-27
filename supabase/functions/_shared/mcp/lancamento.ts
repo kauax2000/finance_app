@@ -85,6 +85,7 @@ export function montarLancamentoDaIA(p: PedidoDaIA, ctx: ContextoDaIA):
     if (!cardId) return { erro: 'Parcelado só no cartão de crédito: diga o cartão.' }
     const centavos = Math.round(p.valor * 100)
     const base = Math.floor(centavos / total)
+    if (base === 0) return { erro: `Valor pequeno demais para parcelar em ${total}x.` }
     parcelas = {
       total,
       valor_parcela: base / 100,

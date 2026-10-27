@@ -42,6 +42,8 @@ export function McpConsentimentoWireframe({ authorizationId }: { authorizationId
             const d: Destino = error ? { tipo: "erro" } : destinoDosDetalhes(data)
             if (d.tipo === "redirecionar") window.location.assign(d.url)
             setDestino(d)
+        }).catch(() => {
+            if (ativo) setDestino({ tipo: "erro" })
         })
         return () => {
             ativo = false

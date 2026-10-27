@@ -562,4 +562,4 @@ o responsável que paga pelo convidado. Sem plano, nada que protege alguém se
 desliga: `garantir_escrita` não mexe em RLS, o convidado continua restrito e o
 limite continua visível. As lacunas conhecidas (a meta de poupança legível pela API,
 o limite que sobe no meio do mês sem reabrir o aviso, a importação que não avalia o
-limite, o e-mail que ainda diz "workspace") estão na seção 19 de `docs/JORNADAS.md`.
+limite, o e-mail que ainda diz "workspace") estão na seção 20 de `docs/JORNADAS.md`.

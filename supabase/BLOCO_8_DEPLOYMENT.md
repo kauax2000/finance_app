@@ -931,5 +931,5 @@ cobrança ligada nele (§1), confira com uma conta de teste:
 **O que fica de fora, de propósito.** O Pix Automático (depois de o CNPJ
 completar 6 meses), o mensal, o "bateu ou devolvemos" automático (§5) e a
 troca de cartão sem pagar (o cartão novo só entra pela fatura). As lacunas
-conhecidas estão na seção 19 de `docs/JORNADAS.md`, da 78 à 91 (a 85 e a 86
+conhecidas estão na seção 20 de `docs/JORNADAS.md`, da 78 à 91 (a 85 e a 86
 fecharam na revisão final).

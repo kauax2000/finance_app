@@ -371,4 +371,4 @@ três contas de teste, numa carteira compartilhada de teste:
 
 **O que fica de fora, de propósito.** As lacunas que o bloco abre (o estorno
 lançado antes do Bloco 9, o aviso já entregue que não se recolhe, a sugestão de categoria da importação) estão na
-seção 19 de `docs/JORNADAS.md` e em `docs/LACUNAS-MAPA.md`.
+seção 20 de `docs/JORNADAS.md` e em `docs/LACUNAS-MAPA.md`.
