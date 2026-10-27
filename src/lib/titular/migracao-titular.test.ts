@@ -19,10 +19,10 @@ function ultima(nome: string, arquivo = MIGRACAO): string {
     return fn!.texto
 }
 
-/** A política final de um comando; exige que seja uma só. */
+/** A política permissiva final de um comando; exige que seja uma só (as `as restrictive` do token de IA ficam de fora). */
 function politicaFinal(tabela: string, comando: string, filtro: (p: Politica) => boolean = () => true): Politica {
     const lista = [...POLITICAS.values()].filter(
-        (p) => p.tabela === tabela && (p.comando === comando || p.comando === "all") && filtro(p),
+        (p) => p.tabela === tabela && (p.comando === comando || p.comando === "all") && filtro(p) && !p.texto.includes("as restrictive"),
     )
     expect(lista.map((p) => p.nome), `${tabela} ${comando}`).toHaveLength(1)
     return lista[0]

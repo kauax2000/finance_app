@@ -251,15 +251,13 @@ export function servidor(ctx: SupabaseContext) {
           p_installment_amount: parcelas.valor_parcela,
           p_final_installment_amount: parcelas.valor_final,
           p_next_billing_date: parcelas.primeira,
+          // A origem vai dentro da RPC: o token da IA não altera linha (20261103130000).
+          p_source: linha.source,
+          p_needs_review: linha.needs_review,
+          p_capture_meta: linha.capture_meta,
         })
         if (error) throw error
         id = planoId as string
-        // Como o formulário: as parcelas que a RPC lançou levam a origem. Falhando, o plano fica.
-        const { error: marca } = await supabase
-          .from('transactions')
-          .update({ source: linha.source, needs_review: linha.needs_review, capture_meta: linha.capture_meta })
-          .eq('installment_plan_id', id)
-        if (marca) console.error('mcp: origem das parcelas', marca)
       }
 
       // Os mesmos avisos que o app dispara com o JWT da pessoa; não seguram a resposta.

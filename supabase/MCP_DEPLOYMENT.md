@@ -13,11 +13,14 @@ pôs no repositório:
   `faturas_dos_cartoes`, `contas_a_pagar` e `assinaturas`) e a única escrita,
   `registrar_lancamento`: insere em `transactions` com `source = 'ia_externa'`,
   `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`; o
-  parcelado passa pela RPC `create_workspace_installment_plan` e por um `update`
-  das parcelas do plano; depois de uma despesa chama `evaluate-budgets` e
+  parcelado passa pela RPC `create_workspace_installment_plan`, que recebe os
+  três e os grava nas parcelas; depois de uma despesa chama `evaluate-budgets` e
   `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário do app;
 - a migração `20261103120000_mcp.sql`, que só acrescenta `ia_externa` ao check
   de `transactions.source`;
+- a migração `20261103130000_mcp_token_somente_leitura.sql`, que deixa o token
+  da IA só ler e inserir lançamento (§1a), e o `getAuthUserFromJwt`
+  (`_shared/auth-user.ts`) recusando esse token nas Edges de usuário;
 - no front do 2.0: a rota `/oauth/consent` (consentimento, em
   `src/app/(app)/oauth/consent/`, wireframe `mcp-consentimento-wireframe.tsx`) e
   o bloco "IAs conectadas" em `/account` (wireframe
@@ -69,17 +72,23 @@ público.
   Os três passam no repositório. O `--node-modules-dir=none` evita que o Deno
   procure o `node_modules` do Next.
 
-## 1. A migração
+## 1. As migrações
 
-Só acrescenta `ia_externa` ao check de `source`. Compatível com o front de
-`main`, que não conhece o valor, mas também não o escreve.
+A primeira só acrescenta `ia_externa` ao check de `source`. A segunda põe as
+políticas `ia_somente_leitura_*` e troca a assinatura do
+`create_workspace_installment_plan` (9 argumentos → 12, os três novos com
+`default`). As duas são compatíveis com o front de `main`: ele não escreve
+`ia_externa`, a sessão do app não tem `client_id`, e a chamada dele à RPC (por
+nome, com os 9) cai na nova.
 
 ```bash
 supabase db push
 ```
 
-Aplica `20261103120000_mcp.sql` (e qualquer migração anterior ainda pendente,
-em ordem: confira `supabase migration list` antes). Conferência no SQL Editor:
+Aplica `20261103120000_mcp.sql` e `20261103130000_mcp_token_somente_leitura.sql`
+(e qualquer migração anterior ainda pendente, em ordem: confira
+`supabase migration list` antes). **O SQL da segunda nunca rodou**: sem banco
+de teste, foi conferido só lendo. Conferência no SQL Editor:
 
 ```sql
 select pg_get_constraintdef(oid)
@@ -90,6 +99,61 @@ where conrelid = 'public.transactions'::regclass
 
 Esperado: a lista de origens inclui `'ia_externa'`. Não salve o resultado no
 repositório.
+
+```sql
+select tablename, policyname, cmd
+from pg_policies
+where policyname like 'ia_%'
+order by tablename, cmd;
+
+select pg_get_function_identity_arguments('public.create_workspace_installment_plan'::regproc);
+```
+
+Esperado: 74 políticas `ia_somente_leitura_*` em `public` (25 tabelas × 3, menos
+o insert de `transactions`), `ia_lancamento_marcado` em `transactions`, as três
+de `storage.objects`; e a RPC com 12 argumentos, terminando em
+`p_source text, p_needs_review boolean, p_capture_meta jsonb`. Depois, crie um
+parcelado pelo app (sessão normal) e confira que ele entra com `source = 'app'`.
+
+## 1a. O que o token da IA pode
+
+O token OAuth que o Auth emite para a IA é um JWT da pessoa com a claim
+`client_id`. Com a chave anônima, ele chega ao `/rest/v1` e às Edges como a
+própria pessoa. O que o fecha:
+
+- **Lê** o que a pessoa lê (o RLS de sempre).
+- **Insere só lançamento**: `transactions`, e só marcado (`source =
+  'ia_externa'` e `needs_review`, política `ia_lancamento_marcado`); o
+  parcelado pela RPC, que força a marca quando o token é de IA.
+- **Não altera nem apaga** nada: políticas `as restrictive`
+  `ia_somente_leitura_insert|update|delete` (para `authenticated`, com
+  `public.eh_token_de_ia()`) em toda tabela de `public` com política de
+  escrita, e em `storage.objects`.
+- **As Edges de usuário recusam** o token (`getAuthUserFromJwt` devolve
+  `token_de_ia` → 401), menos `evaluate-budgets` e `evaluate-credit-card-alerts`,
+  que o MCP chama depois de lançar (`permitirTokenDeIA: true`). Para valer, toda
+  Edge que importa `_shared/auth-user.ts` sobe de novo: `activity-logs`,
+  `billing-cancel`, `billing-checkout`, `delete-user`, `evaluate-budgets`,
+  `evaluate-credit-card-alerts`, `ia-ler`, `push-subscribe`,
+  `push-unsubscribe`, `sessions`, `workspace-invites-accept`,
+  `workspace-invites-create` e `workspace-invites-resend`.
+
+**Residual conhecido** (não fechado nesta rodada):
+
+- **RPCs `security definer` que escrevem**, chamáveis por `authenticated`, não
+  passam pelo RLS e o token da IA ainda as chama pelo `/rest/v1/rpc`:
+  `delete_workspace`, `delete_workspace_installment_plan_cascade`,
+  `trocar_papel`, `definir_partes`, `complete_workspace_categories_onboarding`,
+  `create_capture_token`, `revoke_capture_token`, `marcar_insight`,
+  `registrar_insight`, `garantir_orcamentos_do_mes` e
+  `catch_up_recurring_billing`. As quatro primeiras apagam ou alteram dado: são
+  as primeiras a ganhar `if public.eh_token_de_ia() then raise exception
+  'token_de_ia_somente_leitura'; end if;`. As RPCs `security invoker`
+  (`pay_bill_instance`, `virar_conta`, `criar_carteira_de_modelo`…) passam pelo
+  RLS e já estão fechadas.
+- **`PUT /auth/v1/user` com o token da IA** (trocar e-mail, senha, metadados)
+  não foi verificado. Teste antes de ligar o Dynamic Client Registration: com o
+  token de uma IA de teste, um `PUT` em `/auth/v1/user` tem de ser recusado.
 
 ## 2. Ligar o servidor OAuth (passo do dono, no painel)
 
@@ -113,6 +177,7 @@ Esperado: um JSON com `issuer`, `authorization_endpoint`, `token_endpoint` e
 
 ## 3. A Edge Function
 
+Depois do §1 (a `mcp` nova manda `p_source`, que a RPC antiga não conhece).
 Acrescente `mcp` ao `supabase:deploy:functions` do `package.json` (já está) e
 publique só ela:
 
@@ -180,7 +245,13 @@ uma checagem desta publicação:
    não sai e **nada acusa**. Confira no teste do §6: lance uma despesa que
    cruze 80% de um orçamento e veja o aviso no sino; veja também os logs das
    duas funções (Edge Functions › Logs) por 401/403 vindos do `mcp`.
-4. **O primeiro teste de ponta a ponta** no Claude e no ChatGPT (§6): o registro
+4. **O residual do token da IA** (§1a): as RPCs `security definer` que
+   escrevem e o `PUT /auth/v1/user`.
+5. **As políticas `ia_somente_leitura_*` no ar**: com o token de uma IA de
+   teste e a chave anônima, um `PATCH` e um `DELETE` em
+   `/rest/v1/transactions?id=eq.<id>` voltam sem linha alterada, e um `POST` em
+   `/functions/v1/delete-user` volta 401.
+6. **O primeiro teste de ponta a ponta** no Claude e no ChatGPT (§6): o registro
    dinâmico, o consentimento e a troca do código pelo token nunca rodaram.
 
 ## 6. O teste, no Claude e no ChatGPT
@@ -214,6 +285,9 @@ conferência: apague-o depois.
   (nenhuma IA consegue mais um token novo).
 - **A Edge:** `supabase functions delete mcp` tira o endpoint do ar. O
   lançamento que a IA criou fica, e é apagado pela conferência.
-- **A migração** só acrescenta um valor ao check: não precisa de volta. Se
-  alguma linha já usa `ia_externa`, tirar o valor do check reprovaria a linha.
+- **A migração** `20261103120000` só acrescenta um valor ao check: não precisa
+  de volta. Se alguma linha já usa `ia_externa`, tirar o valor do check
+  reprovaria a linha.
+- **A migração** `20261103130000` não tem volta a fazer: para a sessão do app as
+  políticas não mudam nada. Desligar o OAuth Server já tira o token da IA.
 - **Nunca** `supabase config push`, nem para desfazer.

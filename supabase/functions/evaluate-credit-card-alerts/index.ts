@@ -108,7 +108,8 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
     const jwt = bearerJwt(req.headers.get('Authorization'))
     if (!jwt) return json(401, { error: 'Missing authorization header' })
 
-    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
+    // O MCP dispara este aviso com o token da IA depois de lançar.
+    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt, { permitirTokenDeIA: true })
     if (authResult.error || !authResult.user) {
       return json(401, { error: 'Invalid or expired token' })
     }

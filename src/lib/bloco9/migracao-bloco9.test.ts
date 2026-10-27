@@ -141,7 +141,8 @@ describe(`migração ${MIGRACAO}`, () => {
     })
 
     it("Decisão 5: o create_workspace_installment_plan do main não muda", () => {
-        expect(ULTIMA.get("create_workspace_installment_plan")?.arquivo).toBe("20261024120000_ia.sql")
+        // O MCP (20261103130000) a estende depois, com três parâmetros de `default`.
+        expect(ULTIMA.get("create_workspace_installment_plan")?.arquivo).toBe("20261103130000_mcp_token_somente_leitura.sql")
         expect(sql).not.toMatch(/create_workspace_installment_plan/)
     })
 

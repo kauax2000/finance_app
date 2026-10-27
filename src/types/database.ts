@@ -2187,13 +2187,16 @@ export type Database = {
       }
       create_workspace_installment_plan: {
         Args: {
+          p_capture_meta?: Json
           p_category_id: string
           p_description: string
           p_final_installment_amount: number
           p_installment_amount: number
+          p_needs_review?: boolean
           p_next_billing_date: string
           p_payment_credit_card_id: string
           p_payment_method: string
+          p_source?: string
           p_total_installments: number
           p_workspace_id: string
         }
