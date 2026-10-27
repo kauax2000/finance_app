@@ -28,6 +28,7 @@ import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
 import { identityToneFor } from "@/lib/avatar"
 import { CapturaTokensWireframe } from "@/components/wireframe/captura-tokens-wireframe"
+import { IasConectadasWireframe } from "@/components/wireframe/ias-conectadas-wireframe"
 
 export default function AccountPage() {
     const { user, profile, loading, profileReady, signOut } = useAuth()
@@ -188,6 +189,7 @@ export default function AccountPage() {
             </PageSection>
 
             <CapturaTokensWireframe />
+            <IasConectadasWireframe />
 
             {/* No telefone o plano mora aqui, e não no menu da conta da barra de baixo;
                 no desktop ele segue no menu do usuário. */}
