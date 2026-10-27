@@ -16,20 +16,26 @@ Reúne as correções que o levantamento do Bloco 9 pediu antes de o 2.0 ir para
     `ex_convidado` para um convite **por link** de quem está nela, e apaga a linha
     num aceite com sucesso. O convite por e-mail passa;
   - o `criar_plano_parcelado` com `p_client_id` e `p_capture_meta` (#23): a
-    captura reenviada devolve o plano que já existe. A assinatura antiga sai
+    captura reenviada devolve o plano que já existe, e (Bloco 9b, #95) ele acha o plano
+    do `client_id` em qualquer carteira da pessoa, então um destino diferente entre
+    reenvios não cria um 2º plano. A assinatura antiga sai
     (`drop function`), e o `create_workspace_installment_plan` do `main`, que a
     chama por posição, cai na nova pelos `default`s;
   - o `garantir_escrita` em `projects`, `workspace_split_weights` e
     `workspace_member_limits` (#79): a carteira em só leitura deixa de aceitar
     escrita também ali;
   - a coluna `billing_avisos.pendente` (#87): o aviso de texto fixo fica pendente
-    até a entrega dar certo;
+    até a entrega dar certo, e a `tentativas` (#97, Bloco 9b), que o `billing-daily`
+    soma até desistir na 7ª falha;
 - as Edges (a lista e a ordem estão no §2):
   - `workspace-invites-accept`: o `case 'ex_convidado'` devolve 403 "Peça ao dono
     um convite por e-mail.";
   - `capture`: passa o `client_id` e a `capture_meta` ao `criar_plano_parcelado`,
-    sem o `update` à parte;
-  - `credit-card-calendar-alerts`, `insights-daily`, `evaluate-credit-card-alerts`
+    sem o `update` à parte, e (9b, #95) grava a foto num caminho fixo por
+    `client_id` (`<carteira>/<client_id>.<ext>`): o reenvio simultâneo recebe 409 e
+    não cria um 2º anexo;
+  - `credit-card-calendar-alerts` (9b, #94: avisa as duas faturas que vencem no
+    mesmo dia; a segunda leva `:f:<fechamento>` na chave), `insights-daily`, `evaluate-credit-card-alerts`
     e `evaluate-budgets`: o vencimento do cartão é o primeiro `min(due_day, dias do
     mês)` estritamente depois do fechamento (#33), e o estorno no cartão abate a
     categoria da despesa (#35);
@@ -39,7 +45,8 @@ Reúne as correções que o levantamento do Bloco 9 pediu antes de o 2.0 ir para
   - `billing-checkout`: atualiza o nome e o CPF do cliente que já existe no Asaas
     (#81). `billing-daily`, `asaas-webhook` e `billing-cancel`: o destino do aviso
     é uma função só, os avisos de texto fixo pendentes são reenviados depois de 1
-    hora, e o texto do estorno decide pelo `ativado_em` (#87);
+    hora, e o texto do estorno decide pelo `ativado_em` (#87); o `billing-daily` soma a
+    tentativa e desiste na 7ª (#97);
   - `notify-transaction-created`: voltou ao corpo de antes do 7B, sem o gasto
     privado. **Não é igual ao de `main`**: leva também o que os Blocos 1 e 2
     mudaram nele;
@@ -90,13 +97,13 @@ supabase db push --db-url "<string de conexão do projeto de teste>"
 Aplica as migrações até `20261102120000_bloco9.sql`. Depois, rode no SQL Editor
 do projeto de teste, um arquivo por vez, junto com os dos Blocos 7B a 8:
 
-1. `supabase/tests/database/bloco9.test.sql`: 20 asserções, abre em `begin` e
+1. `supabase/tests/database/bloco9.test.sql`: 21 asserções, abre em `begin` e
    termina em `rollback`. Os casos: o plano parcelado que não duplica no
    reenvio, o titular que sai (o dono rebaixado a membro continua titular; o
    membro tirado e o rebaixado a convidado deixam o cartão da casa), o link que
    recusa o ex-convidado e o e-mail que aceita, a carteira apagada com convidado
    e titular sem quebrar, e a só leitura recusando insert e update em `projects`
-   e insert, update e delete em pesos e limites. Esperado: 20 linhas `ok` e
+   e insert, update e delete em pesos e limites. Esperado: 21 linhas `ok` e
    nenhuma `not ok`;
 2. `supabase/tests/database/divisao.test.sql`: ajustado no Bloco 9 (sem o gasto
    privado). Esperado: 32 linhas `ok`;
@@ -257,6 +264,16 @@ select
 Esperado: o padrão `false` e `0` pendentes logo depois da migração. Depois, o
 `billing-daily` reenvia o que ficar pendente por mais de 1 hora.
 
+**A coluna das tentativas do aviso (9b).**
+
+```sql
+select column_default, is_nullable
+from information_schema.columns
+where table_schema = 'public' and table_name = 'billing_avisos' and column_name = 'tentativas';
+```
+
+Esperado: uma linha, com o padrão `0` e `is_nullable` `NO`.
+
 **Nenhum titular fora da carteira.**
 
 ```sql
@@ -312,7 +329,7 @@ saída de um convidado. Uma linha a mais nega o convite por link a quem não
 devia.
 
 **Não mexa em `billing_avisos.pendente` à mão.** Um aviso marcado `true` é
-reenviado todo dia, sem teto (lacuna 97 de `docs/LACUNAS-MAPA.md`).
+reenviado todo dia, até a 7ª tentativa falha.
 
 ## 5. Compatibilidade com o front de `main`
 
@@ -353,7 +370,5 @@ três contas de teste, numa carteira compartilhada de teste:
   pendente e é reenviado em até um dia.
 
 **O que fica de fora, de propósito.** As lacunas que o bloco abre (o estorno
-lançado antes do Bloco 9, o aviso já entregue que não se recolhe, as faturas que
-vencem no mesmo dia, a captura simultânea com foto, o "Apagar um" do convidado, o
-aviso de cobrança sem destino e a sugestão de categoria da importação) estão na
+lançado antes do Bloco 9, o aviso já entregue que não se recolhe, a sugestão de categoria da importação) estão na
 seção 19 de `docs/JORNADAS.md` e em `docs/LACUNAS-MAPA.md`.

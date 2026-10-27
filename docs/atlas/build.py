@@ -52,7 +52,7 @@ def table(block):
 
 diagrams = re.findall(r"```mermaid\n(.*?)```", md, re.S)
 tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
-# 30 tabelas (uma a menos na jornada 17, que perdeu "Quem vê o quê", e uma a mais nas lacunas fechadas do Bloco 9): a da legenda, dezoito de "Regras técnicas" mais a dos papéis, a de quem vê o quê e a dos
+# 31 tabelas (uma a menos na jornada 17, que perdeu "Quem vê o quê", e uma a mais nas lacunas fechadas do Bloco 9 e outra nas do 9b): a da legenda, dezoito de "Regras técnicas" mais a dos papéis, a de quem vê o quê e a dos
 # modelos de carteira (as novas, T11, T12, T13, T14, T16, T17, T19 e T21, são as jornadas 11 e 12 do
 # Bloco 4, a 13 do Bloco 5, a 14 do Bloco 6B, a 15 e a 16 do Bloco 7A, a 17 do Bloco 7B e a 18 do
 # Bloco 7C; a T15 é a tabela de papéis da jornada 15, a T18 a de quem vê o quê da 17 e a T20 a dos
@@ -68,7 +68,7 @@ tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
 # Criar uma carteira, @@D26@@, Projeto, @@D27@@, Carteira de projeto, e @@D28@@, Dividir e acertar).
 # O Bloco 8 partiu a jornada 11 em duas: a 11b (@@D16@@, Assinar, renovar e reembolsar) entrou logo
 # depois da 11a (@@D15@@) e deslocou de Confiança em diante um a mais (@@D17@@ a @@D29@@).
-assert len(diagrams) == 29 and len(tables) == 30, (len(diagrams), len(tables))
+assert len(diagrams) == 29 and len(tables) == 31, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out

@@ -1,16 +1,16 @@
 # Mapa das lacunas abertas
 
-Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.0`), com leitura pontual do código, e atualizado no Bloco 9 (as lacunas que ele fechou saíram, e as que abriu entraram). Só leitura: nada foi alterado no app.
+Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.0`), com leitura pontual do código, e atualizado no Bloco 9b (#94 a #97 fechadas) e no Bloco 9 (as lacunas que ele fechou saíram, e as que abriu entraram). Só leitura: nada foi alterado no app.
 
 ## Resumo
 
-- Lacunas abertas na tabela: **75** (de #1 a #99, com furos de numeração).
-- Excluídas por serem feature nova ou escolha de produto: **5**. Mapeadas: **70**.
-- Por categoria: A bug ou risco real **15** · B UX e tela **31** · C operação e deploy **19** · D dívida técnica **5**.
+- Lacunas abertas na tabela: **71** (de #1 a #99, com furos de numeração).
+- Excluídas por serem feature nova ou escolha de produto: **5**. Mapeadas: **66**.
+- Por categoria: A bug ou risco real **11** · B UX e tela **31** · C operação e deploy **19** · D dívida técnica **5**.
 - Bloqueiam o lançamento do 2.0: **15** (#8, #12, #14, #26, #28, #29, #36, #40, #43, #58, #67, #69, #78, #90, #99).
 - Esforço: P = horas, M = um dia, G = vários dias.
 
-### As 10 mais importantes antes do lançamento, em ordem
+### As mais importantes antes do lançamento, em ordem
 
 1. Validar o SQL do 7B (o titular) e o do Bloco 9 num ramo de teste, com o `bloco9.test.sql`; nunca rodaram (#67, #99)
 2. Validar as migrações do 7C e o `divisao.test.sql` (32 casos) num ramo de teste; `transaction_splits` tem de ser 0 (#69)
@@ -20,8 +20,6 @@ Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.
 6. Publicar na ordem certa os Blocos 1 a 7A (migração, Edge, front) e fazer o teste de fumaça (#8, #12, #14, #26, #28, #36, #40, #43, #58)
 7. Trocar 'região a confirmar' pela região real do projeto Supabase no Cofre (#29)
 8. Decidir o que fazer com o estorno lançado antes do Bloco 9, que não desconta o orçamento (#92)
-9. Avisar também a segunda fatura que vence no mesmo dia (#94)
-10. Tratar o reenvio simultâneo da captura com foto, que sobe dois anexos (#95)
 
 ### Excluídas (só o número e o motivo)
 
@@ -52,10 +50,6 @@ Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.
 | 91 | Apagar a conta apaga o plano mas não pede ao Asaas a exclusão do cadastro, cobranças e NFS-e (a nota tem guarda fiscal); política e Cofre avisam. | Bloco 8: Cobrança | M | não | está dito na política; revisar com o jurídico (LGPD) |
 | 92 | O estorno no cartão lançado antes do Bloco 9 tem categoria de receita (ou nenhuma) e não desconta o orçamento; ao abri-lo, a categoria é limpa e pede uma de despesa. | Bloco 9: Correções | M | não | sem migração de dados; só desconta depois de revisado |
 | 93 | Um aviso já entregue por push ou e-mail não se recolhe, mesmo que o fato mude depois. | Bloco 9: Correções | M | não | só o que falhou na entrega é reenviado |
-| 94 | Duas faturas podem vencer no mesmo dia (fecha 30 e vence 31 em mês de 30 dias; fecha 28 e vence 30, fevereiro para março); o Painel mostra as duas, mas a `credit-card-calendar-alerts` só avisa a primeira. | Bloco 9: Correções | P | não | falta um aviso nesse dia |
-| 95 | Captura: dois reenvios simultâneos da mesma compra parcelada com foto sobem dois anexos (o plano é um só); com destino diferente entre os reenvios, nascem dois planos. | Bloco 9: Correções | M | não | corrida rara |
-| 96 | O 'Apagar um' de um convidado que não enxerga um dos dois lançamentos marca o insight como resolvido sem apagar. | Bloco 9: Correções | P | não | o repetido continua na lista |
-| 97 | Aviso de cobrança sem destino (sem carteira e e-mail rejeitado) fica pendente e é tentado uma vez por dia, sem teto. | Bloco 9: Correções | P | não | ruído nos logs até alguém consertar o e-mail |
 
 ## (B) UX e tela
 
