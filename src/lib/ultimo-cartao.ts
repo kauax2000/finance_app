@@ -23,7 +23,7 @@ export function gravarUltimoCartao(workspaceId: string, cardId: string) {
  * O cartão que vem escolhido ao pagar no crédito: o único ativo ou, com mais de
  * um, o último escolhido na carteira. `""` quando não há o que escolher.
  */
-export function cartaoPreEscolhido(cards: CreditCard[]): string {
+export function cartaoPreEscolhido(cards: Pick<CreditCard, "id" | "is_active" | "workspace_id">[]): string {
     const ativos = cards.filter((c) => c.is_active)
     if (ativos.length === 0) return ""
     if (ativos.length === 1) return ativos[0]!.id

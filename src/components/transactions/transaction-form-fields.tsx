@@ -603,6 +603,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     key={fraseInicial}
                     fraseInicial={fraseInicial}
                     cartoes={cartoesDaFrase}
+                    categorias={categories}
                     onAplicar={aplicarFrase}
                 />
             ) : null}
@@ -610,6 +611,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 <FotoReciboWireframe
                     fotoInicial={fotoInicial}
                     cartoes={cartoesDaFrase}
+                    categorias={categories}
                     onAplicar={aplicarFoto}
                     onFoto={setFotoDoRecibo}
                 />

@@ -144,6 +144,7 @@ describe("interpretarFrase", () => {
             estorno: false,
             forma: null,
             cartaoTexto: null,
+            cartaoPalavra: null,
             descricao: "Mercado",
             duvidas: [],
         })

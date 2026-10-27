@@ -15,7 +15,8 @@ export type FraseInterpretada = {
   tipo: 'expense' | 'income'
   estorno: boolean
   forma: FormaDePagamento | null
-  cartaoTexto: string | null // palavra que sobrou e pode ser cartão
+  cartaoTexto: string | null // palavra que sobrou e pode ser cartão, normalizada
+  cartaoPalavra?: string | null // a mesma, como foi escrita (volta assim à descrição)
   descricao: string
   duvidas: string[] // "valor", "data", "cartao", "parcelas", "descricao"
 }
@@ -57,6 +58,9 @@ const FORMAS = new Map<string, FormaDePagamento>([
   ['pix', 'pix'], ['debito', 'debit'], ['dinheiro', 'cash'],
   ['credito', 'credit_card'], ['cartao', 'credit_card'],
 ])
+
+/** Dizem que o valor ao lado é o de uma parcela, não o total. */
+const PARCELA = new Set(['parcela', 'parcelas', 'prestacao', 'prestacoes'])
 
 /** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
 const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
@@ -338,6 +342,25 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
           valor = centavos(valor + cent / 100)
         }
       }
+      // "parcela 100", "parcela de R$ 100", "100 a parcela", "100 por parcela", "100 cada":
+      // o valor é o da parcela, e o total é parcelas × valor. Sem o número de parcelas, a conta fica a conferir.
+      let antes = escolhido.de - 1
+      if (k(antes) === 'r$') antes--
+      if (k(antes) === 'de') antes--
+      let depois = escolhido.ate + 1
+      if (k(depois) === 'reais') depois++
+      const ligaDepois = ['a', 'por', 'cada'].includes(k(depois)) && !toks[depois].usado
+      let daParcela = -1
+      if (PARCELA.has(k(antes)) && !toks[antes].usado) daParcela = antes
+      else if (PARCELA.has(k(depois + (ligaDepois ? 1 : 0))) && !toks[depois + (ligaDepois ? 1 : 0)].usado) {
+        daParcela = depois + (ligaDepois ? 1 : 0)
+        if (ligaDepois) toks[depois].usado = true
+      } else if (k(depois) === 'cada' && ligaDepois) daParcela = depois
+      if (daParcela >= 0) {
+        toks[daParcela].usado = true
+        if (parcelas != null) valor = centavos(parcelas * valor)
+        else duvida('valor')
+      }
     }
   }
   for (let i = 0; i < toks.length; i++) if (k(i) === 'r$' || k(i) === 'reais') toks[i].usado = true
@@ -378,8 +401,10 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     if (s.length >= 2 && ehPalavra(ultima) && !prende) cartaoIdx = ultima
   }
   let cartaoTexto: string | null = null
+  let cartaoPalavra: string | null = null
   if (cartaoIdx >= 0) {
     cartaoTexto = k(cartaoIdx)
+    cartaoPalavra = toks[cartaoIdx].texto.replace(/^[("'“‘]+|[)"'”’.,;:!?]+$/g, '')
     toks[cartaoIdx].usado = true
     const antes = toks[cartaoIdx - 1]
     if (antes && !antes.usado && CONECTIVOS.has(antes.chave)) antes.usado = true
@@ -407,6 +432,7 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     estorno,
     forma,
     cartaoTexto,
+    cartaoPalavra,
     descricao,
     duvidas,
   }
@@ -486,4 +512,170 @@ export function preencherPeloHistorico(
     paymentMethod: linha?.payment_method ?? null,
     creditCardId: linha?.payment_credit_card_id ?? null,
   }
+}
+
+export type CategoriaParaCasar = { id: string; name: string; type: 'expense' | 'income' }
+
+/** De onde veio a categoria escolhida pela frase. */
+export type MotivoDaCategoria = 'historico' | 'nome' | 'palavra' | 'comum'
+
+/** As palavras de 3+ letras, normalizadas, com e sem o "s" final ("cafés" casa "café"). */
+function palavrasDe(s: string): Set<string> {
+  const out = new Set<string>()
+  for (const p of normalizarDescricao(s).split(' ')) {
+    if (p.length < 3 || /^\d+$/.test(p)) continue
+    out.add(p)
+    if (p.length > 3 && p.endsWith('s')) out.add(p.slice(0, -1))
+  }
+  return out
+}
+
+/**
+ * Palavras comuns de uma descrição e os nomes de categoria que as abrigam, do
+ * mais específico ao mais geral: "uber" cai em "Transporte", ou em "Carro"
+ * quando não há "Transporte". A primeira palavra da descrição que casa decide.
+ */
+const COMUNS: { palavras: string[]; nomes: string[] }[] = [
+  {
+    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado'],
+    nomes: ['mercado', 'supermercado', 'feira', 'alimentacao', 'comida'],
+  },
+  {
+    palavras: ['restaurante', 'lanche', 'lanchonete', 'almoco', 'jantar', 'ifood', 'delivery', 'pizza', 'pizzaria', 'hamburguer', 'burger', 'sushi', 'cafe', 'cafeteria', 'padaria', 'bar', 'marmita', 'rappi', 'mcdonalds', 'starbucks', 'acai', 'sorvete', 'pastel', 'salgado', 'churrasco', 'boteco'],
+    nomes: ['restaurante', 'delivery', 'lanche', 'refeicao', 'refeicoe', 'alimentacao', 'comida'],
+  },
+  {
+    palavras: ['uber', 'taxi', 'onibus', 'metro', 'trem', 'gasolina', 'combustivel', 'etanol', 'diesel', 'posto', 'estacionamento', 'pedagio', 'cabify', 'patinete', 'bilhete', 'oficina', 'ipva', 'lavagem', 'mecanico'],
+    nomes: ['transporte', 'mobilidade', 'carro', 'veiculo', 'combustivel'],
+  },
+  {
+    palavras: ['farmacia', 'drogaria', 'drogasil', 'remedio', 'medico', 'consulta', 'exame', 'dentista', 'hospital', 'psicologo', 'terapia', 'laboratorio', 'clinica'],
+    nomes: ['saude', 'farmacia', 'medico', 'remedio'],
+  },
+  {
+    palavras: ['aluguel', 'condominio', 'iptu', 'luz', 'energia', 'agua', 'gas', 'internet', 'celular', 'telefone', 'enel', 'sabesp', 'cemig', 'copel', 'light', 'vivo', 'claro', 'tim'],
+    nomes: ['moradia', 'casa', 'contas', 'habitacao', 'aluguel', 'servico'],
+  },
+  {
+    palavras: ['netflix', 'spotify', 'disney', 'hbo', 'youtube', 'globoplay', 'deezer', 'icloud', 'chatgpt', 'assinatura', 'prime', 'paramount', 'crunchyroll'],
+    nomes: ['assinatura', 'streaming', 'servico', 'lazer', 'entretenimento'],
+  },
+  {
+    palavras: ['hotel', 'airbnb', 'passagem', 'voo', 'latam', 'booking', 'hospedagem', 'pousada', 'viagem'],
+    nomes: ['viagem', 'lazer'],
+  },
+  {
+    palavras: ['cinema', 'show', 'ingresso', 'teatro', 'steam', 'balada', 'festa', 'passeio', 'parque', 'museu'],
+    nomes: ['lazer', 'entretenimento', 'diversao'],
+  },
+  {
+    palavras: ['escola', 'faculdade', 'curso', 'livro', 'apostila', 'udemy', 'alura', 'material', 'livraria', 'mensalidade'],
+    nomes: ['educacao', 'estudo', 'escola', 'curso', 'livro'],
+  },
+  {
+    palavras: ['roupa', 'sapato', 'tenis', 'camisa', 'camiseta', 'calca', 'vestido', 'shein', 'renner', 'zara', 'riachuelo', 'shopee', 'amazon', 'magalu', 'shopping'],
+    nomes: ['vestuario', 'roupa', 'compra', 'shopping'],
+  },
+  {
+    palavras: ['pet', 'petshop', 'racao', 'veterinario', 'cachorro', 'gato'],
+    nomes: ['pet', 'animai', 'cachorro', 'gato'],
+  },
+  {
+    palavras: ['cabelo', 'cabeleireiro', 'salao', 'barbeiro', 'barbearia', 'manicure', 'unha', 'estetica', 'perfume', 'maquiagem', 'cosmetico'],
+    nomes: ['beleza', 'cuidado', 'estetica', 'pessoal'],
+  },
+  {
+    palavras: ['academia', 'smartfit', 'crossfit', 'pilates', 'natacao', 'futebol', 'esporte'],
+    nomes: ['academia', 'esporte', 'saude'],
+  },
+  {
+    palavras: ['salario', 'holerite', 'ordenado', 'adiantamento'],
+    nomes: ['salario', 'trabalho', 'renda'],
+  },
+  {
+    palavras: ['freela', 'freelance', 'bico', 'cliente'],
+    nomes: ['freela', 'freelance', 'extra', 'trabalho', 'renda'],
+  },
+  {
+    palavras: ['rendimento', 'juros', 'dividendo', 'cdb', 'tesouro', 'investimento', 'poupanca'],
+    nomes: ['rendimento', 'investimento', 'juros'],
+  },
+  {
+    palavras: ['reembolso', 'devolucao', 'ressarcimento'],
+    nomes: ['reembolso', 'devolucao'],
+  },
+]
+
+/**
+ * A categoria pela descrição, em ordem (a primeira que decide vence):
+ * 1. **histórico** — a linha mais recente com a mesma descrição normalizada e categoria;
+ * 2. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
+ *    duas categorias com o mesmo número de palavras casadas é empate, e ninguém vence;
+ * 3. **palavra** — a linha mais recente com a mesma `palavraSignificativa` e categoria;
+ * 4. **comum** — uma palavra conhecida (`COMUNS`) leva ao nome de categoria que a abriga.
+ * Só valem as categorias de `categorias` do `tipo`: uma apagada no histórico não volta.
+ */
+export function casarCategoria(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+  historico: LinhaHistorico[],
+): { categoryId: string; motivo: MotivoDaCategoria } | null {
+  const doTipo = categorias.filter((c) => c.type === tipo)
+  if (!doTipo.length) return null
+  const ids = new Set(doTipo.map((c) => c.id))
+  const linhas = historico.filter((l) => l.type === tipo && l.description && l.category_id && ids.has(l.category_id))
+
+  const alvo = normalizarDescricao(descricao)
+  const exata = alvo ? maisRecente(linhas.filter((l) => normalizarDescricao(l.description!) === alvo)) : null
+  if (exata) return { categoryId: exata.category_id!, motivo: 'historico' }
+
+  const daDescricao = palavrasDe(descricao)
+  let melhor: CategoriaParaCasar | null = null
+  let pontos = 0
+  let empate = false
+  for (const c of doTipo) {
+    const n = [...palavrasDe(c.name)].filter((p) => daDescricao.has(p)).length
+    if (n > pontos) {
+      melhor = c
+      pontos = n
+      empate = false
+    } else if (n > 0 && n === pontos) empate = true
+  }
+  if (melhor && !empate) return { categoryId: melhor.id, motivo: 'nome' }
+
+  const palavra = palavraSignificativa(descricao)
+  const parecida = palavra ? maisRecente(linhas.filter((l) => palavraSignificativa(l.description!) === palavra)) : null
+  if (parecida) return { categoryId: parecida.category_id!, motivo: 'palavra' }
+
+  for (const p of normalizarDescricao(descricao).split(' ')) {
+    const grupo = COMUNS.find((g) => g.palavras.includes(p) || (p.endsWith('s') && g.palavras.includes(p.slice(0, -1))))
+    if (!grupo) continue
+    for (const nome of grupo.nomes) {
+      const achadas = doTipo.filter((c) => palavrasDe(c.name).has(nome))
+      if (achadas.length === 1) return { categoryId: achadas[0].id, motivo: 'comum' }
+      if (achadas.length > 1) return null
+    }
+  }
+  return null
+}
+
+/**
+ * O cartão do "crédito" dito sem nome: o que o formulário pré-escolhe ao tocar
+ * em Crédito (`escolhidoNoForm`: o único ativo, ou o último escolhido na
+ * carteira neste aparelho); sem ele, o da compra no crédito mais recente do
+ * histórico, se o cartão segue ativo. `null` quando nenhum dos dois serve.
+ */
+export function cartaoDoCredito(
+  cartoes: CartaoParaCasar[],
+  historico: LinhaHistorico[],
+  escolhidoNoForm: string | null,
+): CartaoParaCasar | null {
+  const ativos = cartoes.filter((c) => c.is_active)
+  const doForm = ativos.find((c) => c.id === escolhidoNoForm)
+  if (doForm) return doForm
+  const linha = maisRecente(
+    historico.filter((l) => l.payment_method === 'credit_card' && ativos.some((c) => c.id === l.payment_credit_card_id)),
+  )
+  return linha ? ativos.find((c) => c.id === linha.payment_credit_card_id)! : null
 }

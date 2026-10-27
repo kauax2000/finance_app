@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
-import type { CartaoParaCasar } from "@/lib/captura/frase"
+import type { CartaoParaCasar, CategoriaParaCasar } from "@/lib/captura/frase"
 import {
     avisoDaIA,
     camposDaIA,
@@ -14,6 +14,7 @@ import {
 import { comprimirImagem } from "@/lib/anexos"
 import { lerImagemComIA } from "@/lib/ia/ler"
 import { localYmdFromDate } from "@/lib/transaction-date"
+import { cartaoPreEscolhido } from "@/lib/ultimo-cartao"
 
 /**
  * A foto do recibo na criação: a IA lê a foto e preenche os campos, e quem
@@ -23,12 +24,14 @@ import { localYmdFromDate } from "@/lib/transaction-date"
 export function FotoReciboWireframe({
     fotoInicial,
     cartoes,
+    categorias,
     onAplicar,
     onFoto,
 }: {
     /** A foto do compartilhar: lida uma vez, ao montar. */
     fotoInicial?: File
     cartoes: CartaoParaCasar[]
+    categorias: CategoriaParaCasar[]
     onAplicar: (c: CamposDaFrase) => void
     /** A foto comprimida, que o formulário anexa depois do salvar. */
     onFoto: (foto: File) => void
@@ -79,7 +82,10 @@ export function FotoReciboWireframe({
                 setAviso(lido.mensagem)
                 return
             }
-            const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico)
+            const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico, "", {
+                categorias,
+                cartaoAberto: cartaoPreEscolhido(cartoes) || null,
+            })
             onAplicar(c)
             setAviso(avisoDaIA(c))
         } catch (erro) {

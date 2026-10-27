@@ -6,18 +6,24 @@
  */
 import { onlineManager, type QueryClient } from "@tanstack/react-query"
 import {
+    cartaoDoCredito,
     casarCartao,
+    casarCategoria,
     interpretarFrase,
     preencherPeloHistorico,
     type CartaoParaCasar,
+    type CategoriaParaCasar,
     type FormaDePagamento,
     type FraseInterpretada,
     type LinhaHistorico,
+    type MotivoDaCategoria,
 } from "@/lib/captura/frase"
 import type { CamposIA } from "@/lib/ia/ler"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { fraseHistoricoKeys } from "@/lib/queries/keys"
-import type { PaymentMethod } from "@/lib/payment-methods"
+import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
+import { currencyBRL } from "@/lib/formatters"
+import { formatDatePtBr } from "@/lib/transaction-date"
 import { supabase, type TransactionSource } from "@/lib/supabase"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
@@ -37,6 +43,20 @@ export type CamposDaFrase = {
     parcelas: number | null
     /** "valor", "data", "cartao", "parcelas", "descricao"; "ia" quando a IA leu. */
     duvidas: string[]
+    /** Por que essa categoria (o resumo "Entendi" o diz). */
+    motivoDaCategoria: MotivoDaCategoria | null
+    /** "frase": o cartão foi nomeado; "ultimo": o do crédito sem nome; "historico": o da mesma descrição. */
+    origemDoCartao: "frase" | "ultimo" | "historico" | null
+}
+
+/**
+ * O que a frase consulta além dela mesma. Sem `categorias`, a categoria é só a
+ * do histórico (a regra da Edge `capture`); `cartaoAberto` é o que o formulário
+ * pré-escolhe ao tocar em Crédito (`cartaoPreEscolhido`).
+ */
+export type ContextoDaFrase = {
+    categorias?: CategoriaParaCasar[]
+    cartaoAberto?: string | null
 }
 
 /** A forma do parser no vocabulário de `transactions.payment_method`. */
@@ -74,8 +94,9 @@ export function camposDaFrase(
     hoje: string,
     cartoes: CartaoParaCasar[],
     historico: LinhaHistorico[],
+    ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
-    return camposDaInterpretacao(interpretarFrase(texto, hoje), cartoes, historico)
+    return camposDaInterpretacao(interpretarFrase(texto, hoje), cartoes, historico, ctx)
 }
 
 /**
@@ -93,6 +114,7 @@ export function camposDaIA(
     historico: LinhaHistorico[],
     /** A frase que a pessoa escreveu; a foto não tem. */
     texto = "",
+    ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
     const f = interpretarFrase(texto, hoje)
     const forma = c.forma ?? f.forma
@@ -116,28 +138,44 @@ export function camposDaIA(
         },
         cartoes,
         historico,
+        ctx,
     )
     return { ...campos, duvidas: [...campos.duvidas, "ia"] }
 }
 
+/**
+ * As regras da frase no formulário (docs/JORNADAS.md, "Frase rápida"):
+ * - **Forma e cartão**, nesta ordem: o cartão nomeado ("nubank") é crédito nele;
+ *   a forma dita ("pix", "débito"); "crédito"/"cartão" sem nome é o cartão que o
+ *   formulário pré-escolhe ao tocar em Crédito, senão o do último crédito do
+ *   histórico (`cartaoDoCredito`); parcelas ("em 3x") sem forma dita são crédito
+ *   nesse mesmo cartão, quando há um; por último, a forma e o cartão da mesma
+ *   descrição no histórico.
+ * - **Categoria**: `casarCategoria` (histórico exato, nome da categoria, palavra
+ *   do histórico, palavra comum).
+ * - Um nome de cartão que não casa nenhum volta à descrição e, no crédito, fica
+ *   a conferir sem cartão: palpitar outro cartão ali erraria de propósito.
+ */
 function camposDaInterpretacao(
     f: FraseInterpretada,
     cartoes: CartaoParaCasar[],
     historico: LinhaHistorico[],
+    ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
     let { descricao } = f
     // A dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
-    const duvidas = f.duvidas.filter((d) => d !== "cartao" || f.forma === "credit_card")
+    let duvidas = f.duvidas.filter((d) => d !== "cartao" || f.forma === "credit_card")
     const duvida = (d: string) => {
         if (!duvidas.includes(d)) duvidas.push(d)
     }
 
     const cartao = casarCartao(f.cartaoTexto, cartoes)
     if (f.cartaoTexto && !cartao) {
-        // A palavra volta ao fim da descrição.
+        // A palavra volta ao fim da descrição, como foi escrita.
+        const palavra = f.cartaoPalavra || f.cartaoTexto
         descricao = duvidas.includes("descricao")
-            ? f.cartaoTexto.charAt(0).toUpperCase() + f.cartaoTexto.slice(1)
-            : `${descricao} ${f.cartaoTexto}`
+            ? palavra.charAt(0).toUpperCase() + palavra.slice(1)
+            : `${descricao} ${palavra}`
         if (f.forma === "credit_card") duvida("cartao")
     }
     if (f.estorno && !cartao) duvida("cartao")
@@ -146,30 +184,47 @@ function camposDaInterpretacao(
     if (f.tipo === "income" && f.parcelas != null && f.parcelas > 1) duvida("parcelas")
 
     // Sem descrição de verdade, o histórico não tem o que casar.
-    const doHistorico = duvidas.includes("descricao")
-        ? null
-        : // O estorno no cartão busca a categoria da compra, no histórico de despesa.
-          preencherPeloHistorico(
-              descricao,
-              tipoDaCategoria(f.tipo, f.estorno ? (cartao?.id ?? null) : null),
-              historico,
-          )
+    const semDescricao = duvidas.includes("descricao")
+    // O estorno no cartão busca a categoria da compra, no histórico de despesa.
+    const tipoCategoria = tipoDaCategoria(f.tipo, f.estorno ? (cartao?.id ?? null) : null)
+    const doHistorico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historico)
+    const categoria =
+        semDescricao || !ctx.categorias
+            ? null
+            : casarCategoria(descricao, tipoCategoria, ctx.categorias, historico)
 
     let paymentMethod: PaymentMethod | null = null
     let creditCardId: string | null = null
+    let origemDoCartao: CamposDaFrase["origemDoCartao"] = null
+    const doCredito = () => cartaoDoCredito(cartoes, historico, ctx.cartaoAberto ?? null)
     if (f.tipo === "income") {
         creditCardId = f.estorno ? (cartao?.id ?? null) : null
+        if (creditCardId) origemDoCartao = "frase"
     } else if (cartao) {
         paymentMethod = "credit_card"
         creditCardId = cartao.id
+        origemDoCartao = "frase"
     } else if (f.forma) {
         paymentMethod = FORMA_NO_BANCO[f.forma]
+        // "crédito" sem nome: o cartão de sempre, e não há o que conferir.
+        if (f.forma === "credit_card" && !f.cartaoTexto) {
+            creditCardId = doCredito()?.id ?? null
+            if (creditCardId) {
+                origemDoCartao = "ultimo"
+                duvidas = duvidas.filter((d) => d !== "cartao")
+            }
+        }
+    } else if (f.parcelas != null && f.parcelas > 1 && doCredito()) {
+        paymentMethod = "credit_card"
+        creditCardId = doCredito()!.id
+        origemDoCartao = "ultimo"
     } else if (doHistorico?.paymentMethod) {
         paymentMethod = doHistorico.paymentMethod as PaymentMethod
         // O cartão do histórico só se ainda ativo.
         if (paymentMethod === "credit_card") {
             creditCardId =
                 cartoes.find((c) => c.id === doHistorico.creditCardId && c.is_active)?.id ?? null
+            if (creditCardId) origemDoCartao = "historico"
         }
     }
 
@@ -181,10 +236,59 @@ function camposDaInterpretacao(
         descricao,
         paymentMethod,
         creditCardId,
-        categoryId: doHistorico?.categoryId ?? null,
+        categoryId: ctx.categorias ? (categoria?.categoryId ?? null) : (doHistorico?.categoryId ?? null),
         parcelas: f.parcelas,
         duvidas,
+        motivoDaCategoria: ctx.categorias ? (categoria?.motivo ?? null) : doHistorico?.categoryId ? "historico" : null,
+        origemDoCartao,
     }
+}
+
+const MOTIVO_DA_CATEGORIA: Record<MotivoDaCategoria, string> = {
+    historico: "como da última vez",
+    nome: "pelo nome",
+    palavra: "como uma parecida",
+    comum: "palavra comum",
+}
+
+const ORIGEM_DO_CARTAO: Record<"ultimo" | "historico", string> = {
+    ultimo: "último usado",
+    historico: "como da última vez",
+}
+
+/**
+ * O que a frase entendeu, campo a campo, para a pessoa ver antes de preencher:
+ * "R$ 42,00", "Mercado", "categoria Mercado (pelo nome)", "Crédito · Nubank (último usado)".
+ */
+export function resumoDaFrase(
+    c: CamposDaFrase,
+    hoje: string,
+    categorias: { id: string; name: string }[],
+    cartoes: { id: string; name: string }[],
+): string[] {
+    const itens: string[] = []
+    itens.push(c.valor != null ? currencyBRL(c.valor) : "sem valor")
+    if (c.estorno) itens.push("estorno")
+    else if (c.tipo === "income") itens.push("receita")
+    itens.push(c.duvidas.includes("descricao") ? "sem descrição" : c.descricao)
+    const categoria = categorias.find((x) => x.id === c.categoryId)
+    itens.push(
+        categoria
+            ? `categoria ${categoria.name}${c.motivoDaCategoria ? ` (${MOTIVO_DA_CATEGORIA[c.motivoDaCategoria]})` : ""}`
+            : "sem categoria",
+    )
+    const cartao = cartoes.find((x) => x.id === c.creditCardId)
+    const origem = c.origemDoCartao === "ultimo" || c.origemDoCartao === "historico" ? ` (${ORIGEM_DO_CARTAO[c.origemDoCartao]})` : ""
+    if (c.estorno) itens.push(cartao ? `no cartão ${cartao.name}` : "cartão a escolher")
+    else if (c.paymentMethod === "credit_card") itens.push(`Crédito · ${cartao ? `${cartao.name}${origem}` : "cartão a escolher"}`)
+    else if (c.paymentMethod) itens.push(paymentMethodLabel(c.paymentMethod))
+    if (c.parcelas != null && c.parcelas > 1 && c.tipo === "expense") {
+        // A parcela arredondada, como o resumo do plano no formulário.
+        const parcela = c.valor != null ? ` de ${currencyBRL(Math.round((c.valor * 100) / c.parcelas) / 100)}` : ""
+        itens.push(`em ${c.parcelas}x${parcela}`)
+    }
+    if (c.data !== hoje) itens.push(formatDatePtBr(c.data))
+    return itens
 }
 
 /**

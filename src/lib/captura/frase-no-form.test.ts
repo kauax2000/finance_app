@@ -5,7 +5,7 @@ import type { CartaoParaCasar, LinhaHistorico } from "@/lib/captura/frase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-const { camposDaFrase, origemDaFrase, rascunhoDaFrase } = await import("@/lib/captura/frase-no-form")
+const { camposDaFrase, origemDaFrase, rascunhoDaFrase, resumoDaFrase } = await import("@/lib/captura/frase-no-form")
 const { shouldPersistQuery } = await import("@/lib/queries/persist")
 const { fraseHistoricoKeys } = await import("@/lib/queries/keys")
 const { buildTransactionRow } = await import("@/lib/transactions/mutations")
@@ -261,4 +261,72 @@ describe("fonte", () => {
     })
 
     // O manifest (POST multipart desde o 3B) é conferido em compartilhado.test.ts.
+})
+
+describe("regras da frase com categorias e o cartão de sempre", () => {
+    const inter: CartaoParaCasar = { ...nubank, id: "card-inter", name: "Inter", last_four: "2222" }
+    const categorias = [
+        { id: "cat-mercado", name: "Mercado", type: "expense" as const },
+        { id: "cat-transporte", name: "Transporte", type: "expense" as const },
+    ]
+
+    it("\"crédito\" sem nome usa o cartão que o formulário pré-escolhe, sem dúvida", () => {
+        const c = camposDaFrase("30 uber crédito", HOJE, [nubank, inter], [], { categorias, cartaoAberto: "card-inter" })
+        expect(c.paymentMethod).toBe("credit_card")
+        expect(c.creditCardId).toBe("card-inter")
+        expect(c.origemDoCartao).toBe("ultimo")
+        expect(c.duvidas).toEqual([])
+        expect(c.categoryId).toBe("cat-transporte")
+        expect(c.motivoDaCategoria).toBe("comum")
+    })
+
+    it("sem pré-escolha, o cartão do último crédito do histórico", () => {
+        const hist = [linha({ payment_method: "credit_card", payment_credit_card_id: "card-nu" })]
+        const c = camposDaFrase("30 uber no cartão", HOJE, [nubank, inter], hist, { categorias })
+        expect(c.creditCardId).toBe("card-nu")
+    })
+
+    it("sem cartão nenhum, o crédito fica a conferir", () => {
+        const c = camposDaFrase("30 uber crédito", HOJE, [nubank, inter], [], { categorias })
+        expect(c.creditCardId).toBeNull()
+        expect(c.duvidas).toContain("cartao")
+    })
+
+    it("um nome de cartão que não casa não vira o cartão de sempre", () => {
+        const c = camposDaFrase("30 uber crédito itau", HOJE, [nubank], [], { categorias, cartaoAberto: "card-nu" })
+        expect(c.creditCardId).toBeNull()
+        expect(c.duvidas).toContain("cartao")
+    })
+
+    it("parcelas sem forma dita são crédito no cartão de sempre", () => {
+        const c = camposDaFrase("1200 tv em 10x", HOJE, [nubank], [], { categorias, cartaoAberto: "card-nu" })
+        expect(c.paymentMethod).toBe("credit_card")
+        expect(c.creditCardId).toBe("card-nu")
+    })
+
+    it("a forma dita vence o cartão de sempre", () => {
+        const c = camposDaFrase("42 mercado pix", HOJE, [nubank], [], { categorias, cartaoAberto: "card-nu" })
+        expect(c.paymentMethod).toBe("pix")
+        expect(c.creditCardId).toBeNull()
+        expect(c.categoryId).toBe("cat-mercado")
+        expect(c.motivoDaCategoria).toBe("nome")
+    })
+
+    it("o resumo diz o que entendeu e de onde veio", () => {
+        const c = camposDaFrase("42 mercado crédito ontem", HOJE, [nubank], [], { categorias, cartaoAberto: "card-nu" })
+        expect(resumoDaFrase(c, HOJE, categorias, [nubank])).toEqual([
+            "R$\u00a042,00",
+            "Mercado",
+            "categoria Mercado (pelo nome)",
+            "Crédito · Nubank (último usado)",
+            "09/04/2026",
+        ])
+    })
+})
+
+it("o resumo do parcelado mostra a parcela, e a parcela dita vira o total", () => {
+    const c = camposDaFrase("Kimono parcela 100 4x", HOJE, [], [])
+    expect(c.valor).toBe(400)
+    expect(camposDaFrase("Kimono parcela 100 4x Kauã", HOJE, [], []).descricao).toBe("Kimono Kauã")
+    expect(resumoDaFrase(c, HOJE, [], [])).toContain("em 4x de R$\u00a0100,00")
 })
