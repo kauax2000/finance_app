@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em dezoito jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em dezenove jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7B, que chegou a trazer o gasto privado e hoje é só o titular do cartão: o titular escolhido pelo dono entre os adultos da carteira e a conferência da fatura e o PDF de um cartão com titular abertos só ao titular e ao dono, com os avisos de dado do banco só a eles, as telas em wireframe e ainda não publicado (`supabase/BLOCO_7B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7C, "projetos, modelos de carteira e divisão da conta": a regra de escolha entre projeto e carteira, os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento (e o "Criar a Casa" do primeiro uso), o projeto (`/projetos`, com o resumo e o arquivar), a carteira de projeto sem Previsão nem orçamento do mês, e a divisão por quem pagou: o modo da carteira, os pesos, as partes que o banco gera, o saldo e o acerto, com as telas em wireframe, nenhuma Edge nova e ainda não publicado (`supabase/BLOCO_7C_DEPLOYMENT.md`). Em 2026-10-26 entrou o Bloco 8, "cobrança pelo Asaas": o assinar de verdade em `/plans` (o formulário com nome e CPF, a fatura de 12x do Asaas, a volta por `/plans?pago=1` e o "Continuar o pagamento"), o webhook do Asaas, a renovação pelo token do cartão a partir de dois dias antes do fim, o aviso de renovação e o do cartão recusado, cancelar e desfazer em 1 toque, o reembolso dos 7 dias, a devolução da cobrança em dobro e a NFS-e, com as telas em wireframe, três Edges novas (`billing-checkout`, `asaas-webhook` e `billing-cancel`) e a `billing-daily` estendida, ainda não publicado (`supabase/BLOCO_8_DEPLOYMENT.md`). Em 2026-10-26 entrou o Bloco 9, "correções antes do lançamento": o gasto privado saiu (numa carteira todo adulto vê todos os gastos) e ficou o titular do cartão, que o banco solta quando a pessoa sai da carteira; o convite por link recusa quem saiu como convidado; a captura reenviada de uma compra parcelada dá um plano só; o vencimento do cartão passa a ser o primeiro depois do fechamento, no mesmo mês quando cabe; o estorno no cartão escolhe uma categoria de despesa e a abate; a só leitura cobre projetos, pesos e limites; "Apagar um" mantém o lançamento com anexo; o cliente do Asaas é atualizado a cada compra; e os avisos de cobrança de texto fixo não se perdem, ainda não publicado (`supabase/BLOCO_9_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7B, que chegou a trazer o gasto privado e hoje é só o titular do cartão: o titular escolhido pelo dono entre os adultos da carteira e a conferência da fatura e o PDF de um cartão com titular abertos só ao titular e ao dono, com os avisos de dado do banco só a eles, as telas em wireframe e ainda não publicado (`supabase/BLOCO_7B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7C, "projetos, modelos de carteira e divisão da conta": a regra de escolha entre projeto e carteira, os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento (e o "Criar a Casa" do primeiro uso), o projeto (`/projetos`, com o resumo e o arquivar), a carteira de projeto sem Previsão nem orçamento do mês, e a divisão por quem pagou: o modo da carteira, os pesos, as partes que o banco gera, o saldo e o acerto, com as telas em wireframe, nenhuma Edge nova e ainda não publicado (`supabase/BLOCO_7C_DEPLOYMENT.md`). Em 2026-10-26 entrou o Bloco 8, "cobrança pelo Asaas": o assinar de verdade em `/plans` (o formulário com nome e CPF, a fatura de 12x do Asaas, a volta por `/plans?pago=1` e o "Continuar o pagamento"), o webhook do Asaas, a renovação pelo token do cartão a partir de dois dias antes do fim, o aviso de renovação e o do cartão recusado, cancelar e desfazer em 1 toque, o reembolso dos 7 dias, a devolução da cobrança em dobro e a NFS-e, com as telas em wireframe, três Edges novas (`billing-checkout`, `asaas-webhook` e `billing-cancel`) e a `billing-daily` estendida, ainda não publicado (`supabase/BLOCO_8_DEPLOYMENT.md`). Em 2026-10-26 entrou o Bloco 9, "correções antes do lançamento": o gasto privado saiu (numa carteira todo adulto vê todos os gastos) e ficou o titular do cartão, que o banco solta quando a pessoa sai da carteira; o convite por link recusa quem saiu como convidado; a captura reenviada de uma compra parcelada dá um plano só; o vencimento do cartão passa a ser o primeiro depois do fechamento, no mesmo mês quando cabe; o estorno no cartão escolhe uma categoria de despesa e a abate; a só leitura cobre projetos, pesos e limites; "Apagar um" mantém o lançamento com anexo; o cliente do Asaas é atualizado a cada compra; e os avisos de cobrança de texto fixo não se perdem, ainda não publicado (`supabase/BLOCO_9_DEPLOYMENT.md`). Em 2026-10-27 entrou o MCP, "conectar uma IA": a Edge `mcp` (oito ferramentas de leitura e o `registrar_lancamento`), o consentimento OAuth em `/oauth/consent` e o bloco "IAs conectadas" em Minha conta, com as telas em wireframe, o lançamento da IA caindo na conferência do Bloco 9 e ainda não publicado (`supabase/MCP_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -54,7 +54,8 @@ banco.
 16. [Limite por pessoa](#16-limite-por-pessoa)
 17. [Titular do cartão](#17-titular-do-cartão)
 18. [Projetos, modelos de carteira e divisão](#18-projetos-modelos-de-carteira-e-divisão)
-19. [Lacunas encontradas](#19-lacunas-encontradas)
+19. [Conectar uma IA](#19-conectar-uma-ia)
+20. [Lacunas encontradas](#20-lacunas-encontradas)
 
 ---
 
@@ -150,6 +151,11 @@ flowchart LR
     G18 -->|"a carteira de projeto não copia orçamento"| G9
     G18 -.->|"a carteira de projeto não tem previsão: o link do seguro some"| G13
     G15 -->|"o convidado não vê projetos, partes nem saldo; o responsável paga por ele"| G18
+
+    G10 -->|"IAs conectadas: a URL do MCP, a lista e Revogar"| G19(("G19 Conectar uma IA"))
+    G1 -->|"sem sessão no consentimento: /login?next=… e volta"| G19
+    G19 -->|"a IA registra um lançamento: source ia_externa, needs_review"| G5
+    G19 -->|"a IA lê faturas, contas, assinaturas e orçamentos"| G6
 ```
 
 ---
@@ -1982,7 +1988,95 @@ flowchart TD
 
 ---
 
-## 19. Lacunas encontradas
+## 19. Conectar uma IA
+
+O MCP do app (Model Context Protocol): o endereço `…/functions/v1/mcp` que
+Claude, ChatGPT ou o Claude Code usam como conector. A IA lê as carteiras da
+pessoa (carteiras, categorias, lançamentos, resumo e orçamentos do mês,
+faturas dos cartões, contas a pagar e assinaturas) e tem **uma** escrita,
+`registrar_lancamento`, que grava sempre com `source = 'ia_externa'` e
+`needs_review = true`, e por isso cai na conferência do Bloco 9. O
+login é um OAuth do Supabase Auth (servidor OAuth e registro dinâmico de
+cliente); a única tela do app no meio é o consentimento, `/oauth/consent`,
+em wireframe, que mora dentro de `(app)`. Dois caminhos: conectar (19a) e
+revogar em Minha conta (19b). **Nada foi publicado:** o servidor OAuth está
+desligado em produção (`feature_disabled`) e é um passo do dono no painel
+(`supabase/MCP_DEPLOYMENT.md`).
+
+### 19a. Conectar e usar
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    ia(["A IA: Claude, ChatGPT ou Claude Code, com a URL do conector"]) --> semToken[("Edge mcp sem token: 401 com www-authenticate apontando para oauth-protected-resource")]
+    semToken --> descoberta[("Descoberta: /functions/v1/mcp/oauth-protected-resource e /auth/v1/.well-known/oauth-authorization-server")]
+    descoberta -.->|"OAuth Server desligado: feature_disabled"| semOauth(["A IA não consegue conectar"])
+    descoberta --> registro[("Registro dinâmico do cliente, no Auth")]
+    registro --> autorizar[("/auth/v1/oauth/authorize")]
+    autorizar --> consent["/oauth/consent?authorization_id=…"]
+    consent --> sessao{"Tem sessão?"}
+    sessao -->|"não"| login["/login?next=/oauth/consent?authorization_id=…"]
+    login -->|"entrou"| consent
+    login -.-> G1(("G1 Acesso"))
+    sessao -->|"sim"| detalhes[("getAuthorizationDetails")]
+    detalhes -->|"erro"| erroDetalhes(["Não foi possível abrir o pedido"])
+    detalhes -->|"IA já aprovada antes: redirect_url"| volta(["Volta à IA pelo redirect_url"])
+    detalhes -->|"IA nova"| pergunta(["WIREFRAME Consentimento: o nome da IA, o que ela poderá fazer, Permitir e Recusar"])
+    pergunta -->|"Permitir"| aprovar[("approveAuthorization")]
+    pergunta -->|"Recusar"| negar[("denyAuthorization")]
+    aprovar -->|"erro ou sem redirect_url"| pergunta
+    aprovar -->|"sucesso"| volta
+    negar --> volta
+    volta -->|"a IA troca o código por um token"| chamadas[("Edge mcp com o token da pessoa: o RLS vale")]
+    chamadas -->|"oito ferramentas de leitura"| leitura(["A IA responde com os dados das carteiras da pessoa"])
+    chamadas -->|"registrar_lancamento"| escrita{"Parcelado?"}
+    escrita -->|"não"| insere[("insert em transactions: source ia_externa, needs_review, capture_meta via mcp")]
+    escrita -->|"sim"| plano[("RPC create_workspace_installment_plan e update das parcelas")]
+    insere --> avalia[("evaluate-budgets e evaluate-credit-card-alerts, com o JWT da pessoa")]
+    plano --> avalia
+    avalia --> G5(("G5 Lançamentos: A conferir"))
+    chamadas -.->|"plano em só leitura: workspace_somente_leitura"| barrado(["A IA recebe a frase: sua carteira está só leitura"])
+    leitura -.-> G6(("G6 Cartões e faturas"))
+```
+
+### 19b. IAs conectadas, em Minha conta
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    account["/account"] --> ias(["WIREFRAME IAs conectadas: a URL do MCP com copiar, três instruções e a lista"])
+    ias -->|"Copiar a URL"| copiado(["URL na área de transferência"])
+    ias --> grants[("listGrants")]
+    grants -->|"erro"| erroLista(["Não foi possível carregar as conexões"])
+    grants --> lista{"Alguma IA conectada?"}
+    lista -->|"não"| vazio(["Nenhuma IA conectada"])
+    lista -->|"sim"| linha(["Cada IA e desde quando, com Revogar"])
+    linha -->|"Revogar"| confirma(["Confirmação do navegador: ela perde o acesso na hora"])
+    confirma -->|"cancelar"| linha
+    confirma -->|"confirmar"| revogar[("revokeGrant")]
+    revogar -->|"erro"| erroRevoga(["A frase de erro, e a lista fica"])
+    revogar -->|"sucesso"| ias
+    revogar -.->|"a IA volta a receber 401 e pede o consentimento de novo"| G19a(("19a Conectar"))
+    ias -.-> G10(("G10 Conta"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| A Edge `mcp` | Servidor MCP sem estado (um `McpServer` novo por requisição) em `https://<ref>.supabase.co/functions/v1/mcp`, com `createMcpHandler` e `withSupabase({ auth: 'user' })`. `verify_jwt = false` no `config.toml`, porque a descoberta chega sem token; quem confere o token é o `withSupabase`. Sem token: 401 com `www-authenticate: Bearer resource_metadata=".../functions/v1/mcp/oauth-protected-resource"` | `supabase/functions/mcp/index.ts`, `supabase/config.toml` |
+| O login | OAuth do Supabase Auth (servidor OAuth e registro dinâmico de cliente), **desligado em produção** hoje: `/auth/v1/.well-known/oauth-authorization-server` responde `feature_disabled`. Ligar, definir o Authorization Path `/oauth/consent` e conferir a Site URL é passo do dono no painel; o projeto já assina o JWT em ES256 | `supabase/MCP_DEPLOYMENT.md` |
+| A rota `/oauth/consent` | Dentro de `(app)`: sem sessão, o `AuthGuard` leva a `/login?next=/oauth/consent?authorization_id=…` e a pessoa volta depois de entrar. `getAuthorizationDetails` com `redirect_url` (IA já aprovada) redireciona direto; senão pergunta. `approveAuthorization` e `denyAuthorization` devolvem o `redirect_url` que o navegador segue. O wireframe mostra o nome da IA e o que ela poderá fazer, sem escolher carteira | `src/app/(app)/oauth/consent/`, `src/components/wireframe/mcp-consentimento-wireframe.tsx`, `src/components/layout/auth-guard.tsx` |
+| O alcance | O token é o da pessoa e o RLS vale: a IA vê todas as carteiras em que a pessoa participa, sem escolher carteira no consentimento. Ler é liberado em qualquer plano; escrever segue o gatilho de plano que já existe. Sem `carteira_id`, a ferramenta usa a carteira pessoal (ou a primeira) e diz qual usou | `supabase/functions/mcp/index.ts` |
+| As oito de leitura | `listar_carteiras`, `listar_categorias`, `listar_lancamentos`, `resumo_do_mes`, `orcamentos_do_mes`, `faturas_dos_cartoes`, `contas_a_pagar` e `assinaturas`, todas com `readOnlyHint`. Valores em reais como número e a string BRL; o cálculo é função pura testada | `supabase/functions/_shared/mcp/` |
+| `registrar_lancamento` | A única escrita, com campos separados (sem frase livre nem Groq). Insere em `transactions` com `source = 'ia_externa'`, `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`. Parcelado chama a RPC `create_workspace_installment_plan`, a mesma do formulário, e depois um `update` das parcelas do plano grava as três marcas. Depois de uma despesa chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário; a falha deles é engolida (lacuna 101). A carteira em só leitura devolve a frase "sua carteira está só leitura no plano atual". Sem idempotência por `client_id` (lacuna 102) | `supabase/functions/mcp/index.ts`, `supabase/functions/_shared/mcp/lancamento.ts` |
+| A origem `ia_externa` | A migração acrescenta `ia_externa` ao check de `transactions.source`. É ela e o `needs_review` que levam o lançamento à lista "A conferir" (G5c) e ao Painel, como os da captura | `supabase/migrations/20261103120000_mcp.sql` |
+| IAs conectadas | Bloco em `/account`, ao lado dos tokens de captura: a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) com copiar, três instruções (Claude, ChatGPT e `claude mcp add`), `listGrants` e `revokeGrant` com a confirmação do navegador | `src/app/(app)/account/page-client.tsx`, `src/components/wireframe/ias-conectadas-wireframe.tsx` |
+| A ponte com a conferência | O lançamento da IA entra pela marca `needs_review` na conferência do Bloco 9: a pessoa vê o que a IA lançou e confirma ou apaga. Não há aviso nem bloqueio extra por ser da IA | G5c |
+
+---
+
+## 20. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -2061,6 +2155,9 @@ continuam aqui para registro.
 | 93 | G3, G11 | Um aviso já entregue por push ou e-mail não se recolhe: se o fato muda depois (o lançamento apagado, o insight resolvido, o estorno desfeito), o texto que saiu continua com a pessoa. O `billing_avisos.pendente` só reenvia o que falhou na entrega. |
 | 98 | G5 | A importação por conta sugere a categoria pelo histórico sem olhar o tipo: um crédito pode ganhar a categoria de despesa de um débito parecido. Já era assim antes do Bloco 9. |
 | 99 | G2, G3, G4, G5, G6, G11, G14 | O Bloco 9 (correções antes do lançamento) e o 9b (as lacunas 94 a 97) estão no repositório e **nada foi publicado**. A Edge `workspace-invites-accept` sobe antes da migração `20261102120000_bloco9.sql`, a `capture` depois dela, e as de cobrança e as demais só com o 2.0 em `main`; a migração `20261102120000_bloco9.sql` (editada no lugar, com `billing_avisos.tentativas`) e as Edges `capture`, `credit-card-calendar-alerts` e `billing-daily` do 9b seguem a mesma ordem; o `bloco9.test.sql` (21 asserções) roda no projeto de teste: `supabase/BLOCO_9_DEPLOYMENT.md`. |
+| 100 | G19 | O MCP (conectar uma IA: a Edge `mcp`, o consentimento `/oauth/consent` e as IAs conectadas em Minha conta) está no repositório, com as telas em wireframe, e **nada foi publicado**. O servidor OAuth do Auth está desligado em produção (`feature_disabled`) e ligá-lo é passo do dono no painel. O fluxo OAuth nunca rodou de verdade: não há stack local nem banco de teste, e o primeiro teste de ponta a ponta no Claude e no ChatGPT é do roteiro. Também não está conferido que `supabase functions deploy mcp` resolve os imports `npm:` sem um `deno.json` (com falha, `--use-api`) nem que `/functions/v1/mcp/oauth-protected-resource` responde: `supabase/MCP_DEPLOYMENT.md`. |
+| 101 | G19 | O `registrar_lancamento` chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o token OAuth da IA, e a falha é engolida. Não está conferido que as duas Edges aceitam esse token: se recusarem, o lançamento da IA grava e o aviso de orçamento ou de fatura não sai. |
+| 102 | G19 | O `registrar_lancamento` não tem idempotência por `client_id`: uma IA que repete a chamada cria dois lançamentos. O `needs_review` põe os dois na conferência, onde a pessoa apaga o repetido. |
 
 ### Fechadas no Bloco 9b (26/out/2026)
 

@@ -1,0 +1,219 @@
+# Publicar o MCP: conectar uma IA
+
+Reúne o que o MCP (`docs/superpowers/specs/2026-10-27-mcp-conectar-ia-design.md`)
+pôs no repositório:
+
+- a Edge `mcp` (`supabase/functions/mcp/index.ts`), em
+  `https://<ref>.supabase.co/functions/v1/mcp`, com `[functions.mcp]
+  verify_jwt = false` no `config.toml` (a descoberta OAuth chega sem token; quem
+  confere o token é o `withSupabase`). Sem token, responde 401 com
+  `www-authenticate: Bearer resource_metadata=".../functions/v1/mcp/oauth-protected-resource"`;
+- as oito ferramentas de leitura (`listar_carteiras`, `listar_categorias`,
+  `listar_lancamentos`, `resumo_do_mes`, `orcamentos_do_mes`,
+  `faturas_dos_cartoes`, `contas_a_pagar` e `assinaturas`) e a única escrita,
+  `registrar_lancamento`: insere em `transactions` com `source = 'ia_externa'`,
+  `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`; o
+  parcelado passa pela RPC `create_workspace_installment_plan` e por um `update`
+  das parcelas do plano; depois de uma despesa chama `evaluate-budgets` e
+  `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário do app;
+- a migração `20261103120000_mcp.sql`, que só acrescenta `ia_externa` ao check
+  de `transactions.source`;
+- no front do 2.0: a rota `/oauth/consent` (consentimento, em
+  `src/app/(app)/oauth/consent/`, wireframe `mcp-consentimento-wireframe.tsx`) e
+  o bloco "IAs conectadas" em `/account` (wireframe
+  `ias-conectadas-wireframe.tsx`: a URL do MCP com copiar, as instruções,
+  `listGrants` e `revokeGrant`);
+- a ponte: o lançamento da IA entra na conferência do Bloco 9 por causa do
+  `needs_review`.
+
+**Estado em 27/10/2026: nada publicado.** O front do `finance-app-2.0` também
+não: ele só vai para `main`, e para produção, quando os blocos planejados
+estiverem prontos (decisão do dono). **O banco de desenvolvimento é o de
+produção:** nada deste roteiro roda sem o pedido explícito do dono.
+
+**O fluxo OAuth nunca rodou de verdade.** Não há stack local (a CLI roda sem
+Docker nesta máquina) nem banco de teste, então só os testes de lógica
+(`npm run test:edge`) e o `deno check` passaram. Tudo o que depende do Auth
+real está na lista do §5 e é conferido na hora da publicação.
+
+**Nunca rode `supabase config push`.** Ele reescreve a configuração inteira do
+projeto de produção a partir do `config.toml` local (que não tem o bloco
+`[auth.oauth_server]`) e pode desfazer ajustes feitos no painel. O servidor
+OAuth se liga **só pelo painel** (§2). O `config.toml` local ganhou apenas o
+`[functions.mcp]`.
+
+Faça na ordem. O marcador é `<ref>` (o identificador do projeto, o mesmo da URL
+do Supabase). **Nunca** salve no repositório um id, uma chave, uma URL de
+projeto, o SQL preenchido ou o resultado de uma conferência: o repositório é
+público.
+
+## 0. Pré-requisitos
+
+- **A CLI** do Homebrew, 2.121 ou mais nova, com o projeto ligado
+  (`supabase link`, uma vez só). Sem Docker nesta máquina, as funções sobem pela
+  API (`--use-api`).
+- **O JWT em ES256.** O `withSupabase` exige a chave assimétrica. O projeto já
+  assina em ES256 (o JWKS público responde uma chave EC, conferido em
+  2026-10-27): nada a fazer, só reconferir se o projeto tiver mudado.
+- **O OAuth Server está desligado hoje.**
+  `/auth/v1/.well-known/oauth-authorization-server` responde `feature_disabled`.
+  É o §2 que o liga.
+- **Antes de publicar, localmente:**
+
+  ```bash
+  deno check --node-modules-dir=none supabase/functions/mcp/index.ts
+  npm run test:edge
+  npx tsc --noEmit && npm run lint && npm run test:unit
+  ```
+
+  Os três passam no repositório. O `--node-modules-dir=none` evita que o Deno
+  procure o `node_modules` do Next.
+
+## 1. A migração
+
+Só acrescenta `ia_externa` ao check de `source`. Compatível com o front de
+`main`, que não conhece o valor, mas também não o escreve.
+
+```bash
+supabase db push
+```
+
+Aplica `20261103120000_mcp.sql` (e qualquer migração anterior ainda pendente,
+em ordem: confira `supabase migration list` antes). Conferência no SQL Editor:
+
+```sql
+select pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'public.transactions'::regclass
+  and conname like '%source%';
+```
+
+Esperado: a lista de origens inclui `'ia_externa'`. Não salve o resultado no
+repositório.
+
+## 2. Ligar o servidor OAuth (passo do dono, no painel)
+
+Painel do Supabase › Authentication › OAuth Server:
+
+1. **Ligar** o OAuth Server.
+2. **Authorization Path:** `/oauth/consent`.
+3. **Ligar o Dynamic Client Registration.**
+4. Conferir **Site URL** (Authentication › URL Configuration) = a origem de
+   produção do app. O consentimento mora lá: o Auth manda a pessoa para
+   `<Site URL>/oauth/consent?authorization_id=…`.
+
+Conferência (sem token, de qualquer lugar):
+
+```bash
+curl -s https://<ref>.supabase.co/auth/v1/.well-known/oauth-authorization-server
+```
+
+Esperado: um JSON com `issuer`, `authorization_endpoint`, `token_endpoint` e
+`registration_endpoint`. **Não** pode mais responder `feature_disabled`.
+
+## 3. A Edge Function
+
+Acrescente `mcp` ao `supabase:deploy:functions` do `package.json` (já está) e
+publique só ela:
+
+```bash
+supabase functions deploy mcp
+```
+
+A função importa `npm:@modelcontextprotocol/server`, `npm:@supabase/server`,
+`npm:@supabase/middleware` e `npm:zod`. **Não está conferido** que o `deploy`
+resolve esses imports `npm:` sem um `deno.json`. Se o empacotamento falhar,
+tente de novo pela API, como as outras Edges desta máquina:
+
+```bash
+supabase functions deploy mcp --use-api
+```
+
+Se ainda assim falhar, pare e leve o erro ao dono: a saída provável é um
+`deno.json` com `imports` ao lado da função, que é mudança de código.
+
+Conferência da função no ar:
+
+```bash
+# sem token: 401 com o cabeçalho que aponta para a descoberta
+curl -si https://<ref>.supabase.co/functions/v1/mcp | head -n 12
+
+# a descoberta do recurso protegido
+curl -s https://<ref>.supabase.co/functions/v1/mcp/oauth-protected-resource
+```
+
+Esperado no primeiro: `HTTP/2 401` e um
+`www-authenticate: Bearer resource_metadata="https://<ref>.supabase.co/functions/v1/mcp/oauth-protected-resource"`.
+Esperado no segundo: um JSON com `resource` e `authorization_servers`. **Não
+está conferido** que o caminho `/functions/v1/mcp/oauth-protected-resource`
+responde (o `withOAuthProtectedResource` o monta, mas nunca foi chamado no ar):
+se der 404, o problema é o roteamento da função, não o Auth.
+
+## 4. O front
+
+O front do 2.0 (a rota `/oauth/consent` e o bloco "IAs conectadas") só vai
+quando o 2.0 for para `main`. Sem ele, o §2 funciona, mas o Auth manda a pessoa
+para uma rota que não existe. **Não conecte nenhuma IA antes do front.**
+
+Depois do deploy do front, conferência:
+
+```bash
+curl -sI https://<origem do app>/oauth/consent | head -n 5
+```
+
+Esperado: 200 (a página existe; sem `authorization_id` ela mostra o erro, e sem
+sessão leva ao login).
+
+## 5. O que ainda não foi conferido
+
+Isto é o que as revisões das tarefas deixaram como não verificado. Cada item é
+uma checagem desta publicação:
+
+1. **O `deploy` com os imports `npm:`** sem `deno.json` (§3). Se falhar, tente
+   `--use-api`.
+2. **O `oauth-protected-resource`** responde em
+   `/functions/v1/mcp/oauth-protected-resource` (§3).
+3. **O token OAuth nos avaliadores.** `evaluate-budgets` e
+   `evaluate-credit-card-alerts` são chamados pelo `registrar_lancamento` com o
+   token OAuth da IA, e a falha é engolida de propósito (o lançamento já está
+   salvo). Se as duas recusarem esse token, o aviso de orçamento ou de fatura
+   não sai e **nada acusa**. Confira no teste do §6: lance uma despesa que
+   cruze 80% de um orçamento e veja o aviso no sino; veja também os logs das
+   duas funções (Edge Functions › Logs) por 401/403 vindos do `mcp`.
+4. **O primeiro teste de ponta a ponta** no Claude e no ChatGPT (§6): o registro
+   dinâmico, o consentimento e a troca do código pelo token nunca rodaram.
+
+## 6. O teste, no Claude e no ChatGPT
+
+Use uma carteira de teste e uma conta sua. O lançamento de teste cai na
+conferência: apague-o depois.
+
+1. **Claude** (claude.ai): Configurações › Conectores › Adicionar conector
+   personalizado › a URL `https://<ref>.supabase.co/functions/v1/mcp` (o bloco
+   "IAs conectadas" de `/account` a mostra e copia). Conectar abre o login e o
+   consentimento do app: confira o nome do cliente e **Permitir**.
+2. **ChatGPT:** Configurações › Conectores, com o modo desenvolvedor ligado ›
+   criar um conector com a mesma URL, autenticação OAuth.
+3. **Claude Code:** `claude mcp add --transport http finance-app https://<ref>.supabase.co/functions/v1/mcp`
+   e `/mcp` para autenticar.
+4. Peça uma leitura ("quanto gastei este mês por categoria?") e confira o
+   número contra o app.
+5. Peça `registrar_lancamento` ("registre uma despesa de R$ 1,00 chamada teste
+   MCP"). Confira em Lançamentos › A conferir: o lançamento está lá, com a
+   origem da IA. Apague-o.
+6. Peça um parcelado ("em 3x") e confira as três parcelas, todas marcadas a
+   conferir; apague o plano.
+7. Em `/account` › IAs conectadas, a IA aparece com a data. **Revogar**: a
+   próxima chamada da IA tem de voltar 401 e pedir o consentimento de novo.
+8. Recuse uma vez (**Recusar** no consentimento) e confirme que a IA volta com
+   o erro de acesso negado, sem criar conexão na lista.
+
+## 7. Desfazer
+
+- **A IA some:** `Revogar` em Minha conta, ou desligar o OAuth Server no painel
+  (nenhuma IA consegue mais um token novo).
+- **A Edge:** `supabase functions delete mcp` tira o endpoint do ar. O
+  lançamento que a IA criou fica, e é apagado pela conferência.
+- **A migração** só acrescenta um valor ao check: não precisa de volta. Se
+  alguma linha já usa `ia_externa`, tirar o valor do check reprovaria a linha.
+- **Nunca** `supabase config push`, nem para desfazer.
