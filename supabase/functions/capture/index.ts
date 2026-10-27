@@ -351,20 +351,33 @@ Deno.serve(async (req: Request) => {
     // Com `client_id` o caminho é fixo: o reenvio simultâneo bate no objeto do 1º.
     const path = `${linha.workspace_id}/${clientId ?? crypto.randomUUID()}.${EXTENSAO[foto.mime]}`
     const bucket = admin.storage.from('attachments')
+    const gravarAnexo = async (caminho: string) =>
+      (await admin.from('attachments').insert({
+        workspace_id: linha.workspace_id,
+        transaction_id: gravado.id,
+        path: caminho,
+        mime: foto.mime,
+        size_bytes: foto.bytes.byteLength,
+        created_by: userId,
+      })).error
     const { error: upErr } = await bucket.upload(path, foto.bytes, { contentType: foto.mime, upsert: false })
-    if (jaExiste(upErr)) anexo = true
-    else if (upErr) console.error('capture: anexo upload', upErr)
-    else {
-      const { error: anexoErr } = await admin
+    if (jaExiste(upErr)) {
+      // O 409 só prova o objeto: o 1º envio pode ter morrido antes da linha, ou
+      // o objeto ficou de um lançamento apagado. O objeto é do 1º: não sai daqui.
+      const { count, error: lerErr } = await admin
         .from('attachments')
-        .insert({
-          workspace_id: linha.workspace_id,
-          transaction_id: gravado.id,
-          path,
-          mime: foto.mime,
-          size_bytes: foto.bytes.byteLength,
-          created_by: userId,
-        })
+        .select('id', { count: 'exact', head: true })
+        .eq('path', path)
+      if (lerErr) console.error('capture: anexo existente', lerErr)
+      else if ((count ?? 0) > 0) anexo = true
+      else {
+        const anexoErr = await gravarAnexo(path)
+        if (anexoErr) console.error('capture: anexo', anexoErr)
+        else anexo = true
+      }
+    } else if (upErr) console.error('capture: anexo upload', upErr)
+    else {
+      const anexoErr = await gravarAnexo(path)
       if (anexoErr) {
         console.error('capture: anexo', anexoErr)
         const { error: rmErr } = await bucket.remove([path])

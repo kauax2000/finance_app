@@ -9,7 +9,15 @@ describe("captura: um anexo e um plano por client_id (#95)", () => {
         const f = capture()
         expect(f).toContain("`${linha.workspace_id}/${clientId ?? crypto.randomUUID()}.${EXTENSAO[foto.mime]}`")
         expect(f).toContain("upsert: false")
-        expect(f).toMatch(/if \(jaExiste\(upErr\)\) anexo = true/)
+        expect(f).toMatch(/if \(jaExiste\(upErr\)\)/)
+    })
+
+    it("o 409 só prova o objeto: confere a linha do anexo pelo caminho e, sem ela, a grava sem apagar o objeto", () => {
+        const f = capture()
+        const ramo = f.slice(f.indexOf("if (jaExiste(upErr))"), f.indexOf("else if (upErr)"))
+        expect(ramo).toContain(".eq('path', path)")
+        expect(ramo).toContain("gravarAnexo(path)")
+        expect(ramo).not.toContain("remove(")
     })
 
     it("criar_plano_parcelado acha o plano do client_id em qualquer carteira da pessoa", () => {
