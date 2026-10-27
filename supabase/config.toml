@@ -85,6 +85,10 @@ verify_jwt = false
 [functions.billing-cancel]
 verify_jwt = false
 
+# O MCP (Claude, ChatGPT): a descoberta OAuth chega sem token; o `withSupabase` confere o JWT.
+[functions.mcp]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]
