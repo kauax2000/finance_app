@@ -21,6 +21,10 @@ pôs no repositório:
 - a migração `20261103130000_mcp_token_somente_leitura.sql`, que deixa o token
   da IA só ler e inserir lançamento (§1a), e o `getAuthUserFromJwt`
   (`_shared/auth-user.ts`) recusando esse token nas Edges de usuário;
+- a migração `20261103140000_mcp_guarda_rpc.sql`, a guarda
+  `guarda_do_token_de_ia` que o PostgREST roda antes de toda requisição
+  (`db_pre_request`): para o token da IA, só a RPC do parcelado e nenhum
+  PATCH, PUT ou DELETE;
 - no front do 2.0: a rota `/oauth/consent` (consentimento, em
   `src/app/(app)/oauth/consent/`, wireframe `mcp-consentimento-wireframe.tsx`) e
   o bloco "IAs conectadas" em `/account` (wireframe
@@ -85,9 +89,10 @@ nome, com os 9) cai na nova.
 supabase db push
 ```
 
-Aplica `20261103120000_mcp.sql` e `20261103130000_mcp_token_somente_leitura.sql`
-(e qualquer migração anterior ainda pendente, em ordem: confira
-`supabase migration list` antes). **O SQL da segunda nunca rodou**: sem banco
+Aplica `20261103120000_mcp.sql`, `20261103130000_mcp_token_somente_leitura.sql`
+e `20261103140000_mcp_guarda_rpc.sql` (e qualquer migração anterior ainda
+pendente, em ordem: confira `supabase migration list` antes). **O SQL da
+segunda e da terceira nunca rodou**: sem banco
 de teste, foi conferido só lendo. Conferência no SQL Editor:
 
 ```sql
@@ -138,19 +143,17 @@ própria pessoa. O que o fecha:
   `push-unsubscribe`, `sessions`, `workspace-invites-accept`,
   `workspace-invites-create` e `workspace-invites-resend`.
 
-**Residual conhecido** (não fechado nesta rodada):
+- **As RPCs não escrevem por ele.** As `security definer` não passam pelo RLS,
+  então a guarda `guarda_do_token_de_ia` (`db_pre_request` do PostgREST, em
+  `20261103140000`) recusa ao token da IA toda `/rpc/*` fora
+  `create_workspace_installment_plan`, e todo PATCH, PUT e DELETE, com
+  `42501 token_de_ia_somente_leitura`. A sessão do app, o anon e a service role
+  saem na primeira linha da função. **Ela roda em toda requisição da API**: um
+  erro nela derruba o app inteiro. Logo depois do `db push`, abra o app e
+  confira que lista e salva normalmente; se não, o desfazer está no §7.
 
-- **RPCs `security definer` que escrevem**, chamáveis por `authenticated`, não
-  passam pelo RLS e o token da IA ainda as chama pelo `/rest/v1/rpc`:
-  `delete_workspace`, `delete_workspace_installment_plan_cascade`,
-  `trocar_papel`, `definir_partes`, `complete_workspace_categories_onboarding`,
-  `create_capture_token`, `revoke_capture_token`, `marcar_insight`,
-  `registrar_insight`, `garantir_orcamentos_do_mes` e
-  `catch_up_recurring_billing`. As quatro primeiras apagam ou alteram dado: são
-  as primeiras a ganhar `if public.eh_token_de_ia() then raise exception
-  'token_de_ia_somente_leitura'; end if;`. As RPCs `security invoker`
-  (`pay_bill_instance`, `virar_conta`, `criar_carteira_de_modelo`…) passam pelo
-  RLS e já estão fechadas.
+**Residual conhecido:**
+
 - **`PUT /auth/v1/user` com o token da IA** (trocar e-mail, senha, metadados)
   não foi verificado. Teste antes de ligar o Dynamic Client Registration: com o
   token de uma IA de teste, um `PUT` em `/auth/v1/user` tem de ser recusado.
@@ -245,8 +248,9 @@ uma checagem desta publicação:
    não sai e **nada acusa**. Confira no teste do §6: lance uma despesa que
    cruze 80% de um orçamento e veja o aviso no sino; veja também os logs das
    duas funções (Edge Functions › Logs) por 401/403 vindos do `mcp`.
-4. **O residual do token da IA** (§1a): as RPCs `security definer` que
-   escrevem e o `PUT /auth/v1/user`.
+4. **O residual do token da IA** (§1a): o `PUT /auth/v1/user`. E a guarda das
+   RPCs no ar: com o token de uma IA de teste, `POST /rest/v1/rpc/delete_workspace`
+   volta 403 com `token_de_ia_somente_leitura`, e o app da pessoa segue normal.
 5. **As políticas `ia_somente_leitura_*` no ar**: com o token de uma IA de
    teste e a chave anônima, um `PATCH` e um `DELETE` em
    `/rest/v1/transactions?id=eq.<id>` voltam sem linha alterada, e um `POST` em
@@ -290,4 +294,8 @@ conferência: apague-o depois.
   reprovaria a linha.
 - **A migração** `20261103130000` não tem volta a fazer: para a sessão do app as
   políticas não mudam nada. Desligar o OAuth Server já tira o token da IA.
+- **A guarda** `20261103140000`: se o app quebrar depois dela, no SQL Editor
+  `alter role authenticator reset pgrst.db_pre_request; notify pgrst, 'reload config';`
+  desliga na hora (o token da IA volta a chamar as RPCs: desligue também o
+  OAuth Server).
 - **Nunca** `supabase config push`, nem para desfazer.
