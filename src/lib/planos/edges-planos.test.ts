@@ -815,7 +815,7 @@ describe("#87: os avisos de cobrança que não se perdem", () => {
         expect(r).toContain(".from('billing_avisos')")
         expect(r).toContain(".eq('pendente', true)")
         expect(r).toContain(".lt('enviado_em', limite)")
-        const reivindica = r.indexOf(".update({ enviado_em: ctx.iso })")
+        const reivindica = r.indexOf(".update({ enviado_em: ctx.iso, tentativas: tentativa })")
         expect(reivindica).toBeGreaterThan(-1)
         expect(r.slice(reivindica)).toContain(".eq('pendente', true)")
         expect(r.slice(reivindica)).toContain(".eq('enviado_em', a.enviado_em)")

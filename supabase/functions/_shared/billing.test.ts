@@ -1,5 +1,7 @@
 import { assertEquals, assertThrows } from 'jsr:@std/assert@1.0.19'
 import {
+  desisteDoAviso,
+  MAX_TENTATIVAS_AVISO,
   acaoDoDia,
   aguardandoConfirmacao,
   avisoFixo,
@@ -876,4 +878,10 @@ Deno.test('avisoFixo: só fim, reembolso e estorno têm texto fixo', () => {
   assertEquals(avisoFixo('reembolso'), AVISOS.reembolso())
   assertEquals(avisoFixo('estorno'), AVISOS.estorno())
   for (const tipo of ['renovacao', 'cartao', 'teste', 'outro']) assertEquals(avisoFixo(tipo), null)
+})
+
+Deno.test('desisteDoAviso: o aviso pendente para na 7ª tentativa sem sucesso (#97)', () => {
+  assertEquals(MAX_TENTATIVAS_AVISO, 7)
+  assertEquals(desisteDoAviso(6), false)
+  assertEquals(desisteDoAviso(7), true)
 })

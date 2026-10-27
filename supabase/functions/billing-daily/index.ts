@@ -35,6 +35,7 @@ import {
   resultadoDaCobranca,
   textoDoEstornoConcluido,
   TIPOS_DE_AVISO_FIXO,
+  desisteDoAviso,
   triagemDasAbertas,
   vereditoDaEspera,
 } from '../_shared/billing.ts'
@@ -77,7 +78,7 @@ type AvisoPendente = {
 }
 
 type DedupeRow = { user_id: string; tipo: string; referencia: string }
-type AvisoGuardado = ChaveDoAviso & { enviado_em: string }
+type AvisoGuardado = ChaveDoAviso & { enviado_em: string; tentativas: number }
 
 type Admin = AdminDoAviso
 type Linha = Assinatura & {
@@ -688,9 +689,10 @@ async function reenviarAvisos(ctx: Ctx): Promise<void> {
 
   await forEachLimit(pendentes, FAN_OUT_CONCURRENCY, async (a) => {
     try {
+      const tentativa = a.tentativas + 1
       const { data: minha, error } = await ctx.admin
         .from('billing_avisos')
-        .update({ enviado_em: ctx.iso })
+        .update({ enviado_em: ctx.iso, tentativas: tentativa })
         .eq('user_id', a.user_id)
         .eq('tipo', a.tipo)
         .eq('referencia', a.referencia)
@@ -699,7 +701,18 @@ async function reenviarAvisos(ctx: Ctx): Promise<void> {
         .select('user_id')
       if (error) throw new Error(`reivindicar: ${error.message}`)
       if (!minha?.length) return
-      contarAviso(ctx, a.tipo, a.user_id, await entregarPendente(ctx.admin, a))
+      const r = await entregarPendente(ctx.admin, a)
+      contarAviso(ctx, a.tipo, a.user_id, r)
+      if (r === 'pendente' && desisteDoAviso(tentativa)) {
+        const { error: dErr } = await ctx.admin
+          .from('billing_avisos')
+          .update({ pendente: false })
+          .eq('user_id', a.user_id)
+          .eq('tipo', a.tipo)
+          .eq('referencia', a.referencia)
+        if (dErr) throw new Error(`desistir: ${dErr.message}`)
+        console.error('billing-daily: aviso desistiu', a.tipo, a.user_id, tentativa)
+      }
     } catch (e) {
       erro(ctx, 'reenvio de aviso', a.user_id, e)
     }

@@ -236,12 +236,14 @@ export type Database = {
           enviado_em: string
           pendente: boolean
           referencia: string
+          tentativas: number
           tipo: string
           user_id: string
         }
         Insert: {
           enviado_em?: string
           pendente?: boolean
+          tentativas?: number
           referencia: string
           tipo: string
           user_id: string
@@ -250,6 +252,7 @@ export type Database = {
           enviado_em?: string
           pendente?: boolean
           referencia?: string
+          tentativas?: number
           tipo?: string
           user_id?: string
         }

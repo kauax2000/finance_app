@@ -503,6 +503,13 @@ export const AVISOS = {
 export type TipoDeAvisoFixo = 'fim' | 'reembolso' | 'estorno'
 export const TIPOS_DE_AVISO_FIXO: TipoDeAvisoFixo[] = ['fim', 'reembolso', 'estorno']
 
+/** O reenvio desiste do aviso pendente que falhou 7 vezes: uma semana de cron diário (#97). */
+export const MAX_TENTATIVAS_AVISO = 7
+
+export function desisteDoAviso(tentativas: number): boolean {
+  return tentativas >= MAX_TENTATIVAS_AVISO
+}
+
 /** O texto de um aviso pendente, para o reenvio; `null` para os que dependem da linha. */
 export function avisoFixo(tipo: string): { titulo: string; corpo: string } | null {
   if (tipo === 'fim') return AVISOS.fim()

@@ -393,3 +393,8 @@ create trigger garantir_escrita before insert or update or delete on public.work
 -- reenvia. O `false` padrão é o aviso de hoje, já entregue.
 alter table public.billing_avisos
   add column if not exists pendente boolean not null default false;
+
+-- O reenvio desiste depois de 7 tentativas sem sucesso (#97): o registro fica,
+-- e a chave continua barrando o aviso repetido.
+alter table public.billing_avisos
+  add column if not exists tentativas integer not null default 0;
