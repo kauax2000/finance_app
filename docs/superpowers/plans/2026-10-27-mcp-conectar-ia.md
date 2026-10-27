@@ -34,7 +34,7 @@
 
 ---
 
-### Tarefa 1: Base pura — período, resposta, carteira e resumo do mês
+### Task 1: Base pura — período, resposta, carteira e resumo do mês
 
 **Files:**
 - Create: `supabase/functions/_shared/mcp/periodo.ts`, `resposta.ts`, `resumo.ts`
@@ -90,7 +90,7 @@ git add supabase/functions/_shared/mcp/
 git commit -m "feat(mcp): base pura de período, resposta e resumo do mês"
 ```
 
-### Tarefa 2: Faturas, contas a pagar e assinaturas (puras)
+### Task 2: Faturas, contas a pagar e assinaturas (puras)
 
 **Files:**
 - Create: `supabase/functions/_shared/mcp/faturas.ts`, `compromissos.ts`
@@ -137,7 +137,7 @@ git add supabase/functions/_shared/mcp/
 git commit -m "feat(mcp): faturas, contas a pagar e assinaturas puras"
 ```
 
-### Tarefa 3: Montar o lançamento da IA (puro) + migração do `source`
+### Task 3: Montar o lançamento da IA (puro) + migração do `source`
 
 **Files:**
 - Create: `supabase/functions/_shared/mcp/lancamento.ts`, `supabase/migrations/20261103120000_mcp.sql`
@@ -190,7 +190,7 @@ git add supabase/functions/_shared/mcp/lancamento.ts supabase/functions/_shared/
 git commit -m "feat(mcp): lançamento da IA e source ia_externa"
 ```
 
-### Tarefa 4: A Edge Function `mcp` com as nove ferramentas
+### Task 4: A Edge Function `mcp` com as nove ferramentas
 
 **Files:**
 - Create: `supabase/functions/mcp/index.ts`, `supabase/functions/mcp/consultas.ts`
@@ -242,7 +242,7 @@ git add supabase/functions/mcp supabase/functions/_shared/mcp supabase/config.to
 git commit -m "feat(mcp): edge function mcp com nove ferramentas"
 ```
 
-### Tarefa 5: Tela de consentimento `/oauth/consent`
+### Task 5: Tela de consentimento `/oauth/consent`
 
 **Files:**
 - Create: `src/components/wireframe/mcp-consentimento-wireframe.tsx`, `src/app/(app)/oauth/consent/page.tsx`, `src/app/(app)/oauth/consent/loading.tsx`
@@ -282,7 +282,7 @@ git add src/components/wireframe/mcp-consentimento-wireframe.tsx src/components/
 git commit -m "feat(mcp): tela de consentimento oauth em wireframe"
 ```
 
-### Tarefa 6: "IAs conectadas" em Minha conta
+### Task 6: "IAs conectadas" em Minha conta
 
 **Files:**
 - Create: `src/components/wireframe/ias-conectadas-wireframe.tsx`
@@ -312,7 +312,7 @@ git add src/components/wireframe/ias-conectadas-wireframe.tsx src/components/wir
 git commit -m "feat(mcp): ias conectadas em minha conta"
 ```
 
-### Tarefa 7: Jornada, Atlas, roteiro de publicação e grafo
+### Task 7: Jornada, Atlas, roteiro de publicação e grafo
 
 **Files:**
 - Create: `supabase/MCP_DEPLOYMENT.md`
