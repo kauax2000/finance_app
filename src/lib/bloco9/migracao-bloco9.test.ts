@@ -119,7 +119,7 @@ describe(`migração ${MIGRACAO}`, () => {
         expect(c).toMatch(/p_source text default 'app',\s*p_needs_review boolean default false,\s*p_client_id uuid default null,\s*p_capture_meta jsonb default null\s*\)/)
         const trava = c.search(/perform pg_advisory_xact_lock\(hashtext\('plano:' \|\| p_client_id::text\)\);/)
         const existente = c.search(
-            /select t\.installment_plan_id into v_plan_id\s+from public\.transactions t\s+where t\.workspace_id = p_workspace_id\s+and t\.client_id = p_client_id\s+and t\.installment_plan_id is not null/,
+            /select t\.installment_plan_id into v_plan_id\s+from public\.transactions t\s+join public\.workspace_members m on m\.workspace_id = t\.workspace_id and m\.user_id = p_user_id\s+where t\.client_id = p_client_id\s+and t\.installment_plan_id is not null/,
         )
         expect(trava).toBeGreaterThan(c.indexOf("raise exception 'Forbidden'"))
         expect(existente).toBeGreaterThan(trava)

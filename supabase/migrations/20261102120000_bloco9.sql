@@ -299,10 +299,12 @@ begin
   if p_client_id is not null then
     perform pg_advisory_xact_lock(hashtext('plano:' || p_client_id::text));
 
+    -- Em qualquer carteira da pessoa: entre dois reenvios o destino pode ter
+    -- mudado (#95), e o plano que já existe vale.
     select t.installment_plan_id into v_plan_id
     from public.transactions t
-    where t.workspace_id = p_workspace_id
-      and t.client_id = p_client_id
+    join public.workspace_members m on m.workspace_id = t.workspace_id and m.user_id = p_user_id
+    where t.client_id = p_client_id
       and t.installment_plan_id is not null
     limit 1;
 

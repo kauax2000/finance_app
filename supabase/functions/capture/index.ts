@@ -180,6 +180,14 @@ Deno.serve(async (req: Request) => {
       anexo,
     })
 
+  // O Storage responde 409 ("Duplicate") quando o objeto do caminho já existe;
+  // o storage-js põe o HTTP em `status` e o código em `statusCode`, conforme a versão.
+  const jaExiste = (err: unknown) => {
+    if (err == null) return false
+    const e = err as { status?: unknown; statusCode?: unknown }
+    return String(e.status) === '409' || String(e.statusCode) === '409' || e.statusCode === 'Duplicate'
+  }
+
   // Num retry a foto não sobe de novo: o anexo é o que a 1ª vez gravou.
   const temAnexo = async (transacaoId: string) => {
     const { count, error } = await admin
@@ -306,10 +314,9 @@ Deno.serve(async (req: Request) => {
       })
     }
     // O plano não tem `client_id`: a chave está na 1ª parcela, e o retry a
-    // acha pela busca de cima.
-    // ponytail: o 2º de dois retries simultâneos recebe o plano do 1º e também
-    // conta como novo (a foto vira um 2º anexo, os avisos têm dedupe); devolver
-    // `{ id, novo }` da RPC fecha isso, se aparecer.
+    // acha pela busca de cima. O 2º de dois retries simultâneos recebe o plano
+    // do 1º e conta como novo: a foto não duplica porque o caminho é o do
+    // `client_id` (#95), e os avisos têm dedupe.
     gravado = primeira as Gravado
     novo = true
   } else {
@@ -341,10 +348,12 @@ Deno.serve(async (req: Request) => {
   if (foto && !novo) anexo = await temAnexo(gravado.id)
   else if (foto) {
     anexo = false
-    const path = `${linha.workspace_id}/${crypto.randomUUID()}.${EXTENSAO[foto.mime]}`
+    // Com `client_id` o caminho é fixo: o reenvio simultâneo bate no objeto do 1º.
+    const path = `${linha.workspace_id}/${clientId ?? crypto.randomUUID()}.${EXTENSAO[foto.mime]}`
     const bucket = admin.storage.from('attachments')
     const { error: upErr } = await bucket.upload(path, foto.bytes, { contentType: foto.mime, upsert: false })
-    if (upErr) console.error('capture: anexo upload', upErr)
+    if (jaExiste(upErr)) anexo = true
+    else if (upErr) console.error('capture: anexo upload', upErr)
     else {
       const { error: anexoErr } = await admin
         .from('attachments')

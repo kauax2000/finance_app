@@ -5,7 +5,7 @@
 -- de titular deixam a service role passar. Depois do primeiro `set_config`,
 -- os claims seguem valendo até o fim da transação.
 begin;
-select plan(20);
+select plan(21);
 
 -- Casa: a1 e d6 donos, b2 e c3 membros, g4 convidado. Leitura: o5 dono
 -- antigo, b2 membro. Some: o7 dono, m8 membro titular, x9 convidado.
@@ -87,6 +87,25 @@ select is(
    where client_id = '00000000-0000-4000-e903-000000000001'),
   '{"canal":"atalho"}'::jsonb,
   'a 1ª parcela leva a chave e a capture_meta por dentro'
+);
+
+-- 1b. o reenvio com outro destino devolve o plano que já existe (#95) ----------
+create temp table _b9_destinos (id uuid);
+insert into _b9_destinos
+select public.criar_plano_parcelado(
+  '00000000-0000-4000-e900-000000000002', '00000000-0000-4000-e901-000000000001', null,
+  'Sofá', 'pix', null, 3, 100, 100, current_date, 'shortcut', true,
+  '00000000-0000-4000-e903-000000000002', null);
+insert into _b9_destinos
+select public.criar_plano_parcelado(
+  '00000000-0000-4000-e900-000000000002', '00000000-0000-4000-e901-000000000002', null,
+  'Sofá', 'pix', null, 3, 100, 100, current_date, 'shortcut', true,
+  '00000000-0000-4000-e903-000000000002', null);
+
+select is(
+  (select count(distinct id)::int from _b9_destinos),
+  1,
+  'o mesmo client_id com destino diferente devolve o plano já criado'
 );
 
 -- 2. o titular que sai (#66) ----------------------------------------------------
