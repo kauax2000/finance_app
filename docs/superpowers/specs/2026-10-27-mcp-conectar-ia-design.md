@@ -114,9 +114,9 @@ chama.
   <claim client_id do JWT> }`, para a conferência poder dizer quem lançou.
 - **Parcelado** usa a mesma RPC do formulário do app,
   `create_workspace_installment_plan` (chamável por `authenticated`, RLS), e
-  não `criar_plano_parcelado` (só `service_role`). As parcelas seguem o
-  comportamento do formulário (decisão minha: o plano parcelado não ganha
-  `needs_review`).
+  não `criar_plano_parcelado` (só `service_role`). Depois, como o formulário
+  já faz, um `update` nas parcelas do plano grava `source`, `needs_review` e
+  `capture_meta`.
 - Efeitos depois de salvar: os mesmos que o formulário do app dispara com o
   JWT da pessoa (o trigger `transactions_notify_created` vale para qualquer
   insert). Os avaliadores que a captura chama com `service_role` **não** são
