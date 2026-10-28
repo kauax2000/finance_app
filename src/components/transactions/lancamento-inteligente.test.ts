@@ -19,8 +19,14 @@ describe("a tela do lançamento inteligente (v2)", () => {
     it("ao lado do campo, a pílula redonda do recibo, no mesmo vidro", () => {
         expect(fonte).toMatch(/size="icon-lg"\s+aria-label="Adicionar recibo"/)
         expect(fonte).toContain("<CameraIcon")
-        expect(fonte).toContain('surface="modal"')
-        expect(fonte).toContain("searchFieldSurfaceClassName.modal")
+        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,200}searchFieldSurfaceClassName\.modal/)
+        expect(fonte).toMatch(/aria-label="Adicionar recibo"[\s\S]{0,400}searchFieldSurfaceClassName\.modal/)
+    })
+
+    it("um vidro só: a frase não pinta o dela, e com a placa ela é o cabeçalho", () => {
+        expect(fonte).toMatch(/<SearchInput\s+surface="field"\s+focusRing=\{false\}\s+className="border-0 bg-transparent"/)
+        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]*data-slot="lancamento-cabeca"[\s\S]*<SearchInput[\s\S]*<Revisao/)
+        expect(fonte).toMatch(/size="icon-md"\s+aria-label="Adicionar recibo"/)
     })
 
     it("a casca não pinta: as pílulas e a placa são vidros soltos sobre o véu", () => {
@@ -37,7 +43,8 @@ describe("a tela do lançamento inteligente (v2)", () => {
 
     it("a revisão só aparece com os campos lidos, e é um Form com um submit só", () => {
         expect(fonte).toContain("const revisao = campos != null && !lendoIA")
-        expect(fonte).toContain("{revisao ? (")
+        expect(fonte).toContain("const camposDaPlaca = revisao ? campos : open ? null")
+        expect(fonte).toContain("{camposDaPlaca ? (")
         expect(fonte).toContain("<Form")
         expect(fonte.match(/<FormSubmit/g)).toHaveLength(1)
         expect(fonte).toContain("return leitura.aprovar()")
@@ -64,13 +71,26 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toMatch(/variant="tertiary"[^>]*onClick=\{onAbrirFormulario\}/)
     })
 
-    it("a revisão abre numa placa separada embaixo: o corpo rola e o rodapé fica", () => {
+    it("o campo vira a placa: o corpo rola e o rodapé fica", () => {
         expect(fonte).toMatch(/data-slot="lancamento-pilulas"[\s\S]*<SearchInput/)
-        expect(fonte).toMatch(/data-slot="lancamento-revisao"[\s\S]{0,200}min-h-0 flex-col overflow-hidden rounded-surface/)
-        expect(fonte).toMatch(/data-slot="lancamento-revisao"[\s\S]{0,400}modalSurfaceClassName/)
-        expect(fonte).toContain("menu-morph")
+        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,120}min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-surface/)
+        expect(fonte).not.toContain("lancamento-revisao")
         expect(fonte).toMatch(/<DialogBody>\s*<Form/)
         expect(fonte).toMatch(/<\/DialogBody>[\s\S]*<DialogFooter[\s\S]*<FormSubmit/)
+    })
+
+    it("o movimento: recorte e transform no vidro, pelos quadros puros, na mola da casa", () => {
+        for (const q of ["quadroDaPlaca(", "quadroDaFusao(", "quadroDoMais(", "quandoPintar("]) expect(fonte).toContain(q)
+        expect(fonte).toContain("vidro.style.clipPath")
+        expect(fonte).toContain("SEPARACAO")
+        expect(fonte).toContain("MOLA_PALCO")
+        expect(fonte).toContain("menu-unmorph")
+        expect(fonte).toContain("useReducedMotion")
+        expect(fonte).toContain("window.visualViewport")
+        expect(fonte).toContain("[data-slot=bottom-bar-action]")
+        // A casca nunca anima: no ancestral, o transform desligaria o borrão dos vidros.
+        expect(fonte).not.toMatch(/casca\.style\.(transform|opacity|filter)/)
+        expect(fonte).not.toContain("requestAnimationFrame(quadro")
     })
 
     it("frase mudada depois do Enter: a revisão esmaece e o Aprovar pede o Enter", () => {
