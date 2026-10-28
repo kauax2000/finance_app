@@ -35,6 +35,7 @@ const AVISO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
  * síncrono), a IA só no "Lançar" quando o parser não achou valor ou descrição,
  * e a foto do recibo pela IA. O que a pessoa editou à mão vence a frase, e o
  * formulário sempre reflete os campos lidos — quem salva é o `salvar()` dele.
+ * Prefira `cartoes` e `categorias` estáveis (memoizados): cada troca relê a frase.
  */
 export function useLeituraDoLancamento({
     form,
@@ -61,6 +62,8 @@ export function useLeituraDoLancamento({
     // O que a IA leu da frase vale até a frase mudar; o da foto, até tirar a foto.
     const [iaDoTexto, setIaDoTexto] = useState<CamposIA | null>(null)
     const [iaDaFoto, setIaDaFoto] = useState<CamposIA | null>(null)
+    // A IA já tentou esta frase: falhando, o "Lançar" seguinte salva a revisão como está.
+    const [iaTentada, setIaTentada] = useState(false)
     const [lendoTexto, setLendoTexto] = useState(false)
     const [lendoFoto, setLendoFoto] = useState(false)
     const [aviso, setAviso] = useState<string | null>(null)
@@ -90,9 +93,16 @@ export function useLeituraDoLancamento({
         return base ? comTravas(base, editados) : null
     }, [texto, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados])
 
-    // A foto marca o lançamento como `share`; a frase, como `quick_text`.
+    // A foto marca o lançamento como `share`; a frase, como `quick_text`. O
+    // aplicar re-renderiza o formulário: só campos diferentes do último
+    // aplicado o chamam, para `cartoes`/`categorias` instáveis não darem laço.
+    const ultimoAplicado = useRef<string | null>(null)
     useEffect(() => {
-        if (campos) (iaDaFoto ? aplicarFoto : aplicarFrase)(campos)
+        if (!campos) return
+        const chave = JSON.stringify([campos, iaDaFoto != null])
+        if (chave === ultimoAplicado.current) return
+        ultimoAplicado.current = chave
+        ;(iaDaFoto ? aplicarFoto : aplicarFrase)(campos)
     }, [campos, iaDaFoto, aplicarFrase, aplicarFoto])
 
     // Cada leitura da frase pela IA ganha um número; reescrever a frase ou
@@ -110,6 +120,7 @@ export function useLeituraDoLancamento({
         pedido.current += 1
         setTextoCru(novo)
         setIaDoTexto(null)
+        setIaTentada(false)
         setLendoTexto(false)
         setAviso(null)
         // Limpar a frase solta os campos editados (sem foto, nada mais os segura).
@@ -126,6 +137,7 @@ export function useLeituraDoLancamento({
         if (!currentWorkspaceId) return
         const meu = ++pedido.current
         setLendoTexto(true)
+        setIaTentada(true)
         setAviso(null)
         try {
             const lido = await lerFraseComIA(currentWorkspaceId, texto)
@@ -150,7 +162,7 @@ export function useLeituraDoLancamento({
     async function lancar() {
         if (!campos || lendoTexto || lendoFoto) return
         // A IA lê e não salva: a pessoa vê o que ela leu e aprova de novo.
-        if (precisaDeIA(campos) && !iaDoTexto && !iaDaFoto && texto.trim()) {
+        if (precisaDeIA(campos) && !iaTentada && !iaDaFoto && texto.trim()) {
             await lerComIA()
             return
         }

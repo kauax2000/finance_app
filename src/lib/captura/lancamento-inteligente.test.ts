@@ -127,6 +127,20 @@ describe("useLeituraDoLancamento (fonte)", () => {
         expect(fonte).toMatch(/meu !== pedido\.current/)
     })
 
+    it("a IA tenta uma vez por frase: falhando, o Lançar salva a revisão", () => {
+        expect(fonte).toMatch(/precisaDeIA\(campos\) && !iaTentada/)
+        const setTexto = fonte.slice(fonte.indexOf("function setTexto("), fonte.indexOf("function editar("))
+        expect(setTexto).toMatch(/setIaTentada\(false\)/)
+        const lerComIA = fonte.slice(fonte.indexOf("async function lerComIA("))
+        expect(lerComIA.indexOf("setIaTentada(true)")).toBeGreaterThan(-1)
+        expect(lerComIA.indexOf("setIaTentada(true)")).toBeLessThan(lerComIA.indexOf("await lerFraseComIA"))
+    })
+
+    it("só aplica no formulário campos diferentes do último aplicado", () => {
+        expect(fonte).toMatch(/chave === ultimoAplicado\.current\) return/)
+        expect(fonte).toMatch(/ultimoAplicado\.current = chave/)
+    })
+
     it("a foto só vai ao formulário depois de comprimida", () => {
         const comprime = fonte.indexOf("comprimirImagem(")
         const anexa = fonte.indexOf("setFotoDoRecibo(")
