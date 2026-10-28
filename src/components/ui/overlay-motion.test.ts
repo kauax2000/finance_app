@@ -151,7 +151,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
 
   it("movimento reduzido zera os atrasos das cascatas com !important", () => {
     const zerados = BLOCO.match(/animation-delay: 0ms[^;]*;/g) ?? []
-    expect(zerados.length).toBe(4)
+    expect(zerados.length).toBe(5)
     for (const z of zerados) expect(z).toContain("!important")
   })
 

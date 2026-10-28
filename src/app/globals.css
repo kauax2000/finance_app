@@ -3039,6 +3039,21 @@
   &[data-state="closed"]:not([data-align-trigger="true"]) {
     animation: menu-unmorph 210ms linear both;
   }
+  /* As faixas (a busca, a lista, o rodapé do seletor do `Form`) chegam do desfoque,
+     no lugar, uma a uma, quando a placa já tem corpo: acesas desde o primeiro quadro
+     elas cresciam amassadas junto com a escala da placa. */
+  &[data-state="open"] > [data-slot="popover-viewport"] > * {
+    animation: menu-content-in 300ms var(--ease-out) 120ms backwards;
+    --stagger-base: 120ms;
+    --stagger-step: 45ms;
+    --stagger-cap: 3;
+    @apply stagger-ladder;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] > [data-slot="popover-viewport"] > * {
+      animation-delay: 0ms !important;
+    }
+  }
 }
 
 /* A prévia (`HoverCard`) brota do gatilho; as faixas surgem do desfoque atrás, no
