@@ -1063,7 +1063,7 @@ function Revisao({
                         }
                     >
                         <FieldControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                         </FieldControl>
@@ -1115,7 +1115,7 @@ function Revisao({
                     >
                         <ComboboxField>
                             <FieldControl>
-                                <ComboboxTrigger>
+                                <ComboboxTrigger className="w-full">
                                     <ComboboxValue
                                         placeholder="Escolher categoria"
                                         media={categoria ? <ColorTile size="xs" color={categoria.color} /> : undefined}
@@ -1154,7 +1154,7 @@ function Revisao({
                         onValueChange={(v) => leitura.editar("forma", formaDoValor(v))}
                     >
                         <FieldControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Escolher a forma" />
                             </SelectTrigger>
                         </FieldControl>
@@ -1189,6 +1189,7 @@ function Revisao({
                             }
                             displayStyle="relative"
                             presets
+                            className="w-full"
                         />
                     </FieldControl>
                 )
@@ -1202,7 +1203,7 @@ function Revisao({
                         }
                     >
                         <FieldControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Escolher parcelas" />
                             </SelectTrigger>
                         </FieldControl>
