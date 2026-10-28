@@ -930,9 +930,14 @@ function CommandDialog({
                   "[--command-list-ceiling:calc(var(--command-search-vh,100dvh)_-_var(--command-search-top)_-_--spacing(11)_-_--spacing(3)_-_max(--spacing(3),env(safe-area-inset-bottom)))]",
                   "[--command-list-transition:var(--duration-base)]",
                   // As linhas brotam com a placa: esperam pausadas com ela até o
-                  // vão abrir (`--command-reveal-play`, escrita pelo gesto), e a
-                  // última (120ms de atraso) assenta nos 460ms do `menu-morph`.
+                  // vão abrir (`--command-reveal-play`, escrita pelo gesto). A placa
+                  // espera 60ms depois de solta: as linhas e os títulos também,
+                  // senão acendiam antes dela; e a última (60 + 120ms de atraso)
+                  // assenta com ela, aos 520ms.
                   "[&_[data-slot=command-list]]:[--command-reveal:340ms]",
+                  "[&_[data-slot=command-list]_[cmdk-item]]:[--stagger-base:60ms]",
+                  // A primeira linha de cada grupo não passa pela escada (o `stagger-ladder` começa no 2º).
+                  "[&_[data-slot=command-list]_:is([cmdk-group-heading],[cmdk-item]:first-child)]:[animation-delay:60ms]",
                   "[&_[data-slot=command-list]_:is([cmdk-item],[cmdk-group-heading])]:[animation-play-state:var(--command-reveal-play,running)]",
                   className
                 )}
