@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
+import { Dialog as DialogPrimitive } from "radix-ui"
 import {
     ArrowsRightLeftIcon,
     BanknotesIcon,
@@ -33,10 +34,10 @@ import { DatePicker } from "@/components/ui/date-picker"
 import {
     Dialog,
     DialogBody,
-    DialogContent,
     DialogDescription,
     DialogFooter,
-    DialogHeader,
+    DialogOverlay,
+    DialogPortal,
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
@@ -63,9 +64,12 @@ import {
     type TipoDoLancamento,
 } from "@/lib/captura/lancamento-inteligente"
 import { currencyBRL } from "@/lib/formatters"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
+import { searchFieldSurfaceClassName } from "@/lib/search-field-classes"
 import { addDaysYmd, formatYmdPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 
 type Leitura = ReturnType<typeof useLeituraDoLancamento>
 type FormDoLancamento = ReturnType<typeof useTransactionForm>
@@ -147,11 +151,13 @@ function primeiraImagem(arquivos: FileList | null | undefined) {
  * apresentação — a leitura é do `useLeituraDoLancamento`, que quem monta a
  * tela chama uma vez, e salvar é o `salvar()` do formulário.
  *
- * A casca é o `Dialog` (gaveta no telefone) e não o `CommandDialog`: o cmdk
- * chama `preventDefault` em todo Enter e nas setas, e a revisão é um `Form` com
- * `Select`, `Combobox` e `DatePicker` dentro. Com a revisão aberta o layout é
- * `fixed`: o campo no cabeçalho, a revisão rolando no `DialogBody` e o
- * "Aprovar" preso no rodapé, alcançável em qualquer altura de janela.
+ * A forma é a pilha do `CommandDialog`, sem a paleta: sobre o véu, a pílula da
+ * frase e a do recibo flutuam soltas, e a revisão abre embaixo numa placa
+ * separada. Não é o `CommandDialog` porque o cmdk chama `preventDefault` em todo
+ * Enter e nas setas, e a revisão é um `Form` com `Select`, `Combobox` e
+ * `DatePicker` dentro. A placa é a moldura do `DialogBody` que rola e do rodapé
+ * preso: o "Aprovar" fica alcançável em qualquer altura de janela. No telefone a
+ * pilha fica no alto, com calha de 16px, e as pílulas sobem a 44 no dedo.
  */
 export function LancamentoInteligente({
     open,
@@ -175,49 +181,67 @@ export function LancamentoInteligente({
     const revisao = campos != null && !lendoIA
 
     return (
-        <Dialog surface="auto" open={open} onOpenChange={onOpenChange} pending={saving}>
-            <DialogContent
-                layout={revisao ? "fixed" : "auto"}
-                showCloseButton={false}
-                onPaste={(e) => {
-                    // Texto colado vence: copiar de um app traz o texto e, às vezes, a imagem dele.
-                    if (e.clipboardData.getData("text/plain").trim()) return
-                    const imagem = primeiraImagem(e.clipboardData?.files)
-                    if (!imagem) return
-                    e.preventDefault()
-                    void lerFoto(imagem)
-                }}
-                onDragOver={(e) => {
-                    // Sem o `preventDefault` do arrastar, o navegador não entrega o soltar.
-                    if (e.dataTransfer.types.includes("Files")) e.preventDefault()
-                }}
-                onDrop={(e) => {
-                    const imagem = primeiraImagem(e.dataTransfer.files)
-                    if (!imagem) return
-                    e.preventDefault()
-                    void lerFoto(imagem)
-                }}
-            >
-                {/* O cabeçalho é o campo: o título e a descrição ficam para o leitor de tela. */}
-                <DialogHeader>
+        <Dialog open={open} onOpenChange={onOpenChange} pending={saving}>
+            <DialogPortal>
+                <DialogOverlay />
+                {/* A casca não pinta: as pílulas e a placa são vidros soltos sobre o véu,
+                    como no `CommandDialog`. Não é o `DialogContent`, porque ali a placa é
+                    o próprio `Content` (vidro e `overflow-hidden`), e um elemento com
+                    `backdrop-filter` é raiz de fundo: o borrão das pílulas não veria a
+                    página. A casca não anima (transform ou opacidade num ancestral
+                    desligaria o borrão dos filhos) e só segura a saída deles. */}
+                <DialogPrimitive.Content
+                    data-slot="lancamento-inteligente"
+                    aria-busy={saving || undefined}
+                    // O vão entre as pílulas e a placa é do véu: tocar nele fecha. Vai no
+                    // `style` porque o Radix escreve `pointer-events: auto` inline.
+                    style={{ pointerEvents: "none" }}
+                    className={cn(
+                        "group/lancamento fixed inset-0 z-(--z-modal) mx-auto flex max-w-md flex-col gap-3 text-sm outline-none",
+                        "px-4 pt-[max(--spacing(4),env(safe-area-inset-top))] pb-[max(--spacing(4),env(safe-area-inset-bottom))] md:px-0 md:py-24",
+                        "*:pointer-events-auto",
+                        "data-closed:[animation:presence-hold_210ms]"
+                    )}
+                    onPaste={(e) => {
+                        // Texto colado vence: copiar de um app traz o texto e, às vezes, a imagem dele.
+                        if (e.clipboardData.getData("text/plain").trim()) return
+                        const imagem = primeiraImagem(e.clipboardData?.files)
+                        if (!imagem) return
+                        e.preventDefault()
+                        void lerFoto(imagem)
+                    }}
+                    onDragOver={(e) => {
+                        // Sem o `preventDefault` do arrastar, o navegador não entrega o soltar.
+                        if (e.dataTransfer.types.includes("Files")) e.preventDefault()
+                    }}
+                    onDrop={(e) => {
+                        const imagem = primeiraImagem(e.dataTransfer.files)
+                        if (!imagem) return
+                        e.preventDefault()
+                        void lerFoto(imagem)
+                    }}
+                >
+                    {/* O título e a descrição ficam para o leitor de tela: quem fala é o campo. */}
                     <DialogTitle className="sr-only">Lançamento inteligente</DialogTitle>
                     <DialogDescription className="sr-only">
                         Escreva o lançamento numa frase ou fotografe o recibo, dê Enter, confira o que o app entendeu e
                         aprove.
                     </DialogDescription>
-                    <div className="flex items-center gap-2">
+
+                    {/* As duas pílulas flutuam lado a lado, no vidro modal da busca. */}
+                    <div data-slot="lancamento-pilulas" className="flex shrink-0 items-center gap-2">
                         <SearchInput
                             surface="modal"
                             type="text"
                             enterKeyHint="go"
                             autoFocus
-
                             aria-label="Frase do lançamento"
                             placeholder="Ex.: 42 mercado nubank"
                             value={leitura.texto}
                             onChange={(e) => leitura.setTexto(e.target.value)}
                             pending={lendoIA}
                             disabled={saving}
+                            className={PILULA_ENTRA}
                             onKeyDown={(e) => {
                                 // Enter lê a frase (não salva); o que fecha um acento (IME do Mac e do iOS) não lê.
                                 if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -227,11 +251,13 @@ export function LancamentoInteligente({
                             }}
                         />
                         <Button
-                            variant="floating"
+                            variant="tertiary"
                             size="icon-lg"
                             aria-label="Adicionar recibo"
                             disabled={saving}
                             onClick={() => arquivoRef.current?.click()}
+                            // O círculo no mesmo vidro da pílula, como o × da busca do telefone.
+                            className={cn(searchFieldSurfaceClassName.modal, "shrink-0 bg-clip-border", PILULA_ENTRA)}
                         >
                             <CameraIcon aria-hidden />
                         </Button>
@@ -252,25 +278,35 @@ export function LancamentoInteligente({
                     />
 
                     {/* Cota, rede, imagem que não abre, "Lendo com IA…": vazio, não ocupa lugar. */}
-                    <Caption role="status" className="mt-2 px-1.5 empty:mt-0">
+                    <Caption role="status" className="shrink-0 px-4 empty:hidden">
                         {lendoIA ? (foto ? "Lendo o recibo com IA…" : "Lendo com IA…") : leitura.aviso}
                     </Caption>
-                </DialogHeader>
 
-                {revisao ? (
-                    <Revisao
-                        campos={campos}
-                        leitura={leitura}
-                        form={form}
-                        cartoes={cartoes}
-                        saving={saving}
-                        onAbrirFormulario={onAbrirFormulario}
-                    />
-                ) : null}
-            </DialogContent>
+                    {revisao ? (
+                        <Revisao
+                            campos={campos}
+                            leitura={leitura}
+                            form={form}
+                            cartoes={cartoes}
+                            saving={saving}
+                            onAbrirFormulario={onAbrirFormulario}
+                        />
+                    ) : null}
+                </DialogPrimitive.Content>
+            </DialogPortal>
         </Dialog>
     )
 }
+
+/**
+ * A entrada e a saída de cada pílula, as do `CommandDialog`: abre na mola e fecha
+ * curto. O desfoque do `tw-animate` vira `none` (um `blur(0)` desligaria o borrão).
+ */
+const PILULA_ENTRA = cn(
+    "[--tw-enter-blur:none] [--tw-exit-blur:none]",
+    "animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 animation-duration-(--duration-spring) ease-(--ease-spring)",
+    "group-data-closed/lancamento:animate-out group-data-closed/lancamento:fade-out-0 group-data-closed/lancamento:zoom-out-95 group-data-closed/lancamento:animation-duration-(--duration-fast) group-data-closed/lancamento:ease-(--ease-out) group-data-closed/lancamento:fill-mode-forwards"
+)
 
 /** A miniatura do recibo no topo da revisão, com o × que a tira. */
 function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: () => void; disabled: boolean }) {
@@ -571,7 +607,19 @@ function Revisao({
     }
 
     return (
-        <>
+        // A placa: um vidro à parte, abaixo das pílulas, que brota do alto no gesto
+        // dos menus (`menu-morph`) e volta por ele. Ela é a moldura do corpo que rola e
+        // do rodapé preso: a revisão longa rola dentro dela e o "Aprovar" fica à vista.
+        <div
+            data-slot="lancamento-revisao"
+            className={cn(
+                "flex min-h-0 flex-col overflow-hidden rounded-surface ring-1 ring-foreground/10",
+                modalSurfaceClassName,
+                "[--dialog-bleed:0px] [--dialog-px:--spacing(4)]",
+                "origin-top [animation:menu-morph_380ms_linear_backwards]",
+                "group-data-closed/lancamento:[animation:menu-unmorph_210ms_linear_both]"
+            )}
+        >
             <DialogBody>
                 <Form
                     id={formId}
@@ -686,6 +734,6 @@ function Revisao({
                     Aprovar
                 </FormSubmit>
             </DialogFooter>
-        </>
+        </div>
     )
 }

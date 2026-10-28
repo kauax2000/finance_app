@@ -8,7 +8,7 @@ const fonte = semComentarios(
 
 describe("a tela do lançamento inteligente (v2)", () => {
     it("é um Dialog com a pílula da busca, e não a paleta do cmdk", () => {
-        expect(fonte).toContain('<Dialog surface="auto"')
+        expect(fonte).toContain("<Dialog open={open}")
         expect(fonte).toContain("<SearchInput")
         expect(fonte).not.toContain("CommandDialog")
         expect(fonte).not.toContain("CommandDock")
@@ -16,9 +16,18 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toContain("EXEMPLOS")
     })
 
-    it("ao lado do campo, a pílula redonda do recibo", () => {
+    it("ao lado do campo, a pílula redonda do recibo, no mesmo vidro", () => {
         expect(fonte).toMatch(/size="icon-lg"\s+aria-label="Adicionar recibo"/)
         expect(fonte).toContain("<CameraIcon")
+        expect(fonte).toContain('surface="modal"')
+        expect(fonte).toContain("searchFieldSurfaceClassName.modal")
+    })
+
+    it("a casca não pinta: as pílulas e a placa são vidros soltos sobre o véu", () => {
+        expect(fonte).toContain("<DialogOverlay />")
+        expect(fonte).toContain("<DialogPrimitive.Content")
+        expect(fonte).not.toContain("<DialogContent")
+        expect(fonte).not.toMatch(/data-slot="lancamento-inteligente"[\s\S]{0,400}modalSurfaceClassName/)
     })
 
     it("o Enter no campo lê a frase, não salva; o de um acento (IME) não lê", () => {
@@ -55,9 +64,11 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toMatch(/variant="tertiary"[^>]*onClick=\{onAbrirFormulario\}/)
     })
 
-    it("com a revisão aberta, o layout fixo: o campo no topo, a revisão rola e o rodapé fica", () => {
-        expect(fonte).toContain('layout={revisao ? "fixed" : "auto"}')
-        expect(fonte).toMatch(/<DialogHeader>[\s\S]*<SearchInput/)
+    it("a revisão abre numa placa separada embaixo: o corpo rola e o rodapé fica", () => {
+        expect(fonte).toMatch(/data-slot="lancamento-pilulas"[\s\S]*<SearchInput/)
+        expect(fonte).toMatch(/data-slot="lancamento-revisao"[\s\S]{0,200}min-h-0 flex-col overflow-hidden rounded-surface/)
+        expect(fonte).toMatch(/data-slot="lancamento-revisao"[\s\S]{0,400}modalSurfaceClassName/)
+        expect(fonte).toContain("menu-morph")
         expect(fonte).toMatch(/<DialogBody>\s*<Form/)
         expect(fonte).toMatch(/<\/DialogBody>[\s\S]*<DialogFooter[\s\S]*<FormSubmit/)
     })
