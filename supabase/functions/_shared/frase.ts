@@ -18,6 +18,8 @@ export type FraseInterpretada = {
   cartaoTexto: string | null // palavra que sobrou e pode ser cartão, normalizada
   cartaoPalavra?: string | null // a mesma, como foi escrita (volta assim à descrição)
   descricao: string
+  /** A palavra (como foi escrita) que decidiu estorno, parcelada ou receita; `null` numa despesa sem marca. */
+  motivoDoTipo: string | null
   duvidas: string[] // "valor", "data", "cartao", "parcelas", "descricao"
 }
 
@@ -183,6 +185,20 @@ function diaMes(hoje: string, dia: number, mes: number, ano?: string): string | 
   return d != null && d <= hoje ? d : montarData(y - 1, mes, dia)
 }
 
+const DIAS_DA_SEMANA = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']
+
+/** O dia da semana (0 = domingo) mais recente até hoje; `anterior` nunca devolve hoje. */
+function diaDaSemana(hoje: string, alvo: number, anterior: boolean): string {
+  const [y, m, d] = partes(hoje)
+  const atual = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  let atras = (atual - alvo + 7) % 7
+  if (anterior && atras === 0) atras = 7
+  return somarDias(hoje, -atras)
+}
+
+/** Substantivos de receita: saem da descrição só se sobrar outra palavra ("reembolso 45 uber"). */
+const RECEITA_SUBSTANTIVO = new Set(['reembolso', 'rendimento', 'rendimentos', 'dividendo', 'dividendos'])
+
 type Candidato = { valor: number; de: number; ate: number; marcado: boolean; extenso: boolean; parou: boolean }
 
 export function interpretarFrase(texto: string, hoje: string): FraseInterpretada {
@@ -206,6 +222,12 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   let estorno = false
   let forma: FormaDePagamento | null = null
   let ultimoCredito = -1
+  let motivoEstorno: string | null = null
+  let motivoParcelas: string | null = null
+  let motivoReceita: string | null = null
+  const substantivos: number[] = []
+  const sobra = () => toks.flatMap((t, i) => (!t.usado && /[\p{L}\p{N}]/u.test(t.texto) ? [i] : []))
+  const escrito = (i: number) => toks[i].texto.replace(/^[("'“‘]+|[)"'”’.,;:!?]+$/g, '')
 
   // A primeira data vale; uma inválida ou uma segunda diferente pede conferência.
   const definirData = (d: string | null) => {
@@ -240,7 +262,13 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     if (n != null) {
       usar(i, fim)
       const valida = n >= 2 && n <= 48
-      if (valida) parcelas ??= n
+      if (valida) {
+        if (parcelas == null) {
+          const dePalavra = k(i - 1) === 'em' && !toks[i - 1].usado ? i - 1 : i
+          motivoParcelas = toks.slice(dePalavra, fim + 1).map((_, j) => escrito(dePalavra + j)).join(' ')
+        }
+        parcelas ??= n
+      }
       else duvida('parcelas')
       // O número logo depois ("10x de 30", "10x de R$ 30", "10x 30"): a pessoa confere.
       const comDe = k(fim + 1) === 'de'
@@ -278,14 +306,36 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
       continue
     }
 
-    if (c === 'recebi' || c === 'receita' || c === 'salario') {
+    const diaSemana = DIAS_DA_SEMANA.indexOf(c)
+    if (diaSemana >= 0) {
+      t.usado = true
+      const anterior = k(i + 1) === 'passado' || k(i + 1) === 'passada'
+      if (anterior) toks[++i].usado = true
+      definirData(diaDaSemana(hoje, diaSemana, anterior))
+      continue
+    }
+
+    // "pix do João 150": na primeira posição, com "de/do/da" e um nome, é dinheiro que entrou.
+    if (i === 0 && c === 'pix' && ['de', 'do', 'da'].includes(k(1)) && /^\p{L}{2,}$/u.test(k(2))) {
       tipo = 'income'
-      t.usado = c === 'recebi' // "receita" e "salário" são boas descrições; ficam
+      forma ??= 'pix'
+      motivoReceita ??= escrito(0)
+      usar(0, 1)
+      i = 1
+      continue
+    }
+
+    if (c === 'recebi' || c === 'receita' || c === 'salario' || c === 'ganhei' || c === 'vendi' || RECEITA_SUBSTANTIVO.has(c)) {
+      tipo = 'income'
+      motivoReceita ??= escrito(i)
+      if (RECEITA_SUBSTANTIVO.has(c)) substantivos.push(i)
+      t.usado = c === 'recebi' || c === 'ganhei' || c === 'vendi' // "receita" e "salário" são boas descrições; ficam
       continue
     }
     if (c === 'estorno' || c === 'estornou') {
       tipo = 'income'
       estorno = true
+      motivoEstorno ??= escrito(i)
       t.usado = true
       continue
     }
@@ -378,6 +428,9 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     lerNumero(t.chave) != null || /^\d+x$/.test(t.chave) || t.chave === 'mil' || (NUMEROS.has(t.chave) && t.chave !== 'um' && t.chave !== 'uma')
   if (valor == null || toks.some((t) => !t.usado && outroNumero(t))) duvida('valor')
 
+  // O substantivo de receita só fica na descrição quando é a única palavra.
+  if (sobra().some((i) => !substantivos.includes(i))) for (const i of substantivos) toks[i].usado = true
+
   // O conectivo colado antes do que foi consumido sai junto ("no débito", "em 3x").
   for (let i = toks.length - 2; i >= 0; i--) {
     if (!toks[i].usado && CONECTIVOS.has(k(i)) && toks[i + 1].usado) toks[i].usado = true
@@ -387,7 +440,6 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   // (ou estorno) sem pix/débito/dinheiro, a última palavra que sobrou quando sobram duas ou mais.
   // ponytail: o parser não conhece os cartões; quem chama devolve a palavra à descrição se `casarCartao` falhar.
   const ehPalavra = (i: number) => /^\p{L}{3,}$/u.test(k(i)) && !CONECTIVOS.has(k(i))
-  const sobra = () => toks.flatMap((t, i) => (!t.usado && /[\p{L}\p{N}]/u.test(t.texto) ? [i] : []))
   let cartaoIdx = -1
   const depoisDoCredito = ultimoCredito + 1
   if (ultimoCredito >= 0 && toks[depoisDoCredito] && !toks[depoisDoCredito].usado && ehPalavra(depoisDoCredito)) {
@@ -434,6 +486,7 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     cartaoTexto,
     cartaoPalavra,
     descricao,
+    motivoDoTipo: motivoEstorno ?? motivoParcelas ?? motivoReceita,
     duvidas,
   }
 }
