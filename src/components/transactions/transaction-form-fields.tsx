@@ -830,8 +830,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 Nenhum cartão cadastrado para vincular esta despesa.
                             </EmptyStateDescription>
                             {isAdulto ? (
-                                <EmptyStateActions>
-                                    <Button variant="secondary" asChild>
+                                <EmptyStateActions className="w-full">
+                                    <Button variant="secondary" className="w-full" asChild>
                                         <Link href={creditCardsHref}>Cadastrar cartão</Link>
                                     </Button>
                                 </EmptyStateActions>
