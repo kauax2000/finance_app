@@ -1277,7 +1277,7 @@ declaração de `background-color` no trilho).
     identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
     amostra (`Toggle swatch`: contorno de 2px, afastado 2px) na cor da própria
     opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
-    5,6:1 no claro) e a linha acende cheia (`bg-sidebar-accent`, como a página
+    5,6:1 no claro) e a linha acende a 70% (`bg-sidebar-accent/70`: cheia, era uma placa opaca sobre o vidro), como a página
     ativa na barra); a outra em foco mostra a prévia do halo a 45%, e as demais
     esmaecem a tinta. Sem peso nem marcador no fim.
   - Teto vertical

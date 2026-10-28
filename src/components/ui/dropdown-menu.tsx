@@ -977,9 +977,9 @@ function DropdownMenuRadioItem({
           // No toque o ladrilho é o `ColorTile md` (32, ícone de 16): 32 + 6 de cada lado
           // dá os 44 da linha (rodada 330).
           "pointer-coarse:[&>[data-slot=color-tile]]:size-8 pointer-coarse:[&>[data-slot=color-tile]]:rounded-row pointer-coarse:[&>[data-slot=color-tile]>svg]:size-4",
-          // A escolhida acende cheia nos tons da barra lateral (a passagem é a 50%), como a
-          // página ativa nela.
-          "data-[state=checked]:bg-sidebar-accent data-[state=checked]:text-sidebar-accent-foreground",
+          // A escolhida acende nos tons da barra lateral a 70% (a passagem é a 50%): cheia,
+          // a linha era uma placa opaca sobre o vidro do menu, e o brilho de trás sumia.
+          "data-[state=checked]:bg-sidebar-accent/70 data-[state=checked]:text-sidebar-accent-foreground",
           // O halo mora no ladrilho: nasce colado e transparente, e cresce na curva do sistema.
           "[&>[data-slot=color-tile]]:outline-2 [&>[data-slot=color-tile]]:outline-solid [&>[data-slot=color-tile]]:outline-offset-0 [&>[data-slot=color-tile]]:outline-transparent [&>[data-slot=color-tile]]:transition-[outline-offset,outline-color] [&>[data-slot=color-tile]]:duration-(--duration-slow) [&>[data-slot=color-tile]]:ease-(--ease-emphasized)",
           // Escolhida: a cor da própria carteira, puxada para a tinta — o matiz é da pessoa, e o
