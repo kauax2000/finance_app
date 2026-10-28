@@ -831,7 +831,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             </EmptyStateDescription>
                             {isAdulto ? (
                                 <EmptyStateActions>
-                                    <Button variant="link" asChild>
+                                    <Button variant="secondary" asChild>
                                         <Link href={creditCardsHref}>Cadastrar cartão</Link>
                                     </Button>
                                 </EmptyStateActions>
