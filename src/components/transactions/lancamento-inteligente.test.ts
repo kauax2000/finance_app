@@ -17,16 +17,19 @@ describe("a tela do lançamento inteligente (v2)", () => {
     })
 
     it("ao lado do campo, a pílula redonda do recibo, no mesmo vidro", () => {
-        expect(fonte).toMatch(/size="icon-lg"\s+aria-label="Adicionar recibo"/)
+        expect(fonte).toMatch(/size="icon-xl"\s+aria-label="Adicionar recibo"/)
         expect(fonte).toContain("<CameraIcon")
         expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,200}searchFieldSurfaceClassName\.modal/)
         expect(fonte).toMatch(/aria-label="Adicionar recibo"[\s\S]{0,400}searchFieldSurfaceClassName\.modal/)
     })
 
-    it("um vidro só: a frase não pinta o dela, e com a placa ela é o cabeçalho", () => {
-        expect(fonte).toMatch(/<SearchInput\s+surface="field"\s+focusRing=\{false\}\s+className=\{cn\(\s+"border-0 bg-transparent"/)
-        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]*data-slot="lancamento-cabeca"[\s\S]*<SearchInput[\s\S]*<Revisao/)
-        expect(fonte).toMatch(/size="icon-md"\s+aria-label="Adicionar recibo"/)
+    it("um vidro só: a frase não pinta o dela, e o painel tem o vidro irmão do conteúdo", () => {
+        expect(fonte).toMatch(/<SearchInput\s+surface="field"\s+focusRing=\{false\}\s+size="xl"\s+className=\{cn\(\s+"border-0 bg-transparent"/)
+        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]*data-slot="lancamento-cabeca"[\s\S]*<SearchInput/)
+        // O vidro do painel é irmão do conteúdo: o recorte e o transform do conteúdo não desligam o borrão.
+        expect(fonte).toMatch(/data-slot="lancamento-fundo"[\s\S]{0,160}searchFieldSurfaceClassName\.modal[\s\S]*ref=\{recorteRef\}[\s\S]*ref=\{conteudoRef\}[\s\S]*<Revisao/)
+        // A união das duas pílulas coladas é um vidro só, no mesmo material.
+        expect(fonte).toMatch(/ref=\{uniaoRef\}[\s\S]{0,240}searchFieldSurfaceClassName\.modal/)
     })
 
     it("a casca não pinta: as pílulas e a placa são vidros soltos sobre o véu", () => {
@@ -62,12 +65,21 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toContain('type="submit"')
     })
 
-    it("todos os campos aparecem, e o não lido diz \"Não identificado\"", () => {
-        for (const campo of ["tipo", "valor", "descricao", "categoria", "forma", "data", "parcelas"]) {
+    it("o painel em lista agrupada: o tipo na pílula, o valor em destaque e as linhas", () => {
+        for (const campo of ["descricao", "categoria", "forma", "data", "parcelas"]) {
             expect(fonte).toContain(`campo: "${campo}"`)
         }
+        expect(fonte).toContain('["tipo", "valor", ...CAMPOS.map((x) => x.campo)]')
+        expect(fonte).toContain('x.campo !== "parcelas" || tipo === "parcelada"')
+        expect(fonte).toContain("<BadgeDot />")
+        expect(fonte).toContain("<MoneyDisplay")
+        expect(fonte).toMatch(/<ItemGroup[\s\S]{0,160}rounded-row-lg bg-foreground\/5/)
+        expect(fonte).toContain('<ItemMedia variant="tile" tone={x.tom} tint="vivid">')
+        expect(fonte).toContain("<ItemChevron />")
+        expect(fonte).toContain('{valor ?? "Escolher"}')
+        expect(fonte).toContain('"Primeira cobrança"')
+        expect(fonte).toContain("<DialogCloseButton")
         expect(fonte).toContain('"Não identificado"')
-        expect(fonte).toContain("{CAMPOS.map(")
     })
 
     it("o Enter de um campo em edição confirma a edição, e não aprova", () => {
@@ -78,23 +90,29 @@ describe("a tela do lançamento inteligente (v2)", () => {
     it("o \"Aprovar\" trava com o motivo, e o formulário completo é a ação ao lado", () => {
         expect(fonte).toContain("faltaParaLancar(")
         expect(fonte).toContain("MOTIVO_DA_FALTA[falta]")
-        expect(fonte).toMatch(/<FormSubmit[\s\S]{0,120}form=\{formId\}[\s\S]{0,120}disabled=\{motivo != null\}/)
+        expect(fonte).toMatch(/<FormSubmit[\s\S]{0,40}form=\{formId\}[\s\S]{0,40}size="xl"[\s\S]{0,80}className="w-full"[\s\S]{0,80}disabled=\{motivo != null\}/)
         expect(fonte).toMatch(/variant="tertiary"[^>]*onClick=\{onAbrirFormulario\}/)
     })
 
-    it("o campo vira a placa: o corpo rola e o rodapé fica", () => {
+    it("o campo vira o painel: o corpo rola e o rodapé fica", () => {
         expect(fonte).toMatch(/data-slot="lancamento-pilulas"[\s\S]*<SearchInput/)
-        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,120}min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-surface/)
+        expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,120}flex min-w-0 flex-1 items-center overflow-hidden rounded-full/)
         expect(fonte).not.toContain("lancamento-revisao")
-        expect(fonte).toMatch(/<DialogBody>\s*<Form/)
+        expect(fonte).toMatch(/<DialogBody className="pt-5">\s*<Form/)
         expect(fonte).toMatch(/<\/DialogBody>[\s\S]*<DialogFooter[\s\S]*<FormSubmit/)
     })
 
-    it("o movimento: recorte e transform no vidro, pelos quadros puros, na mola da casa", () => {
-        for (const q of ["quadroDaPlaca(", "quadroDaFusao(", "quadroDoMais(", "quandoPintar("]) expect(fonte).toContain(q)
+    it("o movimento: colar, absorver e abrir, pelos quadros puros, no relógio do motion", () => {
+        for (const q of ["quadroDoColar(", "recorteDoAbsorver(", "quadroDoAbrir(", "cascata(", "quadroDoMais(", "quandoPintar("])
+            expect(fonte).toContain(q)
+        expect(fonte).toContain("...VOLTA_DA_PILULA")
+        expect(fonte).toContain("...ABSORVER")
+        expect(fonte).toContain("...MOLA,")
+        expect(fonte).toContain("...MOLA_PALCO,")
+        expect(fonte).toContain("if (p <= COLADO_EM) absorver()")
+        expect(fonte).toContain("if (u >= ABRE_EM) abrir()")
         expect(fonte).toContain("vidro.style.clipPath")
         expect(fonte).toContain("SEPARACAO")
-        expect(fonte).toContain("MOLA_PALCO")
         expect(fonte).toContain("menu-unmorph")
         expect(fonte).toContain("useReducedMotion")
         expect(fonte).toContain("window.visualViewport")
@@ -110,8 +128,8 @@ describe("a tela do lançamento inteligente (v2)", () => {
     })
 
     it("campo editado à mão perde o selo IA; categoria sem palpite pede Confira", () => {
-        expect(fonte).toContain("!campoEditado(x.campo, leitura.editados)")
-        expect(fonte).toContain('x.campo === "categoria" && !campos.categoryId')
+        expect(fonte).toContain("!campoEditado(campo, leitura.editados)")
+        expect(fonte).toContain('campo === "categoria" && !campos.categoryId')
     })
 
     it("a foto entra colada e solta, e todo botão cru declara o tipo", () => {

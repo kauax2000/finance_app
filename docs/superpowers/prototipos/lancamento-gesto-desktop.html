@@ -1,0 +1,454 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
+  :root { --bg:#0b0b0c; --ink:#f5f5f7; --ink2:#a1a1a6; --ink3:#6e6e73; --line:rgba(255,255,255,.08);
+          --glass:rgba(38,38,42,.58); --ring:rgba(255,255,255,.12); --warn:#ffb340; --brand:#0a84ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#050506; color:var(--ink); font:15px/1.4 Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1300px; margin:0 auto; padding:28px 20px 60px; }
+  h1 { font-size:22px; font-weight:600; margin:0 0 6px; }
+  .sub { color:var(--ink2); margin:0 0 26px; max-width:70ch; }
+  .row { display:flex; gap:36px; flex-wrap:wrap; justify-content:center; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .col h2 { font-size:15px; font-weight:600; margin:0; }
+  .col p { color:var(--ink2); font-size:13px; margin:0; max-width:340px; text-align:center; }
+  .choose { margin-top:4px; font:500 13px Inter; color:var(--ink); background:#1c1c1e; border:1px solid var(--line); border-radius:999px; padding:8px 14px; cursor:pointer; }
+  .choose.selected, .option.selected .choose { background:var(--ink); color:#000; }
+  .replay { font:600 14px Inter; color:#fff; background:var(--brand); border:0; border-radius:999px; padding:10px 18px; cursor:pointer; }
+  .testar { font:600 16px Inter; color:#000; background:var(--ink); border:0; border-radius:999px; padding:13px 26px; cursor:pointer; margin:0 0 24px; }
+  .lenta { font:600 16px Inter; color:var(--ink); background:#1c1c1e; border:1px solid var(--line); border-radius:999px; padding:13px 22px; cursor:pointer; margin:0 0 24px 10px; }
+  .lenta.on { background:var(--warn); color:#000; border-color:transparent; }
+  .testar:active, .replay:active { transform:scale(.97); }
+
+  /* telefone */
+  .phone { position:relative; width:375px; height:760px; border-radius:46px; overflow:hidden; background:var(--bg);
+           box-shadow:0 0 0 10px #1a1a1c, 0 0 0 11px #2a2a2c, 0 30px 80px rgba(0,0,0,.6); isolation:isolate; }
+  .app { position:absolute; inset:0; padding:64px 18px; filter:blur(14px) brightness(.55); }
+  .app .card { height:96px; border-radius:22px; background:#1c1c1e; margin-bottom:12px; }
+  .app .card.g { background:linear-gradient(135deg,#183a2b,#1c1c1e); }
+  .veil { position:absolute; inset:0; background:rgba(0,0,0,.25); }
+  .kbd { position:absolute; left:0; right:0; bottom:0; height:292px; background:rgba(44,44,46,.92); backdrop-filter:blur(20px);
+         border-top:1px solid var(--line); transition:transform calc(var(--f,1)*.32s) cubic-bezier(.32,.72,0,1); padding:10px 4px; }
+  .kbd .k { display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin:8px 3px; }
+  .kbd .k span { height:42px; border-radius:6px; background:#5a5a5e; }
+  .kbd.down { transform:translateY(100%); }
+
+  .glass { position:absolute; overflow:hidden; background:var(--glass); backdrop-filter:blur(28px) saturate(1.7);
+           -webkit-backdrop-filter:blur(28px) saturate(1.7); box-shadow:0 0 0 1px var(--ring), 0 18px 50px rgba(0,0,0,.35);
+           will-change:left,top,width,height,border-radius; }
+  .pill-content { position:absolute; inset:0; display:flex; align-items:center; gap:10px; padding:0 16px; font-size:16px; }
+  .pill-content svg { flex:none; opacity:.6; }
+  .caret { display:inline-block; width:2px; height:19px; background:var(--brand); margin-left:1px; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .cam { position:absolute; display:grid; place-items:center; }
+
+  /* painel — conteúdo em layout final, preso ao topo do vidro */
+  .panel { position:absolute; left:0; top:0; width:339px; padding:22px 16px 16px; }
+  .reveal { opacity:0; filter:blur(10px); transform:translateY(6px); }
+  .in { transition:opacity calc(var(--f,1)*.42s) cubic-bezier(.2,.8,.2,1), filter calc(var(--f,1)*.42s) cubic-bezier(.2,.8,.2,1), transform calc(var(--f,1)*.42s) cubic-bezier(.2,.8,.2,1);
+        opacity:1; filter:blur(0); transform:none; }
+  .close { position:absolute; right:14px; top:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.08);
+           display:grid; place-items:center; color:var(--ink2); }
+  .eyebrow { display:inline-flex; align-items:center; gap:6px; font:600 12px Inter; letter-spacing:.02em; color:var(--ink2);
+             background:rgba(255,255,255,.07); padding:5px 10px; border-radius:999px; }
+  .eyebrow i { width:6px; height:6px; border-radius:50%; background:var(--brand); }
+  .hero { font:700 40px/1.05 Inter; letter-spacing:-.025em; font-variant-numeric:tabular-nums; margin:12px 0 4px; }
+  .hero small { font-size:22px; font-weight:600; color:var(--ink2); margin-right:4px; }
+  .heroSub { color:var(--ink2); font-size:14px; }
+  .group { margin-top:18px; background:rgba(255,255,255,.055); border-radius:16px; overflow:hidden; }
+  .item { display:flex; align-items:center; gap:12px; padding:0 14px; height:50px; position:relative; }
+  .item + .item::before { content:""; position:absolute; top:0; left:52px; right:0; height:1px; background:var(--line); }
+  .ico { width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex:none; }
+  .lbl { flex:1; font-size:15px; }
+  .val { color:var(--ink2); font-size:15px; display:flex; align-items:center; gap:6px; }
+  .val.warn { color:var(--warn); }
+  .chev { color:var(--ink3); }
+  .why { font-size:12px; color:var(--ink3); margin-top:1px; }
+  .approve { margin-top:16px; height:52px; border-radius:999px; background:var(--ink); color:#000; font:600 17px Inter;
+             display:grid; place-items:center; }
+  .full { margin-top:6px; height:40px; display:grid; place-items:center; color:var(--ink2); font:500 14px Inter; }
+
+  /* variante B: fichas */
+  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:18px; }
+  .tile { background:rgba(255,255,255,.055); border-radius:16px; padding:11px 13px; min-height:66px; }
+  .tile .t { font-size:12px; color:var(--ink3); display:flex; align-items:center; gap:6px; }
+  .tile .v { font-size:15px; font-weight:500; margin-top:4px; }
+  .tile.warn { box-shadow:inset 0 0 0 1px rgba(255,179,64,.45); }
+  .tile.warn .v { color:var(--warn); }
+  .tile.wide { grid-column:span 2; display:flex; align-items:center; justify-content:space-between; min-height:54px; }
+
+  .legend { margin:30px auto 0; max-width:760px; color:var(--ink2); font-size:13px; }
+  .legend b { color:var(--ink); font-weight:600; }
+@keyframes menu-morph {
+  0% {
+    opacity: 0;
+    border-radius: 50%;
+    transform: scale(0.2, 0.2);
+  }
+  4.5% {
+    transform: scale(0.316, 0.47);
+  }
+  9% {
+    transform: scale(0.435, 0.65);
+  }
+  13.4% {
+    transform: scale(0.574, 0.807);
+  }
+  16% {
+    opacity: 1;
+  }
+  17.9% {
+    transform: scale(0.682, 0.94);
+  }
+  22.1% {
+    transform: scale(0.802, 1.04);
+  }
+  26.6% {
+    transform: scale(0.881, 1.075);
+  }
+  31.1% {
+    border-radius: 22px;
+    transform: scale(0.93, 1.08);
+  }
+  35.5% {
+    transform: scale(0.96, 1.075);
+  }
+  40% {
+    transform: scale(0.985, 1.065);
+  }
+  44.5% {
+    transform: scale(1, 1.052);
+  }
+  48.9% {
+    transform: scale(1.014, 1.04);
+  }
+  53.4% {
+    transform: scale(1.02, 1.03);
+  }
+  57.6% {
+    transform: scale(1.022, 1.02);
+  }
+  62.1% {
+    transform: scale(1.02, 1.013);
+  }
+  66.6% {
+    transform: scale(1.016, 1.008);
+  }
+  71.1% {
+    transform: scale(1.012, 1.005);
+  }
+  80% {
+    transform: scale(1.006, 1.002);
+  }
+  88.9% {
+    transform: scale(1.003, 1);
+  }
+  100% {
+    opacity: 1;
+    border-radius: 22px;
+    transform: none;
+  }
+}
+
+  .ref .hdr { position:absolute; left:0; right:0; top:0; height:100px; }
+  .ref .placaBusca { position:absolute; left:16px; right:16px; top:112px; height:300px; border-radius:22px; transform-origin:top right; opacity:0;
+       background:var(--glass); backdrop-filter:blur(28px) saturate(1.7); -webkit-backdrop-filter:blur(28px) saturate(1.7); box-shadow:0 0 0 1px var(--ring); padding:10px 8px; }
+  .ref .placaBusca.brota { animation: menu-morph calc(var(--f,1)*460ms) linear backwards; opacity:1; }
+  .ref .placaBusca .ln { height:36px; border-radius:12px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--ink2); font-size:14px; }
+  .ref .placaBusca .ln i { width:22px; height:22px; border-radius:7px; background:rgba(255,255,255,.1); }
+  .ref .placaBusca .grp { font:600 11px Inter; color:var(--ink3); text-transform:uppercase; letter-spacing:.06em; padding:8px 10px 4px; }
+@keyframes menu-morph {
+  0% {
+    opacity: 0;
+    border-radius: 50%;
+    transform: scale(0.2, 0.2);
+  }
+  4.5% {
+    transform: scale(0.316, 0.47);
+  }
+  9% {
+    transform: scale(0.435, 0.65);
+  }
+  13.4% {
+    transform: scale(0.574, 0.807);
+  }
+  16% {
+    opacity: 1;
+  }
+  17.9% {
+    transform: scale(0.682, 0.94);
+  }
+  22.1% {
+    transform: scale(0.802, 1.04);
+  }
+  26.6% {
+    transform: scale(0.881, 1.075);
+  }
+  31.1% {
+    border-radius: 22px;
+    transform: scale(0.93, 1.08);
+  }
+  35.5% {
+    transform: scale(0.96, 1.075);
+  }
+  40% {
+    transform: scale(0.985, 1.065);
+  }
+  44.5% {
+    transform: scale(1, 1.052);
+  }
+  48.9% {
+    transform: scale(1.014, 1.04);
+  }
+  53.4% {
+    transform: scale(1.02, 1.03);
+  }
+  57.6% {
+    transform: scale(1.022, 1.02);
+  }
+  62.1% {
+    transform: scale(1.02, 1.013);
+  }
+  66.6% {
+    transform: scale(1.016, 1.008);
+  }
+  71.1% {
+    transform: scale(1.012, 1.005);
+  }
+  80% {
+    transform: scale(1.006, 1.002);
+  }
+  88.9% {
+    transform: scale(1.003, 1);
+  }
+  100% {
+    opacity: 1;
+    border-radius: 22px;
+    transform: none;
+  }
+}
+
+  .ctrl { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin:0 0 16px; position:sticky; top:0; background:#050506; padding:10px 0; z-index:9; }
+  .ctrl input[type=range] { width:420px; } .ctrl output { font:600 15px Inter; font-variant-numeric:tabular-nums; min-width:90px; }
+  .ctrl button { font:600 13px Inter; color:#000; background:var(--ink); border:0; border-radius:999px; padding:9px 16px; cursor:pointer; }
+  .ctrl button.sec { background:#1c1c1e; color:var(--ink); border:1px solid var(--line); }
+  .big { display:flex; gap:24px; flex-wrap:wrap; margin-bottom:22px; }
+  .big h3, .linha h3 { font-size:13px; font-weight:600; margin:0 0 6px; color:var(--ink2); }
+  .big .phone { transform:scale(.62); transform-origin:0 0; margin:0 -142px -289px 0; }
+  .tira { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; }
+  .quadro { flex:none; width:156px; cursor:pointer; border-radius:12px; padding:3px; }
+  .quadro .phone { transform:scale(.4); transform-origin:0 0; margin:0 -225px -456px 0; box-shadow:0 0 0 4px #1a1a1c; border-radius:30px; }
+  .quadro .t { font:500 11px Inter; color:var(--ink3); margin-top:4px; font-variant-numeric:tabular-nums; }
+  .quadro.agora { outline:1px solid var(--ink2); } .quadro.agora .t { color:var(--ink); }
+  .num { display:inline-block; min-width:18px; height:18px; border-radius:9px; background:#2c2c2e; color:var(--ink); font:600 11px/18px Inter; text-align:center; margin-right:4px; }
+  .linha { margin-bottom:16px; }
+  /* referência: a placa do command, parada no quadro pedido */
+  .placaRef { position:absolute; left:16px; right:16px; top:110px; height:330px; border-radius:22px; transform-origin:top right; padding:10px 8px;
+     background:var(--glass); backdrop-filter:blur(28px) saturate(1.7); -webkit-backdrop-filter:blur(28px) saturate(1.7); box-shadow:0 0 0 1px var(--ring);
+     animation: menu-morph 460ms linear both paused; }
+  .placaRef .grp { font:600 11px Inter; color:var(--ink3); text-transform:uppercase; letter-spacing:.06em; padding:8px 10px 4px; }
+  .placaRef .ln { height:40px; border-radius:12px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--ink); font-size:15px; }
+  .placaRef .ln i { width:24px; height:24px; border-radius:7px; background:rgba(255,255,255,.1); }
+  .refBar { position:absolute; top:54px; left:16px; right:68px; height:44px; border-radius:22px; }
+  .refX { position:absolute; top:54px; right:16px; width:44px; height:44px; border-radius:22px; display:grid; place-items:center; }
+
+  .big .phone { transform:scale(.8); transform-origin:0 0; margin:0 -75px -152px 0; }
+  .fase { font:600 12px Inter; color:var(--ink); background:#2c2c2e; border-radius:999px; padding:4px 10px; }
+  .tira { flex-wrap:wrap; }
+  .quadro .fz { font:500 10px Inter; color:var(--ink3); }
+
+  .desk { position:relative; width:960px; height:620px; border-radius:14px; overflow:hidden; background:var(--bg); isolation:isolate;
+           box-shadow:0 0 0 1px #2a2a2c, 0 30px 80px rgba(0,0,0,.6); }
+  .desk .app { padding:70px 40px 40px 260px; }
+  .desk .app .card { height:110px; }
+  .desk .kbd { display:none; }
+  .desk .panel { width:448px; padding:24px 20px 18px; }
+  .big .desk { transform:scale(.9); transform-origin:0 0; margin:0 -96px -62px 0; }
+  .quadro .desk { transform:scale(.25); transform-origin:0 0; margin:0 -720px -465px 0; border-radius:20px; }
+  .quadro { width:248px; }
+</style></head><body><div class="wrap">
+<h1>O gesto inteiro no desktop, quadro a quadro</h1>
+<p class="sub">0 ms é o Enter. <b>Colar</b> (a busca do telefone fechando, 320 ms) → <b>absorver</b> (a ponta da câmera recua para dentro do campo, 260 ms) → <b>abrir</b> (o campo vira a placa: altura na <code>MOLA</code>, largura na <code>MOLA_PALCO</code>; a frase sai no desfoque; as linhas chegam do desfoque). No desktop não há teclado: o campo fica no centro alto, a borda de cima fica presa e a placa cresce para baixo, na largura do campo com a câmera (448). Arraste, clique num quadro ou toque. Me diga o número do quadro e o que está errado nele.</p>
+<div class="ctrl"><button id="tocar">▶ Tocar</button><button class="sec" id="lento">🐢 5× mais lento</button>
+<input type="range" id="t" min="0" max="1400" step="5" value="0"><output id="tv">0 ms</output><span class="fase" id="fase">repouso</span></div>
+<div class="big"><div class="desk" id="big"></div></div>
+<div class="linha"><h3>Quadros (de 40 em 40 ms)</h3><div class="tira" id="tira"></div></div>
+</div>
+<script>
+const suave=(x,[a,b])=>{ const t=Math.min(Math.max((x-a)/(b-a),0),1); return t*t*(3-2*t); };
+const lerp=(a,b,t)=>a+(b-a)*t;
+const TINTA_DO_VOO=8, ACOPLAMENTO_Y=.45;
+const PINCA=[.1,.7], PARTE=[.6,1], ICONE=[.1,.7], CONTEUDO=[.6,.85], TINTA=[.85,1], PUXAO_DO_X=.05, ESTICA=.7;
+const esticao=p=>Math.min(p/ESTICA,1)+Math.max(0,p-1);
+function quadroDasBolhas(m,p){
+  const q=Math.min(Math.max(p,0),1), resto=1-p, R=m.pilula.height/2;
+  const pinca=suave(q,PINCA), parte=suave(q,PARTE), puxao=PUXAO_DO_X*pinca*(1-parte);
+  const vao=(m.x.left-m.pilula.right)*parte;
+  const xdx=(m.deX.left-m.x.left)*resto, xdy=(m.deX.top-m.x.top)*resto;
+  const livre=m.x.left+xdx-m.x.width*puxao-vao;
+  const direita=vao===0?Math.round(livre*2)/2:livre;
+  const escalaX=(m.x.right+xdx-direita-vao)/m.x.width;
+  const visivel=lerp(m.lupa.left,m.pilula.left,esticao(p));
+  const largura=Math.max(0,direita-visivel), emenda=R*pinca, cabe=Math.min(1,largura/(R+emenda));
+  const dx=direita-m.pilula.right, esquerda=m.pilula.width-largura;
+  return { R, Rh:R*cabe, dx, esquerda, topo:(m.lupa.top-m.pilula.top)*resto, base:(m.pilula.bottom-m.lupa.bottom)*resto,
+    emenda, emendaH:emenda*cabe, puxao, escalaX, vao, xdx, xdy, icone:suave(q,ICONE), conteudo:suave(q,CONTEUDO), tinta:1-suave(q,TINTA) };
+}
+const tinta=k=>{ const a=TINTA_DO_VOO*k/100; return `linear-gradient(rgba(245,245,247,${a}),rgba(245,245,247,${a}))`; };
+function desenharBolhas(p,x,ix,f,conteudo=true){
+  p.style.borderRadius=`${f.R}px 0px 0px ${f.R}px`; x.style.borderRadius=`0px ${f.R}px ${f.R}px 0px`;
+  p.style.transform=`translateX(${f.dx}px)`;
+  p.style.clipPath=`inset(${f.topo}px 0px ${f.base}px ${f.esquerda}px round ${f.Rh}px ${f.emendaH}px ${f.emendaH}px ${f.Rh}px / ${f.R}px ${f.emenda}px ${f.emenda}px ${f.R}px)`;
+  p.style.backgroundImage=x.style.backgroundImage=tinta(f.tinta);
+  x.style.transformOrigin='right center';
+  x.style.transform=`translate(${f.xdx}px, ${f.xdy}px) scale(${f.escalaX}, ${1-f.puxao*ACOPLAMENTO_Y})`;
+  x.style.clipPath=`inset(0px round ${f.emenda}px ${f.R}px ${f.R}px ${f.emenda}px)`;
+  ix.style.opacity=f.icone; ix.style.filter=`blur(${6*(1-f.icone)}px)`; ix.style.transform=`scale(${.7+.3*f.icone})`;
+  for(const filho of p.children){ filho.style.transform=`translateX(${Math.max(0,f.esquerda)}px)`; if(conteudo) filho.style.filter=`opacity(${f.conteudo})`; }
+}
+
+
+function mola(k,c,tMs){ if(tMs<=0) return 0; let x=0,v=0; const dt=1/2000; for(let t=0;t<tMs/1000;t+=dt){ const a=-k*(x-1)-c*v; v+=a*dt; x+=v*dt; } return x; }
+function bezier(p1x,p1y,p2x,p2y){ return x=>{ if(x<=0) return 0; if(x>=1) return 1; let lo=0,hi=1,t=.5; for(let i=0;i<40;i++){ t=(lo+hi)/2; const bx=3*(1-t)*(1-t)*t*p1x+3*(1-t)*t*t*p2x+t*t*t; if(bx<x) lo=t; else hi=t; } return 3*(1-t)*(1-t)*t*p1y+3*(1-t)*t*t*p2y+t*t*t; }; }
+const VOLTA=bezier(.2,0,0,1), PADRAO=bezier(.4,0,.2,1), REVELA=bezier(.2,.8,.2,1), TECLADO=bezier(.32,.72,0,1);
+const KEYS = Array.from({length:10},()=>'<span></span>').join('');
+const lupa = '<svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd"/></svg>';
+const camera = '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M1 8a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 8.07 3h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 16.07 6H17a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8Zm13.5 3a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM10 14a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd"/></svg>';
+const ic = (bg, path) => `<span class="ico" style="background:${bg}"><svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">${path}</svg></span>`;
+const P = {
+  desc:'<path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.75 9.775 3 13l3.225-.75 7.263-7.263a1.75 1.75 0 0 0 0-2.474Z"/>',
+  cat:'<path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h4.379a1.5 1.5 0 0 1 1.06.44l4.62 4.62a1.5 1.5 0 0 1 0 2.12l-4.38 4.38a1.5 1.5 0 0 1-2.12 0l-4.62-4.62A1.5 1.5 0 0 1 2 7.879V3.5ZM5 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/>',
+  card:'<path d="M1 4.5A1.5 1.5 0 0 1 2.5 3h11A1.5 1.5 0 0 1 15 4.5V5H1v-.5ZM1 7h14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 11.5V7Zm3 3a.75.75 0 0 0 0 1.5h2a.75.75 0 0 0 0-1.5H4Z"/>',
+  cal:'<path d="M4.5 1.75a.75.75 0 0 1 1.5 0V3h4V1.75a.75.75 0 0 1 1.5 0V3h.25A2.25 2.25 0 0 1 14 5.25v6.5A2.25 2.25 0 0 1 11.75 14h-7.5A2.25 2.25 0 0 1 2 11.75v-6.5A2.25 2.25 0 0 1 4.25 3h.25V1.75ZM3.5 7v4.75c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75V7h-9Z"/>',
+  parc:'<path d="M2 4.75A.75.75 0 0 1 2.75 4h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 3.5A.75.75 0 0 1 2.75 7.5h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8.25Zm0 3.5a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"/>',
+};
+const chev = '<svg class="chev" width="8" height="13" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const head = `<div class="close reveal">✕</div>
+  <span class="eyebrow reveal"><i></i>Parcelada · por causa de “10x”</span>
+  <div class="hero reveal"><small>R$</small>3.000,00</div>
+  <div class="heroSub reveal">10× de R$ 300,00 no Inter</div>`;
+const foot = `<div class="approve reveal">Aprovar</div><div class="full reveal">Formulário completo</div>`;
+const LISTA = head + `<div class="group reveal">
+  <div class="item">${ic('#8e8e93',P.desc)}<span class="lbl">Descrição</span><span class="val">Tv ${chev}</span></div>
+  <div class="item">${ic('#ff9f0a',P.cat)}<span class="lbl">Categoria</span><span class="val warn">Escolher ${chev}</span></div>
+  <div class="item">${ic('#0a84ff',P.card)}<span class="lbl">Cartão</span><span class="val">Inter ${chev}</span></div>
+  <div class="item">${ic('#ff375f',P.cal)}<span class="lbl">Primeira cobrança</span><span class="val">Hoje ${chev}</span></div>
+  <div class="item">${ic('#30d158',P.parc)}<span class="lbl">Parcelas</span><span class="val">10× ${chev}</span></div>
+</div>` + foot;
+const t = (label, v, cls='') => `<div class="tile reveal ${cls}"><div class="t">${label}</div><div class="v">${v}</div></div>`;
+const FICHAS = head + `<div class="tiles">
+  ${t('Descrição','Tv')}${t('Categoria','Escolher','warn')}
+  ${t('Cartão','Inter')}${t('Primeira cobrança','Hoje')}
+  <div class="tile wide reveal"><div><div class="t">Parcelas</div><div class="v">10× de R$ 300,00</div></div>${chev}</div>
+</div>` + foot;
+
+
+
+const GH=620, KB=0, DW=960;
+const cx=(l,t,w,h)=>({left:l,top:t,width:w,height:h,right:l+w,bottom:t+h});
+const LARG=448, X0=(DW-LARG)/2, TOPO=120;
+const pill=cx(X0,TOPO,LARG-48-8,48), cam=cx(X0+LARG-48,TOPO,48,48), deX=cx(pill.right,TOPO,48,48);
+const M={ lupa:pill, deX, pilula:pill, x:cam, dpr:2 };
+// os marcos do relógio
+let tColado=320; for(let t=0;t<=320;t++){ if(1-VOLTA(t/320)<=.02){ tColado=t; break; } }
+let tAbre=tColado+260; for(let d=0;d<=260;d++){ if(PADRAO(d/260)>=.75){ tAbre=tColado+d; break; } }
+// As peças acendem durante o crescimento e terminam quando o vidro assenta (como
+// no iOS): começam quando a altura passa de 12% e a última termina no repouso
+// das duas molas. A cascata de 28 ms entre elas fica.
+let tRevela=0; for(let t=0;t<800;t++){ if(mola(300,25,t)>.12){ tRevela=t; break; } }
+let tAssenta=0; for(let t=0;t<1500;t+=5){ if(Math.abs(mola(300,25,t)-1)<.01 && Math.abs(mola(220,30,t)-1)<.01){ tAssenta=t; break; } }
+const NPECAS=7, DUR=Math.max(160, tAssenta-tRevela-(NPECAS-1)*28);
+const pos=(e,r)=>Object.assign(e.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
+const fundo='<div class="app"><div class="card g"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div><div class="veil"></div>';
+function montar(el){
+  el.innerHTML=fundo+`<div class="kbd" style="transition:none"><div class="k">${KEYS}</div><div class="k">${KEYS}</div><div class="k">${KEYS}</div></div>
+    <div class="glass placa" style="border-radius:0;box-shadow:none"><div class="frase pill-content">${lupa}<span>tv 3000 em 10x no inter</span></div><div class="panel">${LISTA}</div></div>
+    <div class="glass g1"><div class="pill-content">${lupa}<span>tv 3000 em 10x no inter</span></div></div>
+    <div class="glass uniao" style="border-radius:0;box-shadow:none;visibility:hidden"></div>
+    <div class="glass cam"><div class="ic" style="position:absolute;inset:0;display:grid;place-items:center">${camera}</div></div>`;
+  const pl=el.querySelector('.placa'), painel=pl.querySelector('.panel'), fr=pl.querySelector('.frase');
+  el.querySelectorAll('.reveal').forEach(n=>n.style.transition='none');
+  const alt=painel.scrollHeight;
+  const Fim={ left:X0, top:TOPO, width:LARG, height:alt };
+  const C={ left:pill.left, top:pill.top, width:pill.width, height:48 }, P=20;
+  const box={ left:Math.min(Fim.left,C.left)-P, top:Math.min(Fim.top,C.top)-P, right:Math.max(Fim.left+Fim.width,C.left+C.width)+P, bottom:Math.max(Fim.top+Fim.height,C.top+C.height)+P };
+  pos(pl,{ left:box.left, top:box.top, width:box.right-box.left, height:box.bottom-box.top });
+  Object.assign(painel.style,{ left:(Fim.left-box.left)+'px', top:(Fim.top-box.top)+'px' });
+  Object.assign(fr.style,{ inset:'auto', left:(C.left-box.left)+'px', top:(C.top-box.top)+'px', width:C.width+'px', height:'48px' });
+  el._g={ pl, painel, fr, Fim, C, box, W:box.right-box.left, H:box.bottom-box.top, g:el.querySelector('.g1'), c:el.querySelector('.cam'), kbd:el.querySelector('.kbd'), un:el.querySelector('.uniao') };
+}
+// O contorno da união: a cápsula do campo até a costura e a câmera depois
+// dela, cada uma com os cantos da emenda (raio `emenda`) arredondados na
+// costura — a cintura é o entalhe entre os dois cantos. Sem fio no meio.
+function desenharUniao(un,g,f){
+  const R=24, H=48, e=Math.max(f.emenda,0.001);
+  const s=pill.right+f.dx-pill.left;                       // a costura, nas coordenadas da união
+  const fimCam=cam.right+f.xdx-pill.left;                   // a borda direita da câmera
+  const sy=1-f.puxao*.45, dy=R*(1-sy);                       // o aperto vertical da câmera
+  const W=fimCam;
+  Object.assign(un.style,{ left:pill.left+'px', top:pill.top+'px', width:W+'px', height:H+'px', visibility:'visible' });
+  const d=`M ${R} 0 L ${s-e} 0 A ${e} ${e} 0 0 1 ${s} ${e} A ${e} ${e} 0 0 1 ${s+e} ${dy} L ${fimCam-R} ${dy} A ${R} ${R-dy} 0 0 1 ${fimCam-R} ${H-dy} `+
+          `L ${s+e} ${H-dy} A ${e} ${e} 0 0 1 ${s} ${H-e} A ${e} ${e} 0 0 1 ${s-e} ${H} L ${R} ${H} A ${R} ${R} 0 0 1 ${R} 0 Z`;
+  un.style.clipPath=`path('${d}')`;
+  un.style.backgroundImage=g.style.backgroundImage;
+  un.innerHTML=g.innerHTML;                                   // a frase continua no lugar
+  g.style.visibility='hidden';
+  // a câmera deixa de pintar vidro (a união pinta por ela) e fica só o ícone, que segue saindo no desfoque
+  const c=el_c(un); c.style.background='none'; c.style.backdropFilter=c.style.webkitBackdropFilter='none'; c.style.boxShadow='none';
+}
+const el_c=un=>un.parentElement.querySelector('.cam');
+function fase(t){ return t<=0?'repouso': t<tColado?'colar': t<tAbre?'absorver': t<tAbre+tRevela?'abrir': 'abrir · linhas chegando'; }
+function desenhar(el,t){
+  const { pl, painel, fr, Fim, C, box, W, H, g, c, kbd, un }=el._g, ic=c.firstElementChild;
+  un.style.visibility='hidden';
+  
+  // repouso
+  for(const n of [g,c]){ n.style.clipPath=n.style.transform=n.style.backgroundImage=''; n.style.borderRadius='24px'; n.style.visibility=''; }
+  c.style.background=c.style.backdropFilter=c.style.webkitBackdropFilter=c.style.boxShadow='';
+  pos(g,pill); pos(c,cam); ic.style.cssText='position:absolute;inset:0;display:grid;place-items:center';
+  pl.style.visibility='hidden'; painel.style.transform='';
+  el.querySelectorAll('.reveal').forEach(n=>{ n.style.opacity=0; });
+  if(t<=0) return;
+  if(t<tColado+1){                                            // colar
+    const f=quadroDasBolhas(M,1-VOLTA(t/320));
+    desenharBolhas(g,c,ic,f,false);
+    for(const n of g.children) n.style.transform='';
+    // Encostaram (o vão é zero): um vidro só, com um contorno só. Dois vidros
+    // lado a lado borram o fundo cada um até a própria borda, e a costura
+    // aparecia como um fio escuro. A união tem a mesma tinta e a mesma cintura.
+    if(f.vao===0) desenharUniao(un,g,f);
+
+  }
+  if(t>=tColado && t<tAbre+1){                                // absorver: uma cápsula só, a ponta recuando
+    const u=PADRAO((t-tColado)/260);
+    c.style.visibility='hidden'; g.style.transform=''; g.style.borderRadius='0'; g.style.width=(pill.width+48)+'px';
+    g.style.clipPath=`inset(0px ${48*u}px 0px 0px round 24px)`; g.style.backgroundImage=tinta(1);
+  }
+  if(t>=tAbre){                                               // abrir
+    g.style.visibility='hidden'; c.style.visibility='hidden'; pl.style.visibility='visible';
+    const tg=t-tAbre, py=mola(300,25,tg), px=mola(220,30,tg);
+    const tp=lerp(C.top,Fim.top,py)-box.top, b=H-(lerp(C.top+48,Fim.top+Fim.height,py)-box.top);
+    const l=lerp(C.left,Fim.left,px)-box.left, r=W-(lerp(C.left+C.width,Fim.left+Fim.width,px)-box.left);
+    pl.style.clipPath=`inset(${tp}px ${r}px ${b}px ${l}px round ${lerp(24,34,Math.min(Math.max(py,0),1))}px)`;
+    pl.style.backgroundImage=tinta(1-suave(Math.min(py,1),[.85,1]));
+    // o conteúdo anda preso à borda de cima e ao centro do vidro (no passe também)
+    const topoAgora=lerp(C.top,Fim.top,py), centroAgora=lerp(C.left+C.width/2,Fim.left+Fim.width/2,px);
+    painel.style.transform=`translate(${centroAgora-(Fim.left+Fim.width/2)}px, ${topoAgora-Fim.top}px)`;
+    const f=suave(py,[0,.28]); fr.style.opacity=1-f; fr.style.filter=`blur(${8*f}px)`; fr.style.transform=`translateY(${(lerp(C.top,Fim.top,py)-C.top)*.35}px)`;
+    el.querySelectorAll('.reveal').forEach((n,i)=>{ const u=REVELA(Math.max(0,tg-tRevela-i*28)/DUR); n.style.opacity=u; n.style.filter=`blur(${10*(1-u)}px)`; n.style.transform='none'; });
+  }
+}
+const FRAMES=Array.from({length:33},(_,i)=>i*40);
+const tira=document.getElementById('tira');
+FRAMES.forEach((t,i)=>{ const q=document.createElement('div'); q.className='quadro'; q.dataset.t=t;
+  q.innerHTML=`<div class="desk"></div><div class="t"><span class="num">${i+1}</span>${t} ms <span class="fz">${fase(t)}</span></div>`; tira.appendChild(q);
+  const ph=q.querySelector('.desk'); montar(ph); desenhar(ph,t); q.onclick=()=>irPara(t); });
+const big=document.getElementById('big'); montar(big);
+const rng=document.getElementById('t'), out=document.getElementById('tv'), fz=document.getElementById('fase');
+function irPara(t){ rng.value=t; out.textContent=t+' ms'; fz.textContent=fase(t); desenhar(big,t);
+  document.querySelectorAll('.quadro').forEach(q=>q.classList.toggle('agora',Math.abs(q.dataset.t-t)<20)); }
+rng.oninput=()=>irPara(+rng.value);
+let lento=1, rod=null;
+document.getElementById('lento').onclick=e=>{ lento=lento===1?5:1; e.currentTarget.textContent=lento===1?'🐢 5× mais lento':'🐢 5× ligado'; };
+document.getElementById('tocar').onclick=()=>{ cancelAnimationFrame(rod); const t0=performance.now(); const passo=a=>{ const t=Math.min((a-t0)/lento,1400); irPara(Math.round(t)); if(t<1400) rod=requestAnimationFrame(passo); }; rod=requestAnimationFrame(passo); };
+irPara(0);
+</script></body></html>

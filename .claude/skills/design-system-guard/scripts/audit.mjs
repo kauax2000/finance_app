@@ -230,6 +230,10 @@ const RAW_PRIMITIVE_EXCEPTIONS = [
   // Os chips de fatura e "Parcelada" são o gatilho focável da prévia: o
   // `Badge` não tem `asChild`, e o `Button` somaria o realce e o afundar.
   ["transactions/transactions-table", "button"],
+  // A pílula do tipo e o valor em destaque do painel do lançamento inteligente
+  // abrem o editor deles no lugar: o `Badge` não tem `asChild`, e o `Button`
+  // poria a escada de altura e o realce num número de 36px.
+  ["transactions/lancamento-inteligente", "button"],
   // O seletor de cor nativo não tem peça; o `Input` lhe daria a moldura de campo.
   ["workspace-appearance-form-fields", "input"],
   // Substitui o layout raiz quando o resto quebrou: o CSS do sistema pode não

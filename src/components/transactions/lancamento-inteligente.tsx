@@ -1,11 +1,9 @@
 "use client"
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
 import { animate, stagger, useReducedMotion, type AnimationPlaybackControlsWithThen } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import {
-    ArrowsRightLeftIcon,
-    BanknotesIcon,
     CalendarIcon,
     CameraIcon,
     CreditCardIcon,
@@ -16,7 +14,7 @@ import {
     XMarkIcon,
 } from "@heroicons/react/16/solid"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -35,6 +33,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import {
     Dialog,
     DialogBody,
+    DialogCloseButton,
     DialogDescription,
     DialogFooter,
     DialogOverlay,
@@ -44,10 +43,20 @@ import {
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { Form, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import {
+    Item,
+    ItemActions,
+    ItemChevron,
+    ItemContent,
+    ItemGroup,
+    ItemMedia,
+    ItemSeparator,
+    ItemTitle,
+} from "@/components/ui/item"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Caption, H4 } from "@/components/ui/typography"
+import { Caption, Muted } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
@@ -66,8 +75,23 @@ import {
     type TipoDoLancamento,
 } from "@/lib/captura/lancamento-inteligente"
 import { currencyBRL } from "@/lib/formatters"
-import { quandoPintar, suave, TINTA_DO_VOO } from "@/lib/header-morph"
-import { quadroDaFusao, quadroDaPlaca, quadroDoMais, VAO_DAS_PILULAS } from "@/lib/lancamento-morph"
+import { quandoPintar, TINTA_DO_VOO } from "@/lib/header-morph"
+import {
+    ABRE_EM,
+    ABSORVER,
+    caixa,
+    cascata,
+    CASCATA_MS,
+    COLADO_EM,
+    insetDe,
+    quadroDoAbrir,
+    quadroDoColar,
+    quadroDoMais,
+    recorteDoAbsorver,
+    REVELA_EASE,
+    VOLTA_DA_PILULA,
+} from "@/lib/lancamento-gesto"
+import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
 import { searchFieldFocusClassName, searchFieldSurfaceClassName } from "@/lib/search-field-classes"
@@ -80,28 +104,26 @@ type FormDoLancamento = ReturnType<typeof useTransactionForm>
 
 const NAO_IDENTIFICADO = "Não identificado"
 
-/** As linhas da revisão, na ordem do spec: todas aparecem, lidas ou não. */
-const CAMPOS: { campo: CampoDoLancamento; rotulo: string; icone: ReactNode }[] = [
-    {
-        campo: "tipo",
-        rotulo: "Tipo",
-        icone: <ArrowsRightLeftIcon aria-hidden />,
-    },
-    { campo: "valor", rotulo: "Valor", icone: <BanknotesIcon aria-hidden /> },
-    {
-        campo: "descricao",
-        rotulo: "Descrição",
-        icone: <PencilIcon aria-hidden />,
-    },
-    { campo: "categoria", rotulo: "Categoria", icone: <TagIcon aria-hidden /> },
-    { campo: "forma", rotulo: "Forma", icone: <CreditCardIcon aria-hidden /> },
-    { campo: "data", rotulo: "Data", icone: <CalendarIcon aria-hidden /> },
-    {
-        campo: "parcelas",
-        rotulo: "Parcelas",
-        icone: <QueueListIcon aria-hidden />,
-    },
+/**
+ * As linhas da lista agrupada, na ordem do painel, cada uma com o ladrilho no
+ * tom dela. O tipo é a pílula do topo e o valor é o destaque; as parcelas só
+ * aparecem na parcelada.
+ */
+const CAMPOS: {
+    campo: CampoDoLancamento
+    rotulo: string
+    icone: ReactNode
+    tom: "neutral" | "info" | "warning" | "destructive"
+}[] = [
+    { campo: "descricao", rotulo: "Descrição", icone: <PencilIcon aria-hidden />, tom: "neutral" },
+    { campo: "categoria", rotulo: "Categoria", icone: <TagIcon aria-hidden />, tom: "warning" },
+    { campo: "forma", rotulo: "Forma", icone: <CreditCardIcon aria-hidden />, tom: "info" },
+    { campo: "data", rotulo: "Data", icone: <CalendarIcon aria-hidden />, tom: "destructive" },
+    { campo: "parcelas", rotulo: "Parcelas", icone: <QueueListIcon aria-hidden />, tom: "neutral" },
 ]
+
+/** Todos os campos da revisão: os dois do topo e as linhas. */
+const TODOS_OS_CAMPOS: CampoDoLancamento[] = ["tipo", "valor", ...CAMPOS.map((x) => x.campo)]
 
 /** A dúvida do parser que cada linha confere ("Confira"). */
 const DUVIDA_DA_LINHA: Partial<Record<CampoDoLancamento, string>> = {
@@ -147,23 +169,71 @@ function primeiraImagem(arquivos: FileList | null | undefined) {
     return Array.from(arquivos ?? []).find((f) => f.type.startsWith("image/"))
 }
 
+/** O tom do ponto da pílula do tipo. */
+const TOM_DO_TIPO = {
+    despesa: "expense",
+    receita: "income",
+    parcelada: "info",
+    estorno: "warning",
+} as const satisfies Record<TipoDoLancamento, ComponentProps<typeof Badge>["tone"]>
+
+/** A cor do traço que pinta a silhueta no voo: `--foreground` a `k`%, numa camada que o `clip-path` recorta junto. */
+const tintaDoVoo = (k: number) => {
+    const c = `color-mix(in oklab, var(--foreground) ${k}%, transparent)`
+    return `linear-gradient(${c}, ${c})`
+}
+
+/** Liga e desliga o material de um vidro (o fundo, o borrão e o anel), para outro vidro pintar por ele. */
+function vidroDesligado(el: HTMLElement, desligado: boolean) {
+    el.style.backgroundColor = desligado ? "transparent" : ""
+    el.style.setProperty("-webkit-backdrop-filter", desligado ? "none" : "")
+    el.style.backdropFilter = desligado ? "none" : ""
+    el.style.boxShadow = desligado ? "none" : ""
+    if (desligado) el.style.backgroundImage = "none"
+}
+
+function semEstilo(el: HTMLElement | null | undefined, props: string[]) {
+    if (el) for (const k of props) el.style.removeProperty(k)
+}
+
+const ESTILOS_DO_VOO = [
+    "clip-path",
+    "border-radius",
+    "transform",
+    "transform-origin",
+    "background-image",
+    "background-color",
+    "-webkit-backdrop-filter",
+    "backdrop-filter",
+    "box-shadow",
+    "opacity",
+    "filter",
+    "visibility",
+    "flex",
+    "animation",
+    "--morph-radius",
+]
+
 /**
  * O lançamento inteligente: o campo da frase (a pílula da busca) com a pílula
  * redonda do recibo ao lado, e nada mais até o Enter. O Enter lê a frase (a IA
- * uma vez, se o valor ou a descrição ficarem em dúvida) e o campo **vira** a
- * placa da revisão: todos os campos, cada um editável no lugar, e o "Aprovar".
- * Só apresentação — a leitura é do `useLeituraDoLancamento`, que quem monta a
- * tela chama uma vez, e salvar é o `salvar()` do formulário.
+ * uma vez, se o valor ou a descrição ficarem em dúvida) e o campo **vira** o
+ * painel da revisão: o tipo, o valor em destaque e a lista agrupada dos
+ * campos, cada um editável no lugar, e o "Aprovar". Só apresentação — a
+ * leitura é do `useLeituraDoLancamento`, que quem monta a tela chama uma vez, e
+ * salvar é o `salvar()` do formulário.
  *
- * Um vidro só, no espírito do Liquid Glass: a pílula da frase **é** a placa.
- * Com a revisão, o vidro já está no lugar final (o cabeçalho é a frase, o
- * corpo rola e o rodapé fica preso) e o que anda é o recorte dele, da pílula
- * à caixa inteira (`quadroDaPlaca`); a câmera é uma segunda gota que se funde
- * ao campo antes (`quadroDaFusao`). No desktop a pilha fica no alto e a placa
- * cresce para baixo; no telefone a linha mora colada ao teclado (o viewport
- * visual) e a placa cresce para cima, até a área segura do topo, nascendo do
- * "+" da barra de baixo (`quadroDoMais`). Não é o `CommandDialog` porque o
- * cmdk chama `preventDefault` em todo Enter e nas setas, e a revisão é um
+ * O gesto é o aprovado quadro a quadro
+ * (`docs/superpowers/specs/2026-10-28-lancamento-gesto-final.md`), pelos
+ * quadros puros de `lib/lancamento-gesto`: **colar** (a busca do telefone
+ * fechando, a câmera colada no campo, um vidro só com o vão zero),
+ * **absorver** (a ponta da câmera recua para dentro do campo) e **abrir** (o
+ * campo vira o painel por recorte — a altura na `MOLA`, a largura na
+ * `MOLA_PALCO` —, o conteúdo andando com o vidro e as peças chegando em
+ * cascata). No desktop a linha fica no alto e o painel cresce para baixo; no
+ * telefone a linha mora 12px acima do teclado (o viewport visual) e o painel
+ * cresce para cima, até a área segura do topo. Não é o `CommandDialog` porque
+ * o cmdk chama `preventDefault` em todo Enter e nas setas, e a revisão é um
  * `Form` com `Select`, `Combobox` e `DatePicker` dentro.
  */
 export function LancamentoInteligente({
@@ -191,36 +261,52 @@ export function LancamentoInteligente({
     // A casca num estado, e não num ref: o `Portal` do Radix monta o conteúdo
     // num segundo commit, e os efeitos precisam rodar quando ele chega.
     const [casca, setCasca] = useState<HTMLDivElement | null>(null)
+    const linhaRef = useRef<HTMLDivElement>(null)
     const vidroRef = useRef<HTMLDivElement>(null)
     const cabecaRef = useRef<HTMLDivElement>(null)
     const cameraRef = useRef<HTMLButtonElement>(null)
-    const cameraPequenaRef = useRef<HTMLButtonElement>(null)
+    const uniaoRef = useRef<HTMLDivElement>(null)
+    const placaRef = useRef<HTMLDivElement>(null)
+    const fundoRef = useRef<HTMLDivElement>(null)
+    const recorteRef = useRef<HTMLDivElement>(null)
+    const conteudoRef = useRef<HTMLDivElement>(null)
 
-    // Fechar zera a leitura no mesmo instante, mas a placa precisa voltar à
-    // pílula com o que mostrava: a saída guarda os campos e a frase da última
-    // revisão aberta.
+    // Fechar zera a leitura no mesmo instante, mas o painel precisa sair com o
+    // que mostrava: a saída guarda os campos e a frase da última revisão aberta.
     const [naSaida, setNaSaida] = useState<{ campos: CamposDaFrase; texto: string } | null>(null)
     const aberta = revisao ? { campos, texto: leitura.texto } : null
     if (open && (naSaida?.campos !== aberta?.campos || naSaida?.texto !== aberta?.texto)) setNaSaida(aberta)
     const camposDaPlaca = revisao ? campos : open ? null : (naSaida?.campos ?? null)
     const placa = camposDaPlaca != null
     const texto = open ? leitura.texto : (naSaida?.texto ?? leitura.texto)
+    // Com o painel pousado, a linha some (e sai da ordem do foco); volta com uma leitura nova.
+    const [recolhida, setRecolhida] = useState(false)
+    if (!placa && recolhida) setRecolhida(false)
 
     // No telefone a linha mora no viewport visual: a base dela fica 12px acima
     // do teclado do iOS (que só encolhe ele) e o acompanha; sem teclado, 12px
-    // acima da área segura de baixo (`data-teclado` troca o pé).
+    // acima da área segura de baixo (`data-teclado` troca o pé). No gesto a
+    // linha fica parada (`congelada`) enquanto o teclado desce, como no
+    // protótipo; o painel lê o viewport vivo (`--lancamento-placa-*`).
+    const congelada = useRef(false)
+    const medirRef = useRef<() => void>(() => {})
     useLayoutEffect(() => {
         const vv = window.visualViewport
         if (!casca || !telefone || !vv) return
         const medir = () => {
+            casca.style.setProperty("--lancamento-placa-vh", `${vv.height}px`)
+            casca.style.setProperty("--lancamento-placa-vy", `${vv.offsetTop}px`)
+            if (congelada.current) return
             casca.style.setProperty("--lancamento-vh", `${vv.height}px`)
             casca.style.setProperty("--lancamento-vy", `${vv.offsetTop}px`)
             casca.toggleAttribute("data-teclado", window.innerHeight - vv.height > 120)
         }
+        medirRef.current = medir
         medir()
         vv.addEventListener("resize", medir)
         vv.addEventListener("scroll", medir)
         return () => {
+            medirRef.current = () => {}
             vv.removeEventListener("resize", medir)
             vv.removeEventListener("scroll", medir)
         }
@@ -229,8 +315,7 @@ export function LancamentoInteligente({
     // A abertura no telefone: a linha nasce do "+" da barra de baixo como uma
     // gota que se separa em duas (`quadroDoMais`, na `SEPARACAO`). Sem o "+" à
     // vista, as pílulas entram no lugar; com movimento reduzido, só esmaecem.
-    // Uma vez por abertura, e nunca com a placa já aberta (a frase
-    // compartilhada): o gesto da placa é outro.
+    // Uma vez por abertura, e nunca com o painel já aberto.
     const entrou = useRef(false)
     useLayoutEffect(() => {
         if (!open) {
@@ -288,149 +373,245 @@ export function LancamentoInteligente({
         }
     }, [open, casca, telefone, reduzido, placa])
 
-    // O campo vira a placa (e volta). Um progresso para a fusão (`n`) e outro
-    // para o crescimento (`g`), escritos no vidro e nos filhos dele, nunca na
-    // casca: um `transform` num ancestral desligaria o `backdrop-filter`. Fechar
-    // segue de onde a abertura parou.
-    const progresso = useRef({ n: 1, g: 1 })
+    // O campo vira o painel: colar → absorver → abrir, cada fase no relógio do
+    // `motion`, escrita nos vidros e nos filhos deles, nunca num ancestral (um
+    // `transform` ou `clip-path` ali desligaria o `backdrop-filter`). Fechar é o
+    // caminho curto: o painel recolhe e some no `menu-unmorph`.
     const placaAntes = useRef(false)
+    const pousada = useRef(false)
     useLayoutEffect(() => {
+        const linha = linhaRef.current
         const vidro = vidroRef.current
         const cabeca = cabecaRef.current
         const camera = cameraRef.current
-        if (!casca || !vidro || !cabeca || !camera) return
+        const uniao = uniaoRef.current
+        const placaEl = placaRef.current
+        const fundo = fundoRef.current
+        const recorte = recorteRef.current
+        const conteudo = conteudoRef.current
         const abriu = placa && !placaAntes.current
         placaAntes.current = placa
-        if (!placa) return
+        if (!casca || !linha || !vidro || !cabeca || !camera || !uniao) return
+        if (!placa) {
+            pousada.current = false
+            linha.style.visibility = linha.style.opacity = ""
+            return
+        }
+        if (!placaEl || !fundo || !recorte || !conteudo) return
         const iconeCamera = camera.querySelector<SVGElement>("svg")
-        const pequena = cameraPequenaRef.current
-        const corpo = [...vidro.querySelectorAll<HTMLElement>("[data-slot=dialog-body], [data-slot=dialog-footer]")]
-        const linhas = [
-            ...vidro.querySelectorAll<HTMLElement>(
-                "[data-slot=dialog-body] form > :not([data-slot=item-group]), [data-slot=item-group] > *, [data-slot=dialog-footer]"
-            ),
-        ]
+        const pecas = [...conteudo.querySelectorAll<HTMLElement>("[data-revela]")]
         let ativa = true
         let cancelar = () => {}
         const controles: AnimationPlaybackControlsWithThen[] = []
 
-        const desenhar = (n: number, g: number) => {
-            progresso.current = { n, g }
-            const W = vidro.offsetWidth
-            const H = vidro.offsetHeight
-            const h = cabeca.offsetHeight
-            const R = h / 2
-            const fusao = quadroDaFusao(n, { largura: camera.offsetWidth, raio: R })
-            const de = telefone
-                ? { esquerda: 0, topo: H - h, direita: W, base: H }
-                : { esquerda: 0, topo: 0, direita: W, base: h }
-            const f = quadroDaPlaca(g, de, { esquerda: 0, topo: 0, direita: W, base: H }, telefone)
-            const { esquerda, topo, direita, base } = f.recorte
-            // Antes de fundir, a ponta do vidro para no vão e a costura (os cantos
-            // da direita) vai a reta enquanto a câmera estica até ele: a silhueta
-            // das duas é a cápsula de ponta a ponta quando a câmera some.
-            const fora = fusao.fundida ? 0 : camera.offsetWidth + VAO_DAS_PILULAS
-            const emenda = fusao.fundida ? f.raio : fusao.emenda
-            // O recorte manda no raio: o próprio fica reto (o do `rounded-surface`
-            // cortaria os cantos de cima a 22 com a pílula a 18).
-            vidro.style.borderRadius = "0px"
-            vidro.style.clipPath = `inset(${topo}px ${direita + fora}px ${base}px ${esquerda}px round ${f.raio}px ${emenda}px ${emenda}px ${f.raio}px)`
-            vidro.style.transform = f.ty ? `translateY(${f.ty}px)` : ""
-            // O recorte tira o anel: a silhueta no voo é a tinta do voo.
-            const peso = fusao.fundida ? f.tinta : suave(n, [0, 0.3])
-            const tinta = `color-mix(in oklab, var(--foreground) ${TINTA_DO_VOO * peso}%, transparent)`
-            vidro.style.backgroundImage = camera.style.backgroundImage = `linear-gradient(${tinta}, ${tinta})`
-            // A frase viaja com a borda de cima.
-            cabeca.style.transform = f.cabeca ? `translateY(${f.cabeca}px)` : ""
-            camera.style.opacity = fusao.fundida ? "0" : "1"
-            camera.style.transformOrigin = "right"
-            camera.style.transform = `scaleX(${fusao.escalaX})`
-            camera.style.borderRadius = `${fusao.emenda}px ${R}px ${R}px ${fusao.emenda}px`
-            if (iconeCamera) {
-                iconeCamera.style.opacity = `${fusao.icone.opacidade}`
-                iconeCamera.style.filter = `blur(${fusao.icone.desfoque}px)`
-                iconeCamera.style.transform = `scale(${fusao.icone.escala})`
-            }
-            if (pequena) pequena.style.opacity = `${suave(g, [0, 0.35])}`
+        const linhaEmRepouso = () => {
+            for (const el of [vidro, camera]) semEstilo(el, ESTILOS_DO_VOO)
+            semEstilo(cabeca, ["opacity", "filter", "transform"])
+            semEstilo(iconeCamera as HTMLElement | null, ["opacity", "filter", "transform"])
+            uniao.style.cssText = ""
         }
-        const repouso = () => {
-            for (const k of ["clip-path", "border-radius", "transform", "background-image", "animation", "transform-origin", "opacity", "--morph-radius"])
-                vidro.style.removeProperty(k)
-            cabeca.style.transform = ""
-            for (const k of ["opacity", "transform", "transform-origin", "border-radius", "background-image"])
-                camera.style.removeProperty(k)
-            if (iconeCamera) iconeCamera.style.opacity = iconeCamera.style.filter = iconeCamera.style.transform = ""
-            if (pequena) pequena.style.opacity = ""
-            for (const el of [...corpo, ...linhas]) el.style.opacity = el.style.filter = ""
+        const placaEmRepouso = () => {
+            for (const el of [placaEl, fundo, recorte, conteudo, ...pecas]) semEstilo(el, ESTILOS_DO_VOO)
+            for (const k of ["inset", "left", "top", "width", "height"]) fundo.style.removeProperty(k)
+        }
+        /** O painel pousado: a linha some sem piscar (o inline antes da classe) e o foco vai a ele. */
+        const pousar = () => {
+            pousada.current = true
+            linha.style.visibility = "hidden"
+            linhaEmRepouso()
+            placaEmRepouso()
+            congelada.current = false
+            medirRef.current()
+            setRecolhida(true)
+            placaEl.focus({ preventScroll: true })
         }
 
-        if (open) {
-            if (!abriu) return
+        if (!open) {
+            // Fechar no meio do gesto: a linha sai pela classe, e o painel nem aparece.
+            if (!pousada.current) placaEl.style.visibility = "hidden"
+            else if (reduzido) controles.push(animate([fundo, recorte], { opacity: 0 }, SAIDA))
+            else {
+                // O caminho curto: o conteúdo esmaece, e o vidro recolhe e some.
+                controles.push(animate(recorte, { opacity: 0 }, SAIDA))
+                fundo.style.setProperty("--morph-radius", "0px")
+                fundo.style.transformOrigin = telefone ? "50% 100%" : "50% 0%"
+                fundo.style.animation = "menu-unmorph 210ms linear both"
+            }
+        } else if (abriu) {
+            // O campo perde o foco: no telefone o teclado desce no mesmo instante, e
+            // o foco vai ao painel quando ele pousa.
+            cabeca.querySelector("input")?.blur()
             if (reduzido) {
-                // Sem viagem: o vidro troca de forma num esmaecer, e as linhas chegam juntas.
-                controles.push(animate(corpo, { opacity: [0, 1] }, SAIDA))
+                // Sem viagem: a linha e o painel trocam num esmaecer.
+                controles.push(animate(linha, { opacity: [1, 0] }, SAIDA))
+                const troca = animate([fundo, recorte], { opacity: [0, 1] }, SAIDA)
+                controles.push(troca)
+                troca.then(() => {
+                    if (ativa) pousar()
+                })
             } else {
-                for (const el of linhas) el.style.opacity = "0"
-                desenhar(0, 0)
+                congelada.current = telefone
+                placaEl.style.visibility = "hidden"
+                for (const el of pecas) {
+                    el.style.opacity = "0"
+                    el.style.filter = "blur(10px)"
+                }
+                const r = vidro.getBoundingClientRect()
+                const k = camera.getBoundingClientRect()
+                const campo = caixa(r.left, r.top, r.width, r.height)
+                const cam = caixa(k.left, k.top, k.width, k.height)
+                const R = campo.height / 2
+                const dpr = window.devicePixelRatio || 1
+                let fase: "colar" | "absorver" | "abrir" = "colar"
+
+                const colar = (p: number) => {
+                    const { f, uniao: u } = quadroDoColar(campo, cam, p, dpr)
+                    vidro.style.borderRadius = `${f.R}px 0px 0px ${f.R}px`
+                    camera.style.borderRadius = `0px ${f.R}px ${f.R}px 0px`
+                    vidro.style.transform = `translateX(${f.dx}px)`
+                    vidro.style.clipPath = `inset(${f.topo}px 0px ${f.base}px ${f.esquerda}px round ${f.Rh}px ${f.emendaH}px ${f.emendaH}px ${f.Rh}px / ${f.R}px ${f.emenda}px ${f.emenda}px ${f.R}px)`
+                    camera.style.transformOrigin = "right center"
+                    camera.style.transform = `translate(${f.xdx}px, ${f.xdy}px) scale(${f.escalaX}, ${1 - f.puxao * ACOPLAMENTO_Y})`
+                    camera.style.clipPath = `inset(0px round ${f.emenda}px ${f.R}px ${f.R}px ${f.emenda}px)`
+                    if (iconeCamera) {
+                        iconeCamera.style.opacity = `${f.icone}`
+                        iconeCamera.style.filter = `blur(${6 * (1 - f.icone)}px)`
+                        iconeCamera.style.transform = `scale(${0.7 + 0.3 * f.icone})`
+                    }
+                    // Encostados, um vidro só (a união), com um contorno só: dois
+                    // vidros lado a lado mostravam a costura num fio escuro.
+                    for (const el of [vidro, camera]) vidroDesligado(el, u != null)
+                    if (!u) {
+                        vidro.style.backgroundImage = camera.style.backgroundImage = tintaDoVoo(TINTA_DO_VOO * f.tinta)
+                        uniao.style.cssText = ""
+                        return
+                    }
+                    const l = linha.getBoundingClientRect()
+                    Object.assign(uniao.style, {
+                        display: "block",
+                        left: `${u.left - l.left}px`,
+                        top: `${u.top - l.top}px`,
+                        width: `${u.width}px`,
+                        height: `${u.height}px`,
+                        clipPath: `path("${u.path}")`,
+                        backgroundImage: tintaDoVoo(TINTA_DO_VOO * f.tinta),
+                    })
+                }
+
+                const abrir = () => {
+                    fase = "abrir"
+                    const agora = vidro.getBoundingClientRect()
+                    const C = caixa(agora.left, agora.top, campo.width, agora.height)
+                    // O painel lê o viewport vivo: o teclado já desceu.
+                    medirRef.current()
+                    placaEl.style.visibility = ""
+                    const p = placaEl.getBoundingClientRect()
+                    const F = caixa(p.left, p.top, p.width, p.height)
+                    const raio = { de: R, ate: parseFloat(getComputedStyle(fundo).borderTopLeftRadius) || 28 }
+                    // O vidro do painel cobre o campo e o painel, com folga para o passe da mola.
+                    const folga = 20
+                    const box = caixa(
+                        Math.min(C.left, F.left) - folga,
+                        Math.min(C.top, F.top) - folga,
+                        Math.max(C.right, F.right) - Math.min(C.left, F.left) + 2 * folga,
+                        Math.max(C.bottom, F.bottom) - Math.min(C.top, F.top) + 2 * folga
+                    )
+                    Object.assign(fundo.style, {
+                        inset: "auto",
+                        left: `${box.left - F.left}px`,
+                        top: `${box.top - F.top}px`,
+                        width: `${box.width}px`,
+                        height: `${box.height}px`,
+                        borderRadius: "0px",
+                        boxShadow: "none",
+                    })
+                    // O campo para de pintar vidro: quem pinta é o do painel. A frase fica, e sai no desfoque.
+                    vidroDesligado(vidro, true)
+                    vidro.style.clipPath = ""
+                    let py = 0
+                    let px = 0
+                    const desenhar = () => {
+                        const f = quadroDoAbrir(py, px, C, F, raio)
+                        fundo.style.clipPath = insetDe(f.vidro, box, f.raio)
+                        fundo.style.backgroundImage = tintaDoVoo(f.tinta)
+                        recorte.style.clipPath = insetDe(f.vidro, F, f.raio)
+                        conteudo.style.transform = `translate(${f.conteudo.dx}px, ${f.conteudo.dy}px)`
+                        cabeca.style.opacity = `${f.frase.opacidade}`
+                        cabeca.style.filter = `blur(${f.frase.desfoque}px)`
+                        cabeca.style.transform = `translateY(${f.frase.dy}px)`
+                    }
+                    desenhar()
+                    const c = cascata(pecas.length)
+                    const altura = animate(0, 1, {
+                        ...MOLA,
+                        onUpdate: (v) => {
+                            py = v
+                            desenhar()
+                        },
+                    })
+                    const largura = animate(0, 1, {
+                        ...MOLA_PALCO,
+                        onUpdate: (v) => {
+                            px = v
+                            desenhar()
+                        },
+                    })
+                    const chegam = animate(
+                        pecas,
+                        { opacity: [0, 1], filter: ["blur(10px)", "blur(0px)"] },
+                        {
+                            duration: c.duracao / 1000,
+                            ease: REVELA_EASE,
+                            delay: stagger(CASCATA_MS / 1000, { startDelay: c.comeca / 1000 }),
+                        }
+                    )
+                    controles.push(altura, largura, chegam)
+                    void Promise.all([altura, largura, chegam]).then(() => {
+                        if (ativa) pousar()
+                    })
+                }
+
+                const absorver = () => {
+                    fase = "absorver"
+                    camera.style.visibility = "hidden"
+                    uniao.style.cssText = ""
+                    vidroDesligado(vidro, false)
+                    vidro.style.transform = ""
+                    vidro.style.borderRadius = "0px"
+                    vidro.style.flex = `0 0 ${campo.width + cam.width}px`
+                    vidro.style.backgroundImage = tintaDoVoo(TINTA_DO_VOO)
+                    const recolhe = animate(0, 1, {
+                        ...ABSORVER,
+                        onUpdate: (u) => {
+                            if (fase !== "absorver") return
+                            vidro.style.clipPath = recorteDoAbsorver(u, cam.width, R)
+                            if (u >= ABRE_EM) abrir()
+                        },
+                    })
+                    controles.push(recolhe)
+                }
+
+                colar(1)
                 cancelar = quandoPintar(() => {
-                    const fusao = animate(0, 1, {
-                        duration: 0.18,
-                        ease: [0.2, 0, 0, 1],
-                        onUpdate: (n) => desenhar(n, 0),
+                    const cola = animate(1, 0, {
+                        ...VOLTA_DA_PILULA,
+                        onUpdate: (p) => {
+                            if (fase !== "colar") return
+                            colar(p)
+                            if (p <= COLADO_EM) absorver()
+                        },
                     })
-                    controles.push(fusao)
-                    fusao.then(() => {
-                        if (!ativa) return
-                        // Telefone: a subida estica e assenta num passe; desktop: sóbria, sem passe.
-                        const cresce = animate(0, 1, {
-                            ...(telefone ? SEPARACAO : MOLA_PALCO),
-                            onUpdate: (g) => desenhar(1, g),
-                        })
-                        // As linhas chegam do desfoque, de cima para baixo, 30ms
-                        // entre elas (o `menu-content-in`); o rodapé por último.
-                        const chegam = animate(
-                            linhas.slice(0, -1),
-                            { opacity: [0, 1], filter: ["blur(10px)", "blur(0px)"] },
-                            { duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: stagger(0.03, { startDelay: 0.08 }) }
-                        )
-                        const rodape = animate(
-                            linhas.slice(-1),
-                            { opacity: [0, 1], filter: ["blur(10px)", "blur(0px)"] },
-                            { duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.34 }
-                        )
-                        controles.push(cresce, chegam, rodape)
-                        void Promise.all([cresce, chegam, rodape]).then(() => {
-                            if (!ativa) return
-                            progresso.current = { n: 1, g: 1 }
-                            repouso()
-                        })
-                    })
+                    controles.push(cola)
                 })
             }
-        } else if (reduzido) {
-            controles.push(animate(vidro, { opacity: 0 }, SAIDA))
-        } else {
-            // O inverso curto: as linhas saem juntas, o vidro volta à pílula e
-            // some no `menu-unmorph`, recolhendo ao centro dela.
-            const { g } = progresso.current
-            controles.push(animate(corpo, { opacity: 0 }, SAIDA))
-            desenhar(1, g)
-            const volta = animate(g, 0, { ...VOLTA_DA_PLACA, onUpdate: (x) => desenhar(1, x) })
-            controles.push(volta)
-            volta.then(() => {
-                if (!ativa) return
-                const R = cabeca.offsetHeight / 2
-                const centroY = telefone ? vidro.offsetHeight - R : R
-                vidro.style.setProperty("--morph-radius", "0px")
-                vidro.style.transformOrigin = `${vidro.offsetWidth / 2}px ${centroY}px`
-                vidro.style.animation = "menu-unmorph 210ms linear both"
-            })
         }
         return () => {
             ativa = false
             cancelar()
             for (const c of controles) c.stop()
-            repouso()
+            congelada.current = false
+            linhaEmRepouso()
+            placaEmRepouso()
         }
     }, [open, placa, casca, telefone, reduzido])
 
@@ -438,13 +619,12 @@ export function LancamentoInteligente({
         <Dialog open={open} onOpenChange={onOpenChange} pending={saving}>
             <DialogPortal>
                 <DialogOverlay />
-                {/* A casca não pinta: o vidro e a câmera são vidros soltos sobre o véu,
-                    como no `CommandDialog`. Não é o `DialogContent`, porque ali a placa é
-                    o próprio `Content` (vidro e `overflow-hidden`), e um elemento com
+                {/* A casca não pinta: a linha e o painel são vidros soltos sobre o véu,
+                    como no `CommandDialog`. Não é o `DialogContent`, porque ali o painel
+                    é o próprio `Content` (vidro e `overflow-hidden`), e um elemento com
                     `backdrop-filter` é raiz de fundo: o borrão dos vidros não veria a
                     página. A casca não anima (transform ou opacidade num ancestral
-                    desligaria o borrão dos filhos) e só segura a saída deles: a volta
-                    da placa (200ms) e o `menu-unmorph` (210ms). */}
+                    desligaria o borrão dos filhos) e só segura a saída deles. */}
                 <DialogPrimitive.Content
                     ref={setCasca}
                     data-slot="lancamento-inteligente"
@@ -486,35 +666,89 @@ export function LancamentoInteligente({
                         aprove.
                     </DialogDescription>
 
-                    {/* A linha: o vidro da frase (que vira a placa) e a gota da câmera ao
-                        lado. Com a placa, a câmera sai do fluxo e fica por cima da ponta do
-                        vidro até se fundir a ele. */}
+                    {/* O painel: preso à tela, e não à casca (a linha fica parada no gesto
+                        enquanto o teclado desce). No telefone, 16 de calha e a borda de cima
+                        na área segura + 16; no desktop, 448 no alto, crescendo para baixo. O
+                        vidro (`lancamento-fundo`) é irmão do conteúdo, e não pai: o recorte
+                        de cada um é escrito em separado. */}
+                    {camposDaPlaca ? (
+                        <div
+                            data-slot="lancamento-area"
+                            style={{ pointerEvents: "none" }}
+                            className={cn(
+                                "fixed inset-x-4 flex flex-col justify-end",
+                                "top-[calc(var(--lancamento-placa-vy,0px)+max(--spacing(4),env(safe-area-inset-top)))]",
+                                "h-[calc(var(--lancamento-placa-vh,100dvh)-max(--spacing(4),env(safe-area-inset-top))-env(safe-area-inset-bottom,0px)-(--spacing(3)))]",
+                                "md:inset-x-0 md:top-24 md:mx-auto md:h-[calc(100dvh-(--spacing(48)))] md:max-w-md md:justify-start"
+                            )}
+                        >
+                            <div
+                                ref={placaRef}
+                                data-slot="lancamento-placa"
+                                tabIndex={-1}
+                                className="pointer-events-auto relative flex max-h-full min-h-0 flex-col outline-none"
+                            >
+                                <div
+                                    ref={fundoRef}
+                                    aria-hidden
+                                    data-slot="lancamento-fundo"
+                                    className={cn("absolute inset-0 rounded-modal", searchFieldSurfaceClassName.modal)}
+                                />
+                                <div ref={recorteRef} className="relative flex min-h-0 flex-col">
+                                    <div
+                                        ref={conteudoRef}
+                                        className="relative flex min-h-0 flex-col [--dialog-bleed:0px] [--dialog-px:--spacing(4)]"
+                                    >
+                                        <Revisao
+                                            campos={camposDaPlaca}
+                                            leitura={leitura}
+                                            form={form}
+                                            cartoes={cartoes}
+                                            saving={saving}
+                                            onAbrirFormulario={onAbrirFormulario}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {/* A linha: o vidro da frase e a gota da câmera ao lado; a união é o
+                        vidro único das duas coladas. Depois do painel, por cima dele: a
+                        frase sai no desfoque sobre o vidro que cresce. */}
                     <div
+                        ref={linhaRef}
                         data-slot="lancamento-pilulas"
-                        className={cn("relative flex shrink-0 gap-2", placa && "min-h-0 shrink max-md:flex-1")}
+                        inert={recolhida}
+                        className={cn("relative flex shrink-0 gap-2", recolhida && "invisible")}
                     >
+                        <div
+                            ref={uniaoRef}
+                            aria-hidden
+                            className={cn("pointer-events-none absolute hidden", searchFieldSurfaceClassName.modal)}
+                        />
                         <div
                             ref={vidroRef}
                             data-slot="lancamento-vidro"
                             className={cn(
-                                "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-surface",
+                                "flex min-w-0 flex-1 items-center overflow-hidden rounded-full",
                                 searchFieldSurfaceClassName.modal,
-                                "[--dialog-bleed:0px] [--dialog-px:--spacing(4)]",
                                 !placa && searchFieldFocusClassName,
                                 !telefone && PILULA_ENTRA,
-                                !placa && PILULA_SAI
+                                !recolhida && PILULA_SAI
                             )}
                         >
-                            <div ref={cabecaRef} data-slot="lancamento-cabeca" className="flex shrink-0 items-center">
-                                {/* A frase não pinta vidro próprio: o vidro é o de fora, que vira a placa. */}
+                            <div ref={cabecaRef} data-slot="lancamento-cabeca" className="flex min-w-0 flex-1 items-center">
+                                {/* A frase não pinta vidro próprio: o vidro é o de fora. */}
                                 {/* O feixe do `CommandDialog` (a segunda exceção nomeada ao campo
                                     sem marca): aceso enquanto a frase é pílula, vazia ou digitada;
-                                    com a IA lendo, corre mais rápido; sai quando o gesto da placa
-                                    começa. A lista de durações segue a da utility: entrada,
-                                    trajeto, pontas e respiro. */}
+                                    com a IA lendo, corre mais rápido; sai quando o gesto começa. A
+                                    lista de durações segue a da utility: entrada, trajeto, pontas e
+                                    respiro. */}
                                 <SearchInput
                                     surface="field"
                                     focusRing={false}
+                                    size="xl"
                                     className={cn(
                                         "border-0 bg-transparent",
                                         !placa && "command-beam",
@@ -540,52 +774,26 @@ export function LancamentoInteligente({
                                         if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                                             e.preventDefault()
                                             leitura.interpretar()
-                                            // No telefone o teclado desce: a placa cresce para cima no lugar dele.
+                                            // No telefone o teclado desce: o painel cresce no lugar dele.
                                             if (telefone) e.currentTarget.blur()
                                         }
                                     }}
                                 />
-                                {placa ? (
-                                    <Button
-                                        ref={cameraPequenaRef}
-                                        variant="tertiary"
-                                        size="icon-md"
-                                        aria-label="Adicionar recibo"
-                                        disabled={saving}
-                                        onClick={() => arquivoRef.current?.click()}
-                                        className="me-1 shrink-0"
-                                    >
-                                        <CameraIcon aria-hidden />
-                                    </Button>
-                                ) : null}
                             </div>
-
-                            {camposDaPlaca ? (
-                                <Revisao
-                                    campos={camposDaPlaca}
-                                    leitura={leitura}
-                                    form={form}
-                                    cartoes={cartoes}
-                                    saving={saving}
-                                    onAbrirFormulario={onAbrirFormulario}
-                                />
-                            ) : null}
                         </div>
                         <Button
                             ref={cameraRef}
                             variant="tertiary"
-                            size="icon-lg"
+                            size="icon-xl"
                             aria-label="Adicionar recibo"
                             disabled={saving}
-                            inert={placa}
                             onClick={() => arquivoRef.current?.click()}
                             // O círculo no mesmo vidro da frase, como o × da busca do telefone.
                             className={cn(
                                 searchFieldSurfaceClassName.modal,
                                 "shrink-0 bg-clip-border",
-                                placa && "pointer-events-none absolute end-0 top-0 opacity-0 max-md:top-auto max-md:bottom-0",
                                 !telefone && PILULA_ENTRA,
-                                !placa && PILULA_SAI
+                                !recolhida && PILULA_SAI
                             )}
                         >
                             <CameraIcon aria-hidden />
@@ -616,9 +824,6 @@ export function LancamentoInteligente({
     )
 }
 
-/** A volta da placa à pílula: curta, começando macia (a curva da `VOLTA_DA_PILULA` da busca). */
-const VOLTA_DA_PLACA = { duration: 0.2, ease: [0.2, 0, 0, 1] } as const
-
 /**
  * A entrada de cada pílula no desktop, a do `CommandDialog`: abre na mola. O
  * desfoque do `tw-animate` vira `none` (um `blur(0)` desligaria o borrão). No
@@ -629,7 +834,7 @@ const PILULA_ENTRA = cn(
     "animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 animation-duration-(--duration-spring) ease-(--ease-spring)"
 )
 
-/** A saída de cada pílula sem placa: curta. Com a placa, a volta é do efeito. */
+/** A saída de cada pílula sem o painel pousado: curta. Com o painel, a saída é do efeito. */
 const PILULA_SAI = cn(
     "[--tw-exit-blur:none]",
     "group-data-closed/lancamento:animate-out group-data-closed/lancamento:fade-out-0 group-data-closed/lancamento:zoom-out-95 group-data-closed/lancamento:animation-duration-(--duration-fast) group-data-closed/lancamento:ease-(--ease-out) group-data-closed/lancamento:fill-mode-forwards"
@@ -646,7 +851,7 @@ function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: (
     }, [foto])
     /* eslint-enable react-hooks/set-state-in-effect */
     return (
-        <Item variant="flush" size="sm">
+        <Item variant="flush" size="sm" data-revela className="px-0">
             <ItemMedia>
                 <Avatar size="md">
                     {url ? <AvatarImage src={url} alt="Foto do recibo" /> : null}
@@ -672,6 +877,9 @@ function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: (
         </Item>
     )
 }
+
+/** O anel de foco do sistema numa peça clicável que não é um `Button` (a pílula do tipo, o valor). */
+const FOCO = "outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
 function Revisao({
     campos,
@@ -709,10 +917,12 @@ function Revisao({
     const plano = planoDaFrase(campos)
     const categoriasDoTipo = categories.filter((c) => c.type === campos.tipo)
     const categoria = categories.find((c) => c.id === campos.categoryId)
+    const cartao = cartoes.find((x) => x.id === campos.creditCardId)?.name
     const leuComIA = campos.duvidas.includes("ia")
     // A frase do campo mudou depois do Enter: a revisão é da frase velha até o próximo Enter.
     const desatualizada = leitura.texto.trim() !== "" && leitura.texto !== leitura.fraseLida
     const motivo = desatualizada ? "Enter para atualizar" : falta ? MOTIVO_DA_FALTA[falta] : null
+    const rotuloDoTipo = TIPOS.find((t) => t.tipo === tipo)?.rotulo ?? NAO_IDENTIFICADO
 
     function rotuloDaData(ymd: string) {
         if (ymd === hoje) return "Hoje"
@@ -721,17 +931,22 @@ function Revisao({
     }
 
     function rotuloDaForma(c: CamposDaFrase) {
-        const cartao = cartoes.find((x) => x.id === c.creditCardId)?.name
-        if (c.paymentMethod === "credit_card" || (c.estorno && cartao))
-            return cartao ? `Crédito · ${cartao}` : "Crédito"
+        if (c.paymentMethod === "credit_card" || (c.estorno && cartao)) return cartao ?? "Crédito"
         return c.paymentMethod ? paymentMethodLabel(c.paymentMethod) : null
     }
 
-    /** O que a linha mostra; `null` é o "Não identificado". */
+    /** O rótulo da linha, que muda com o tipo e a forma. */
+    function rotuloDaLinha(campo: CampoDoLancamento, rotulo: string) {
+        if (campo === "forma" && campos.paymentMethod === "credit_card") return "Cartão"
+        if (campo === "data" && tipo === "parcelada") return "Primeira cobrança"
+        return rotulo
+    }
+
+    /** O que a linha mostra; `null` é o que falta. */
     function valorDaLinha(campo: CampoDoLancamento): string | null {
         switch (campo) {
             case "tipo":
-                return TIPOS.find((t) => t.tipo === tipo)?.rotulo ?? null
+                return rotuloDoTipo
             case "valor":
                 return campos.valor != null ? currencyBRL(campos.valor) : null
             case "descricao":
@@ -747,14 +962,20 @@ function Revisao({
         }
     }
 
-    // Reenviar a frase com a placa aberta não refaz a viagem: a linha cujo valor
-    // mudou pisca do desfoque no lugar. A que estava em edição não conta (quem a
-    // mudou foi a pessoa, à vista).
+    /** A linha muda abaixo do valor: as parcelas na parcelada, a descrição e a forma nos outros. */
+    const legenda =
+        tipo === "parcelada" && campos.valor != null && campos.parcelas
+            ? `${campos.parcelas}× de ${currencyBRL(campos.valor / campos.parcelas)}${cartao ? ` no ${cartao}` : ""}`
+            : [campos.descricao, rotuloDaForma(campos)].filter(Boolean).join(" · ")
+
+    // Uma linha cujo valor mudou sem a pessoa (uma leitura nova) pisca do
+    // desfoque no lugar. A que estava em edição não conta (quem a mudou foi a
+    // pessoa, à vista).
     const reduzido = useReducedMotion()
     const valoresAntes = useRef<Partial<Record<CampoDoLancamento, string | null>>>({})
     useEffect(() => {
         const agora: Partial<Record<CampoDoLancamento, string | null>> = {}
-        for (const { campo } of CAMPOS) {
+        for (const campo of TODOS_OS_CAMPOS) {
             if (editando === campo) continue
             agora[campo] = valorDaLinha(campo)
             const antes = valoresAntes.current[campo]
@@ -789,6 +1010,46 @@ function Revisao({
             e.preventDefault()
             fechar()
         }
+    }
+
+    /** A dúvida do parser que a linha confere ("Confira"); a categoria sem palpite também se confere. */
+    function confira(campo: CampoDoLancamento) {
+        const duvida = DUVIDA_DA_LINHA[campo]
+        return (duvida != null && campos.duvidas.includes(duvida)) || (campo === "categoria" && !campos.categoryId)
+    }
+
+    /** O selo da linha: "Confira" vence o "IA"; campo editado à mão perde o selo IA. */
+    function selo(campo: CampoDoLancamento, valor: string | null) {
+        if (confira(campo))
+            return (
+                <Badge size="xs" tone="warning">
+                    Confira
+                </Badge>
+            )
+        if (leuComIA && valor && !campoEditado(campo, leitura.editados))
+            return (
+                <Badge size="xs" tone="info">
+                    IA
+                </Badge>
+            )
+        return null
+    }
+
+    /** O campo em edição, no lugar da linha (ou da pílula do tipo, ou do valor). */
+    function emEdicao(campo: CampoDoLancamento, rotulo: string) {
+        return (
+            <Field key={campo} size="sm" data-revela={campo === "tipo" || campo === "valor" || undefined}>
+                <FieldLabel>{rotulo}</FieldLabel>
+                <div className="flex items-center gap-2">
+                    <div ref={editorRef} className="min-w-0 flex-1">
+                        {editor(campo)}
+                    </div>
+                    <Button variant="secondary" onClick={fechar}>
+                        ok
+                    </Button>
+                </div>
+            </Field>
+        )
     }
 
     function editor(campo: CampoDoLancamento): ReactNode {
@@ -957,12 +1218,16 @@ function Revisao({
         }
     }
 
+    // As linhas da lista agrupada: as parcelas só na parcelada.
+    const linhas = CAMPOS.filter((x) => x.campo !== "parcelas" || tipo === "parcelada")
+
     return (
-        // O corpo e o rodapé da placa: moram no vidro da frase, abaixo do
-        // cabeçalho. O corpo rola e o rodapé fica preso: a revisão longa rola e o
-        // "Aprovar" fica à vista.
+        // O corpo e o rodapé do painel. O corpo rola e o rodapé fica preso: a
+        // revisão longa rola e o "Aprovar" fica à vista. Cada peça com
+        // `data-revela` chega na cascata do gesto.
         <>
-            <DialogBody>
+            <DialogCloseButton data-revela />
+            <DialogBody className="pt-5">
                 <Form
                     id={formId}
                     pending={saving}
@@ -973,79 +1238,126 @@ function Revisao({
                         return leitura.aprovar()
                     }}
                 >
+                    {/* O tipo numa pílula com o ponto; tocá-la edita o tipo. */}
+                    {editando === "tipo" ? (
+                        emEdicao("tipo", "Tipo")
+                    ) : (
+                        <div data-revela className="flex items-center gap-2 pe-10">
+                            <button
+                                type="button"
+                                id="lancamento-tipo"
+                                disabled={saving}
+                                onClick={() => abrir("tipo")}
+                                className={cn("rounded-full", FOCO)}
+                            >
+                                <Badge tone={TOM_DO_TIPO[tipo]}>
+                                    <BadgeDot />
+                                    {campos.motivoDoTipo
+                                        ? `${rotuloDoTipo} · por causa de “${campos.motivoDoTipo}”`
+                                        : rotuloDoTipo}
+                                </Badge>
+                            </button>
+                            {leuComIA ? (
+                                <Badge size="xs" tone="info">
+                                    IA
+                                </Badge>
+                            ) : null}
+                        </div>
+                    )}
+
+                    {/* O valor em destaque; tocá-lo edita o valor. */}
+                    {editando === "valor" ? (
+                        emEdicao("valor", "Valor")
+                    ) : (
+                        <div data-revela className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    id="lancamento-valor"
+                                    disabled={saving}
+                                    onClick={() => abrir("valor")}
+                                    className={cn("rounded-row text-start", FOCO)}
+                                >
+                                    {campos.valor != null ? (
+                                        <MoneyDisplay
+                                            value={campos.valor}
+                                            size="2xl"
+                                            mono={false}
+                                            className="text-4xl font-bold tracking-tight"
+                                        />
+                                    ) : (
+                                        <span className="text-2xl font-semibold text-muted-foreground">
+                                            {NAO_IDENTIFICADO}
+                                        </span>
+                                    )}
+                                </button>
+                                {selo("valor", valorDaLinha("valor"))}
+                            </div>
+                            {legenda ? <Muted>{legenda}</Muted> : null}
+                        </div>
+                    )}
+
                     {leitura.foto ? (
                         <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
                     ) : null}
 
-                    <div className="flex items-center gap-2">
-                        <H4>Confira o lançamento</H4>
-                        {leuComIA ? (
-                            <Badge size="xs" tone="info">
-                                IA
-                            </Badge>
-                        ) : null}
-                    </div>
-
-                    <ItemGroup variant="divided">
-                        {CAMPOS.map((x) => {
+                    {/* A lista agrupada: a superfície funda, linhas de 50 com a divisória
+                        recuada até o texto (16 + o ladrilho de 28 + 8). */}
+                    <ItemGroup
+                        data-revela
+                        className="gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
+                    >
+                        {linhas.map((x, i) => {
+                            const rotulo = rotuloDaLinha(x.campo, x.rotulo)
+                            const separador = i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null
                             if (editando === x.campo) {
                                 return (
-                                    <Field key={x.campo} size="sm">
-                                        <FieldLabel>{x.rotulo}</FieldLabel>
-                                        <div className="flex items-center gap-2">
-                                            <div ref={editorRef} className="min-w-0 flex-1">
-                                                {editor(x.campo)}
-                                            </div>
-                                            <Button variant="secondary" onClick={fechar}>
-                                                ok
-                                            </Button>
-                                        </div>
-                                    </Field>
+                                    <Fragment key={x.campo}>
+                                        {separador}
+                                        <div className="px-4 py-2">{emEdicao(x.campo, rotulo)}</div>
+                                    </Fragment>
                                 )
                             }
                             const valor = valorDaLinha(x.campo)
-                            const duvida = DUVIDA_DA_LINHA[x.campo]
-                            // A categoria sem palpite também se confere, como no aviso da IA (`textoDasDuvidas`).
-                            const confira =
-                                (duvida != null && campos.duvidas.includes(duvida)) ||
-                                (x.campo === "categoria" && !campos.categoryId)
                             return (
-                                <Item key={x.campo} variant="flush" size="sm" interactive asChild>
-                                    <button
-                                        type="button"
-                                        id={`lancamento-${x.campo}`}
-                                        disabled={saving}
-                                        onClick={() => abrir(x.campo)}
-                                    >
-                                        <ItemMedia variant="icon">
+                                <Fragment key={x.campo}>
+                                    {separador}
+                                    <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
+                                        <button
+                                            type="button"
+                                            id={`lancamento-${x.campo}`}
+                                            disabled={saving}
+                                            onClick={() => abrir(x.campo)}
+                                        >
                                             {x.campo === "categoria" && categoria ? (
-                                                <ColorTile size="xs" color={categoria.color} />
+                                                <ItemMedia>
+                                                    <ColorTile size="xs" color={categoria.color} />
+                                                </ItemMedia>
                                             ) : (
-                                                x.icone
+                                                <ItemMedia variant="tile" tone={x.tom} tint="vivid">
+                                                    {x.icone}
+                                                </ItemMedia>
                                             )}
-                                        </ItemMedia>
-                                        <ItemContent>
-                                            <ItemTitle>{x.rotulo}</ItemTitle>
-                                            {x.campo === "tipo" && campos.motivoDoTipo ? (
-                                                <ItemDescription>por causa de “{campos.motivoDoTipo}”</ItemDescription>
-                                            ) : null}
-                                        </ItemContent>
-                                        <ItemActions>
-                                            {confira ? (
-                                                <Badge size="xs" tone="warning">
-                                                    Confira
-                                                </Badge>
-                                            ) : leuComIA && valor && !campoEditado(x.campo, leitura.editados) ? (
-                                                <Badge size="xs" tone="info">
-                                                    IA
-                                                </Badge>
-                                            ) : null}
-                                            <span className={valor ? "nums text-sm" : "text-sm text-muted-foreground"}>
-                                                {valor ?? NAO_IDENTIFICADO}
-                                            </span>
-                                        </ItemActions>
-                                    </button>
-                                </Item>
+                                            <ItemContent>
+                                                <ItemTitle>{rotulo}</ItemTitle>
+                                            </ItemContent>
+                                            <ItemActions>
+                                                {selo(x.campo, valor)}
+                                                <span
+                                                    className={cn(
+                                                        "text-sm",
+                                                        valor
+                                                            ? "nums text-muted-foreground"
+                                                            : "text-warning-muted-foreground"
+                                                    )}
+                                                >
+                                                    {valor ?? "Escolher"}
+                                                </span>
+                                                <ItemChevron />
+                                            </ItemActions>
+                                        </button>
+                                    </Item>
+                                </Fragment>
                             )
                         })}
                     </ItemGroup>
@@ -1055,26 +1367,32 @@ function Revisao({
             </DialogBody>
 
             {/* O rodapé fica preso fora do corpo que rola; o "Aprovar" é do formulário pelo `form=`. */}
-            <DialogFooter
-                start={
-                    motivo ? (
-                        <Caption id="lancamento-motivo" className="self-center">
-                            {motivo}
-                        </Caption>
-                    ) : null
-                }
-            >
-                <Button variant="tertiary" disabled={saving} onClick={onAbrirFormulario}>
-                    formulário completo
-                </Button>
+            <DialogFooter className="flex-col gap-1 pt-0 sm:flex-col sm:justify-start">
+                {motivo ? (
+                    <Caption id="lancamento-motivo" data-revela className="pb-2 text-center">
+                        {motivo}
+                    </Caption>
+                ) : null}
                 <FormSubmit
                     form={formId}
+                    size="xl"
+                    data-revela
+                    className="w-full"
                     pending={saving}
                     disabled={motivo != null}
                     aria-describedby={motivo ? "lancamento-motivo" : undefined}
                 >
                     Aprovar
                 </FormSubmit>
+                <Button
+                    variant="tertiary"
+                    data-revela
+                    className="w-full"
+                    disabled={saving}
+                    onClick={onAbrirFormulario}
+                >
+                    formulário completo
+                </Button>
             </DialogFooter>
         </>
     )
