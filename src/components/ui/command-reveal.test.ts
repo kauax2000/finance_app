@@ -22,7 +22,9 @@ describe("as linhas da paleta surgem do desfoque ao aparecer", () => {
     // em `0s`.
     const cva = paleta.slice(paleta.indexOf("const commandVariants"), paleta.indexOf("defaultVariants"))
     expect(cva).toMatch(/panel: "[^"]*\[--command-reveal:var\(--duration-spring\)\]/)
-    expect(paleta.replace(cva, "")).not.toContain("--command-reveal:")
+    // Fora dela, só o telefone do `CommandDialog`: as linhas assentam com a placa
+    // (120ms de atraso da última + 340ms = os 460ms do `menu-morph`).
+    expect(paleta.replace(cva, "").match(/--command-reveal:[^\]]*/g)).toEqual(["--command-reveal:340ms"])
   })
 
   it("o escopo é texto pintado, não Badge, e o campo tem o slot", () => {

@@ -131,9 +131,18 @@ describe("as versões do Command", () => {
     expect(lerFonte("src/app/globals.css")).toMatch(/@keyframes veil-out \{\s*to \{\s*-webkit-backdrop-filter: blur\(0\);\s*backdrop-filter: blur\(0\);\s*background-color: transparent;/)
     // A placa espera o vão: pausada no primeiro quadro, solta quando o vão abre
     // (o relógio do CSS corria durante a montagem), e a limpeza a solta sempre.
-    expect(CODIGO).toContain('if (placa) placa.style.animationPlayState = "paused"')
-    expect(CODIGO).toContain('if (f.vao > 0 && placa) placa.style.animationPlayState = ""')
-    expect(CODIGO).toMatch(/controle\?\.stop\(\)\s*if \(placa\) placa\.style\.animationPlayState = ""/)
+    // As linhas esperam e brotam com ela (`--command-reveal-play`): a última
+    // (120ms de atraso, 340ms de duração) assenta nos 460ms do `menu-morph`.
+    expect(CODIGO).toContain('placa.style.animationPlayState = sim ? "paused" : ""')
+    expect(CODIGO).toContain('if (sim) placa.style.setProperty("--command-reveal-play", "paused")')
+    expect(CODIGO).toContain('else placa.style.removeProperty("--command-reveal-play")')
+    expect(CODIGO).toMatch(/segurarPlaca\(true\)\s*quadro\(de\)/)
+    expect(CODIGO).toContain("if (f.vao > 0) segurarPlaca(false)")
+    expect(CODIGO).toMatch(/controle\?\.stop\(\)\s*segurarPlaca\(false\)/)
+    expect(CODIGO).toContain("[&_[data-slot=command-list]]:[--command-reveal:340ms]")
+    expect(CODIGO).toContain(
+      "[&_[data-slot=command-list]_:is([cmdk-item],[cmdk-group-heading])]:[animation-play-state:var(--command-reveal-play,running)]"
+    )
     // O foco não rola a pílula: os filhos estão transladados no voo, e o
     // `focus()` rolava o `overflow: hidden` do feixe (o conteúdo ~165pt fora).
     expect(CODIGO).toMatch(/onOpenAutoFocus=\{[\s\S]*?\.focus\(\{ preventScroll: true \}\)/)
@@ -182,6 +191,7 @@ describe("as versões do Command", () => {
     // repouso tira tudo dos dois vidros, do X e do fantasma.
     expect(CODIGO).not.toMatch(/animate\(pilula, \{ clipPath/)
     const repouso = CODIGO.slice(CODIGO.indexOf("function bolhasEmRepouso"), CODIGO.indexOf("/**\n * A paleta em diálogo"))
+    expect(repouso).toContain("if (uniao) desenharUniao(uniao, pilula, x, null)")
     expect(repouso).toContain('pilula.style.borderRadius = x.style.borderRadius = ""')
     expect(repouso).toContain('pilula.style.transform = ""')
     expect(repouso).toContain('pilula.style.clipPath = ""')
@@ -197,7 +207,7 @@ describe("as versões do Command", () => {
     // A viagem zera a opacidade que uma entrada sem origem tenha deixado no
     // meio; sem viagem, as duas bolhas voltam ao repouso antes do esmaecer.
     expect(CODIGO).toMatch(/if \(viaja\) \{\s*pilula\.style\.opacity = x\.style\.opacity = ""/)
-    expect(CODIGO).toMatch(/\} else \{\s*bolhasEmRepouso\(pilula, x, iconeX, fantasma, origemLupaEl\)\s*progresso\.current = aberto \? 1 : 0/)
+    expect(CODIGO).toMatch(/\} else \{\s*bolhasEmRepouso\(pilula, x, iconeX, fantasma, origemLupaEl, uniao\)\s*progresso\.current = aberto \? 1 : 0/)
     // O × é medido sem o aperto do toque (o `translate` do AFUNDAR e do
     // `active:translate-y-px`): o lugar de layout dele na camada, e não a caixa
     // pintada. O aperto da pessoa nunca é cancelado.
@@ -455,6 +465,69 @@ describe("as versões do Command", () => {
     })
   })
 
+  describe("coladas, as duas bolhas são um vidro só", () => {
+    const caixa = (left: number, right: number) => ({ left, right, top: 6, bottom: 50, width: right - left, height: 44 })
+    const pilula = caixa(16, 307)
+    const x = caixa(315, 359)
+    const capsula = { lupa: caixa(271, 315), deX: caixa(315, 359), pilula, x, dpr: 3 }
+    /** Os arcos na ordem do contorno: emenda da pílula, emenda do ×, ponta do × (2), emenda do × e da pílula embaixo, ponta da pílula (2). */
+    const arcos = (path: string) => [...path.matchAll(/A ([\d.]+) ([\d.]+) 0 0 1/g)].map((a) => [+a[1], +a[2]])
+
+    it("a caixa vai da borda visível da pílula à ponta do ×; costura com a emenda, pontas no R", async () => {
+      const { quadroDasBolhas, contornoDaUniao } = await import("@/components/ui/command")
+      for (const p of [0, 0.3, 0.5, 0.6]) {
+        const f = quadroDasBolhas(capsula, p)
+        expect(f.vao).toBe(0)
+        const u = contornoDaUniao(f, { pilula, x })
+        expect(u.left).toBeCloseTo(pilula.left + f.dx + Math.max(0, f.esquerda), 6)
+        expect(u.left + u.width).toBeCloseTo(x.right + f.xdx, 6)
+        expect(u.left + u.costura).toBeCloseTo(pilula.right + f.dx, 6)
+        const a = arcos(u.path)
+        expect(a).toHaveLength(8)
+        // A emenda nos quatro cantos da costura (a horizontal da pílula só encolhe se a fatia não couber).
+        for (const i of [1, 4]) expect(a[i][0]).toBeCloseTo(f.emenda, 3)
+        for (const i of [0, 5]) expect(a[i][0]).toBeCloseTo(f.emendaH, 3)
+        // As pontas de fora no R (a do × com o aperto só na vertical).
+        for (const i of [2, 3]) expect(a[i][0]).toBeCloseTo(f.R, 3)
+        for (const i of [6, 7]) expect(a[i][0]).toBeCloseTo(f.Rh, 3)
+      }
+      const meio = quadroDasBolhas(capsula, 0.5)
+      expect(meio.emendaH).toBe(meio.emenda)
+      expect(meio.puxao).toBeGreaterThan(0)
+    })
+
+    it("sem fio vertical por dentro: com a emenda, a costura só aparece na cintura", async () => {
+      const { quadroDasBolhas, contornoDaUniao } = await import("@/components/ui/command")
+      for (const p of [0.3, 0.5, 0.6]) {
+        const f = quadroDasBolhas(capsula, p)
+        const u = contornoDaUniao(f, { pilula, x })
+        expect(f.emenda).toBeGreaterThan(0)
+        expect(u.path).not.toContain(`${+u.costura.toFixed(3)} 0 `)
+        expect(u.path).not.toContain(`${+u.costura.toFixed(3)} ${+u.height.toFixed(3)} `)
+        // Os dois pedaços retos na costura ficam na cintura: um acima do meio, outro abaixo.
+        const naCostura = [...u.path.matchAll(/L ([\d.]+) ([\d.]+)/g)].map((l) => +l[2])
+        expect(naCostura).toHaveLength(2)
+        expect(Math.abs(naCostura[0] - u.height / 2)).toBeLessThan(u.height / 2 - f.emenda + 1)
+        expect(Math.abs(naCostura[1] - u.height / 2)).toBeLessThan(u.height / 2 - f.emenda + 1)
+      }
+    })
+
+    it("o escritor só põe a união coladas, e a pílula e o × deixam de pintar o vidro; o repouso tira tudo", () => {
+      const escritor = CODIGO.slice(CODIGO.indexOf("function desenharUniao("), CODIGO.indexOf("/**\n * Escreve um quadro da busca sem filtro"))
+      expect(escritor).toContain('el.style.backgroundColor = u ? "transparent" : ""')
+      expect(escritor).toContain('el.style.backdropFilter = u ? "none" : ""')
+      expect(escritor).toContain('el.style.setProperty("-webkit-backdrop-filter", u ? "none" : "")')
+      expect(escritor).toContain('uniao.style.cssText = ""')
+      expect(escritor).toContain('clipPath: `path("${u.path}")`')
+      expect(CODIGO).toMatch(/desenharUniao\(uniao, pilula, x, f\.vao === 0\s*\? \{ \.\.\.contornoDaUniao\(f, \{ pilula: final, x: xFinal \}\), origem: c, tinta \}\s*: null\)/)
+      expect(CODIGO).toMatch(/if \(uniao\) desenharUniao\(uniao, pilula, x, null\)\s*desenharGota\(/)
+      // A união pinta por baixo do conteúdo: antes da raiz do cmdk e do ×.
+      const telefone = CODIGO.slice(CODIGO.indexOf("if (isMobile) {"))
+      expect(telefone).toMatch(/data-slot="command-search-union"\s*className=\{cn\("pointer-events-none absolute hidden", searchFieldSurfaceClassName\.modal\)\}/)
+      expect(telefone.indexOf('data-slot="command-search-union"')).toBeLessThan(telefone.indexOf("<Command"))
+    })
+  })
+
   describe("sem filtro: a lupa vira o campo e o × pinga dela", () => {
     const caixa = (left: number, right: number) => ({ left, right, top: 6, bottom: 50, width: right - left, height: 44 })
     const pilula = caixa(16, 307)
@@ -529,7 +602,7 @@ describe("as versões do Command", () => {
       expect(escritor).toContain("origemLupa.style.opacity = `${1 - f.lupaTroca}`")
       expect(escritor).toContain("iconeX.style.opacity = `${f.icone}`")
       expect(escritor).not.toMatch(/camada|parentElement/)
-      expect(CODIGO).toMatch(/if \(ativa\) bolhasEmRepouso\(pilula, x, iconeX, fantasma, origemLupaEl\)/)
+      expect(CODIGO).toMatch(/if \(ativa\) bolhasEmRepouso\(pilula, x, iconeX, fantasma, origemLupaEl, uniao\)/)
     })
   })
 

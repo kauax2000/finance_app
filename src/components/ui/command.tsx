@@ -271,6 +271,60 @@ function quadroDasBolhas(
 }
 
 /**
+ * O contorno das duas bolhas coladas (`vao` 0), num vidro só: dois vidros
+ * lado a lado borram o fundo cada um até a própria borda, e a costura mostrava
+ * um fio escuro. A caixa vai da borda visível da pílula à ponta do ×, em
+ * coordenadas de tela; o `path` é relativo a ela: a pílula até a costura, com
+ * os cantos dela arredondados pela emenda, e o × depois dela, com o mesmo
+ * arredondamento na costura e o aperto vertical (`1 − puxao × ACOPLAMENTO_Y`)
+ * pelo centro. A cintura é o entalhe entre os dois cantos, sem fio vertical
+ * por dentro. Puro, para o teste: quem escreve é o `desenharUniao`.
+ */
+function contornoDaUniao(
+  f: ReturnType<typeof quadroDasBolhas>,
+  m: { pilula: Caixa; x: Caixa }
+) {
+  // A pílula: o que a caixa (transladada) e o recorte deixam pintar.
+  const costura = m.pilula.right + f.dx
+  const esquerda = m.pilula.left + f.dx + Math.max(0, f.esquerda)
+  const t1 = m.pilula.top + f.topo, b1 = m.pilula.bottom - f.base
+  // O ×: escala pela direita na largura e pelo centro na altura.
+  const sy = 1 - f.puxao * ACOPLAMENTO_Y
+  const meio = (m.x.top + m.x.bottom) / 2 + f.xdy, meia = (m.x.height / 2) * sy
+  const t2 = meio - meia, b2 = meio + meia, direita = m.x.right + f.xdx
+  const meiaPilula = (b1 - t1) / 2
+  const ponta = [f.Rh, Math.min(f.R, meiaPilula)] as const
+  const emendaPilula = [f.emendaH, Math.min(f.emenda, meiaPilula)] as const
+  const emendaX = [f.emenda, f.emenda * sy] as const
+  const fim = [f.R, f.R * sy] as const
+  const top = Math.min(t1, t2)
+  const n = (v: number) => +v.toFixed(3)
+  const X = (v: number) => n(v - esquerda), Y = (v: number) => n(v - top)
+  const A = ([rx, ry]: readonly [number, number], x: number, y: number) => `A ${n(rx)} ${n(ry)} 0 0 1 ${X(x)} ${Y(y)}`
+  const path = [
+    `M ${X(esquerda + ponta[0])} ${Y(t1)}`,
+    `H ${X(costura - emendaPilula[0])}`,
+    A(emendaPilula, costura, t1 + emendaPilula[1]),
+    `L ${X(costura)} ${Y(t2 + emendaX[1])}`,
+    A(emendaX, costura + emendaX[0], t2),
+    `H ${X(direita - fim[0])}`,
+    A(fim, direita, t2 + fim[1]),
+    `V ${Y(b2 - fim[1])}`,
+    A(fim, direita - fim[0], b2),
+    `H ${X(costura + emendaX[0])}`,
+    A(emendaX, costura, b2 - emendaX[1]),
+    `L ${X(costura)} ${Y(b1 - emendaPilula[1])}`,
+    A(emendaPilula, costura - emendaPilula[0], b1),
+    `H ${X(esquerda + ponta[0])}`,
+    A(ponta, esquerda, b1 - ponta[1]),
+    `V ${Y(t1 + ponta[1])}`,
+    A(ponta, esquerda + ponta[0], t1),
+    "Z",
+  ].join(" ")
+  return { left: esquerda, top, width: direita - esquerda, height: Math.max(b1, b2) - top, costura: costura - esquerda, path }
+}
+
+/**
  * As fases da busca sem filtro, no mesmo progresso: a borda esquerda do campo
  * repousa na calha aos 0,7 (o passe vem só da mola), a direita anda de 0,15 a
  * 0,75, a gota nasce e corre de 0,45 a 1, a lupa do header se troca pela da
@@ -418,6 +472,40 @@ function desenharBolhas(
 }
 
 /**
+ * Coladas, as duas bolhas são um vidro só: a união (`contornoDaUniao`) pinta o
+ * material e a tinta do voo, e a pílula e o × deixam de pintar o deles (o
+ * fundo, a tinta e o borrão), ficando só com o conteúdo, por cima. Sem `u` (o
+ * vão aberto, a gota ou o repouso), a união some e os dois voltam à classe.
+ * Escreve só nos vidros, nunca num ancestral.
+ */
+function desenharUniao(
+  uniao: HTMLElement,
+  pilula: HTMLElement,
+  x: HTMLElement,
+  u: (ReturnType<typeof contornoDaUniao> & { origem: { left: number; top: number }; tinta: string }) | null
+) {
+  for (const el of [pilula, x]) {
+    el.style.backgroundColor = u ? "transparent" : ""
+    el.style.setProperty("-webkit-backdrop-filter", u ? "none" : "")
+    el.style.backdropFilter = u ? "none" : ""
+    if (u) el.style.backgroundImage = "none"
+  }
+  if (!u) {
+    uniao.style.cssText = ""
+    return
+  }
+  Object.assign(uniao.style, {
+    display: "block",
+    left: `${u.left - u.origem.left}px`,
+    top: `${u.top - u.origem.top}px`,
+    width: `${u.width}px`,
+    height: `${u.height}px`,
+    clipPath: `path("${u.path}")`,
+    backgroundImage: `linear-gradient(${u.tinta}, ${u.tinta})`,
+  })
+}
+
+/**
  * Escreve um quadro da busca sem filtro (`quadroDaGota`) nos dois vidros e nos
  * filhos deles, nunca num ancestral. A pílula anda com a ponta (`translateX`)
  * e o recorte esconde o que fica à esquerda da borda (no passe da mola ele sai
@@ -491,8 +579,10 @@ function bolhasEmRepouso(
   x: HTMLElement,
   iconeX: SVGElement | null,
   fantasma: HTMLElement | null,
-  origemLupa: HTMLElement | null
+  origemLupa: HTMLElement | null,
+  uniao: HTMLElement | null
 ) {
+  if (uniao) desenharUniao(uniao, pilula, x, null)
   pilula.style.borderRadius = x.style.borderRadius = ""
   pilula.style.transform = ""
   pilula.style.clipPath = ""
@@ -585,6 +675,16 @@ function CommandDialog({
     const fantasma = x.querySelector<HTMLElement>("[data-slot=command-search-cancel-origin]")
     const origemLupaEl = camada.querySelector<HTMLElement>("[data-slot=command-search-origin]")
     const placa = camada.querySelector<HTMLElement>("[data-slot=command-dialog-panel]")
+    const uniao = camada.querySelector<HTMLElement>("[data-slot=command-search-union]")
+    // A placa e as linhas dela esperam juntas o vão abrir, e brotam juntas: a
+    // última linha assenta quando a placa acaba (`--command-reveal-play`, lida
+    // pelas linhas da lista no telefone).
+    const segurarPlaca = (sim: boolean) => {
+      if (!placa) return
+      placa.style.animationPlayState = sim ? "paused" : ""
+      if (sim) placa.style.setProperty("--command-reveal-play", "paused")
+      else placa.style.removeProperty("--command-reveal-play")
+    }
     const lupaEl = origin?.current
     // As origens pelas caixas de layout, sem o voo do header: a busca aberta
     // com o filtro ainda pingando parte de onde a lupa e ele pousam.
@@ -639,11 +739,19 @@ function CommandDialog({
         ? (p: number) => {
             const f = quadroDasBolhas({ lupa, deX: filtro, pilula: final, x: xFinal, dpr }, p)
             desenharBolhas(pilula, x, iconeX, fantasma, origemLupaEl, f)
+            // Coladas, um vidro só; com o vão aberto, cada bolha pinta o seu.
+            if (uniao) {
+              const tinta = `color-mix(in oklab, var(--foreground) ${TINTA_DO_VOO * f.tinta}%, transparent)`
+              desenharUniao(uniao, pilula, x, f.vao === 0
+                ? { ...contornoDaUniao(f, { pilula: final, x: xFinal }), origem: c, tinta }
+                : null)
+            }
             return f
           }
         : (p: number) => {
             const m = { lupa, pilula: final, x: xFinal, dpr }
             const f = quadroDaGota(m, p)
+            if (uniao) desenharUniao(uniao, pilula, x, null)
             desenharGota(pilula, x, iconeX, origemLupaEl, m, f, p)
             return f
           }
@@ -653,7 +761,7 @@ function CommandDialog({
         // A placa brota quando o vão abre, no progresso, e não no relógio do
         // CSS: ele corre durante a montagem, e a placa terminava de brotar
         // antes de as bolhas se separarem.
-        if (f.vao > 0 && placa) placa.style.animationPlayState = ""
+        if (f.vao > 0) segurarPlaca(false)
       }
       if (aberto) {
         // Com um gesto no ar (a camada ainda fechando), a abertura segue de
@@ -661,7 +769,7 @@ function CommandDialog({
         // da cápsula. O primeiro quadro já sai daqui, antes da pintura: a
         // cápsula do header, que parada lê como o aperto.
         const de = pilula.style.clipPath ? progresso.current : 0
-        if (placa) placa.style.animationPlayState = "paused"
+        segurarPlaca(true)
         quadro(de)
         // O relógio só começa quando a pintura volta (`quandoPintar`): a
         // mola contaria o tempo da montagem e voltaria já sem a divisão. O
@@ -672,7 +780,7 @@ function CommandDialog({
           // é a última palavra (animando o `clip-path` do elemento, o valor do
           // motion o reescrevia no render seguinte).
           abrindo.then(() => {
-            if (ativa) bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl)
+            if (ativa) bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl, uniao)
           })
           controle = abrindo
         })
@@ -688,7 +796,7 @@ function CommandDialog({
         })
       }
     } else {
-      bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl)
+      bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl, uniao)
       progresso.current = aberto ? 1 : 0
       if (aberto) {
         // Sem lupa à vista, a pílula e o × entram no lugar; com movimento
@@ -705,7 +813,7 @@ function CommandDialog({
       ativa = false
       cancelar()
       controle?.stop()
-      if (placa) placa.style.animationPlayState = ""
+      segurarPlaca(false)
     }
   }, [aberto, camada, origin, closeOrigin, reduzido])
 
@@ -794,6 +902,15 @@ function CommandDialog({
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
+            {/* As duas bolhas coladas num vidro só (`desenharUniao`): o mesmo
+                material da pílula, posto e recortado pelo gesto, escondido fora
+                dele. Antes da raiz do cmdk e do ×, para pintar por baixo do
+                conteúdo dos dois. */}
+            <span
+              aria-hidden
+              data-slot="command-search-union"
+              className={cn("pointer-events-none absolute hidden", searchFieldSurfaceClassName.modal)}
+            />
             <CommandBeamContext.Provider value>
               <Command
                 // O `CommandInput` é o primeiro filho que o consumidor passa:
@@ -812,6 +929,11 @@ function CommandDialog({
                   // de 44, o respiro de 12 e a área segura de baixo.
                   "[--command-list-ceiling:calc(var(--command-search-vh,100dvh)_-_var(--command-search-top)_-_--spacing(11)_-_--spacing(3)_-_max(--spacing(3),env(safe-area-inset-bottom)))]",
                   "[--command-list-transition:var(--duration-base)]",
+                  // As linhas brotam com a placa: esperam pausadas com ela até o
+                  // vão abrir (`--command-reveal-play`, escrita pelo gesto), e a
+                  // última (120ms de atraso) assenta nos 460ms do `menu-morph`.
+                  "[&_[data-slot=command-list]]:[--command-reveal:340ms]",
+                  "[&_[data-slot=command-list]_:is([cmdk-item],[cmdk-group-heading])]:[animation-play-state:var(--command-reveal-play,running)]",
                   className
                 )}
                 {...commandProps}
@@ -1842,6 +1964,7 @@ export {
   origemValida,
   quadroDasBolhas,
   quadroDaGota,
+  contornoDaUniao,
   CommandHighlight,
   CommandPage,
   CommandPages,

@@ -28597,3 +28597,35 @@ direita), e aquém da lupa o grupo anda para a direita (`translateX`). Medido no
 laboratório: a entrada leva a borda de 43 a 0 e a largura a 93,5 antes de
 assentar em 88; a saída leva a borda a 43 e o círculo 5,5px para a direita
 antes de voltar. A costura e o estica do filtro saíram do quadro.
+
+### Rodada 353 — a busca do telefone: um vidro só ao colar, e as linhas com a placa
+
+**O pedido.** Dois ajustes no `CommandDialog` do telefone, com o `command.tsx`
+autorizado só para eles. (1) Enquanto a pílula e o × estão colados (`vao` 0,
+na abertura e na volta), um fio escuro aparecia na costura. (2) As linhas da
+lista terminavam de surgir depois da placa.
+
+**Por quê o fio.** O mesmo da cápsula do cabeçalho (rodada 352): dois vidros
+lado a lado, cada um com o próprio `backdrop-filter` borrando o fundo até a
+própria borda, e na costura os dois borrões não casam.
+
+**Como (1).** Uma terceira peça na camada, `command-search-union`, com o mesmo
+material da pílula (`searchFieldSurfaceClassName.modal`) e a tinta do voo
+(`TINTA_DO_VOO`), posta da borda visível da pílula à ponta do × e recortada
+por `clip-path: path(...)`: a pílula até a costura e o × depois dela, os cantos
+da costura arredondados pela emenda (a cintura é o entalhe entre eles), as
+pontas no R e o aperto vertical do × (`1 − puxao × ACOPLAMENTO_Y`) na parte
+dele. A geometria é pura (`contornoDaUniao`, ao lado do `quadroDasBolhas`) e
+testada. Enquanto a união aparece, a pílula e o × não pintam fundo, tinta nem
+borrão, e o conteúdo deles fica por cima; com o vão aberto, na gota sem filtro
+e no repouso (`bolhasEmRepouso`) ela some e tudo volta à classe. Nada escreve
+num ancestral.
+
+**Como (2).** As linhas pausam com a placa: o gesto escreve
+`--command-reveal-play: paused` na placa junto do `animation-play-state`, e as
+linhas da lista no telefone leem a variável no `animation-play-state`; soltam
+juntas quando o vão abre. No telefone `--command-reveal` é 340ms: com o degrau
+de 30ms e o teto de quatro (120ms), a última linha assenta nos 460ms do
+`menu-morph`. O desktop segue em `--duration-spring`. A placa ainda tem os
+60ms de atraso do `menu-morph` depois de solta; as linhas não.
+

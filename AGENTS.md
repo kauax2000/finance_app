@@ -1386,7 +1386,13 @@ declaração de `background-color` no trilho).
   com o `menu-unmorph` — só ali em 460ms e 260ms (rodada 350), os outros
   menus seguem em 380 e 210; o véu do telefone sai depois das bolhas se
   fundirem, e a casca segura a saída 460ms (`--duration-slow` +
-  `--duration-instant` + 60ms). A camada e o teto da placa medem o viewport visual
+  `--duration-instant` + 60ms). **Coladas (`vao` 0), as duas bolhas são um
+  vidro só**: a união (`command-search-union`, `contornoDaUniao`) pinta o
+  material e a tinta do voo num `clip-path: path()` com a cintura entre as
+  emendas, e a pílula e o × só desenham o conteúdo; com o vão aberto, cada uma
+  volta ao seu. **As linhas brotam com a placa**: pausadas com ela
+  (`--command-reveal-play`), em 340ms no telefone, e a última (120ms de atraso)
+  assenta nos 460ms do `menu-morph` (rodada 353). A camada e o teto da placa medem o viewport visual
   (`--command-search-vh`, de `visualViewport`; `100dvh` de reserva): o teclado
   do iOS só encolhe ele, e a placa termina acima do teclado. O foco vai ao
   campo no `onOpenAutoFocus` (o teclado abre no mesmo toque); ao fechar, o foco
