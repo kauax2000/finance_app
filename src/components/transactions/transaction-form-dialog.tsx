@@ -92,14 +92,17 @@ export function TransactionFormDialog({
     const { handleSubmit, fieldsProps, formTitle, formDescription, showFooter, submitDisabled, isDirty } = form
 
     // A paleta é a criação de quem ligou o lançamento inteligente (ou de quem
-    // chegou com uma frase ou foto compartilhada); editar segue no formulário.
+    // chegou com uma frase ou foto compartilhada); editar segue no formulário,
+    // e quem pediu Receita ou Parcelada (⌘K) escolheu o formulário.
     // O hook da leitura e o do formulário moram aqui, uma vez só: "Abrir
     // formulário completo" troca a casca e os campos lidos já estão nele.
     const [ligado] = useLancamentoInteligente()
     const [usarFormulario, setUsarFormulario] = useState(false)
     if (!open && usarFormulario) setUsarFormulario(false)
     const usarPaleta =
-        !editingTransaction && (ligado || Boolean(fraseInicial || fotoInicial)) && !usarFormulario
+        !editingTransaction &&
+        ((ligado && defaultLaunchKind === "expense") || Boolean(fraseInicial || fotoInicial)) &&
+        !usarFormulario
 
     // Estáveis: cada troca relê a frase.
     const cartoes = useMemo(
@@ -111,6 +114,7 @@ export function TransactionFormDialog({
     )
     const leitura = useLeituraDoLancamento({
         form,
+        ativo: usarPaleta && open,
         cartoes,
         categorias: categories,
         fraseInicial,

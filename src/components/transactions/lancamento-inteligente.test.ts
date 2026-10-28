@@ -33,3 +33,26 @@ describe("a paleta do lançamento inteligente", () => {
         expect(fonte).not.toContain("lucide")
     })
 })
+
+const hook = semComentarios(lerFonte("src/components/transactions/use-leitura-do-lancamento.ts"))
+const dialogo = semComentarios(lerFonte("src/components/transactions/transaction-form-dialog.tsx"))
+
+describe("a leitura do lançamento inteligente", () => {
+    it("o convidado não vê Receita nem Estorno, e a leitura vira despesa", () => {
+        expect(fonte).toMatch(/papel === "guest"[\s\S]*TIPOS\.filter/)
+        expect(fonte).toContain("tipos.map(")
+        expect(hook).toContain('papel === "guest"')
+        expect(hook).toContain("soDespesa(")
+    })
+
+    it("Receita e Parcelada pedidas pelo ⌘K abrem o formulário; o compartilhar segue na paleta", () => {
+        expect(dialogo).toMatch(/\(ligado && defaultLaunchKind === "expense"\) \|\| Boolean\(fraseInicial \|\| fotoInicial\)/)
+    })
+
+    it("inativa (fechada ou trocada pelo formulário), nada se aplica e o histórico não carrega", () => {
+        expect(dialogo).toContain("ativo: usarPaleta && open")
+        expect(hook).toContain("if (!ativo || !campos) return")
+        expect(hook).toMatch(/if \(!ativo\) return\s+let vivo = true/)
+        expect(hook).toContain("}, [ativo, queryClient, currentWorkspaceId])")
+    })
+})

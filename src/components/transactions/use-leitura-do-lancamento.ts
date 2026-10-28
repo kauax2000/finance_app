@@ -17,6 +17,7 @@ import {
     comTravas,
     faltaParaLancar,
     precisaDeIA,
+    soDespesa,
     type CampoDoLancamento,
 } from "@/lib/captura/lancamento-inteligente"
 import { comprimirImagem } from "@/lib/anexos"
@@ -39,12 +40,15 @@ const AVISO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
  */
 export function useLeituraDoLancamento({
     form,
+    ativo,
     cartoes,
     categorias,
     fraseInicial,
     fotoInicial,
 }: {
     form: ReturnType<typeof useTransactionForm>
+    /** A paleta aberta: fechada (ou trocada pelo formulário completo), nada se aplica nem carrega. */
+    ativo: boolean
     cartoes: CartaoParaCasar[]
     categorias: CategoriaParaCasar[]
     /** A frase do compartilhar (`?frase=`). */
@@ -52,7 +56,8 @@ export function useLeituraDoLancamento({
     /** A foto do compartilhar: lida uma vez, ao montar. */
     fotoInicial?: File
 }) {
-    const { currentWorkspaceId } = useWorkspace()
+    const { currentWorkspaceId, papel } = useWorkspace()
+    const semReceita = papel === "guest"
     const queryClient = useQueryClient()
     const { aplicarFrase, aplicarFoto } = form.fieldsProps
     const { setFotoDoRecibo } = form
@@ -69,8 +74,10 @@ export function useLeituraDoLancamento({
     const [aviso, setAviso] = useState<string | null>(null)
     const hoje = localYmdFromDate(new Date())
 
-    // O histórico é ajuda: carrega ao abrir, e a frase lê sem ele até chegar.
+    // O histórico é ajuda: carrega a cada abertura (o `staleTime` do cache a
+    // deixa barata), e a frase lê sem ele até chegar.
     useEffect(() => {
+        if (!ativo) return
         let vivo = true
         void historicoDaFraseEmCache(queryClient, currentWorkspaceId).then((lido) => {
             if (vivo && lido.length) setHistorico(lido)
@@ -78,7 +85,7 @@ export function useLeituraDoLancamento({
         return () => {
             vivo = false
         }
-    }, [queryClient, currentWorkspaceId])
+    }, [ativo, queryClient, currentWorkspaceId])
 
     const campos = useMemo(() => {
         // O cartão do "crédito" sem nome é o que o formulário pré-escolhe ao tocar em Crédito.
@@ -90,20 +97,24 @@ export function useLeituraDoLancamento({
             : texto.trim()
               ? camposDaFrase(texto, hoje, cartoes, historico, ctx)
               : null
-        return base ? comTravas(base, editados) : null
-    }, [texto, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados])
+        if (!base) return null
+        const lidos = comTravas(base, editados)
+        return semReceita ? soDespesa(lidos, categorias) : lidos
+    }, [texto, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados, semReceita])
 
     // A foto marca o lançamento como `share`; a frase, como `quick_text`. O
     // aplicar re-renderiza o formulário: só campos diferentes do último
     // aplicado o chamam, para `cartoes`/`categorias` instáveis não darem laço.
+    // Inativa, a resposta atrasada (IA, histórico, meia-noite) não sobrescreve
+    // o formulário completo que a pessoa abriu.
     const ultimoAplicado = useRef<string | null>(null)
     useEffect(() => {
-        if (!campos) return
+        if (!ativo || !campos) return
         const chave = JSON.stringify([campos, iaDaFoto != null])
         if (chave === ultimoAplicado.current) return
         ultimoAplicado.current = chave
         ;(iaDaFoto ? aplicarFoto : aplicarFrase)(campos)
-    }, [campos, iaDaFoto, aplicarFrase, aplicarFoto])
+    }, [ativo, campos, iaDaFoto, aplicarFrase, aplicarFoto])
 
     // Cada leitura da frase pela IA ganha um número; reescrever a frase ou
     // fechar a paleta o muda, e a resposta atrasada de um pedido velho é

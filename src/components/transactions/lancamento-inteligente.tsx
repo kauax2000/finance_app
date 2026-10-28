@@ -43,6 +43,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { KbdGroup } from "@/components/ui/kbd-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Caption } from "@/components/ui/typography"
+import { useWorkspace } from "@/components/workspace-provider"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
@@ -236,6 +237,9 @@ function Paleta({
     const arquivoRef = useRef<HTMLInputElement>(null)
     const { campos, lendoIA, foto } = leitura
     const hoje = localYmdFromDate(new Date())
+    // O convidado não lança receita, como no formulário (a leitura já a vira despesa).
+    const tipos =
+        useWorkspace().papel === "guest" ? TIPOS.filter((t) => t.tipo !== "receita" && t.tipo !== "estorno") : TIPOS
 
     // O `CommandInput` esvazia o campo ao montar e a cada troca de página (num
     // efeito do filho, que roda antes deste). Na raiz o campo é a frase, e
@@ -504,7 +508,7 @@ function Paleta({
                 </CommandPage>
 
                 <CommandPage id="tipo">
-                    {TIPOS.map((t) => (
+                    {tipos.map((t) => (
                         <CommandItem key={t.tipo} value={`tipo:${t.tipo}`} onSelect={() => escolherTipo(t.tipo)}>
                             <CommandItemTitle>{t.rotulo}</CommandItemTitle>
                             {t.tipo === tipo ? (

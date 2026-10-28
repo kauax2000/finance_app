@@ -5,9 +5,15 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 const { camposDaIA } = await import("@/lib/captura/frase-no-form")
-const { comTravas, faltaParaLancar, planoDaFrase, precisaDeIA, rotuloDaAcao: rotulo, tipoDoLancamento } = await import(
-    "@/lib/captura/lancamento-inteligente"
-)
+const {
+    comTravas,
+    faltaParaLancar,
+    planoDaFrase,
+    precisaDeIA,
+    rotuloDaAcao: rotulo,
+    soDespesa,
+    tipoDoLancamento,
+} = await import("@/lib/captura/lancamento-inteligente")
 
 function campos(over: Partial<CamposDaFrase> = {}): CamposDaFrase {
     return {
@@ -69,6 +75,32 @@ describe("precisaDeIA", () => {
     })
 })
 
+describe("soDespesa", () => {
+    const categorias = [
+        { id: "salario", type: "income" as const },
+        { id: "mercado", type: "expense" as const },
+    ]
+
+    it("a receita e o estorno do convidado viram despesa, sem a categoria de receita", () => {
+        expect(soDespesa(campos({ tipo: "income", categoryId: "salario", motivoDoTipo: "salário" }), categorias)).toMatchObject({
+            tipo: "expense",
+            estorno: false,
+            categoryId: null,
+            motivoDoTipo: null,
+        })
+        expect(soDespesa(campos({ tipo: "income", estorno: true, categoryId: "mercado" }), categorias)).toMatchObject({
+            tipo: "expense",
+            estorno: false,
+            categoryId: "mercado",
+        })
+    })
+
+    it("a despesa passa intacta", () => {
+        const c = campos({ categoryId: "mercado" })
+        expect(soDespesa(c, categorias)).toBe(c)
+    })
+})
+
 describe("faltaParaLancar", () => {
     it("sem valor falta o valor", () => {
         expect(faltaParaLancar(campos({ valor: null }), 0)).toBe("valor")
@@ -78,6 +110,13 @@ describe("faltaParaLancar", () => {
         const c = campos({ paymentMethod: "credit_card", creditCardId: null, valor: 1 })
         expect(faltaParaLancar(c, 2)).toBe("forma")
         expect(faltaParaLancar(c, 0)).toBeNull()
+    })
+
+    it("estorno sem cartão pede o cartão só quando há cartão ativo", () => {
+        const c = campos({ tipo: "income", estorno: true, paymentMethod: null, creditCardId: null })
+        expect(faltaParaLancar(c, 1)).toBe("forma")
+        expect(faltaParaLancar(c, 0)).toBeNull()
+        expect(faltaParaLancar({ ...c, creditCardId: "c1" }, 1)).toBeNull()
     })
 
     it("completo, nada falta", () => {

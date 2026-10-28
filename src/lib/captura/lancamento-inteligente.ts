@@ -40,6 +40,23 @@ export function comTravas(c: CamposDaFrase, editados: Partial<CamposDaFrase>): C
     return { ...c, ...editados, duvidas: c.duvidas.filter((d) => !resolvidas.has(d)) }
 }
 
+/**
+ * O convidado não lança receita (a RLS recusa, e o formulário esconde a
+ * Receita): o que a frase leu como receita ou estorno vira despesa, e a
+ * categoria de receita sai.
+ */
+export function soDespesa(c: CamposDaFrase, categorias: { id: string; type: "expense" | "income" }[]): CamposDaFrase {
+    if (c.tipo === "expense" && !c.estorno) return c
+    const categoria = categorias.find((x) => x.id === c.categoryId)
+    return {
+        ...c,
+        tipo: "expense",
+        estorno: false,
+        motivoDoTipo: null,
+        categoryId: categoria?.type === "expense" ? c.categoryId : null,
+    }
+}
+
 /** Sem valor ou sem descrição de verdade, o parser não leu a frase: a IA tenta. */
 export function precisaDeIA(c: CamposDaFrase): boolean {
     return c.duvidas.includes("valor") || c.duvidas.includes("descricao")
@@ -47,11 +64,13 @@ export function precisaDeIA(c: CamposDaFrase): boolean {
 
 /**
  * O campo obrigatório que falta, ou `null`. O cartão só se pede quando há um
- * ativo: sem nenhum, o crédito não pode travar o "Lançar".
+ * ativo: sem nenhum, o crédito (ou o estorno) não pode travar o "Lançar".
  */
 export function faltaParaLancar(c: CamposDaFrase, cartoesAtivos: number): CampoDoLancamento | null {
     if (c.valor == null) return "valor"
     if (c.paymentMethod === "credit_card" && cartoesAtivos > 0 && !c.creditCardId) return "forma"
+    // O estorno abate a fatura de um cartão: sem ele, sairia uma receita comum.
+    if (c.estorno && cartoesAtivos > 0 && !c.creditCardId) return "forma"
     return null
 }
 

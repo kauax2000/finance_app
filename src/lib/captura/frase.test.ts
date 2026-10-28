@@ -54,6 +54,10 @@ describe("interpretarFrase", () => {
         // Dia da semana, mais receita e o motivo do tipo
         ["sexta 30 pizza", "2026-10-28", { tipo: "expense", valor: 30, data: "2026-10-23", descricao: "Pizza" }],
         ["na segunda 30 pizza", "2026-10-28", { data: "2026-10-26", descricao: "Pizza" }],
+        // "segunda via" é a cópia de um boleto, não o dia; o hífen do "-feira" não esconde o dia.
+        ["segunda via 50 conta", HOJE, { valor: 50, data: HOJE, descricao: "Segunda" }],
+        ["sexta-feira 30 pizza", "2026-10-28", { data: "2026-10-23", descricao: "Pizza" }],
+        ["segunda-feira passada 30 pizza", "2026-10-26", { data: "2026-10-19", descricao: "Pizza" }],
         ["quarta 30 pizza", "2026-10-28", { data: "2026-10-28" }],
         ["sábado passado 80 bar", "2026-10-28", { valor: 80, data: "2026-10-24", descricao: "Bar" }],
         ["ganhei 200 aposta", HOJE, { tipo: "income", valor: 200, descricao: "Aposta", motivoDoTipo: "ganhei" }],

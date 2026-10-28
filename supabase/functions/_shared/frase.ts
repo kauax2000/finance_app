@@ -306,7 +306,8 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
       continue
     }
 
-    const diaSemana = DIAS_DA_SEMANA.indexOf(c)
+    // "sexta-feira" é a sexta; "segunda via" é a cópia de um boleto, não o dia.
+    const diaSemana = k(i + 1) === 'via' ? -1 : DIAS_DA_SEMANA.indexOf(c.replace(/-feira$/, ''))
     if (diaSemana >= 0) {
       t.usado = true
       const anterior = k(i + 1) === 'passado' || k(i + 1) === 'passada'
