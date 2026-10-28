@@ -1,17 +1,15 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
 import {
     ArrowsRightLeftIcon,
     BanknotesIcon,
     CalendarIcon,
     CameraIcon,
     CreditCardIcon,
-    DocumentTextIcon,
     PencilIcon,
     PhotoIcon,
     QueueListIcon,
-    SparklesIcon,
     TagIcon,
     XMarkIcon,
 } from "@heroicons/react/16/solid"
@@ -20,64 +18,67 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
-    CommandDialog,
-    CommandDock,
-    CommandDockItem,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandItemArrow,
-    CommandItemDescription,
-    CommandItemIcon,
-    CommandItemMeta,
-    CommandItemTitle,
-    CommandList,
-    CommandLoading,
-    CommandPage,
-    CommandPages,
-    useCommandPages,
-} from "@/components/ui/command"
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxField,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxTrigger,
+    ComboboxValue,
+} from "@/components/ui/combobox"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
+import { Form, FormActions, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Kbd } from "@/components/ui/kbd"
-import { KbdGroup } from "@/components/ui/kbd-group"
-import { Spinner } from "@/components/ui/spinner"
-import { Caption } from "@/components/ui/typography"
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemDescription,
+    ItemGroup,
+    ItemMedia,
+    ItemTitle,
+} from "@/components/ui/item"
+import { SearchInput } from "@/components/ui/search-input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Caption, H4 } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
-import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
-import { interpretarFrase, type CartaoParaCasar } from "@/lib/captura/frase"
+import type { CartaoParaCasar } from "@/lib/captura/frase"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import {
+    edicaoDoTipo,
     faltaParaLancar,
     planoDaFrase,
-    precisaDeIA,
-    rotuloDaAcao,
     tipoDoLancamento,
     type CampoDoLancamento,
     type TipoDoLancamento,
 } from "@/lib/captura/lancamento-inteligente"
-import { commandFilter } from "@/lib/command-filter"
 import { currencyBRL } from "@/lib/formatters"
-import { parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
-import { addDaysYmd, formatYmdPtBr, localYmdFromDate } from "@/lib/transaction-date"
+import { addDaysYmd, formatYmdPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 
 type Leitura = ReturnType<typeof useLeituraDoLancamento>
-type Form = ReturnType<typeof useTransactionForm>
+type FormDoLancamento = ReturnType<typeof useTransactionForm>
 
-const EXEMPLOS = ["42 mercado nubank", "salário 5000 dia 5", "tv 3000 em 10x no inter"]
+const NAO_IDENTIFICADO = "Não identificado"
 
-const CAMPOS: { campo: CampoDoLancamento; rotulo: string; icone: ReactNode; placeholder: string }[] = [
-    { campo: "valor", rotulo: "Valor", icone: <BanknotesIcon aria-hidden />, placeholder: "Digite o valor" },
-    { campo: "descricao", rotulo: "Descrição", icone: <PencilIcon aria-hidden />, placeholder: "Digite a descrição" },
-    { campo: "tipo", rotulo: "Tipo", icone: <ArrowsRightLeftIcon aria-hidden />, placeholder: "Escolha o tipo" },
-    { campo: "categoria", rotulo: "Categoria", icone: <TagIcon aria-hidden />, placeholder: "Buscar categoria" },
-    { campo: "forma", rotulo: "Forma", icone: <CreditCardIcon aria-hidden />, placeholder: "Escolha a forma" },
-    { campo: "data", rotulo: "Data", icone: <CalendarIcon aria-hidden />, placeholder: "Hoje, ontem, dia 5, sexta…" },
-    { campo: "parcelas", rotulo: "Parcelas", icone: <QueueListIcon aria-hidden />, placeholder: "De 2 a 48 parcelas" },
+/** As linhas da revisão, na ordem do spec: todas aparecem, lidas ou não. */
+const CAMPOS: { campo: CampoDoLancamento; rotulo: string; icone: ReactNode }[] = [
+    { campo: "tipo", rotulo: "Tipo", icone: <ArrowsRightLeftIcon aria-hidden /> },
+    { campo: "valor", rotulo: "Valor", icone: <BanknotesIcon aria-hidden /> },
+    { campo: "descricao", rotulo: "Descrição", icone: <PencilIcon aria-hidden /> },
+    { campo: "categoria", rotulo: "Categoria", icone: <TagIcon aria-hidden /> },
+    { campo: "forma", rotulo: "Forma", icone: <CreditCardIcon aria-hidden /> },
+    { campo: "data", rotulo: "Data", icone: <CalendarIcon aria-hidden /> },
+    { campo: "parcelas", rotulo: "Parcelas", icone: <QueueListIcon aria-hidden /> },
 ]
 
 /** A dúvida do parser que cada linha confere ("Confira"). */
@@ -105,14 +106,37 @@ const TIPOS: { tipo: TipoDoLancamento; rotulo: string }[] = [
 /** Pix e débito antes do crédito; dinheiro por último. */
 const FORMAS_ANTES_DO_CREDITO: PaymentMethod[] = ["pix", "debit_card"]
 
-const PARCELAS_SUGERIDAS = [2, 3, 6, 10, 12]
+/** De 2 a 48, a régua do formulário. */
+const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
+
+const SEM_CATEGORIA = "__sem__"
+
+/** O valor do `Select` da forma: o cartão leva o id junto. */
+function valorDaForma(c: CamposDaFrase): string {
+    if (c.paymentMethod === "credit_card" && c.creditCardId) return `cartao:${c.creditCardId}`
+    return c.paymentMethod ?? ""
+}
+
+function formaDoValor(v: string): Partial<CamposDaFrase> {
+    if (v.startsWith("cartao:")) return { paymentMethod: "credit_card", creditCardId: v.slice("cartao:".length) }
+    return { paymentMethod: v as PaymentMethod, creditCardId: null }
+}
+
+function primeiraImagem(arquivos: FileList | null | undefined) {
+    return Array.from(arquivos ?? []).find((f) => f.type.startsWith("image/"))
+}
 
 /**
- * A paleta do lançamento inteligente: a frase (ou a foto do recibo) na pílula,
- * a revisão na placa e o "Lançar" em destaque. Só apresentação — a leitura é
- * do `useLeituraDoLancamento`, que quem monta a paleta chama uma vez, e salvar
- * é o `salvar()` do formulário. A lista da página de categoria vem do
- * formulário, que tem a cor.
+ * O lançamento inteligente: o campo da frase (a pílula da busca) com a pílula
+ * redonda do recibo ao lado, e nada mais até o Enter. O Enter lê a frase (a IA
+ * uma vez, se o valor ou a descrição ficarem em dúvida) e abre a revisão
+ * embaixo: todos os campos, cada um editável no lugar, e o "Aprovar". Só
+ * apresentação — a leitura é do `useLeituraDoLancamento`, que quem monta a
+ * tela chama uma vez, e salvar é o `salvar()` do formulário.
+ *
+ * A casca é o `Dialog` (gaveta no telefone) e não o `CommandDialog`: o cmdk
+ * chama `preventDefault` em todo Enter e nas setas, e a revisão é um `Form` com
+ * `Select`, `Combobox` e `DatePicker` dentro.
  */
 export function LancamentoInteligente({
     open,
@@ -126,74 +150,114 @@ export function LancamentoInteligente({
     open: boolean
     onOpenChange: (open: boolean) => void
     leitura: Leitura
-    form: Form
+    form: FormDoLancamento
     cartoes: CartaoParaCasar[]
     onAbrirFormulario: () => void
     saving: boolean
 }) {
-    // A linha selecionada é controlada: a cada frase nova volta ao "Lançar",
-    // para o Enter aprovar. O cmdk escolhe a primeira linha habilitada quando
-    // o texto muda, e o "Lançar" é a primeira.
-    const [selecao, setSelecao] = useState({ texto: leitura.texto, valor: "" })
-    const valor = selecao.texto === leitura.texto ? selecao.valor : leitura.campos ? "lancar" : ""
-    const { lerFoto } = leitura
-
-    function primeiraImagem(arquivos: FileList | null | undefined) {
-        return Array.from(arquivos ?? []).find((f) => f.type.startsWith("image/"))
-    }
+    const arquivoRef = useRef<HTMLInputElement>(null)
+    const { lerFoto, lendoIA, campos, foto } = leitura
 
     return (
-        <CommandDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            pending={saving}
-            title="Lançamento inteligente"
-            description="Escreva o lançamento numa frase ou fotografe o recibo, confira o que o app entendeu e lance."
-            commandProps={{
-                shouldFilter: false,
-                autoSelectFirst: true,
-                value: valor,
-                onValueChange: (v) => setSelecao({ texto: leitura.texto, valor: v }),
-                onKeyDown: (e) => {
-                    // O Enter que fecha um acento (IME do Mac e do iOS) não lança.
-                    if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault()
-                },
-                onPaste: (e) => {
+        <Dialog surface="auto" open={open} onOpenChange={onOpenChange} pending={saving}>
+            <DialogContent
+                showCloseButton={false}
+                onPaste={(e) => {
                     // Texto colado vence: copiar de um app traz o texto e, às vezes, a imagem dele.
                     if (e.clipboardData.getData("text/plain").trim()) return
                     const imagem = primeiraImagem(e.clipboardData?.files)
                     if (!imagem) return
                     e.preventDefault()
                     void lerFoto(imagem)
-                },
-                onDragOver: (e) => {
+                }}
+                onDragOver={(e) => {
                     // Sem o `preventDefault` do arrastar, o navegador não entrega o soltar.
                     if (e.dataTransfer.types.includes("Files")) e.preventDefault()
-                },
-                onDrop: (e) => {
+                }}
+                onDrop={(e) => {
                     const imagem = primeiraImagem(e.dataTransfer.files)
                     if (!imagem) return
                     e.preventDefault()
                     void lerFoto(imagem)
-                },
-            }}
-        >
-            {/* O conteúdo desmonta ao fechar, e com ele a pilha das páginas. */}
-            <CommandPages>
-                <Paleta
-                    leitura={leitura}
-                    form={form}
-                    cartoes={cartoes}
-                    saving={saving}
-                    onAbrirFormulario={onAbrirFormulario}
-                />
-            </CommandPages>
-        </CommandDialog>
+                }}
+            >
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Lançamento inteligente</DialogTitle>
+                    <DialogDescription>
+                        Escreva o lançamento numa frase ou fotografe o recibo, dê Enter, confira o que o app entendeu e
+                        aprove.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex min-w-0 flex-col">
+                    <div className="flex items-center gap-2">
+                        <SearchInput
+                            surface="modal"
+                            type="text"
+                            enterKeyHint="go"
+                            autoFocus
+                            aria-label="Frase do lançamento"
+                            placeholder="Ex.: 42 mercado nubank"
+                            value={leitura.texto}
+                            onChange={(e) => leitura.setTexto(e.target.value)}
+                            pending={lendoIA}
+                            disabled={saving}
+                            onKeyDown={(e) => {
+                                // Enter lê a frase (não salva); o que fecha um acento (IME do Mac e do iOS) não lê.
+                                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                                    e.preventDefault()
+                                    leitura.interpretar()
+                                }
+                            }}
+                        />
+                        <Button
+                            variant="floating"
+                            size="icon-lg"
+                            aria-label="Adicionar recibo"
+                            disabled={saving}
+                            onClick={() => arquivoRef.current?.click()}
+                        >
+                            <CameraIcon aria-hidden />
+                        </Button>
+                    </div>
+
+                    <Input
+                        ref={arquivoRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) => {
+                            const imagem = e.target.files?.[0]
+                            // Escolher a mesma foto de novo precisa disparar o `change`.
+                            e.target.value = ""
+                            if (imagem) void leitura.lerFoto(imagem)
+                        }}
+                    />
+
+                    {/* Cota, rede, imagem que não abre, "Lendo com IA…": vazio, não ocupa lugar. */}
+                    <Caption role="status" className="mt-2 px-1.5 empty:mt-0">
+                        {lendoIA ? (foto ? "Lendo o recibo com IA…" : "Lendo com IA…") : leitura.aviso}
+                    </Caption>
+
+                    {campos && !lendoIA ? (
+                        <Revisao
+                            campos={campos}
+                            leitura={leitura}
+                            form={form}
+                            cartoes={cartoes}
+                            saving={saving}
+                            onAbrirFormulario={onAbrirFormulario}
+                        />
+                    ) : null}
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 
-/** A miniatura do recibo na pílula, com o × que a tira. */
-function MiniaturaDoRecibo({ foto, onTirar }: { foto: File; onTirar: () => void }) {
+/** A miniatura do recibo no topo da revisão, com o × que a tira. */
+function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: () => void; disabled: boolean }) {
     const [url, setUrl] = useState<string | null>(null)
     /* eslint-disable react-hooks/set-state-in-effect -- a URL do arquivo nasce e é revogada com ele */
     useEffect(() => {
@@ -203,463 +267,362 @@ function MiniaturaDoRecibo({ foto, onTirar }: { foto: File; onTirar: () => void 
     }, [foto])
     /* eslint-enable react-hooks/set-state-in-effect */
     return (
-        <span className="-ms-1 inline-flex shrink-0 items-center">
-            <Avatar size="xs">
-                {url ? <AvatarImage src={url} alt="Foto do recibo" /> : null}
-                <AvatarFallback>
-                    <PhotoIcon aria-hidden />
-                </AvatarFallback>
-            </Avatar>
-            <Button variant="tertiary" size="icon-xs" aria-label="Tirar a foto" onClick={onTirar}>
-                <XMarkIcon aria-hidden />
-            </Button>
-        </span>
+        <Item variant="flush" size="sm">
+            <ItemMedia>
+                <Avatar size="md">
+                    {url ? <AvatarImage src={url} alt="Foto do recibo" /> : null}
+                    <AvatarFallback>
+                        <PhotoIcon aria-hidden />
+                    </AvatarFallback>
+                </Avatar>
+            </ItemMedia>
+            <ItemContent>
+                <ItemTitle>Recibo</ItemTitle>
+            </ItemContent>
+            <ItemActions>
+                <Button variant="tertiary" size="icon-md" aria-label="Tirar a foto" disabled={disabled} onClick={onTirar}>
+                    <XMarkIcon aria-hidden />
+                </Button>
+            </ItemActions>
+        </Item>
     )
 }
 
-function Paleta({
+function Revisao({
+    campos,
     leitura,
     form,
     cartoes,
     saving,
     onAbrirFormulario,
 }: {
+    campos: CamposDaFrase
     leitura: Leitura
-    form: Form
+    form: FormDoLancamento
     cartoes: CartaoParaCasar[]
     saving: boolean
     onAbrirFormulario: () => void
 }) {
-    const pages = useCommandPages()
-    const pagina = pages.current as CampoDoLancamento | undefined
-    const [busca, setBusca] = useState("")
-    const inputRef = useRef<HTMLInputElement>(null)
-    const arquivoRef = useRef<HTMLInputElement>(null)
-    const { campos, lendoIA, foto } = leitura
+    const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
+    // A máscara do valor em edição: o `Input money` é controlado pela string digitada.
+    const [valorDigitado, setValorDigitado] = useState("")
     const hoje = localYmdFromDate(new Date())
     // O convidado não lança receita, como no formulário (a leitura já a vira despesa).
     const tipos =
         useWorkspace().papel === "guest" ? TIPOS.filter((t) => t.tipo !== "receita" && t.tipo !== "estorno") : TIPOS
 
-    // O `CommandInput` esvazia o campo ao montar e a cada troca de página (num
-    // efeito do filho, que roda antes deste). Na raiz o campo é a frase, e
-    // essa limpeza a apagaria — a do compartilhar, ou a escrita antes de
-    // editar um campo. A janela vai da limpeza deste efeito (que roda antes
-    // dos efeitos novos, e no ensaio do modo estrito) até ele rodar de novo.
-    const esperandoLimpeza = useRef(true)
-    useEffect(() => {
-        esperandoLimpeza.current = false
-        return () => {
-            esperandoLimpeza.current = true
-        }
-    }, [pages.stack.length])
-
+    const { categories } = form.fieldsProps
     const cartoesAtivos = cartoes.filter((c) => c.is_active)
-    const falta = campos ? faltaParaLancar(campos, cartoesAtivos.length) : null
-    // Sem valor ou descrição, o "Lançar" pede à IA primeiro: travar o deixaria sem saída.
-    const lancarTravado = saving || lendoIA || (falta != null && !(campos && precisaDeIA(campos)))
-    const tipo = campos ? tipoDoLancamento(campos) : null
+    const falta = faltaParaLancar(campos, cartoesAtivos.length)
+    const tipo = tipoDoLancamento(campos)
     const plano = planoDaFrase(campos)
-    const categoriasDoTipo = form.fieldsProps.categories.filter((c) => c.type === (campos?.tipo ?? "expense"))
+    const categoriasDoTipo = categories.filter((c) => c.type === campos.tipo)
+    const categoria = categories.find((c) => c.id === campos.categoryId)
+    const leuComIA = campos.duvidas.includes("ia")
 
-    const dias: { ymd: string; rotulo: string }[] = [
-        { ymd: hoje, rotulo: "Hoje" },
-        { ymd: addDaysYmd(hoje, -1), rotulo: "Ontem" },
-        { ymd: addDaysYmd(hoje, -2), rotulo: "Anteontem" },
-    ]
-    const rotuloDaData = (ymd: string) => dias.find((d) => d.ymd === ymd)?.rotulo ?? formatYmdPtBr(ymd)
-
-    function nomeDoCartao(id: string | null) {
-        return cartoes.find((c) => c.id === id)?.name ?? null
+    function rotuloDaData(ymd: string) {
+        if (ymd === hoje) return "Hoje"
+        if (ymd === addDaysYmd(hoje, -1)) return "Ontem"
+        return formatYmdPtBr(ymd)
     }
 
     function rotuloDaForma(c: CamposDaFrase) {
-        const cartao = nomeDoCartao(c.creditCardId)
+        const cartao = cartoes.find((x) => x.id === c.creditCardId)?.name
         if (c.paymentMethod === "credit_card" || (c.estorno && cartao)) return cartao ? `Crédito · ${cartao}` : "Crédito"
-        return c.paymentMethod ? paymentMethodLabel(c.paymentMethod) : "Não informada"
+        return c.paymentMethod ? paymentMethodLabel(c.paymentMethod) : null
     }
 
-    function valorDaLinha(campo: CampoDoLancamento, c: CamposDaFrase): ReactNode {
+    /** O que a linha mostra; `null` é o "Não identificado". */
+    function valorDaLinha(campo: CampoDoLancamento): string | null {
         switch (campo) {
-            case "valor":
-                return c.valor != null ? currencyBRL(c.valor) : "Sem valor"
-            case "descricao":
-                return c.descricao || "Sem descrição"
             case "tipo":
-                return TIPOS.find((t) => t.tipo === tipo)?.rotulo
+                return TIPOS.find((t) => t.tipo === tipo)?.rotulo ?? null
+            case "valor":
+                return campos.valor != null ? currencyBRL(campos.valor) : null
+            case "descricao":
+                return campos.descricao || null
             case "categoria":
-                return form.fieldsProps.categories.find((x) => x.id === c.categoryId)?.name ?? "Sem categoria"
+                return categoria?.name ?? null
             case "forma":
-                return rotuloDaForma(c)
+                return rotuloDaForma(campos)
             case "data":
-                return rotuloDaData(c.data)
+                return rotuloDaData(campos.data)
             case "parcelas":
-                return c.parcelas != null ? `${c.parcelas}×` : "—"
+                return campos.parcelas != null ? `${campos.parcelas}×` : null
         }
     }
 
-    /** Editar volta à raiz, onde a frase continua escrita. */
-    function escolher(campo: CampoDoLancamento, parcial: Partial<CamposDaFrase>) {
-        leitura.editar(campo, parcial)
-        pages.pop()
-        inputRef.current?.focus()
+    function abrir(campo: CampoDoLancamento) {
+        if (campo === "valor") setValorDigitado(campos.valor != null ? formatMoneyBrlInput(campos.valor) : "")
+        setEditando(campo)
     }
 
-    function escolherTipo(novo: TipoDoLancamento) {
-        const receita = novo === "receita" || novo === "estorno"
-        const parcial: Partial<CamposDaFrase> = {
-            tipo: receita ? "income" : "expense",
-            estorno: novo === "estorno",
-            parcelas:
-                novo === "parcelada"
-                    ? campos?.parcelas != null && campos.parcelas >= 2
-                        ? campos.parcelas
-                        : Number(DEFAULT_INSTALLMENT_COUNT)
-                    : null,
+    /** Confirmar volta à linha, com o foco nela. */
+    function fechar() {
+        const campo = editando
+        setEditando(null)
+        requestAnimationFrame(() => document.getElementById(`lancamento-${campo}`)?.focus())
+    }
+
+    /** O Enter de um campo em edição confirma a edição, e não aprova o lançamento. */
+    function confirmaComEnter(e: KeyboardEvent) {
+        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.preventDefault()
+            fechar()
         }
-        // A categoria do outro tipo não serve.
-        const categoria = form.fieldsProps.categories.find((x) => x.id === campos?.categoryId)
-        if (categoria && categoria.type !== parcial.tipo) parcial.categoryId = null
-        // O estorno abate uma fatura: a forma é o cartão.
-        if (novo === "estorno") parcial.paymentMethod = "credit_card"
-        escolher("tipo", parcial)
     }
 
-    function abrirCampo(campo: CampoDoLancamento) {
-        const meta = CAMPOS.find((x) => x.campo === campo)!
-        pages.push({ id: campo, label: meta.rotulo, icon: meta.icone })
-        inputRef.current?.focus()
+    function editor(campo: CampoDoLancamento): ReactNode {
+        switch (campo) {
+            case "tipo":
+                return (
+                    <Select
+                        value={tipo}
+                        onValueChange={(v) => leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))}
+                    >
+                        <FieldControl>
+                            <SelectTrigger autoFocus>
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
+                        <SelectContent>
+                            {tipos.map((t) => (
+                                <SelectItem key={t.tipo} value={t.tipo}>
+                                    {t.rotulo}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )
+            case "valor":
+                return (
+                    <FieldControl>
+                        <Input
+                            money
+                            autoFocus
+                            placeholder="0,00"
+                            value={valorDigitado}
+                            onValueChange={(texto, reais) => {
+                                setValorDigitado(texto)
+                                leitura.editar("valor", { valor: reais })
+                            }}
+                            onKeyDown={confirmaComEnter}
+                        />
+                    </FieldControl>
+                )
+            case "descricao":
+                return (
+                    <FieldControl>
+                        <Input
+                            autoFocus
+                            placeholder="Ex.: Mercado"
+                            value={campos.descricao}
+                            onChange={(e) => leitura.editar("descricao", { descricao: e.target.value })}
+                            onKeyDown={confirmaComEnter}
+                        />
+                    </FieldControl>
+                )
+            case "categoria":
+                return (
+                    <Combobox
+                        value={campos.categoryId ?? SEM_CATEGORIA}
+                        onValueChange={(v: string) =>
+                            leitura.editar("categoria", {
+                                categoryId: v === SEM_CATEGORIA ? null : v,
+                                motivoDaCategoria: null,
+                            })
+                        }
+                    >
+                        <ComboboxField>
+                            <FieldControl>
+                                <ComboboxTrigger autoFocus>
+                                    <ComboboxValue
+                                        placeholder="Escolher categoria"
+                                        media={categoria ? <ColorTile size="xs" color={categoria.color} /> : undefined}
+                                    >
+                                        {categoria?.name}
+                                    </ComboboxValue>
+                                </ComboboxTrigger>
+                            </FieldControl>
+                        </ComboboxField>
+                        <ComboboxContent>
+                            <ComboboxInput placeholder="Buscar categoria…" />
+                            <ComboboxList>
+                                <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
+                                <ComboboxGroup>
+                                    <ComboboxItem value={SEM_CATEGORIA} variant="none">
+                                        Sem categoria
+                                    </ComboboxItem>
+                                    {categoriasDoTipo.map((c) => (
+                                        <ComboboxItem key={c.id} value={c.id} media={<ColorTile size="xs" color={c.color} />}>
+                                            {c.name}
+                                        </ComboboxItem>
+                                    ))}
+                                </ComboboxGroup>
+                            </ComboboxList>
+                        </ComboboxContent>
+                    </Combobox>
+                )
+            case "forma":
+                return (
+                    <Select value={valorDaForma(campos)} onValueChange={(v) => leitura.editar("forma", formaDoValor(v))}>
+                        <FieldControl>
+                            <SelectTrigger autoFocus>
+                                <SelectValue placeholder="Escolher a forma" />
+                            </SelectTrigger>
+                        </FieldControl>
+                        <SelectContent>
+                            {FORMAS_ANTES_DO_CREDITO.map((f) => (
+                                <SelectItem key={f} value={f}>
+                                    {paymentMethodLabel(f)}
+                                </SelectItem>
+                            ))}
+                            {cartoesAtivos.length > 0 ? (
+                                cartoesAtivos.map((c) => (
+                                    <SelectItem key={c.id} value={`cartao:${c.id}`}>
+                                        Crédito · {c.name}
+                                    </SelectItem>
+                                ))
+                            ) : (
+                                <SelectItem value="credit_card">Crédito</SelectItem>
+                            )}
+                            <SelectItem value="cash">{paymentMethodLabel("cash")}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                )
+            case "data":
+                return (
+                    <FieldControl>
+                        <DatePicker
+                            value={parseYmdLocal(campos.data)}
+                            onChange={(d) => leitura.editar("data", { data: localYmdFromDate(d ?? new Date()) })}
+                            displayStyle="relative"
+                            presets
+                        />
+                    </FieldControl>
+                )
+            case "parcelas":
+                return (
+                    <Select
+                        value={campos.parcelas != null ? String(campos.parcelas) : ""}
+                        // Escolher parcelas faz da despesa uma parcelada.
+                        onValueChange={(v) =>
+                            leitura.editar("parcelas", edicaoDoTipo(campos, "parcelada", categories, Number(v)))
+                        }
+                    >
+                        <FieldControl>
+                            <SelectTrigger autoFocus>
+                                <SelectValue placeholder="Escolher parcelas" />
+                            </SelectTrigger>
+                        </FieldControl>
+                        <SelectContent>
+                            {PARCELAS.map((n) => (
+                                <SelectItem key={n} value={String(n)}>
+                                    {n}×
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )
+        }
     }
-
-    function fotografar() {
-        arquivoRef.current?.click()
-    }
-
-    const valorDigitado = parseMoneyBrl(busca)
-    const parcelasDigitadas = /^\d+$/.test(busca.trim()) ? Number(busca.trim()) : null
-    const dataDigitada = (() => {
-        if (!busca.trim()) return null
-        const lida = interpretarFrase(busca, hoje)
-        // Sem palavra de data, o parser fica em hoje: "Hoje" já está na lista.
-        return lida.duvidas.includes("data") || lida.data === hoje ? null : lida.data
-    })()
-    const categoriasVistas = busca.trim()
-        ? categoriasDoTipo.filter((c) => commandFilter(c.name, busca) > 0)
-        : categoriasDoTipo
-    const metaDaPagina = CAMPOS.find((x) => x.campo === pagina)
-
-    const linhaDaFoto = !foto ? (
-        <CommandItem value="foto" onSelect={fotografar}>
-            <CommandItemIcon>
-                <CameraIcon />
-            </CommandItemIcon>
-            <CommandItemTitle>Fotografar recibo</CommandItemTitle>
-            <CommandItemArrow />
-        </CommandItem>
-    ) : null
 
     return (
-        <>
-            <CommandInput
-                ref={inputRef}
-                autoFocus
-                aria-label={metaDaPagina ? metaDaPagina.rotulo : "Frase do lançamento"}
-                placeholder={metaDaPagina ? metaDaPagina.placeholder : "Ex.: 42 mercado nubank"}
-                value={pagina ? busca : leitura.texto}
-                onValueChange={(v) => {
-                    if (pagina) setBusca(v)
-                    else if (v || !esperandoLimpeza.current) leitura.setTexto(v)
-                }}
-                // Na raiz a miniatura do recibo; numa página, o escopo dela (do `CommandPages`).
-                leading={!pagina && foto ? <MiniaturaDoRecibo foto={foto} onTirar={leitura.tirarFoto} /> : undefined}
-            />
+        <Form
+            className="mt-4"
+            pending={saving}
+            onSubmit={(e) => {
+                e.preventDefault()
+                return leitura.aprovar()
+            }}
+        >
+            {leitura.foto ? (
+                <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
+            ) : null}
 
-            <Input
-                ref={arquivoRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                    const imagem = e.target.files?.[0]
-                    // Escolher a mesma foto de novo precisa disparar o `change`.
-                    e.target.value = ""
-                    if (imagem) void leitura.lerFoto(imagem)
-                }}
-            />
+            <div className="flex items-center gap-2">
+                <H4>Confira o lançamento</H4>
+                {leuComIA ? (
+                    <Badge size="xs" tone="info">
+                        IA
+                    </Badge>
+                ) : null}
+            </div>
 
-            <CommandList>
-                <CommandPage>
-                    {campos ? (
-                        <CommandItem value="lancar" disabled={lancarTravado} onSelect={() => void leitura.lancar()}>
-                            <CommandItemIcon>{saving ? <Spinner size="sm" /> : <SparklesIcon />}</CommandItemIcon>
-                            <CommandItemTitle>{rotuloDaAcao(campos)}</CommandItemTitle>
-                            <CommandItemMeta>
-                                {falta ? (
-                                    <CommandItemDescription>{MOTIVO_DA_FALTA[falta]}</CommandItemDescription>
-                                ) : null}
-                                <CommandItemArrow variant="add" />
-                            </CommandItemMeta>
-                        </CommandItem>
-                    ) : null}
-
-                    {/* Cota, rede, imagem que não abre: a falha aparece aqui, e a revisão segue usável. */}
-                    <Caption role="status" className="px-1.5">
-                        {leitura.aviso}
-                    </Caption>
-
-                    {lendoIA ? (
-                        <CommandLoading label="Lendo com IA">
-                            <Spinner size="sm" />
-                            {foto ? "Lendo o recibo com IA…" : "Lendo com IA…"}
-                        </CommandLoading>
-                    ) : campos ? (
-                        <CommandGroup
-                            heading={
-                                campos.duvidas.includes("ia") ? (
-                                    <span className="inline-flex items-center gap-1.5">
-                                        Entendi
+            <ItemGroup variant="divided">
+                {CAMPOS.map((x) => {
+                    if (editando === x.campo) {
+                        return (
+                            <Field key={x.campo} size="sm">
+                                <FieldLabel>{x.rotulo}</FieldLabel>
+                                <div className="flex items-center gap-2">
+                                    <div className="min-w-0 flex-1">{editor(x.campo)}</div>
+                                    <Button variant="secondary" onClick={fechar}>
+                                        ok
+                                    </Button>
+                                </div>
+                            </Field>
+                        )
+                    }
+                    const valor = valorDaLinha(x.campo)
+                    const duvida = DUVIDA_DA_LINHA[x.campo]
+                    const confira = duvida != null && campos.duvidas.includes(duvida)
+                    return (
+                        <Item key={x.campo} variant="flush" size="sm" interactive asChild>
+                            <button
+                                type="button"
+                                id={`lancamento-${x.campo}`}
+                                disabled={saving}
+                                onClick={() => abrir(x.campo)}
+                            >
+                                <ItemMedia variant="icon">
+                                    {x.campo === "categoria" && categoria ? (
+                                        <ColorTile size="xs" color={categoria.color} />
+                                    ) : (
+                                        x.icone
+                                    )}
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle>{x.rotulo}</ItemTitle>
+                                    {x.campo === "tipo" && campos.motivoDoTipo ? (
+                                        <ItemDescription>por causa de “{campos.motivoDoTipo}”</ItemDescription>
+                                    ) : null}
+                                </ItemContent>
+                                <ItemActions>
+                                    {confira ? (
+                                        <Badge size="xs" tone="warning">
+                                            Confira
+                                        </Badge>
+                                    ) : leuComIA && valor ? (
                                         <Badge size="xs" tone="info">
                                             IA
                                         </Badge>
+                                    ) : null}
+                                    <span className={valor ? "nums text-sm" : "text-sm text-muted-foreground"}>
+                                        {valor ?? NAO_IDENTIFICADO}
                                     </span>
-                                ) : (
-                                    "Entendi"
-                                )
-                            }
-                        >
-                            {CAMPOS.filter((x) => x.campo !== "parcelas" || tipo === "parcelada").map((x) => {
-                                const duvida = DUVIDA_DA_LINHA[x.campo]
-                                return (
-                                    <CommandItem
-                                        key={x.campo}
-                                        value={`campo:${x.campo}`}
-                                        disabled={saving}
-                                        // O toque não tira o foco do campo: no telefone o teclado segue aberto.
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        onSelect={() => abrirCampo(x.campo)}
-                                    >
-                                        <CommandItemIcon>
-                                            {x.campo === "categoria" && campos.categoryId ? (
-                                                <ColorTile
-                                                    size="xs"
-                                                    color={
-                                                        form.fieldsProps.categories.find((c) => c.id === campos.categoryId)
-                                                            ?.color ?? null
-                                                    }
-                                                />
-                                            ) : (
-                                                x.icone
-                                            )}
-                                        </CommandItemIcon>
-                                        <CommandItemTitle>{x.rotulo}</CommandItemTitle>
-                                        <CommandItemMeta>
-                                            {duvida && campos.duvidas.includes(duvida) ? (
-                                                <Badge size="xs" tone="warning">
-                                                    Confira
-                                                </Badge>
-                                            ) : null}
-                                            <CommandItemDescription className="nums">
-                                                {valorDaLinha(x.campo, campos)}
-                                                {x.campo === "tipo" && campos.motivoDoTipo
-                                                    ? ` · por causa de “${campos.motivoDoTipo}”`
-                                                    : null}
-                                            </CommandItemDescription>
-                                            <CommandItemArrow />
-                                        </CommandItemMeta>
-                                    </CommandItem>
-                                )
-                            })}
-                        </CommandGroup>
-                    ) : (
-                        <CommandGroup heading="Experimente">
-                            {EXEMPLOS.map((exemplo, i) => (
-                                <CommandItem
-                                    key={exemplo}
-                                    value={`exemplo:${i}`}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onSelect={() => leitura.setTexto(exemplo)}
-                                >
-                                    <CommandItemIcon>
-                                        <SparklesIcon />
-                                    </CommandItemIcon>
-                                    <CommandItemTitle>{exemplo}</CommandItemTitle>
-                                    <CommandItemArrow />
-                                </CommandItem>
-                            ))}
-                            {linhaDaFoto}
-                        </CommandGroup>
-                    )}
+                                </ItemActions>
+                            </button>
+                        </Item>
+                    )
+                })}
+            </ItemGroup>
 
-                    {plano && !lendoIA ? <ImpactoDaParcela proposto={plano} /> : null}
+            {plano ? <ImpactoDaParcela proposto={plano} /> : null}
 
-                    {campos ? (
-                        <CommandGroup>
-                            {linhaDaFoto}
-                            <CommandItem value="formulario" disabled={saving} onSelect={onAbrirFormulario}>
-                                <CommandItemIcon>
-                                    <DocumentTextIcon />
-                                </CommandItemIcon>
-                                <CommandItemTitle>Abrir formulário completo</CommandItemTitle>
-                                <CommandItemArrow />
-                            </CommandItem>
-                        </CommandGroup>
-                    ) : null}
-                </CommandPage>
-
-                <CommandPage id="tipo">
-                    {tipos.map((t) => (
-                        <CommandItem key={t.tipo} value={`tipo:${t.tipo}`} onSelect={() => escolherTipo(t.tipo)}>
-                            <CommandItemTitle>{t.rotulo}</CommandItemTitle>
-                            {t.tipo === tipo ? (
-                                <CommandItemMeta>
-                                    <CommandItemDescription>Atual</CommandItemDescription>
-                                </CommandItemMeta>
-                            ) : null}
-                        </CommandItem>
-                    ))}
-                </CommandPage>
-
-                <CommandPage id="valor">
-                    {valorDigitado != null && valorDigitado > 0 ? (
-                        <CommandItem value="usar:valor" onSelect={() => escolher("valor", { valor: valorDigitado })}>
-                            <CommandItemTitle className="nums">Usar {currencyBRL(valorDigitado)}</CommandItemTitle>
-                        </CommandItem>
-                    ) : (
-                        <Caption className="px-1.5 py-2">Digite o valor, como 42 ou 42,90.</Caption>
-                    )}
-                </CommandPage>
-
-                <CommandPage id="descricao">
-                    {busca.trim() ? (
-                        <CommandItem
-                            value="usar:descricao"
-                            onSelect={() => escolher("descricao", { descricao: busca.trim() })}
-                        >
-                            <CommandItemTitle>Usar “{busca.trim()}”</CommandItemTitle>
-                        </CommandItem>
-                    ) : (
-                        <Caption className="px-1.5 py-2">
-                            {campos?.descricao ? `Atual: ${campos.descricao}` : "Digite a descrição."}
-                        </Caption>
-                    )}
-                </CommandPage>
-
-                <CommandPage id="categoria">
-                    <CommandEmpty>Nenhuma categoria com esse nome.</CommandEmpty>
-                    {categoriasVistas.map((c) => (
-                        <CommandItem
-                            key={c.id}
-                            value={`categoria:${c.id}`}
-                            onSelect={() => escolher("categoria", { categoryId: c.id, motivoDaCategoria: null })}
-                        >
-                            <CommandItemIcon>
-                                <ColorTile size="xs" color={c.color} />
-                            </CommandItemIcon>
-                            <CommandItemTitle>{c.name}</CommandItemTitle>
-                        </CommandItem>
-                    ))}
-                </CommandPage>
-
-                <CommandPage id="forma">
-                    {FORMAS_ANTES_DO_CREDITO.map((forma) => (
-                        <ItemDaForma
-                            key={forma}
-                            valor={`forma:${forma}`}
-                            rotulo={paymentMethodLabel(forma)}
-                            onSelect={() => escolher("forma", { paymentMethod: forma, creditCardId: null })}
-                        />
-                    ))}
-                    {cartoesAtivos.length > 0 ? (
-                        cartoesAtivos.map((c) => (
-                            <ItemDaForma
-                                key={c.id}
-                                valor={`forma:cartao:${c.id}`}
-                                rotulo={`Crédito · ${c.name}`}
-                                onSelect={() =>
-                                    escolher("forma", { paymentMethod: "credit_card", creditCardId: c.id })
-                                }
-                            />
-                        ))
-                    ) : (
-                        <ItemDaForma
-                            valor="forma:credit_card"
-                            rotulo="Crédito"
-                            onSelect={() => escolher("forma", { paymentMethod: "credit_card", creditCardId: null })}
-                        />
-                    )}
-                    <ItemDaForma
-                        valor="forma:cash"
-                        rotulo={paymentMethodLabel("cash")}
-                        onSelect={() => escolher("forma", { paymentMethod: "cash", creditCardId: null })}
-                    />
-                </CommandPage>
-
-                <CommandPage id="data">
-                    {dataDigitada ? (
-                        <CommandItem value="usar:data" onSelect={() => escolher("data", { data: dataDigitada })}>
-                            <CommandItemTitle>Usar {rotuloDaData(dataDigitada)}</CommandItemTitle>
-                        </CommandItem>
-                    ) : null}
-                    {dias.map((d) => (
-                        <CommandItem key={d.ymd} value={`data:${d.ymd}`} onSelect={() => escolher("data", { data: d.ymd })}>
-                            <CommandItemTitle>{d.rotulo}</CommandItemTitle>
-                            <CommandItemMeta>
-                                <CommandItemDescription className="nums">{formatYmdPtBr(d.ymd)}</CommandItemDescription>
-                            </CommandItemMeta>
-                        </CommandItem>
-                    ))}
-                </CommandPage>
-
-                <CommandPage id="parcelas">
-                    {parcelasDigitadas != null && parcelasDigitadas >= 2 && parcelasDigitadas <= 48 ? (
-                        <CommandItem
-                            value="usar:parcelas"
-                            onSelect={() => escolher("parcelas", { parcelas: parcelasDigitadas })}
-                        >
-                            <CommandItemTitle>Usar {parcelasDigitadas} parcelas</CommandItemTitle>
-                        </CommandItem>
-                    ) : null}
-                    {PARCELAS_SUGERIDAS.map((n) => (
-                        <CommandItem key={n} value={`parcelas:${n}`} onSelect={() => escolher("parcelas", { parcelas: n })}>
-                            <CommandItemTitle>{n} parcelas</CommandItemTitle>
-                        </CommandItem>
-                    ))}
-                </CommandPage>
-            </CommandList>
-
-            <CommandDock>
-                <div className="flex items-center gap-2">
-                    <CommandDockItem>
-                        <Kbd>↵</Kbd>
-                        {pagina ? "usar" : "lançar"}
-                    </CommandDockItem>
-                    <CommandDockItem>
-                        <KbdGroup mode="either" joined keys={["up", "down"]} />
-                        campos
-                    </CommandDockItem>
-                </div>
-                <div className="flex items-center gap-2">
-                    <CommandDockItem>
-                        <Button variant="link" size="xs" onClick={fotografar}>
-                            <CameraIcon aria-hidden />
-                            recibo
-                        </Button>
-                    </CommandDockItem>
-                    <CommandDockItem>
-                        <Kbd>Esc</Kbd>
-                        fechar
-                    </CommandDockItem>
-                </div>
-            </CommandDock>
-        </>
-    )
-}
-
-function ItemDaForma({ valor, rotulo, onSelect }: { valor: string; rotulo: string; onSelect: () => void }) {
-    return (
-        <CommandItem value={valor} onSelect={onSelect}>
-            <CommandItemTitle>{rotulo}</CommandItemTitle>
-        </CommandItem>
+            <FormActions>
+                {falta ? (
+                    <Caption id="lancamento-falta" className="self-center sm:me-auto">
+                        {MOTIVO_DA_FALTA[falta]}
+                    </Caption>
+                ) : null}
+                <Button variant="tertiary" disabled={saving} onClick={onAbrirFormulario}>
+                    formulário completo
+                </Button>
+                <FormSubmit disabled={falta != null} aria-describedby={falta ? "lancamento-falta" : undefined}>
+                    Aprovar
+                </FormSubmit>
+            </FormActions>
+        </Form>
     )
 }

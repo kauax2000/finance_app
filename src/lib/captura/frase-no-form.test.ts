@@ -233,7 +233,8 @@ describe("consumirParametroFrase", () => {
 
 describe("fonte", () => {
     it("o Enter no campo da frase não envia o formulário (Foco 5)", () => {
-        // Na paleta o Enter é do cmdk (lança); o que fecha um acento não lança.
+        // No campo da frase o Enter lê (não salva), fora do formulário da
+        // revisão; o que fecha um acento não lê.
         const fonte = semComentarios(lerFonte("src/components/transactions/lancamento-inteligente.tsx"), "tudo")
         expect(fonte).toMatch(/e\.key === "Enter"[\s\S]{0,120}e\.preventDefault\(\)/)
         expect(fonte).not.toContain('type="submit"')

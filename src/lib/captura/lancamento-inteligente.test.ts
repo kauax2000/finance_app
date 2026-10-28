@@ -7,6 +7,7 @@ vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 const { camposDaIA } = await import("@/lib/captura/frase-no-form")
 const {
     comTravas,
+    edicaoDoTipo,
     faltaParaLancar,
     planoDaFrase,
     precisaDeIA,
@@ -45,6 +46,42 @@ describe("tipoDoLancamento", () => {
     it("uma parcela só é despesa, e receita não é parcelada", () => {
         expect(tipoDoLancamento(campos({ parcelas: 1 }))).toBe("despesa")
         expect(tipoDoLancamento(campos({ tipo: "income", parcelas: 3 }))).toBe("receita")
+    })
+})
+
+describe("edicaoDoTipo", () => {
+    const categorias = [
+        { id: "mercado", type: "expense" as const },
+        { id: "salario", type: "income" as const },
+    ]
+
+    it("receita e estorno viram income, e a categoria de despesa sai", () => {
+        expect(edicaoDoTipo(campos({ categoryId: "mercado" }), "receita", categorias)).toEqual({
+            tipo: "income",
+            estorno: false,
+            parcelas: null,
+            categoryId: null,
+        })
+        expect(edicaoDoTipo(campos(), "estorno", categorias)).toEqual({
+            tipo: "income",
+            estorno: true,
+            parcelas: null,
+            paymentMethod: "credit_card",
+        })
+    })
+
+    it("parcelada mantém as parcelas lidas ou cai no padrão", () => {
+        expect(edicaoDoTipo(campos({ parcelas: 10 }), "parcelada", categorias).parcelas).toBe(10)
+        expect(edicaoDoTipo(campos(), "parcelada", categorias).parcelas).toBe(12)
+        expect(edicaoDoTipo(campos(), "parcelada", categorias, 5).parcelas).toBe(5)
+    })
+
+    it("despesa tira as parcelas e mantém a categoria de despesa", () => {
+        expect(edicaoDoTipo(campos({ parcelas: 10, categoryId: "mercado" }), "despesa", categorias)).toEqual({
+            tipo: "expense",
+            estorno: false,
+            parcelas: null,
+        })
     })
 })
 
@@ -166,13 +203,23 @@ describe("useLeituraDoLancamento (fonte)", () => {
         expect(fonte).toMatch(/meu !== pedido\.current/)
     })
 
-    it("a IA tenta uma vez por frase: falhando, o Lançar salva a revisão", () => {
-        expect(fonte).toMatch(/precisaDeIA\(campos\) && !iaTentada/)
-        const setTexto = fonte.slice(fonte.indexOf("function setTexto("), fonte.indexOf("function editar("))
-        expect(setTexto).toMatch(/setIaTentada\(false\)/)
+    it("a IA tenta uma vez por frase, no Enter; o Aprovar só salva", () => {
+        const interpretar = fonte.slice(fonte.indexOf("function interpretar("), fonte.indexOf("function reiniciar("))
+        // A frase nova esquece a tentativa; a mesma frase lançada de novo não chama a IA outra vez.
+        expect(interpretar).toMatch(/if \(nova\) \{[\s\S]*setIaTentada\(false\)/)
+        expect(interpretar).toContain("(!nova && iaTentada)")
+        expect(interpretar).toMatch(/precisaDeIA\([\s\S]*lerComIA\(frase\)/)
         const lerComIA = fonte.slice(fonte.indexOf("async function lerComIA("))
         expect(lerComIA.indexOf("setIaTentada(true)")).toBeGreaterThan(-1)
         expect(lerComIA.indexOf("setIaTentada(true)")).toBeLessThan(lerComIA.indexOf("await lerFraseComIA"))
+        const aprovar = fonte.slice(fonte.indexOf("async function aprovar("), fonte.indexOf("const pedidoDaFoto"))
+        expect(aprovar).not.toContain("lerComIA")
+        expect(aprovar).toContain("await form.salvar()")
+    })
+
+    it("até o Enter nada se lê: a revisão parte da frase lançada, não da escrita", () => {
+        expect(fonte).toContain("camposDaFrase(fraseLida,")
+        expect(fonte).not.toContain("camposDaFrase(texto,")
     })
 
     it("só aplica no formulário campos diferentes do último aplicado", () => {

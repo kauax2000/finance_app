@@ -25,17 +25,18 @@ import { lerFraseComIA, lerImagemComIA, type CamposIA } from "@/lib/ia/ler"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { cartaoPreEscolhido, gravarUltimoCartao } from "@/lib/ultimo-cartao"
 
-/** O aviso do "Lançar" que trava, pelo campo que falta. */
+/** O aviso do "Aprovar" que trava, pelo campo que falta. */
 const AVISO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
     valor: "Falta o valor",
     forma: "Falta o cartão",
 }
 
 /**
- * A leitura do lançamento inteligente: a frase é lida a cada tecla (o parser é
- * síncrono), a IA só no "Lançar" quando o parser não achou valor ou descrição,
- * e a foto do recibo pela IA. O que a pessoa editou à mão vence a frase, e o
- * formulário sempre reflete os campos lidos — quem salva é o `salvar()` dele.
+ * A leitura do lançamento inteligente: a frase é lida quando a pessoa a lança
+ * (Enter) — o parser na hora e, se o valor ou a descrição ficarem em dúvida, a
+ * IA uma vez —, e a foto do recibo pela IA. Até lá nada aparece nem vai ao
+ * formulário. O que a pessoa editou à mão vence a frase, e o formulário
+ * reflete os campos lidos — quem salva é o `salvar()` dele, no "Aprovar".
  * Prefira `cartoes` e `categorias` estáveis (memoizados): cada troca relê a frase.
  */
 export function useLeituraDoLancamento({
@@ -61,13 +62,15 @@ export function useLeituraDoLancamento({
     const queryClient = useQueryClient()
     const { aplicarFrase, aplicarFoto } = form.fieldsProps
     const { setFotoDoRecibo } = form
-    const [texto, setTextoCru] = useState(fraseInicial ?? "")
+    const [texto, setTexto] = useState(fraseInicial ?? "")
+    // A frase lançada (Enter): é ela que se lê, e não a que está sendo escrita.
+    const [fraseLida, setFraseLida] = useState("")
     const [editados, setEditados] = useState<Partial<CamposDaFrase>>({})
     const [historico, setHistorico] = useState<LinhaHistorico[]>([])
     // O que a IA leu da frase vale até a frase mudar; o da foto, até tirar a foto.
     const [iaDoTexto, setIaDoTexto] = useState<CamposIA | null>(null)
     const [iaDaFoto, setIaDaFoto] = useState<CamposIA | null>(null)
-    // A IA já tentou esta frase: falhando, o "Lançar" seguinte salva a revisão como está.
+    // A IA já tentou esta frase: lançá-la de novo não a chama outra vez.
     const [iaTentada, setIaTentada] = useState(false)
     const [lendoTexto, setLendoTexto] = useState(false)
     const [lendoFoto, setLendoFoto] = useState(false)
@@ -93,14 +96,14 @@ export function useLeituraDoLancamento({
         // A IA vence e o texto da pessoa completa (`camposDaIA`).
         const ia = iaDaFoto ?? iaDoTexto
         const base = ia
-            ? camposDaIA(ia, hoje, cartoes, historico, texto, ctx)
-            : texto.trim()
-              ? camposDaFrase(texto, hoje, cartoes, historico, ctx)
+            ? camposDaIA(ia, hoje, cartoes, historico, fraseLida, ctx)
+            : fraseLida.trim()
+              ? camposDaFrase(fraseLida, hoje, cartoes, historico, ctx)
               : null
         if (!base) return null
         const lidos = comTravas(base, editados)
         return semReceita ? soDespesa(lidos, categorias) : lidos
-    }, [texto, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados, semReceita])
+    }, [fraseLida, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados, semReceita])
 
     // A foto marca o lançamento como `share`; a frase, como `quick_text`. O
     // aplicar re-renderiza o formulário: só campos diferentes do último
@@ -116,7 +119,7 @@ export function useLeituraDoLancamento({
         ;(iaDaFoto ? aplicarFoto : aplicarFrase)(campos)
     }, [ativo, campos, iaDaFoto, aplicarFrase, aplicarFoto])
 
-    // Cada leitura da frase pela IA ganha um número; reescrever a frase ou
+    // Cada leitura da frase pela IA ganha um número; lançar outra frase ou
     // fechar a paleta o muda, e a resposta atrasada de um pedido velho é
     // jogada fora.
     const pedido = useRef(0)
@@ -127,15 +130,31 @@ export function useLeituraDoLancamento({
         }
     }, [])
 
-    function setTexto(novo: string) {
-        pedido.current += 1
-        setTextoCru(novo)
-        setIaDoTexto(null)
-        setIaTentada(false)
-        setLendoTexto(false)
-        setAviso(null)
-        // Limpar a frase solta os campos editados (sem foto, nada mais os segura).
-        if (!novo.trim() && !iaDaFoto) setEditados({})
+    /**
+     * O Enter no campo: lê a frase escrita e abre a revisão. A frase nova
+     * esquece o que a IA leu da anterior (as edições à mão ficam); se o valor
+     * ou a descrição ficarem em dúvida, a IA lê uma vez. Lançar a mesma frase
+     * de novo não a chama outra vez. `frase` é a do compartilhar.
+     */
+    function interpretar(frase = texto) {
+        if (lendoTexto || lendoFoto) return
+        const vazia = !frase.trim()
+        // Sem frase nem foto lida não há o que revisar.
+        if (vazia && !iaDaFoto) return
+        const nova = frase !== fraseLida
+        if (nova) {
+            pedido.current += 1
+            setFraseLida(frase)
+            setIaDoTexto(null)
+            setIaTentada(false)
+            setAviso(null)
+        }
+        // Com a foto lida, a frase só completa o que a IA leu dela.
+        if (vazia || iaDaFoto || (!nova && iaTentada)) return
+        const ctx: ContextoDaFrase = { categorias, cartaoAberto: cartaoPreEscolhido(cartoes) || null }
+        if (precisaDeIA(comTravas(camposDaFrase(frase, hoje, cartoes, historico, ctx), editados))) {
+            void lerComIA(frase)
+        }
     }
 
     /** Volta ao zero: o hook mora no diálogo, que fica montado entre uma paleta e outra. */
@@ -143,7 +162,8 @@ export function useLeituraDoLancamento({
         pedido.current += 1
         pedidoDaFoto.current += 1
         ultimoAplicado.current = null
-        setTextoCru("")
+        setTexto("")
+        setFraseLida("")
         setEditados({})
         setIaDoTexto(null)
         setIaDaFoto(null)
@@ -160,14 +180,14 @@ export function useLeituraDoLancamento({
         setAviso((atual) => (atual != null && atual === AVISO_DA_FALTA[campo] ? null : atual))
     }
 
-    async function lerComIA() {
+    async function lerComIA(frase: string) {
         if (!currentWorkspaceId) return
         const meu = ++pedido.current
         setLendoTexto(true)
         setIaTentada(true)
         setAviso(null)
         try {
-            const lido = await lerFraseComIA(currentWorkspaceId, texto)
+            const lido = await lerFraseComIA(currentWorkspaceId, frase)
             if (meu !== pedido.current) return
             if (!lido.ok) setAviso(lido.mensagem)
             else setIaDoTexto(lido.campos)
@@ -186,13 +206,9 @@ export function useLeituraDoLancamento({
         if (cartao) gravarUltimoCartao(cartao.workspace_id, cartao.id)
     }
 
-    async function lancar() {
+    /** O "Aprovar" da revisão: salva pelo formulário. A IA já leu no Enter. */
+    async function aprovar() {
         if (!campos || lendoTexto || lendoFoto) return
-        // A IA lê e não salva: a pessoa vê o que ela leu e aprova de novo.
-        if (precisaDeIA(campos) && !iaTentada && !iaDaFoto && texto.trim()) {
-            await lerComIA()
-            return
-        }
         const falta = faltaParaLancar(campos, cartoes.filter((c) => c.is_active).length)
         if (falta) {
             setAviso(AVISO_DA_FALTA[falta] ?? null)
@@ -203,7 +219,7 @@ export function useLeituraDoLancamento({
     }
 
     // Cada foto ganha um número: a resposta atrasada de uma foto trocada é
-    // jogada fora, e nada se aplica com a paleta fechada. Escrever a frase não
+    // jogada fora, e nada se aplica com a paleta fechada. Lançar uma frase não
     // invalida a foto (o texto completa o que a foto leu).
     const pedidoDaFoto = useRef(0)
     const montado = useRef(false)
@@ -271,13 +287,15 @@ export function useLeituraDoLancamento({
     return {
         texto,
         setTexto,
+        interpretar,
         reiniciar,
+        // A revisão: só depois do Enter ou da foto lida.
         campos,
         editar,
         lendoIA: lendoTexto || lendoFoto,
         // O aviso da IA segue os campos: conferir um campo o tira da lista.
         aviso: aviso ?? (campos?.duvidas.includes("ia") ? avisoDaIA(campos) : null),
-        lancar,
+        aprovar,
         foto: form.fotoDoRecibo,
         lerFoto,
         tirarFoto,

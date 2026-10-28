@@ -3,6 +3,7 @@
  * mostra e o que o "Lançar" decide, sem React. A leitura ao vivo mora no hook
  * `useLeituraDoLancamento`.
  */
+import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import { currencyBRL } from "@/lib/formatters"
 import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
@@ -18,6 +19,36 @@ export function tipoDoLancamento(c: CamposDaFrase): TipoDoLancamento {
     if (c.tipo === "expense" && c.parcelas != null && c.parcelas >= 2) return "parcelada"
     if (c.estorno) return "estorno"
     return c.tipo === "income" ? "receita" : "despesa"
+}
+
+/** As parcelas da parcelada que a frase não disse: as do formulário. */
+const PARCELAS_PADRAO = Number(DEFAULT_INSTALLMENT_COUNT)
+
+/**
+ * O que trocar o tipo na revisão muda: a parcelada precisa de parcelas (as
+ * lidas, ou `parcelas` quando ela vem do campo de parcelas), as outras não;
+ * a categoria do outro tipo não serve, e o estorno abate uma fatura (a forma
+ * é o cartão).
+ */
+export function edicaoDoTipo(
+    c: CamposDaFrase,
+    novo: TipoDoLancamento,
+    categorias: { id: string; type: "expense" | "income" }[],
+    parcelas?: number
+): Partial<CamposDaFrase> {
+    const tipo = novo === "receita" || novo === "estorno" ? "income" : "expense"
+    const parcial: Partial<CamposDaFrase> = {
+        tipo,
+        estorno: novo === "estorno",
+        parcelas:
+            novo === "parcelada"
+                ? (parcelas ?? (c.parcelas != null && c.parcelas >= 2 ? c.parcelas : PARCELAS_PADRAO))
+                : null,
+    }
+    const categoria = categorias.find((x) => x.id === c.categoryId)
+    if (categoria && categoria.type !== tipo) parcial.categoryId = null
+    if (novo === "estorno") parcial.paymentMethod = "credit_card"
+    return parcial
 }
 
 /** A dúvida que cada campo editado resolve. */

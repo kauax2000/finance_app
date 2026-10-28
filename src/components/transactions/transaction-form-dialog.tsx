@@ -121,12 +121,15 @@ export function TransactionFormDialog({
         fotoInicial,
     })
     // O diálogo fica montado entre uma paleta e outra: fechada, a leitura zera.
-    // Aberta com uma frase compartilhada nova, ela entra no campo.
-    const { setTexto, reiniciar } = leitura
+    // Aberta com uma frase compartilhada nova, ela entra no campo e já é lida.
+    const { setTexto, interpretar, reiniciar } = leitura
     useEffect(() => {
         if (!open) reiniciar()
-        else if (fraseInicial) setTexto(fraseInicial)
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- reiniciar e setTexto são recriados a cada render
+        else if (fraseInicial) {
+            setTexto(fraseInicial)
+            interpretar(fraseInicial)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- reiniciar, setTexto e interpretar são recriados a cada render
     }, [open, fraseInicial])
 
     // Uma casca só: diálogo no desktop, gaveta alta no telefone. O
