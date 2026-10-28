@@ -6,6 +6,7 @@ vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 const { camposDaIA } = await import("@/lib/captura/frase-no-form")
 const {
+    campoEditado,
     comTravas,
     edicaoDoTipo,
     faltaParaLancar,
@@ -46,6 +47,17 @@ describe("tipoDoLancamento", () => {
     it("uma parcela só é despesa, e receita não é parcelada", () => {
         expect(tipoDoLancamento(campos({ parcelas: 1 }))).toBe("despesa")
         expect(tipoDoLancamento(campos({ tipo: "income", parcelas: 3 }))).toBe("receita")
+    })
+})
+
+describe("campoEditado", () => {
+    it("cada linha olha as chaves que a edição dela grava", () => {
+        expect(campoEditado("valor", { valor: 10 })).toBe(true)
+        expect(campoEditado("forma", { creditCardId: "c1", paymentMethod: "credit_card" })).toBe(true)
+        expect(campoEditado("categoria", { categoryId: null })).toBe(true)
+        expect(campoEditado("tipo", { estorno: true })).toBe(true)
+        expect(campoEditado("data", { valor: 10 })).toBe(false)
+        expect(campoEditado("descricao", {})).toBe(false)
     })
 })
 

@@ -27,7 +27,8 @@ describe("a tela do lançamento inteligente (v2)", () => {
     })
 
     it("a revisão só aparece com os campos lidos, e é um Form com um submit só", () => {
-        expect(fonte).toContain("campos && !lendoIA ? (")
+        expect(fonte).toContain("const revisao = campos != null && !lendoIA")
+        expect(fonte).toContain("{revisao ? (")
         expect(fonte).toContain("<Form")
         expect(fonte.match(/<FormSubmit/g)).toHaveLength(1)
         expect(fonte).toContain("return leitura.aprovar()")
@@ -49,8 +50,26 @@ describe("a tela do lançamento inteligente (v2)", () => {
 
     it("o \"Aprovar\" trava com o motivo, e o formulário completo é a ação ao lado", () => {
         expect(fonte).toContain("faltaParaLancar(")
-        expect(fonte).toContain("<FormSubmit disabled={falta != null}")
+        expect(fonte).toContain("MOTIVO_DA_FALTA[falta]")
+        expect(fonte).toMatch(/<FormSubmit[\s\S]{0,120}form=\{formId\}[\s\S]{0,120}disabled=\{motivo != null\}/)
         expect(fonte).toMatch(/variant="tertiary"[^>]*onClick=\{onAbrirFormulario\}/)
+    })
+
+    it("com a revisão aberta, o layout fixo: o campo no topo, a revisão rola e o rodapé fica", () => {
+        expect(fonte).toContain('layout={revisao ? "fixed" : "auto"}')
+        expect(fonte).toMatch(/<DialogHeader>[\s\S]*<SearchInput/)
+        expect(fonte).toMatch(/<DialogBody>\s*<Form/)
+        expect(fonte).toMatch(/<\/DialogBody>[\s\S]*<DialogFooter[\s\S]*<FormSubmit/)
+    })
+
+    it("frase mudada depois do Enter: a revisão esmaece e o Aprovar pede o Enter", () => {
+        expect(fonte).toContain("leitura.texto !== leitura.fraseLida")
+        expect(fonte).toContain('"Enter para atualizar"')
+    })
+
+    it("campo editado à mão perde o selo IA; categoria sem palpite pede Confira", () => {
+        expect(fonte).toContain("!campoEditado(x.campo, leitura.editados)")
+        expect(fonte).toContain('x.campo === "categoria" && !campos.categoryId')
     })
 
     it("a foto entra colada e solta, e todo botão cru declara o tipo", () => {

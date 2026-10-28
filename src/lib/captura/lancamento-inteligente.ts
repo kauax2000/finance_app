@@ -21,6 +21,28 @@ export function tipoDoLancamento(c: CamposDaFrase): TipoDoLancamento {
     return c.tipo === "income" ? "receita" : "despesa"
 }
 
+/** O motivo do "Aprovar" travado, pelo campo que falta (`faltaParaLancar`). */
+export const MOTIVO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
+    valor: "Falta o valor",
+    forma: "Falta o cartão",
+}
+
+/** As chaves de `CamposDaFrase` que a edição de cada linha grava. */
+const CHAVES_DA_LINHA: Record<CampoDoLancamento, (keyof CamposDaFrase)[]> = {
+    tipo: ["tipo", "estorno"],
+    valor: ["valor"],
+    descricao: ["descricao"],
+    categoria: ["categoryId"],
+    forma: ["paymentMethod", "creditCardId"],
+    data: ["data"],
+    parcelas: ["parcelas"],
+}
+
+/** A pessoa editou esta linha à mão: o que ela mostra não é mais o que a IA leu. */
+export function campoEditado(campo: CampoDoLancamento, editados: Partial<CamposDaFrase>): boolean {
+    return CHAVES_DA_LINHA[campo].some((k) => k in editados)
+}
+
 /** As parcelas da parcelada que a frase não disse: as do formulário. */
 const PARCELAS_PADRAO = Number(DEFAULT_INSTALLMENT_COUNT)
 

@@ -16,6 +16,7 @@ import {
 import {
     comTravas,
     faltaParaLancar,
+    MOTIVO_DA_FALTA,
     precisaDeIA,
     soDespesa,
     type CampoDoLancamento,
@@ -24,12 +25,6 @@ import { comprimirImagem } from "@/lib/anexos"
 import { lerFraseComIA, lerImagemComIA, type CamposIA } from "@/lib/ia/ler"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { cartaoPreEscolhido, gravarUltimoCartao } from "@/lib/ultimo-cartao"
-
-/** O aviso do "Aprovar" que trava, pelo campo que falta. */
-const AVISO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
-    valor: "Falta o valor",
-    forma: "Falta o cartão",
-}
 
 /**
  * A leitura do lançamento inteligente: a frase é lida quando a pessoa a lança
@@ -177,7 +172,7 @@ export function useLeituraDoLancamento({
     function editar(campo: CampoDoLancamento, parcial: Partial<CamposDaFrase>) {
         setEditados((atual) => ({ ...atual, ...parcial }))
         // O "Falta o valor" some quando a pessoa preenche o valor.
-        setAviso((atual) => (atual != null && atual === AVISO_DA_FALTA[campo] ? null : atual))
+        setAviso((atual) => (atual != null && atual === MOTIVO_DA_FALTA[campo] ? null : atual))
     }
 
     async function lerComIA(frase: string) {
@@ -211,7 +206,7 @@ export function useLeituraDoLancamento({
         if (!campos || lendoTexto || lendoFoto) return
         const falta = faltaParaLancar(campos, cartoes.filter((c) => c.is_active).length)
         if (falta) {
-            setAviso(AVISO_DA_FALTA[falta] ?? null)
+            setAviso(MOTIVO_DA_FALTA[falta] ?? null)
             return
         }
         lembrarCartao(campos)
@@ -289,8 +284,11 @@ export function useLeituraDoLancamento({
         setTexto,
         interpretar,
         reiniciar,
+        // A frase lida por último: diferente do campo, a revisão está velha.
+        fraseLida,
         // A revisão: só depois do Enter ou da foto lida.
         campos,
+        editados,
         editar,
         lendoIA: lendoTexto || lendoFoto,
         // O aviso da IA segue os campos: conferir um campo o tira da lista.

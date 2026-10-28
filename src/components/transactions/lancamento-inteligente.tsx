@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
 import {
     ArrowsRightLeftIcon,
     BanknotesIcon,
@@ -30,19 +30,19 @@ import {
     ComboboxValue,
 } from "@/components/ui/combobox"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
-import { Form, FormActions, FormSubmit } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import {
-    Item,
-    ItemActions,
-    ItemContent,
-    ItemDescription,
-    ItemGroup,
-    ItemMedia,
-    ItemTitle,
-} from "@/components/ui/item"
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
+import { Form, FormSubmit } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Caption, H4 } from "@/components/ui/typography"
@@ -53,8 +53,10 @@ import type { useLeituraDoLancamento } from "@/components/transactions/use-leitu
 import type { CartaoParaCasar } from "@/lib/captura/frase"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import {
+    campoEditado,
     edicaoDoTipo,
     faltaParaLancar,
+    MOTIVO_DA_FALTA,
     planoDaFrase,
     tipoDoLancamento,
     type CampoDoLancamento,
@@ -72,13 +74,25 @@ const NAO_IDENTIFICADO = "Não identificado"
 
 /** As linhas da revisão, na ordem do spec: todas aparecem, lidas ou não. */
 const CAMPOS: { campo: CampoDoLancamento; rotulo: string; icone: ReactNode }[] = [
-    { campo: "tipo", rotulo: "Tipo", icone: <ArrowsRightLeftIcon aria-hidden /> },
+    {
+        campo: "tipo",
+        rotulo: "Tipo",
+        icone: <ArrowsRightLeftIcon aria-hidden />,
+    },
     { campo: "valor", rotulo: "Valor", icone: <BanknotesIcon aria-hidden /> },
-    { campo: "descricao", rotulo: "Descrição", icone: <PencilIcon aria-hidden /> },
+    {
+        campo: "descricao",
+        rotulo: "Descrição",
+        icone: <PencilIcon aria-hidden />,
+    },
     { campo: "categoria", rotulo: "Categoria", icone: <TagIcon aria-hidden /> },
     { campo: "forma", rotulo: "Forma", icone: <CreditCardIcon aria-hidden /> },
     { campo: "data", rotulo: "Data", icone: <CalendarIcon aria-hidden /> },
-    { campo: "parcelas", rotulo: "Parcelas", icone: <QueueListIcon aria-hidden /> },
+    {
+        campo: "parcelas",
+        rotulo: "Parcelas",
+        icone: <QueueListIcon aria-hidden />,
+    },
 ]
 
 /** A dúvida do parser que cada linha confere ("Confira"). */
@@ -89,11 +103,6 @@ const DUVIDA_DA_LINHA: Partial<Record<CampoDoLancamento, string>> = {
     forma: "cartao",
     data: "data",
     parcelas: "parcelas",
-}
-
-const MOTIVO_DA_FALTA: Partial<Record<CampoDoLancamento, string>> = {
-    valor: "Falta o valor",
-    forma: "Falta o cartão",
 }
 
 const TIPOS: { tipo: TipoDoLancamento; rotulo: string }[] = [
@@ -118,7 +127,11 @@ function valorDaForma(c: CamposDaFrase): string {
 }
 
 function formaDoValor(v: string): Partial<CamposDaFrase> {
-    if (v.startsWith("cartao:")) return { paymentMethod: "credit_card", creditCardId: v.slice("cartao:".length) }
+    if (v.startsWith("cartao:"))
+        return {
+            paymentMethod: "credit_card",
+            creditCardId: v.slice("cartao:".length),
+        }
     return { paymentMethod: v as PaymentMethod, creditCardId: null }
 }
 
@@ -136,7 +149,9 @@ function primeiraImagem(arquivos: FileList | null | undefined) {
  *
  * A casca é o `Dialog` (gaveta no telefone) e não o `CommandDialog`: o cmdk
  * chama `preventDefault` em todo Enter e nas setas, e a revisão é um `Form` com
- * `Select`, `Combobox` e `DatePicker` dentro.
+ * `Select`, `Combobox` e `DatePicker` dentro. Com a revisão aberta o layout é
+ * `fixed`: o campo no cabeçalho, a revisão rolando no `DialogBody` e o
+ * "Aprovar" preso no rodapé, alcançável em qualquer altura de janela.
  */
 export function LancamentoInteligente({
     open,
@@ -157,10 +172,12 @@ export function LancamentoInteligente({
 }) {
     const arquivoRef = useRef<HTMLInputElement>(null)
     const { lerFoto, lendoIA, campos, foto } = leitura
+    const revisao = campos != null && !lendoIA
 
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange} pending={saving}>
             <DialogContent
+                layout={revisao ? "fixed" : "auto"}
                 showCloseButton={false}
                 onPaste={(e) => {
                     // Texto colado vence: copiar de um app traz o texto e, às vezes, a imagem dele.
@@ -181,21 +198,20 @@ export function LancamentoInteligente({
                     void lerFoto(imagem)
                 }}
             >
-                <DialogHeader className="sr-only">
-                    <DialogTitle>Lançamento inteligente</DialogTitle>
-                    <DialogDescription>
+                {/* O cabeçalho é o campo: o título e a descrição ficam para o leitor de tela. */}
+                <DialogHeader>
+                    <DialogTitle className="sr-only">Lançamento inteligente</DialogTitle>
+                    <DialogDescription className="sr-only">
                         Escreva o lançamento numa frase ou fotografe o recibo, dê Enter, confira o que o app entendeu e
                         aprove.
                     </DialogDescription>
-                </DialogHeader>
-
-                <div className="flex min-w-0 flex-col">
                     <div className="flex items-center gap-2">
                         <SearchInput
                             surface="modal"
                             type="text"
                             enterKeyHint="go"
                             autoFocus
+
                             aria-label="Frase do lançamento"
                             placeholder="Ex.: 42 mercado nubank"
                             value={leitura.texto}
@@ -239,18 +255,18 @@ export function LancamentoInteligente({
                     <Caption role="status" className="mt-2 px-1.5 empty:mt-0">
                         {lendoIA ? (foto ? "Lendo o recibo com IA…" : "Lendo com IA…") : leitura.aviso}
                     </Caption>
+                </DialogHeader>
 
-                    {campos && !lendoIA ? (
-                        <Revisao
-                            campos={campos}
-                            leitura={leitura}
-                            form={form}
-                            cartoes={cartoes}
-                            saving={saving}
-                            onAbrirFormulario={onAbrirFormulario}
-                        />
-                    ) : null}
-                </div>
+                {revisao ? (
+                    <Revisao
+                        campos={campos}
+                        leitura={leitura}
+                        form={form}
+                        cartoes={cartoes}
+                        saving={saving}
+                        onAbrirFormulario={onAbrirFormulario}
+                    />
+                ) : null}
             </DialogContent>
         </Dialog>
     )
@@ -280,7 +296,13 @@ function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: (
                 <ItemTitle>Recibo</ItemTitle>
             </ItemContent>
             <ItemActions>
-                <Button variant="tertiary" size="icon-md" aria-label="Tirar a foto" disabled={disabled} onClick={onTirar}>
+                <Button
+                    variant="tertiary"
+                    size="icon-md"
+                    aria-label="Tirar a foto"
+                    disabled={disabled}
+                    onClick={onTirar}
+                >
                     <XMarkIcon aria-hidden />
                 </Button>
             </ItemActions>
@@ -304,6 +326,12 @@ function Revisao({
     onAbrirFormulario: () => void
 }) {
     const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
+    const formId = useId()
+    // O editor que abre leva o foco ao controle dele (o `DatePicker` não tem `autoFocus`).
+    const editorRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (editando) editorRef.current?.querySelector<HTMLElement>("input, button")?.focus()
+    }, [editando])
     // A máscara do valor em edição: o `Input money` é controlado pela string digitada.
     const [valorDigitado, setValorDigitado] = useState("")
     const hoje = localYmdFromDate(new Date())
@@ -319,6 +347,9 @@ function Revisao({
     const categoriasDoTipo = categories.filter((c) => c.type === campos.tipo)
     const categoria = categories.find((c) => c.id === campos.categoryId)
     const leuComIA = campos.duvidas.includes("ia")
+    // A frase do campo mudou depois do Enter: a revisão é da frase velha até o próximo Enter.
+    const desatualizada = leitura.texto.trim() !== "" && leitura.texto !== leitura.fraseLida
+    const motivo = desatualizada ? "Enter para atualizar" : falta ? MOTIVO_DA_FALTA[falta] : null
 
     function rotuloDaData(ymd: string) {
         if (ymd === hoje) return "Hoje"
@@ -328,7 +359,8 @@ function Revisao({
 
     function rotuloDaForma(c: CamposDaFrase) {
         const cartao = cartoes.find((x) => x.id === c.creditCardId)?.name
-        if (c.paymentMethod === "credit_card" || (c.estorno && cartao)) return cartao ? `Crédito · ${cartao}` : "Crédito"
+        if (c.paymentMethod === "credit_card" || (c.estorno && cartao))
+            return cartao ? `Crédito · ${cartao}` : "Crédito"
         return c.paymentMethod ? paymentMethodLabel(c.paymentMethod) : null
     }
 
@@ -378,10 +410,12 @@ function Revisao({
                 return (
                     <Select
                         value={tipo}
-                        onValueChange={(v) => leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))}
+                        onValueChange={(v) =>
+                            leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))
+                        }
                     >
                         <FieldControl>
-                            <SelectTrigger autoFocus>
+                            <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                         </FieldControl>
@@ -399,7 +433,6 @@ function Revisao({
                     <FieldControl>
                         <Input
                             money
-                            autoFocus
                             placeholder="0,00"
                             value={valorDigitado}
                             onValueChange={(texto, reais) => {
@@ -414,7 +447,6 @@ function Revisao({
                 return (
                     <FieldControl>
                         <Input
-                            autoFocus
                             placeholder="Ex.: Mercado"
                             value={campos.descricao}
                             onChange={(e) => leitura.editar("descricao", { descricao: e.target.value })}
@@ -435,7 +467,7 @@ function Revisao({
                     >
                         <ComboboxField>
                             <FieldControl>
-                                <ComboboxTrigger autoFocus>
+                                <ComboboxTrigger>
                                     <ComboboxValue
                                         placeholder="Escolher categoria"
                                         media={categoria ? <ColorTile size="xs" color={categoria.color} /> : undefined}
@@ -454,7 +486,11 @@ function Revisao({
                                         Sem categoria
                                     </ComboboxItem>
                                     {categoriasDoTipo.map((c) => (
-                                        <ComboboxItem key={c.id} value={c.id} media={<ColorTile size="xs" color={c.color} />}>
+                                        <ComboboxItem
+                                            key={c.id}
+                                            value={c.id}
+                                            media={<ColorTile size="xs" color={c.color} />}
+                                        >
                                             {c.name}
                                         </ComboboxItem>
                                     ))}
@@ -465,9 +501,12 @@ function Revisao({
                 )
             case "forma":
                 return (
-                    <Select value={valorDaForma(campos)} onValueChange={(v) => leitura.editar("forma", formaDoValor(v))}>
+                    <Select
+                        value={valorDaForma(campos)}
+                        onValueChange={(v) => leitura.editar("forma", formaDoValor(v))}
+                    >
                         <FieldControl>
-                            <SelectTrigger autoFocus>
+                            <SelectTrigger>
                                 <SelectValue placeholder="Escolher a forma" />
                             </SelectTrigger>
                         </FieldControl>
@@ -495,7 +534,11 @@ function Revisao({
                     <FieldControl>
                         <DatePicker
                             value={parseYmdLocal(campos.data)}
-                            onChange={(d) => leitura.editar("data", { data: localYmdFromDate(d ?? new Date()) })}
+                            onChange={(d) =>
+                                leitura.editar("data", {
+                                    data: localYmdFromDate(d ?? new Date()),
+                                })
+                            }
                             displayStyle="relative"
                             presets
                         />
@@ -511,7 +554,7 @@ function Revisao({
                         }
                     >
                         <FieldControl>
-                            <SelectTrigger autoFocus>
+                            <SelectTrigger>
                                 <SelectValue placeholder="Escolher parcelas" />
                             </SelectTrigger>
                         </FieldControl>
@@ -528,101 +571,121 @@ function Revisao({
     }
 
     return (
-        <Form
-            className="mt-4"
-            pending={saving}
-            onSubmit={(e) => {
-                e.preventDefault()
-                return leitura.aprovar()
-            }}
-        >
-            {leitura.foto ? (
-                <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
-            ) : null}
+        <>
+            <DialogBody>
+                <Form
+                    id={formId}
+                    pending={saving}
+                    // A frase mudou depois do Enter: a revisão esmaece até o próximo Enter.
+                    className={desatualizada ? "opacity-60" : undefined}
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        return leitura.aprovar()
+                    }}
+                >
+                    {leitura.foto ? (
+                        <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
+                    ) : null}
 
-            <div className="flex items-center gap-2">
-                <H4>Confira o lançamento</H4>
-                {leuComIA ? (
-                    <Badge size="xs" tone="info">
-                        IA
-                    </Badge>
-                ) : null}
-            </div>
+                    <div className="flex items-center gap-2">
+                        <H4>Confira o lançamento</H4>
+                        {leuComIA ? (
+                            <Badge size="xs" tone="info">
+                                IA
+                            </Badge>
+                        ) : null}
+                    </div>
 
-            <ItemGroup variant="divided">
-                {CAMPOS.map((x) => {
-                    if (editando === x.campo) {
-                        return (
-                            <Field key={x.campo} size="sm">
-                                <FieldLabel>{x.rotulo}</FieldLabel>
-                                <div className="flex items-center gap-2">
-                                    <div className="min-w-0 flex-1">{editor(x.campo)}</div>
-                                    <Button variant="secondary" onClick={fechar}>
-                                        ok
-                                    </Button>
-                                </div>
-                            </Field>
-                        )
-                    }
-                    const valor = valorDaLinha(x.campo)
-                    const duvida = DUVIDA_DA_LINHA[x.campo]
-                    const confira = duvida != null && campos.duvidas.includes(duvida)
-                    return (
-                        <Item key={x.campo} variant="flush" size="sm" interactive asChild>
-                            <button
-                                type="button"
-                                id={`lancamento-${x.campo}`}
-                                disabled={saving}
-                                onClick={() => abrir(x.campo)}
-                            >
-                                <ItemMedia variant="icon">
-                                    {x.campo === "categoria" && categoria ? (
-                                        <ColorTile size="xs" color={categoria.color} />
-                                    ) : (
-                                        x.icone
-                                    )}
-                                </ItemMedia>
-                                <ItemContent>
-                                    <ItemTitle>{x.rotulo}</ItemTitle>
-                                    {x.campo === "tipo" && campos.motivoDoTipo ? (
-                                        <ItemDescription>por causa de “{campos.motivoDoTipo}”</ItemDescription>
-                                    ) : null}
-                                </ItemContent>
-                                <ItemActions>
-                                    {confira ? (
-                                        <Badge size="xs" tone="warning">
-                                            Confira
-                                        </Badge>
-                                    ) : leuComIA && valor ? (
-                                        <Badge size="xs" tone="info">
-                                            IA
-                                        </Badge>
-                                    ) : null}
-                                    <span className={valor ? "nums text-sm" : "text-sm text-muted-foreground"}>
-                                        {valor ?? NAO_IDENTIFICADO}
-                                    </span>
-                                </ItemActions>
-                            </button>
-                        </Item>
-                    )
-                })}
-            </ItemGroup>
+                    <ItemGroup variant="divided">
+                        {CAMPOS.map((x) => {
+                            if (editando === x.campo) {
+                                return (
+                                    <Field key={x.campo} size="sm">
+                                        <FieldLabel>{x.rotulo}</FieldLabel>
+                                        <div className="flex items-center gap-2">
+                                            <div ref={editorRef} className="min-w-0 flex-1">
+                                                {editor(x.campo)}
+                                            </div>
+                                            <Button variant="secondary" onClick={fechar}>
+                                                ok
+                                            </Button>
+                                        </div>
+                                    </Field>
+                                )
+                            }
+                            const valor = valorDaLinha(x.campo)
+                            const duvida = DUVIDA_DA_LINHA[x.campo]
+                            // A categoria sem palpite também se confere, como no aviso da IA (`textoDasDuvidas`).
+                            const confira =
+                                (duvida != null && campos.duvidas.includes(duvida)) ||
+                                (x.campo === "categoria" && !campos.categoryId)
+                            return (
+                                <Item key={x.campo} variant="flush" size="sm" interactive asChild>
+                                    <button
+                                        type="button"
+                                        id={`lancamento-${x.campo}`}
+                                        disabled={saving}
+                                        onClick={() => abrir(x.campo)}
+                                    >
+                                        <ItemMedia variant="icon">
+                                            {x.campo === "categoria" && categoria ? (
+                                                <ColorTile size="xs" color={categoria.color} />
+                                            ) : (
+                                                x.icone
+                                            )}
+                                        </ItemMedia>
+                                        <ItemContent>
+                                            <ItemTitle>{x.rotulo}</ItemTitle>
+                                            {x.campo === "tipo" && campos.motivoDoTipo ? (
+                                                <ItemDescription>por causa de “{campos.motivoDoTipo}”</ItemDescription>
+                                            ) : null}
+                                        </ItemContent>
+                                        <ItemActions>
+                                            {confira ? (
+                                                <Badge size="xs" tone="warning">
+                                                    Confira
+                                                </Badge>
+                                            ) : leuComIA && valor && !campoEditado(x.campo, leitura.editados) ? (
+                                                <Badge size="xs" tone="info">
+                                                    IA
+                                                </Badge>
+                                            ) : null}
+                                            <span className={valor ? "nums text-sm" : "text-sm text-muted-foreground"}>
+                                                {valor ?? NAO_IDENTIFICADO}
+                                            </span>
+                                        </ItemActions>
+                                    </button>
+                                </Item>
+                            )
+                        })}
+                    </ItemGroup>
 
-            {plano ? <ImpactoDaParcela proposto={plano} /> : null}
+                    {plano ? <ImpactoDaParcela proposto={plano} /> : null}
+                </Form>
+            </DialogBody>
 
-            <FormActions>
-                {falta ? (
-                    <Caption id="lancamento-falta" className="self-center sm:me-auto">
-                        {MOTIVO_DA_FALTA[falta]}
-                    </Caption>
-                ) : null}
+            {/* O rodapé fica preso fora do corpo que rola; o "Aprovar" é do formulário pelo `form=`. */}
+            <DialogFooter
+                start={
+                    motivo ? (
+                        <Caption id="lancamento-motivo" className="self-center">
+                            {motivo}
+                        </Caption>
+                    ) : null
+                }
+            >
                 <Button variant="tertiary" disabled={saving} onClick={onAbrirFormulario}>
                     formulário completo
                 </Button>
-                <FormSubmit disabled={falta != null} aria-describedby={falta ? "lancamento-falta" : undefined}>
+                <FormSubmit
+                    form={formId}
+                    pending={saving}
+                    disabled={motivo != null}
+                    aria-describedby={motivo ? "lancamento-motivo" : undefined}
+                >
                     Aprovar
                 </FormSubmit>
-            </FormActions>
-        </Form>
+            </DialogFooter>
+        </>
     )
 }
