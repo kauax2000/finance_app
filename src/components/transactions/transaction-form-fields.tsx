@@ -81,11 +81,9 @@ import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
-import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import { equalInstallmentsFromPortion, splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import type { PlanoProposto } from "@/lib/previsao/impacto-parcela"
-import { FotoReciboWireframe } from "@/components/wireframe/foto-recibo-wireframe"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 
 
@@ -268,13 +266,9 @@ export type TransactionFormFieldsProps = {
     installmentEditScope?: "slice" | "plan"
     setInstallmentEditScope?: (s: "slice" | "plan") => void
     planIsActive?: boolean
-    /** A frase rápida (só na criação): a frase já escrita e o que ela preenche. */
-    fraseInicial?: string
+    /** O que a leitura do lançamento inteligente preenche (a paleta lê; o formulário só recebe). */
     aplicarFrase?: (c: CamposDaFrase) => void
-    /** A foto do recibo (só na criação): a do compartilhar, o que a IA leu e a foto a anexar. */
-    fotoInicial?: File
     aplicarFoto?: (c: CamposDaFrase) => void
-    setFotoDoRecibo?: (foto: File) => void
     /** O projeto da despesa (Bloco 7C); sem `setProjectId`, o seletor não aparece. */
     projectId?: string
     setProjectId?: (id: string) => void
@@ -355,11 +349,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         installmentEditScope = "slice",
         setInstallmentEditScope,
         planIsActive = false,
-        fraseInicial,
-        aplicarFrase,
-        fotoInicial,
-        aplicarFoto,
-        setFotoDoRecibo,
         projectId = "",
         setProjectId,
         paidBy = "",
@@ -489,11 +478,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         [creditCards]
     )
 
-    const cartoesDaFrase = useMemo(
-        () => activeCards.map((c) => ({ ...c, wallet_alias: c.wallet_alias ?? null })),
-        [activeCards]
-    )
-
     const handleCategoryPopoverOpenChange = (open: boolean) => {
         setCategoryPopoverOpen(open)
         if (open) {
@@ -597,26 +581,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
 
     return (
         <div className="space-y-4 py-1 pb-2">
-            {segmentMode === "create" && aplicarFrase ? (
-                <FraseRapidaWireframe
-                    // Um compartilhar com o formulário já aberto troca a frase.
-                    key={fraseInicial}
-                    fraseInicial={fraseInicial}
-                    cartoes={cartoesDaFrase}
-                    categorias={categories}
-                    onAplicar={aplicarFrase}
-                />
-            ) : null}
-            {segmentMode === "create" && aplicarFoto && setFotoDoRecibo ? (
-                <FotoReciboWireframe
-                    fotoInicial={fotoInicial}
-                    cartoes={cartoesDaFrase}
-                    categorias={categories}
-                    onAplicar={aplicarFoto}
-                    onFoto={setFotoDoRecibo}
-                />
-            ) : null}
-
             {showInstallmentEditScopePicker ? (
                 <TransactionFormScopeSegment
                     value={installmentEditScope}

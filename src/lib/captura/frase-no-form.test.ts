@@ -233,10 +233,10 @@ describe("consumirParametroFrase", () => {
 
 describe("fonte", () => {
     it("o Enter no campo da frase não envia o formulário (Foco 5)", () => {
-        const fonte = semComentarios(lerFonte("src/components/wireframe/frase-rapida-wireframe.tsx"), "tudo")
+        // Na paleta o Enter é do cmdk (lança); o que fecha um acento não lança.
+        const fonte = semComentarios(lerFonte("src/components/transactions/lancamento-inteligente.tsx"), "tudo")
         expect(fonte).toMatch(/e\.key === "Enter"[\s\S]{0,120}e\.preventDefault\(\)/)
         expect(fonte).not.toContain('type="submit"')
-        expect(fonte).toMatch(/<button\s+type="button"/)
     })
 
     it("o histórico não trava o aplicar offline nem preenche outro formulário", () => {
@@ -248,14 +248,19 @@ describe("fonte", () => {
         expect(lib).toContain("retry: false")
         expect(lib).toContain("meta: { errorToast: false }")
         expect(lib).toContain("AbortSignal.timeout(")
-        const fonte = semComentarios(lerFonte("src/components/wireframe/frase-rapida-wireframe.tsx"), "tudo")
+        const fonte = semComentarios(lerFonte("src/components/transactions/use-leitura-do-lancamento.ts"), "tudo")
         expect(fonte).toContain("historicoDaFraseEmCache(")
         expect(fonte).toMatch(/if \(meu !== pedido\.current\) return/)
     })
 
-    it("o formulário mostra a frase só na criação e leva a origem no payload", () => {
+    it("a paleta só abre na criação, o formulário não leva a frase, e a origem vai no payload", () => {
         const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"), "tudo")
-        expect(campos).toMatch(/segmentMode === "create"[\s\S]{0,80}<FraseRapidaWireframe/)
+        expect(campos).not.toContain("FraseRapidaWireframe")
+        expect(campos).not.toContain("FotoReciboWireframe")
+        const dialogo = semComentarios(lerFonte("src/components/transactions/transaction-form-dialog.tsx"), "tudo")
+        expect(dialogo).toContain("useLancamentoInteligente")
+        expect(dialogo).toContain("<LancamentoInteligente")
+        expect(dialogo).toContain("!editingTransaction")
         const hook = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"), "tudo")
         expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase)")
     })

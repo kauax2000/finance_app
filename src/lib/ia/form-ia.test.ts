@@ -138,30 +138,35 @@ describe("o aviso e a origem do que veio da IA", () => {
 })
 
 describe("fonte do formulário com IA", () => {
-    const foto = semComentarios(lerFonte("src/components/wireframe/foto-recibo-wireframe.tsx"), "tudo")
-    const frase = semComentarios(lerFonte("src/components/wireframe/frase-rapida-wireframe.tsx"), "tudo")
+    // A leitura (frase, IA e foto) mora no hook; a paleta só a mostra.
+    const leitura = semComentarios(lerFonte("src/components/transactions/use-leitura-do-lancamento.ts"), "tudo")
+    // Sem `semComentarios`: o `image/*` do accept parece abrir um comentário.
+    const paleta = lerFonte("src/components/transactions/lancamento-inteligente.tsx")
+    const dialogo = semComentarios(lerFonte("src/components/transactions/transaction-form-dialog.tsx"), "tudo")
     const form = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"), "tudo")
     const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"), "tudo")
 
-    it("nenhum type=submit nos wireframes da IA", () => {
-        expect(foto).not.toContain('type="submit"')
-        expect(frase).not.toContain('type="submit"')
+    it("nenhum type=submit na paleta nem no hook da leitura", () => {
+        expect(paleta).not.toContain('type="submit"')
+        expect(leitura).not.toContain('type="submit"')
     })
 
     it("a foto abre a câmera de trás e passa pela compressão e pela IA", () => {
-        expect(foto).toContain('accept="image/*"')
-        expect(foto).toContain('capture="environment"')
-        expect(foto).toMatch(/comprimirImagem\([\s\S]*lerImagemComIA\([\s\S]*camposDaIA\(/)
-        expect(foto).toContain("fotoInicial")
+        expect(paleta).toContain('accept="image/*"')
+        expect(paleta).toContain('capture="environment"')
+        expect(leitura).toMatch(/comprimirImagem\([\s\S]*lerImagemComIA\(/)
+        expect(leitura).toContain("camposDaIA(")
+        expect(leitura).toContain("fotoInicial")
     })
 
     it("a frase chama a IA e aplica camposDaIA", () => {
-        expect(frase).toContain("Tentar com IA")
-        expect(frase).toMatch(/lerFraseComIA\([\s\S]*camposDaIA\(/)
+        expect(leitura).toMatch(/lerFraseComIA\([\s\S]*camposDaIA\(|camposDaIA\([\s\S]*lerFraseComIA\(/)
     })
 
-    it("a foto só aparece na criação", () => {
-        expect(campos).toMatch(/segmentMode === "create"[^?]*\?\s*\(\s*<FotoReciboWireframe/)
+    it("a paleta só vale na criação; o formulário não leva mais a frase nem a foto", () => {
+        expect(dialogo).toMatch(/usarPaleta =\s*!editingTransaction/)
+        expect(campos).not.toContain("FraseRapidaWireframe")
+        expect(campos).not.toContain("FotoReciboWireframe")
     })
 
     it("enviarAnexo só depois do salvar, com o id devolvido", () => {
@@ -176,9 +181,9 @@ describe("fonte do formulário com IA", () => {
         expect(ajudante).toMatch(/const id = await lancamento\(\)[\s\S]*enviarAnexo\([^)]*transactionId: id/)
         expect(form).toContain("Sem conexão: a foto não foi anexada.")
         expect(form).toContain("Sem carteira: a foto não foi anexada.")
-        expect(foto).not.toContain("anexada ao salvar")
-        expect(foto).toContain("Escolha uma carteira primeiro.")
-        expect(foto).toMatch(/finally \{[\s\S]{0,120}setLendo\(false\)/)
+        expect(leitura).not.toContain("anexada ao salvar")
+        expect(leitura).toContain("Escolha uma carteira primeiro.")
+        expect(leitura).toMatch(/finally \{[\s\S]{0,120}setLendoFoto\(false\)/)
     })
 
     it("a foto escolhida deixa o formulário sujo", () => {

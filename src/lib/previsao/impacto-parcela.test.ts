@@ -187,7 +187,7 @@ describe("impactoDoPlano — o detalhe de um parcelado que já existe", () => {
 describe("onde o quadro aparece", () => {
     it.each([
         ["src/components/transactions/transaction-form-fields.tsx", "<ImpactoDaParcela proposto={planoProposto} />"],
-        ["src/components/wireframe/frase-rapida-wireframe.tsx", "<ImpactoDaParcela proposto={proposto} />"],
+        ["src/components/transactions/lancamento-inteligente.tsx", "<ImpactoDaParcela proposto={plano} />"],
         ["src/components/transactions/transaction-detail-sheet.tsx", "<ImpactoDaParcela planoId={t.installment_plan_id} />"],
     ])("%s monta o quadro", (arquivo, jsx) => {
         expect(semComentarios(lerFonte(arquivo), "tudo")).toContain(jsx)

@@ -127,6 +127,22 @@ export function useLeituraDoLancamento({
         if (!novo.trim() && !iaDaFoto) setEditados({})
     }
 
+    /** Volta ao zero: o hook mora no diálogo, que fica montado entre uma paleta e outra. */
+    function reiniciar() {
+        pedido.current += 1
+        pedidoDaFoto.current += 1
+        ultimoAplicado.current = null
+        setTextoCru("")
+        setEditados({})
+        setIaDoTexto(null)
+        setIaDaFoto(null)
+        setIaTentada(false)
+        setLendoTexto(false)
+        setLendoFoto(false)
+        setAviso(null)
+        setFotoDoRecibo(null)
+    }
+
     function editar(campo: CampoDoLancamento, parcial: Partial<CamposDaFrase>) {
         setEditados((atual) => ({ ...atual, ...parcial }))
         // O "Falta o valor" some quando a pessoa preenche o valor.
@@ -244,6 +260,7 @@ export function useLeituraDoLancamento({
     return {
         texto,
         setTexto,
+        reiniciar,
         campos,
         editar,
         lendoIA: lendoTexto || lendoFoto,

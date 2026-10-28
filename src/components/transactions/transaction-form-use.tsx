@@ -186,10 +186,6 @@ export type UseTransactionFormArgs = {
     onClose: () => void
     /** Called after any successful save (before onClose when closeOnSuccess). */
     onSuccess?: () => void
-    /** Na criação, a frase rápida já escrita (o compartilhar do Android). */
-    fraseInicial?: string
-    /** Na criação, a foto que a "Foto do recibo" lê ao abrir (o compartilhar do Android). */
-    fotoInicial?: File
 }
 
 export function useTransactionForm({
@@ -207,8 +203,6 @@ export function useTransactionForm({
     closeOnSuccess = true,
     onClose,
     onSuccess,
-    fraseInicial,
-    fotoInicial,
 }: UseTransactionFormArgs) {
     const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
     const [creditCardPopoverOpen, setCreditCardPopoverOpen] = useState(false)
@@ -790,11 +784,8 @@ export function useTransactionForm({
         installmentEditScope,
         setInstallmentEditScope: setInstallmentScope,
         planIsActive,
-        fraseInicial,
         aplicarFrase,
-        fotoInicial,
         aplicarFoto,
-        setFotoDoRecibo,
         projectId,
         setProjectId,
         paidBy: paidBy || pagadorPadrao,

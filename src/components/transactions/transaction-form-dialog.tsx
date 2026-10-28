@@ -1,12 +1,17 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
+
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useLancamentoInteligente } from "@/hooks/use-lancamento-inteligente"
 import type { Category, CreditCard, Transaction } from "@/lib/supabase"
 import {
     Dialog,
     DialogContent,
 } from "@/components/ui/dialog"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
+import { LancamentoInteligente } from "@/components/transactions/lancamento-inteligente"
+import { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import type {
@@ -44,9 +49,9 @@ type TransactionFormDialogProps = {
         planId: string,
         payload: InstallmentPlanUpdatePayload
     ) => Promise<boolean>
-    /** Na criação, a frase rápida já escrita (o compartilhar do Android). */
+    /** Na criação, a frase já escrita (o compartilhar do Android): abre a paleta com ela. */
     fraseInicial?: string
-    /** Na criação, a foto que a "Foto do recibo" lê ao abrir (o compartilhar do Android). */
+    /** Na criação, a foto que a paleta lê ao abrir (o compartilhar do Android). */
     fotoInicial?: File
 }
 
@@ -68,15 +73,7 @@ export function TransactionFormDialog({
 }: TransactionFormDialogProps) {
     const isMobile = useIsMobile()
 
-    const {
-        handleSubmit,
-        fieldsProps,
-        formTitle,
-        formDescription,
-        showFooter,
-        submitDisabled,
-        isDirty,
-    } = useTransactionForm({
+    const form = useTransactionForm({
         active: open,
         saving,
         editingTransaction,
@@ -90,9 +87,43 @@ export function TransactionFormDialog({
         onUpdateInstallmentPlan,
         closeOnSuccess: true,
         onClose: () => onOpenChange(false),
+    })
+
+    const { handleSubmit, fieldsProps, formTitle, formDescription, showFooter, submitDisabled, isDirty } = form
+
+    // A paleta é a criação de quem ligou o lançamento inteligente (ou de quem
+    // chegou com uma frase ou foto compartilhada); editar segue no formulário.
+    // O hook da leitura e o do formulário moram aqui, uma vez só: "Abrir
+    // formulário completo" troca a casca e os campos lidos já estão nele.
+    const [ligado] = useLancamentoInteligente()
+    const [usarFormulario, setUsarFormulario] = useState(false)
+    if (!open && usarFormulario) setUsarFormulario(false)
+    const usarPaleta =
+        !editingTransaction && (ligado || Boolean(fraseInicial || fotoInicial)) && !usarFormulario
+
+    // Estáveis: cada troca relê a frase.
+    const cartoes = useMemo(
+        () =>
+            creditCards
+                .filter((c) => c.is_active)
+                .map((c) => ({ ...c, wallet_alias: c.wallet_alias ?? null })),
+        [creditCards]
+    )
+    const leitura = useLeituraDoLancamento({
+        form,
+        cartoes,
+        categorias: categories,
         fraseInicial,
         fotoInicial,
     })
+    // O diálogo fica montado entre uma paleta e outra: fechada, a leitura zera.
+    // Aberta com uma frase compartilhada nova, ela entra no campo.
+    const { setTexto, reiniciar } = leitura
+    useEffect(() => {
+        if (!open) reiniciar()
+        else if (fraseInicial) setTexto(fraseInicial)
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- reiniciar e setTexto são recriados a cada render
+    }, [open, fraseInicial])
 
     // Uma casca só: diálogo no desktop, gaveta alta no telefone. O
     // `isMobile` sobra só para escolher a variante do miolo, que no telefone
@@ -101,6 +132,20 @@ export function TransactionFormDialog({
     // Salvar com sucesso fecha pelo `onClose` do hook, que chama o
     // `onOpenChange` da tela direto — fora do `Dialog` —, e por isso não
     // pergunta "Descartar alterações?".
+    if (usarPaleta) {
+        return (
+            <LancamentoInteligente
+                open={open}
+                onOpenChange={onOpenChange}
+                leitura={leitura}
+                form={form}
+                cartoes={cartoes}
+                onAbrirFormulario={() => setUsarFormulario(true)}
+                saving={saving}
+            />
+        )
+    }
+
     return (
         <Dialog
             surface="auto"

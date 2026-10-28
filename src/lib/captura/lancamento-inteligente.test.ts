@@ -143,7 +143,7 @@ describe("useLeituraDoLancamento (fonte)", () => {
 
     it("a foto só vai ao formulário depois de comprimida", () => {
         const comprime = fonte.indexOf("comprimirImagem(")
-        const anexa = fonte.indexOf("setFotoDoRecibo(")
+        const anexa = fonte.indexOf("setFotoDoRecibo(", comprime)
         expect(comprime).toBeGreaterThan(-1)
         expect(anexa).toBeGreaterThan(comprime)
     })

@@ -47,7 +47,7 @@ import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wirefra
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
 import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
-import { interpretarFrase, type CartaoParaCasar, type CategoriaParaCasar } from "@/lib/captura/frase"
+import { interpretarFrase, type CartaoParaCasar } from "@/lib/captura/frase"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import {
     faltaParaLancar,
@@ -110,8 +110,8 @@ const PARCELAS_SUGERIDAS = [2, 3, 6, 10, 12]
  * A paleta do lançamento inteligente: a frase (ou a foto do recibo) na pílula,
  * a revisão na placa e o "Lançar" em destaque. Só apresentação — a leitura é
  * do `useLeituraDoLancamento`, que quem monta a paleta chama uma vez, e salvar
- * é o `salvar()` do formulário. `categorias` é o que a leitura casa; a lista
- * da página de categoria vem do formulário, que tem a cor.
+ * é o `salvar()` do formulário. A lista da página de categoria vem do
+ * formulário, que tem a cor.
  */
 export function LancamentoInteligente({
     open,
@@ -126,7 +126,6 @@ export function LancamentoInteligente({
     onOpenChange: (open: boolean) => void
     leitura: Leitura
     form: Form
-    categorias: CategoriaParaCasar[]
     cartoes: CartaoParaCasar[]
     onAbrirFormulario: () => void
     saving: boolean
@@ -159,6 +158,8 @@ export function LancamentoInteligente({
                     if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault()
                 },
                 onPaste: (e) => {
+                    // Texto colado vence: copiar de um app traz o texto e, às vezes, a imagem dele.
+                    if (e.clipboardData.getData("text/plain").trim()) return
                     const imagem = primeiraImagem(e.clipboardData?.files)
                     if (!imagem) return
                     e.preventDefault()
@@ -535,7 +536,7 @@ function Paleta({
                         </CommandItem>
                     ) : (
                         <Caption className="px-1.5 py-2">
-                            {campos?.descricao ? `Hoje: ${campos.descricao}` : "Digite a descrição."}
+                            {campos?.descricao ? `Atual: ${campos.descricao}` : "Digite a descrição."}
                         </Caption>
                     )}
                 </CommandPage>
