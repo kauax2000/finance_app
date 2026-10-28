@@ -475,9 +475,9 @@ export function useTransactionForm({
     const aplicarFrase = useCallback((c: CamposDaFrase) => preencher(c, "quick_text"), [preencher])
     const aplicarFoto = useCallback((c: CamposDaFrase) => preencher(c, "share"), [preencher])
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
+    // O salvar não conhece o evento: a paleta do lançamento inteligente não é
+    // um <form> e chama direto.
+    const salvar = async () => {
         if (isInstallmentCreate) {
             if (
                 paymentMethod === "credit_card" &&
@@ -712,6 +712,11 @@ export function useTransactionForm({
         }
     }
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        await salvar()
+    }
+
     /**
      * A foto do recibo vira anexo depois do lançamento salvo, sem segurar o
      * fechar; falhando, o lançamento fica. Sem `id` (salvo offline), avisa.
@@ -854,6 +859,10 @@ export function useTransactionForm({
 
     return {
         handleSubmit,
+        salvar,
+        fotoDoRecibo,
+        setFotoDoRecibo,
+        needsCreditCard,
         fieldsProps,
         formTitle,
         formDescription,

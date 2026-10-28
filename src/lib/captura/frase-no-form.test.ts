@@ -260,6 +260,12 @@ describe("fonte", () => {
         expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase)")
     })
 
+    it("o handleSubmit só impede o evento e chama o salvar, que a paleta usa direto", () => {
+        const hook = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"), "tudo")
+        expect(hook).toMatch(/const handleSubmit = async \(e: React\.FormEvent\) => \{\s*e\.preventDefault\(\)\s*await salvar\(\)\s*\}/)
+        expect(hook).toMatch(/return \{\s*handleSubmit,\s*salvar,/)
+    })
+
     // O manifest (POST multipart desde o 3B) é conferido em compartilhado.test.ts.
 })
 
