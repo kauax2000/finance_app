@@ -45,6 +45,8 @@ export type CamposDaFrase = {
     duvidas: string[]
     /** Por que essa categoria (o resumo "Entendi" o diz). */
     motivoDaCategoria: MotivoDaCategoria | null
+    /** A palavra que decidiu o tipo ("ganhei", "estorno", "em 10x"); `null` quando nada decidiu. */
+    motivoDoTipo: string | null
     /** "frase": o cartão foi nomeado; "ultimo": o do crédito sem nome; "historico": o da mesma descrição. */
     origemDoCartao: "frase" | "ultimo" | "historico" | null
 }
@@ -124,12 +126,15 @@ export function camposDaIA(
         data = hoje
         duvidas.push("data")
     }
+    const tipo = f.estorno ? "income" : (c.tipo ?? f.tipo)
     const campos = camposDaInterpretacao(
         {
             ...f,
             valor: f.valor ?? c.valor,
             data,
-            tipo: f.estorno ? "income" : (c.tipo ?? f.tipo),
+            tipo,
+            // O motivo é do texto: quando a IA trocou o tipo, a palavra não o decidiu.
+            motivoDoTipo: tipo === f.tipo ? f.motivoDoTipo : null,
             descricao: c.descricao || f.descricao,
             duvidas,
             forma,
@@ -240,6 +245,7 @@ function camposDaInterpretacao(
         parcelas: f.parcelas,
         duvidas,
         motivoDaCategoria: ctx.categorias ? (categoria?.motivo ?? null) : doHistorico?.categoryId ? "historico" : null,
+        motivoDoTipo: f.motivoDoTipo,
         origemDoCartao,
     }
 }
