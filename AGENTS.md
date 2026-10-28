@@ -377,8 +377,9 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   variant="brandCard"`), `Alert variant="brand"`, `AnnouncementBar
   variant="brand"`, `Card variant="brand"`, `ThemeToggle variant="brand"`,
   `SearchInput variant="brand"`, `Progress`/`Slider variant="brand"`,
-  `Spinner variant="brand"`, o numeral do `EmptyStateCode` e o anel do
-  `OnboardingTour`. **Uma peça de marca por tela.**
+  `Spinner variant="brand"`, o numeral do `EmptyStateCode`, o anel do
+  `OnboardingTour` e o feixe (`command-beam`) da pílula do `CommandDialog` e da
+  frase do lançamento inteligente. **Uma peça de marca por tela.**
 - **Arco-íris sob texto é proibido** — num gráfico, num fundo de cartão,
   preenchendo um chip: é a invariante 3 violada com sete cores, e sete matizes
   não têm um contraste só. As exceções conscientes, todas com o volume num
@@ -423,7 +424,9 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
 - **O campo não veste marca.** O foco do campo é o anel do sistema (`--ring`,
   por `fieldFocusRingClassName`). Os oito controles de campo não casam
   `--brand-`, `field-brand` nem `brand-rainbow` — `brand-contour.test.ts`
-  reprova. A exceção nomeada é o feixe da pílula do `CommandDialog`.
+  reprova. As exceções nomeadas são o feixe da pílula do `CommandDialog` e o
+  da pílula da frase do lançamento inteligente (rodada 354), e
+  `brand-contour.test.ts` tranca que só elas o vestem.
 - **O anel de foco do campo é `ring-3` de `--ring` a 30%**, fora dos 3:1 por
   decisão do dono; a borda de 1px fica na cor cheia de `--ring`, e o caminho de
   volta é `/45`. Os outros anéis do sistema ficam a 45% — **medidos contra as
@@ -926,8 +929,10 @@ declaração de `background-color` no trilho).
     linha tem 36 e as peças dela são do componente — `CommandItemIcon`,
     `CommandItemMeta` e `CommandItemArrow` —; a tela não escreve nada disso.
   - **O feixe** (`@utility command-beam`) corre pela base da pílula com o
-    campo vazio, **só no `CommandDialog`** — a exceção nomeada ao campo sem
-    marca.
+    campo vazio, **só no `CommandDialog`** e na pílula da frase do lançamento
+    inteligente — as duas exceções nomeadas ao campo sem marca. Na frase ele
+    corre também digitando, encurta as durações enquanto a IA lê (`data-lendo`
+    na pílula) e sai quando o campo começa a virar a placa.
   - O campo da paleta é `CommandInput size="lg"` (36); `md` (32) é o padrão.
 
 ### Component rules

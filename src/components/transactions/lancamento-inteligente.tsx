@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
 import { animate, stagger, useReducedMotion, type AnimationPlaybackControlsWithThen } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import {
@@ -507,10 +507,25 @@ export function LancamentoInteligente({
                         >
                             <div ref={cabecaRef} data-slot="lancamento-cabeca" className="flex shrink-0 items-center">
                                 {/* A frase não pinta vidro próprio: o vidro é o de fora, que vira a placa. */}
+                                {/* O feixe do `CommandDialog` (a segunda exceção nomeada ao campo
+                                    sem marca): aceso enquanto a frase é pílula, vazia ou digitada;
+                                    com a IA lendo, corre mais rápido; sai quando o gesto da placa
+                                    começa. A lista de durações segue a da utility: entrada,
+                                    trajeto, pontas e respiro. */}
                                 <SearchInput
                                     surface="field"
                                     focusRing={false}
-                                    className="border-0 bg-transparent"
+                                    className={cn(
+                                        "border-0 bg-transparent",
+                                        !placa && "command-beam",
+                                        "data-lendo:[animation-duration:0s,1.2s,1.2s,1.6s]"
+                                    )}
+                                    rootProps={
+                                        {
+                                            "data-waiting": !placa || undefined,
+                                            "data-lendo": lendoIA || undefined,
+                                        } as ComponentProps<"div">
+                                    }
                                     type="text"
                                     enterKeyHint="go"
                                     autoFocus

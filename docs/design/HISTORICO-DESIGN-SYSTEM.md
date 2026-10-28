@@ -28629,3 +28629,29 @@ de 30ms e o teto de quatro (120ms), a última linha assenta nos 460ms do
 `menu-morph`. O desktop segue em `--duration-spring`. A placa ainda tem os
 60ms de atraso do `menu-morph` depois de solta; as linhas não.
 
+### Rodada 354 — o feixe da marca na pílula da frase
+
+**O pedido.** O feixe do `CommandDialog` (`@utility command-beam`) na pílula
+da frase do lançamento inteligente, aprovado pelo dono como a **segunda
+exceção nomeada** ao campo sem marca.
+
+**Como.** Reuso de fora de `ui/`, sem prop nova: o `SearchInput` da frase
+recebe `command-beam` no `className` enquanto não há placa, e
+`data-waiting` pelo `rootProps`, como a paleta faz. Diferente da paleta, ele
+corre com o campo vazio **e** digitando: aqui ninguém precisa da primeira
+tecla, a frase espera o Enter. Sai junto com o gesto do campo para a placa
+(a classe some com `placa`), e não volta enquanto a revisão está aberta.
+
+**Lendo, corre mais rápido.** A utility não tem variável de duração (3,1s no
+trajeto e nas pontas, 4s no respiro). Com a IA lendo a frase ou o recibo
+(`lendoIA`), a pílula ganha `data-lendo`, e
+`data-lendo:[animation-duration:0s,1.2s,1.2s,1.6s]` encurta a lista na mesma
+ordem da utility (entrada, trajeto, pontas, respiro). O seletor de atributo
+vence a especificidade da `.command-beam`. Trocar a duração no meio do laço
+salta o feixe uma vez para a posição proporcional; aceito. Com movimento
+reduzido, o `!important` global vence e o feixe não aparece, como na paleta.
+
+**Trava.** `brand-contour.test.ts` (7b) lista os três arquivos que podem
+escrever `command-beam`: o `command.tsx`, a página dele no catálogo e o
+`lancamento-inteligente.tsx`. O teste da tela confere a classe, o
+`data-waiting`, o `data-lendo` e que nenhuma outra peça de marca entra nela.

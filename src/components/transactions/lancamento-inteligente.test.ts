@@ -24,7 +24,7 @@ describe("a tela do lançamento inteligente (v2)", () => {
     })
 
     it("um vidro só: a frase não pinta o dela, e com a placa ela é o cabeçalho", () => {
-        expect(fonte).toMatch(/<SearchInput\s+surface="field"\s+focusRing=\{false\}\s+className="border-0 bg-transparent"/)
+        expect(fonte).toMatch(/<SearchInput\s+surface="field"\s+focusRing=\{false\}\s+className=\{cn\(\s+"border-0 bg-transparent"/)
         expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]*data-slot="lancamento-cabeca"[\s\S]*<SearchInput[\s\S]*<Revisao/)
         expect(fonte).toMatch(/size="icon-md"\s+aria-label="Adicionar recibo"/)
     })
@@ -34,6 +34,17 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toContain("<DialogPrimitive.Content")
         expect(fonte).not.toContain("<DialogContent")
         expect(fonte).not.toMatch(/data-slot="lancamento-inteligente"[\s\S]{0,400}modalSurfaceClassName/)
+    })
+
+    it("a pílula da frase veste o feixe da paleta, mais rápido lendo, e o perde com a placa", () => {
+        // A segunda exceção nomeada ao campo sem marca (a primeira é o `CommandDialog`).
+        expect(fonte).toContain('!placa && "command-beam"')
+        expect(fonte).toContain('"data-waiting": !placa || undefined')
+        // Lendo (a frase ou o recibo), as durações da utility encurtam.
+        expect(fonte).toContain('"data-lendo": lendoIA || undefined')
+        expect(fonte).toContain('"data-lendo:[animation-duration:0s,1.2s,1.2s,1.6s]"')
+        // Uma peça de marca por tela: nada mais aqui veste marca.
+        expect(fonte).not.toMatch(/variant="brand|brandColorful|brandOutline|brand-glow|brand-rainbow/)
     })
 
     it("o Enter no campo lê a frase, não salva; o de um acento (IME) não lê", () => {

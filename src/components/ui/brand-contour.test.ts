@@ -1,6 +1,6 @@
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
+import { arquivosTsx, blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { cn } from "@/lib/utils"
@@ -106,6 +106,20 @@ describe("contorno de marca", () => {
     ]) {
       expect(fonte(nome), nome).not.toMatch(/--brand-|brand-rainbow/)
     }
+  })
+
+  it("7b. o feixe da paleta mora em duas pílulas nomeadas, e só nelas", () => {
+    // As exceções ao campo sem marca: a pílula do `CommandDialog` e a da frase do
+    // lançamento inteligente (fora daqui, o catálogo só documenta a primeira).
+    const donos = [
+      ...arquivosTsx("src/components"),
+      ...arquivosTsx("src/app"),
+    ].filter((f) => semComentarios(lerFonte(f)).includes("command-beam"))
+    expect(donos.sort()).toEqual([
+      join("src/app/designsystem/docs/command.tsx"),
+      join("src/components/transactions/lancamento-inteligente.tsx"),
+      join("src/components/ui/command.tsx"),
+    ])
   })
 
   it("8. a família do preenchimento — `Progress` e `Slider` — declara a variável", () => {
