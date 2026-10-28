@@ -59,6 +59,7 @@ describe("interpretarFrase", () => {
         ["ganhei 200 aposta", HOJE, { tipo: "income", valor: 200, descricao: "Aposta", motivoDoTipo: "ganhei" }],
         ["vendi bicicleta 900", HOJE, { tipo: "income", valor: 900, descricao: "Bicicleta" }],
         ["reembolso 45 uber", HOJE, { tipo: "income", valor: 45, descricao: "Uber" }],
+        ["reembolso 45 no pix", HOJE, { tipo: "income", valor: 45, descricao: "Reembolso", forma: "pix" }],
         ["pix do joão 150", HOJE, { tipo: "income", valor: 150, descricao: "João", forma: "pix" }],
         ["pix da maria 20", HOJE, { tipo: "income", descricao: "Maria" }],
         ["42 mercado pix", HOJE, { tipo: "expense", forma: "pix", motivoDoTipo: null }],

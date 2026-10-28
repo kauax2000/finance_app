@@ -428,13 +428,13 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     lerNumero(t.chave) != null || /^\d+x$/.test(t.chave) || t.chave === 'mil' || (NUMEROS.has(t.chave) && t.chave !== 'um' && t.chave !== 'uma')
   if (valor == null || toks.some((t) => !t.usado && outroNumero(t))) duvida('valor')
 
-  // O substantivo de receita só fica na descrição quando é a única palavra.
-  if (sobra().some((i) => !substantivos.includes(i))) for (const i of substantivos) toks[i].usado = true
-
   // O conectivo colado antes do que foi consumido sai junto ("no débito", "em 3x").
   for (let i = toks.length - 2; i >= 0; i--) {
     if (!toks[i].usado && CONECTIVOS.has(k(i)) && toks[i + 1].usado) toks[i].usado = true
   }
+
+  // O substantivo de receita só fica na descrição quando é a única palavra (conectivos soltos já saíram acima).
+  if (sobra().some((i) => !substantivos.includes(i))) for (const i of substantivos) toks[i].usado = true
 
   // O cartão: a palavra logo depois de "cartão"/"crédito"; senão, numa despesa
   // (ou estorno) sem pix/débito/dinheiro, a última palavra que sobrou quando sobram duas ou mais.
