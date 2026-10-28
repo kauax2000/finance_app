@@ -3,6 +3,7 @@
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-appearance-settings"
 import { PwaSettingsSection } from "@/components/pwa/pwa-settings-section"
+import { LancamentoSettings } from "@/components/settings/lancamento-settings"
 import { ThemeSettings } from "@/components/settings/theme-settings"
 import { LembreteConferirWireframe } from "@/components/wireframe/a-conferir-lembrete-wireframe"
 import { InsightsAvisoWireframe } from "@/components/wireframe/insights-wireframe"
@@ -17,6 +18,7 @@ export default function SettingsPage() {
             <DatasDaCarteiraProjetoWireframe />
             <ModoEPesosDaCarteiraWireframe />
             <ThemeSettings />
+            <LancamentoSettings />
             <PwaSettingsSection />
             <NotificationPreferences />
             <LembreteConferirWireframe />
