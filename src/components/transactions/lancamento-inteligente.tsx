@@ -970,11 +970,11 @@ function Revisao({
         }
     }
 
-    /** A linha muda abaixo do valor: as parcelas na parcelada, a descrição e a forma nos outros. */
+    /** A linha abaixo do valor só existe na parcelada; nos outros tipos as linhas da lista já dizem o resto. */
     const legenda =
         tipo === "parcelada" && campos.valor != null && campos.parcelas
             ? `${campos.parcelas}× de ${currencyBRL(campos.valor / campos.parcelas)}${cartao ? ` no ${cartao}` : ""}`
-            : [campos.descricao, rotuloDaForma(campos)].filter(Boolean).join(" · ")
+            : null
 
     // Uma linha cujo valor mudou sem a pessoa (uma leitura nova) pisca do
     // desfoque no lugar. A que estava em edição não conta (quem a mudou foi a
@@ -1266,7 +1266,7 @@ function Revisao({
                                     id="lancamento-valor"
                                     disabled={saving}
                                     onClick={() => abrir("valor")}
-                                    className={cn("rounded-row text-start", FOCO)}
+                                    className={cn("min-h-11 w-full rounded-row text-start", FOCO)}
                                 >
                                     {campos.valor != null ? (
                                         <MoneyDisplay
@@ -1319,23 +1319,20 @@ function Revisao({
                                             disabled={saving}
                                             onClick={() => abrir(x.campo)}
                                         >
-                                            {x.campo === "categoria" && categoria ? (
-                                                <ItemMedia>
-                                                    <ColorTile size="xs" color={categoria.color} />
-                                                </ItemMedia>
-                                            ) : (
-                                                <ItemMedia variant="tile" tone={x.tom} tint="vivid">
-                                                    {x.icone}
-                                                </ItemMedia>
-                                            )}
+                                            <ItemMedia variant="tile" tone={x.tom} tint="vivid">
+                                                {x.icone}
+                                            </ItemMedia>
                                             <ItemContent>
-                                                <ItemTitle>{rotulo}</ItemTitle>
+                                                <ItemTitle className="shrink-0">{rotulo}</ItemTitle>
                                             </ItemContent>
-                                            <ItemActions>
+                                            <ItemActions className="min-w-0 max-w-3/5">
                                                 {selo(x.campo, valor)}
+                                                {x.campo === "categoria" && categoria ? (
+                                                    <ColorTile size="xs" color={categoria.color} />
+                                                ) : null}
                                                 <span
                                                     className={cn(
-                                                        "text-sm",
+                                                        "min-w-0 truncate text-sm",
                                                         valor
                                                             ? "nums text-muted-foreground"
                                                             : "text-warning-muted-foreground"

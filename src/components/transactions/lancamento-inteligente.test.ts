@@ -174,4 +174,11 @@ describe("a leitura do lançamento inteligente", () => {
         expect(hook).toMatch(/if \(!ativo\) return\s+let vivo = true/)
         expect(hook).toContain("}, [ativo, queryClient, currentWorkspaceId])")
     })
+    it("as linhas têm o mesmo ladrilho, e o valor trunca", () => {
+        expect(fonte).not.toMatch(/<ItemMedia>\s*<ColorTile/)
+        expect(fonte).toMatch(/<ItemActions[\s\S]{0,400}<ColorTile size="xs"/)
+        expect(fonte).toMatch(/min-w-0 truncate[\s\S]{0,600}valor \?\? "Escolher"/)
+        expect(fonte).toMatch(/tipo === "parcelada"[\s\S]{0,200}`\$\{campos\.parcelas\}× de/)
+        expect(fonte).not.toContain('.filter(Boolean).join(" · ")')
+    })
 })
