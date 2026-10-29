@@ -128,7 +128,7 @@ describe("os campos do formulário", () => {
     })
 
     it("o cartão: a bandeira no campo e na linha, a fatura por linha e a pré-escolha ao tocar em Crédito", () => {
-        expect(CAMPOS.match(/<CreditCardBrandChip /g)?.length).toBe(2)
+        expect(CAMPOS.match(/<CreditCardBrandChip /g)?.length).toBe(3)
         expect(CAMPOS).toMatch(/creditCardInvoiceHintForPurchase\(purchaseIso, c\)/)
         expect(CAMPOS).toMatch(/if \(forma === "credit_card"\) preEscolherCartao\(\)/)
         // Um cartão só vem escolhido; com mais de um, o último gravado na carteira.
