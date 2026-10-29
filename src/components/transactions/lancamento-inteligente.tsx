@@ -689,7 +689,9 @@ export function LancamentoInteligente({
                             data-slot="lancamento-area"
                             style={{ pointerEvents: "none" }}
                             className={cn(
-                                "fixed inset-x-4 flex flex-col justify-end",
+                                // No telefone o painel termina no centro da tela (com o teclado já
+                                // descido, a área é a tela inteira): o gesto lê a caixa final daqui.
+                                "fixed inset-x-4 flex flex-col justify-center",
                                 "top-[calc(var(--lancamento-placa-vy,0px)+max(--spacing(4),env(safe-area-inset-top)))]",
                                 "h-[calc(var(--lancamento-placa-vh,100dvh)-max(--spacing(4),env(safe-area-inset-top))-env(safe-area-inset-bottom,0px)-(--spacing(3)))]",
                                 "md:inset-x-0 md:top-24 md:mx-auto md:h-[calc(100dvh-(--spacing(48)))] md:max-w-md md:justify-start"
