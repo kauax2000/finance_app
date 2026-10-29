@@ -34,8 +34,8 @@ function DeltaBadge({
     if (prev === 0) {
         return (
             <Badge
-                variant="outline" tone="neutral"
-                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
+                variant="outline" tone="neutral" size="xs"
+                className="shrink-0 tabular-nums whitespace-nowrap"
                 title="Sem valor no período anterior para comparar"
             >
                 Sem base
@@ -52,8 +52,8 @@ function DeltaBadge({
     if (isFlat) {
         return (
             <Badge
-                variant="outline" tone="neutral"
-                className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
+                variant="outline" tone="neutral" size="xs"
+                className="shrink-0 tabular-nums whitespace-nowrap"
                 aria-label="Sem variação percentual vs. mesmo período do mês anterior"
             >
                 <MinusIcon
@@ -70,8 +70,8 @@ function DeltaBadge({
 
     return (
         <Badge
-            tone={tone}
-            className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
+            tone={tone} size="xs"
+            className="shrink-0 tabular-nums whitespace-nowrap"
             aria-label={`${display} vs. mesmo período do mês anterior`}
         >
             <Icon
@@ -98,8 +98,11 @@ function KpiCard({
 }) {
     return (
         <Card padding="none">
+            {/* O rótulo tem a linha inteira (com o selo ao lado ele era
+                cortado em "DESPE…"), e a linha mede o mesmo em todo cartão:
+                os valores alinham. */}
             <CardToolbar>
-                <div className="flex min-w-0 flex-1 items-center gap-2">
+                <div className="flex min-h-5 min-w-0 flex-1 items-center gap-2">
                     <Icon
                         className={cn(
                             "hidden size-3.5 shrink-0 md:block",
@@ -111,12 +114,12 @@ function KpiCard({
                         {label}
                     </p>
                 </div>
-                {badge ? (
-                    <div className="flex min-w-0 shrink-0 justify-end">{badge}</div>
-                ) : null}
             </CardToolbar>
-            <CardContent className="pt-4 pb-4 md:pt-5 md:pb-5">
+            {/* O painel (`padding="none"`) zera o recuo do corpo; o valor
+                alinha com a tira de cima. */}
+            <CardContent className="px-(--card-strip-px) pt-4 pb-4 md:pt-5 md:pb-5">
                 <div className="leading-tight">{value}</div>
+                {badge ? <div className="mt-2 flex">{badge}</div> : null}
             </CardContent>
         </Card>
     )
