@@ -151,7 +151,7 @@ const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
 
 const SEM_CATEGORIA = "__sem__"
 
-/** As escolhas: o seletor monta aberto, e escolher (ou fechá-lo) volta à linha, sem "ok". */
+/** As escolhas: categoria, forma e parcelas montam o seletor aberto e escolher (ou fechá-lo) volta à linha, sem "ok"; a Data fica com o campo e o "ok". */
 const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]
 
 /** A escolha cujo seletor abre direto. O `DatePicker` não expõe `open`/`onOpenChange`: a Data fica com o campo e o "ok". */
@@ -1253,11 +1253,19 @@ function Revisao({
                     <div data-revela className="flex flex-col gap-1.5 pe-10">
                         <Tabs
                             value={tipo}
-                            onValueChange={(v) =>
+                            onValueChange={(v) => {
+                                // O toque é da pessoa, à vista: não conta como leitura nova, sem piscar o trilho.
+                                delete valoresAntes.current.tipo
                                 leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))
-                            }
+                            }}
                         >
-                            <TabsList id="lancamento-tipo" aria-label="Tipo do lançamento" stretch>
+                            {/* Com 4 abas em ~290px, `lg` (14px) deixa "Parcelada" rente à pílula: `md` encolhe o texto. */}
+                            <TabsList
+                                id="lancamento-tipo"
+                                aria-label="Tipo do lançamento"
+                                stretch
+                                size={tipo === "estorno" ? "md" : undefined}
+                            >
                                 {tipos
                                     .filter((t) => t.tipo !== "estorno" || tipo === "estorno")
                                     .map((t) => (

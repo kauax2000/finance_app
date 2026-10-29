@@ -72,6 +72,9 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toMatch(/case "tipo":\s*return \(\s*<Select/)
         expect(fonte).toMatch(/<Caption[\s\S]{0,200}por causa de/)
         expect(fonte).toMatch(/t\.tipo !== "estorno" \|\| tipo === "estorno"/)
+        // o toque no trilho é da pessoa: esquece o valor anterior antes de editar, para não piscar
+        expect(fonte.indexOf("delete valoresAntes.current.tipo")).toBeGreaterThan(0)
+        expect(fonte.indexOf("delete valoresAntes.current.tipo")).toBeLessThan(fonte.indexOf('leitura.editar("tipo"'))
     })
 
     it("o painel em lista agrupada: o tipo no trilho, o valor em destaque e as linhas", () => {
