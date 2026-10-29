@@ -263,7 +263,6 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                             listen={false}
                             slash={false}
                             collapse="lg"
-                            glow
                             plate
                             placeholder="Buscar telas e ações…"
                         />

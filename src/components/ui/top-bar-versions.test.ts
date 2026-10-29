@@ -87,7 +87,8 @@ describe("as peças", () => {
     // A busca é a do catálogo, centrada: uma vez só, ícone abaixo de lg, com brilho.
     expect([...app.matchAll(/<TopBarSearch/g)]).toHaveLength(1)
     expect(app).toContain('collapse="lg"')
-    expect(app).toMatch(/<TopBarSearch[\s\S]*?\bglow\b[\s\S]*?\/>/)
+    // O app tirou o brilho da marca da busca (pedido do dono); a opção `glow` continua na peça e no catálogo.
+    expect(app).not.toMatch(/<TopBarSearch[^>]*\bglow\b/)
     expect(app).toContain('placeholder="Buscar telas e ações…"')
     expect(app).toContain("lg:w-full lg:max-w-xs xl:max-w-sm lg:justify-center")
     expect(app).toContain("lg:flex-1 lg:basis-0 lg:justify-end")
