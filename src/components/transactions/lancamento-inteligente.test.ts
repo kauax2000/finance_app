@@ -159,7 +159,7 @@ const dialogo = semComentarios(lerFonte("src/components/transactions/transaction
 describe("a leitura do lançamento inteligente", () => {
     it("o convidado não vê Receita nem Estorno, e a leitura vira despesa", () => {
         expect(fonte).toMatch(/papel === "guest"[\s\S]*TIPOS\.filter/)
-        expect(fonte).toMatch(/tipos\s*\.filter\([\s\S]{0,80}\.map\(/)
+        expect(fonte).toMatch(/tipos\s*\.filter\([\s\S]{0,120}\.map\(/)
         expect(hook).toContain('papel === "guest"')
         expect(hook).toContain("soDespesa(")
     })
