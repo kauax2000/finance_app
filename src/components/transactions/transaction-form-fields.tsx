@@ -828,7 +828,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         checked={estornoCartaoId != null}
                         disabled={semCartaoParaEstorno}
                         onCheckedChange={(ligado) =>
-                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) ?? activeCards[0]?.id ?? null) : null)
+                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) || activeCards[0]?.id || null) : null)
                         }
                     />
                     {estornoCartaoId != null ? (
@@ -851,9 +851,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                                 </span>
                                             </span>
                                         </span>
-                                    ) : (
+                                    ) : creditCards.length > 0 ? (
                                         <span className="min-w-0 truncate">Cartão inativo</span>
-                                    )}
+                                    ) : null}
                                 </FormPickerPopoverTrigger>
                                 <FormPickerPopoverContent>
                                     <FormPickerPopoverList>
