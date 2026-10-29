@@ -1322,8 +1322,8 @@ function Revisao({
                                             <ItemMedia variant="tile" tone={x.tom} tint="vivid">
                                                 {x.icone}
                                             </ItemMedia>
-                                            <ItemContent>
-                                                <ItemTitle className="shrink-0">{rotulo}</ItemTitle>
+                                            <ItemContent className="min-w-fit">
+                                                <ItemTitle>{rotulo}</ItemTitle>
                                             </ItemContent>
                                             <ItemActions className="min-w-0 max-w-3/5">
                                                 {selo(x.campo, valor)}
