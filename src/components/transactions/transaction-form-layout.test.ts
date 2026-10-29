@@ -54,7 +54,7 @@ describe("os campos do formulário", () => {
         const data = pos("{dataField}")
         const forma = pos('label="Forma de pagamento"')
         pos('id="tx-credit-card"')
-        const cartao = CAMPOS.lastIndexOf('id="tx-credit-card"') // o primeiro é o do estorno, antes da categoria
+        const cartao = CAMPOS.lastIndexOf('id="tx-credit-card"') // o do estorno vem antes (receita), o da despesa por último
         expect([valor, categoria, descricao, detalhes, data, forma, cartao]).toEqual(
             [valor, categoria, descricao, detalhes, data, forma, cartao].slice().sort((a, b) => a - b)
         )
@@ -158,14 +158,14 @@ describe("o estorno no cartão do formulário", () => {
 
     it("é um interruptor do design system, não o quadro tracejado", () => {
         expect(campos).not.toContain("EstornoWireframe")
-        expect(campos).toMatch(/<FormSwitch[\s\S]*?label="Estorno de compra no cartão"/)
+        expect(campos).toMatch(/<FormSwitch[\s\S]*?label="É estorno de compra no cartão\?"/)
     })
 
-    it("vem antes da categoria, que muda de lista com ele", () => {
-        const estorno = campos.indexOf('label="Estorno de compra no cartão"')
-        const categoria = campos.indexOf('htmlFor="tx-category"')
+    it("mora nos Detalhes, depois da data, e a categoria muda de lista com ele", () => {
+        const estorno = campos.indexOf('label="É estorno de compra no cartão?"')
+        const data = campos.indexOf("{dataField}")
         expect(estorno).toBeGreaterThan(-1)
-        expect(estorno).toBeLessThan(categoria)
+        expect(estorno).toBeGreaterThan(data)
         expect(campos).toContain('"Categoria da compra"')
         expect(campos).not.toContain("Abate a fatura do ciclo")
     })

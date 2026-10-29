@@ -715,63 +715,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             )}
 
-            {type === "income" && !showInstallmentFields ? (
-                <>
-                    <FormSwitch
-                        label="Estorno de compra no cartão"
-                        description={
-                            semCartaoParaEstorno
-                                ? "Cadastre um cartão para registrar um estorno."
-                                : "Abate a fatura e devolve ao orçamento da categoria."
-                        }
-                        checked={estornoCartaoId != null}
-                        disabled={semCartaoParaEstorno}
-                        onCheckedChange={(ligado) =>
-                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) || activeCards[0]?.id || null) : null)
-                        }
-                    />
-                    {estornoCartaoId != null ? (
-                        <Field size="sm">
-                            <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
-                            <Popover
-                                modal={isMobile}
-                                open={creditCardPopoverOpen}
-                                onOpenChange={handleCreditCardPopoverOpenChange}
-                            >
-                                <FormPickerPopoverTrigger id="tx-credit-card">
-                                    {estornoCard ? (
-                                        <span className="flex min-w-0 items-center gap-2">
-                                            <CreditCardBrandChip brand={estornoCard.brand} />
-                                            <span className="min-w-0 truncate">
-                                                {estornoCard.name}
-                                                <span className="nums text-muted-foreground">
-                                                    {" "}
-                                                    •••• {estornoCard.last_four}
-                                                </span>
-                                            </span>
-                                        </span>
-                                    ) : creditCards.length > 0 ? (
-                                        <span className="min-w-0 truncate">Cartão inativo</span>
-                                    ) : null}
-                                </FormPickerPopoverTrigger>
-                                <FormPickerPopoverContent>
-                                    <FormPickerPopoverList>
-                                        <CreditCardRows
-                                            cards={creditCards}
-                                            value={estornoCartaoId}
-                                            onPick={pickEstornoCard}
-                                            purchaseIso={dateYmd.trim() ? calendarYmdToStorageIso(dateYmd) : null}
-                                            embedInScrollContainer
-                                        />
-                                    </FormPickerPopoverList>
-                                </FormPickerPopoverContent>
-                            </Popover>
-                        </Field>
-                    ) : null}
-                </>
-            ) : null}
-
-
             <Field size="sm">
                 <FieldLabel htmlFor="tx-category">{type === "income" && estornoCartaoId ? "Categoria da compra" : "Categoria"}</FieldLabel>
                 <Popover
@@ -844,6 +787,62 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             <Separator>Detalhes</Separator>
 
             {dataField}
+
+            {type === "income" && !showInstallmentFields ? (
+                <>
+                    <FormSwitch
+                        label="É estorno de compra no cartão?"
+                        description={
+                            semCartaoParaEstorno
+                                ? "Cadastre um cartão para registrar um estorno."
+                                : undefined
+                        }
+                        checked={estornoCartaoId != null}
+                        disabled={semCartaoParaEstorno}
+                        onCheckedChange={(ligado) =>
+                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) || activeCards[0]?.id || null) : null)
+                        }
+                    />
+                    {estornoCartaoId != null ? (
+                        <Field size="sm">
+                            <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
+                            <Popover
+                                modal={isMobile}
+                                open={creditCardPopoverOpen}
+                                onOpenChange={handleCreditCardPopoverOpenChange}
+                            >
+                                <FormPickerPopoverTrigger id="tx-credit-card">
+                                    {estornoCard ? (
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <CreditCardBrandChip brand={estornoCard.brand} />
+                                            <span className="min-w-0 truncate">
+                                                {estornoCard.name}
+                                                <span className="nums text-muted-foreground">
+                                                    {" "}
+                                                    •••• {estornoCard.last_four}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    ) : creditCards.length > 0 ? (
+                                        <span className="min-w-0 truncate">Cartão inativo</span>
+                                    ) : null}
+                                </FormPickerPopoverTrigger>
+                                <FormPickerPopoverContent>
+                                    <FormPickerPopoverList>
+                                        <CreditCardRows
+                                            cards={creditCards}
+                                            value={estornoCartaoId}
+                                            onPick={pickEstornoCard}
+                                            purchaseIso={dateYmd.trim() ? calendarYmdToStorageIso(dateYmd) : null}
+                                            embedInScrollContainer
+                                        />
+                                    </FormPickerPopoverList>
+                                </FormPickerPopoverContent>
+                            </Popover>
+                        </Field>
+                    ) : null}
+                </>
+            ) : null}
 
             {mostraForma ? (
                 // Um toque escolhe e outro na escolhida desmarca (a forma é opcional).
