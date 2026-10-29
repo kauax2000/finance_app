@@ -99,8 +99,12 @@ export function TransactionFormDialog({
     const [ligado] = useLancamentoInteligente()
     const [usarFormulario, setUsarFormulario] = useState(false)
     if (!open && usarFormulario) setUsarFormulario(false)
+    // O lançamento inteligente é do telefone: no laptop e no desktop a criação
+    // é sempre o formulário, ligado ou não (pedido do dono, 28/10). O
+    // compartilhar do Android só chega no telefone.
     const usarPaleta =
         !editingTransaction &&
+        isMobile &&
         ((ligado && defaultLaunchKind === "expense") || Boolean(fraseInicial || fotoInicial)) &&
         !usarFormulario
 

@@ -17,7 +17,7 @@ export function LancamentoSettings() {
                 <CardContent className="px-4 py-3 sm:py-3.5">
                     <FormSwitch
                         label="Lançamento inteligente"
-                        description="Escreva ou fotografe e o app preenche tudo. Desligado, o + Adicionar abre o formulário."
+                        description="No celular, escreva ou fotografe e o app preenche tudo. Desligado, o + Adicionar abre o formulário. No computador é sempre o formulário."
                         checked={ligado}
                         onCheckedChange={definir}
                     />
