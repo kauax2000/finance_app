@@ -1024,7 +1024,9 @@ function FormPickerPopoverContent({
       }}
       padding="none"
       className={cn(
-        "flex min-h-0 w-(--radix-popover-trigger-width) max-w-88 flex-col overflow-hidden",
+        // A placa tem a largura do campo (era presa a 352, e num campo de 400 ficava mais
+        // estreita que ele); o teto de 480 segura o campo largo de uma página.
+        "flex min-h-0 w-(--radix-popover-trigger-width) max-w-120 flex-col overflow-hidden",
         // O teto de lista suspensa com a busca e o rodapé somados: 384px deixam a lista nos ~288 dos outros dropdowns.
         "max-h-[min(var(--radix-popover-content-available-height),--spacing(96))]",
         // A casca publica a altura das duas faixas, porque só ela as vê como
@@ -1098,6 +1100,10 @@ function FormPickerPopoverList({
           // Sem a busca em cima, a lista abre a placa: o topo recua 8, como as
           // laterais e o pé. Os 4 do `py-1` são o vão para a busca.
           "first:pt-[calc(var(--scroll-fade-band-h)+--spacing(2))]",
+          // Sem o rodapé embaixo, a lista fecha a placa: o pé recua os mesmos 8 (os 4 do
+          // `py-1` são o vão para o rodapé, e sem ele a linha ficava colada embaixo). Não é
+          // `last:`: as setas da dissolução vêm depois da lista.
+          "[&:not(:has(~[data-slot=form-picker-popover-footer]))]:pb-[calc(var(--scroll-fade-foot-h)+--spacing(2))]",
           className
         )}
         onWheel={(e) => {
