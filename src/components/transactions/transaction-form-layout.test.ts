@@ -151,3 +151,12 @@ describe("os campos do formulário", () => {
         expect(USO).toContain("setFormKind,")
     })
 })
+
+describe("o estorno no cartão do formulário", () => {
+    const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"))
+
+    it("é um interruptor do design system, não o quadro tracejado", () => {
+        expect(campos).not.toContain("EstornoWireframe")
+        expect(campos).toMatch(/<FormSwitch[\s\S]*?label="Estorno no cartão"/)
+    })
+})

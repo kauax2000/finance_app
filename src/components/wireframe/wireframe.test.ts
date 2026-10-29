@@ -69,9 +69,6 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
       /import\s*\{[^}]*\bAConferirWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/a-conferir-wireframe["']/,
     )
-    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toMatch(
-      /import\s*\{[^}]*\bEstornoWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/estorno-wireframe["']/,
-    )
   })
 
   it("importar: prepara uma vez no estado, importa e desfaz (Foco 3)", () => {

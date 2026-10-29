@@ -62,7 +62,7 @@ import {
 } from "@/components/transactions/transaction-type-segment"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
-import { FormInput, FormRadioGroup } from "@/components/ui/form"
+import { FormInput, FormRadioGroup, FormSwitch } from "@/components/ui/form"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     FormPickerPopoverContent,
@@ -77,7 +77,6 @@ import { Popover } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
-import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
@@ -513,6 +512,17 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         if (card) gravarUltimoCartao(card.workspace_id, id)
     }
 
+    // Um estorno gravado num cartão que saiu da lista continua escolhido; só o ligar fica sem saída.
+    const semCartaoParaEstorno = activeCards.length === 0 && estornoCartaoId == null
+    const estornoCard = creditCards.find((c) => c.id === estornoCartaoId && c.is_active)
+
+    const pickEstornoCard = (id: string) => {
+        setEstornoCartaoId(id)
+        setCreditCardPopoverOpen(false)
+        const card = activeCards.find((c) => c.id === id)
+        if (card) gravarUltimoCartao(card.workspace_id, id)
+    }
+
     /** Ao tocar em Crédito: um cartão só vem escolhido; com mais de um, o último usado na carteira. */
     const preEscolherCartao = () => {
         if (paymentCreditCardId) return
@@ -807,11 +817,63 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             ) : null}
 
             {type === "income" && !showInstallmentFields ? (
-                <EstornoWireframe
-                    cards={activeCards}
-                    value={estornoCartaoId}
-                    onChange={setEstornoCartaoId}
-                />
+                <>
+                    <FormSwitch
+                        label="Estorno no cartão"
+                        description={
+                            semCartaoParaEstorno
+                                ? "Cadastre um cartão para registrar um estorno."
+                                : "A compra voltou para o cartão: abate a fatura em vez de contar como receita."
+                        }
+                        checked={estornoCartaoId != null}
+                        disabled={semCartaoParaEstorno}
+                        onCheckedChange={(ligado) =>
+                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) ?? activeCards[0]?.id ?? null) : null)
+                        }
+                    />
+                    {estornoCartaoId != null ? (
+                        <Field size="sm">
+                            <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
+                            <Popover
+                                modal={isMobile}
+                                open={creditCardPopoverOpen}
+                                onOpenChange={handleCreditCardPopoverOpenChange}
+                            >
+                                <FormPickerPopoverTrigger id="tx-credit-card">
+                                    {estornoCard ? (
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <CreditCardBrandChip brand={estornoCard.brand} />
+                                            <span className="min-w-0 truncate">
+                                                {estornoCard.name}
+                                                <span className="nums text-muted-foreground">
+                                                    {" "}
+                                                    •••• {estornoCard.last_four}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    ) : (
+                                        <span className="min-w-0 truncate">Cartão inativo</span>
+                                    )}
+                                </FormPickerPopoverTrigger>
+                                <FormPickerPopoverContent>
+                                    <FormPickerPopoverList>
+                                        <CreditCardRows
+                                            cards={creditCards}
+                                            value={estornoCartaoId}
+                                            onPick={pickEstornoCard}
+                                            purchaseIso={dateYmd.trim() ? calendarYmdToStorageIso(dateYmd) : null}
+                                            embedInScrollContainer
+                                        />
+                                    </FormPickerPopoverList>
+                                </FormPickerPopoverContent>
+                            </Popover>
+                            <FieldDescription>
+                                Abate a fatura do ciclo em que cai. A categoria é a da compra: o estorno desconta o
+                                orçamento dela.
+                            </FieldDescription>
+                        </Field>
+                    ) : null}
+                </>
             ) : null}
 
             {mostraForma && paymentMethod === "credit_card" ? (
