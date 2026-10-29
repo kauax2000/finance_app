@@ -137,9 +137,10 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
     // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
     // `origem`: é a do telefone, de onde a busca nasce.
-    const lupa = (origem = false) => (
+    const lupa = (origem = false, className?: string) => (
         <TopBarAction
             ref={origem ? lupaRef : undefined}
+            className={className}
             type="button"
             label="Buscar"
             plate
@@ -257,7 +258,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // No telefone a lupa é o `TopBarAction` branco, na ponta
                     // direita: esta, cinza,
                     // fica para o tablet e o desktop. O `contents` não mexe no layout.
-                    <span className="contents max-md:hidden">
+                    // Abaixo do `lg` a pílula não cabe e vira a lupa colada ao sino (a
+                    // mesma do modo "Botão", abaixo), e não uma lupa solta ao lado dele.
+                    <span className="contents max-lg:hidden">
                         <TopBarSearch
                             onOpen={openSearch}
                             listen={false}
@@ -283,16 +286,13 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     </TopBarActionGroup>
                 }
             >
-                {/* Do `md` para cima, o sino; com a busca em "Botão", a lupa
-                    cola nele numa cápsula. */}
-                {busca === "botao" ? (
-                    <TopBarActionGroup>
-                        {lupa()}
-                        <NotificationBellButton />
-                    </TopBarActionGroup>
-                ) : (
+                {/* Do `md` para cima, o sino; a lupa cola nele numa cápsula com a
+                    busca em "Botão", e também em "Barra" abaixo do `lg`, onde a
+                    pílula não cabe. */}
+                <TopBarActionGroup>
+                    {lupa(false, busca === "barra" ? "lg:hidden" : undefined)}
                     <NotificationBellButton />
-                )}
+                </TopBarActionGroup>
             </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}

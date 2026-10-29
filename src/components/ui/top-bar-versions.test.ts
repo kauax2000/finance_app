@@ -317,7 +317,10 @@ describe("as ações numa cápsula", () => {
   it("o cabeçalho do app escolhe a busca pela preferência do aparelho", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toContain("useBuscaDoCabecalho()")
-    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup>\s*\{lupa\(\)\}\s*<NotificationBellButton \/>/)
+    // A lupa colada ao sino é uma só: a do modo "Botão" e a da "Barra" abaixo do `lg`
+    // (onde a pílula some), nunca uma lupa solta ao lado do sino.
+    expect(cabecalho).toMatch(/<TopBarActionGroup>\s*\{lupa\(false, busca === "barra" \? "lg:hidden" : undefined\)\}\s*<NotificationBellButton \/>/)
+    expect(cabecalho).toContain('className="contents max-lg:hidden"')
     expect(cabecalho).not.toContain("teste-ab")
   })
 

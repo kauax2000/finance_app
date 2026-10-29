@@ -1618,7 +1618,7 @@ declaração de `background-color` no trilho).
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
-  `TopBarSearch` (⌘K e `/`; no app, sem `glow` (o brilho da marca saiu da busca do app; a opção fica na peça) e com `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
+  `TopBarSearch` (⌘K e `/`; no app, sem `glow` (o brilho da marca saiu da busca do app; a opção fica na peça) e com `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`; abaixo do `lg` o app esconde a pílula e mostra a mesma lupa colada ao sino do modo "Botão", nunca uma lupa solta; centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
 - **`BottomBar`**: a forma do `Tabs floating`, no tom próprio (rodada 340): a
