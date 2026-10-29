@@ -14,7 +14,7 @@ import {
     XMarkIcon,
 } from "@heroicons/react/16/solid"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge, BadgeDot } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -56,6 +56,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption, Muted } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -168,14 +169,6 @@ function formaDoValor(v: string): Partial<CamposDaFrase> {
 function primeiraImagem(arquivos: FileList | null | undefined) {
     return Array.from(arquivos ?? []).find((f) => f.type.startsWith("image/"))
 }
-
-/** O tom do ponto da pílula do tipo. */
-const TOM_DO_TIPO = {
-    despesa: "expense",
-    receita: "income",
-    parcelada: "info",
-    estorno: "warning",
-} as const satisfies Record<TipoDoLancamento, ComponentProps<typeof Badge>["tone"]>
 
 /** A cor do traço que pinta a silhueta no voo: `--foreground` a `k`%, numa camada que o `clip-path` recorta junto. */
 const tintaDoVoo = (k: number) => {
@@ -1050,10 +1043,10 @@ function Revisao({
         return null
     }
 
-    /** O campo em edição, no lugar da linha (ou da pílula do tipo, ou do valor). */
+    /** O campo em edição, no lugar da linha (ou do valor). */
     function emEdicao(campo: CampoDoLancamento, rotulo: string) {
         return (
-            <Field key={campo} size="sm" data-revela={campo === "tipo" || campo === "valor" || undefined}>
+            <Field key={campo} size="sm" data-revela={campo === "valor" || undefined}>
                 <FieldLabel>{rotulo}</FieldLabel>
                 <div className="flex items-center gap-2">
                     <div ref={editorRef} className="min-w-0 flex-1">
@@ -1069,28 +1062,6 @@ function Revisao({
 
     function editor(campo: CampoDoLancamento): ReactNode {
         switch (campo) {
-            case "tipo":
-                return (
-                    <Select
-                        value={tipo}
-                        onValueChange={(v) =>
-                            leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))
-                        }
-                    >
-                        <FieldControl>
-                            <SelectTrigger className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                        </FieldControl>
-                        <SelectContent>
-                            {tipos.map((t) => (
-                                <SelectItem key={t.tipo} value={t.tipo}>
-                                    {t.rotulo}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                )
             case "valor":
                 return (
                     <FieldControl>
@@ -1254,32 +1225,35 @@ function Revisao({
                         return leitura.aprovar()
                     }}
                 >
-                    {/* O tipo numa pílula com o ponto; tocá-la edita o tipo. */}
-                    {editando === "tipo" ? (
-                        emEdicao("tipo", "Tipo")
-                    ) : (
-                        <div data-revela className="flex items-center gap-2 pe-10">
-                            <button
-                                type="button"
-                                id="lancamento-tipo"
-                                disabled={saving}
-                                onClick={() => abrir("tipo")}
-                                className={cn("rounded-full", FOCO)}
-                            >
-                                <Badge tone={TOM_DO_TIPO[tipo]}>
-                                    <BadgeDot />
-                                    {campos.motivoDoTipo
-                                        ? `${rotuloDoTipo} · por causa de “${campos.motivoDoTipo}”`
-                                        : rotuloDoTipo}
-                                </Badge>
-                            </button>
-                            {leuComIA ? (
-                                <Badge size="xs" tone="info">
-                                    IA
-                                </Badge>
-                            ) : null}
-                        </div>
-                    )}
+                    {/* O tipo é um trilho segmentado: trocar é um toque. Estorno só aparece quando a leitura o trouxe. */}
+                    <div data-revela className="flex flex-col gap-1.5 pe-10">
+                        <Tabs
+                            value={tipo}
+                            onValueChange={(v) =>
+                                leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))
+                            }
+                        >
+                            <TabsList id="lancamento-tipo" aria-label="Tipo do lançamento" stretch>
+                                {tipos
+                                    .filter((t) => t.tipo !== "estorno" || tipo === "estorno")
+                                    .map((t) => (
+                                        <TabsTrigger key={t.tipo} value={t.tipo} disabled={saving}>
+                                            {t.rotulo}
+                                        </TabsTrigger>
+                                    ))}
+                            </TabsList>
+                        </Tabs>
+                        {campos.motivoDoTipo || leuComIA ? (
+                            <Caption className="flex items-center gap-2">
+                                {campos.motivoDoTipo ? `por causa de “${campos.motivoDoTipo}”` : null}
+                                {leuComIA ? (
+                                    <Badge size="xs" tone="info">
+                                        IA
+                                    </Badge>
+                                ) : null}
+                            </Caption>
+                        ) : null}
+                    </div>
 
                     {/* O valor em destaque; tocá-lo edita o valor. */}
                     {editando === "valor" ? (

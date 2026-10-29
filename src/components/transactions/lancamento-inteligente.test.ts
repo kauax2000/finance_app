@@ -65,13 +65,21 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toContain('type="submit"')
     })
 
-    it("o painel em lista agrupada: o tipo na pílula, o valor em destaque e as linhas", () => {
+    it("o tipo é um trilho de abas, e o motivo é uma legenda", () => {
+        expect(fonte).toMatch(/<Tabs[\s\S]{0,200}value=\{tipo\}/)
+        expect(fonte).toMatch(/<TabsList[^>]*id="lancamento-tipo"/)
+        expect(fonte).not.toContain('emEdicao("tipo"')
+        expect(fonte).not.toMatch(/case "tipo":\s*return \(\s*<Select/)
+        expect(fonte).toMatch(/<Caption[\s\S]{0,200}por causa de/)
+        expect(fonte).toMatch(/t\.tipo !== "estorno" \|\| tipo === "estorno"/)
+    })
+
+    it("o painel em lista agrupada: o tipo no trilho, o valor em destaque e as linhas", () => {
         for (const campo of ["descricao", "categoria", "forma", "data", "parcelas"]) {
             expect(fonte).toContain(`campo: "${campo}"`)
         }
         expect(fonte).toContain('["tipo", "valor", ...CAMPOS.map((x) => x.campo)]')
         expect(fonte).toContain('x.campo !== "parcelas" || tipo === "parcelada"')
-        expect(fonte).toContain("<BadgeDot />")
         expect(fonte).toContain("<MoneyDisplay")
         expect(fonte).toMatch(/<ItemGroup[\s\S]{0,160}rounded-row-lg bg-foreground\/5/)
         expect(fonte).toContain('<ItemMedia variant="tile" tone={x.tom} tint="vivid">')
@@ -151,7 +159,7 @@ const dialogo = semComentarios(lerFonte("src/components/transactions/transaction
 describe("a leitura do lançamento inteligente", () => {
     it("o convidado não vê Receita nem Estorno, e a leitura vira despesa", () => {
         expect(fonte).toMatch(/papel === "guest"[\s\S]*TIPOS\.filter/)
-        expect(fonte).toContain("tipos.map(")
+        expect(fonte).toMatch(/tipos\s*\.filter\([\s\S]{0,80}\.map\(/)
         expect(hook).toContain('papel === "guest"')
         expect(hook).toContain("soDespesa(")
     })
