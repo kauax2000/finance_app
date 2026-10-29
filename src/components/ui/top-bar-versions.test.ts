@@ -319,7 +319,7 @@ describe("as ações numa cápsula", () => {
     expect(cabecalho).toContain("useBuscaDoCabecalho()")
     // A lupa colada ao sino é uma só: a do modo "Botão" e a da "Barra" abaixo do `lg`
     // (onde a pílula some), nunca uma lupa solta ao lado do sino.
-    expect(cabecalho).toMatch(/<TopBarActionGroup>\s*\{lupa\(false, busca === "barra" \? "lg:hidden" : undefined\)\}\s*<NotificationBellButton \/>/)
+    expect(cabecalho).toMatch(/busca === "botao" \|\| !pilulaCabe \? \(\s*<TopBarActionGroup>\s*\{lupa\(\)\}\s*<NotificationBellButton \/>/)
     expect(cabecalho).toContain('className="contents max-lg:hidden"')
     expect(cabecalho).not.toContain("teste-ab")
   })

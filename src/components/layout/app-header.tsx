@@ -99,6 +99,13 @@ type AppHeaderProps = {
  * (`TopBarActionSwap`), que afunda e volta enquanto o ícone troca, e o filtro
  * pinga da lupa e volta a ela (`TopBarActionGroup morph`). Montar não anima.
  */
+const LG = "(min-width: 64rem)"
+function assinarLg(avisar: () => void) {
+    const mq = window.matchMedia(LG)
+    mq.addEventListener("change", avisar)
+    return () => mq.removeEventListener("change", avisar)
+}
+
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
     const filtro = filtroDoCabecalho(mobileHeaderFilterFor(pathname), usePageChromeFilterFor(pathname))
@@ -112,6 +119,13 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     // Do `lg` para cima a busca é a pílula no centro ou a lupa colada ao sino,
     // pela escolha em Configurações › Aparência (neste aparelho).
     const [busca] = useBuscaDoCabecalho()
+    // A pílula cabe do `lg` para cima. Abaixo, a lupa cola no sino (a do modo
+    // "Botão"); a lupa escondida por CSS dentro do grupo achatava o canto do sino.
+    const pilulaCabe = React.useSyncExternalStore(
+        assinarLg,
+        () => window.matchMedia(LG).matches,
+        () => true
+    )
     // A lupa do telefone é a origem da busca: a pílula nasce dela e volta a ela.
     // O ref de objeto basta: a lupa nunca troca (é o primeiro filho fixo da
     // cápsula), então nunca há duas montadas com o mesmo ref.
@@ -137,10 +151,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
     // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
     // `origem`: é a do telefone, de onde a busca nasce.
-    const lupa = (origem = false, className?: string) => (
+    const lupa = (origem = false) => (
         <TopBarAction
             ref={origem ? lupaRef : undefined}
-            className={className}
             type="button"
             label="Buscar"
             plate
@@ -289,10 +302,14 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 {/* Do `md` para cima, o sino; a lupa cola nele numa cápsula com a
                     busca em "Botão", e também em "Barra" abaixo do `lg`, onde a
                     pílula não cabe. */}
-                <TopBarActionGroup>
-                    {lupa(false, busca === "barra" ? "lg:hidden" : undefined)}
+                {busca === "botao" || !pilulaCabe ? (
+                    <TopBarActionGroup>
+                        {lupa()}
+                        <NotificationBellButton />
+                    </TopBarActionGroup>
+                ) : (
                     <NotificationBellButton />
-                </TopBarActionGroup>
+                )}
             </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}
