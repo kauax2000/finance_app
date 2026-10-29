@@ -740,13 +740,13 @@ export function LancamentoInteligente({
                             aria-hidden
                             className={cn("pointer-events-none absolute hidden", searchFieldSurfaceClassName.modal)}
                         />
+                        {/* Sem o contorno de foco: a pílula já é o único campo da tela, e o
+                            feixe diz que ela está ativa (pedido do dono, 29/10). */}
                         <div
                             ref={vidroRef}
                             data-slot="lancamento-vidro"
                             className={cn(
                                 "flex min-w-0 flex-1 items-center overflow-hidden rounded-full",
-                                // Sem o contorno de foco: a pílula já é o único campo da tela, e o
-                                // feixe diz que ela está ativa (pedido do dono, 29/10).
                                 searchFieldSurfaceClassName.modal,
                                 !telefone && PILULA_ENTRA,
                                 !recolhida && PILULA_SAI
