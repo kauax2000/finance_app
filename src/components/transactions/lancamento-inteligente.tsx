@@ -788,9 +788,9 @@ export function LancamentoInteligente({
                                         // Enter lê a frase (não salva); o que fecha um acento (IME do Mac e do iOS) não lê.
                                         if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                                             e.preventDefault()
+                                            // O teclado fica enquanto lê: quem o desce é o gesto, com a
+                                            // linha já presa (descer antes a levava junto).
                                             leitura.interpretar()
-                                            // No telefone o teclado desce: o painel cresce no lugar dele.
-                                            if (telefone) e.currentTarget.blur()
                                         }
                                     }}
                                 />
