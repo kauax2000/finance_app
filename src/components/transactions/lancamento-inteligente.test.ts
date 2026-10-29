@@ -181,4 +181,10 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).toMatch(/tipo === "parcelada"[\s\S]{0,200}`\$\{campos\.parcelas\}× de/)
         expect(fonte).not.toContain('.filter(Boolean).join(" · ")')
     })
+    it("categoria, forma, data e parcelas abrem o seletor direto", () => {
+        expect(fonte).toContain('const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]')
+        expect(fonte).toMatch(/<Combobox[\s\S]{0,80}defaultOpen/)
+        expect(fonte.match(/<Select[\s\S]{0,60}defaultOpen/g)?.length).toBe(2)
+        expect(fonte).toMatch(/onOpenChange=\{\(aberto\) => \{?\s*if \(!aberto\) fechar\(\)/)
+    })
 })

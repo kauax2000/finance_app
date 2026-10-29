@@ -151,6 +151,14 @@ const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
 
 const SEM_CATEGORIA = "__sem__"
 
+/** As escolhas: o seletor monta aberto, e escolher (ou fechá-lo) volta à linha, sem "ok". */
+const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]
+
+/** A escolha cujo seletor abre direto. O `DatePicker` não expõe `open`/`onOpenChange`: a Data fica com o campo e o "ok". */
+function abreDireto(campo: CampoDoLancamento) {
+    return ESCOLHAS.includes(campo) && campo !== "data"
+}
+
 /** O valor do `Select` da forma: o cartão leva o id junto. */
 function valorDaForma(c: CamposDaFrase): string {
     if (c.paymentMethod === "credit_card" && c.creditCardId) return `cartao:${c.creditCardId}`
@@ -909,7 +917,9 @@ function Revisao({
     // O editor que abre leva o foco ao controle dele (o `DatePicker` não tem `autoFocus`).
     const editorRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
-        if (editando) editorRef.current?.querySelector<HTMLElement>("input, button")?.focus()
+        // O seletor aberto já tem o foco: focar o gatilho o fecharia.
+        if (editando && !abreDireto(editando))
+            editorRef.current?.querySelector<HTMLElement>("input, button")?.focus()
     }, [editando])
     // A máscara do valor em edição: o `Input money` é controlado pela string digitada.
     const [valorDigitado, setValorDigitado] = useState("")
@@ -1052,9 +1062,11 @@ function Revisao({
                     <div ref={editorRef} className="min-w-0 flex-1">
                         {editor(campo)}
                     </div>
-                    <Button variant="secondary" onClick={fechar}>
-                        ok
-                    </Button>
+                    {abreDireto(campo) ? null : (
+                        <Button variant="secondary" onClick={fechar}>
+                            ok
+                        </Button>
+                    )}
                 </div>
             </Field>
         )
@@ -1091,6 +1103,10 @@ function Revisao({
             case "categoria":
                 return (
                     <Combobox
+                        defaultOpen
+                        onOpenChange={(aberto) => {
+                            if (!aberto) fechar()
+                        }}
                         value={campos.categoryId ?? SEM_CATEGORIA}
                         onValueChange={(v: string) =>
                             leitura.editar("categoria", {
@@ -1136,6 +1152,10 @@ function Revisao({
             case "forma":
                 return (
                     <Select
+                        defaultOpen
+                        onOpenChange={(aberto) => {
+                            if (!aberto) fechar()
+                        }}
                         value={valorDaForma(campos)}
                         onValueChange={(v) => leitura.editar("forma", formaDoValor(v))}
                     >
@@ -1182,6 +1202,10 @@ function Revisao({
             case "parcelas":
                 return (
                     <Select
+                        defaultOpen
+                        onOpenChange={(aberto) => {
+                            if (!aberto) fechar()
+                        }}
                         value={campos.parcelas != null ? String(campos.parcelas) : ""}
                         // Escolher parcelas faz da despesa uma parcelada.
                         onValueChange={(v) =>
