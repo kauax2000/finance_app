@@ -715,8 +715,65 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             )}
 
+            {type === "income" && !showInstallmentFields ? (
+                <>
+                    <FormSwitch
+                        label="Estorno de compra no cartão"
+                        description={
+                            semCartaoParaEstorno
+                                ? "Cadastre um cartão para registrar um estorno."
+                                : "Abate a fatura e devolve ao orçamento da categoria."
+                        }
+                        checked={estornoCartaoId != null}
+                        disabled={semCartaoParaEstorno}
+                        onCheckedChange={(ligado) =>
+                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) || activeCards[0]?.id || null) : null)
+                        }
+                    />
+                    {estornoCartaoId != null ? (
+                        <Field size="sm">
+                            <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
+                            <Popover
+                                modal={isMobile}
+                                open={creditCardPopoverOpen}
+                                onOpenChange={handleCreditCardPopoverOpenChange}
+                            >
+                                <FormPickerPopoverTrigger id="tx-credit-card">
+                                    {estornoCard ? (
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <CreditCardBrandChip brand={estornoCard.brand} />
+                                            <span className="min-w-0 truncate">
+                                                {estornoCard.name}
+                                                <span className="nums text-muted-foreground">
+                                                    {" "}
+                                                    •••• {estornoCard.last_four}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    ) : creditCards.length > 0 ? (
+                                        <span className="min-w-0 truncate">Cartão inativo</span>
+                                    ) : null}
+                                </FormPickerPopoverTrigger>
+                                <FormPickerPopoverContent>
+                                    <FormPickerPopoverList>
+                                        <CreditCardRows
+                                            cards={creditCards}
+                                            value={estornoCartaoId}
+                                            onPick={pickEstornoCard}
+                                            purchaseIso={dateYmd.trim() ? calendarYmdToStorageIso(dateYmd) : null}
+                                            embedInScrollContainer
+                                        />
+                                    </FormPickerPopoverList>
+                                </FormPickerPopoverContent>
+                            </Popover>
+                        </Field>
+                    ) : null}
+                </>
+            ) : null}
+
+
             <Field size="sm">
-                <FieldLabel htmlFor="tx-category">Categoria</FieldLabel>
+                <FieldLabel htmlFor="tx-category">{type === "income" && estornoCartaoId ? "Categoria da compra" : "Categoria"}</FieldLabel>
                 <Popover
                     modal={isMobile}
                     open={categoryPopoverOpen}
@@ -767,9 +824,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         </FormPickerPopoverFooter>
                     </FormPickerPopoverContent>
                 </Popover>
-                {type === "income" && estornoCartaoId ? (
-                    <FieldDescription>No estorno, a categoria é a da compra (de despesa).</FieldDescription>
-                ) : null}
                 {categoriaSaiu && !categoryId ? (
                     <FieldDescription>A categoria antiga era de receita e saiu; escolha a da compra.</FieldDescription>
                 ) : null}
@@ -814,66 +868,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     // como parte do formulário; a escolhida segue com a cor de seleção.
                     className="data-[variant=chip]:grid data-[variant=chip]:grid-cols-3 [&>[data-slot=radio-group-item]]:justify-center [&>[data-slot=radio-group-item]:not(:has([data-state=checked]))]:bg-input-fill/50"
                 />
-            ) : null}
-
-            {type === "income" && !showInstallmentFields ? (
-                <>
-                    <FormSwitch
-                        label="Estorno no cartão"
-                        description={
-                            semCartaoParaEstorno
-                                ? "Cadastre um cartão para registrar um estorno."
-                                : "A compra voltou para o cartão: abate a fatura em vez de contar como receita."
-                        }
-                        checked={estornoCartaoId != null}
-                        disabled={semCartaoParaEstorno}
-                        onCheckedChange={(ligado) =>
-                            setEstornoCartaoId(ligado ? (cartaoPreEscolhido(activeCards) || activeCards[0]?.id || null) : null)
-                        }
-                    />
-                    {estornoCartaoId != null ? (
-                        <Field size="sm">
-                            <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
-                            <Popover
-                                modal={isMobile}
-                                open={creditCardPopoverOpen}
-                                onOpenChange={handleCreditCardPopoverOpenChange}
-                            >
-                                <FormPickerPopoverTrigger id="tx-credit-card">
-                                    {estornoCard ? (
-                                        <span className="flex min-w-0 items-center gap-2">
-                                            <CreditCardBrandChip brand={estornoCard.brand} />
-                                            <span className="min-w-0 truncate">
-                                                {estornoCard.name}
-                                                <span className="nums text-muted-foreground">
-                                                    {" "}
-                                                    •••• {estornoCard.last_four}
-                                                </span>
-                                            </span>
-                                        </span>
-                                    ) : creditCards.length > 0 ? (
-                                        <span className="min-w-0 truncate">Cartão inativo</span>
-                                    ) : null}
-                                </FormPickerPopoverTrigger>
-                                <FormPickerPopoverContent>
-                                    <FormPickerPopoverList>
-                                        <CreditCardRows
-                                            cards={creditCards}
-                                            value={estornoCartaoId}
-                                            onPick={pickEstornoCard}
-                                            purchaseIso={dateYmd.trim() ? calendarYmdToStorageIso(dateYmd) : null}
-                                            embedInScrollContainer
-                                        />
-                                    </FormPickerPopoverList>
-                                </FormPickerPopoverContent>
-                            </Popover>
-                            <FieldDescription>
-                                Abate a fatura do ciclo em que cai. A categoria é a da compra: o estorno desconta o
-                                orçamento dela.
-                            </FieldDescription>
-                        </Field>
-                    ) : null}
-                </>
             ) : null}
 
             {mostraForma && paymentMethod === "credit_card" ? (
