@@ -293,7 +293,13 @@ export function LancamentoInteligente({
     useLayoutEffect(() => {
         const vv = window.visualViewport
         if (!casca || !telefone || !vv) return
+        // O iOS rola a página por baixo para mostrar o campo acima do teclado, e a
+        // camada fixa se desloca junto (no app instalado o campo sumia atrás do
+        // teclado, e ao fechar a página ficava rolada). Aberto, a rolagem fica onde
+        // estava; quem acompanha o teclado é a medida do viewport visual.
+        const rolagem = window.scrollY
         const medir = () => {
+            if (window.scrollY !== rolagem) window.scrollTo(0, rolagem)
             casca.style.setProperty("--lancamento-placa-vh", `${vv.height}px`)
             casca.style.setProperty("--lancamento-placa-vy", `${vv.offsetTop}px`)
             if (congelada.current) return
@@ -632,6 +638,13 @@ export function LancamentoInteligente({
                     // O vão entre o vidro e o resto é do véu: tocar nele fecha. Vai no
                     // `style` porque o Radix escreve `pointer-events: auto` inline.
                     style={{ pointerEvents: "none" }}
+                    // O foco vai ao campo sem rolar a página (o `autoFocus` deixava o iOS rolá-la).
+                    onOpenAutoFocus={(e) => {
+                        e.preventDefault()
+                        casca
+                            ?.querySelector<HTMLInputElement>("[data-slot=search-input-control]")
+                            ?.focus({ preventScroll: true })
+                    }}
                     className={cn(
                         "group/lancamento fixed inset-0 z-(--z-modal) mx-auto flex max-w-md flex-col gap-3 text-sm outline-none",
                         // Telefone: o viewport visual, com a linha embaixo (acima do teclado).
@@ -762,7 +775,6 @@ export function LancamentoInteligente({
                                     }
                                     type="text"
                                     enterKeyHint="go"
-                                    autoFocus
                                     aria-label="Frase do lançamento"
                                     placeholder="Ex.: 42 mercado nubank"
                                     value={texto}
