@@ -301,12 +301,11 @@ describe("a superfície de vidro", () => {
             expect(receita, `${nome}: borrão próprio`).not.toMatch(/\bbackdrop-blur/)
             expect(receita, `${nome}: sem guarda`).toContain(`reduced-transparency:bg-${token}`)
             expect(receita, `${nome}: token errado`).not.toMatch(new RegExp(`bg-${token === "popover" ? "background" : "popover"}`))
-            // O escuro abre mais, e só onde o borrão existe.
-            const base = Number(receita.match(new RegExp(`(?<!dark:)bg-${token}/(\\d+)`))?.[1])
-            const escuro = Number(receita.match(new RegExp(`supports-backdrop-filter:dark:bg-${token}/(\\d+)`))?.[1])
-            expect(base, `${nome}: alfa base`).toBeGreaterThan(0)
-            expect(escuro, `${nome}: alfa do escuro`).toBeGreaterThan(0)
-            expect(escuro).toBeLessThan(base)
+            // Quase opaca nos dois temas: com o escuro aberto (60% e 40%) a
+            // página atravessava menus, diálogos e gavetas em produção.
+            const base = Number(receita.match(new RegExp(`bg-${token}/(\\d+)`))?.[1])
+            expect(base, `${nome}: alfa base`).toBeGreaterThanOrEqual(95)
+            expect(receita, `${nome}: o escuro não abre`).not.toMatch(/dark:bg-/)
         }
     })
 

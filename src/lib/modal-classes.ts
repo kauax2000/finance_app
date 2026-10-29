@@ -38,13 +38,10 @@
  * irmãs do corpo, que se mascara sozinho; o fundo delas já é a placa.
  */
 export const modalSurfaceClassName = [
-  "bg-background/85 glass-surface",
-  // 40% no escuro, e não os 60% da flutuante: a placa modal cobre página quase
-  // uniforme, e a 60% ela lia como fosca — visto na tela, e escolhido contra a
-  // sonda a 40% lado a lado. Medido a 40%: `--muted-foreground` sobre a placa
-  // sobre um botão `primary` dá 5,61, sobre um card 7,57. O claro fica em 85%,
-  // onde 4,38 já é o teto (rodada 51c).
-  "supports-backdrop-filter:dark:bg-background/40",
+  // 95% nos dois temas. A 40% no escuro (e 85% no claro, com 4,38 de
+  // contraste) a página atravessava a gaveta e o diálogo em produção, e os
+  // campos do formulário competiam com o que estava atrás.
+  "bg-background/95 glass-surface",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-background",
 ].join(" ")

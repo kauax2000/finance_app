@@ -43,8 +43,8 @@ import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
  * `--z-sheet` em vez de `--z-modal` (duas gavetas em camadas diferentes),
  * `bg-background` em vez de `bg-popover` (que é token de camada pequena),
  * `dvh` + área segura em vez de `80vh` (que mente quando a barra do navegador
- * recolhe), e `repositionInputs`, que é o que impede a gaveta de encolher
- * quando o teclado do iOS sobe.
+ * recolhe). `repositionInputs` nasce desligado: com o teclado do iOS ele
+ * empurrava a gaveta alta para fora da tela.
  *
  * ## A cromagem não é daqui
  *
@@ -152,7 +152,7 @@ type DrawerDirection = "bottom" | "top"
 
 function Drawer({
   direction = "bottom",
-  repositionInputs = true,
+  repositionInputs = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -169,8 +169,9 @@ function Drawer({
     <DrawerPrimitive.Root
       data-slot="drawer"
       direction={direction}
-      // O motivo é o mesmo que o `Sheet` documenta: é `repositionInputs` que
-      // impede a superfície de encolher quando o teclado do iOS sobe.
+      // Desligado: no iOS o vaul media o topo com a página já rolada pelo
+      // teclado e empurrava a gaveta alta para cima, quebrando o formulário.
+      // Sem ele o corpo (`DialogBody`) rola e o campo fica à vista.
       repositionInputs={repositionInputs}
       // Dentro da moldura do catálogo ela deixa de ser modal — senão o
       // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de

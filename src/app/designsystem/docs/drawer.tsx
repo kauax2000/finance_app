@@ -170,9 +170,9 @@ export default function DrawerDoc() {
           {
             prop: "repositionInputs",
             type: "boolean",
-            default: "true",
+            default: "false",
             description:
-              "Impede a gaveta de encolher quando o teclado do iOS sobe.",
+              "Deixa o vaul reposicionar a gaveta quando o teclado do iOS sobe. Desligado: numa gaveta alta ele a empurrava para fora da tela.",
           },
           {
             prop: "fill",

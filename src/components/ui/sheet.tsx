@@ -223,12 +223,11 @@ function Sheet({
   return (
     <SheetSurfaceContext.Provider value={surface}>
       {surface === "drawer" ? (
-        // `repositionInputs` é o motivo de o `fillMobileViewport` ter existido:
-        // é ele que impede a superfície de encolher quando o teclado do iOS
-        // sobe. O vaul faz isso de fábrica; o CSS anterior tentava fazer à mão.
+        // Sem `repositionInputs`: com o teclado do iOS o vaul empurrava a
+        // gaveta alta (`fillMobileViewport`) para cima e quebrava o formulário.
         <DrawerPrimitive.Root
           direction="bottom"
-          repositionInputs
+          repositionInputs={false}
           modal={modal}
           {...props}
           onOpenChange={onOpenChange}
