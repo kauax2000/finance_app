@@ -94,7 +94,7 @@ import {
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
-import { searchFieldFocusClassName, searchFieldSurfaceClassName } from "@/lib/search-field-classes"
+import { searchFieldSurfaceClassName } from "@/lib/search-field-classes"
 import { MOLA, MOLA_PALCO, SAIDA, SEPARACAO } from "@/lib/spring"
 import { addDaysYmd, formatYmdPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
@@ -745,8 +745,9 @@ export function LancamentoInteligente({
                             data-slot="lancamento-vidro"
                             className={cn(
                                 "flex min-w-0 flex-1 items-center overflow-hidden rounded-full",
+                                // Sem o contorno de foco: a pílula já é o único campo da tela, e o
+                                // feixe diz que ela está ativa (pedido do dono, 29/10).
                                 searchFieldSurfaceClassName.modal,
-                                !placa && searchFieldFocusClassName,
                                 !telefone && PILULA_ENTRA,
                                 !recolhida && PILULA_SAI
                             )}
