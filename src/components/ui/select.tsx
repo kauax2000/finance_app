@@ -5,7 +5,7 @@ import { Select as SelectPrimitive } from "radix-ui"
 
 import { menuItemFadeClassName, menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { anchoredCollisionPadding } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
@@ -83,7 +83,7 @@ function SelectContent({
   children,
   position = "popper",
   align = "center",
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (

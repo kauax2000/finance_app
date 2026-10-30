@@ -59,7 +59,7 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
       const src = fonte(join(UI, arquivo))
 
       it("2. declara a folga vinda da régua, e nunca um número", () => {
-        expect(src).toContain("collisionPadding = ANCHORED_COLLISION_PADDING")
+        expect(src).toContain("collisionPadding = anchoredCollisionPadding()")
         // O default sozinho não faz nada: sem repassar ao Radix, o prop é
         // engolido pelo `...props`. Foi o que o `DropdownMenuContent` fez na
         // primeira escrita desta regra.

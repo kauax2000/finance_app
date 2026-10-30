@@ -15,7 +15,7 @@ import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { commandFilter } from "@/lib/command-filter"
 import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { anchoredCollisionPadding } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -583,7 +583,7 @@ function MenubarContent({
   align = "start",
   alignOffset = -4,
   sideOffset = 8,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   title,
   description,
   style,
@@ -1036,7 +1036,7 @@ function MenubarSubTrigger({
 function MenubarSubContent({
   className,
   children,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
   const indice = React.useContext(IndiceContext)

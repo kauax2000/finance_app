@@ -6,7 +6,7 @@ import { HoverCard as HoverCardPrimitive } from "radix-ui"
 
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { anchoredCollisionPadding } from "@/lib/anchored-surface"
 import { Button } from "@/components/ui/button"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Caption } from "@/components/ui/typography"
@@ -283,7 +283,7 @@ function HoverCardContent({
   className,
   align = "center",
   sideOffset = 4,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   size,
   padding,
   pending = false,

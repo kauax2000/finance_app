@@ -9,7 +9,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { deDedo } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { anchoredCollisionPadding } from "@/lib/anchored-surface"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 
 /**
@@ -220,7 +220,7 @@ const tooltipContentVariants = cva("font-medium", {
 function TooltipContent({
   className,
   sideOffset = 6,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   size,
   variant,
   shortcut,

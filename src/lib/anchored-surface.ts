@@ -15,3 +15,46 @@
 
 /** A folga entre uma superfície ancorada e a borda da janela, em pixels. */
 export const ANCHORED_COLLISION_PADDING = 8
+
+type Folga = { top: number; right: number; bottom: number; left: number }
+
+let sonda: HTMLElement | null = null
+let areaSegura: Folga | null = null
+
+/** A área segura em px, lida de uma sonda com `env(safe-area-inset-*)`; refeita quando a janela gira. */
+function lerAreaSegura(): Folga {
+  if (areaSegura) return areaSegura
+  if (!sonda) {
+    sonda = document.createElement("div")
+    sonda.setAttribute("aria-hidden", "true")
+    sonda.style.cssText =
+      "position:fixed;inset:0 auto auto 0;visibility:hidden;pointer-events:none;" +
+      "padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)"
+    document.body.appendChild(sonda)
+    window.addEventListener("resize", () => (areaSegura = null))
+  }
+  const s = getComputedStyle(sonda)
+  areaSegura = {
+    top: parseFloat(s.paddingTop) || 0,
+    right: parseFloat(s.paddingRight) || 0,
+    bottom: parseFloat(s.paddingBottom) || 0,
+    left: parseFloat(s.paddingLeft) || 0,
+  }
+  return areaSegura
+}
+
+/**
+ * A folga de colisão somada à área segura: no app instalado do iPhone a barra
+ * de status e o indicador de início são página, e um seletor que abria para
+ * cima passava por baixo do relógio. No servidor, a folga sozinha.
+ */
+export function anchoredCollisionPadding(): number | Folga {
+  if (typeof document === "undefined") return ANCHORED_COLLISION_PADDING
+  const a = lerAreaSegura()
+  return {
+    top: ANCHORED_COLLISION_PADDING + a.top,
+    right: ANCHORED_COLLISION_PADDING + a.right,
+    bottom: ANCHORED_COLLISION_PADDING + a.bottom,
+    left: ANCHORED_COLLISION_PADDING + a.left,
+  }
+}

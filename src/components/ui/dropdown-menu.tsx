@@ -26,7 +26,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { anchoredCollisionPadding } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
@@ -361,7 +361,7 @@ function DropdownMenuContent({
   footer,
   search,
   sideOffset = 4,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   variant,
   size,
   onCloseAutoFocus,
@@ -827,7 +827,7 @@ function DropdownMenuSubTrigger({
 function DropdownMenuSubContent({
   className,
   children,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)

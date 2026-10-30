@@ -7,7 +7,7 @@ import { XMarkIcon } from "@heroicons/react/16/solid";
 
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes";
 import { cn } from "@/lib/utils";
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface";
+import { anchoredCollisionPadding } from "@/lib/anchored-surface";
 import { useIsMobile, useViewportWindow } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -225,7 +225,7 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
-  collisionPadding = ANCHORED_COLLISION_PADDING,
+  collisionPadding = anchoredCollisionPadding(),
   padding,
   surface,
   size,
