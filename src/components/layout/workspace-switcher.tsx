@@ -73,18 +73,19 @@ export function WorkspaceSwitcher({
                     className="h-12 w-full min-w-0 rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                     {loading ? (
-                        <Skeleton className="size-8 shrink-0 rounded-lg" />
+                        <Skeleton className="size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:size-6" />
                     ) : currentWorkspace ? (
                         <WorkspaceBrandMark
                             iconKey={currentWorkspace.icon}
                             backgroundColor={
                                 currentWorkspace.icon_background_color
                             }
-                            className="size-8 rounded-lg"
+                            // Recolhida, o degrau `lg` da barra cabe uma mídia de 24.
+                            className="size-8 rounded-lg group-data-[collapsible=icon]:size-6"
                             iconClassName="size-4"
                         />
                     ) : (
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground group-data-[collapsible=icon]:size-6">
                             <span className="text-xs font-semibold">?</span>
                         </div>
                     )}
