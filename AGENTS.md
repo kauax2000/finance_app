@@ -1277,9 +1277,11 @@ declaração de `background-color` no trilho).
     `menu-fade.test.ts`. O realce é **o da barra lateral** nos menus,
     `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês:
     `bg-sidebar-accent/50` na passagem (foco, cursor, a linha selecionada do
-    `Command`) e `bg-sidebar-accent` cheio ao pressionar e com o item aberto
-    (rodada 325; era a tinta `bg-foreground/9`). `Item` e `Toggle` seguem
-    `bg-muted` — `lib/row-tint.test.ts`.
+    `Command`) e `bg-sidebar-accent/70` ao pressionar e com o item aberto
+    (rodada 325; era a tinta `bg-foreground/9`; cheio virava uma placa opaca
+    sobre o vidro, e saiu em 29/10). **Nenhum realce de linha sobre vidro é
+    `bg-sidebar-accent` cheio.** `Item` e `Toggle` seguem `bg-muted` —
+    `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
     (`pointer-coarse:min-h-11`) — e no toque o texto vai a 16, o ícone a 20, o
     rótulo de seção a 14, o ladrilho da opção com mídia a 32 e o teto a 384

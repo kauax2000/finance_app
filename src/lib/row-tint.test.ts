@@ -4,7 +4,7 @@ import { lerFonte } from "@/test/fonte"
 /**
  * O realce das linhas sobre vidro é o da barra lateral (rodada 325, a pedido do
  * dono: um realce só no app): `--sidebar-accent` a 50% na passagem, ainda
- * translúcido sobre a placa, e cheio ao pressionar ou com o item aberto. Foi a
+ * translúcido sobre a placa, e a 70% ao pressionar ou com o item aberto. Foi a
  * tinta `--foreground` a 9%. `bg-accent` e `bg-muted` continuam fora: matavam a
  * transparência da placa e da gaveta.
  */
@@ -17,6 +17,7 @@ const SOBRE_VIDRO = [
   "src/components/ui/navigation-menu.tsx",
   "src/components/ui/drawer.tsx",
   "src/components/ui/calendar.tsx",
+  "src/components/layout/notification-row.tsx",
 ]
 
 describe("o realce das linhas sobre vidro é o da barra lateral", () => {
@@ -29,12 +30,14 @@ describe("o realce das linhas sobre vidro é o da barra lateral", () => {
     }
   })
 
-  it("o realce é um só: o sidebar-accent a 50%, cheio ao pressionar", () => {
+  it("o realce é um só: o sidebar-accent a 50%, a 70% ao pressionar", () => {
     for (const caminho of SOBRE_VIDRO) {
       const codigo = lerFonte(caminho)
       expect(codigo, caminho).toContain("bg-sidebar-accent/50")
-      expect(codigo, caminho).toContain("active:bg-sidebar-accent")
+      expect(codigo, caminho).toContain("active:bg-sidebar-accent/70")
       expect(codigo, caminho).not.toMatch(/bg-foreground\/9\b/)
+      // Cheio, o realce era uma placa opaca sobre o vidro.
+      expect(codigo, caminho).not.toMatch(/:bg-sidebar-accent(?![\/\w-])/)
     }
   })
 })

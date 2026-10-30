@@ -1678,7 +1678,7 @@ function CommandItem({
         // O acender dos menus (`menuItemFadeClassName`).
         menuItemFadeClassName,
         // Os tons da barra lateral, como todo menu (ver `menu-classes`).
-        "data-selected:bg-sidebar-accent/50 active:bg-sidebar-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
+        "data-selected:bg-sidebar-accent/50 active:bg-sidebar-accent/70 data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         // Na pilha a linha tem 36; isto garante o piso se a geometria dos menus mudar.

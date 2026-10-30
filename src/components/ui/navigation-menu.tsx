@@ -160,11 +160,11 @@ const navigationMenuTriggerVariants = cva(
     variants: {
       variant: {
         floating:
-          "rounded-full px-3 hover:bg-sidebar-accent/50 active:bg-sidebar-accent aria-expanded:bg-sidebar-accent aria-expanded:text-foreground",
+          "rounded-full px-3 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 aria-expanded:bg-sidebar-accent/70 aria-expanded:text-foreground",
         plain:
-          "hover:bg-sidebar-accent/50 active:bg-sidebar-accent aria-expanded:bg-sidebar-accent aria-expanded:text-foreground",
+          "hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 aria-expanded:bg-sidebar-accent/70 aria-expanded:text-foreground",
         outline:
-          "hover:bg-sidebar-accent/50 active:bg-sidebar-accent aria-expanded:bg-sidebar-accent aria-expanded:text-foreground",
+          "hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 aria-expanded:bg-sidebar-accent/70 aria-expanded:text-foreground",
         solid:
           "border border-transparent hover:bg-background/60 active:bg-background/60 aria-expanded:border-border/80 aria-expanded:bg-background aria-expanded:text-foreground aria-expanded:shadow-xs",
       },
@@ -349,7 +349,7 @@ const navigationMenuLinkVariants = cva(
     "concentric text-sm pointer-coarse:min-h-11",
     menuItemFadeClassName,
     // Tinta, não cor: o realce das linhas de lista sobre vidro.
-    "hover:bg-sidebar-accent/50 hover:text-accent-foreground active:bg-sidebar-accent active:text-accent-foreground focus-visible:bg-sidebar-accent/50",
+    "hover:bg-sidebar-accent/50 hover:text-accent-foreground active:bg-sidebar-accent/70 active:text-accent-foreground focus-visible:bg-sidebar-accent/50",
     "aria-[current=page]:bg-foreground/6 aria-[current=page]:font-medium",
   ],
   {

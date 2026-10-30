@@ -89,7 +89,7 @@ export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -101,8 +101,8 @@ export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
-  "data-inset:pl-7.5 data-open:bg-sidebar-accent data-open:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
+  "data-inset:pl-7.5 data-open:bg-sidebar-accent/70 data-open:text-accent-foreground",
   // Sem o desabilitado um submenu desabilitado sai igual ao ativo.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
@@ -114,7 +114,7 @@ export const menuIndicatorItemClassName = [
   // O recuo do lado do indicador cresce; o `twMerge` guarda o `px-2` com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
