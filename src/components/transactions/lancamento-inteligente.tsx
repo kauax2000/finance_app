@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
 import {
     animate,
     AnimatePresence,
@@ -1117,21 +1117,33 @@ function Revisao({
         return (duvida != null && campos.duvidas.includes(duvida)) || (campo === "categoria" && !campos.categoryId)
     }
 
-    /** O selo da linha: "Confira" vence o "IA"; campo editado à mão perde o selo IA. */
+    /**
+     * O selo da linha: "Confira" vence o "IA"; campo editado à mão perde o selo
+     * IA. Ele entra e sai no desfoque, fora do fluxo ao sair (`popLayout`).
+     */
     function selo(campo: CampoDoLancamento, valor: string | null) {
-        if (confira(campo))
-            return (
-                <Badge size="xs" tone="warning">
-                    Confira
-                </Badge>
-            )
-        if (leuComIA && valor && !campoEditado(campo, leitura.editados))
-            return (
-                <Badge size="xs" tone="info">
-                    IA
-                </Badge>
-            )
-        return null
+        const qual = confira(campo)
+            ? "confira"
+            : leuComIA && valor && !campoEditado(campo, leitura.editados)
+              ? "ia"
+              : null
+        return (
+            <AnimatePresence mode="popLayout" initial={false}>
+                {qual ? (
+                    <motion.span key={qual} className="flex" {...presenca}>
+                        {qual === "confira" ? (
+                            <Badge size="xs" tone="warning">
+                                Confira
+                            </Badge>
+                        ) : (
+                            <Badge size="xs" tone="info">
+                                IA
+                            </Badge>
+                        )}
+                    </motion.span>
+                ) : null}
+            </AnimatePresence>
+        )
     }
 
     /** O campo em edição, no lugar da linha (ou do valor), filho da presença dela. */
@@ -1365,7 +1377,7 @@ function Revisao({
                             ) : (
                                 <motion.div key="valor-linha" {...presenca}>
                                     <div data-revela className="flex flex-col">
-                                        <div className="flex items-center gap-2">
+                                        <div className="relative flex items-center gap-2">
                                             <button
                                                 type="button"
                                                 id="lancamento-valor"
@@ -1388,15 +1400,25 @@ function Revisao({
                                             </button>
                                             {selo("valor", valorDaLinha("valor"))}
                                         </div>
-                                        {legenda ? <Muted>{legenda}</Muted> : null}
+                                        <AnimatePresence initial={false}>
+                                            {legenda ? (
+                                                <motion.div key="legenda" {...presenca}>
+                                                    <Muted>{legenda}</Muted>
+                                                </motion.div>
+                                            ) : null}
+                                        </AnimatePresence>
                                     </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        {leitura.foto ? (
-                            <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
-                        ) : null}
+                        <AnimatePresence initial={false}>
+                            {leitura.foto ? (
+                                <motion.div key="recibo" {...presenca}>
+                                    <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
+                                </motion.div>
+                            ) : null}
+                        </AnimatePresence>
 
                         {/* A lista agrupada: a superfície funda, linhas de 50 com a divisória
                             recuada até o texto (16 + o ladrilho de 28 + 8). */}
@@ -1404,55 +1426,58 @@ function Revisao({
                             data-revela
                             className="relative gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
                         >
-                            {linhas.map((x, i) => {
-                                const rotulo = rotuloDaLinha(x.campo, x.rotulo)
-                                const valor = valorDaLinha(x.campo)
-                                return (
-                                    <Fragment key={x.campo}>
-                                        {i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null}
-                                        <AnimatePresence mode="popLayout" initial={false}>
-                                            {editando === x.campo ? (
-                                                emEdicao(x.campo, rotulo, "px-4 py-2")
-                                            ) : (
-                                                <motion.div key={`${x.campo}-linha`} {...presenca}>
-                                                    <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
-                                                        <button
-                                                            type="button"
-                                                            id={`lancamento-${x.campo}`}
-                                                            disabled={saving}
-                                                            onClick={() => abrir(x.campo)}
-                                                        >
-                                                            <ItemMedia variant="tile" tone={x.tom} tint="vivid">
-                                                                {x.icone}
-                                                            </ItemMedia>
-                                                            <ItemContent className="min-w-fit">
-                                                                <ItemTitle>{rotulo}</ItemTitle>
-                                                            </ItemContent>
-                                                            <ItemActions className="min-w-0 max-w-3/5">
-                                                                {selo(x.campo, valor)}
-                                                                {x.campo === "categoria" && categoria ? (
-                                                                    <ColorTile size="xs" color={categoria.color} />
-                                                                ) : null}
-                                                                <span
-                                                                    className={cn(
-                                                                        "min-w-0 truncate text-sm",
-                                                                        valor
-                                                                            ? "nums text-muted-foreground"
-                                                                            : "text-warning-muted-foreground"
-                                                                    )}
-                                                                >
-                                                                    {valor ?? "Escolher"}
-                                                                </span>
-                                                                <ItemChevron />
-                                                            </ItemActions>
-                                                        </button>
-                                                    </Item>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </Fragment>
-                                )
-                            })}
+                            {/* A linha Parcelas entra e sai com o tipo. */}
+                            <AnimatePresence initial={false}>
+                                {linhas.map((x, i) => {
+                                    const rotulo = rotuloDaLinha(x.campo, x.rotulo)
+                                    const valor = valorDaLinha(x.campo)
+                                    return (
+                                        <motion.div key={x.campo} {...presenca}>
+                                            {i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null}
+                                            <AnimatePresence mode="popLayout" initial={false}>
+                                                {editando === x.campo ? (
+                                                    emEdicao(x.campo, rotulo, "px-4 py-2")
+                                                ) : (
+                                                    <motion.div key={`${x.campo}-linha`} {...presenca}>
+                                                        <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
+                                                            <button
+                                                                type="button"
+                                                                id={`lancamento-${x.campo}`}
+                                                                disabled={saving}
+                                                                onClick={() => abrir(x.campo)}
+                                                            >
+                                                                <ItemMedia variant="tile" tone={x.tom} tint="vivid">
+                                                                    {x.icone}
+                                                                </ItemMedia>
+                                                                <ItemContent className="min-w-fit">
+                                                                    <ItemTitle>{rotulo}</ItemTitle>
+                                                                </ItemContent>
+                                                                <ItemActions className="relative min-w-0 max-w-3/5">
+                                                                    {selo(x.campo, valor)}
+                                                                    {x.campo === "categoria" && categoria ? (
+                                                                        <ColorTile size="xs" color={categoria.color} />
+                                                                    ) : null}
+                                                                    <span
+                                                                        className={cn(
+                                                                            "min-w-0 truncate text-sm",
+                                                                            valor
+                                                                                ? "nums text-muted-foreground"
+                                                                                : "text-warning-muted-foreground"
+                                                                        )}
+                                                                    >
+                                                                        {valor ?? "Escolher"}
+                                                                    </span>
+                                                                    <ItemChevron />
+                                                                </ItemActions>
+                                                            </button>
+                                                        </Item>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    )
+                                })}
+                            </AnimatePresence>
                         </ItemGroup>
 
                         {plano ? <ImpactoDaParcela proposto={plano} /> : null}
@@ -1461,12 +1486,17 @@ function Revisao({
             </DialogBody>
 
             {/* O rodapé fica preso fora do corpo que rola; o "Aprovar" é do formulário pelo `form=`. */}
-            <DialogFooter className="flex-col gap-1 pt-0 sm:flex-col sm:justify-start">
-                {motivo ? (
-                    <Caption id="lancamento-motivo" data-revela className="pb-2 text-center">
-                        {motivo}
-                    </Caption>
-                ) : null}
+            <DialogFooter className="relative flex-col gap-1 pt-0 sm:flex-col sm:justify-start">
+                {/* O motivo sai do fluxo ao sair (`popLayout`): o rodapé não guarda a altura dele. */}
+                <AnimatePresence mode="popLayout" initial={false}>
+                    {motivo ? (
+                        <motion.div key="motivo" {...presenca}>
+                            <Caption id="lancamento-motivo" data-revela className="pb-2 text-center">
+                                {motivo}
+                            </Caption>
+                        </motion.div>
+                    ) : null}
+                </AnimatePresence>
                 <FormSubmit
                     form={formId}
                     size="xl"

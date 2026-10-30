@@ -214,4 +214,10 @@ describe("a leitura do lançamento inteligente", () => {
         expect(revisao).toContain("staggerChildren: ESCADA_DO_EDITOR")
         expect(revisao).not.toMatch(/scale:/)
     })
+
+    it("o que aparece no painel surge do desfoque e sai nele", () => {
+        expect(fonte.match(/<AnimatePresence/g)?.length).toBe(7)
+        expect(fonte).toMatch(/<AnimatePresence[\s\S]{0,300}MiniaturaDoRecibo/)
+        expect(fonte).toMatch(/<AnimatePresence[\s\S]{0,300}lancamento-motivo/)
+    })
 })
