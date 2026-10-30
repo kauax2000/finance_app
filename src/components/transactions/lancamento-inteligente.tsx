@@ -14,7 +14,7 @@ import {
     XMarkIcon,
 } from "@heroicons/react/16/solid"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -56,9 +56,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption, Muted } from "@/components/ui/typography"
-import { useWorkspace } from "@/components/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
@@ -150,6 +148,14 @@ const FORMAS_ANTES_DO_CREDITO: PaymentMethod[] = ["pix", "debit_card"]
 const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
 
 const SEM_CATEGORIA = "__sem__"
+
+/** O tom do ponto do indicador do tipo. */
+const TOM_DO_TIPO = {
+    despesa: "expense",
+    receita: "income",
+    parcelada: "info",
+    estorno: "warning",
+} as const satisfies Record<TipoDoLancamento, ComponentProps<typeof Badge>["tone"]>
 
 /** As escolhas: categoria, forma e parcelas montam o seletor aberto e escolher (ou fechá-lo) volta à linha, sem "ok"; a Data fica com o campo e o "ok". */
 const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]
@@ -924,9 +930,6 @@ function Revisao({
     // A máscara do valor em edição: o `Input money` é controlado pela string digitada.
     const [valorDigitado, setValorDigitado] = useState("")
     const hoje = localYmdFromDate(new Date())
-    // O convidado não lança receita, como no formulário (a leitura já a vira despesa).
-    const tipos =
-        useWorkspace().papel === "guest" ? TIPOS.filter((t) => t.tipo !== "receita" && t.tipo !== "estorno") : TIPOS
 
     const { categories } = form.fieldsProps
     const cartoesAtivos = cartoes.filter((c) => c.is_active)
@@ -1249,41 +1252,17 @@ function Revisao({
                         return leitura.aprovar()
                     }}
                 >
-                    {/* O tipo é um trilho segmentado: trocar é um toque. Estorno só aparece quando a leitura o trouxe. */}
-                    <div data-revela className="flex flex-col gap-1.5 pe-10">
-                        <Tabs
-                            value={tipo}
-                            onValueChange={(v) => {
-                                // O toque é da pessoa, à vista: não conta como leitura nova, sem piscar o trilho.
-                                delete valoresAntes.current.tipo
-                                leitura.editar("tipo", edicaoDoTipo(campos, v as TipoDoLancamento, categories))
-                            }}
-                        >
-                            {/* Com 4 abas em ~290px, `lg` (14px) deixa "Parcelada" rente à pílula: `md` encolhe o texto. */}
-                            <TabsList
-                                id="lancamento-tipo"
-                                aria-label="Tipo do lançamento"
-                                stretch
-                                size={tipo === "estorno" ? "md" : undefined}
-                            >
-                                {tipos
-                                    .filter((t) => t.tipo !== "estorno" || tipo === "estorno")
-                                    .map((t) => (
-                                        <TabsTrigger key={t.tipo} value={t.tipo} disabled={saving}>
-                                            {t.rotulo}
-                                        </TabsTrigger>
-                                    ))}
-                            </TabsList>
-                        </Tabs>
-                        {campos.motivoDoTipo || leuComIA ? (
-                            <Caption className="flex items-center gap-2">
-                                {campos.motivoDoTipo ? `por causa de “${campos.motivoDoTipo}”` : null}
-                                {leuComIA ? (
-                                    <Badge size="xs" tone="info">
-                                        IA
-                                    </Badge>
-                                ) : null}
-                            </Caption>
+                    {/* O tipo é só um indicador: corrigir o tipo é pelo formulário completo. */}
+                    <div data-revela className="flex flex-wrap items-center gap-2 pe-10">
+                        <Badge id="lancamento-tipo" tone={TOM_DO_TIPO[tipo]}>
+                            <BadgeDot />
+                            {rotuloDoTipo}
+                        </Badge>
+                        {campos.motivoDoTipo ? <Caption>por causa de “{campos.motivoDoTipo}”</Caption> : null}
+                        {leuComIA ? (
+                            <Badge size="xs" tone="info">
+                                IA
+                            </Badge>
                         ) : null}
                     </div>
 
