@@ -345,6 +345,8 @@ export function LancamentoInteligente({
             if (window.scrollY !== rolagem) window.scrollTo(0, rolagem)
             casca.style.setProperty("--lancamento-placa-vh", `${vv.height}px`)
             casca.style.setProperty("--lancamento-placa-vy", `${vv.offsetTop}px`)
+            // O painel com o teclado aberto (uma edição): colado na barra de cima dele.
+            casca.toggleAttribute("data-teclado-placa", window.innerHeight - vv.height > 120)
             if (congelada.current) return
             const teclado = window.innerHeight - vv.height > 120
             casca.style.setProperty("--lancamento-vh", `${vv.height}px`)
@@ -747,9 +749,13 @@ export function LancamentoInteligente({
                             className={cn(
                                 // No telefone o painel termina no centro da tela (com o teclado já
                                 // descido, a área é a tela inteira): o gesto lê a caixa final daqui.
+                                // Com o teclado aberto numa edição, ele cola 12px acima da barra do
+                                // teclado (o pé da área segura fica atrás do teclado).
                                 "fixed inset-x-4 flex flex-col justify-center",
                                 "top-[calc(var(--lancamento-placa-vy,0px)+max(--spacing(4),env(safe-area-inset-top)))]",
                                 "h-[calc(var(--lancamento-placa-vh,100dvh)-max(--spacing(4),env(safe-area-inset-top))-env(safe-area-inset-bottom,0px)-(--spacing(3)))]",
+                                "group-data-teclado-placa/lancamento:justify-end",
+                                "group-data-teclado-placa/lancamento:h-[calc(var(--lancamento-placa-vh,100dvh)-max(--spacing(4),env(safe-area-inset-top))-(--spacing(3)))]",
                                 "md:inset-x-0 md:top-24 md:mx-auto md:h-[calc(100dvh-(--spacing(48)))] md:max-w-md md:justify-start"
                             )}
                         >
