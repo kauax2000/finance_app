@@ -257,7 +257,9 @@ export function MonthNav({
                 </div>
             ) : (
                 <>
-                    <div className={cn("md:hidden", className)}>
+                    {/* `md:hidden` por último: um `md:flex` de quem chama vencia e
+                        punha o gatilho do telefone no desktop, ao lado das setas. */}
+                    <div className={cn(className, "md:hidden")}>
                         <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
                             <Button
