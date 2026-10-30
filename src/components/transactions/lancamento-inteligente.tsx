@@ -290,6 +290,33 @@ export function LancamentoInteligente({
     const [recolhida, setRecolhida] = useState(false)
     if (!placa && recolhida) setRecolhida(false)
 
+    // No telefone o campo não fica na tela sem o teclado. O ✓ da barra do teclado
+    // do iOS só tira o foco, sem tecla nem toque: com frase lê, vazio fecha. Um
+    // toque (na câmera, no véu) também tira, mas resolve sozinho: marca `tocou`, e
+    // o blur dele não conta.
+    const tocou = useRef(false)
+    useEffect(() => {
+        if (!open || !telefone) return
+        let espera = 0
+        const marcar = () => {
+            tocou.current = true
+            window.clearTimeout(espera)
+            espera = window.setTimeout(() => (tocou.current = false), 400)
+        }
+        document.addEventListener("pointerdown", marcar, true)
+        // Câmera cancelada: o campo volta ao foco (sem teclado ele não fica na tela).
+        const arquivo = arquivoRef.current
+        const voltar = () =>
+            casca?.querySelector<HTMLInputElement>("[data-slot=search-input-control]")?.focus({ preventScroll: true })
+        arquivo?.addEventListener("cancel", voltar)
+        return () => {
+            arquivo?.removeEventListener("cancel", voltar)
+            document.removeEventListener("pointerdown", marcar, true)
+            window.clearTimeout(espera)
+            tocou.current = false
+        }
+    }, [open, telefone, casca])
+
     // No telefone a linha mora no viewport visual: a base dela fica 12px acima
     // do teclado do iOS (que só encolhe ele) e o acompanha; sem teclado, 12px
     // acima da área segura de baixo (`data-teclado` troca o pé). No gesto a
@@ -799,6 +826,12 @@ export function LancamentoInteligente({
                                             // linha já presa (descer antes a levava junto).
                                             leitura.interpretar()
                                         }
+                                    }}
+                                    onBlur={() => {
+                                        // O ✓ do teclado: com frase, lê como o Enter; vazio, fecha.
+                                        if (!open || !telefone || placa || lendoIA || saving || tocou.current) return
+                                        if (texto.trim()) leitura.interpretar()
+                                        else onOpenChange(false)
                                     }}
                                 />
                             </div>

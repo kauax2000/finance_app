@@ -65,6 +65,12 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toContain('type="submit"')
     })
 
+    it("no telefone o campo não fica sem teclado: o ✓ lê a frase ou fecha", () => {
+        expect(fonte).toMatch(/onBlur=\{\(\) => \{[\s\S]{0,200}if \(texto\.trim\(\)\) leitura\.interpretar\(\)\s*else onOpenChange\(false\)/)
+        expect(fonte).toMatch(/addEventListener\("pointerdown", marcar, true\)/)
+        expect(fonte).toMatch(/addEventListener\("cancel", voltar\)/)
+    })
+
     it("o tipo é só um indicador, e o motivo é uma legenda", () => {
         expect(fonte).toMatch(/<Badge id="lancamento-tipo" tone=\{TOM_DO_TIPO\[tipo\]\}>\s*<BadgeDot \/>/)
         expect(fonte).not.toContain("<Tabs")
