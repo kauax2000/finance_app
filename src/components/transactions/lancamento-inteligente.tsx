@@ -58,7 +58,6 @@ import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Caption, Muted } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
@@ -149,9 +148,6 @@ const FORMAS_ANTES_DO_CREDITO: PaymentMethod[] = ["pix", "debit_card"]
 const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
 
 const SEM_CATEGORIA = "__sem__"
-
-/** A barra de cima do teclado do iOS 26 (setas e ✓), medida no iPhone: 45pt e 11 até o teclado. */
-const BARRA_DO_TECLADO_IOS = 56
 
 /** O tom do ponto do indicador do tipo. */
 const TOM_DO_TIPO = {
@@ -268,8 +264,6 @@ export function LancamentoInteligente({
     const { lerFoto, lendoIA, campos, foto } = leitura
     const revisao = campos != null && !lendoIA
     const telefone = useIsMobile()
-    const { isStandalone: instalado } = useDisplayMode()
-    const ios = useIsIos()
     const reduzido = useReducedMotion() ?? false
     // A casca num estado, e não num ref: o `Portal` do Radix monta o conteúdo
     // num segundo commit, e os efeitos precisam rodar quando ele chega.
@@ -344,24 +338,32 @@ export function LancamentoInteligente({
             casca.style.setProperty("--lancamento-placa-vy", `${vv.offsetTop}px`)
             if (congelada.current) return
             const teclado = window.innerHeight - vv.height > 120
-            // No app instalado do iOS a barra do teclado (setas e ✓) flutua fora do
-            // viewport visual: sem a reserva, a linha ficava atrás dela. No Safari
-            // ela já fica de fora da medida.
-            const barra = teclado && instalado && ios ? BARRA_DO_TECLADO_IOS : 0
-            casca.style.setProperty("--lancamento-vh", `${vv.height - barra}px`)
+            casca.style.setProperty("--lancamento-vh", `${vv.height}px`)
             casca.style.setProperty("--lancamento-vy", `${vv.offsetTop}px`)
             casca.toggleAttribute("data-teclado", teclado)
         }
+        // O iOS mede o viewport visual primeiro sem a barra de cima do teclado
+        // (setas e ✓) e só desconta a barra depois, às vezes sem novo `resize`: a
+        // linha ficava atrás dela. A cada mudança, mede de novo até o teclado assentar.
+        let reMedidas: number[] = []
+        const assentar = () => {
+            medir()
+            for (const t of reMedidas) window.clearTimeout(t)
+            reMedidas = [120, 300, 600, 1000].map((ms) => window.setTimeout(medir, ms))
+        }
         medirRef.current = medir
-        medir()
-        vv.addEventListener("resize", medir)
+        assentar()
+        vv.addEventListener("resize", assentar)
         vv.addEventListener("scroll", medir)
+        casca.addEventListener("focusin", assentar)
         return () => {
             medirRef.current = () => {}
-            vv.removeEventListener("resize", medir)
+            for (const t of reMedidas) window.clearTimeout(t)
+            vv.removeEventListener("resize", assentar)
             vv.removeEventListener("scroll", medir)
+            casca.removeEventListener("focusin", assentar)
         }
-    }, [casca, telefone, instalado, ios])
+    }, [casca, telefone])
 
     // A abertura no telefone: a linha nasce do "+" da barra de baixo como uma
     // gota que se separa em duas (`quadroDoMais`, na `SEPARACAO`). Sem o "+" à
