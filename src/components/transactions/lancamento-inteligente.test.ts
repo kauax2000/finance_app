@@ -71,6 +71,11 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toMatch(/addEventListener\("cancel", voltar\)/)
     })
 
+    it("no app instalado do iOS a linha reserva a barra do teclado", () => {
+        expect(fonte).toContain("const barra = teclado && instalado && ios ? BARRA_DO_TECLADO_IOS : 0")
+        expect(fonte).toContain("`${vv.height - barra}px`")
+    })
+
     it("o tipo é só um indicador, e o motivo é uma legenda", () => {
         expect(fonte).toMatch(/<Badge id="lancamento-tipo" tone=\{TOM_DO_TIPO\[tipo\]\}>\s*<BadgeDot \/>/)
         expect(fonte).not.toContain("<Tabs")
