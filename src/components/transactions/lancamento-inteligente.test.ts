@@ -201,4 +201,17 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).toContain("useAlturaAnimada<HTMLDivElement>()")
         expect(fonte).toMatch(/data-slot="lancamento-revisao-corpo"/)
     })
+
+    it("a linha e o editor trocam no desfoque, na mola", () => {
+        const revisao = fonte.slice(fonte.indexOf("function Revisao"))
+        expect(fonte).toContain("<AnimatePresence")
+        expect(fonte).toContain("const ESCADA_DO_EDITOR = 0.04")
+        expect(fonte).toMatch(/filter: "blur\(10px\)"/)
+        expect(fonte).toMatch(/filter: "blur\(6px\)"/)
+        expect(fonte).toMatch(/const ENTRA = \{[^}]*transition: \{ \.\.\.MOLA \}/)
+        expect(fonte).toMatch(/const SAI = \{[^}]*transition: SAIDA/)
+        expect(revisao).toMatch(/<AnimatePresence mode="popLayout" initial=\{false\}/)
+        expect(revisao).toContain("staggerChildren: ESCADA_DO_EDITOR")
+        expect(revisao).not.toMatch(/scale:/)
+    })
 })

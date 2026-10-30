@@ -1,7 +1,14 @@
 "use client"
 
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
-import { animate, stagger, useReducedMotion, type AnimationPlaybackControlsWithThen } from "motion/react"
+import {
+    animate,
+    AnimatePresence,
+    motion,
+    stagger,
+    useReducedMotion,
+    type AnimationPlaybackControlsWithThen,
+} from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import {
     CalendarIcon,
@@ -950,6 +957,15 @@ function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: (
 /** O anel de foco do sistema numa peça clicável que não é um `Button` (a pílula do tipo, o valor). */
 const FOCO = "outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
+/** De onde quem entra no painel surge: no desfoque, 4px abaixo, como as linhas da paleta (`menu-content-in`). */
+const SURGE_DE = { opacity: 0, filter: "blur(10px)", y: 4 }
+/** Quem entra assenta na mola. */
+const ENTRA = { opacity: 1, filter: "blur(0px)", y: 0, transition: { ...MOLA } }
+/** Quem sai esmaece no desfoque, curto. */
+const SAI = { opacity: 0, filter: "blur(6px)", transition: SAIDA }
+/** As peças do editor chegam em escada: o rótulo, o campo, o "ok". */
+const ESCADA_DO_EDITOR = 0.04
+
 function Revisao({
     campos,
     leitura,
@@ -1043,6 +1059,18 @@ function Revisao({
     // desfoque no lugar. A que estava em edição não conta (quem a mudou foi a
     // pessoa, à vista).
     const reduzido = useReducedMotion()
+    // A linha e o editor trocam no lugar: quem entra surge do desfoque e quem
+    // sai esmaece nele. Com movimento reduzido, só a opacidade.
+    const presenca = reduzido
+        ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: SAIDA }, exit: { opacity: 0, transition: SAIDA } }
+        : { initial: SURGE_DE, animate: ENTRA, exit: SAI }
+    // O editor sai inteiro, e as peças dele chegam em escada.
+    const editorVariantes = {
+        antes: {},
+        entra: { transition: { staggerChildren: ESCADA_DO_EDITOR } },
+        sai: presenca.exit,
+    }
+    const pecaDoEditor = { antes: presenca.initial, entra: presenca.animate }
     const valoresAntes = useRef<Partial<Record<CampoDoLancamento, string | null>>>({})
     useEffect(() => {
         const agora: Partial<Record<CampoDoLancamento, string | null>> = {}
@@ -1106,22 +1134,35 @@ function Revisao({
         return null
     }
 
-    /** O campo em edição, no lugar da linha (ou do valor). */
-    function emEdicao(campo: CampoDoLancamento, rotulo: string) {
+    /** O campo em edição, no lugar da linha (ou do valor), filho da presença dela. */
+    function emEdicao(campo: CampoDoLancamento, rotulo: string, className?: string) {
         return (
-            <Field key={campo} size="sm" data-revela={campo === "valor" || undefined}>
-                <FieldLabel>{rotulo}</FieldLabel>
-                <div className="flex items-center gap-2">
-                    <div ref={editorRef} className="min-w-0 flex-1">
-                        {editor(campo)}
+            <motion.div
+                key={`${campo}-editor`}
+                className={className}
+                variants={editorVariantes}
+                initial="antes"
+                animate="entra"
+                exit="sai"
+            >
+                <Field size="sm" data-revela={campo === "valor" || undefined}>
+                    <motion.div variants={pecaDoEditor}>
+                        <FieldLabel>{rotulo}</FieldLabel>
+                    </motion.div>
+                    <div className="flex items-center gap-2">
+                        <motion.div ref={editorRef} variants={pecaDoEditor} className="min-w-0 flex-1">
+                            {editor(campo)}
+                        </motion.div>
+                        {abreDireto(campo) ? null : (
+                            <motion.div variants={pecaDoEditor}>
+                                <Button variant="secondary" onClick={fechar}>
+                                    ok
+                                </Button>
+                            </motion.div>
+                        )}
                     </div>
-                    {abreDireto(campo) ? null : (
-                        <Button variant="secondary" onClick={fechar}>
-                            ok
-                        </Button>
-                    )}
-                </div>
-            </Field>
+                </Field>
+            </motion.div>
         )
     }
 
@@ -1302,7 +1343,7 @@ function Revisao({
                         return leitura.aprovar()
                     }}
                 >
-                    <div data-slot="lancamento-revisao-corpo" ref={corpoRef} className="flex flex-col gap-(--space-block)">
+                    <div data-slot="lancamento-revisao-corpo" ref={corpoRef} className="relative flex flex-col gap-(--space-block)">
                         {/* O tipo é só um indicador: corrigir o tipo é pelo formulário completo. */}
                         <div data-revela className="flex flex-wrap items-center gap-2 pe-10">
                             <Badge id="lancamento-tipo" tone={TOM_DO_TIPO[tipo]}>
@@ -1318,36 +1359,40 @@ function Revisao({
                         </div>
 
                         {/* O valor em destaque; tocá-lo edita o valor. */}
-                        {editando === "valor" ? (
-                            emEdicao("valor", "Valor")
-                        ) : (
-                            <div data-revela className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        id="lancamento-valor"
-                                        disabled={saving}
-                                        onClick={() => abrir("valor")}
-                                        className={cn("min-h-11 w-full rounded-row text-start", FOCO)}
-                                    >
-                                        {campos.valor != null ? (
-                                            <MoneyDisplay
-                                                value={campos.valor}
-                                                size="2xl"
-                                                mono={false}
-                                                className="text-4xl font-bold tracking-tight"
-                                            />
-                                        ) : (
-                                            <span className="text-2xl font-semibold text-muted-foreground">
-                                                {NAO_IDENTIFICADO}
-                                            </span>
-                                        )}
-                                    </button>
-                                    {selo("valor", valorDaLinha("valor"))}
-                                </div>
-                                {legenda ? <Muted>{legenda}</Muted> : null}
-                            </div>
-                        )}
+                        <AnimatePresence mode="popLayout" initial={false}>
+                            {editando === "valor" ? (
+                                emEdicao("valor", "Valor")
+                            ) : (
+                                <motion.div key="valor-linha" {...presenca}>
+                                    <div data-revela className="flex flex-col">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                id="lancamento-valor"
+                                                disabled={saving}
+                                                onClick={() => abrir("valor")}
+                                                className={cn("min-h-11 w-full rounded-row text-start", FOCO)}
+                                            >
+                                                {campos.valor != null ? (
+                                                    <MoneyDisplay
+                                                        value={campos.valor}
+                                                        size="2xl"
+                                                        mono={false}
+                                                        className="text-4xl font-bold tracking-tight"
+                                                    />
+                                                ) : (
+                                                    <span className="text-2xl font-semibold text-muted-foreground">
+                                                        {NAO_IDENTIFICADO}
+                                                    </span>
+                                                )}
+                                            </button>
+                                            {selo("valor", valorDaLinha("valor"))}
+                                        </div>
+                                        {legenda ? <Muted>{legenda}</Muted> : null}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {leitura.foto ? (
                             <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
@@ -1357,55 +1402,54 @@ function Revisao({
                             recuada até o texto (16 + o ladrilho de 28 + 8). */}
                         <ItemGroup
                             data-revela
-                            className="gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
+                            className="relative gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
                         >
                             {linhas.map((x, i) => {
                                 const rotulo = rotuloDaLinha(x.campo, x.rotulo)
-                                const separador = i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null
-                                if (editando === x.campo) {
-                                    return (
-                                        <Fragment key={x.campo}>
-                                            {separador}
-                                            <div className="px-4 py-2">{emEdicao(x.campo, rotulo)}</div>
-                                        </Fragment>
-                                    )
-                                }
                                 const valor = valorDaLinha(x.campo)
                                 return (
                                     <Fragment key={x.campo}>
-                                        {separador}
-                                        <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
-                                            <button
-                                                type="button"
-                                                id={`lancamento-${x.campo}`}
-                                                disabled={saving}
-                                                onClick={() => abrir(x.campo)}
-                                            >
-                                                <ItemMedia variant="tile" tone={x.tom} tint="vivid">
-                                                    {x.icone}
-                                                </ItemMedia>
-                                                <ItemContent className="min-w-fit">
-                                                    <ItemTitle>{rotulo}</ItemTitle>
-                                                </ItemContent>
-                                                <ItemActions className="min-w-0 max-w-3/5">
-                                                    {selo(x.campo, valor)}
-                                                    {x.campo === "categoria" && categoria ? (
-                                                        <ColorTile size="xs" color={categoria.color} />
-                                                    ) : null}
-                                                    <span
-                                                        className={cn(
-                                                            "min-w-0 truncate text-sm",
-                                                            valor
-                                                                ? "nums text-muted-foreground"
-                                                                : "text-warning-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {valor ?? "Escolher"}
-                                                    </span>
-                                                    <ItemChevron />
-                                                </ItemActions>
-                                            </button>
-                                        </Item>
+                                        {i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null}
+                                        <AnimatePresence mode="popLayout" initial={false}>
+                                            {editando === x.campo ? (
+                                                emEdicao(x.campo, rotulo, "px-4 py-2")
+                                            ) : (
+                                                <motion.div key={`${x.campo}-linha`} {...presenca}>
+                                                    <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
+                                                        <button
+                                                            type="button"
+                                                            id={`lancamento-${x.campo}`}
+                                                            disabled={saving}
+                                                            onClick={() => abrir(x.campo)}
+                                                        >
+                                                            <ItemMedia variant="tile" tone={x.tom} tint="vivid">
+                                                                {x.icone}
+                                                            </ItemMedia>
+                                                            <ItemContent className="min-w-fit">
+                                                                <ItemTitle>{rotulo}</ItemTitle>
+                                                            </ItemContent>
+                                                            <ItemActions className="min-w-0 max-w-3/5">
+                                                                {selo(x.campo, valor)}
+                                                                {x.campo === "categoria" && categoria ? (
+                                                                    <ColorTile size="xs" color={categoria.color} />
+                                                                ) : null}
+                                                                <span
+                                                                    className={cn(
+                                                                        "min-w-0 truncate text-sm",
+                                                                        valor
+                                                                            ? "nums text-muted-foreground"
+                                                                            : "text-warning-muted-foreground"
+                                                                    )}
+                                                                >
+                                                                    {valor ?? "Escolher"}
+                                                                </span>
+                                                                <ItemChevron />
+                                                            </ItemActions>
+                                                        </button>
+                                                    </Item>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </Fragment>
                                 )
                             })}
