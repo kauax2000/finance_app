@@ -1000,6 +1000,7 @@ function Revisao({
     saving: boolean
     onAbrirFormulario: () => void
 }) {
+    const telefone = useIsMobile()
     const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
     const formId = useId()
     // A altura do corpo anda na mola quando um editor abre ou uma peça entra e
@@ -1270,7 +1271,12 @@ function Revisao({
                                 </ComboboxTrigger>
                             </FieldControl>
                         </ComboboxField>
-                        <ComboboxContent>
+                        {/* No telefone abre para baixo, onde sobra espaço, e sem focar a busca: o
+                            teclado subiria por cima da lista. Tocar na busca a abre. */}
+                        <ComboboxContent
+                            side="bottom"
+                            onOpenAutoFocus={telefone ? (e) => e.preventDefault() : undefined}
+                        >
                             <ComboboxInput placeholder="Buscar categoria…" />
                             <ComboboxList>
                                 <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
