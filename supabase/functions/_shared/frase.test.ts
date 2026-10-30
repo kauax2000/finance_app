@@ -184,3 +184,65 @@ Deno.test('frase: o valor da parcela vira o total', () => {
   // Sem a palavra, o valor segue sendo o total.
   assertEquals(interpretarFrase('kimono 400 4x', HOJE).valor, 400)
 })
+
+const HOJE_PARCELAS = '2026-10-29'
+const lerParcelas = (s: string) => {
+  const f = interpretarFrase(s, HOJE_PARCELAS)
+  return [f.valor, f.parcelas, f.descricao]
+}
+
+Deno.test('frase: "N parcelas de V" e "N prestações de V" são N × V', () => {
+  for (const s of ['tv 4 parcelas de 100', 'tv 4 prestações de 100', 'tv 4 parcelas iguais de 100']) {
+    assertEquals(lerParcelas(s), [400, 4, 'Tv'], s)
+  }
+  assertEquals(interpretarFrase('tv 4 parcelas de 100', HOJE_PARCELAS).motivoDoTipo, '4 parcelas')
+})
+
+Deno.test('frase: "N parcelas" sem valor conta as parcelas e pede o valor', () => {
+  const f = interpretarFrase('tv 4 parcelas', HOJE_PARCELAS)
+  assertEquals([f.valor, f.parcelas, f.descricao, f.duvidas.includes('valor')], [null, 4, 'Tv', true])
+})
+
+Deno.test('frase: "V em N parcelas" é o total', () => {
+  const f = interpretarFrase('tv 100 em 4 parcelas', HOJE_PARCELAS)
+  assertEquals([f.valor, f.parcelas, f.descricao, f.motivoDoTipo], [100, 4, 'Tv', 'em 4 parcelas'])
+})
+
+Deno.test('frase: "NxV" colado é como "Nx de V"; "V xN" é o total', () => {
+  const colado = interpretarFrase('tv 4x100', HOJE_PARCELAS)
+  assertEquals([colado.valor, colado.parcelas, colado.descricao, colado.duvidas.includes('valor')], [400, 4, 'Tv', true])
+  assertEquals(lerParcelas('tv 100 x4'), [100, 4, 'Tv'])
+})
+
+Deno.test('frase: "mensal", "ao mês", "por mês" e "/mês" dizem que V é a parcela', () => {
+  assertEquals(lerParcelas('tv 100 mensais 4x'), [400, 4, 'Tv'])
+  assertEquals(lerParcelas('tv 100 mensal em 12x'), [1200, 12, 'Tv'])
+  for (const s of ['tv 100 ao mes em 4x', 'tv 100 ao mês em 4x', 'tv 100 por mês em 4x', 'tv 100 por mes em 4x', 'tv 100 /mês em 4x', 'tv 100/mês em 4x']) {
+    assertEquals(lerParcelas(s), [400, 4, 'Tv'], s)
+  }
+  // Sem parcelas, "mensal" não multiplica nada.
+  const academia = interpretarFrase('academia 100 mensal', HOJE_PARCELAS)
+  assertEquals([academia.valor, academia.parcelas], [100, null])
+})
+
+Deno.test('frase: "N meses" com um valor ao lado são parcelas; sozinho, não', () => {
+  assertEquals(lerParcelas('tv 100 por mes 4 meses'), [400, 4, 'Tv'])
+  assertEquals(lerParcelas('tv 4 meses de 100'), [400, 4, 'Tv'])
+  assertEquals(interpretarFrase('academia 3 meses 300', HOJE_PARCELAS).parcelas, null)
+})
+
+Deno.test('frase: o total dito junto de "Nx de V" vence, e só confere quando não bate', () => {
+  const bate = interpretarFrase('tv 400 em 4x de 100', HOJE_PARCELAS)
+  assertEquals([bate.valor, bate.parcelas, bate.descricao, bate.duvidas.includes('valor')], [400, 4, 'Tv', false])
+  const naoBate = interpretarFrase('tv 500 em 4x de 100', HOJE_PARCELAS)
+  assertEquals([naoBate.valor, naoBate.parcelas, naoBate.descricao, naoBate.duvidas.includes('valor')], [500, 4, 'Tv', true])
+})
+
+Deno.test('frase: as formas de parcela que já funcionavam', () => {
+  for (const s of [
+    'tv em 4 vezes de 100', 'tv 4 x de 100', 'tv total 400 em 4x', 'tv valor da parcela 100 em 4x',
+    'tv 100 reais cada parcela 4x', 'tv parcela de 100 em 4 vezes', 'tv 400 em 4 vezes',
+  ]) {
+    assertEquals(lerParcelas(s), [400, 4, 'Tv'], s)
+  }
+})

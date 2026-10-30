@@ -63,6 +63,8 @@ const FORMAS = new Map<string, FormaDePagamento>([
 
 /** Dizem que o valor ao lado é o de uma parcela, não o total. */
 const PARCELA = new Set(['parcela', 'parcelas', 'prestacao', 'prestacoes'])
+/** Depois de um valor, com parcelas na frase, dizem que ele é o de cada mês ("100 mensais 4x"). */
+const POR_MES = new Set(['mensal', 'mensais', '/mes'])
 
 /** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
 const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
@@ -203,6 +205,7 @@ type Candidato = { valor: number; de: number; ate: number; marcado: boolean; ext
 
 export function interpretarFrase(texto: string, hoje: string): FraseInterpretada {
   const toks: Token[] = texto
+    .replace(/(\d)(\/m[eê]s)(?=$|[\s.,;:!?)])/giu, '$1 $2') // "100/mês"
     .split(/\s+/)
     .filter(Boolean)
     .map((t) => ({ texto: t, chave: chaveDe(t), usado: false }))
@@ -236,27 +239,47 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     else if (d !== data) duvida('data')
   }
 
+  // "por mês", "ao mês", "mensal", "/mês" em algum lugar da frase.
+  const porMes = toks.some((t, i) => POR_MES.has(t.chave) || ((t.chave === 'ao' || t.chave === 'por') && k(i + 1) === 'mes'))
+  const numeroEm = (j: number) => lerNumero(k(k(j) === 'r$' ? j + 1 : j)) != null
+  // A palavra da contagem depois do número: "x", "vezes", "parcelas", "prestações", com "iguais"
+  // opcional; "meses" só com um valor ao lado ("4 meses de 100", "100 por mês 4 meses").
+  const contagem = (j: number) => {
+    let fim = -1
+    if (['x', 'vezes', 'vez', 'parcelas', 'prestacoes'].includes(k(j))) fim = j
+    else if (k(j) === 'meses' && (porMes || (k(j + 1) === 'de' && numeroEm(j + 2)))) fim = j
+    if (fim >= 0 && k(fim + 1) === 'iguais') fim++
+    return fim
+  }
+  // "Nx de V": V é a parcela. O total sai depois do valor, que pode tê-lo dito ("400 em 4x de 100").
+  let porParcela: { n: number; v: number; valida: boolean; duvidar: boolean } | null = null
+
   // 1ª passada: parcelas, data, tipo, forma e a moeda. O que casa é consumido.
   for (let i = 0; i < toks.length; i++) {
     const c = k(i)
     const t = toks[i]
 
-    // "3x", "3 x", "3 vezes", "três vezes", "três x"; com "de V", V é a parcela.
+    // "3x", "3 x", "3 vezes", "três vezes", "três x", "4 parcelas"; com "de V", V é a parcela.
     // Um número solto logo depois de "r$" é dinheiro, nunca a contagem ("R$ 30 x 2");
-    // o "12x" colado nunca é dinheiro, então vale mesmo depois de "r$".
+    // o "12x" colado nunca é dinheiro, então vale mesmo depois de "r$". "4x100" é "4x de 100";
+    // "x4" só conta logo depois de um número ("100 x4").
     let n: number | null = null
     let fim = i
-    const x = /^(\d+)x$/.exec(c)
+    let colado: number | null = null
+    const x = /^(\d+)x(\d[\d.,]*)?$/.exec(c)
     const dinheiro = k(i - 1) === 'r$'
-    if (x) n = Number(x[1])
-    else if (!dinheiro && /^\d+$/.test(c) && ['x', 'vezes', 'vez'].includes(k(i + 1))) {
+    if (x) {
+      n = Number(x[1])
+      colado = x[2] ? lerNumero(x[2]) : null
+    } else if (/^x\d+$/.test(c) && lerNumero(k(i - 1)) != null) n = Number(c.slice(1))
+    else if (!dinheiro && /^\d+$/.test(c) && contagem(i + 1) >= 0) {
       n = Number(c)
-      fim = i + 1
+      fim = contagem(i + 1)
     } else if (!dinheiro && NUMEROS.has(c)) {
       const ext = lerExtenso(toks, i)
-      if (ext && ['x', 'vezes', 'vez'].includes(k(ext.fim + 1))) {
+      if (ext && contagem(ext.fim + 1) >= 0) {
         n = ext.valor
-        fim = ext.fim + 1
+        fim = contagem(ext.fim + 1)
       }
     }
     if (n != null) {
@@ -270,19 +293,22 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
         parcelas ??= n
       }
       else duvida('parcelas')
-      // O número logo depois ("10x de 30", "10x de R$ 30", "10x 30"): a pessoa confere.
-      const comDe = k(fim + 1) === 'de'
+      // O número logo depois ("10x de 30", "10x de R$ 30", "10x 30"): a pessoa confere,
+      // a não ser que a palavra diga que ele é a parcela ("4 parcelas de 100", "4 meses de 100").
+      const comDe = colado == null && k(fim + 1) === 'de'
       let j = comDe ? fim + 2 : fim + 1
       if (k(j) === 'r$') j++
-      const seguinte = toks[j] && !toks[j].usado ? lerNumero(k(j)) : null
+      const seguinte = colado ?? (toks[j] && !toks[j].usado ? lerNumero(k(j)) : null)
       if (seguinte != null) {
-        duvida('valor')
         // Com "de", V é a parcela e o total é N × V; sem "de", V fica como o valor.
-        if (comDe && valor == null) {
-          usar(fim + 1, j)
-          valor = valida ? centavos(n * seguinte) : seguinte
-          fim = j
-        }
+        if ((comDe || colado != null) && porParcela == null) {
+          const explicita = toks.slice(i, fim + 1).some((t) => PARCELA.has(t.chave) || t.chave === 'meses')
+          porParcela = { n, v: seguinte, valida, duvidar: !explicita }
+          if (comDe) {
+            usar(fim + 1, j)
+            fim = j
+          }
+        } else duvida('valor')
       }
       i = fim
       continue
@@ -376,7 +402,9 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
       if (noComeco || marcado) candidatos.push({ valor: ext.valor, de: i, ate: ext.fim, marcado, extenso: true, parou: ext.parou })
       i = ext.fim
     }
-    const escolhido = candidatos.find((c) => c.marcado) ?? candidatos.find((c) => !c.extenso) ?? candidatos[0]
+    let escolhido: Candidato | undefined = candidatos.find((c) => c.marcado) ?? candidatos.find((c) => !c.extenso) ?? candidatos[0]
+    // Junto de "Nx de V", só é o total um número maior que a parcela ("3 cafés 10x de 5" não é).
+    if (porParcela && escolhido && escolhido.valor <= porParcela.v) escolhido = undefined
     if (escolhido) {
       usar(escolhido.de, escolhido.ate)
       valor = escolhido.valor
@@ -411,8 +439,22 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
         toks[daParcela].usado = true
         if (parcelas != null) valor = centavos(parcelas * valor)
         else duvida('valor')
+      } else if (parcelas != null) {
+        // "100 mensais 4x", "100 ao mês em 4x", "100 por mês 4 meses", "100 /mês em 4x".
+        const mes = POR_MES.has(k(depois)) ? depois : ['ao', 'por'].includes(k(depois)) && k(depois + 1) === 'mes' ? depois + 1 : -1
+        if (mes >= 0 && !toks[mes].usado) {
+          usar(depois, mes)
+          valor = centavos(parcelas * valor)
+        }
       }
     }
+  }
+  if (porParcela) {
+    const total = porParcela.valida ? centavos(porParcela.n * porParcela.v) : porParcela.v
+    if (valor == null) {
+      valor = total
+      if (porParcela.duvidar) duvida('valor')
+    } else if (valor !== total) duvida('valor')
   }
   for (let i = 0; i < toks.length; i++) if (k(i) === 'r$' || k(i) === 'reais') toks[i].usado = true
   // O "x" solto entre dois números ("R$ 30 x 2", "R$ 15 x 2 vezes"), ou antes de "de",
