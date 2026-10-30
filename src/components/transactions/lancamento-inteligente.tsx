@@ -1159,11 +1159,11 @@ function Revisao({
                 {qual ? (
                     <motion.span key={qual} className="flex" {...presenca}>
                         {qual === "confira" ? (
-                            <Badge size="sm" tone="warning">
+                            <Badge tone="warning">
                                 Confira
                             </Badge>
                         ) : (
-                            <Badge size="sm" tone="info">
+                            <Badge tone="info">
                                 IA
                             </Badge>
                         )}
@@ -1395,7 +1395,7 @@ function Revisao({
                             </Badge>
                             {campos.motivoDoTipo ? <Caption>por causa de “{campos.motivoDoTipo}”</Caption> : null}
                             {leuComIA ? (
-                                <Badge size="xs" tone="info">
+                                <Badge tone="info">
                                     IA
                                 </Badge>
                             ) : null}
