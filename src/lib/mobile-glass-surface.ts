@@ -18,12 +18,6 @@ export const MOBILE_GLASS_ACCOUNT_MENU_CONTENT_CLASSNAME = cn(
     "w-[min(calc(100vw-2rem),20rem)] max-w-[min(calc(100vw-2rem),20rem)]"
 )
 
-/** FAB quick-create dropdown — compact width for short action labels. */
-export const MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME = cn(
-    MOBILE_GLASS_MENU_SHELL_CLASSNAME,
-    "w-[min(calc(100vw-2rem),14rem)]"
-)
-
 export const MOBILE_GLASS_MENU_INNER_CLASSNAME =
     "flex flex-col gap-0.5 px-2.5 py-2.5"
 

@@ -4,35 +4,15 @@ import { ArrowPathRoundedSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { PlusIcon as PlusMiniIcon } from "@heroicons/react/20/solid"
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
 import { bottomBarActionClassName } from "@/components/ui/bottom-bar"
-import {
-    MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME,
-    MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME,
-    MOBILE_GLASS_MENU_INNER_CLASSNAME,
-    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
-} from "@/lib/mobile-glass-surface"
+import { MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME } from "@/lib/mobile-glass-surface"
 import { cn } from "@/lib/utils"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
-
-const FIXED_TRANSACTION_ACTIONS: ReadonlyArray<{
-    mode: NewTransactionMode
-    label: string
-}> = [
-    { mode: "expense", label: "Despesas" },
-    { mode: "installment", label: "Parcelas" },
-    { mode: "income", label: "Receitas" },
-]
 
 function useQuickCreateTransaction() {
     const shell = useGlobalShellDialogsOptional()
@@ -95,162 +75,42 @@ export function QuickActionResourceLinks({
     )
 }
 
-function FixedQuickCreateMenuItems({
-    onPickTransaction,
-    onPickSubscription,
-    mobileGlass = false,
-    part = "all",
-}: {
-    onPickTransaction: (mode: NewTransactionMode) => void
-    onPickSubscription: () => void
-    mobileGlass?: boolean
-    /** Splits glass FAB menu so the separator can sit outside padded sections. */
-    part?: "all" | "transactions" | "subscription"
-}) {
-    const itemClassName = mobileGlass
-        ? MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME
-        : undefined
-    const separatorClassName = mobileGlass
-        ? MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
-        : undefined
-
-    if (part === "subscription") {
-        return (
-            <DropdownMenuItem
-                className={itemClassName}
-                onClick={onPickSubscription}
-            >
-                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
-                <span>Assinatura</span>
-            </DropdownMenuItem>
-        )
-    }
-
-    const transactionItems = (
-        <>
-            {FIXED_TRANSACTION_ACTIONS.map(({ mode, label }) => (
-                <DropdownMenuItem
-                    key={mode}
-                    className={itemClassName}
-                    onClick={() => onPickTransaction(mode)}
-                >
-                    {label}
-                </DropdownMenuItem>
-            ))}
-        </>
-    )
-
-    if (part === "transactions") {
-        return transactionItems
-    }
-
-    return (
-        <>
-            {transactionItems}
-            <DropdownMenuSeparator className={separatorClassName} />
-            <DropdownMenuItem
-                className={itemClassName}
-                onClick={onPickSubscription}
-            >
-                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
-                <span>Assinatura</span>
-            </DropdownMenuItem>
-        </>
-    )
-}
-
 type QuickActionButtonProps = {
     variant?: "sidebar" | "fab"
 }
 
+/** "+ Adicionar" abre direto o lançamento em Despesa; o tipo se troca no próprio formulário. */
 export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProps) {
-    const [open, setOpen] = React.useState(false)
     const isFab = variant === "fab"
     const { state } = useSidebar()
     const quickCreate = useQuickCreateTransaction()
-    const createSubscription = useQuickCreateSubscription()
     const isSidebarCollapsed = state === "collapsed"
+    const abrir = () => quickCreate("expense")
 
-    const pickTransaction = React.useCallback(
-        (mode: NewTransactionMode) => {
-            quickCreate(mode)
-            setOpen(false)
-        },
-        [quickCreate]
-    )
-
-    const pickSubscription = React.useCallback(() => {
-        createSubscription()
-        setOpen(false)
-    }, [createSubscription])
-
-    return (
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-            <DropdownMenuTrigger asChild>
-                {isFab || isSidebarCollapsed ? (
-                    <Button
-                        variant="primary"
-                        size="icon-lg"
-                        type="button"
-                        className={cn(
-                            isFab && bottomBarActionClassName,
-                            !isFab &&
-                                "size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
-                        )}
-                        aria-label="Adicionar"
-                    >
-                        <PlusMiniIcon className="size-5 shrink-0" />
-                    </Button>
-                ) : (
-                    <Button
-                        variant="primary"
-                        type="button"
-                        className="h-9 w-full justify-center gap-2 text-xs group-data-[collapsible=icon]:hidden"
-                    >
-                        <PlusIcon className="size-4 shrink-0" />
-                        <span className="truncate">Adicionar</span>
-                    </Button>
-                )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-                align={isFab ? "end" : "start"}
-                side={isFab ? "top" : "right"}
-                className={
-                    isFab
-                        ? MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME
-                        : "min-w-56 w-max max-w-[min(100vw-2rem,18rem)]"
-                }
-                sideOffset={isFab ? 12 : 8}
-            >
-                {isFab ? (
-                    <>
-                        <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
-                            <FixedQuickCreateMenuItems
-                                mobileGlass
-                                part="transactions"
-                                onPickTransaction={pickTransaction}
-                                onPickSubscription={pickSubscription}
-                            />
-                        </div>
-                        <DropdownMenuSeparator
-                            className={MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME}
-                        />
-                        <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
-                            <FixedQuickCreateMenuItems
-                                mobileGlass
-                                part="subscription"
-                                onPickTransaction={pickTransaction}
-                                onPickSubscription={pickSubscription}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <FixedQuickCreateMenuItems
-                        onPickTransaction={pickTransaction}
-                        onPickSubscription={pickSubscription}
-                    />
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
+    return isFab || isSidebarCollapsed ? (
+        <Button
+            variant="primary"
+            size="icon-lg"
+            type="button"
+            onClick={abrir}
+            className={cn(
+                isFab && bottomBarActionClassName,
+                !isFab &&
+                    "size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
+            )}
+            aria-label="Adicionar"
+        >
+            <PlusMiniIcon className="size-5 shrink-0" />
+        </Button>
+    ) : (
+        <Button
+            variant="primary"
+            type="button"
+            onClick={abrir}
+            className="h-9 w-full justify-center gap-2 text-xs group-data-[collapsible=icon]:hidden"
+        >
+            <PlusIcon className="size-4 shrink-0" />
+            <span className="truncate">Adicionar</span>
+        </Button>
     )
 }
