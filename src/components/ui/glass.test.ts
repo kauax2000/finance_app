@@ -301,11 +301,10 @@ describe("a superfície de vidro", () => {
             expect(receita, `${nome}: borrão próprio`).not.toMatch(/\bbackdrop-blur/)
             expect(receita, `${nome}: sem guarda`).toContain(`reduced-transparency:bg-${token}`)
             expect(receita, `${nome}: token errado`).not.toMatch(new RegExp(`bg-${token === "popover" ? "background" : "popover"}`))
-            // Quase opaca nos dois temas: com o escuro aberto (60% e 40%) a
-            // página atravessava menus, diálogos e gavetas em produção.
-            const base = Number(receita.match(new RegExp(`bg-${token}/(\\d+)`))?.[1])
-            expect(base, `${nome}: alfa base`).toBeGreaterThanOrEqual(95)
-            expect(receita, `${nome}: o escuro não abre`).not.toMatch(/dark:bg-/)
+            // Sólida nos dois temas: com alfa a página atravessava menus,
+            // diálogos e gavetas em produção.
+            expect(receita, `${nome}: tinta sólida`).toMatch(new RegExp(`"bg-${token} `))
+            expect(receita, `${nome}: sem alfa`).not.toMatch(new RegExp(`bg-${token}/`))
         }
     })
 
@@ -741,16 +740,9 @@ describe("a superfície de vidro", () => {
         expect(receita, "sem guarda").toContain("reduced-transparency:bg-background")
         expect(receita, "token errado").not.toMatch(/bg-popover/)
 
-        // Opaca de base, aberta só onde o borrão existe. A lookbehind é
-        // necessária: sem ela `supports-backdrop-filter:bg-background/60`
-        // casaria como se fosse a base.
-        const base = Number(receita.match(/(?<!:)bg-background\/(\d+)/)?.[1])
-        const aberta = Number(
-            receita.match(/supports-backdrop-filter:bg-background\/(\d+)/)?.[1]
-        )
-        expect(base, "alfa base").toBeGreaterThan(0)
-        expect(aberta, "alfa aberto").toBeGreaterThan(0)
-        expect(aberta).toBeLessThan(base)
+        // Sólida: a 60% o conteúdo que rola atravessava o cabeçalho.
+        expect(receita, "tinta sólida").toMatch(/"bg-background /)
+        expect(receita, "sem alfa").not.toMatch(/bg-background\//)
         expect(receita, "a barra não é de tema").not.toMatch(
             /supports-backdrop-filter:dark:/
         )

@@ -206,7 +206,7 @@ export default function BottomBarDoc() {
       </DocNote>
 
       <DocNote title="O vidro é o da folha, e não o da barra">
-        A ilha flutua com margem, e veste <code>--mobile-glass-bg</code> (55/45), calibrado para uma folha sobre a página. <code>barSurfaceClassName</code> (95/60) é para barra <strong>rente</strong> à borda, e deixaria a pílula quase opaca.
+        A ilha flutua com margem, e veste <code>--mobile-glass-bg</code>, sólido como as outras sobreposições. <code>barSurfaceClassName</code> é a barra <strong>rente</strong> à borda.
       </DocNote>
 
       <DocNote title="A ação lê a altura da barra, porque 56 não é degrau">

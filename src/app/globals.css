@@ -594,9 +594,9 @@
      dropdown do FAB. Ela segue superfícies diferentes em cada tema de
      propósito: é calibrada para uma **folha sobre a página**, e não para uma
      faixa rente à borda (ver a nota de `scroll-fade-material`, que a rejeita
-     justamente por isso). 95%, como as sobreposições: a 55% e 45% o
+     justamente por isso). Sólida, como as sobreposições: com alfa o
      conteúdo atravessava a barra de baixo. */
-  --mobile-glass-bg: oklch(0.985 0 0 / 95%);
+  --mobile-glass-bg: oklch(0.985 0 0);
   --mobile-glass-border: oklch(1 0 0 / 10%);
 
   /* A barra de baixo (ver `BottomBar`).
@@ -792,7 +792,7 @@
      media bem (ΔE 43 do `--income`) e ainda assim tingia a navegação de verde,
      num app em que verde significa "entrou dinheiro". */
   --glass-cloud: oklch(1 0 0 / 48%);
-  --mobile-glass-bg: oklch(0.205 0 0 / 95%);
+  --mobile-glass-bg: oklch(0.205 0 0);
   --mobile-glass-border: oklch(1 0 0 / 5%);
 }
 

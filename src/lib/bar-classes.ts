@@ -36,8 +36,8 @@
  * cabeçalho fixo e o da fileira de menus no topo de uma região que rola.
  */
 export const barSurfaceClassName = [
-  "bg-background/95 glass-surface",
-  "supports-backdrop-filter:bg-background/60",
+  // Sólida: a 60% o conteúdo que rola por baixo atravessava o cabeçalho.
+  "bg-background glass-surface",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-background",
 ].join(" ")

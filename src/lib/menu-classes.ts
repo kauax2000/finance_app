@@ -48,9 +48,9 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  * própria e só troca o token, como o `CommandDialog` sobre o `DialogContent`.
  */
 export const menuPanelTintClassName = [
-  // 95% nos dois temas: a 85% (claro) e 60% (escuro) o texto de trás
-  // atravessava menus e seletores, e a lista ficava difícil de ler.
-  "bg-popover/95 glass-surface",
+  // Sólida: com alfa (85/60%, depois 95%) o texto de trás atravessava menus e
+  // seletores, e a lista ficava difícil de ler.
+  "bg-popover glass-surface",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-popover",
 ].join(" ")

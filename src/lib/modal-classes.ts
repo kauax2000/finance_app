@@ -38,10 +38,10 @@
  * irmãs do corpo, que se mascara sozinho; o fundo delas já é a placa.
  */
 export const modalSurfaceClassName = [
-  // 95% nos dois temas. A 40% no escuro (e 85% no claro, com 4,38 de
-  // contraste) a página atravessava a gaveta e o diálogo em produção, e os
-  // campos do formulário competiam com o que estava atrás.
-  "bg-background/95 glass-surface",
+  // Sólida. Com alfa (40% no escuro, 85% no claro, depois 95%) a página
+  // atravessava a gaveta e o diálogo em produção, e os campos do formulário
+  // competiam com o que estava atrás.
+  "bg-background glass-surface",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-background",
 ].join(" ")

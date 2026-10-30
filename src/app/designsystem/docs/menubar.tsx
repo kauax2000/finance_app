@@ -220,7 +220,7 @@ export default function MenubarDoc() {
       </DocNote>
 
       <DocNote title="Só a fileira outline é vidro">
-        A <code>outline</code> veste <code>barSurfaceClassName</code>, a régua de barra do cabeçalho deste catálogo: <code>--background</code> a 95%, abrindo a 60% onde há <code>backdrop-filter</code>, nos dois temas, com guarda de transparência reduzida. <code>solid</code> fica opaca porque translúcida deixa de ler como bandeja; <code>plain</code> fica transparente porque mora dentro de um cabeçalho que já é o vidro.
+        A <code>outline</code> veste <code>barSurfaceClassName</code>, a régua de barra do cabeçalho deste catálogo: <code>--background</code> sólido, nos dois temas. <code>solid</code> fica opaca porque translúcida deixa de ler como bandeja; <code>plain</code> fica transparente porque mora dentro de um cabeçalho que já é o vidro.
       </DocNote>
 
       <DocNote title="Na bandeja, o realce sobe em vez de tingir">

@@ -193,7 +193,7 @@ function HoverCardArrow({
       className={cn(
         // A seta é a ponta da placa: com a placa translúcida, um triângulo opaco
         // saía mais escuro que ela. Os alfas são os de `menuPanelSurfaceClassName`.
-        "fill-popover/95 reduced-transparency:fill-popover",
+        "fill-popover",
         className,
       )}
       {...props}
