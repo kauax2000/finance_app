@@ -1132,11 +1132,11 @@ function Revisao({
                 {qual ? (
                     <motion.span key={qual} className="flex" {...presenca}>
                         {qual === "confira" ? (
-                            <Badge size="xs" tone="warning">
+                            <Badge size="sm" tone="warning">
                                 Confira
                             </Badge>
                         ) : (
-                            <Badge size="xs" tone="info">
+                            <Badge size="sm" tone="info">
                                 IA
                             </Badge>
                         )}
