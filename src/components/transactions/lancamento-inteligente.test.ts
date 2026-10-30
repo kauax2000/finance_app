@@ -116,7 +116,7 @@ describe("a tela do lançamento inteligente (v2)", () => {
     it("o campo vira o painel: o corpo rola e o rodapé fica", () => {
         expect(fonte).toMatch(/data-slot="lancamento-pilulas"[\s\S]*<SearchInput/)
         expect(fonte).toMatch(/data-slot="lancamento-vidro"[\s\S]{0,120}flex min-w-0 flex-1 items-center overflow-hidden rounded-full/)
-        expect(fonte).not.toContain("lancamento-revisao")
+        expect(fonte).not.toContain('"lancamento-revisao"')
         expect(fonte).toMatch(/<DialogBody className="pt-5">\s*<Form/)
         expect(fonte).toMatch(/<\/DialogBody>[\s\S]*<DialogFooter[\s\S]*<FormSubmit/)
     })
@@ -195,5 +195,10 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).toMatch(/<Combobox[\s\S]{0,80}defaultOpen/)
         expect(fonte.match(/<Select[\s\S]{0,60}defaultOpen/g)?.length).toBe(2)
         expect(fonte).toMatch(/onOpenChange=\{\(aberto\) => \{?\s*if \(!aberto\) fechar\(\)/)
+    })
+
+    it("o corpo da revisão anda na mola", () => {
+        expect(fonte).toContain("useAlturaAnimada<HTMLDivElement>()")
+        expect(fonte).toMatch(/data-slot="lancamento-revisao-corpo"/)
     })
 })

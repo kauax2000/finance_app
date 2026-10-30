@@ -57,6 +57,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { SearchInput } from "@/components/ui/search-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Caption, Muted } from "@/components/ui/typography"
+import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
@@ -966,6 +967,9 @@ function Revisao({
 }) {
     const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
     const formId = useId()
+    // A altura do corpo anda na mola quando um editor abre ou uma peça entra e
+    // sai; o vidro (`lancamento-fundo`) acompanha a placa sozinho.
+    const corpoRef = useAlturaAnimada<HTMLDivElement>()
     // O editor que abre leva o foco ao controle dele (o `DatePicker` não tem `autoFocus`).
     const editorRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
@@ -1298,115 +1302,117 @@ function Revisao({
                         return leitura.aprovar()
                     }}
                 >
-                    {/* O tipo é só um indicador: corrigir o tipo é pelo formulário completo. */}
-                    <div data-revela className="flex flex-wrap items-center gap-2 pe-10">
-                        <Badge id="lancamento-tipo" tone={TOM_DO_TIPO[tipo]}>
-                            <BadgeDot />
-                            {rotuloDoTipo}
-                        </Badge>
-                        {campos.motivoDoTipo ? <Caption>por causa de “{campos.motivoDoTipo}”</Caption> : null}
-                        {leuComIA ? (
-                            <Badge size="xs" tone="info">
-                                IA
+                    <div data-slot="lancamento-revisao-corpo" ref={corpoRef} className="flex flex-col gap-(--space-block)">
+                        {/* O tipo é só um indicador: corrigir o tipo é pelo formulário completo. */}
+                        <div data-revela className="flex flex-wrap items-center gap-2 pe-10">
+                            <Badge id="lancamento-tipo" tone={TOM_DO_TIPO[tipo]}>
+                                <BadgeDot />
+                                {rotuloDoTipo}
                             </Badge>
-                        ) : null}
-                    </div>
-
-                    {/* O valor em destaque; tocá-lo edita o valor. */}
-                    {editando === "valor" ? (
-                        emEdicao("valor", "Valor")
-                    ) : (
-                        <div data-revela className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    id="lancamento-valor"
-                                    disabled={saving}
-                                    onClick={() => abrir("valor")}
-                                    className={cn("min-h-11 w-full rounded-row text-start", FOCO)}
-                                >
-                                    {campos.valor != null ? (
-                                        <MoneyDisplay
-                                            value={campos.valor}
-                                            size="2xl"
-                                            mono={false}
-                                            className="text-4xl font-bold tracking-tight"
-                                        />
-                                    ) : (
-                                        <span className="text-2xl font-semibold text-muted-foreground">
-                                            {NAO_IDENTIFICADO}
-                                        </span>
-                                    )}
-                                </button>
-                                {selo("valor", valorDaLinha("valor"))}
-                            </div>
-                            {legenda ? <Muted>{legenda}</Muted> : null}
+                            {campos.motivoDoTipo ? <Caption>por causa de “{campos.motivoDoTipo}”</Caption> : null}
+                            {leuComIA ? (
+                                <Badge size="xs" tone="info">
+                                    IA
+                                </Badge>
+                            ) : null}
                         </div>
-                    )}
 
-                    {leitura.foto ? (
-                        <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
-                    ) : null}
+                        {/* O valor em destaque; tocá-lo edita o valor. */}
+                        {editando === "valor" ? (
+                            emEdicao("valor", "Valor")
+                        ) : (
+                            <div data-revela className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        id="lancamento-valor"
+                                        disabled={saving}
+                                        onClick={() => abrir("valor")}
+                                        className={cn("min-h-11 w-full rounded-row text-start", FOCO)}
+                                    >
+                                        {campos.valor != null ? (
+                                            <MoneyDisplay
+                                                value={campos.valor}
+                                                size="2xl"
+                                                mono={false}
+                                                className="text-4xl font-bold tracking-tight"
+                                            />
+                                        ) : (
+                                            <span className="text-2xl font-semibold text-muted-foreground">
+                                                {NAO_IDENTIFICADO}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {selo("valor", valorDaLinha("valor"))}
+                                </div>
+                                {legenda ? <Muted>{legenda}</Muted> : null}
+                            </div>
+                        )}
 
-                    {/* A lista agrupada: a superfície funda, linhas de 50 com a divisória
-                        recuada até o texto (16 + o ladrilho de 28 + 8). */}
-                    <ItemGroup
-                        data-revela
-                        className="gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
-                    >
-                        {linhas.map((x, i) => {
-                            const rotulo = rotuloDaLinha(x.campo, x.rotulo)
-                            const separador = i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null
-                            if (editando === x.campo) {
+                        {leitura.foto ? (
+                            <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
+                        ) : null}
+
+                        {/* A lista agrupada: a superfície funda, linhas de 50 com a divisória
+                            recuada até o texto (16 + o ladrilho de 28 + 8). */}
+                        <ItemGroup
+                            data-revela
+                            className="gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
+                        >
+                            {linhas.map((x, i) => {
+                                const rotulo = rotuloDaLinha(x.campo, x.rotulo)
+                                const separador = i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null
+                                if (editando === x.campo) {
+                                    return (
+                                        <Fragment key={x.campo}>
+                                            {separador}
+                                            <div className="px-4 py-2">{emEdicao(x.campo, rotulo)}</div>
+                                        </Fragment>
+                                    )
+                                }
+                                const valor = valorDaLinha(x.campo)
                                 return (
                                     <Fragment key={x.campo}>
                                         {separador}
-                                        <div className="px-4 py-2">{emEdicao(x.campo, rotulo)}</div>
+                                        <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
+                                            <button
+                                                type="button"
+                                                id={`lancamento-${x.campo}`}
+                                                disabled={saving}
+                                                onClick={() => abrir(x.campo)}
+                                            >
+                                                <ItemMedia variant="tile" tone={x.tom} tint="vivid">
+                                                    {x.icone}
+                                                </ItemMedia>
+                                                <ItemContent className="min-w-fit">
+                                                    <ItemTitle>{rotulo}</ItemTitle>
+                                                </ItemContent>
+                                                <ItemActions className="min-w-0 max-w-3/5">
+                                                    {selo(x.campo, valor)}
+                                                    {x.campo === "categoria" && categoria ? (
+                                                        <ColorTile size="xs" color={categoria.color} />
+                                                    ) : null}
+                                                    <span
+                                                        className={cn(
+                                                            "min-w-0 truncate text-sm",
+                                                            valor
+                                                                ? "nums text-muted-foreground"
+                                                                : "text-warning-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {valor ?? "Escolher"}
+                                                    </span>
+                                                    <ItemChevron />
+                                                </ItemActions>
+                                            </button>
+                                        </Item>
                                     </Fragment>
                                 )
-                            }
-                            const valor = valorDaLinha(x.campo)
-                            return (
-                                <Fragment key={x.campo}>
-                                    {separador}
-                                    <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
-                                        <button
-                                            type="button"
-                                            id={`lancamento-${x.campo}`}
-                                            disabled={saving}
-                                            onClick={() => abrir(x.campo)}
-                                        >
-                                            <ItemMedia variant="tile" tone={x.tom} tint="vivid">
-                                                {x.icone}
-                                            </ItemMedia>
-                                            <ItemContent className="min-w-fit">
-                                                <ItemTitle>{rotulo}</ItemTitle>
-                                            </ItemContent>
-                                            <ItemActions className="min-w-0 max-w-3/5">
-                                                {selo(x.campo, valor)}
-                                                {x.campo === "categoria" && categoria ? (
-                                                    <ColorTile size="xs" color={categoria.color} />
-                                                ) : null}
-                                                <span
-                                                    className={cn(
-                                                        "min-w-0 truncate text-sm",
-                                                        valor
-                                                            ? "nums text-muted-foreground"
-                                                            : "text-warning-muted-foreground"
-                                                    )}
-                                                >
-                                                    {valor ?? "Escolher"}
-                                                </span>
-                                                <ItemChevron />
-                                            </ItemActions>
-                                        </button>
-                                    </Item>
-                                </Fragment>
-                            )
-                        })}
-                    </ItemGroup>
+                            })}
+                        </ItemGroup>
 
-                    {plano ? <ImpactoDaParcela proposto={plano} /> : null}
+                        {plano ? <ImpactoDaParcela proposto={plano} /> : null}
+                    </div>
                 </Form>
             </DialogBody>
 
