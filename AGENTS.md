@@ -246,6 +246,18 @@ design system. Tudo na tela é componente dele.
 3. `npm run ds:audit -- <arquivo-da-tela>` e corrigir o que for local.
 4. `npx tsc --noEmit && npm run lint && npm run test:unit`.
 
+**Antes de propor a tela, leia os estudos de concorrentes.** O
+[comparativo de UX](docs/produto/concorrentes/2026-10-28-comparativo-ux.md)
+(§11 tem as ações por impacto), o
+[estudo de telas](docs/produto/concorrentes/2026-10-28-estudo-telas-mobbin.md)
+e os dossiês em `docs/produto/concorrentes/telas-mobbin/`, com as telas
+baixadas, dizem o que os concorrentes e as fintechs fazem em cada área. Use-os
+para sugerir funcionalidades, jornadas e organização, sempre como proposta
+marcada **⚠️ Fora do padrão do DS** quando sair do padrão. Para buscar
+referências novas, use o **Mobbin MCP** (`search_screens`, `search_flows`), em
+iOS e web e também fora de finanças, quando outra área resolve melhor o mesmo
+problema. Cite a tela pelo `mobbin_url`, e não salve nada no Mobbin sem pedido.
+
 **Parar e perguntar (AskUserQuestion), sem exceção:**
 
 - **Componente novo** — elemento sem correspondência no catálogo. A pergunta
