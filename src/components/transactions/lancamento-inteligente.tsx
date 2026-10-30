@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
 import {
     animate,
     AnimatePresence,
     motion,
     stagger,
+    useIsPresent,
     useReducedMotion,
     type AnimationPlaybackControlsWithThen,
 } from "motion/react"
@@ -959,12 +960,24 @@ const FOCO = "outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
 /** De onde quem entra no painel surge: no desfoque, 4px abaixo, como as linhas da paleta (`menu-content-in`). */
 const SURGE_DE = { opacity: 0, filter: "blur(10px)", y: 4 }
-/** Quem entra assenta na mola. */
-const ENTRA = { opacity: 1, filter: "blur(0px)", y: 0, transition: { ...MOLA } }
+/** O mesmo, sem descer: o gatilho que um seletor mede ao montar (Categoria, Forma, Parcelas). */
+const SURGE_NO_LUGAR = { opacity: 0, filter: "blur(10px)" }
+/** Quem entra assenta na mola; em repouso, sem `filter` (ele faria um contexto de empilhamento). */
+const ENTRA = { opacity: 1, filter: "blur(0px)", y: 0, transition: { ...MOLA }, transitionEnd: { filter: "none" } }
 /** Quem sai esmaece no desfoque, curto. */
 const SAI = { opacity: 0, filter: "blur(6px)", transition: SAIDA }
 /** As peças do editor chegam em escada: o rótulo, o campo, o "ok". */
 const ESCADA_DO_EDITOR = 0.04
+
+/**
+ * Um filho de `AnimatePresence` que fica inerte enquanto sai: o fantasma do
+ * `popLayout` pinta por cima de quem entra, e não recebe clique nem foco (o
+ * Radix devolveria o foco ao gatilho do editor que sai).
+ */
+function Presenca({ ref, ...props }: ComponentProps<typeof motion.div>) {
+    const presente = useIsPresent()
+    return <motion.div {...props} ref={ref} inert={!presente} />
+}
 
 function Revisao({
     campos,
@@ -987,7 +1000,16 @@ function Revisao({
     // sai; o vidro (`lancamento-fundo`) acompanha a placa sozinho.
     const corpoRef = useAlturaAnimada<HTMLDivElement>()
     // O editor que abre leva o foco ao controle dele (o `DatePicker` não tem `autoFocus`).
-    const editorRef = useRef<HTMLDivElement>(null)
+    const editorRef = useRef<HTMLDivElement | null>(null)
+    // Na troca rápida de A para B os dois editores estão montados: o que sai só
+    // apaga o ref se ele ainda for o dele.
+    const prenderEditor = useCallback((el: HTMLDivElement | null) => {
+        if (!el) return
+        editorRef.current = el
+        return () => {
+            if (editorRef.current === el) editorRef.current = null
+        }
+    }, [])
     useEffect(() => {
         // O seletor aberto já tem o foco: focar o gatilho o fecharia.
         if (editando && !abreDireto(editando))
@@ -1071,6 +1093,9 @@ function Revisao({
         sai: presenca.exit,
     }
     const pecaDoEditor = { antes: presenca.initial, entra: presenca.animate }
+    const pecaNoLugar = { antes: reduzido ? presenca.initial : SURGE_NO_LUGAR, entra: presenca.animate }
+    // A altura do rodapé também anda na mola quando o motivo entra e sai.
+    const rodapeRef = useAlturaAnimada<HTMLDivElement>()
     const valoresAntes = useRef<Partial<Record<CampoDoLancamento, string | null>>>({})
     useEffect(() => {
         const agora: Partial<Record<CampoDoLancamento, string | null>> = {}
@@ -1121,12 +1146,14 @@ function Revisao({
      * O selo da linha: "Confira" vence o "IA"; campo editado à mão perde o selo
      * IA. Ele entra e sai no desfoque, fora do fluxo ao sair (`popLayout`).
      */
+    function qualSelo(campo: CampoDoLancamento, valor: string | null) {
+        if (confira(campo)) return "confira"
+        if (leuComIA && valor && !campoEditado(campo, leitura.editados)) return "ia"
+        return null
+    }
+
     function selo(campo: CampoDoLancamento, valor: string | null) {
-        const qual = confira(campo)
-            ? "confira"
-            : leuComIA && valor && !campoEditado(campo, leitura.editados)
-              ? "ia"
-              : null
+        const qual = qualSelo(campo, valor)
         return (
             <AnimatePresence mode="popLayout" initial={false}>
                 {qual ? (
@@ -1149,7 +1176,7 @@ function Revisao({
     /** O campo em edição, no lugar da linha (ou do valor), filho da presença dela. */
     function emEdicao(campo: CampoDoLancamento, rotulo: string, className?: string) {
         return (
-            <motion.div
+            <Presenca
                 key={`${campo}-editor`}
                 className={className}
                 variants={editorVariantes}
@@ -1162,7 +1189,11 @@ function Revisao({
                         <FieldLabel>{rotulo}</FieldLabel>
                     </motion.div>
                     <div className="flex items-center gap-2">
-                        <motion.div ref={editorRef} variants={pecaDoEditor} className="min-w-0 flex-1">
+                        <motion.div
+                            ref={prenderEditor}
+                            variants={abreDireto(campo) ? pecaNoLugar : pecaDoEditor}
+                            className="min-w-0 flex-1"
+                        >
                             {editor(campo)}
                         </motion.div>
                         {abreDireto(campo) ? null : (
@@ -1174,7 +1205,7 @@ function Revisao({
                         )}
                     </div>
                 </Field>
-            </motion.div>
+            </Presenca>
         )
     }
 
@@ -1375,7 +1406,7 @@ function Revisao({
                             {editando === "valor" ? (
                                 emEdicao("valor", "Valor")
                             ) : (
-                                <motion.div key="valor-linha" {...presenca}>
+                                <Presenca key="valor-linha" {...presenca}>
                                     <div data-revela className="flex flex-col">
                                         <div className="relative flex items-center gap-2">
                                             <button
@@ -1408,15 +1439,15 @@ function Revisao({
                                             ) : null}
                                         </AnimatePresence>
                                     </div>
-                                </motion.div>
+                                </Presenca>
                             )}
                         </AnimatePresence>
 
                         <AnimatePresence initial={false}>
                             {leitura.foto ? (
-                                <motion.div key="recibo" {...presenca}>
+                                <Presenca key="recibo" {...presenca}>
                                     <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
-                                </motion.div>
+                                </Presenca>
                             ) : null}
                         </AnimatePresence>
 
@@ -1432,13 +1463,13 @@ function Revisao({
                                     const rotulo = rotuloDaLinha(x.campo, x.rotulo)
                                     const valor = valorDaLinha(x.campo)
                                     return (
-                                        <motion.div key={x.campo} {...presenca}>
+                                        <Presenca key={x.campo} {...presenca}>
                                             {i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null}
                                             <AnimatePresence mode="popLayout" initial={false}>
                                                 {editando === x.campo ? (
                                                     emEdicao(x.campo, rotulo, "px-4 py-2")
                                                 ) : (
-                                                    <motion.div key={`${x.campo}-linha`} {...presenca}>
+                                                    <Presenca key={`${x.campo}-linha`} {...presenca}>
                                                         <Item variant="flush" size="sm" interactive asChild className="min-h-12.5">
                                                             <button
                                                                 type="button"
@@ -1454,10 +1485,21 @@ function Revisao({
                                                                 </ItemContent>
                                                                 <ItemActions className="relative min-w-0 max-w-3/5">
                                                                     {selo(x.campo, valor)}
+                                                                    {/* O selo entra e sai fora do fluxo: o ladrilho e o valor deslizam até o lugar novo. */}
                                                                     {x.campo === "categoria" && categoria ? (
-                                                                        <ColorTile size="xs" color={categoria.color} />
+                                                                        <motion.span
+                                                                            layout="position"
+                                                                            layoutDependency={qualSelo(x.campo, valor)}
+                                                                            transition={MOLA}
+                                                                            className="flex"
+                                                                        >
+                                                                            <ColorTile size="xs" color={categoria.color} />
+                                                                        </motion.span>
                                                                     ) : null}
-                                                                    <span
+                                                                    <motion.span
+                                                                        layout="position"
+                                                                        layoutDependency={qualSelo(x.campo, valor)}
+                                                                        transition={MOLA}
                                                                         className={cn(
                                                                             "min-w-0 truncate text-sm",
                                                                             valor
@@ -1466,15 +1508,15 @@ function Revisao({
                                                                         )}
                                                                     >
                                                                         {valor ?? "Escolher"}
-                                                                    </span>
+                                                                    </motion.span>
                                                                     <ItemChevron />
                                                                 </ItemActions>
                                                             </button>
                                                         </Item>
-                                                    </motion.div>
+                                                    </Presenca>
                                                 )}
                                             </AnimatePresence>
-                                        </motion.div>
+                                        </Presenca>
                                     )
                                 })}
                             </AnimatePresence>
@@ -1486,28 +1528,31 @@ function Revisao({
             </DialogBody>
 
             {/* O rodapé fica preso fora do corpo que rola; o "Aprovar" é do formulário pelo `form=`. */}
-            <DialogFooter className="relative flex-col gap-1 pt-0 sm:flex-col sm:justify-start">
-                {/* O motivo sai do fluxo ao sair (`popLayout`): o rodapé não guarda a altura dele. */}
-                <AnimatePresence mode="popLayout" initial={false}>
-                    {motivo ? (
-                        <motion.div key="motivo" {...presenca}>
-                            <Caption id="lancamento-motivo" data-revela className="pb-2 text-center">
-                                {motivo}
-                            </Caption>
-                        </motion.div>
-                    ) : null}
-                </AnimatePresence>
-                <FormSubmit
-                    form={formId}
-                    size="xl"
-                    data-revela
-                    className="w-full"
-                    pending={saving}
-                    disabled={motivo != null}
-                    aria-describedby={motivo ? "lancamento-motivo" : undefined}
-                >
-                    Aprovar
-                </FormSubmit>
+            <DialogFooter className="flex-col gap-1 pt-0 sm:flex-col sm:justify-start">
+                {/* O motivo fica no fluxo ao sair, e a altura do rodapé anda na mola. O
+                    "Aprovar" mora junto, para a caixa medida nunca chegar a zero. */}
+                <div ref={rodapeRef} className="flex flex-col gap-1">
+                    <AnimatePresence initial={false}>
+                        {motivo ? (
+                            <Presenca key="motivo" {...presenca}>
+                                <Caption id="lancamento-motivo" data-revela className="pb-2 text-center">
+                                    {motivo}
+                                </Caption>
+                            </Presenca>
+                        ) : null}
+                    </AnimatePresence>
+                    <FormSubmit
+                        form={formId}
+                        size="xl"
+                        data-revela
+                        className="w-full"
+                        pending={saving}
+                        disabled={motivo != null}
+                        aria-describedby={motivo ? "lancamento-motivo" : undefined}
+                    >
+                        Aprovar
+                    </FormSubmit>
+                </div>
                 <Button
                     variant="tertiary"
                     data-revela

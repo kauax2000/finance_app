@@ -185,7 +185,7 @@ describe("a leitura do lançamento inteligente", () => {
     })
     it("as linhas têm o mesmo ladrilho, e o valor trunca", () => {
         expect(fonte).not.toMatch(/<ItemMedia>\s*<ColorTile/)
-        expect(fonte).toMatch(/<ItemActions[\s\S]{0,400}<ColorTile size="xs"/)
+        expect(fonte).toMatch(/<ItemActions[\s\S]{0,1200}<ColorTile size="xs"/)
         expect(fonte).toMatch(/min-w-0 truncate[\s\S]{0,600}valor \?\? "Escolher"/)
         expect(fonte).toMatch(/tipo === "parcelada"[\s\S]{0,200}`\$\{campos\.parcelas\}× de/)
         expect(fonte).not.toContain('.filter(Boolean).join(" · ")')
@@ -219,5 +219,18 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte.match(/<AnimatePresence/g)?.length).toBe(7)
         expect(fonte).toMatch(/<AnimatePresence[\s\S]{0,300}MiniaturaDoRecibo/)
         expect(fonte).toMatch(/<AnimatePresence[\s\S]{0,300}lancamento-motivo/)
+    })
+
+    it("quem sai fica inerte, e em repouso nada guarda filtro", () => {
+        expect(fonte).toContain("const presente = useIsPresent()")
+        expect(fonte).toMatch(/<motion\.div \{\.\.\.props\} ref=\{ref\} inert=\{!presente\} \/>/)
+        for (const chave of ['key="valor-linha"', 'key="recibo"', "key={`${x.campo}-linha`}", "key={`${campo}-editor`}", 'key="motivo"'])
+            expect(fonte).toMatch(new RegExp(`<Presenca\\s+${chave.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`))
+        expect(fonte).toMatch(/const ENTRA = \{[^\n]*transitionEnd: \{ filter: "none" \}/)
+    })
+
+    it("o motivo do rodapé entra e sai no fluxo, com a altura na mola", () => {
+        expect(fonte).toMatch(/<div ref=\{rodapeRef\}[^>]*>\s*<AnimatePresence initial=\{false\}>[\s\S]{0,200}id="lancamento-motivo"/)
+        expect(fonte).not.toMatch(/<AnimatePresence mode="popLayout"[^>]*>[\s\S]{0,200}lancamento-motivo/)
     })
 })
