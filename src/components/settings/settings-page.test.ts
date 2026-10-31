@@ -41,11 +41,6 @@ describe("Configurações: página única", () => {
         expect(fonte).toMatch(/: null/)
     })
 
-    it("a página entrega os formulários da Carteira por children", () => {
-        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
-        expect(fonte).toMatch(/<WorkspaceAppearanceSettings>[\s\S]*DatasDaCarteiraProjetoWireframe[\s\S]*<\/WorkspaceAppearanceSettings>/)
-    })
-
     it("Este aparelho e IA e privacidade ficam em linhas, sem os três arquivos antigos", () => {
         const pagina = lerFonte("src/app/(app)/settings/page-client.tsx")
         for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe"]) expect(pagina).not.toContain(fora)
