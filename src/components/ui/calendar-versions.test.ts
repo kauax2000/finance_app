@@ -60,3 +60,20 @@ describe("Calendar", () => {
     expect(tela).not.toMatch(/grid-cols-7|MOBILE_DAY_MODIFIER_DOT|function buildCells|after:bg-/)
   })
 })
+
+describe("a grade do Calendar no WebKit", () => {
+  const src = lerFonte("src/components/ui/calendar.tsx")
+
+  it("a grade é flex: como table, a última semana saía da caixa no iPhone", () => {
+    expect(src).toMatch(/month_grid: cn\(\s*"flex w-full flex-col"/)
+  })
+
+  it("o raio da célula é o mesmo infinito do rounded-full: 9999px zerava o canto da coluna da ponta", () => {
+    expect(src).toContain("[--cell-radius:calc(infinity*1px)]")
+    expect(src).not.toContain("[--cell-radius:9999px]")
+  })
+
+  it("hoje escolhido não pinta um quadrado atrás do círculo", () => {
+    expect(src).toContain("has-data-[selected-single=true]:bg-transparent")
+  })
+})

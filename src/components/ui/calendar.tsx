@@ -371,7 +371,7 @@ function Calendar({
       className={cn(
         // Transparente onde quem contém já pinta (cartão, popover e a gaveta,
         // que é vidro).
-        "group/calendar bg-background p-2 [--cell-radius:9999px] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent in-data-[surface=drawer]:bg-transparent",
+        "group/calendar bg-background p-2 [--cell-radius:calc(infinity*1px)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent in-data-[surface=drawer]:bg-transparent",
         CALENDAR_CELL[size],
         // A troca de mês anima, fora da agenda (ver `calendar-month-motion`).
         !agenda && "calendar-month-motion",
@@ -442,9 +442,12 @@ function Calendar({
         // superfície, fio de 1px, cartão) e as células se separam por fios. Como
         // item de flex, `thead` e `tbody` viram blocos sozinhos. Abaixo de 40rem
         // da própria agenda ela some e a lista do `CalendarShell` aparece.
+        // Sempre flex: como `table`, o WebKit não soma as linhas flex de células
+        // quadradas na altura dela, e a última semana saía da caixa.
         month_grid: cn(
+          "flex w-full flex-col",
           agenda &&
-            "flex w-full flex-col overflow-hidden rounded-surface border border-border bg-card bg-clip-padding @max-[40rem]/calendar:hidden",
+            "overflow-hidden rounded-surface border border-border bg-card bg-clip-padding @max-[40rem]/calendar:hidden",
           defaultClassNames.month_grid
         ),
         weekdays: cn("flex", agenda && "border-b border-border", defaultClassNames.weekdays),
@@ -493,7 +496,7 @@ function Calendar({
           // Na agenda o hoje é o número na pastilha (`DiaConteudo`), não a célula acesa.
           agenda
             ? "text-foreground"
-            : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none",
+            : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none has-data-[selected-single=true]:bg-transparent",
           defaultClassNames.today
         ),
         outside: cn(
