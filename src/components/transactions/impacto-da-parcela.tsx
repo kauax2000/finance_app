@@ -51,12 +51,18 @@ function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
     return (
         <div className="flex flex-col gap-2">
             {aviso ? (
-                <Alert size="sm" tone={aviso.tom}>
+                <Alert tone={aviso.tom}>
                     <AlertTitle>{aviso.titulo}</AlertTitle>
                     {aviso.descricao ? <AlertDescription>{aviso.descricao}</AlertDescription> : null}
                 </Alert>
             ) : null}
-            <Collapsible variant="card" open={aberto} onOpenChange={setAberto}>
+            {/* A superfície da lista da revisão: sem o fio e o fundo do `Card`. */}
+            <Collapsible
+                variant="card"
+                open={aberto}
+                onOpenChange={setAberto}
+                className="border-0 bg-foreground/5"
+            >
                 <CollapsibleRow trailing={<span className="nums">{resumoDoImpacto(impacto)}</span>}>
                     Impacto da parcela
                 </CollapsibleRow>
@@ -130,6 +136,6 @@ export function ImpactoDaParcela(
     if (impacto === undefined) return null
     if (impacto) return <QuadroDoImpacto impacto={impacto} />
     if (erro) return <Caption role="status">Não deu para calcular o impacto agora.</Caption>
-    if (carregando) return <Skeleton className="h-8.5 w-full rounded-row-lg pointer-coarse:h-11.5" />
+    if (carregando) return <Skeleton className="h-8 w-full rounded-row-lg pointer-coarse:h-11" />
     return null
 }
