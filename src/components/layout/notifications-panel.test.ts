@@ -42,7 +42,7 @@ describe("painel de notificações (fonte)", () => {
     it("tem as ações e os estados do desenho", () => {
         expect(painel).toContain("Marcar todas como lidas")
         expect(painel).toContain("Configurar notificações")
-        expect(painel).toContain("#notificacoes")
+        expect(painel).toContain("?secao=notificacoes")
         expect(painel).toContain("Limpar notificações")
         // Sem reticências: a confirmação vem logo depois (pedido do dono).
         expect(painel).not.toContain("Limpar notificações…")
