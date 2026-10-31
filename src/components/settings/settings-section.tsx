@@ -10,19 +10,21 @@ import {
 /** A seção de Configurações: título, o alcance ("Vale para …") e a ação à direita. */
 export function SettingsSection({
     id,
+    className,
     titulo,
     alcance,
     actions,
     children,
 }: {
     id?: string
+    className?: string
     titulo: string
     alcance: string
     actions?: ReactNode
     children?: ReactNode
 }) {
     return (
-        <PageSection id={id}>
+        <PageSection id={id} className={className}>
             <PageSectionHeader actions={actions}>
                 <PageSectionTitle>{titulo}</PageSectionTitle>
                 <PageSectionDescription>{alcance}</PageSectionDescription>

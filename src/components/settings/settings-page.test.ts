@@ -55,4 +55,10 @@ describe("Configurações: página única", () => {
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")
         for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
     })
+
+    it("Notificações: um cartão com Como avisar e Sobre o quê, sem o desenho antigo", () => {
+        const f = lerFonte("src/components/settings/notification-preferences.tsx")
+        for (const texto of ["id=\"notificacoes\"", "notify_review", "notify_insights", "Como avisar", "Sobre o quê", "Às 20h.", "No máximo 3 push por semana.", "Desligar remove este aparelho de todas as carteiras."]) expect(f).toContain(texto)
+        for (const fora of ["uppercase", "variant=\"card\"", "border-dashed", "h-8", "PrefSubheaderBar"]) expect(f).not.toContain(fora)
+    })
 })
