@@ -20,155 +20,147 @@ sequência. Ela tem cinco defeitos medidos na tela e no código:
    usam `PageSection`; `FormSwitch variant="card"` é cartão dentro de cartão; há
    rótulo em caixa alta à mão; a rota não tem `loading.tsx` nem `AdiarMontagem`.
 
-Referências: [Copilot web](https://mobbin.com/screens/de003567-b00f-4c29-839d-f0a7a589f3d9)
-e [Quicken](https://mobbin.com/screens/c5b493d8-5c3a-498a-9c7c-3d3929e93296) usam
-seções laterais com um painel por vez, e [Square](https://mobbin.com/screens/5a28ed24-8ffd-41dc-b545-226e282f9322)
+Referência: [Square](https://mobbin.com/screens/5a28ed24-8ffd-41dc-b545-226e282f9322)
 agrupa linhas com chave em cartões. O comparativo de UX (§ Configurações) mantém a
 divisão Carteira × Conta: Minha conta continua separada.
 
 ## Decisões do dono
 
-- **Menu lateral** com uma seção por vez à direita.
-- **Quatro seções, por alcance**: Carteira, Notificações, Este aparelho, IA e
-  privacidade.
+- **Página única, coluna única, linhas densas** (layout C). O menu lateral com
+  abas foi construído e recusado: "comandos rápidos ficarem a um clique a mais
+  de distância". Nenhum comando rápido fica atrás de clique.
+- **Rápidos primeiro.** Ordem aprovada no wireframe: Este aparelho, Notificações,
+  Carteira, IA e privacidade.
+- **Divisão e Datas abrem em diálogo**, por `Alterar`, e Editar também.
+- Largura de volta aos 576px.
+- Mockups no navegador antes de decidir layout.
 
 ## Objetivos
 
-- Achar qualquer ajuste em até dois cliques, sem rolar uma página longa.
+- Toda chave e toda escolha rápida a um clique, sem abrir nada.
+- Reduzir a altura de 1.878px para cerca de 1.250px.
 - Dizer uma vez, no topo de cada seção, onde o ajuste vale.
 - Reunir tudo de notificação em um lugar.
 - Tirar os cinco wireframes da tela, com o mesmo comportamento.
 
 ## Fora do escopo
 
-- Mudar qualquer peça de `src/components/ui/` ou `globals.css`. Tudo sai do
-  catálogo atual. Se algo faltar, para e pergunta ao dono.
-- Redesenhar o telefone. Ele só não pode quebrar.
+- Mudar qualquer peça de `src/components/ui/` ou `globals.css`. Se algo faltar,
+  para e pergunta ao dono.
+- Redesenhar o telefone. Ele herda a coluna e só não pode quebrar.
 - Minha conta, Membros, ou a página `/me`.
 - Mudar regras de negócio, RPCs ou o que cada ajuste grava.
 
 ## Anti-objetivos
 
-- Componente declarado em `src/app/`, ou duas árvores `md:hidden` / `hidden md:flex`.
-- Estilo especial escrito só nesta tela.
+- Abas, menu lateral, acordeão, ou qualquer coisa que esconda chave atrás de clique.
+- Cartão dentro de cartão, ou texto de apoio em toda linha.
+- Componente declarado em `src/app/`.
 - Perder o caminho "Configurar notificações" do painel de notificações.
 - Gravar dado na verificação: o dev usa o banco de produção. Só tema e busca do
   cabeçalho, que são locais, podem ser alternados.
 
 ## A tela
 
-```
-+-----------------+-------------------------------------+
-| > Carteira      | Carteira                            |
-|   Notificações  | Vale para Viagem G4 Valley.         |
-|   Este aparelho |                                     |
-|   IA e          | [ícone] Viagem G4 Valley  [Editar]  |
-|   privacidade   |                                     |
-|                 | Divisão ...                         |
-|                 | Datas e orçamento (só projeto) ...  |
-|                 | Sair ou excluir a carteira          |
-+-----------------+-------------------------------------+
-```
+Wireframe aprovado: `.superpowers/brainstorm/59923-1793465332/content/layout-c-completa.html`.
 
-Wireframe indicativo, não é o visual final.
+```
+Este aparelho                    (Vale só neste aparelho.)
+  Tema                                   [sistema|claro|escuro]
+  Busca no cabeçalho  (lg+)              [barra|botão]
+  Lançamento inteligente                 (chave)
+  App no celular                         [Como instalar]
+
+Notificações                     (Vale para você em {carteira}.)  [Ver histórico]
+  Como avisar
+    E-mail · Central do app · Push no dispositivo
+  Sobre o quê
+    Despesas de outros membros · Alertas de orçamento · Cartões: limite e
+    categorias · Cartões: fatura e vencimento · Contas a pagar · Lembrete de
+    itens a conferir · Insights
+
+Carteira                         (Vale para todos em {carteira}.)
+  [ícone] {nome}                         [Editar]
+  Divisão / {Pote único|Dividida}        [Alterar]
+  Datas e orçamento / {resumo}           [Alterar]
+  Excluir carteira | Sair da carteira    [Excluir | Sair]
+
+IA e privacidade                 (Vale para toda a sua conta.)
+  Quem lê, limite e conferência
+  Política de privacidade
+```
 
 ### Casca
 
-- `Tabs orientation="vertical"` **controlado pela URL**, variante e tamanho padrão:
-  `value` vem de `useSearchParams().get("secao")` (valor desconhecido ou ausente
-  é `carteira`), e `onValueChange` faz `router.replace` com `scroll: false`. A
-  seção fica no endereço: `/settings?secao=notificacoes`. **Não use o `urlParam`
-  do `Tabs`**: ele lê a URL uma vez, e "Configurar notificações" clicado em
-  `/settings` não trocaria a seção aberta.
-- **Abaixo de `lg` (1024px)** a orientação vira horizontal com `scrollable`, por
-  `window.matchMedia("(min-width: 64rem)")` num `useSyncExternalStore`. É o mesmo
-  componente, não uma segunda árvore. O corte não é o `useIsMobile`: em 768px, com
-  a barra lateral aberta, sobrariam cerca de 240px para o conteúdo.
-- `settings/layout.tsx` usa `Container size="full" className="max-w-4xl"` (896px).
-  A coluna do menu mede `w-52` e o conteúdo ocupa o resto, sem passar de 576px
-  na largura de leitura se isso ficar melhor na medição.
-- `loading.tsx` com `SettingsPageSkeleton` e `AdiarMontagem` em `page.tsx`, como
-  em `account/(raiz)`.
+- `page-client.tsx` monta as quatro seções em `space-y` na ordem acima, sem `Tabs`.
+- `settings/layout.tsx` volta a `Container` padrão (576px).
+- `loading.tsx` e `AdiarMontagem` ficam; `SettingsPageSkeleton` vira uma coluna.
+- Saem `secoes.ts`, `use-tela-larga.ts` e `?secao=`.
+- `NOTIFICATION_PREFERENCES_HREF` volta a `/settings#notificacoes`, e a seção de
+  notificações mantém `id="notificacoes"`.
+- **O `AdiarMontagem` monta a página depois da navegação**, então o navegador não
+  acha a âncora. `page-client` faz, ao montar, `scrollIntoView` do elemento do
+  `location.hash`. A seção leva `scroll-mt` abaixo da barra do topo. Clicado já em
+  `/settings`, o link rola sozinho.
 
-### Cabeçalho de seção
+### Linhas
 
-`PageSectionHeader` com o título e uma linha de alcance, uma vez só:
+Toda linha tem a mesma altura de ritmo, separada por `Separator`, dentro de um
+`Card padding="none"` por seção. Texto de apoio só onde muda a decisão:
 
-| Seção | Alcance |
+| Linha | Texto de apoio |
 |---|---|
-| Carteira | Vale para {nome da carteira}. |
-| Notificações | Vale para você em {nome da carteira}. |
-| Este aparelho | Vale só neste aparelho. |
-| IA e privacidade | Vale para toda a sua conta. |
+| Lançamento inteligente | Só no celular. |
+| Push no dispositivo | O atual para bloqueado e sem suporte; o padrão é "Desligar remove este aparelho de todas as carteiras." |
+| Lembrete de itens a conferir | Às 20h. |
+| Insights | No máximo 3 push por semana. |
+| Divisão | Pote único, Dividida, ou Ainda não disponível (sem `Alterar`). |
+| Datas e orçamento | As datas e o orçamento gravados, ou "Sem datas". |
 
-As descrições das linhas perdem o "Vale só neste aparelho".
-
-### Carteira
-
-1. **Identidade**: `WorkspaceBrandMark` e nome, com `Button variant="secondary"`
-   "Editar" visível para quem é dono, abrindo o `WorkspaceAppearanceEditDialog`
-   de hoje. Para quem não é dono, a nota "Só o dono pode alterar nome, ícone e
-   cor." O ⋯ sai.
-2. **Divisão** (dono, carteira não pessoal): o formulário de
-   `ModoEPesosDaCarteiraWireframe` em design system: `Form`, `FormRadioGroup`
-   com "Pote único" e "Dividida", uma linha de `FormInput` por adulto,
-   `FormSubmit variant="secondary"`. Mesma lógica de gravação, mesmos textos de apoio e o mesmo
-   estado "Ainda não disponível" quando `split_mode` não vem do banco.
-3. **Datas e orçamento** (dono, carteira de projeto): o formulário de
-   `DatasDaCarteiraProjetoWireframe` em design system: `DatePicker` nas duas
-   datas, `FormInput money` no orçamento e `FormSubmit variant="secondary"`. Os
-   dois formulários ficam separados, porque gravam coisas diferentes, e nenhum é
-   `primary`: a tela não tem uma ação principal, e pode mostrar os dois. Ele também é o passo da criação em
-   `project-form-dialog.tsx`, que passa a usar a mesma peça.
-4. **Sair ou excluir**: uma linha no fim da seção com o que a pessoa pode fazer
-   (`Sair da carteira` para quem não é dono; `Excluir carteira` para o dono de
-   carteira não pessoal), `Button variant="destructive"`, abrindo os diálogos de
-   confirmação de hoje. Dono de carteira pessoal não vê a linha.
-
-Sem carteira: o `EmptyState` da situação diz para criar ou entrar numa carteira.
-
-### Notificações
-
-- `id="notificacoes"` sai. `NOTIFICATION_PREFERENCES_HREF` passa a
-  `${ROUTES.SETTINGS}?secao=notificacoes`.
-- "Ver histórico" fica como ação do cabeçalho, sem `size` e sem classes à mão.
-- **Dois cartões, com título em caixa normal**: "Como avisar" (e-mail, central do
-  app, push) e "Sobre o quê" (despesas de outros membros, orçamento, cartões:
-  limite, cartões: fatura, contas a pagar, **lembrete de itens a conferir**,
-  **insights**).
-- Linhas `FormSwitch` planas com separador, sem cartão dentro de cartão.
-- Lembrete grava `notify_review`, insights grava `notify_insights`, com os textos
-  dos wireframes: "Às 20h, quando houver itens a conferir." e "O que o app notou
-  na carteira. No máximo 3 push por semana; o resto fica no Painel."
-- O tratamento de push, as mensagens e a folha de instalação ficam iguais. A
-  descrição padrão da linha de push ganha "Desligar remove este aparelho de todas
-  as carteiras.", porque `unsubscribeFromPush` cancela a inscrição do navegador.
+"Vale só neste aparelho" sai das linhas e fica só no cabeçalho.
 
 ### Este aparelho
 
-Um cartão com Tema (`ThemeToggle`), Busca no cabeçalho (`Tabs`, só do `lg` para
-cima) e Lançamento inteligente (`FormSwitch`). Abaixo, App no celular no mesmo
-idioma das outras linhas, com o texto de instalação, a ação de instalar no iPhone
-e o `SyncStatusChip` de hoje.
+`ThemeSettings` vira a seção inteira: Tema, Busca (`max-lg:hidden`), Lançamento
+inteligente e App no celular. A linha do app reúne o que `PwaSettingsSection`
+mostra: `Como instalar` só no iPhone fora do modo app; instalado, o texto de
+instalado; nos demais, o texto do menu do navegador como apoio; `SyncStatusChip` e
+o aviso de sem conexão ficam. `LancamentoSettings` e `PwaSettingsSection` somem
+como blocos soltos, se nada mais os usar.
+
+### Notificações
+
+Um `Card` só, com "Como avisar" e "Sobre o quê" como faixas, sem caixa alta. Linhas
+`FormSwitch` planas. `notify_review` e `notify_insights` entram, e os dois
+wireframes saem. O tratamento de push, as mensagens e a folha de instalação ficam
+iguais. "Ver histórico" é ação do cabeçalho.
+
+### Carteira
+
+- O `Editar` sai do cabeçalho da seção e vai para a linha da identidade.
+- **Divisão** (dono, não pessoal) e **Datas e orçamento** (dono, projeto) abrem
+  diálogos, com a lógica de gravação dos wireframes, em design system: `Form`,
+  `FormRadioGroup`, `FormInput` por adulto, `DatePicker`, `FormInput money`,
+  `FormCancel`, `FormSubmit` no rodapé. O passo da criação em
+  `project-form-dialog.tsx` usa o mesmo formulário, com "Agora não" no cancelar.
+- Trocar de carteira fecha esses diálogos, como os de hoje.
+- Sair ou excluir fica como última linha do mesmo cartão.
 
 ### IA e privacidade
 
-Um cartão com o conteúdo do wireframe em design system: quem lê (Groq e
-Cloudflare, sem treino), o limite de 30 chamadas por dia, "Tudo que a IA preenche
-fica a conferir" e o link da política de privacidade. Sem ação de gravar.
+Um cartão, com o texto do wireframe e o link da política. Sem ação de gravar.
 
 ## Limpeza
 
 - Apagar `a-conferir-lembrete-wireframe.tsx` e `ia-configuracoes-wireframe.tsx`.
 - Tirar `InsightsAvisoWireframe`, `DatasDaCarteiraProjetoWireframe` e
   `ModoEPesosDaCarteiraWireframe` dos arquivos deles, preservando os outros
-  wireframes que moram lá. A lógica de gravação que só eles usam se muda com eles
-  para `src/components/settings/`.
+  wireframes que moram lá.
 
 ## Jornada
 
-Conta como mudança de jornada: muda URL, destino e ações da carteira. Na mesma
-mudança: `docs/JORNADAS.md`, `docs/atlas/template.html`,
+Conta como mudança de jornada: abre diálogos novos e muda ações da carteira. Na
+mesma mudança: `docs/JORNADAS.md`, `docs/atlas/template.html`,
 `python3 docs/atlas/build.py` e republicar o Atlas
 (https://claude.ai/artifact/1N43LFYP1YSVsWaRMaNTRL).
 
@@ -176,23 +168,23 @@ mudança: `docs/JORNADAS.md`, `docs/atlas/template.html`,
 
 - `npm run ds:audit -- src/components/settings "src/app/(app)/settings"`
 - `npx tsc --noEmit && npm run lint && npm run test:unit`
+- `npm run build`
 - `graphify update .`
-- Na prévia (`dev-attach`), em 1280px, 1075px e 1024px, claro e escuro, e 900px e
-  375px: trocar de seção, recarregar com `?secao=notificacoes`, abrir Editar e
-  cancelar, e ir pelo link "Configurar notificações" estando **já em `/settings`**.
-  Sem clicar em Salvar nem em chave que grave.
+- Na prévia (`dev-attach`), em 1280px e 1024px, claro e escuro, e 375px: medir a
+  altura, abrir `/settings#notificacoes` vindo de outra rota, usar "Configurar
+  notificações" já em `/settings`, abrir Editar, Alterar e cancelar. Sem clicar em
+  Salvar nem em chave que grave.
 
 ## Decisões de quem escreveu (não do dono)
 
-- Editar visível no lugar do ⋯, e Sair ou excluir como linha no fim da seção.
-- A seção por URL controlada pela página, sem tocar em `ui/`.
-- Vertical só do `lg` para cima.
-- Os dois formulários da carteira separados, ambos `secondary`.
+- Âncora por efeito ao montar, porque o `AdiarMontagem` a esconderia.
+- `Alterar` com resumo do valor na linha.
+- Os dois diálogos com `FormSubmit` padrão: agora cada um é a ação principal da
+  sua superfície.
 - O aviso sobre push e "Vale para você em {carteira}".
+- `Sobre o quê` e `Como avisar` no mesmo cartão.
 
 ## Deixado para quem constrói
 
 - Divisão em arquivos dentro de `src/components/settings/`.
-- Estrutura interna das linhas, desde que use `Card`, `Separator`, `Item` e
-  `FormSwitch` do catálogo.
-- Escolha da peça para o título dos dois cartões de Notificações.
+- A peça exata de cada faixa e de cada linha, desde que do catálogo.
