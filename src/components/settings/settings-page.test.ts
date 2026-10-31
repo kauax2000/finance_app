@@ -1,27 +1,30 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications-panel-empty"
-import { SECOES, secaoDaUrl } from "@/components/settings/secoes"
+import { rolarAteAncora } from "@/components/settings/settings-section"
 import { lerFonte } from "@/test/fonte"
 
-describe("Configurações: seção na URL", () => {
-    it("as seções vêm na ordem e com os rótulos do desenho", () => {
-        expect(SECOES.map((s) => s.label)).toEqual(["Carteira", "Notificações", "Este aparelho", "IA e privacidade"])
-    })
-
-    it("lê a seção, e ausente ou desconhecida abre Carteira", () => {
-        expect(secaoDaUrl("notificacoes")).toBe("notificacoes")
-        expect(secaoDaUrl(null)).toBe("carteira")
-        expect(secaoDaUrl("xyz")).toBe("carteira")
-    })
-
-    it("a página é controlada pela URL, sem urlParam", () => {
+describe("Configurações: página única", () => {
+    it("a página não tem abas, nem lê a query, e rola até a âncora", () => {
         const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
-        expect(fonte).toContain("useSearchParams")
-        expect(fonte).not.toContain("urlParam")
+        for (const proibido of ["Tabs", "useSearchParams", "useTelaLarga"]) expect(fonte).not.toContain(proibido)
+        expect(fonte).toContain("rolarAteAncora")
     })
 
-    it("Configurar notificações aponta para a seção", () => {
-        expect(NOTIFICATION_PREFERENCES_HREF).toBe("/settings?secao=notificacoes")
+    it("Configurar notificações aponta para a âncora", () => {
+        expect(NOTIFICATION_PREFERENCES_HREF).toBe("/settings#notificacoes")
+    })
+
+    it("rolarAteAncora rola até o elemento do hash", () => {
+        const scrollIntoView = vi.fn()
+        const doc = { getElementById: (id: string) => (id === "x" ? { scrollIntoView } : null) } as unknown as Document
+        rolarAteAncora("#x", doc)
+        expect(scrollIntoView).toHaveBeenCalledOnce()
+    })
+
+    it("rolarAteAncora não lança sem elemento ou sem hash", () => {
+        const doc = { getElementById: () => null } as unknown as Document
+        expect(() => rolarAteAncora("#nao-existe", doc)).not.toThrow()
+        expect(() => rolarAteAncora("", doc)).not.toThrow()
     })
 
     it("Carteira: Editar à vista, sem ⋯, e a linha final respeita o papel", () => {

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { Caption } from "@/components/ui/typography"
 import {
     PageSection,
     PageSectionDescription,
@@ -8,18 +9,20 @@ import {
 
 /** A seção de Configurações: título, o alcance ("Vale para …") e a ação à direita. */
 export function SettingsSection({
+    id,
     titulo,
     alcance,
     actions,
     children,
 }: {
+    id?: string
     titulo: string
     alcance: string
     actions?: ReactNode
     children?: ReactNode
 }) {
     return (
-        <PageSection>
+        <PageSection id={id}>
             <PageSectionHeader actions={actions}>
                 <PageSectionTitle>{titulo}</PageSectionTitle>
                 <PageSectionDescription>{alcance}</PageSectionDescription>
@@ -27,4 +30,30 @@ export function SettingsSection({
             {children}
         </PageSection>
     )
+}
+
+/** A linha de uma seção: texto à esquerda, controle à direita. */
+export function SettingsRow({
+    titulo,
+    descricao,
+    children,
+}: {
+    titulo: ReactNode
+    descricao?: ReactNode
+    children?: ReactNode
+}) {
+    return (
+        <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+                <p className="text-sm font-medium">{titulo}</p>
+                {descricao ? <Caption>{descricao}</Caption> : null}
+            </div>
+            {children}
+        </div>
+    )
+}
+
+/** Rola até o elemento do `#hash`; sem hash ou sem elemento, nada. */
+export function rolarAteAncora(hash: string, doc: Document) {
+    doc.getElementById(hash.slice(1))?.scrollIntoView()
 }

@@ -17,7 +17,7 @@ import {
 } from "@/components/layout/notifications-empty-illustration"
 
 /** A seção Notificações das Configurações. */
-export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}?secao=notificacoes`
+export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}#notificacoes`
 
 export type NotificationsPanelEmptyVariant = "no-auth" | "no-workspace" | "inbox-empty"
 

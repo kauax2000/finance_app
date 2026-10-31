@@ -144,7 +144,7 @@ export function NotificationPreferences() {
         !authLoading && !workspaceLoading && !currentWorkspaceId
 
     return (
-        <PageSection id="notificacoes">
+        <PageSection id="notificacoes" className="scroll-mt-(--top-bar-bottom)">
             <PageSectionHeader
                 actions={
                     <Button
