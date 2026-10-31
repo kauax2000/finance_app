@@ -42,9 +42,10 @@ export default function SettingsPage() {
                 ))}
             </TabsList>
             <TabsContent value="carteira" className={PAINEL}>
-                <WorkspaceAppearanceSettings />
-                <DatasDaCarteiraProjetoWireframe />
-                <ModoEPesosDaCarteiraWireframe />
+                <WorkspaceAppearanceSettings>
+                    <DatasDaCarteiraProjetoWireframe />
+                    <ModoEPesosDaCarteiraWireframe />
+                </WorkspaceAppearanceSettings>
             </TabsContent>
             <TabsContent value="notificacoes" className={PAINEL}>
                 <NotificationPreferences />

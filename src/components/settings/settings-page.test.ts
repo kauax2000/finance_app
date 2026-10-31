@@ -23,4 +23,23 @@ describe("Configurações: seção na URL", () => {
     it("Configurar notificações aponta para a seção", () => {
         expect(NOTIFICATION_PREFERENCES_HREF).toBe("/settings?secao=notificacoes")
     })
+
+    it("Carteira: Editar à vista, sem ⋯, e a linha final respeita o papel", () => {
+        const fonte = lerFonte("src/components/settings/workspace-appearance-settings.tsx")
+        expect(fonte).not.toContain("EllipsisVerticalIcon")
+        expect(fonte).not.toContain("DropdownMenu")
+        for (const texto of ["Editar", "Sair da carteira", "Excluir carteira"]) expect(fonte).toContain(texto)
+        // Editar só sob `owner`; a linha final: excluir com canDeleteProject, sair com !owner, senão nada.
+        expect(fonte).toMatch(/owner \? \(\s*<Button[^>]*onClick=\{openEdit\}/)
+        expect(fonte.match(/openEdit/g)).toHaveLength(2) // a definição e o único uso
+        // Excluir só com canDeleteProject; sair só com !owner; dono pessoal: nada.
+        expect(fonte).toMatch(/canDeleteProject\s*\?/)
+        expect(fonte).toMatch(/!owner\s*\?/)
+        expect(fonte).toMatch(/: null/)
+    })
+
+    it("a página entrega os formulários da Carteira por children", () => {
+        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        expect(fonte).toMatch(/<WorkspaceAppearanceSettings>[\s\S]*DatasDaCarteiraProjetoWireframe[\s\S]*<\/WorkspaceAppearanceSettings>/)
+    })
 })
