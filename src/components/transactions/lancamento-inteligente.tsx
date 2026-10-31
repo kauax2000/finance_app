@@ -179,6 +179,9 @@ function abreEmDialogo(campo: CampoDoLancamento) {
     return campo === "data"
 }
 
+/** Quanto o círculo fica à vista no dia tocado antes de o diálogo sair. */
+const POUSO_DO_DIA_MS = 160
+
 /** Os atalhos do calendário da Data. */
 const ATALHOS_DA_DATA = [
     { label: "hoje", date: () => new Date() },
@@ -1020,6 +1023,10 @@ function Revisao({
 }) {
     const telefone = useIsMobile()
     const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
+    // O dia já tocado no calendário: pousa nele antes de gravar e fechar.
+    const [diaEscolhido, setDiaEscolhido] = useState<Date | null>(null)
+    const pousoDoDia = useRef(0)
+    useEffect(() => () => window.clearTimeout(pousoDoDia.current), [])
     const formId = useId()
     // A altura do corpo anda na mola quando um editor abre ou uma peça entra e
     // sai; o vidro (`lancamento-fundo`) acompanha a placa sozinho.
@@ -1125,7 +1132,8 @@ function Revisao({
     useEffect(() => {
         const agora: Partial<Record<CampoDoLancamento, string | null>> = {}
         for (const campo of TODOS_OS_CAMPOS) {
-            if (editando === campo) continue
+            // A Data edita num diálogo: a linha recebe o valor novo à vista, quando ele volta a ela.
+            if (editando === campo && !abreEmDialogo(campo)) continue
             agora[campo] = valorDaLinha(campo)
             const antes = valoresAntes.current[campo]
             const linha = document.getElementById(`lancamento-${campo}`)
@@ -1151,6 +1159,30 @@ function Revisao({
         const campo = editando
         setEditando(null)
         requestAnimationFrame(() => document.getElementById(`lancamento-${campo}`)?.focus())
+    }
+
+    /** O diálogo da Data volta para a linha: o `menu-unmorph` encolhe na direção dela. */
+    function fecharData() {
+        window.clearTimeout(pousoDoDia.current)
+        const placa = document.getElementById("lancamento-calendario")
+        const linha = document.getElementById("lancamento-data")?.getBoundingClientRect()
+        if (placa && linha) {
+            const caixa = placa.getBoundingClientRect()
+            placa.style.transformOrigin = `${linha.left + linha.width / 2 - caixa.left}px ${linha.top + linha.height / 2 - caixa.top}px`
+        }
+        fechar()
+    }
+
+    /** O círculo pousa no dia, à vista, e só então o diálogo volta para a linha, que recebe a data. */
+    function escolherDia(dia: Date | undefined) {
+        if (!dia) return fecharData()
+        setDiaEscolhido(dia)
+        window.clearTimeout(pousoDoDia.current)
+        pousoDoDia.current = window.setTimeout(() => {
+            leitura.editar("data", { data: localYmdFromDate(dia) })
+            setDiaEscolhido(null)
+            fecharData()
+        }, POUSO_DO_DIA_MS)
     }
 
     /** O Enter de um campo em edição confirma a edição, e não aprova o lançamento. */
@@ -1543,25 +1575,29 @@ function Revisao({
                 <Dialog
                     open={editando !== null && abreEmDialogo(editando)}
                     onOpenChange={(aberto) => {
-                        if (!aberto) fechar()
+                        if (!aberto) fecharData()
                     }}
                 >
-                    <DialogContent size="sm">
+                    <DialogContent
+                        id="lancamento-calendario"
+                        size="sm"
+                        className={cn(
+                            !reduzido &&
+                                "[--morph-radius:var(--radius-modal)] data-closed:[animation:menu-unmorph_260ms_linear_both]!"
+                        )}
+                    >
                         <DialogHeader>
                             <DialogTitle>{rotuloDaLinha("data", "Data")}</DialogTitle>
                             <DialogDescription className="sr-only">Escolha o dia do lançamento.</DialogDescription>
                         </DialogHeader>
                         <Calendar
                             mode="single"
-                            selected={parseYmdLocal(campos.data)}
+                            selected={diaEscolhido ?? parseYmdLocal(campos.data)}
                             defaultMonth={parseYmdLocal(campos.data)}
                             presets={ATALHOS_DA_DATA}
                             stretch
                             className="bg-transparent p-0"
-                            onSelect={(d) => {
-                                if (d) leitura.editar("data", { data: localYmdFromDate(d) })
-                                fechar()
-                            }}
+                            onSelect={escolherDia}
                         />
                     </DialogContent>
                 </Dialog>

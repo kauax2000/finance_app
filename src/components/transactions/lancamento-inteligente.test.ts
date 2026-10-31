@@ -79,8 +79,15 @@ describe("a tela do lançamento inteligente (v2)", () => {
 
     it("o calendário da Data abre num diálogo, sem gaveta", () => {
         expect(fonte).not.toContain("<DatePicker")
-        expect(fonte).toMatch(/<DialogContent size="sm">[\s\S]{0,500}<Calendar/)
+        expect(fonte).toMatch(/<DialogContent[\s\S]{0,700}<Calendar/)
         expect(fonte).toContain("open={editando !== null && abreEmDialogo(editando)}")
+    })
+
+    it("o diálogo da Data volta para a linha, com o dia pousado à vista", () => {
+        expect(fonte).toContain("data-closed:[animation:menu-unmorph_260ms_linear_both]!")
+        expect(fonte).toContain("placa.style.transformOrigin")
+        expect(fonte).toContain("const POUSO_DO_DIA_MS = 160")
+        expect(fonte).toContain("if (editando === campo && !abreEmDialogo(campo)) continue")
     })
 
     it("o tipo é só um indicador, e o motivo é uma legenda", () => {
