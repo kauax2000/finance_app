@@ -18,8 +18,10 @@ Reúne a receita recorrente, o orçamento que se repete e a previsão do mês:
   `/previsao`, o quadro de impacto da parcela, a receita nas assinaturas e o
   "Repetir todo mês" do orçamento.
 
-**Estado em 24/10/2026: nada publicado.** O front do `finance-app-2.0` também
-não: ele só vai para `main`, e para produção, quando os blocos planejados
+**Estado em 31/10/2026: a migração `20261026120000_previsao.sql` está em produção,
+aplicada sozinha, antes das `captura`, `ia` e `planos`; o próximo `db push` do
+repositório pede `--include-all`. As Edges deste bloco não foram publicadas.** O
+front do `finance-app-2.0` também não: ele só vai para `main`, e para produção, quando os blocos planejados
 estiverem prontos (decisão do dono).
 
 **O backend do Bloco 5 pode subir antes do front, menos o
