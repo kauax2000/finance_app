@@ -68,8 +68,15 @@ type AcoesDoFormulario = {
 }
 
 function ModoEPesos({ ws, ...acoes }: { ws: Workspace } & AcoesDoFormulario) {
-    const { lista } = useAdultos(ws.id)
+    const { lista, erro } = useAdultos(ws.id)
     const pesos = useQuery({ queryKey: chaves.pesos(ws.id), queryFn: () => lerPesos(ws.id) })
+    if (erro || pesos.isError) {
+        return (
+            <DialogBody>
+                <P>Não foi possível carregar.</P>
+            </DialogBody>
+        )
+    }
     if (!lista.length || pesos.isLoading) {
         return (
             <DialogBody>
@@ -125,14 +132,15 @@ function FormularioDoModo({
         onPendente(true)
         setErro(null)
         try {
+            // Pesos primeiro: se falharem, o modo não muda e nada fica pela metade.
+            if (modo === "split" && mudados.length) {
+                const r = await gravarPesos(ws.id, mudados)
+                if (!r.disponivel) return setErro(AINDA_NAO_DISPONIVEL)
+            }
             if (modo !== ws.split_mode) {
                 const r = await gravarModo(ws.id, modo)
                 if (!r.disponivel) return setErro(AINDA_NAO_DISPONIVEL)
                 if (!r.dados?.length) return setErro(NADA_MUDOU)
-            }
-            if (modo === "split" && mudados.length) {
-                const r = await gravarPesos(ws.id, mudados)
-                if (!r.disponivel) return setErro(AINDA_NAO_DISPONIVEL)
             }
             await Promise.all([
                 refreshWorkspaces(),

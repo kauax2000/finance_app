@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Caption } from "@/components/ui/typography"
+import { Muted } from "@/components/ui/typography"
 import {
     PageSection,
     PageSectionDescription,
@@ -47,8 +47,8 @@ export function SettingsRow({
     return (
         <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0">
-                <p className="text-sm font-medium">{titulo}</p>
-                {descricao ? <Caption>{descricao}</Caption> : null}
+                {titulo ? <p className="text-sm font-medium">{titulo}</p> : null}
+                {descricao ? <Muted>{descricao}</Muted> : null}
             </div>
             {children}
         </div>

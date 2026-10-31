@@ -14,5 +14,5 @@ export const chaves = {
 export function useAdultos(workspaceId: string) {
     const q = useQuery({ queryKey: chaves.adultos(workspaceId), queryFn: () => lerAdultos(workspaceId), staleTime: 60_000 })
     const nome = (id: string | null | undefined) => q.data?.find((a) => a.user_id === id)?.nome ?? QUEM_SAIU
-    return { lista: q.data ?? [], nome }
+    return { lista: q.data ?? [], nome, erro: q.isError }
 }

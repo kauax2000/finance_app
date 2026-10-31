@@ -105,7 +105,6 @@ export function NotificationPreferences() {
 
     const showSkeleton = authLoading || workspaceLoading || (Boolean(currentWorkspaceId) && loading)
 
-
     return (
         <SettingsSection
             id="notificacoes"
@@ -122,6 +121,7 @@ export function NotificationPreferences() {
                 </Button>
             }
         >
+            {showSkeleton || currentWorkspaceId ? (
             <Card padding="none">
                 {error ? (
                     <div className="px-4 py-3">
@@ -131,7 +131,7 @@ export function NotificationPreferences() {
                     </div>
                 ) : null}
                 {showSkeleton ? <NotificationPreferencesSkeleton /> : null}
-                {!loading && currentWorkspaceId ? (
+                {!loading && currentWorkspaceId && prefs ? (
                     <>
                         <CardToolbar variant="label">Como avisar</CardToolbar>
                         <div className="px-4 py-3">
@@ -278,6 +278,7 @@ export function NotificationPreferences() {
                     </>
                 ) : null}
             </Card>
+            ) : null}
         </SettingsSection>
     )
 }

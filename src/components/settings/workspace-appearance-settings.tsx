@@ -159,7 +159,7 @@ export function WorkspaceAppearanceSettings() {
                 <EmptyState>
                     <EmptyStateTitle>Nenhuma carteira disponível</EmptyStateTitle>
                     <EmptyStateDescription>
-                        Crie ou entre numa carteira para configurar a aparência.
+                        Crie ou entre numa carteira para configurar.
                     </EmptyStateDescription>
                 </EmptyState>
             ) : (
@@ -209,7 +209,7 @@ export function WorkspaceAppearanceSettings() {
                                         }
                                     >
                                         {splitMode === undefined ? null : (
-                                            <Button type="button" variant="secondary" onClick={() => setDivisaoOpen(true)}>
+                                            <Button type="button" variant="secondary" aria-label="Alterar divisão" onClick={() => setDivisaoOpen(true)}>
                                                 Alterar
                                             </Button>
                                         )}
@@ -220,7 +220,7 @@ export function WorkspaceAppearanceSettings() {
                                 <>
                                     <Separator />
                                     <SettingsRow titulo="Datas e orçamento" descricao={resumoDoCalendario(currentWorkspace)}>
-                                        <Button type="button" variant="secondary" onClick={() => setDatasOpen(true)}>
+                                        <Button type="button" variant="secondary" aria-label="Alterar datas e orçamento" onClick={() => setDatasOpen(true)}>
                                             Alterar
                                         </Button>
                                     </SettingsRow>

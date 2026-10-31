@@ -15,7 +15,7 @@ export function IaPrivacidadeSettings() {
                     descricao="Até 30 chamadas por dia (frase, foto do recibo e fatura; uma fatura longa gasta várias). Tudo que a IA preenche fica a conferir."
                 />
                 <Separator />
-                <SettingsRow titulo="Política de privacidade">
+                <SettingsRow titulo={null}>
                     <Button variant="link" asChild>
                         <Link href={ROUTES.PRIVACY}>Política de privacidade</Link>
                     </Button>

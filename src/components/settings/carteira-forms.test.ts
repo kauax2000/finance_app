@@ -124,3 +124,25 @@ describe("Carteira em linhas", () => {
         expect(f).toContain('variant="destructive"')
     })
 })
+
+describe("Achados da revisão final", () => {
+    it("Divisão: pesos antes do modo, e erro de carga visível", () => {
+        const f = semComentarios(lerFonte("src/components/settings/carteira-divisao-dialog.tsx"), "tudo")
+        expect(f.indexOf("await gravarPesos(")).toBeLessThan(f.indexOf("await gravarModo("))
+        expect(f).toContain("erro || pesos.isError")
+        expect(f).toContain("Não foi possível carregar.")
+        expect(semComentarios(lerFonte("src/lib/divisao/use-adultos.ts"), "tudo")).toContain("erro: q.isError")
+    })
+
+    it("Notificações: sem preferências não há linhas, sem carteira não há cartão", () => {
+        const f = semComentarios(lerFonte("src/components/settings/notification-preferences.tsx"), "tudo")
+        expect(f).toContain("!loading && currentWorkspaceId && prefs ?")
+        expect(f).toContain("showSkeleton || currentWorkspaceId ?")
+    })
+
+    it("Carteira: Alterar com nome acessível próprio", () => {
+        const f = carteira()
+        expect(f).toContain('aria-label="Alterar divisão"')
+        expect(f).toContain('aria-label="Alterar datas e orçamento"')
+    })
+})
