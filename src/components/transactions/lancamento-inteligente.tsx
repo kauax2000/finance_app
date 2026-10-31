@@ -37,13 +37,15 @@ import {
     ComboboxTrigger,
     ComboboxValue,
 } from "@/components/ui/combobox"
-import { DatePicker } from "@/components/ui/date-picker"
+import { Calendar } from "@/components/ui/calendar"
 import {
     Dialog,
     DialogBody,
     DialogCloseButton,
+    DialogContent,
     DialogDescription,
     DialogFooter,
+    DialogHeader,
     DialogOverlay,
     DialogPortal,
     DialogTitle,
@@ -166,13 +168,29 @@ const TOM_DO_TIPO = {
     estorno: "warning",
 } as const satisfies Record<TipoDoLancamento, ComponentProps<typeof Badge>["tone"]>
 
-/** As escolhas: categoria, forma e parcelas montam o seletor aberto e escolher (ou fechá-lo) volta à linha, sem "ok"; a Data fica com o campo e o "ok". */
-const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]
+/** As escolhas: montam o seletor aberto, e escolher (ou fechá-lo) volta à linha, sem "ok". A Data não entra: o calendário abre num diálogo. */
+const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "parcelas"]
 
-/** A escolha cujo seletor abre direto. O `DatePicker` não expõe `open`/`onOpenChange`: a Data fica com o campo e o "ok". */
 function abreDireto(campo: CampoDoLancamento) {
-    return ESCOLHAS.includes(campo) && campo !== "data"
+    return ESCOLHAS.includes(campo)
 }
+
+function abreEmDialogo(campo: CampoDoLancamento) {
+    return campo === "data"
+}
+
+/** Os atalhos do calendário da Data. */
+const ATALHOS_DA_DATA = [
+    { label: "hoje", date: () => new Date() },
+    {
+        label: "ontem",
+        date: () => {
+            const dia = new Date()
+            dia.setDate(dia.getDate() - 1)
+            return dia
+        },
+    },
+]
 
 /** O valor do `Select` da forma: o cartão leva o id junto. */
 function valorDaForma(c: CamposDaFrase): string {
@@ -1332,22 +1350,6 @@ function Revisao({
                         </SelectContent>
                     </Select>
                 )
-            case "data":
-                return (
-                    <FieldControl>
-                        <DatePicker
-                            value={parseYmdLocal(campos.data)}
-                            onChange={(d) =>
-                                leitura.editar("data", {
-                                    data: localYmdFromDate(d ?? new Date()),
-                                })
-                            }
-                            displayStyle="relative"
-                            presets
-                            className="w-full"
-                        />
-                    </FieldControl>
-                )
             case "parcelas":
                 return (
                     <Select
@@ -1467,7 +1469,7 @@ function Revisao({
                             recuada até o texto (16 + o ladrilho de 28 + 8). */}
                         <ItemGroup
                             data-revela
-                            className="relative gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
+                            className="relative shrink-0 gap-0 overflow-hidden rounded-row-lg bg-foreground/5 has-data-[size=sm]:gap-0"
                         >
                             {/* A linha Parcelas entra e sai com o tipo. */}
                             <AnimatePresence initial={false}>
@@ -1478,7 +1480,7 @@ function Revisao({
                                         <Presenca key={x.campo} {...presenca}>
                                             {i > 0 ? <ItemSeparator className="my-0 ms-13 w-auto" /> : null}
                                             <AnimatePresence mode="popLayout" initial={false}>
-                                                {editando === x.campo ? (
+                                                {editando === x.campo && !abreEmDialogo(x.campo) ? (
                                                     emEdicao(x.campo, rotulo, "px-4 py-2")
                                                 ) : (
                                                     <Presenca key={`${x.campo}-linha`} {...presenca}>
@@ -1537,6 +1539,32 @@ function Revisao({
                         {plano ? <ImpactoDaParcela proposto={plano} /> : null}
                     </div>
                 </Form>
+                {/* O calendário não cabe na linha nem numa terceira gaveta: um diálogo por cima do painel. */}
+                <Dialog
+                    open={editando !== null && abreEmDialogo(editando)}
+                    onOpenChange={(aberto) => {
+                        if (!aberto) fechar()
+                    }}
+                >
+                    <DialogContent size="sm">
+                        <DialogHeader>
+                            <DialogTitle>{rotuloDaLinha("data", "Data")}</DialogTitle>
+                            <DialogDescription className="sr-only">Escolha o dia do lançamento.</DialogDescription>
+                        </DialogHeader>
+                        <Calendar
+                            mode="single"
+                            selected={parseYmdLocal(campos.data)}
+                            defaultMonth={parseYmdLocal(campos.data)}
+                            presets={ATALHOS_DA_DATA}
+                            stretch
+                            className="bg-transparent p-0"
+                            onSelect={(d) => {
+                                if (d) leitura.editar("data", { data: localYmdFromDate(d) })
+                                fechar()
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
             </DialogBody>
 
             {/* O rodapé fica preso fora do corpo que rola; o "Aprovar" é do formulário pelo `form=`. */}

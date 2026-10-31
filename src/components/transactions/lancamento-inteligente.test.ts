@@ -35,7 +35,7 @@ describe("a tela do lançamento inteligente (v2)", () => {
     it("a casca não pinta: as pílulas e a placa são vidros soltos sobre o véu", () => {
         expect(fonte).toContain("<DialogOverlay />")
         expect(fonte).toContain("<DialogPrimitive.Content")
-        expect(fonte).not.toContain("<DialogContent")
+        expect(fonte.slice(0, fonte.indexOf("function Revisao"))).not.toContain("<DialogContent")
         expect(fonte).not.toMatch(/data-slot="lancamento-inteligente"[\s\S]{0,400}modalSurfaceClassName/)
     })
 
@@ -77,6 +77,12 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).not.toContain("BARRA_DO_TECLADO_IOS")
     })
 
+    it("o calendário da Data abre num diálogo, sem gaveta", () => {
+        expect(fonte).not.toContain("<DatePicker")
+        expect(fonte).toMatch(/<DialogContent size="sm">[\s\S]{0,500}<Calendar/)
+        expect(fonte).toContain("open={editando !== null && abreEmDialogo(editando)}")
+    })
+
     it("o tipo é só um indicador, e o motivo é uma legenda", () => {
         expect(fonte).toMatch(/<Badge id="lancamento-tipo" tone=\{TOM_DO_TIPO\[tipo\]\}>\s*<BadgeDot \/>/)
         expect(fonte).not.toContain("<Tabs")
@@ -94,7 +100,7 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toContain("<MoneyDisplay")
         expect(fonte).toMatch(/<ItemGroup[\s\S]{0,160}rounded-row-lg bg-foreground\/5/)
         expect(fonte).toContain('<ItemMedia variant="tile" tone={x.tom} tint="vivid">')
-        expect(fonte).toContain("<ItemChevron />")
+        expect(fonte).toContain("<ItemChevron")
         expect(fonte).toContain('{valor ?? "Escolher"}')
         expect(fonte).toContain('"Primeira cobrança"')
         expect(fonte).toContain("<DialogCloseButton")
@@ -191,7 +197,7 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).not.toContain('.filter(Boolean).join(" · ")')
     })
     it("categoria, forma, data e parcelas abrem o seletor direto", () => {
-        expect(fonte).toContain('const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "data", "parcelas"]')
+        expect(fonte).toContain('const ESCOLHAS: CampoDoLancamento[] = ["categoria", "forma", "parcelas"]')
         expect(fonte).toMatch(/<Combobox[\s\S]{0,80}defaultOpen/)
         expect(fonte.match(/<Select[\s\S]{0,60}defaultOpen/g)?.length).toBe(2)
         expect(fonte).toMatch(/onOpenChange=\{\(aberto\) => \{?\s*if \(!aberto\) fechar\(\)/)
