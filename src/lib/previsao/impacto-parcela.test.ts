@@ -208,7 +208,7 @@ describe("o texto do quadro", () => {
         parcelaEFim: "",
         pico: { semEsta: 0, comEsta: 242, mes: "2027-05" },
         proximasFaturas: null,
-        percentualDaRenda: null,
+        percentualDaRenda: 10,
         primeiroMesNegativo: { antes: null, depois: null },
         limite: { disponivel: null, cabe: null, motivo: null },
     }
@@ -228,6 +228,10 @@ describe("o texto do quadro", () => {
         expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: null, depois: "2027-03" } }))).toEqual(aviso)
         expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-03" } }))).toEqual(aviso)
         expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: "2027-03", depois: "2027-03" } }))).toBeNull()
+        // Sem receita recorrente qualquer compra deixa o mês negativo: não avisa.
+        expect(
+            avisoDoImpacto(com({ percentualDaRenda: null, primeiroMesNegativo: { antes: null, depois: "2027-03" } })),
+        ).toBeNull()
     })
 
     it("o destrutivo vence o negativo novo", () => {

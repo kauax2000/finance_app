@@ -60,6 +60,8 @@ export function avisoDoImpacto(i: Impacto): { tom: "destructive" | "warning"; ti
             descricao: i.limite.disponivel != null ? `Disponível: ${currencyBRL(i.limite.disponivel)}` : null,
         }
     }
+    // Sem receita recorrente, todo mês futuro fica negativo com qualquer compra: o aviso seria ruído.
+    if (i.percentualDaRenda == null) return null
     const { antes, depois } = i.primeiroMesNegativo
     if (depois && depois !== antes) {
         return { tom: "warning", titulo: `O seguro para gastar fica negativo em ${mesCurto(depois)}`, descricao: null }
