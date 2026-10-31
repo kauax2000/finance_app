@@ -155,8 +155,8 @@ const TIPOS: { tipo: TipoDoLancamento; rotulo: string }[] = [
 /** Pix e débito antes do crédito; dinheiro por último. */
 const FORMAS_ANTES_DO_CREDITO: PaymentMethod[] = ["pix", "debit_card"]
 
-/** De 2 a 48, a régua do formulário. */
-const PARCELAS = Array.from({ length: 47 }, (_, i) => i + 2)
+/** De 2 a 12, o comum. Mais que isso se escreve no formulário completo (até 48). */
+const PARCELAS = Array.from({ length: 11 }, (_, i) => i + 2)
 
 const SEM_CATEGORIA = "__sem__"
 
@@ -1394,7 +1394,8 @@ function Revisao({
                             </SelectTrigger>
                         </FieldControl>
                         <SelectContent>
-                            {PARCELAS.map((n) => (
+                            {/* Uma frase ou o formulário podem trazer mais de 12: a escolhida continua na lista. */}
+                            {(campos.parcelas != null && campos.parcelas > 12 ? [...PARCELAS, campos.parcelas] : PARCELAS).map((n) => (
                                 <SelectItem key={n} value={String(n)}>
                                     {n}×
                                 </SelectItem>

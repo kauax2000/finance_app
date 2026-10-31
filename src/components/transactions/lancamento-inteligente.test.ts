@@ -91,6 +91,11 @@ describe("a tela do lançamento inteligente (v2)", () => {
         expect(fonte).toContain("if (editando === campo && !abreEmDialogo(campo)) continue")
     })
 
+    it("as parcelas da revisão vão até 12, e a lida acima disso continua na lista", () => {
+        expect(fonte).toContain("const PARCELAS = Array.from({ length: 11 }, (_, i) => i + 2)")
+        expect(fonte).toContain("campos.parcelas > 12 ? [...PARCELAS, campos.parcelas] : PARCELAS")
+    })
+
     it("o tipo é só um indicador, e o motivo é uma legenda", () => {
         expect(fonte).toMatch(/<Badge id="lancamento-tipo" tone=\{TOM_DO_TIPO\[tipo\]\}>\s*<BadgeDot \/>/)
         expect(fonte).not.toContain("<Tabs")
