@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWorkspace } from "@/components/workspace-provider"
-import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
+import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import type { CartaoParaCasar, CategoriaParaCasar, LinhaHistorico } from "@/lib/captura/frase"
 import {

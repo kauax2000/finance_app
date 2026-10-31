@@ -49,7 +49,7 @@ import { TransactionFormSurface } from "@/components/transactions/transaction-fo
 import { AConferirWireframe } from "@/components/wireframe/a-conferir-wireframe"
 import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
 import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
-import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
+import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesaWireframe } from "@/components/wireframe/divisao-wireframe"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type {

@@ -69,7 +69,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Caption, Muted } from "@/components/ui/typography"
 import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
+import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import type { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
 import type { CartaoParaCasar } from "@/lib/captura/frase"

@@ -51,6 +51,27 @@ export function mesCurto(ym: string): string {
     return MESES[m - 1] ? `${MESES[m - 1]}/${y}` : ym
 }
 
+/** O aviso que o quadro mostra sempre à vista; o destrutivo vence, e o negativo que já existia no mesmo mês não conta. */
+export function avisoDoImpacto(i: Impacto): { tom: "destructive" | "warning"; titulo: string; descricao: string | null } | null {
+    if (i.limite.cabe === false) {
+        return {
+            tom: "destructive",
+            titulo: "Não cabe no limite do cartão",
+            descricao: i.limite.disponivel != null ? `Disponível: ${currencyBRL(i.limite.disponivel)}` : null,
+        }
+    }
+    const { antes, depois } = i.primeiroMesNegativo
+    if (depois && depois !== antes) {
+        return { tom: "warning", titulo: `O seguro para gastar fica negativo em ${mesCurto(depois)}`, descricao: null }
+    }
+    return null
+}
+
+/** A linha fechada do quadro. */
+export function resumoDoImpacto(i: Impacto): string {
+    return `Pico de ${currencyBRL(i.pico.comEsta)} em ${mesCurto(i.pico.mes)}`
+}
+
 const ID_PROPOSTO = "__proposto__"
 
 /** O plano como o banco o gravaria: nada lançado, a âncora no dia da 1ª parcela (o trigger). */

@@ -1,9 +1,18 @@
+import { existsSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { currencyBRL } from "@/lib/formatters"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { statementTotalKey } from "@/lib/fatura/total-com-banco"
 import { assinatura, cartao, dados, noCartao, plano, totalDoBanco } from "./dados-de-teste"
-import { impactoDaParcela, impactoDoPlano, mesCurto, type PlanoProposto } from "./impacto-parcela"
+import {
+    avisoDoImpacto,
+    impactoDaParcela,
+    impactoDoPlano,
+    mesCurto,
+    resumoDoImpacto,
+    type Impacto,
+    type PlanoProposto,
+} from "./impacto-parcela"
 
 const HOJE = "2026-10-24"
 // Fecha dia 5 e vence dia 15: a parcela de 10/11 cai na fatura que fecha em 05/12.
@@ -191,5 +200,61 @@ describe("onde o quadro aparece", () => {
         ["src/components/transactions/transaction-detail-sheet.tsx", "<ImpactoDaParcela planoId={t.installment_plan_id} />"],
     ])("%s monta o quadro", (arquivo, jsx) => {
         expect(semComentarios(lerFonte(arquivo), "tudo")).toContain(jsx)
+    })
+})
+
+describe("o texto do quadro", () => {
+    const base: Impacto = {
+        parcelaEFim: "",
+        pico: { semEsta: 0, comEsta: 242, mes: "2027-05" },
+        proximasFaturas: null,
+        percentualDaRenda: null,
+        primeiroMesNegativo: { antes: null, depois: null },
+        limite: { disponivel: null, cabe: null, motivo: null },
+    }
+    const com = (p: Partial<Impacto>): Impacto => ({ ...base, ...p })
+
+    it("não cabe no limite: destrutivo, com o disponível quando se sabe", () => {
+        expect(avisoDoImpacto(com({ limite: { disponivel: 1500, cabe: false, motivo: null } }))).toEqual({
+            tom: "destructive",
+            titulo: "Não cabe no limite do cartão",
+            descricao: `Disponível: ${currencyBRL(1500)}`,
+        })
+        expect(avisoDoImpacto(com({ limite: { disponivel: null, cabe: false, motivo: null } }))?.descricao).toBeNull()
+    })
+
+    it("o seguro para gastar que fica negativo avisa; o que já era no mesmo mês não", () => {
+        const aviso = { tom: "warning", titulo: "O seguro para gastar fica negativo em mar/2027", descricao: null }
+        expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: null, depois: "2027-03" } }))).toEqual(aviso)
+        expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-03" } }))).toEqual(aviso)
+        expect(avisoDoImpacto(com({ primeiroMesNegativo: { antes: "2027-03", depois: "2027-03" } }))).toBeNull()
+    })
+
+    it("o destrutivo vence o negativo novo", () => {
+        const i = com({
+            limite: { disponivel: null, cabe: false, motivo: null },
+            primeiroMesNegativo: { antes: null, depois: "2027-03" },
+        })
+        expect(avisoDoImpacto(i)?.tom).toBe("destructive")
+    })
+
+    it("o resumo da linha fechada", () => {
+        expect(resumoDoImpacto(base)).toBe(`Pico de ${currencyBRL(242)} em mai/2027`)
+    })
+
+    it("o quadro é feito de peças do design system, e o wireframe saiu", () => {
+        const quadro = semComentarios(lerFonte("src/components/transactions/impacto-da-parcela.tsx"), "tudo")
+        expect(quadro).toContain("<Collapsible")
+        expect(quadro).toContain("<DescriptionList")
+        expect(quadro).not.toContain("WireframeBox")
+        for (const f of [
+            "src/components/transactions/lancamento-inteligente.tsx",
+            "src/components/transactions/transaction-detail-sheet.tsx",
+            "src/components/transactions/transaction-form-fields.tsx",
+            "src/components/wireframe/frase-rapida-wireframe.tsx",
+        ]) {
+            expect(lerFonte(f)).not.toContain("impacto-parcela-wireframe")
+        }
+        expect(existsSync("src/components/wireframe/impacto-parcela-wireframe.tsx")).toBe(false)
     })
 })
