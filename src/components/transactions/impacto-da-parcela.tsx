@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
+import { motion, useReducedMotion } from "motion/react"
+import { useMemo, useRef, useState } from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
@@ -14,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Caption } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { currencyBRL } from "@/lib/formatters"
+import { MOLA_PALCO } from "@/lib/spring"
 import {
     avisoDoImpacto,
     impactoDaParcela,
@@ -43,6 +45,9 @@ function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
     const { pico, proximasFaturas, percentualDaRenda, primeiroMesNegativo, limite } = impacto
     const aviso = avisoDoImpacto(impacto)
     const { antes, depois } = primeiroMesNegativo
+    const [aberto, setAberto] = useState(false)
+    const envelope = useRef<HTMLDivElement>(null)
+    const reduzido = useReducedMotion()
     return (
         <div className="flex flex-col gap-2">
             {aviso ? (
@@ -51,35 +56,53 @@ function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
                     {aviso.descricao ? <AlertDescription>{aviso.descricao}</AlertDescription> : null}
                 </Alert>
             ) : null}
-            <Collapsible variant="card">
+            <Collapsible variant="card" open={aberto} onOpenChange={setAberto}>
                 <CollapsibleRow trailing={<span className="nums">{resumoDoImpacto(impacto)}</span>}>
                     Impacto da parcela
                 </CollapsibleRow>
-                <CollapsibleContent>
-                    <DescriptionList divided>
-                        <Linha termo="Parcela">{impacto.parcelaEFim}</Linha>
-                        <Linha termo={`Pico de parcelas (${mesCurto(pico.mes)})`}>
-                            {currencyBRL(pico.semEsta)} → {currencyBRL(pico.comEsta)}
-                        </Linha>
-                        {proximasFaturas?.map((f) => (
-                            <Linha key={f.closeYmd} termo={`Fatura de ${formatDatePtBr(f.closeYmd)}`}>
-                                {currencyBRL(f.antes)} → {currencyBRL(f.depois)}
+                {/* Uma altura só, na mola: fora a animação de CSS do `Collapsible` (ela vence o
+                    estilo inline) e a subida do conteúdo, e quem contém o quadro não anima de
+                    novo (`data-altura-em-voo`). */}
+                <CollapsibleContent forceMount asChild className="animate-none! overflow-hidden *:animate-none!">
+                    <motion.div
+                        ref={envelope}
+                        inert={!aberto}
+                        initial={false}
+                        animate={{ height: aberto ? "auto" : 0, opacity: aberto ? 1 : 0 }}
+                        transition={reduzido ? { duration: 0 } : MOLA_PALCO}
+                        onAnimationStart={() => envelope.current?.setAttribute("data-altura-em-voo", "")}
+                        onAnimationComplete={() =>
+                            // O último `ResizeObserver` do voo chega depois do fim da animação.
+                            requestAnimationFrame(() =>
+                                requestAnimationFrame(() => envelope.current?.removeAttribute("data-altura-em-voo"))
+                            )
+                        }
+                    >
+                        <DescriptionList divided>
+                            <Linha termo="Parcela">{impacto.parcelaEFim}</Linha>
+                            <Linha termo={`Pico de parcelas (${mesCurto(pico.mes)})`}>
+                                {currencyBRL(pico.semEsta)} → {currencyBRL(pico.comEsta)}
                             </Linha>
-                        ))}
-                        <Linha termo="Da renda recorrente">
-                            {percentualDaRenda != null ? `${percentualDaRenda}% no pico` : "Sem receita recorrente"}
-                        </Linha>
-                        <Linha termo="Seguro para gastar">
-                            {!antes && !depois
-                                ? "Sem mês negativo"
-                                : `${antes ? mesCurto(antes) : "nenhum"} → ${depois ? mesCurto(depois) : "nenhum"}`}
-                        </Linha>
-                        {limite.motivo === "sem_limite" ? (
-                            <Linha termo="Limite disponível">Sem limite cadastrado</Linha>
-                        ) : limite.disponivel != null ? (
-                            <Linha termo="Limite disponível">{currencyBRL(limite.disponivel)}</Linha>
-                        ) : null}
-                    </DescriptionList>
+                            {proximasFaturas?.map((f) => (
+                                <Linha key={f.closeYmd} termo={`Fatura de ${formatDatePtBr(f.closeYmd)}`}>
+                                    {currencyBRL(f.antes)} → {currencyBRL(f.depois)}
+                                </Linha>
+                            ))}
+                            <Linha termo="Da renda recorrente">
+                                {percentualDaRenda != null ? `${percentualDaRenda}% no pico` : "Sem receita recorrente"}
+                            </Linha>
+                            <Linha termo="Seguro para gastar">
+                                {!antes && !depois
+                                    ? "Sem mês negativo"
+                                    : `${antes ? mesCurto(antes) : "nenhum"} → ${depois ? mesCurto(depois) : "nenhum"}`}
+                            </Linha>
+                            {limite.motivo === "sem_limite" ? (
+                                <Linha termo="Limite disponível">Sem limite cadastrado</Linha>
+                            ) : limite.disponivel != null ? (
+                                <Linha termo="Limite disponível">{currencyBRL(limite.disponivel)}</Linha>
+                            ) : null}
+                        </DescriptionList>
+                    </motion.div>
                 </CollapsibleContent>
             </Collapsible>
         </div>

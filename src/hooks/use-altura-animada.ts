@@ -35,6 +35,9 @@ export function useAlturaAnimada<T extends HTMLElement>() {
             if (alvo === ultima) return
             const de = ultima
             ultima = alvo
+            // Um filho que anda a própria altura (`data-altura-em-voo`) já leva a
+            // caixa junto: duas animações da mesma altura sairiam em duas etapas.
+            if (el.querySelector("[data-altura-em-voo]")) return
             if (reduzido.matches || de === 0 || alvo === 0) return
             animando = true
             el.style.overflow = "clip"

@@ -203,6 +203,15 @@ describe("onde o quadro aparece", () => {
     })
 })
 
+describe("a abertura do quadro", () => {
+    it("uma altura só: quem contém o quadro não anima a mesma altura de novo", () => {
+        const quadro = lerFonte("src/components/transactions/impacto-da-parcela.tsx")
+        expect(quadro).toContain("setAttribute(\"data-altura-em-voo\"")
+        expect(quadro).toContain('height: aberto ? "auto" : 0')
+        expect(lerFonte("src/hooks/use-altura-animada.ts")).toContain('el.querySelector("[data-altura-em-voo]")')
+    })
+})
+
 describe("o texto do quadro", () => {
     const base: Impacto = {
         parcelaEFim: "",
