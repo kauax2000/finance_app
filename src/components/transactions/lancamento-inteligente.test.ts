@@ -79,13 +79,14 @@ describe("a tela do lançamento inteligente (v2)", () => {
 
     it("o calendário da Data abre num diálogo, sem gaveta", () => {
         expect(fonte).not.toContain("<DatePicker")
-        expect(fonte).toMatch(/<DialogContent[\s\S]{0,700}<Calendar/)
+        expect(fonte).toMatch(/<DialogContent[\s\S]{0,1200}<Calendar/)
         expect(fonte).toContain("open={editando !== null && abreEmDialogo(editando)}")
     })
 
-    it("o diálogo da Data volta para a linha, com o dia pousado à vista", () => {
-        expect(fonte).toContain("data-closed:[animation:menu-unmorph_260ms_linear_both]!")
-        expect(fonte).toContain("placa.style.transformOrigin")
+    it("o diálogo da Data fecha como abre, ao contrário, com o dia pousado à vista", () => {
+        expect(fonte).toContain("data-closed:slide-out-to-top-1 data-closed:animation-duration-(--duration-spring)!")
+        expect(fonte).toContain("data-closed:*:[animation:menu-content-in_var(--duration-spring)_var(--ease-in-out)_reverse_both]")
+        expect(fonte).not.toContain("menu-unmorph_260ms")
         expect(fonte).toContain("const POUSO_DO_DIA_MS = 160")
         expect(fonte).toContain("if (editando === campo && !abreEmDialogo(campo)) continue")
     })

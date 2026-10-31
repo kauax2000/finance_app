@@ -1161,19 +1161,12 @@ function Revisao({
         requestAnimationFrame(() => document.getElementById(`lancamento-${campo}`)?.focus())
     }
 
-    /** O diálogo da Data volta para a linha: o `menu-unmorph` encolhe na direção dela. */
     function fecharData() {
         window.clearTimeout(pousoDoDia.current)
-        const placa = document.getElementById("lancamento-calendario")
-        const linha = document.getElementById("lancamento-data")?.getBoundingClientRect()
-        if (placa && linha) {
-            const caixa = placa.getBoundingClientRect()
-            placa.style.transformOrigin = `${linha.left + linha.width / 2 - caixa.left}px ${linha.top + linha.height / 2 - caixa.top}px`
-        }
         fechar()
     }
 
-    /** O círculo pousa no dia, à vista, e só então o diálogo volta para a linha, que recebe a data. */
+    /** O círculo pousa no dia, à vista, e só então o diálogo fecha e a linha recebe a data. */
     function escolherDia(dia: Date | undefined) {
         if (!dia) return fecharData()
         setDiaEscolhido(dia)
@@ -1579,11 +1572,12 @@ function Revisao({
                     }}
                 >
                     <DialogContent
-                        id="lancamento-calendario"
                         size="sm"
+                        // A abertura do `Dialog` ao contrário: a mesma duração, o mesmo zoom e a
+                        // mesma subida, e o conteúdo volta ao desfoque.
                         className={cn(
                             !reduzido &&
-                                "[--morph-radius:var(--radius-modal)] data-closed:[animation:menu-unmorph_260ms_linear_both]!"
+                                "data-closed:slide-out-to-top-1 data-closed:animation-duration-(--duration-spring)! data-closed:ease-(--ease-in-out)! data-closed:*:[animation:menu-content-in_var(--duration-spring)_var(--ease-in-out)_reverse_both]"
                         )}
                     >
                         <DialogHeader>
