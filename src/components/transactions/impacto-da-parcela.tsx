@@ -56,9 +56,9 @@ function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
                     Impacto da parcela
                 </CollapsibleRow>
                 <CollapsibleContent>
-                    <DescriptionList size="sm" divided>
+                    <DescriptionList divided>
                         <Linha termo="Parcela">{impacto.parcelaEFim}</Linha>
-                        <Linha termo="Pico de parcelas">
+                        <Linha termo={`Pico de parcelas (${mesCurto(pico.mes)})`}>
                             {currencyBRL(pico.semEsta)} → {currencyBRL(pico.comEsta)}
                         </Linha>
                         {proximasFaturas?.map((f) => (
@@ -107,6 +107,6 @@ export function ImpactoDaParcela(
     if (impacto === undefined) return null
     if (impacto) return <QuadroDoImpacto impacto={impacto} />
     if (erro) return <Caption role="status">Não deu para calcular o impacto agora.</Caption>
-    if (carregando) return <Skeleton className="h-10.5 w-full rounded-row-lg" />
+    if (carregando) return <Skeleton className="h-8.5 w-full rounded-row-lg pointer-coarse:h-11.5" />
     return null
 }

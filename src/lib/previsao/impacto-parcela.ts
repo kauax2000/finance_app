@@ -69,7 +69,7 @@ export function avisoDoImpacto(i: Impacto): { tom: "destructive" | "warning"; ti
 
 /** A linha fechada do quadro. */
 export function resumoDoImpacto(i: Impacto): string {
-    return `Pico de ${currencyBRL(i.pico.comEsta)} em ${mesCurto(i.pico.mes)}`
+    return `Pico de ${currencyBRL(i.pico.comEsta)}`
 }
 
 const ID_PROPOSTO = "__proposto__"

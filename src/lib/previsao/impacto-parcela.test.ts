@@ -239,13 +239,14 @@ describe("o texto do quadro", () => {
     })
 
     it("o resumo da linha fechada", () => {
-        expect(resumoDoImpacto(base)).toBe(`Pico de ${currencyBRL(242)} em mai/2027`)
+        expect(resumoDoImpacto(base)).toBe(`Pico de ${currencyBRL(242)}`)
     })
 
     it("o quadro é feito de peças do design system, e o wireframe saiu", () => {
         const quadro = semComentarios(lerFonte("src/components/transactions/impacto-da-parcela.tsx"), "tudo")
         expect(quadro).toContain("<Collapsible")
         expect(quadro).toContain("<DescriptionList")
+        for (const peca of ["<Alert", "<Skeleton", "<Caption"]) expect(quadro).toContain(peca)
         expect(quadro).not.toContain("WireframeBox")
         for (const f of [
             "src/components/transactions/lancamento-inteligente.tsx",
