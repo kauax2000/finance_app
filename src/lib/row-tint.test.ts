@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
 /**
- * O realce das linhas sobre vidro é o da barra lateral (rodada 325, a pedido do
- * dono: um realce só no app): `--sidebar-accent` a 50% na passagem, ainda
- * translúcido sobre a placa, e a 70% ao pressionar ou com o item aberto. Foi a
- * tinta `--foreground` a 9%. `bg-accent` e `bg-muted` continuam fora: matavam a
+ * O realce das linhas sobre vidro é a tinta `--foreground`, a pedido do dono:
+ * 9% na passagem e 15% ao pressionar ou com o item aberto. O `--sidebar-accent`
+ * (rodada 325), mesmo com alfa, é um cinza escuro: sobre o que estava atrás lia
+ * como faixa sólida. `bg-accent` e `bg-muted` continuam fora: matavam a
  * transparência da placa e da gaveta.
  */
 
@@ -20,7 +20,7 @@ const SOBRE_VIDRO = [
   "src/components/layout/notification-row.tsx",
 ]
 
-describe("o realce das linhas sobre vidro é o da barra lateral", () => {
+describe("o realce das linhas sobre vidro é a tinta do texto", () => {
   it("nenhuma linha acende com cor opaca", () => {
     for (const caminho of SOBRE_VIDRO) {
       const codigo = lerFonte(caminho)
@@ -30,14 +30,12 @@ describe("o realce das linhas sobre vidro é o da barra lateral", () => {
     }
   })
 
-  it("o realce é um só: o sidebar-accent a 50%, a 70% ao pressionar", () => {
+  it("o realce é um só: a tinta a 9%, a 15% ao pressionar", () => {
     for (const caminho of SOBRE_VIDRO) {
       const codigo = lerFonte(caminho)
-      expect(codigo, caminho).toContain("bg-sidebar-accent/50")
-      expect(codigo, caminho).toContain("active:bg-sidebar-accent/70")
-      expect(codigo, caminho).not.toMatch(/bg-foreground\/9\b/)
-      // Cheio, o realce era uma placa opaca sobre o vidro.
-      expect(codigo, caminho).not.toMatch(/:bg-sidebar-accent(?![\/\w-])/)
+      expect(codigo, caminho).toContain("bg-foreground/9")
+      expect(codigo, caminho).toContain("active:bg-foreground/15")
+      expect(codigo, caminho).not.toMatch(/:bg-sidebar-accent\b/)
     }
   })
 })

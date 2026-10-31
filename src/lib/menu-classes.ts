@@ -75,11 +75,11 @@ export const menuItemGeometryClassName = [
 ].join(" ")
 
 /**
- * O realce é o da barra lateral (rodada 325): `--sidebar-accent` a 50% na
- * passagem, ainda translúcido sobre o vidro, e cheio ao pressionar ou com o
- * submenu aberto, como a página ativa nela. Era a tinta `--foreground` a 9%. A cor
- * esmaece em 300ms na entrada e na saída; nada segue o ponteiro (o realce que
- * viaja entre as linhas está recusado).
+ * O realce é a tinta `--foreground`: 9% na passagem e 15% ao pressionar ou com
+ * o submenu aberto. Clareia o vidro no escuro e o escurece no claro; o cinza da
+ * barra lateral (rodada 325) lia como uma faixa escura sobre o que estava atrás.
+ * A cor esmaece em 300ms na entrada e na saída; nada segue o ponteiro (o realce
+ * que viaja entre as linhas está recusado).
  */
 export const menuItemFadeClassName =
   "transition-colors duration-(--duration-slow) ease-(--ease-emphasized)"
@@ -89,7 +89,7 @@ export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
+  "focus:bg-foreground/9 active:bg-foreground/15 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -101,8 +101,8 @@ export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
-  "data-inset:pl-7.5 data-open:bg-sidebar-accent/70 data-open:text-accent-foreground",
+  "focus:bg-foreground/9 active:bg-foreground/15 focus:text-accent-foreground",
+  "data-inset:pl-7.5 data-open:bg-foreground/15 data-open:text-accent-foreground",
   // Sem o desabilitado um submenu desabilitado sai igual ao ativo.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
@@ -114,7 +114,7 @@ export const menuIndicatorItemClassName = [
   // O recuo do lado do indicador cresce; o `twMerge` guarda o `px-2` com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
-  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent/70 focus:text-accent-foreground",
+  "focus:bg-foreground/9 active:bg-foreground/15 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

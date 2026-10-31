@@ -95,7 +95,7 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
             // `rounded-surface` (22): a 8px da borda da folha (28), o concêntrico seria 20, e
             // o degrau mais perto da escala é o da superfície; o `row-lg` (16) lia quadrado.
             // `px-2`: com o recuo de 8 da lista, o texto fica nos 16 do cabeçalho.
-            className="items-start rounded-surface px-2 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70"
+            className="items-start rounded-surface px-2 hover:bg-foreground/9 active:bg-foreground/15"
         >
             <ItemMedia variant="tile" tint="vivid" tone={notificationTone(n)}>
                 {getNotificationIcon(n)}

@@ -1274,13 +1274,14 @@ declaração de `background-color` no trilho).
   ([`lib/menu-classes`](src/lib/menu-classes.ts)).
   - A linha **acende esmaecendo** (`menuItemFadeClassName`); **o realce que
     viaja entre linhas e o disco do `button-fill` não voltam** —
-    `menu-fade.test.ts`. O realce é **o da barra lateral** nos menus,
-    `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês:
-    `bg-sidebar-accent/50` na passagem (foco, cursor, a linha selecionada do
-    `Command`) e `bg-sidebar-accent/70` ao pressionar e com o item aberto
-    (rodada 325; era a tinta `bg-foreground/9`; cheio virava uma placa opaca
-    sobre o vidro, e saiu em 29/10). **Nenhum realce de linha sobre vidro é
-    `bg-sidebar-accent` cheio.** `Item` e `Toggle` seguem `bg-muted` —
+    `menu-fade.test.ts`. O realce é **a tinta do texto** nos menus,
+    `Command`, `Select`, `NavigationMenu`, folha de ações, seletor de mês e
+    notificações: `bg-foreground/9` na passagem (foco, cursor, a linha
+    selecionada do `Command`) e `bg-foreground/15` ao pressionar e com o item
+    aberto (31/10). Ela clareia o vidro no escuro e o escurece no claro; o
+    `--sidebar-accent` da rodada 325, mesmo com alfa, é um cinza escuro e lia
+    como faixa sólida. **Nenhum realce de linha sobre vidro é
+    `bg-sidebar-accent`.** `Item` e `Toggle` seguem `bg-muted` —
     `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
     (`pointer-coarse:min-h-11`) — e no toque o texto vai a 16, o ícone a 20, o
@@ -1291,7 +1292,7 @@ declaração de `background-color` no trilho).
     identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
     amostra (`Toggle swatch`: contorno de 2px, afastado 2px) na cor da própria
     opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
-    5,6:1 no claro) e a linha acende a 70% (`bg-sidebar-accent/70`: cheia, era uma placa opaca sobre o vidro), como a página
+    5,6:1 no claro) e a linha acende na tinta (`bg-foreground/15`), como a página
     ativa na barra); a outra em foco mostra a prévia do halo a 45%, e as demais
     esmaecem a tinta. Sem peso nem marcador no fim.
   - Teto vertical
