@@ -90,7 +90,7 @@
 **Interfaces:**
 - Produces: `chaves` e `useAdultos(workspaceId: string)` em `lib/divisao/use-adultos.ts`, movidos sem mudança; `divisao-wireframe.tsx` passa a importá-los.
 - Produces: `CarteiraDivisaoForm()`, mesma guarda de `ModoEPesosDaCarteiraWireframe`.
-- Produces: `CarteiraProjetoForm({ workspace?: Workspace, onSalvo?: () => void })`, mesma guarda e `key={alvo.id}` de `DatasDaCarteiraProjetoWireframe`.
+- Produces: `CarteiraProjetoForm({ workspace?: Workspace, onSalvo?: () => void, moldura?: boolean })`, com `moldura` `true` por padrão, mesma guarda e `key={alvo.id}` de `DatasDaCarteiraProjetoWireframe`.
 - Produces: `ymdParaData(ymd: string): Date | undefined` em `carteira-projeto-form.tsx`, exportado para teste. Use o helper de `lib/transaction-date` se existir.
 
 - [ ] **Step 1: Testes:** `ymdParaData("2026-03-01")` tem `getDate() === 1` e `getMonth() === 2`; `ymdParaData("")` é `undefined`; a fonte dos dois formulários contém `key=` por carteira, `FormSubmit` e `variant="secondary"`, e não contém `WireframeBox`, `<input` nem `new Date(inicio`.
