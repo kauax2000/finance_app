@@ -234,13 +234,12 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
     expect(fonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).toContain("O CPF, o cartão e o nome como no cartão ficam só no Asaas; o nome e o e-mail da conta continuam aqui")
   })
 
-  it("Configurações mostra a IA com o link da política", async () => {
-    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaConfiguracoesWireframe />")
-    const { IaConfiguracoesWireframe } = await import("./ia-configuracoes-wireframe")
-    const html = renderToStaticMarkup(IaConfiguracoesWireframe())
-    expect(html).toContain("IA: Groq e Cloudflare, grátis, sem treino")
-    expect(html).toContain("30")
-    expect(html).toContain('href="/privacidade"')
+  it("Configurações mostra a IA com o link da política", () => {
+    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaPrivacidadeSettings />")
+    const ia = fonte("src/components/settings/ia-privacidade-settings.tsx")
+    expect(ia).toContain("Groq e Cloudflare")
+    expect(ia).toContain("30 chamadas")
+    expect(ia).toContain("ROUTES.PRIVACY")
   })
 })
 
