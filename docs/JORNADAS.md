@@ -312,15 +312,17 @@ flowchart TD
     createDlg -.->|"a regra da escolha e os modelos de carteira"| G18a(("G18a Criar com um modelo"))
 
     settings["/settings"] --> owner{"É dona da carteira?"}
-    owner -->|"sim"| edit(["Editar nome, ícone, cor"])
+    owner -->|"sim"| edit(["Editar: nome, ícone, cor"])
+    owner -->|"sim, e não é pessoal"| divisao(["Alterar Divisão: diálogo com modo e pesos"])
+    owner -->|"sim, carteira de projeto"| datas(["Alterar Datas e orçamento: diálogo"])
     owner -->|"sim, e não é pessoal"| del(["Excluir carteira: digitar o nome"])
     del --> impact[("RPC get_workspace_delete_impact")]
     del -->|"Excluir"| delRpc[("RPC delete_workspace")] --> fallback(["Se era a atual, volta para a pessoal"])
     owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
     settings --> pwa(["Instalar app: folha de instalação"])
     settings --> notif(["Preferências de notificação: canais e tópicos"])
-    settings --> iaWf(["WIREFRAME IA: Groq e Cloudflare, grátis, sem treino; até 30 por dia"])
-    iaWf -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
+    settings --> ia(["IA e privacidade: Groq e Cloudflare, sem treino; até 30 por dia"])
+    ia -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
     settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
 ```
 
@@ -383,7 +385,7 @@ flowchart TD
 | O aceite grava o papel e o responsável (Bloco 7A) | `accept_workspace_invite` grava `role = v_invite.role` (era `'member'` fixo) e, no convidado, `sponsor_user_id = v_invite.created_by`. A RPC continua só da service role: a Edge de aceite não mudou | `supabase/migrations/20261029120000_papeis.sql` |
 | O ex-convidado (Bloco 9) | `workspace_ex_convidados(workspace_id, user_id, saiu_em)`, com RLS ligada e sem grant, é preenchida pelo gatilho `lembrar_ex_convidado` (depois de apagar um membro com `role = 'guest'`; pula a cascata). O `accept_workspace_invite` devolve o status `ex_convidado` para um convite **por link** de quem está nela, e a Edge `workspace-invites-accept` responde 403 "Peça ao dono um convite por e-mail."; o convite por e-mail passa, e um aceite com sucesso apaga a linha (fecha a lacuna 60). **A Edge sobe antes da migração**: sem o `case`, o status novo cai no `default` e vira 500 | `supabase/migrations/20261102120000_bloco9.sql`, `supabase/functions/workspace-invites-accept/index.ts` |
 | Lista de membros e convites (Bloco 7A) | O selo mostra Dono, Membro ou Convidado (`rotuloDoPapel`); o convite por e-mail pendente mostra o papel; a troca de papel é da linha do membro e só do dono (ver 15a). O membro adulto também lê a seção Limites (ver 16) | `src/app/(app)/members/page-client.tsx`, `src/components/members/workspace-invite-dialog.tsx` |
-| IA e privacidade (Bloco 3B) | Configurações mostra o wireframe "IA": "IA: Groq e Cloudflare, grátis, sem treino", o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/wireframe/ia-configuracoes-wireframe.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
+| IA e privacidade (Bloco 3B) | Configurações mostra a seção "IA e privacidade": Groq e Cloudflare, sem treinar com os dados, o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/wireframe/ia-configuracoes-wireframe.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Modelos de carteira (Bloco 7C) | Criar carteira ganha a regra da escolha e os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento, que criam pela RPC `criar_carteira_de_modelo` (com as categorias e o modo de cada um); "Sem modelo" segue o `create_shared_workspace`. Ver a jornada 18 | `src/components/workspace/project-form-dialog.tsx`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx` |
 
@@ -820,7 +822,7 @@ flowchart TD
     iconConf(("G3 Atalho do ícone: A conferir")) --> conferir
     cron[("Cron review-reminder-daily, 23:00 UTC")] -.-> reminderFn[("Edge review-reminder")]
     reminderFn -.->|"quem lançou itens a conferir, por carteira, uma vez por dia"| deliver[("deliverNotification, tipo review")]
-    settings["/settings"] -->|"WIREFRAME Lembrete de itens a conferir"| prefs[("notify_review")]
+    settings["/settings"] -->|"Lembrete de itens a conferir"| prefs[("notify_review")]
     prefs -.->|"desligado: não avisa"| reminderFn
     deliver -.-> notif(("G3 Notificação Itens a conferir"))
     notif --> conferir
@@ -1837,7 +1839,7 @@ flowchart TD
     modeloRpc -->|"sucesso"| aparencia[("updateWorkspace: o ícone e a cor que a pessoa escolheu valem sobre os do modelo")]
     aparencia --> tipo{"É modelo de projeto: Viagem, Reforma ou Evento?"}
     tipo -->|"não: Casa ou Casal"| nova(["A carteira nova vira a atual"])
-    tipo -->|"sim"| datas(["WIREFRAME Datas e orçamento total da carteira de projeto"])
+    tipo -->|"sim"| datas(["Datas e orçamento total da carteira de projeto"])
     datas -->|"Salvar ou Agora não"| nova
     semModelo -->|"sucesso"| nova
     pessoalRpc --> nova
@@ -1895,7 +1897,7 @@ flowchart TD
     modelo(("G18a Viagem, Reforma ou Evento")) --> ws[("workspaces: purpose project, split_mode split, starts_on, ends_on e budget_total só aqui")]
     ws --> config["/settings"]
     config --> dono{"É dona da carteira?"}
-    dono -->|"sim"| datas(["WIREFRAME Datas e orçamento total: o fim não vem antes do começo, orçamento maior que zero, vazio grava nulo"])
+    dono -->|"sim"| datas(["Diálogo Datas e orçamento: o fim não vem antes do começo, orçamento maior que zero, vazio grava nulo"])
     dono -->|"não"| semEditor(["Sem o editor"])
     datas -->|"Salvar"| upd[("update em workspaces, e zero linhas diz Nada mudou")]
 
@@ -1919,7 +1921,7 @@ flowchart TD
 flowchart TD
     config["/settings: Modo e pesos da carteira"] --> dono{"É dona, e a carteira não é a pessoal?"}
     dono -->|"não"| semModo(["Sem o editor"])
-    dono -->|"sim"| modo(["WIREFRAME Modo e pesos: pote único ou dividida, e um peso por adulto"])
+    dono -->|"sim"| modo(["Diálogo Divisão: pote único ou dividida, e um peso por adulto"])
     modo -->|"Salvar o modo"| modoDb[("workspaces.split_mode")]
     modoDb --> since[("Trigger carimbar_split_since: o dia em que virou split na primeira vez, nunca se perde")]
     dono -.->|"banco sem a migração"| semMig(["Ainda não disponível"])
