@@ -146,6 +146,18 @@ iguais. "Ver histórico" é ação do cabeçalho.
 - Trocar de carteira fecha esses diálogos, como os de hoje.
 - Sair ou excluir fica como última linha do mesmo cartão.
 
+Regras herdadas do código de hoje, sem mudança:
+
+- **Divisão** grava por `gravarModo` e `gravarPesos`, e só aparece para dono de
+  carteira não pessoal. `split_mode === undefined` é o "Ainda não disponível".
+- **Datas** grava por `editarCarteiraProjeto`, e só aparece para dono de carteira
+  com `purpose === "project"`. A criação usa só este formulário, não a Divisão.
+- Para quem não pode editar, as duas linhas não aparecem, com ou sem resumo.
+- A última linha não aparece para dono de carteira pessoal.
+- `notify_review` e `notify_insights` gravam pelo `patch` de
+  `useWorkspaceNotificationPrefs`, como as outras chaves. As condições de
+  `disabled` ficam como estão: nenhuma chave depende de outra.
+
 ### IA e privacidade
 
 Um cartão, com o texto do wireframe e o link da política. Sem ação de gravar.
