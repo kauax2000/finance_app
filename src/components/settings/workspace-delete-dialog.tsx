@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react"
 import {
-    Card,
-} from "@/components/ui/card"
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
   AlertDialog,
@@ -124,23 +127,22 @@ export function WorkspaceDeleteDialog({
     ) : impactError ? (
         <AlertDialogError>{impactError}</AlertDialogError>
     ) : (
-        <Card variant="muted" padding="none" className="px-3 py-2 text-sm">
-            <p className="font-medium text-foreground">Resumo nesta carteira</p>
-            <ul className="mt-2 space-y-1 text-muted-foreground">
-                <li>
-                    Transações:{" "}
-                    <span className="tabular-nums text-foreground">{transactions}</span>
-                </li>
-                <li>
-                    Orçamentos:{" "}
-                    <span className="tabular-nums text-foreground">{budgets}</span>
-                </li>
-                <li>
-                    Categorias:{" "}
-                    <span className="tabular-nums text-foreground">{categories}</span>
-                </li>
-            </ul>
-        </Card>
+        // A superfície da lista da revisão do lançamento inteligente.
+        <div className="rounded-row-lg bg-foreground/5 p-3">
+            <p className="text-sm font-medium text-foreground">Resumo nesta carteira</p>
+            <DescriptionList layout="inline" size="sm" divided className="mt-2">
+                {[
+                    ["Transações", transactions],
+                    ["Orçamentos", budgets],
+                    ["Categorias", categories],
+                ].map(([termo, valor]) => (
+                    <DescriptionListItem key={termo}>
+                        <DescriptionTerm>{termo}</DescriptionTerm>
+                        <DescriptionDetails className="nums">{valor}</DescriptionDetails>
+                    </DescriptionListItem>
+                ))}
+            </DescriptionList>
+        </div>
     )
 
     // Uma confirmação do que não tem volta é `AlertDialog` (rodada 201): até
