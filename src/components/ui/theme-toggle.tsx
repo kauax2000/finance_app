@@ -59,8 +59,10 @@ const indiceDe = (tema: string | undefined) => {
 /**
  * Três degraus, na escada de controle: `sm` 28 (barras densas), `md` 32 (padrão,
  * o do menu da conta) e `lg` 36 (ao lado de um campo `lg`). Trilho = 4 de recuo
- * + 3 paradas, a parada é a altura menos 4 e a viagem é uma parada por índice. A
- * área de toque segue em 44 (o `::after` cresce o que falta).
+ * + 3 paradas, a parada é a altura menos 4 e a viagem é uma parada por índice. O
+ * marcador é desenhado 2px para dentro da parada (4 de vão até o trilho, como o
+ * `Tabs`), e o alvo continua a parada inteira. A área de toque segue em 44 (o
+ * `::after` cresce o que falta).
  * Com `labels` a parada alarga (`LARGURA_COM_ROTULO`, igual nas três para a
  * viagem continuar uma conta). A geometria desce por estilo inline porque é
  * número calculado, e classe montada em runtime não chega ao CSS.
@@ -293,8 +295,8 @@ export function ThemeToggle({
                 aria-hidden
                 ref={cabecaRef}
                 data-slot="theme-toggle-thumb"
-                className="pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-background shadow-sm"
-                style={{ width: passo, height: face, translate: `${indice * passo}px` }}
+                className="pointer-events-none absolute top-1 left-1 rounded-full bg-background shadow-sm"
+                style={{ width: passo - 4, height: face - 4, translate: `${indice * passo}px` }}
             />
             {PARADAS.map((parada) => (
                 <ThemeFace

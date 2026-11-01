@@ -62,6 +62,9 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toContain("const face = degrau.altura - 4")
         expect(CODIGO).toContain("p-0.5")
         expect(CODIGO).toContain("const larguraTrilho = 4 + passo * PARADAS.length")
+        // O marcador fica 2px para dentro da parada: 4 de vão até o trilho, como o `Tabs`.
+        expect(peca(PECA)).toContain("top-1 left-1")
+        expect(peca(PECA)).toContain("width: passo - 4, height: face - 4")
         // O repouso da peça e a viagem da WAAPI usam o mesmo passo.
         expect(peca(PECA)).toContain("translate: `${indice * passo}px`")
         expect(CODIGO).toContain("{ x: indice * passo, y: 0 }")
