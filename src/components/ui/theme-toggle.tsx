@@ -57,8 +57,8 @@ const indiceDe = (tema: string | undefined) => {
 }
 
 /**
- * Três degraus, na escada de controle: `sm` 28 (barras densas), `md` 32 (padrão,
- * o do menu da conta) e `lg` 36 (ao lado de um campo `lg`). Trilho = 4 de recuo
+ * Três degraus, na escada de controle: `sm` 28 (barras densas), `md` 32 (padrão)
+ * e `lg` 36 (ao lado de um campo `lg`, o de Configurações). Trilho = 4 de recuo
  * + 3 paradas, a parada é a altura menos 4 e a viagem é uma parada por índice. O
  * marcador é desenhado 2px para dentro da parada (4 de vão até o trilho, como o
  * `Tabs`), e o alvo continua a parada inteira. A área de toque segue em 44 (o
@@ -188,8 +188,7 @@ export function ThemeToggle({
 
         // A primeira pintura não anima: o gate de montagem faz `indice` sair de 0 para a
         // parada real, e sem esta guarda o polegar entraria deslizando da esquerda toda
-        // vez que o componente nasce (todo abrir do menu da conta, cujo conteúdo
-        // desmonta ao fechar). Nascer é chegar, não viajar.
+        // vez que o componente nasce. Nascer é chegar, não viajar.
         if (!jaPintou.current) {
             jaPintou.current = true
             return

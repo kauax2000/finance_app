@@ -15,7 +15,7 @@ export default function ThemeToggleDoc() {
 
       <DocSection
         title="Degraus"
-        description="sm 28 para barras densas, md 32 (o padrão, o do menu da conta) e lg 36, ao lado de um campo lg. A parada é a altura menos 4, a peça viaja uma parada por índice, e o alvo de toque é 44 nos três."
+        description="sm 28 para barras densas, md 32 (o padrão) e lg 36, ao lado de um campo lg. A parada é a altura menos 4, a peça viaja uma parada por índice, e o alvo de toque é 44 nos três."
         code={`<ThemeToggle size="sm" />
 <ThemeToggle />
 <ThemeToggle size="lg" />`}
@@ -66,7 +66,7 @@ export default function ThemeToggleDoc() {
 
       <DocSection
         title="Numa linha de menu"
-        description="A forma do menu da conta: o rótulo à esquerda, o controle empurrado para a borda."
+        description="O rótulo à esquerda, o controle empurrado para a borda."
         code={`<div className="flex items-center justify-between gap-3">
   <span className="text-sm text-foreground">Tema</span>
   <ThemeToggle className="ml-auto shrink-0" />
@@ -93,7 +93,7 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Quem desloca é a WAAPI, e o movimento reduzido é perguntado à mão">
-        O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>transition: none !important</code> durante a troca. Uma transição de CSS morreria ali; a Web Animations API não é transição e escapa. O repouso é o estilo, e a animação (com <code>fill: &quot;none&quot;</code>) só cobre o trajeto. O preço é que o bloco global de movimento reduzido também não a alcança, e o componente pergunta à mão — como pergunta antes da revelação circular. E a primeira pintura não anima: o conteúdo do menu da conta desmonta ao fechar, e sem essa guarda a peça entraria deslizando a cada abertura.
+        O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>transition: none !important</code> durante a troca. Uma transição de CSS morreria ali; a Web Animations API não é transição e escapa. O repouso é o estilo, e a animação (com <code>fill: &quot;none&quot;</code>) só cobre o trajeto. O preço é que o bloco global de movimento reduzido também não a alcança, e o componente pergunta à mão — como pergunta antes da revelação circular. E a primeira pintura não anima: sem essa guarda, a peça entraria deslizando toda vez que nasce.
       </DocNote>
 
       <DocNote title="A bandeja é sobreposição, e não tinta chapada">
@@ -109,7 +109,7 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Dois: o menu da conta no desktop (<code>UserMenu</code>), na forma de linha de menu, e a seção Aparência de Configurações (<code>ThemeSettings</code>), onde o tema mora no telefone — o telefone não tem menu da conta, a aba Você abre uma página. Os dois no degrau <code>md</code> e com a revelação circular. O catálogo usa mais dois no cabeçalho. A versão anterior desta página dizia que existia um só no app.
+        Um: a seção Aparência de Configurações (<code>ThemeSettings</code>), no degrau <code>lg</code>, com rótulos no desktop e só ícones no telefone, e com a revelação circular. O menu da conta do desktop teve o seu até 1º de novembro de 2026. O catálogo usa mais dois no cabeçalho.
       </DocNote>
 
       <PropsTable

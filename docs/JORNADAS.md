@@ -413,7 +413,7 @@ flowchart TD
     sidebar --> nav7["/members"]
     sidebar --> nav8["/settings"]
     sidebar -->|"só o adulto, depois de Cartões"| nav9["/projetos"]
-    sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Planos, Cofre aberto, Sair"])
+    sidebar --> userMenu(["Menu do usuário: Minha conta, Planos, Cofre aberto, Sair"])
     bottom -->|"aba Você, com o avatar"| mePage["/me: Carteira (Assinaturas, Contas, Cartões, Projetos, Membros) · Conta (Minha conta, Cofre aberto, Configurações)"]
     mePage -->|"linha da página"| meDest["Tela de um item da página, com o voltar a /me no lugar do sino"]
     meDest -->|"voltar"| mePage

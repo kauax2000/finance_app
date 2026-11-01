@@ -307,7 +307,7 @@ function DropdownMenuRadioGroup({
  * passagem, linhas coladas liam como um bloco só, e o seletor de carteira, que
  * já os tinha, destoava dos outros menus. Vale entre comandos, entre um comando
  * e um grupo deles (`role="group"`, o `DropdownMenuRadioGroup`) e para a linha
- * que não é comando mas mora na lista (`data-menu-row`, como a do tema); rótulo e
+ * que não é comando mas mora na lista (`data-menu-row`); rótulo e
  * separador têm o próprio respiro.
  */
 const MENU_ROW_GAP =
