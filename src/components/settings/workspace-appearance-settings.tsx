@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
 import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
-import { InformationCircleIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceEditDialog } from "@/components/settings/workspace-appearance-edit-dialog"
@@ -17,10 +17,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
-/** Sair e excluir são ações de texto: o peso fica na confirmação, não na página. */
+/** Sair e excluir ficam leves: o peso é da confirmação, não da página. */
 const ACAO_DE_PERIGO = "text-destructive [--button-hover-fill:var(--destructive-muted)]"
+
+/** O botão de ícone da carteira: a dica mostra o nome, e a tinta diz o perigo. */
+function AcaoDaCarteira({
+    rotulo,
+    perigo = false,
+    onClick,
+    children,
+}: {
+    rotulo: string
+    perigo?: boolean
+    onClick: () => void
+    children: ReactNode
+}) {
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    size="icon-lg"
+                    className={perigo ? ACAO_DE_PERIGO : undefined}
+                    aria-label={rotulo}
+                    onClick={onClick}
+                >
+                    {children}
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent>{rotulo}</TooltipContent>
+        </Tooltip>
+    )
+}
 
 function WorkspaceAppearanceSkeleton() {
     return (
@@ -186,18 +218,18 @@ export function WorkspaceAppearanceSettings() {
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
                                     {owner ? (
-                                        <Button type="button" variant="secondary" onClick={openEdit}>
-                                            Editar
-                                        </Button>
+                                        <AcaoDaCarteira rotulo="Editar carteira" onClick={openEdit}>
+                                            <PencilIcon aria-hidden />
+                                        </AcaoDaCarteira>
                                     ) : null}
                                     {canDeleteProject ? (
-                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} aria-label="Excluir carteira" onClick={() => setDeleteOpen(true)}>
-                                            Excluir
-                                        </Button>
+                                        <AcaoDaCarteira rotulo="Excluir carteira" perigo onClick={() => setDeleteOpen(true)}>
+                                            <TrashIcon aria-hidden />
+                                        </AcaoDaCarteira>
                                     ) : !owner ? (
-                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} aria-label="Sair da carteira" onClick={() => setLeaveOpen(true)}>
-                                            Sair
-                                        </Button>
+                                        <AcaoDaCarteira rotulo="Sair da carteira" perigo onClick={() => setLeaveOpen(true)}>
+                                            <ArrowRightStartOnRectangleIcon aria-hidden />
+                                        </AcaoDaCarteira>
                                     ) : null}
                                 </div>
                             </div>

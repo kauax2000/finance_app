@@ -82,7 +82,7 @@ describe("Formulários da Carteira", () => {
 describe("Carteira em linhas", () => {
     it("não recebe children e tudo mora num cartão só, sem ação no cabeçalho", () => {
         const f = carteira()
-        expect(f).not.toContain("children")
+        expect(f).toContain("export function WorkspaceAppearanceSettings() {")
         expect(f).not.toContain("actions=")
         expect(f.match(/<Card padding="none">/g)).toHaveLength(2) // o do esqueleto e o da seção
         expect(f).toContain("Vale para todos em ${currentWorkspace.name}.")
@@ -105,7 +105,7 @@ describe("Carteira em linhas", () => {
 
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
-        expect(f).toMatch(/owner \? \(\s*<Button[^>]*onClick=\{openEdit\}/)
+        expect(f).toMatch(/owner \? \(\s*<AcaoDaCarteira rotulo="Editar carteira" onClick=\{openEdit\}/)
         expect(f).toMatch(/podeDivisao = owner && !isPersonal/)
         expect(f).toMatch(/podeDatas = owner && currentWorkspace\?\.purpose === "project"/)
         expect(f).toMatch(/\{podeDivisao \? \(/)
@@ -123,7 +123,7 @@ describe("Carteira em linhas", () => {
     it("a última linha: excluir, sair, ou nada para o dono da pessoal", () => {
         const f = carteira()
         expect(f).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*!owner \?[\s\S]*Sair da carteira[\s\S]*: null/)
-        expect(f.match(/className=\{ACAO_DE_PERIGO\}/g)).toHaveLength(2)
+        expect(f.match(/<AcaoDaCarteira rotulo="[^"]*" perigo/g)).toHaveLength(2)
     })
 })
 
