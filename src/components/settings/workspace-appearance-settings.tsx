@@ -13,7 +13,6 @@ import { WorkspaceLeaveDialog } from "@/components/settings/workspace-leave-dial
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { ColorTile } from "@/components/ui/color-tile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Separator } from "@/components/ui/separator"
@@ -174,11 +173,8 @@ export function WorkspaceAppearanceSettings() {
                 >
                     <Card padding="none">
                         <CardContent className="flex flex-col">
-                            {/* A capa é a cor da carteira, sem nada escrito em cima. */}
-                            <ColorTile
-                                color={currentWorkspace.icon_background_color}
-                                className="h-16 w-full rounded-none"
-                            />
+                            {/* A capa é o campo de marca, sem nada escrito em cima. */}
+                            <div aria-hidden className="brand-field h-16 w-full" />
                             <div className="flex min-h-13 min-w-0 items-center justify-between gap-3 px-4 pt-2 pb-3">
                                 <div className="flex min-w-0 gap-3 self-stretch">
                                     <WorkspaceBrandMark

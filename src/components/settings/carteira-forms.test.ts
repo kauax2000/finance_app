@@ -172,9 +172,7 @@ describe("opcoesDeModo", () => {
 })
 
 describe("A capa da carteira", () => {
-    it("é a cor da carteira no ColorTile, sem texto em cima e sem cor crua", () => {
-        const f = carteira()
-        expect(f).toMatch(/<ColorTile\s+color=\{currentWorkspace\.icon_background_color\}\s+className="h-16 w-full rounded-none"\s*\/>/)
-        expect(f).not.toContain("backgroundColor: currentWorkspace")
+    it("é o campo de marca, sem texto em cima", () => {
+        expect(carteira()).toContain('<div aria-hidden className="brand-field h-16 w-full" />')
     })
 })
