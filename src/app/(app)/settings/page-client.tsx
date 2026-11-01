@@ -23,9 +23,9 @@ export default function SettingsPage() {
                 </PageHeaderTitle>
             </PageHeader>
             <div className="min-w-0 space-y-5">
+                <WorkspaceAppearanceSettings />
                 <ThemeSettings />
                 <NotificationPreferences />
-                <WorkspaceAppearanceSettings />
                 <IaPrivacidadeSettings />
             </div>
         </div>

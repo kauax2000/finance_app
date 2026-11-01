@@ -29,8 +29,8 @@ divisão Carteira × Conta: Minha conta continua separada.
 - **Página única, coluna única, linhas densas** (layout C). O menu lateral com
   abas foi construído e recusado: "comandos rápidos ficarem a um clique a mais
   de distância". Nenhum comando rápido fica atrás de clique.
-- **Rápidos primeiro.** Ordem aprovada no wireframe: Este aparelho, Notificações,
-  Carteira, IA e privacidade.
+- **Ordem definida depois de ver a tela pronta:** Carteira, Este aparelho,
+  Notificações, IA e privacidade.
 - **Divisão e Datas abrem em diálogo**, por `Alterar`, e Editar também.
 - Largura de volta aos 576px.
 - Mockups no navegador antes de decidir layout.

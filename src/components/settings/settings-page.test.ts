@@ -3,6 +3,15 @@ import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { lerFonte } from "@/test/fonte"
 
+describe("Configurações: ordem", () => {
+    it("Carteira vem primeiro", () => {
+        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const ordem = ["<WorkspaceAppearanceSettings", "<ThemeSettings", "<NotificationPreferences", "<IaPrivacidadeSettings"].map((peca) => fonte.indexOf(peca))
+        expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
+        expect(ordem[0]).toBeGreaterThan(-1)
+    })
+})
+
 describe("Configurações: cabeçalho", () => {
     it("mostra o título sem um segundo h1", () => {
         const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
