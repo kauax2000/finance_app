@@ -105,7 +105,7 @@ describe("Carteira em linhas", () => {
 
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
-        expect(f).toMatch(/owner \? \(\s*<AcaoDaCarteira rotulo="Editar carteira" onClick=\{openEdit\}/)
+        expect(f).toMatch(/owner \? \(\s*<DropdownMenuItem onSelect=\{openEdit\}/)
         expect(f).toMatch(/podeDivisao = owner && !isPersonal/)
         expect(f).toMatch(/podeDatas = owner && currentWorkspace\?\.purpose === "project"/)
         expect(f).toMatch(/\{podeDivisao \? \(/)
@@ -123,7 +123,7 @@ describe("Carteira em linhas", () => {
     it("a última linha: excluir, sair, ou nada para o dono da pessoal", () => {
         const f = carteira()
         expect(f).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*!owner \?[\s\S]*Sair da carteira[\s\S]*: null/)
-        expect(f.match(/<AcaoDaCarteira rotulo="[^"]*" perigo/g)).toHaveLength(2)
+        expect(f.match(/<DropdownMenuItem variant="destructive"/g)).toHaveLength(2)
     })
 })
 

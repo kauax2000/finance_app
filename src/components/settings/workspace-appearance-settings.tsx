@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
 import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
-import { ArrowRightStartOnRectangleIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceEditDialog } from "@/components/settings/workspace-appearance-edit-dialog"
@@ -14,45 +14,17 @@ import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuHeader,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
-
-/** Sair e excluir ficam leves: o peso é da confirmação, não da página. */
-const ACAO_DE_PERIGO = "text-destructive [--button-hover-fill:var(--destructive-muted)]"
-
-/** O botão de ícone da carteira: a dica mostra o nome, e a tinta diz o perigo. */
-function AcaoDaCarteira({
-    rotulo,
-    perigo = false,
-    onClick,
-    children,
-}: {
-    rotulo: string
-    perigo?: boolean
-    onClick: () => void
-    children: ReactNode
-}) {
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    size="icon-lg"
-                    className={perigo ? ACAO_DE_PERIGO : undefined}
-                    aria-label={rotulo}
-                    onClick={onClick}
-                >
-                    {children}
-                </Button>
-            </TooltipTrigger>
-            <TooltipContent>{rotulo}</TooltipContent>
-        </Tooltip>
-    )
-}
 
 function WorkspaceAppearanceSkeleton() {
     return (
@@ -216,22 +188,41 @@ export function WorkspaceAppearanceSettings() {
                                         {currentWorkspace.name}
                                     </p>
                                 </div>
-                                <div className="flex shrink-0 items-center gap-1">
-                                    {owner ? (
-                                        <AcaoDaCarteira rotulo="Editar carteira" onClick={openEdit}>
-                                            <PencilIcon aria-hidden />
-                                        </AcaoDaCarteira>
-                                    ) : null}
-                                    {canDeleteProject ? (
-                                        <AcaoDaCarteira rotulo="Excluir carteira" perigo onClick={() => setDeleteOpen(true)}>
-                                            <TrashIcon aria-hidden />
-                                        </AcaoDaCarteira>
-                                    ) : !owner ? (
-                                        <AcaoDaCarteira rotulo="Sair da carteira" perigo onClick={() => setLeaveOpen(true)}>
-                                            <ArrowRightStartOnRectangleIcon aria-hidden />
-                                        </AcaoDaCarteira>
-                                    ) : null}
-                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="tertiary"
+                                            size="icon-md"
+                                            aria-label={`Mais opções da carteira ${currentWorkspace.name}`}
+                                        >
+                                            <EllipsisVerticalIcon aria-hidden />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="end"
+                                        size="md"
+                                        header={<DropdownMenuHeader title={currentWorkspace.name} />}
+                                    >
+                                        {owner ? (
+                                            <DropdownMenuItem onSelect={openEdit}>
+                                                <PencilIcon aria-hidden />
+                                                Editar
+                                            </DropdownMenuItem>
+                                        ) : null}
+                                        {canDeleteProject ? (
+                                            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
+                                                <TrashIcon aria-hidden />
+                                                Excluir carteira
+                                            </DropdownMenuItem>
+                                        ) : !owner ? (
+                                            <DropdownMenuItem variant="destructive" onSelect={() => setLeaveOpen(true)}>
+                                                <ArrowRightStartOnRectangleIcon aria-hidden />
+                                                Sair da carteira
+                                            </DropdownMenuItem>
+                                        ) : null}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                             {!owner ? (
                                 <CardNote>

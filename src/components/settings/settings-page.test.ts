@@ -45,13 +45,13 @@ describe("Configurações: página única", () => {
         expect(() => rolarAteAncora("", doc)).not.toThrow()
     })
 
-    it("Carteira: Editar à vista, sem ⋯, e a linha final respeita o papel", () => {
+    it("Carteira: as ações moram no ⋯, e cada uma respeita o papel", () => {
         const fonte = lerFonte("src/components/settings/workspace-appearance-settings.tsx")
-        expect(fonte).not.toContain("EllipsisVerticalIcon")
-        expect(fonte).not.toContain("DropdownMenu")
+        expect(fonte).toContain("<EllipsisVerticalIcon aria-hidden />")
+        expect(fonte).toContain("<DropdownMenuContent")
         for (const texto of ["Editar", "Sair da carteira", "Excluir carteira"]) expect(fonte).toContain(texto)
-        // Editar só sob `owner`; a linha final: excluir com canDeleteProject, sair com !owner, senão nada.
-        expect(fonte).toMatch(/owner \? \(\s*<AcaoDaCarteira rotulo="Editar carteira" onClick=\{openEdit\}/)
+        // Editar só sob `owner`; depois dele: excluir com canDeleteProject, sair com !owner, senão nada.
+        expect(fonte).toMatch(/owner \? \(\s*<DropdownMenuItem onSelect=\{openEdit\}/)
         expect(fonte.match(/openEdit/g)).toHaveLength(2) // a definição e o único uso
         // Excluir só com canDeleteProject; sair só com !owner; dono pessoal: nada.
         expect(fonte).toMatch(/canDeleteProject\s*\?/)
