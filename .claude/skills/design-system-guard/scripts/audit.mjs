@@ -140,6 +140,8 @@ const DRAWN_SVG_FILES = [
   // ponteiro de outra pessoa é um primitivo desenhado — a ponta é a posição —,
   // e o `CursorArrowRaysIcon` desenha um clique, não um ponteiro.
   "components/ui/presence-cursor",
+  // O `QrCode`: a matriz é um desenho (um `<path>` de módulos), não um ícone.
+  "components/ui/qr-code",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
   "designsystem/docs/motion",
 ]
