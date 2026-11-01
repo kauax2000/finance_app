@@ -835,7 +835,8 @@ declaração de `background-color` no trilho).
   - **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em
     [`lib/tile-palette.ts`](src/lib/tile-palette.ts), servindo categoria **e**
     carteira. `tileColorFor` dobra na leitura os presets legados, sem escrever
-    no banco; o que a pessoa digitou no seletor livre atravessa intacto.
+    no banco; o matiz livre da carteira grava hexadecimal (`matizParaHex`), e nele o trilho é a
+    fórmula do ladrilho: `<input type="color">` não volta, porque o ladrilho só guarda o matiz.
   - A escada: `xs` 24 · `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44 (só o `2xl`
     alcança o alvo de toque; `xs` é o de dentro de uma linha). **O degrau manda
     no corpo do ícone** (`[&>svg]:size-4` vence classe no próprio `svg`).

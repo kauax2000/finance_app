@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import {
+    hexParaMatiz,
+    MATIZ_PADRAO,
+    matizParaHex,
+    TRILHO_DE_MATIZ,
     TILE_COLORS,
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
@@ -74,5 +78,25 @@ describe("tileColorFor", () => {
             i === 0 ? m + 360 - matizes[matizes.length - 1]! : m - matizes[i - 1]!
         )
         expect(Math.min(...gaps)).toBe(28)
+    })
+})
+
+describe("matiz da carteira", () => {
+    it("a volta pelo hexadecimal preserva o matiz em todo o círculo", () => {
+        for (let h = 0; h < 360; h += 15) {
+            const hex = matizParaHex(h)
+            expect(hex).toMatch(/^#[0-9a-f]{6}$/)
+            const volta = hexParaMatiz(hex)
+            const erro = Math.abs(((volta - h + 540) % 360) - 180)
+            expect(erro).toBeLessThanOrEqual(3)
+        }
+    })
+
+    it("cor sem matiz cai no teal padrão, e valor inválido também", () => {
+        for (const cinza of ["#808080", "#000000", "#ffffff", "azul", ""]) expect(hexParaMatiz(cinza)).toBe(MATIZ_PADRAO)
+    })
+
+    it("o trilho percorre o círculo na claridade e no croma do ladrilho", () => {
+        expect(TRILHO_DE_MATIZ).toBe("linear-gradient(to right in oklch longer hue, oklch(0.76 0.2 0), oklch(0.76 0.2 360))")
     })
 })
