@@ -17,7 +17,7 @@ import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field"
 import { CustomForm, FormCancel, FormError, FormInput, FormRadioGroup, FormSubmit } from "@/components/ui/form"
 import { SpinnerBlock } from "@/components/ui/spinner"
 import { P } from "@/components/ui/typography"
-import { gravarModo, gravarPesos, lerPesos, type Adulto } from "@/lib/divisao/dados"
+import { gravarModo, gravarPesos, lerPesos, lerSaldos, type Adulto } from "@/lib/divisao/dados"
 import { lerPeso, pesosDigitados } from "@/lib/divisao/partes"
 import { chaves, useAdultos } from "@/lib/divisao/use-adultos"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
@@ -29,6 +29,12 @@ const MODOS = [
     { value: "pooled", label: "Pote único", description: "O dinheiro é de todos, sem conta de quem deve a quem." },
     { value: "split", label: "Dividida", description: "Cada despesa vira partes entre os adultos, e o Painel mostra quem deve a quem." },
 ]
+
+/** Sem as partes no banco, "Dividida" não dividiria nada: fica travada, salvo para a carteira que já divide. */
+export function opcoesDeModo(partesNoAr: boolean, modoAtual: Workspace["split_mode"]) {
+    if (partesNoAr || modoAtual === "split") return MODOS
+    return MODOS.map((m) => (m.value === "split" ? { ...m, description: AINDA_NAO_DISPONIVEL, disabled: true } : m))
+}
 
 /** O modo da carteira e os pesos de cada adulto. Trocar o modo não apaga nada. */
 export function CarteiraDivisaoDialog({
@@ -70,6 +76,8 @@ type AcoesDoFormulario = {
 function ModoEPesos({ ws, ...acoes }: { ws: Workspace } & AcoesDoFormulario) {
     const { lista, erro } = useAdultos(ws.id)
     const pesos = useQuery({ queryKey: chaves.pesos(ws.id), queryFn: () => lerPesos(ws.id) })
+    // `saldos_da_carteira` nasce com as partes: quando a migração subir, a opção se solta.
+    const partes = useQuery({ queryKey: ["divisao", "partes-no-ar", ws.id], queryFn: () => lerSaldos(ws.id) })
     if (erro || pesos.isError) {
         return (
             <DialogBody>
@@ -77,7 +85,7 @@ function ModoEPesos({ ws, ...acoes }: { ws: Workspace } & AcoesDoFormulario) {
             </DialogBody>
         )
     }
-    if (!lista.length || pesos.isLoading) {
+    if (!lista.length || pesos.isLoading || partes.isLoading) {
         return (
             <DialogBody>
                 <SpinnerBlock label="Carregando…" />
@@ -98,6 +106,7 @@ function ModoEPesos({ ws, ...acoes }: { ws: Workspace } & AcoesDoFormulario) {
             adultos={lista}
             iniciais={iniciais}
             pesosDisponiveis={salvos != null}
+            partesNoAr={partes.data?.disponivel === true}
             {...acoes}
         />
     )
@@ -108,6 +117,7 @@ function FormularioDoModo({
     adultos,
     iniciais,
     pesosDisponiveis,
+    partesNoAr,
     pendente,
     onPendente,
     onSalvo,
@@ -116,6 +126,7 @@ function FormularioDoModo({
     adultos: Adulto[]
     iniciais: Record<string, string>
     pesosDisponiveis: boolean
+    partesNoAr: boolean
 } & AcoesDoFormulario) {
     const { refreshWorkspaces } = useWorkspace()
     const queryClient = useQueryClient()
@@ -162,7 +173,7 @@ function FormularioDoModo({
                 <FormRadioGroup
                     label="Modo"
                     description="Trocar o modo não apaga nada: as partes ficam guardadas e voltam a valer se a carteira voltar a dividir."
-                    options={MODOS}
+                    options={opcoesDeModo(partesNoAr, ws.split_mode)}
                     value={modo}
                     onValueChange={(valor) => setModo(valor as "pooled" | "split")}
                 />

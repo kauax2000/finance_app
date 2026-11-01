@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
+import { opcoesDeModo } from "@/components/settings/carteira-divisao-dialog"
+import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -144,5 +146,27 @@ describe("Achados da revisão final", () => {
         const f = carteira()
         expect(f).toContain('aria-label="Alterar divisão"')
         expect(f).toContain('aria-label="Alterar datas e orçamento"')
+    })
+})
+
+describe("opcoesDeModo", () => {
+    const dividida = (partes: boolean, modo: "pooled" | "split") =>
+        opcoesDeModo(partes, modo).find((m) => m.value === "split") as { disabled?: boolean; description: string }
+
+    it("trava Dividida sem as partes no banco", () => {
+        expect(dividida(false, "pooled").disabled).toBe(true)
+        expect(dividida(false, "pooled").description).toBe(AINDA_NAO_DISPONIVEL)
+    })
+
+    it("solta com as partes no banco", () => {
+        expect(dividida(true, "pooled").disabled).toBeUndefined()
+    })
+
+    it("a carteira que já divide continua podendo", () => {
+        expect(dividida(false, "split").disabled).toBeUndefined()
+    })
+
+    it("nunca trava o Pote único", () => {
+        expect(opcoesDeModo(false, "pooled").find((m) => m.value === "pooled")).not.toHaveProperty("disabled")
     })
 })

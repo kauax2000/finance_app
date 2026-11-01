@@ -5,8 +5,8 @@
 -- inteiras depois, e o que elas repetem as deixa iguais.
 --
 -- Fora daqui: as partes, `paid_by`, os gatilhos em `transactions`, o acerto e o
--- `drop table transaction_splits`. Até eles subirem, escolher "Dividida" grava o
--- modo e o `split_since`, e nenhuma despesa ganha parte.
+-- `drop table transaction_splits`. Até eles subirem, o diálogo trava "Dividida",
+-- e `split` gravado por outro caminho não gera parte nenhuma.
 
 create or replace function public.is_workspace_adult(p_workspace_id uuid)
 returns boolean

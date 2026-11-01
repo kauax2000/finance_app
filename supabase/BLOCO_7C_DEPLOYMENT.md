@@ -102,7 +102,7 @@ resultado de uma conferência (o repositório é público).
 - **O banco de desenvolvimento é o de produção.** Não rode nada disto sem o
   pedido explícito do dono.
 
-**Estado em 31/10/2026: só o parcial `supabase/parciais/20261031-divisao-modo-e-pesos.sql` está em produção, aplicado por `db query`: `is_workspace_adult`, `split_mode`, `split_since` com o gatilho, e `workspace_split_weights`. As migrações `20261031120000_projetos.sql` e `20261031130000_divisao.sql` seguem pendentes, sem `migration repair`, e o parcial é idempotente diante delas. Até subirem, "Dividida" grava o modo e o `split_since`, mas nenhuma despesa ganha parte, e as despesas lançadas nesse intervalo não ganham parte depois: a migração não faz retroativo.**
+**Estado em 31/10/2026: só o parcial `supabase/parciais/20261031-divisao-modo-e-pesos.sql` está em produção, aplicado por `db query`: `is_workspace_adult`, `split_mode`, `split_since` com o gatilho, e `workspace_split_weights`. As migrações `20261031120000_projetos.sql` e `20261031130000_divisao.sql` seguem pendentes, sem `migration repair`, e o parcial é idempotente diante delas. Até subirem, o diálogo Divisão trava "Dividida": ele pergunta por `saldos_da_carteira` e solta a opção sozinho quando a RPC existir. A trava é só da tela: gravar `split` por outro caminho guarda o modo sem gerar partes, e a migração não faz retroativo.**
 
 ## 1. Migrações
 
