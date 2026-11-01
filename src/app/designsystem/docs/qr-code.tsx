@@ -67,7 +67,7 @@ export default function QrCodeDoc() {
   return (
     <>
       <Usage>
-        O código que leva de uma tela a outro aparelho: o desktop mostra o QR e a câmera do celular abre o link. Use-o quando a pessoa precisa continuar a jornada em <strong>outro</strong> aparelho. Não o use para um link que abre na mesma tela — isso é um <code>Link</code>. Quem vai usar: Configurações, uma tela (a seção “No celular”); hoje nenhuma tela do app o monta. A placa tem 128px e não tem escada de tamanho; a margem de silêncio ocupa 12px de cada lado.
+        O código que leva de uma tela a outro aparelho: o desktop mostra o QR e a câmera do celular abre o link. Use-o quando a pessoa precisa continuar a jornada em <strong>outro</strong> aparelho. Não o use para um link que abre na mesma tela — isso é um <code>Link</code>. Quem usa: Configurações, uma tela (a seção “No celular”, no desktop). A placa tem 128px e não tem escada de tamanho; a margem de silêncio ocupa 12px de cada lado.
       </Usage>
 
       <DocSection
