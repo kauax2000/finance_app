@@ -88,6 +88,7 @@ export function WorkspaceAppearanceFormFields({
                         iconKey={icon}
                         backgroundColor={previewColor}
                         size="xl"
+                        className="size-12 rounded-row-lg"
                     />
                     <FieldControl>
                         <Input
