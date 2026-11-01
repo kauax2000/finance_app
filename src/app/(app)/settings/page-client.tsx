@@ -15,17 +15,19 @@ export default function SettingsPage() {
     }, [])
 
     return (
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-8">
             <PageHeader>
                 <PageHeaderTitle asChild>
                     {/* O `<h1>` da página é o da barra do topo. */}
                     <p aria-hidden="true">Configurações</p>
                 </PageHeaderTitle>
             </PageHeader>
-            <ThemeSettings />
-            <NotificationPreferences />
-            <WorkspaceAppearanceSettings />
-            <IaPrivacidadeSettings />
+            <div className="min-w-0 space-y-5">
+                <ThemeSettings />
+                <NotificationPreferences />
+                <WorkspaceAppearanceSettings />
+                <IaPrivacidadeSettings />
+            </div>
         </div>
     )
 }
