@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
-import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
-import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -13,17 +15,14 @@ import { WorkspaceLeaveDialog } from "@/components/settings/workspace-leave-dial
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
-import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
 function WorkspaceAppearanceSkeleton() {
     return (
@@ -38,13 +37,101 @@ function WorkspaceAppearanceSkeleton() {
                         aria-busy="true"
                     >
                         <div className="flex items-center gap-3">
-                            <Skeleton className="size-12 shrink-0 rounded-row-lg" />
+                            <Skeleton className="size-12 shrink-0 rounded-lg" />
                             <Skeleton className="h-4 w-36 max-w-full" />
                         </div>
                         <Skeleton shape="tile" size="lg" />
                     </div>
                 </CardContent>
             </Card>
+        </div>
+    )
+}
+
+function InvitedCarteiraOverflowMenu({
+    workspaceName,
+    onLeave,
+}: {
+    workspaceName: string
+    onLeave: () => void
+}) {
+    return (
+        <div className="shrink-0">
+            {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                        aria-label={`Mais opções da carteira ${workspaceName}`}
+                    >
+                        <EllipsisVerticalIcon aria-hidden />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="end"
+                    size="md"
+                    header={<DropdownMenuHeader title={workspaceName} />}
+                >
+                    <DropdownMenuItem variant="destructive"
+                        onSelect={() => onLeave()}
+                    >
+                        <ArrowRightStartOnRectangleIcon aria-hidden />
+                        Sair da carteira
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    )
+}
+
+function OwnerCarteiraOverflowMenu({
+    workspaceName,
+    canDeleteProject,
+    onEdit,
+    onDelete,
+}: {
+    workspaceName: string
+    canDeleteProject: boolean
+    onEdit: () => void
+    onDelete: () => void
+}) {
+    return (
+        <div className="shrink-0">
+            {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                        aria-label={`Mais opções da carteira ${workspaceName}`}
+                    >
+                        <EllipsisVerticalIcon aria-hidden />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="end"
+                    size="md"
+                    header={<DropdownMenuHeader title={workspaceName} />}
+                >
+                    <DropdownMenuItem onSelect={() => onEdit()}>
+                        <PencilIcon aria-hidden />
+                        Editar
+                    </DropdownMenuItem>
+                    {canDeleteProject ? (
+                        <DropdownMenuItem variant="destructive"
+                            onSelect={() => onDelete()}
+                        >
+                            <TrashIcon aria-hidden />
+                            Excluir carteira
+                        </DropdownMenuItem>
+                    ) : null}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     )
 }
@@ -57,9 +144,6 @@ export function WorkspaceAppearanceSettings() {
     const [editTargetId, setEditTargetId] = useState<string | null>(null)
     const [deleteOpen, setDeleteOpen] = useState(false)
     const [leaveOpen, setLeaveOpen] = useState(false)
-    const [divisaoOpen, setDivisaoOpen] = useState(false)
-    const [datasOpen, setDatasOpen] = useState(false)
-    const [salvandoDatas, setSalvandoDatas] = useState(false)
 
     const dialogOpen =
         editOpen &&
@@ -94,8 +178,6 @@ export function WorkspaceAppearanceSettings() {
         /* eslint-disable react-hooks/set-state-in-effect -- close destructive flows when switching workspace */
         setDeleteOpen(false)
         setLeaveOpen(false)
-        setDivisaoOpen(false)
-        setDatasOpen(false)
         /* eslint-enable react-hooks/set-state-in-effect */
     }, [currentWorkspace?.id])
 
@@ -109,9 +191,6 @@ export function WorkspaceAppearanceSettings() {
     const canDeleteProject = Boolean(
         owner && currentWorkspace && !isPersonal,
     )
-    const podeDivisao = owner && !isPersonal
-    const podeDatas = owner && currentWorkspace?.purpose === "project"
-    const splitMode = currentWorkspace?.split_mode
 
     return (
         <>
@@ -132,130 +211,80 @@ export function WorkspaceAppearanceSettings() {
                 onOpenChange={setLeaveOpen}
                 workspace={leaveOpen ? currentWorkspace : null}
             />
-            <CarteiraDivisaoDialog
-                open={divisaoOpen && podeDivisao}
-                onOpenChange={setDivisaoOpen}
-                workspace={podeDivisao ? currentWorkspace : null}
-            />
-            <Dialog
-                surface="auto"
-                pending={salvandoDatas}
-                open={datasOpen && podeDatas}
-                onOpenChange={setDatasOpen}
-            >
-                <DialogContent layout="fixed">
-                    <DialogHeader>
-                        <DialogTitle>Datas e orçamento</DialogTitle>
-                    </DialogHeader>
-                    {currentWorkspace ? (
-                        <CarteiraProjetoForm
-                            key={currentWorkspace.id}
-                            workspace={currentWorkspace}
-                            onSalvo={() => setDatasOpen(false)}
-                            onCancelar={() => setDatasOpen(false)}
-                            onPendente={setSalvandoDatas}
-                            cancelarLabel="Cancelar"
-                        />
-                    ) : null}
-                </DialogContent>
-            </Dialog>
             {authLoading || loading ? (
                 <WorkspaceAppearanceSkeleton />
-            ) : !currentWorkspace ? (
-                <EmptyState>
-                    <EmptyStateTitle>Nenhuma carteira disponível</EmptyStateTitle>
-                    <EmptyStateDescription>
-                        Crie ou entre numa carteira para configurar.
-                    </EmptyStateDescription>
-                </EmptyState>
             ) : (
-                <SettingsSection
-                    titulo="Carteira"
-                    alcance={`Vale para todos em ${currentWorkspace.name}.`}
-                >
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Carteira</PageSectionTitle>
+                    </PageSectionHeader>
                     <Card padding="none">
                         <CardContent className="flex flex-col">
-                            <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
-                                <div className="flex min-w-0 items-center gap-3">
-                                    <WorkspaceBrandMark
-                                        iconKey={currentWorkspace.icon}
-                                        backgroundColor={currentWorkspace.icon_background_color}
-                                        size="xl"
-                                        className="size-12 rounded-row-lg"
-                                    />
-                                    <p className="min-w-0 truncate text-base font-medium">
-                                        {currentWorkspace.name}
+                            {!currentWorkspace ? (
+                                <div className="px-4 py-3 sm:py-3.5">
+                                    <p className="text-sm text-muted-foreground">
+                                        Nenhuma carteira disponível. Crie ou entre numa
+                                        carteira para configurar a aparência.
                                     </p>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="tertiary"
-                                            size="icon-md"
-                                            aria-label={`Mais opções da carteira ${currentWorkspace.name}`}
-                                        >
-                                            <EllipsisVerticalIcon aria-hidden />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" size="md">
-                                        {owner ? (
-                                            <DropdownMenuItem onSelect={openEdit}>
-                                                <PencilIcon aria-hidden />
-                                                Editar
-                                            </DropdownMenuItem>
-                                        ) : null}
-                                        {canDeleteProject ? (
-                                            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
-                                                <TrashIcon aria-hidden />
-                                                Excluir carteira
-                                            </DropdownMenuItem>
-                                        ) : !owner ? (
-                                            <DropdownMenuItem variant="destructive" onSelect={() => setLeaveOpen(true)}>
-                                                <ArrowRightStartOnRectangleIcon aria-hidden />
-                                                Sair da carteira
-                                            </DropdownMenuItem>
-                                        ) : null}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                            {!owner ? (
-                                <CardNote>
-                                    <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                                    <p className="min-w-0 break-words">
-                                        Só o dono pode alterar nome, ícone e cor.
-                                    </p>
-                                </CardNote>
-                            ) : null}
-                            {podeDivisao ? (
+                            ) : !owner ? (
                                 <>
-                                    <Separator />
-                                    {splitMode === undefined ? (
-                                        <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
-                                    ) : (
-                                        <SettingsLink
-                                            titulo="Divisão"
-                                            valor={splitMode === "split" ? "Dividida" : "Pote único"}
-                                            aria-label="Alterar divisão"
-                                            onClick={() => setDivisaoOpen(true)}
+                                    <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <WorkspaceBrandMark
+                                                iconKey={currentWorkspace.icon}
+                                                backgroundColor={
+                                                    currentWorkspace.icon_background_color
+                                                }
+                                                className="size-12 shrink-0 rounded-lg"
+                                                iconClassName="size-5"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium">
+                                                    {currentWorkspace.name}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <InvitedCarteiraOverflowMenu
+                                            workspaceName={currentWorkspace.name}
+                                            onLeave={() => setLeaveOpen(true)}
                                         />
-                                    )}
+                                    </div>
+                                    <CardNote>
+                                        <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                                        <p className="min-w-0 break-words">
+                                            Só o dono pode alterar nome, ícone e cor.
+                                        </p>
+                                    </CardNote>
                                 </>
-                            ) : null}
-                            {podeDatas ? (
-                                <>
-                                    <Separator />
-                                    <SettingsLink
-                                        titulo="Datas e orçamento"
-                                        valor={resumoDoCalendario(currentWorkspace)}
-                                        aria-label="Alterar datas e orçamento"
-                                        onClick={() => setDatasOpen(true)}
+                            ) : (
+                                <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
+                                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                                        <WorkspaceBrandMark
+                                            iconKey={currentWorkspace.icon}
+                                            backgroundColor={
+                                                currentWorkspace.icon_background_color
+                                            }
+                                            className="size-12 shrink-0 rounded-lg"
+                                            iconClassName="size-5"
+                                        />
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-medium">
+                                                {currentWorkspace.name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <OwnerCarteiraOverflowMenu
+                                        workspaceName={currentWorkspace.name}
+                                        canDeleteProject={canDeleteProject}
+                                        onEdit={openEdit}
+                                        onDelete={() => setDeleteOpen(true)}
                                     />
-                                </>
-                            ) : null}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
-                </SettingsSection>
+                </PageSection>
             )}
         </>
     )

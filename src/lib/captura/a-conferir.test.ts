@@ -133,9 +133,10 @@ describe("telas de a conferir", () => {
     })
 
     it("Configurações liga e desliga o lembrete", () => {
-        const f = fonte("src/components/settings/notification-preferences.tsx")
+        expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("LembreteConferirWireframe")
+        const f = fonte("src/components/wireframe/a-conferir-lembrete-wireframe.tsx")
         expect(f).toContain("patch({ notify_review:")
-        expect(f).toContain("Lembrete de itens a conferir")
+        expect(f).toContain("Lembrete às 20h de itens a conferir")
     })
 })
 

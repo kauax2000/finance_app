@@ -334,11 +334,10 @@ describe("o gêmeo do telefone", () => {
     expect(fonte).toContain('<ItemDescription className="line-clamp-1 text-xs">')
     expect(fonte).toContain('meta: { label: header, mobile: "meta", ...meta }')
   })
-  it("a linha de agora não pinta, e o menu de ações não tem título", () => {
+  it("a linha de agora não pinta, e a folha de ações tem o nome da linha", () => {
     const gemeo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"))
     expect(gemeo).not.toContain('"bg-muted/50"')
-    expect(fonte).not.toContain("DropdownMenuHeader")
-    expect(fonte).toContain("aria-label={`Mais ações para ${label}`}")
+    expect(fonte).toContain("header={<DropdownMenuHeader title={label} />}")
   })
 })
 

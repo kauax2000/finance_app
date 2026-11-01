@@ -10,20 +10,25 @@ import {
     apagarAcerto,
     criarAcerto,
     definirPartes,
+    gravarModo,
+    gravarPesos,
+    lerAdultos,
     lerPartes,
+    lerPesos,
     lerSaldos,
     listarAcertos,
+    type Adulto,
 } from "@/lib/divisao/dados"
 import {
     acertoEhMeu,
     emCentavos,
+    lerPeso,
     partesFecham,
     pesosDigitados,
     pessoasDoAcerto,
     sugestaoDeAcerto,
     textoDoSaldo,
 } from "@/lib/divisao/partes"
-import { chaves, useAdultos } from "@/lib/divisao/use-adultos"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
@@ -35,6 +40,14 @@ const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foregr
 const campo = "border border-muted-foreground/60 bg-transparent px-2 py-1 font-mono text-foreground"
 
 const PARTES_NAO_FECHAM = "As partes precisam somar o valor da despesa."
+const QUEM_SAIU = "Ex-membro"
+
+const chaves = {
+    adultos: (ws: string) => ["divisao", "adultos", ws] as const,
+    partes: (id: string) => ["divisao", "partes", id] as const,
+    pesos: (ws: string) => ["divisao", "pesos", ws] as const,
+    saldos: (ws: string) => ["divisao", "saldos", ws] as const,
+}
 
 function mensagem(e: unknown): string {
     return e instanceof Error ? e.message : "Não foi possível salvar."
@@ -44,6 +57,12 @@ function mensagem(e: unknown): string {
 function useDivisao(): Workspace | null {
     const { currentWorkspace, isAdulto } = useWorkspace()
     return currentWorkspace?.split_mode === "split" && isAdulto ? currentWorkspace : null
+}
+
+function useAdultos(workspaceId: string) {
+    const q = useQuery({ queryKey: chaves.adultos(workspaceId), queryFn: () => lerAdultos(workspaceId), staleTime: 60_000 })
+    const nome = (id: string | null | undefined) => q.data?.find((a) => a.user_id === id)?.nome ?? QUEM_SAIU
+    return { lista: q.data ?? [], nome }
 }
 
 /**
@@ -261,6 +280,149 @@ function Partes({ t, ws }: { t: Transaction; ws: string }) {
                 </>
             ) : null}
             {aviso ? <p role="status">{aviso}</p> : null}
+        </WireframeBox>
+    )
+}
+
+/**
+ * O modo da carteira e os pesos de cada adulto, nas Configurações: só para o
+ * dono, e fora da carteira pessoal. Trocar o modo não apaga nada.
+ */
+export function ModoEPesosDaCarteiraWireframe() {
+    const { currentWorkspace, isWorkspaceOwner } = useWorkspace()
+    if (!currentWorkspace || currentWorkspace.type === "personal" || !isWorkspaceOwner(currentWorkspace.id)) return null
+    if (currentWorkspace.split_mode === undefined) {
+        return (
+            <WireframeBox bloco={7} titulo="Modo e pesos da carteira">
+                <p>{AINDA_NAO_DISPONIVEL}</p>
+            </WireframeBox>
+        )
+    }
+    return <ModoEPesos ws={currentWorkspace} />
+}
+
+function ModoEPesos({ ws }: { ws: Workspace }) {
+    const { lista } = useAdultos(ws.id)
+    const pesos = useQuery({ queryKey: chaves.pesos(ws.id), queryFn: () => lerPesos(ws.id) })
+    if (!lista.length || pesos.isLoading) {
+        return (
+            <WireframeBox bloco={7} titulo="Modo e pesos da carteira">
+                <p>Carregando…</p>
+            </WireframeBox>
+        )
+    }
+    const salvos = pesos.data?.disponivel ? pesos.data.dados : null
+    const iniciais = Object.fromEntries(
+        lista.map((a) => {
+            const p = salvos?.find((x) => x.user_id === a.user_id)
+            return [a.user_id, String(p ? Number(p.weight) : 1).replace(".", ",")]
+        }),
+    )
+    return (
+        <FormularioDoModo
+            key={`${ws.id}:${ws.split_mode}:${JSON.stringify(iniciais)}`}
+            ws={ws}
+            adultos={lista}
+            iniciais={iniciais}
+            pesosDisponiveis={salvos != null}
+        />
+    )
+}
+
+function FormularioDoModo({
+    ws,
+    adultos,
+    iniciais,
+    pesosDisponiveis,
+}: {
+    ws: Workspace
+    adultos: Adulto[]
+    iniciais: Record<string, string>
+    pesosDisponiveis: boolean
+}) {
+    const { refreshWorkspaces } = useWorkspace()
+    const queryClient = useQueryClient()
+    const [modo, setModo] = useState<"pooled" | "split">(ws.split_mode ?? "pooled")
+    const [valores, setValores] = useState(iniciais)
+    const [pendente, setPendente] = useState(false)
+    const [aviso, setAviso] = useState<string | null>(null)
+
+    async function onSubmit(e: FormEvent) {
+        e.preventDefault()
+        const pesos = pesosDigitados(valores)
+        if (modo === "split" && pesosDisponiveis && !pesos) return setAviso("Cada peso precisa ser maior que zero.")
+        // Só o que mudou vai ao banco (Ruling 8).
+        const mudados = (pesos ?? []).filter((p) => lerPeso(iniciais[p.user_id] ?? "1") !== p.weight)
+        setPendente(true)
+        setAviso(null)
+        try {
+            if (modo !== ws.split_mode) {
+                const r = await gravarModo(ws.id, modo)
+                if (!r.disponivel) return setAviso(AINDA_NAO_DISPONIVEL)
+                if (!r.dados?.length) return setAviso(NADA_MUDOU)
+            }
+            if (modo === "split" && mudados.length) {
+                const r = await gravarPesos(ws.id, mudados)
+                if (!r.disponivel) return setAviso(AINDA_NAO_DISPONIVEL)
+            }
+            await Promise.all([
+                refreshWorkspaces(),
+                queryClient.invalidateQueries({ queryKey: chaves.pesos(ws.id) }),
+                queryClient.invalidateQueries({ queryKey: chaves.saldos(ws.id) }),
+            ])
+            setAviso("Salvo.")
+        } catch (erro) {
+            setAviso(mensagem(erro))
+        } finally {
+            setPendente(false)
+        }
+    }
+
+    return (
+        <WireframeBox bloco={7} titulo="Modo e pesos da carteira">
+            <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-2">
+                <fieldset className="flex flex-col gap-1">
+                    <legend className="text-foreground">Modo</legend>
+                    <label className="flex items-center gap-2">
+                        <input type="radio" name="modo" checked={modo === "pooled"} onChange={() => setModo("pooled")} />
+                        Pote único: o dinheiro é de todos, sem conta de quem deve a quem.
+                    </label>
+                    <label className="flex items-center gap-2">
+                        <input type="radio" name="modo" checked={modo === "split"} onChange={() => setModo("split")} />
+                        Dividida: cada despesa vira partes entre os adultos, e o Painel mostra quem deve a quem.
+                    </label>
+                </fieldset>
+                <p>Trocar o modo não apaga nada: as partes ficam guardadas e voltam a valer se a carteira voltar a dividir.</p>
+                {modo === "split" ? (
+                    <fieldset className="flex flex-col gap-1">
+                        <legend className="text-foreground">Pesos</legend>
+                        {!pesosDisponiveis ? <p>{AINDA_NAO_DISPONIVEL}</p> : null}
+                        {pesosDisponiveis
+                            ? adultos.map((a) => (
+                                  <label key={a.user_id} className="flex items-center gap-2">
+                                      {a.nome}
+                                      <input
+                                          className={campo}
+                                          inputMode="decimal"
+                                          value={valores[a.user_id] ?? ""}
+                                          onChange={(e) => setValores({ ...valores, [a.user_id]: e.target.value })}
+                                      />
+                                  </label>
+                              ))
+                            : null}
+                        <p>
+                            Peso 1 para todos é a divisão igual; peso 2 fica com o dobro de peso 1. O convidado não entra: quem
+                            é responsável por ele paga. Os pesos novos valem para as despesas novas e para as editadas.
+                        </p>
+                    </fieldset>
+                ) : null}
+                <div>
+                    <button type="submit" className={botao} disabled={pendente}>
+                        {pendente ? "Salvando…" : "Salvar modo e pesos"}
+                    </button>
+                </div>
+                {aviso ? <p role="status">{aviso}</p> : null}
+            </form>
         </WireframeBox>
     )
 }

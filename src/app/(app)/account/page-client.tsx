@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
@@ -99,6 +100,12 @@ export default function AccountPage() {
                                     <DropdownMenuContent
                                         align="end"
                                         size="md"
+                                        header={
+                                            <DropdownMenuHeader
+                                                title={userName}
+                                                description={userEmail}
+                                            />
+                                        }
                                     >
                                         <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                                             <PencilIcon aria-hidden />

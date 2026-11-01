@@ -1,10 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
-    desfazerPatch,
     ensureWorkspaceNotificationPrefsRow,
     patchWorkspaceNotificationPrefs,
     type WorkspaceMemberNotificationPrefs,
@@ -15,6 +14,7 @@ type State = {
     prefs: WorkspaceMemberNotificationPrefs | null
     loading: boolean
     error: string | null
+    updating: boolean
     patch: (p: WorkspaceNotificationPrefsPatch) => Promise<void>
 }
 
@@ -22,6 +22,7 @@ export function useWorkspaceNotificationPrefs(): State {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
     const [loading, setLoading] = useState(true)
+    const [updating, setUpdating] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [prefs, setPrefs] = useState<WorkspaceMemberNotificationPrefs | null>(null)
 
@@ -64,32 +65,37 @@ export function useWorkspaceNotificationPrefs(): State {
         }
     }, [authLoading, workspaceLoading, user?.id, currentWorkspaceId])
 
-    // Em fila: duas mudanças da mesma chave chegam ao banco na ordem do toque.
-    const fila = useRef(Promise.resolve())
-
     const patch = useCallback(
-        (p: WorkspaceNotificationPrefsPatch) => {
-            if (!user?.id || !currentWorkspaceId) return Promise.resolve()
-            const userId = user.id
+        async (p: WorkspaceNotificationPrefsPatch) => {
+            if (!user?.id || !currentWorkspaceId) return
+            setUpdating(true)
             setError(null)
-            setPrefs((cur) => (cur ? { ...cur, ...p } : null))
-            fila.current = fila.current.then(async () => {
-                try {
-                    await patchWorkspaceNotificationPrefs(userId, currentWorkspaceId, p)
-                } catch (e) {
-                    setPrefs((cur) => desfazerPatch(cur, prefs, p))
-                    setError(
-                        e instanceof Error ? e.message : "Erro ao salvar preferências da carteira"
-                    )
-                }
+            const previous = prefs
+            setPrefs((cur) => {
+                if (!cur) return null
+                return { ...cur, ...p }
             })
-            return fila.current
+            try {
+                const updated = await patchWorkspaceNotificationPrefs(
+                    user.id,
+                    currentWorkspaceId,
+                    p
+                )
+                setPrefs(updated)
+            } catch (e) {
+                setPrefs(previous ?? null)
+                setError(
+                    e instanceof Error ? e.message : "Erro ao salvar preferências da carteira"
+                )
+            } finally {
+                setUpdating(false)
+            }
         },
         [user?.id, currentWorkspaceId, prefs]
     )
 
     return useMemo(
-        () => ({ prefs, loading, error, patch }),
-        [prefs, loading, error, patch]
+        () => ({ prefs, loading, error, updating, patch }),
+        [prefs, loading, error, updating, patch]
     )
 }

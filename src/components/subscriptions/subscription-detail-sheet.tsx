@@ -31,6 +31,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -324,6 +325,12 @@ export function SubscriptionDetailSheet({
                             <DropdownMenuContent
                                 align="end"
                                 size="sm"
+                                header={
+                                    <DropdownMenuHeader
+                                        title={s.name}
+                                        description={`${currencyBRL(Number(s.amount))} · próxima ${formatDatePtBr(nextCharge)}`}
+                                    />
+                                }
                             >
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}

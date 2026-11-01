@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -233,6 +234,12 @@ export function ExpenseCategoryCard({
                                 <DropdownMenuContent
                                     align="end"
                                     size="sm"
+                                    header={
+                                        <DropdownMenuHeader
+                                            title={category.name}
+                                            description={`${currency(spent)} no mês`}
+                                        />
+                                    }
                                 >
                                     <DropdownMenuItem onSelect={onEdit}>
                                         <PencilIcon aria-hidden />

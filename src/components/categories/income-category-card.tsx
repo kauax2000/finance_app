@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -77,6 +78,12 @@ export function IncomeCategoryCard({
                                 <DropdownMenuContent
                                     align="end"
                                     size="sm"
+                                    header={
+                                        <DropdownMenuHeader
+                                            title={category.name}
+                                            description="Categoria de receita"
+                                        />
+                                    }
                                 >
                                     <DropdownMenuItem onSelect={onEdit}>
                                         <PencilIcon aria-hidden />

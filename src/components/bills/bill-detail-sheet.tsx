@@ -33,6 +33,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -268,6 +269,12 @@ export function BillDetailSheet({
                                         <DropdownMenuContent
                                             align="end"
                                             size="sm"
+                                            header={
+                                                <DropdownMenuHeader
+                                                    title={bill.name}
+                                                    description={`${billFrequencyLabel(bill.frequency)} · Dia ${bill.due_day_of_month}`}
+                                                />
+                                            }
                                         >
                                             <DropdownMenuItem onClick={onEditBill}>
                                                 <PencilIcon aria-hidden />

@@ -1,10 +1,9 @@
 "use client"
 
-import { createElement, type CSSProperties } from "react"
+import { createElement } from "react"
 import { UserGroupIcon } from "@heroicons/react/16/solid"
 import { UserGroupIcon as UserGroupMiniIcon } from "@heroicons/react/20/solid"
 import { ColorTile } from "@/components/ui/color-tile"
-import { corExataDaCarteira } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 import { getWorkspaceIconComponent, isWorkspaceIconKey, WORKSPACE_ICON_MAP_MINI } from "@/lib/workspace-icons"
 
@@ -20,7 +19,7 @@ type WorkspaceBrandMarkProps = {
 /**
  * A marca da carteira é a cor escolhida pela pessoa, e cor de runtime é trabalho
  * do `ColorTile`: ele escolhe a tinta pelo contraste. O `text-white` cru sumia
- * sobre cores claras. A cor do seletor livre aparece exata (`corExataDaCarteira`).
+ * sobre cores claras.
  *
  * **O corpo do ícone é do ladrilho, e o `size-3.5` daqui nunca desenhou nada.**
  * Medido: `[&>svg]:size-4` do degrau é um seletor de descendente (0,1,1) e a
@@ -47,7 +46,6 @@ export function WorkspaceBrandMark({
             size={size}
             color={backgroundColor}
             className={cn("shrink-0", className)}
-            style={corExataDaCarteira(backgroundColor) as CSSProperties | undefined}
         >
             {createElement(Cmp, {
                 className: iconClassName,

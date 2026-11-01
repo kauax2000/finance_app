@@ -1,7 +1,7 @@
 "use client"
 
-import { createElement, type CSSProperties } from "react"
-import { CheckIcon, EyeDropperIcon } from "@heroicons/react/20/solid"
+import { createElement } from "react"
+import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
 import { Label } from "@/components/ui/label"
 import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
 import {
@@ -24,11 +24,11 @@ import { FormError } from "@/components/ui/form"
 import {
     WORKSPACE_ACCENT_PALETTE,
     WORKSPACE_ICON_PICKER_KEYS,
-    WORKSPACE_ICON_MAP_MINI,
+    WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
-import { corExataDaCarteira, TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
+import { TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 
 type WorkspaceAppearanceFormFieldsProps = {
@@ -49,11 +49,11 @@ type WorkspaceAppearanceFormFieldsProps = {
 const NOME_MAX = 120
 
 /**
- * Cor e ícone dividem a mesma grade de 40px, com o vão distribuído: as nove
+ * Cor e ícone dividem a mesma grade de 36px, com o vão distribuído: as nove
  * amostras (oito da paleta e a livre) cabem numa fileira, e os ícones caem nas
  * mesmas colunas. No telefone a grade refaz as colunas pela largura.
  */
-const GRADE = "grid grid-cols-[repeat(auto-fill,--spacing(10))] justify-between gap-1"
+const GRADE = "grid grid-cols-[repeat(auto-fill,--spacing(9))] justify-between gap-2"
 
 export function WorkspaceAppearanceFormFields({
     name,
@@ -88,7 +88,6 @@ export function WorkspaceAppearanceFormFields({
                         iconKey={icon}
                         backgroundColor={previewColor}
                         size="xl"
-                        className="size-12 rounded-row-lg"
                     />
                     <FieldControl>
                         <Input
@@ -116,7 +115,7 @@ export function WorkspaceAppearanceFormFields({
                     }}
                     aria-label="Cor"
                     variant="swatch"
-                    size="icon-xl"
+                    size="icon-lg"
                     className={GRADE}
                 >
                     {/* A paleta de destaque é a do ladrilho (`TILE_COLORS`),
@@ -138,15 +137,12 @@ export function WorkspaceAppearanceFormFields({
                     <Label
                         data-state={daPaleta ? "off" : "on"}
                         className={cn(
-                            toggleVariants({ variant: "swatch", size: "icon-xl" }),
+                            toggleVariants({ variant: "swatch", size: "icon-lg" }),
                             "relative cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/45"
                         )}
-                        style={toggleStyle(
-                            daPaleta ? null : previewColor,
-                            daPaleta ? undefined : (corExataDaCarteira(previewColor) as CSSProperties | undefined)
-                        )}
+                        style={toggleStyle(daPaleta ? null : previewColor)}
                     >
-                        {daPaleta ? <EyeDropperIcon className="size-5" aria-hidden /> : <CheckIcon className="size-5" aria-hidden />}
+                        {daPaleta ? <EyeDropperIcon aria-hidden /> : <CheckIcon aria-hidden />}
                         <input
                             type="color"
                             value={
@@ -167,7 +163,7 @@ export function WorkspaceAppearanceFormFields({
                 <ToggleGroup
                     type="single"
                     variant="outline"
-                    size="icon-xl"
+                    size="icon-lg"
                     value={icon}
                     onValueChange={(next) => {
                         if (next) onIconChange(next as typeof icon)
@@ -181,7 +177,7 @@ export function WorkspaceAppearanceFormFields({
                             value={key}
                             aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
                         >
-                            {createElement(WORKSPACE_ICON_MAP_MINI[key])}
+                            {createElement(WORKSPACE_ICON_MAP[key])}
                         </ToggleGroupItem>
                     ))}
                 </ToggleGroup>

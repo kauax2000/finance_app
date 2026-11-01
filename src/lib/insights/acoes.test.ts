@@ -416,6 +416,7 @@ describe("fonte", () => {
     })
 
     it("as preferências ganham a chave Insights", () => {
-        expect(fonte("src/components/settings/notification-preferences.tsx")).toContain("notify_insights")
+        expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<InsightsAvisoWireframe")
+        expect(fonte("src/components/wireframe/insights-wireframe.tsx")).toContain("notify_insights")
     })
 })

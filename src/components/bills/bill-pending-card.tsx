@@ -37,6 +37,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -278,6 +279,12 @@ export function BillPendingCard({
                         <DropdownMenuContent
                             align="end"
                             size="md"
+                            header={
+                                <DropdownMenuHeader
+                                    title={row.title}
+                                    description={`Venc. ${dueFmt} · ${delta}`}
+                                />
+                            }
                         >
                             <DropdownMenuItem
                                 onClick={(e) => {

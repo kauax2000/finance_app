@@ -15,7 +15,8 @@ import {
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { randomWorkspaceAccentColor, type WorkspaceIconKey } from "@/lib/workspace-icons"
 import { ModelosDeCarteiraWireframe } from "@/components/wireframe/modelos-de-carteira-wireframe"
-import { CarteiraProjetoForm } from "@/components/settings/carteira-projeto-form"
+import { DatasDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
+import { Button } from "@/components/ui/button"
 import type { Workspace } from "@/lib/supabase"
 import { AINDA_NAO_DISPONIVEL, criarCarteiraDeModelo } from "@/lib/projetos/dados"
 import { MODELOS_DE_CARTEIRA, type ModeloDeCarteira } from "@/lib/projetos/modelos"
@@ -129,14 +130,19 @@ export function ProjectFormDialog({
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>
                 {carteiraDeProjeto ? (
-                    <CarteiraProjetoForm
-                        key={carteiraDeProjeto.id}
-                        workspace={carteiraDeProjeto}
-                        onSalvo={() => onOpenChange(false)}
-                        onCancelar={() => onOpenChange(false)}
-                        onPendente={setSubmitting}
-                        cancelarLabel="Agora não"
-                    />
+                    <>
+                        <DialogBody>
+                            <DatasDaCarteiraProjetoWireframe
+                                workspace={carteiraDeProjeto}
+                                onSalvo={() => onOpenChange(false)}
+                            />
+                        </DialogBody>
+                        <DialogFooter>
+                            <Button variant="secondary" type="button" onClick={() => onOpenChange(false)}>
+                                Agora não
+                            </Button>
+                        </DialogFooter>
+                    </>
                 ) : (
                     <CustomForm
                         pending={submitting}

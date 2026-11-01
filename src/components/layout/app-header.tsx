@@ -18,7 +18,6 @@ import {
     TopBarContent,
     TopBarSearch,
     TopBarStart,
-    TopBarTitle,
 } from "@/components/ui/top-bar"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
@@ -232,8 +231,6 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 }
             >
                 <SidebarTrigger size="icon-lg" className="-ml-2 w-9" />
-                {/* O título de um `PageHeader collapse` sobe para cá ao sair de vista. */}
-                <TopBarTitle pageTitle className="ml-1" />
             </TopBarStart>
             {/* A barra não mostra o nome da tela, nem no telefone (lá quem diz
                 onde se está é a barra de baixo; no desktop, a lateral): ele fica

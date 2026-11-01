@@ -96,6 +96,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuHeader,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -1476,6 +1477,8 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
           <DropdownMenuContent
             align="end"
             size="md"
+            // O alvo do menu: o cabeçalho diz de que linha são as ações.
+            header={<DropdownMenuHeader title={label} />}
             onClick={(e) => e.stopPropagation()}
           >
             {resto.map((a) => (

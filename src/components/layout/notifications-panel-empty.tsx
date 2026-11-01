@@ -16,7 +16,7 @@ import {
     NotificationsWalletsIllustration,
 } from "@/components/layout/notifications-empty-illustration"
 
-/** A seção Notificações das Configurações. */
+/** A seção "Notificações desta carteira" das Configurações (o `id` dela). */
 export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}#notificacoes`
 
 export type NotificationsPanelEmptyVariant = "no-auth" | "no-workspace" | "inbox-empty"

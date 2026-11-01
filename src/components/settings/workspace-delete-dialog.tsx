@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react"
 import {
-    DescriptionDetails,
-    DescriptionList,
-    DescriptionListItem,
-    DescriptionTerm,
-} from "@/components/ui/description-list"
+    Card,
+} from "@/components/ui/card"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
   AlertDialog,
@@ -18,11 +15,11 @@ import {
   AlertDialogError,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogList,
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { toastSuccess } from "@/lib/toast"
 import type { Workspace } from "@/lib/supabase"
 
 type WorkspaceDeleteDialogProps = {
@@ -107,7 +104,6 @@ export function WorkspaceDeleteDialog({
         const result = await deleteWorkspace(workspace.id)
         setDeleting(false)
         if (result.ok) {
-            toastSuccess(`${workspace.name} excluída.`)
             resetLocalState()
             onOpenChange(false)
         } else {
@@ -119,17 +115,6 @@ export function WorkspaceDeleteDialog({
         open && workspace && workspace.type !== "personal"
     )
 
-    // Só o que existe: uma linha "Orçamentos 0" não informa nada.
-    const impacto: [string, string | number][] = [
-        ...(transactions > 0 ? [["Transações", transactions] as [string, number]] : []),
-        ...(budgets > 0 ? [["Orçamentos", budgets] as [string, number]] : []),
-        ...(categories > 0 ? [["Categorias", categories] as [string, number]] : []),
-        ...(otherMembers > 0
-            ? [["Perdem o acesso", otherMembers === 1 ? "1 pessoa" : `${otherMembers} pessoas`] as [string, string]]
-            : []),
-        ["Membros, convites e notificações", "Tudo"],
-    ]
-
     const resumo = impactLoading ? (
         <div className="space-y-2" aria-busy="true">
             <Skeleton className="h-4 w-full" />
@@ -139,15 +124,23 @@ export function WorkspaceDeleteDialog({
     ) : impactError ? (
         <AlertDialogError>{impactError}</AlertDialogError>
     ) : (
-        // A superfície da lista da revisão do lançamento inteligente.
-        <DescriptionList layout="inline" size="sm" divided className="rounded-row-lg bg-foreground/5 p-3">
-            {impacto.map(([termo, valor]) => (
-                <DescriptionListItem key={termo}>
-                    <DescriptionTerm>{termo}</DescriptionTerm>
-                    <DescriptionDetails className="nums">{valor}</DescriptionDetails>
-                </DescriptionListItem>
-            ))}
-        </DescriptionList>
+        <Card variant="muted" padding="none" className="px-3 py-2 text-sm">
+            <p className="font-medium text-foreground">Resumo nesta carteira</p>
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+                <li>
+                    Transações:{" "}
+                    <span className="tabular-nums text-foreground">{transactions}</span>
+                </li>
+                <li>
+                    Orçamentos:{" "}
+                    <span className="tabular-nums text-foreground">{budgets}</span>
+                </li>
+                <li>
+                    Categorias:{" "}
+                    <span className="tabular-nums text-foreground">{categories}</span>
+                </li>
+            </ul>
+        </Card>
     )
 
     // Uma confirmação do que não tem volta é `AlertDialog` (rodada 201): até
@@ -160,17 +153,33 @@ export function WorkspaceDeleteDialog({
             <AlertDialogContent size="lg">
                 <AlertDialogHeader>
                     <AlertDialogMedia tone="destructive" />
-                    <AlertDialogTitle>Excluir {workspace?.name}?</AlertDialogTitle>
-                    <AlertDialogDescription>Não dá para desfazer.</AlertDialogDescription>
+                    <AlertDialogTitle>Excluir carteira?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        <p>Esta ação é permanente e não pode ser desfeita. Serão removidos desta carteira:</p>
+                        <AlertDialogList>
+                            <li>todas as transações e divisões associadas</li>
+                            <li>categorias e orçamentos</li>
+                            <li>membros, convites e notificações da carteira</li>
+                        </AlertDialogList>
+                        {otherMembers > 0 ? (
+                            <p className="text-destructive">
+                                Outras {otherMembers}{" "}
+                                {otherMembers === 1 ? "pessoa perderá o acesso" : "pessoas perderão o acesso"} e os
+                                dados desta carteira para elas também serão apagados.
+                            </p>
+                        ) : null}
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
                 {resumo}
                 <AlertDialogConfirmInput
                     expected={workspace?.name ?? ""}
                     label={
                         <span>
-                            Digite <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span> para confirmar
+                            Digite o nome da carteira para confirmar:{" "}
+                            <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
                         </span>
                     }
+                    placeholder="Nome exato da carteira"
                     disabled={impactLoading || Boolean(impactError)}
                 />
                 {deleteError ? <AlertDialogError>{deleteError}</AlertDialogError> : null}

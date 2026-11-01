@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
 import { shiftYearMonth } from "@/lib/budget-month"
 import {
     apagarUm,
@@ -321,5 +322,32 @@ function DialogoDaRecorrencia({
                 </div>
             </form>
         </dialog>
+    )
+}
+
+/** A chave "Insights" das preferências de aviso: liga e desliga `notify_insights` nesta carteira. */
+export function InsightsAvisoWireframe() {
+    const { prefs, loading, updating, error, patch } = useWorkspaceNotificationPrefs()
+
+    if (loading || !prefs) return null
+
+    return (
+        <WireframeBox bloco={6} titulo="Insights">
+            <label className="flex items-center gap-2 text-foreground">
+                <input
+                    type="checkbox"
+                    checked={prefs.notify_insights !== false}
+                    disabled={updating}
+                    onChange={(e) => void patch({ notify_insights: e.target.checked })}
+                />
+                Insights
+            </label>
+            <p>Avisos do que o app notou na carteira. No máximo 3 push por semana; o resto fica no Painel.</p>
+            {error ? (
+                <p role="alert" className="text-destructive">
+                    {error}
+                </p>
+            ) : null}
+        </WireframeBox>
     )
 }

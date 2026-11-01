@@ -142,14 +142,3 @@ export async function patchWorkspaceNotificationPrefs(
     }
     return data as WorkspaceMemberNotificationPrefs
 }
-
-/** Volta só as chaves do pedido que falhou: as outras podem ter mudado depois dele. */
-export function desfazerPatch(
-    atual: WorkspaceMemberNotificationPrefs | null,
-    antes: WorkspaceMemberNotificationPrefs | null,
-    patch: WorkspaceNotificationPrefsPatch
-): WorkspaceMemberNotificationPrefs | null {
-    if (!atual || !antes) return atual
-    const volta = Object.fromEntries(Object.keys(patch).map((k) => [k, antes[k as keyof typeof antes]]))
-    return { ...atual, ...volta }
-}
