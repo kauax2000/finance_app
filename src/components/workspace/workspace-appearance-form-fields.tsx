@@ -1,7 +1,9 @@
 "use client"
 
-import { createElement, type CSSProperties } from "react"
-import { Slider } from "@/components/ui/slider"
+import { createElement } from "react"
+import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
+import { Label } from "@/components/ui/label"
+import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
 import {
     ToggleGroup,
     ToggleGroupItem,
@@ -26,7 +28,8 @@ import {
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
-import { hexParaMatiz, matizParaHex, TILE_PALETTE, TRILHO_DE_MATIZ } from "@/lib/tile-palette"
+import { TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
+import { cn } from "@/lib/utils"
 
 type WorkspaceAppearanceFormFieldsProps = {
     name: string
@@ -46,8 +49,9 @@ type WorkspaceAppearanceFormFieldsProps = {
 const NOME_MAX = 120
 
 /**
- * Cor e ícone dividem a mesma grade de 36px, com o vão distribuído: as oito
- * amostras da paleta cabem numa fileira, e os ícones caem nas mesmas colunas. No telefone a grade refaz as colunas pela largura.
+ * Cor e ícone dividem a mesma grade de 36px, com o vão distribuído: as nove
+ * amostras (oito da paleta e a livre) cabem numa fileira, e os ícones caem nas
+ * mesmas colunas. No telefone a grade refaz as colunas pela largura.
  */
 const GRADE = "grid grid-cols-[repeat(auto-fill,--spacing(9))] justify-between gap-2"
 
@@ -125,18 +129,33 @@ export function WorkspaceAppearanceFormFields({
                             aria-label={`Cor ${nome}`}
                         />
                     ))}
+                    {/* A cor livre é a nona amostra. O seletor nativo não tem peça
+                        no sistema: ele mora escondido dentro de um `Label` que
+                        veste a amostra (`toggleVariants` + `toggleStyle`), cinza
+                        com o conta-gotas até a pessoa escolher, e então na cor
+                        dela, com o tique das outras. */}
+                    <Label
+                        data-state={daPaleta ? "off" : "on"}
+                        className={cn(
+                            toggleVariants({ variant: "swatch", size: "icon-lg" }),
+                            "relative cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/45"
+                        )}
+                        style={toggleStyle(daPaleta ? null : previewColor)}
+                    >
+                        {daPaleta ? <EyeDropperIcon aria-hidden /> : <CheckIcon aria-hidden />}
+                        <input
+                            type="color"
+                            value={
+                                /^#[0-9A-Fa-f]{6}$/.test(previewColor)
+                                    ? previewColor
+                                    : TILE_WORKSPACE_DEFAULT
+                            }
+                            onChange={(e) => onPreviewColorChange(e.target.value)}
+                            className="sr-only"
+                            aria-label="Outra cor"
+                        />
+                    </Label>
                 </ToggleGroup>
-                {/* O ladrilho só guarda o matiz da cor, então o controle livre é o
-                    do matiz. O trilho é a própria régua: a faixa não preenche. */}
-                <Slider
-                    aria-label="Outra cor"
-                    min={0}
-                    max={359}
-                    value={[hexParaMatiz(previewColor)]}
-                    onValueChange={([matiz]) => onPreviewColorChange(matizParaHex(matiz))}
-                    className="[&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-track]]:bg-(image:--trilho-de-matiz)"
-                    style={{ "--trilho-de-matiz": TRILHO_DE_MATIZ } as CSSProperties}
-                />
             </FieldSet>
 
             <FieldSet className="gap-3">

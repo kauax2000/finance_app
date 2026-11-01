@@ -4,7 +4,7 @@
  * identidade. Delas vem só o matiz, porque nenhuma tinta única serve as oito
  * paradas chapadas como o token as pinta; aqui a tinta escura entrega de 10,63
  * a 11,74. Um valor só nos dois temas. O ladrilho normaliza de novo o que sai
- * daqui, para cobrir o matiz livre da carteira, e uma cor desta lista
+ * daqui, para cobrir o seletor livre da carteira, e uma cor desta lista
  * atravessa a fórmula sem mudar.
  */
 export const TILE_PALETTE = [
@@ -83,50 +83,4 @@ export function tileColorFor(
     if (!bruto) return null
     const dobrado = LEGACY[bruto.toUpperCase()]
     return dobrado === undefined ? bruto : dobrado
-}
-
-/**
- * O matiz livre da carteira. Do que a pessoa escolhe o ladrilho só guarda o
- * matiz (`tile-vivid`: claridade 0,76, croma até 0,2), então o controle oferece
- * só o matiz. O trilho é a mesma fórmula, e o que se vê nele é o que o ladrilho
- * mostra.
- */
-export const TRILHO_DE_MATIZ =
-    "linear-gradient(to right in oklch longer hue, oklch(0.76 0.2 0), oklch(0.76 0.2 360))"
-
-export const MATIZ_PADRAO = 195
-
-/** Abaixo disso a cor não tem matiz que valha: preto, branco e cinzas. */
-const CROMA_MINIMO = 0.02
-
-const paraLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-const paraGama = (c: number) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
-
-/** Grava em hexadecimal, como a paleta. Croma 0,12 cabe no sRGB em todo matiz, e o ladrilho o sobe. */
-export function matizParaHex(matiz: number): string {
-    const rad = (matiz * Math.PI) / 180
-    const a = 0.12 * Math.cos(rad)
-    const b = 0.12 * Math.sin(rad)
-    const l = (0.76 + 0.3963377774 * a + 0.2158037573 * b) ** 3
-    const m = (0.76 - 0.1055613458 * a - 0.0638541728 * b) ** 3
-    const s = (0.76 - 0.0894841775 * a - 1.291485548 * b) ** 3
-    const lineares = [
-        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-        -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-    ]
-    const canais = lineares.map((c) => Math.round(paraGama(Math.min(1, Math.max(0, c))) * 255))
-    return `#${canais.map((c) => c.toString(16).padStart(2, "0")).join("")}`
-}
-
-export function hexParaMatiz(hex: string): number {
-    if (!/^#[0-9a-f]{6}$/i.test(hex)) return MATIZ_PADRAO
-    const [r, g, b] = [1, 3, 5].map((i) => paraLinear(parseInt(hex.slice(i, i + 2), 16) / 255))
-    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
-    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
-    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
-    const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
-    const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
-    if (Math.hypot(A, B) < CROMA_MINIMO) return MATIZ_PADRAO
-    return Math.round((Math.atan2(B, A) * 180) / Math.PI + 360) % 360
 }
