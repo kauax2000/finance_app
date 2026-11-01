@@ -137,7 +137,8 @@ export function WorkspaceDeleteDialog({
     ) : impactError ? (
         <AlertDialogError>{impactError}</AlertDialogError>
     ) : (
-        <DescriptionList layout="inline" size="sm" divided>
+        // A superfície da lista da revisão do lançamento inteligente.
+        <DescriptionList layout="inline" size="sm" divided className="rounded-row-lg bg-foreground/5 p-3">
             {impacto.map(([termo, valor]) => (
                 <DescriptionListItem key={termo}>
                     <DescriptionTerm>{termo}</DescriptionTerm>
