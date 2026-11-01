@@ -25,7 +25,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -191,12 +190,6 @@ export function CreditCardDetailView({
                                 <DropdownMenuContent
                                     align="end"
                                     size="lg"
-                                    header={
-                                        <DropdownMenuHeader
-                                            title={card.name}
-                                            description={`Final ${card.last_four}`}
-                                        />
-                                    }
                                 >
                                     <DropdownMenuItem onClick={() => onEdit()}>
                                         <PencilIcon aria-hidden />

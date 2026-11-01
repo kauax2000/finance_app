@@ -7,7 +7,6 @@ import { ColorTile } from "@/components/ui/color-tile"
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -36,14 +35,6 @@ export function CategoryDetailHero({
     monthToolbar,
 }: CategoryDetailHeroProps) {
     const isExpense = category.type === "expense"
-    // O alvo em cima das ações — no telefone, o título da folha.
-    const menuHeader = (
-        <DropdownMenuHeader
-            title={category.name}
-            description={isExpense ? "Despesa" : "Receita"}
-        />
-    )
-
     // Sem editar nem excluir (o convidado, Bloco 7A), não há menu.
     const menu =
         onEdit && onDelete ? (
@@ -62,7 +53,6 @@ export function CategoryDetailHero({
                 <DropdownMenuContent
                     align="end"
                     size="sm"
-                    header={menuHeader}
                 >
                     <DropdownMenuItem onSelect={onEdit}>
                         <PencilIcon aria-hidden />

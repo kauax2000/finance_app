@@ -1,6 +1,6 @@
 "use client"
 
-import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
+import { currencyBRL } from "@/lib/formatters"
 import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
 import type {
@@ -41,7 +41,6 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -267,14 +266,6 @@ export function TransactionDetailSheet({
                             <DropdownMenuContent
                                 align="end"
                                 size="sm"
-                                header={
-                                    <DropdownMenuHeader
-                                        title={t.description?.trim() || t.category?.name || "Sem descrição"}
-                                        description={`${formatTransactionDayPtBr(t.date)} · ${signedCurrencyBRL(
-                                            isIncome ? Number(t.amount) : -Number(t.amount)
-                                        )}`}
-                                    />
-                                }
                             >
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
