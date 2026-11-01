@@ -81,7 +81,7 @@ describe("Configurações: página única", () => {
         const pagina = lerFonte("src/app/(app)/settings/page-client.tsx")
         for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe"]) expect(pagina).not.toContain(fora)
         const aparelho = lerFonte("src/components/settings/theme-settings.tsx")
-        for (const texto of ["useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Só no celular."]) expect(aparelho).toContain(texto)
+        for (const texto of ["useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Só tem efeito no telefone."]) expect(aparelho).toContain(texto)
         expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(1)
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")
         for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
