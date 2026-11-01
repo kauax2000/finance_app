@@ -171,8 +171,10 @@ describe("opcoesDeModo", () => {
     })
 })
 
-describe("A capa da carteira", () => {
-    it("é o campo de marca, sem texto em cima", () => {
-        expect(carteira()).toContain('<div aria-hidden className="brand-field h-16 w-full" />')
+describe("O topo da Carteira", () => {
+    it("não veste capa nem marca: a cor fica só no ladrilho", () => {
+        const f = carteira()
+        expect(f).not.toContain("brand-field")
+        expect(f).not.toContain("<ColorTile")
     })
 })

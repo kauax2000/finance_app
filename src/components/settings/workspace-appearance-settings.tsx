@@ -30,7 +30,6 @@ function WorkspaceAppearanceSkeleton() {
             </div>
             <Card padding="none">
                 <CardContent className="flex flex-col">
-                    <Skeleton className="h-16 w-full rounded-none" />
                     <div
                         className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5"
                         aria-busy="true"
@@ -173,17 +172,15 @@ export function WorkspaceAppearanceSettings() {
                 >
                     <Card padding="none">
                         <CardContent className="flex flex-col">
-                            {/* A capa é o campo de marca, sem nada escrito em cima. */}
-                            <div aria-hidden className="brand-field h-16 w-full" />
-                            <div className="flex min-h-13 min-w-0 items-center justify-between gap-3 px-4 pt-2 pb-3">
-                                <div className="flex min-w-0 gap-3 self-stretch">
+                            <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+                                <div className="flex min-w-0 items-center gap-3">
                                     <WorkspaceBrandMark
                                         iconKey={currentWorkspace.icon}
                                         backgroundColor={currentWorkspace.icon_background_color}
                                         size="xl"
-                                        className="relative -mt-9 size-14 self-start rounded-row-lg ring-4 ring-card"
+                                        className="size-12 rounded-row-lg"
                                     />
-                                    <p className="min-w-0 self-center truncate text-base font-medium">
+                                    <p className="min-w-0 truncate text-base font-medium">
                                         {currentWorkspace.name}
                                     </p>
                                 </div>

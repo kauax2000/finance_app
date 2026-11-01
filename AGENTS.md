@@ -491,8 +491,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   `text-expense-muted-foreground`, `z-(--z-sheet)` — **não** adicione classes
   cruas da paleta do Tailwind (`text-green-600`, `bg-rose-100`).
 - **O campo de marca**: `@utility brand-field` é o arco-íris ocupando uma
-  **região** (o painel das telas de acesso e a capa da Carteira em
-  Configurações), com grão e vinheta, e ele é um
+  **região** (o painel das telas de acesso), com grão e vinheta, e ele é um
   **cartão**: cantos arredondados, fio por dentro, margem dada por quem chama.
   **Nenhum texto corrido mora direto sobre ele** — o que se lê vive num `Card`,
   que segue o tema; a exceção é o wordmark branco, por `currentColor`, e a
