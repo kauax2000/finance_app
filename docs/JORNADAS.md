@@ -2177,7 +2177,7 @@ continuam aqui para registro.
 | 104 | G5 | Fechar o lançamento inteligente (Esc, fora) descarta o que foi lido ou editado sem perguntar; o formulário clássico pergunta "Descartar alterações?". |
 | 105 | G5 | Os wireframes antigos `frase-rapida-wireframe.tsx` e `foto-recibo-wireframe.tsx` ficam sem uso no repositório até o dono aprovar apagá-los. |
 | 106 | G5, G10 | A Edge `capture` compartilha o parser melhorado (dias da semana, receita, motivo do tipo), mas não foi publicada: o Atalho do iPhone e o Apple Pay seguem com o parser antigo até a próxima publicação. |
-| 107 | G2 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas não se mediu se a âncora sobrevive ao login quando o telefone não tem sessão: o `AuthGuard` entra antes e leva ao login, e depois do login a pessoa pode cair em `/dashboard` em vez da seção. |
+| 107 | G2 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas, sem sessão no telefone, o `AuthGuard` entra antes e monta o `next` do login só com `pathname` e `searchParams`, sem o hash (`src/components/layout/auth-guard.tsx`): depois do login a pessoa chega ao topo de Configurações, não à seção. |
 
 ### Fechadas no Bloco 9b (26/out/2026)
 
