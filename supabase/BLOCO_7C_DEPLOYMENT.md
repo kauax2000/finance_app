@@ -102,6 +102,8 @@ resultado de uma conferência (o repositório é público).
 - **O banco de desenvolvimento é o de produção.** Não rode nada disto sem o
   pedido explícito do dono.
 
+**Estado em 31/10/2026: só o parcial `supabase/parciais/20261031-divisao-modo-e-pesos.sql` está em produção, aplicado por `db query`: `is_workspace_adult`, `split_mode`, `split_since` com o gatilho, e `workspace_split_weights`. As migrações `20261031120000_projetos.sql` e `20261031130000_divisao.sql` seguem pendentes, sem `migration repair`, e o parcial é idempotente diante delas. Até subirem, "Dividida" grava o modo e o `split_since`, mas nenhuma despesa ganha parte, e as despesas lançadas nesse intervalo não ganham parte depois: a migração não faz retroativo.**
+
 ## 1. Migrações
 
 ### 1.0. Antes de tudo: a tabela que sai tem de estar vazia
