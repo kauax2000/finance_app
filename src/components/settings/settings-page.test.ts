@@ -3,6 +3,14 @@ import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { lerFonte } from "@/test/fonte"
 
+describe("Configurações: cabeçalho", () => {
+    it("mostra o título sem um segundo h1", () => {
+        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        expect(fonte).toContain("<PageHeaderTitle asChild>")
+        expect(fonte).toContain('<p aria-hidden="true">Configurações</p>')
+    })
+})
+
 describe("Configurações: página única", () => {
     it("a página não tem abas, nem lê a query, e rola até a âncora", () => {
         const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
