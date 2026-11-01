@@ -48,6 +48,8 @@ resultado de uma conferência (o repositório é público).
 - **O `verify_jwt = false` da `insights-daily`** está em `supabase/config.toml`:
   só o cron a chama, com o `x-cron-secret`, e ela mesma o confere.
 
+**Estado em 31/10/2026: as migrações `20261023120000_captura.sql` e `20261028120000_insights.sql` estão em produção, aplicadas juntas, sem as outras da fila, para Configurações ler `notify_review` e `notify_insights`. As Edges `review-reminder` e `insights-daily` não foram publicadas: até subirem, os crons `review-reminder-daily` e `insights-daily` só deixam um 404 em `net._http_response`. O próximo `db push` pede `--include-all`.**
+
 ## 1. Migração
 
 ```bash
