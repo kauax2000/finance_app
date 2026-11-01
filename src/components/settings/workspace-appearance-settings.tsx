@@ -17,7 +17,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -199,11 +198,7 @@ export function WorkspaceAppearanceSettings() {
                                             <EllipsisVerticalIcon aria-hidden />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent
-                                        align="end"
-                                        size="md"
-                                        header={<DropdownMenuHeader title={currentWorkspace.name} />}
-                                    >
+                                    <DropdownMenuContent align="end" size="md">
                                         {owner ? (
                                             <DropdownMenuItem onSelect={openEdit}>
                                                 <PencilIcon aria-hidden />
