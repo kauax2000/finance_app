@@ -211,6 +211,8 @@ export const REGISTRY: RegistryEntry[] = [
     /** A sequência: um `Kbd` por tecla. Importa o átomo de fato (`keys`). */
     entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
     entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
+    /** O código para outro aparelho: `Button` (copiar), `Tooltip` (a confirmação) e `Skeleton`; o desenho é SVG próprio. */
+    entry("qr-code", "QR Code", "O código que leva de uma tela a outro aparelho.", ui("qr-code"), "QrCode, QrCodeCopy, QrCodeSkeleton"),
     /** A junção: `Radio` + `Label`, e o cartão. Importa os átomos de fato (`children` da opção). */
     entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
     /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner` (`pending`); não é o grupo de campo. */

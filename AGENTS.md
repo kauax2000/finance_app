@@ -128,7 +128,7 @@ O porquê de cada regra (medições, tentativas recusadas) está em
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 82 arquivos
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 83 arquivos
   hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
@@ -1874,6 +1874,20 @@ declaração de `background-color` no trilho).
   falso, congelado em 0 fora do repouso, sem rAF nem `setState` por evento —
   **um `pointermove` em `document` continua exclusivo do brilho da marca**.
   `showcase-versions.test.ts`.
+- **`QrCode`** (Molécula, rodada 355): o código que leva de uma tela a outro
+  aparelho, desenhado em SVG com tokens (`uqr`, correção `M`, sem borda; os
+  módulos escuros são **um `<path>` só**). **A placa é clara nos dois
+  temas** (`bg-background` no claro, `bg-foreground` no escuro, a tinta do
+  módulo no par oposto por `currentColor`): leitor de câmera falha mais com o
+  QR invertido. **A margem de silêncio é a placa**, `p-3` (12px) — não reduza.
+  **`label` é obrigatório**: nomeia o link para o leitor de tela. **O link só
+  abre no toque**: no cursor o `<a>` é `pointer-events-none`
+  (`pointer-coarse:pointer-events-auto`), porque o código é para a câmera de
+  outro aparelho e um clique acidental navegaria. 128px, **sem escada**.
+  `QrCodeCopy` é a peça solta que copia o link (`Tooltip confirmation` ligada
+  pelo resultado) e `QrCodeSkeleton` o osso; sem `value`, ou com um que não
+  cabe no maior QR, `QrCode` cai no esqueleto. Fora: escada de tamanho,
+  módulos arredondados, símbolo central e legenda. `qr-code-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra
   de tempo**. **Nenhuma tela importa o `toast` do sonner**: use `@/lib/toast`
   (`description`, `id` como assunto, `action`, `cancel`, `toastPill`,

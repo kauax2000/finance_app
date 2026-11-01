@@ -28655,3 +28655,50 @@ reduzido, o `!important` global vence e o feixe não aparece, como na paleta.
 escrever `command-beam`: o `command.tsx`, a página dele no catálogo e o
 `lancamento-inteligente.tsx`. O teste da tela confere a classe, o
 `data-waiting`, o `data-lendo` e que nenhuma outra peça de marca entra nela.
+
+### Rodada 355 — QrCode, o código para outro aparelho
+
+**O pedido.** A seção "No celular" de Configurações mostrava, no desktop, uma
+chave sem efeito. No desktop ela passa a levar a pessoa ao telefone por um QR
+Code; no telefone vira "Neste celular". O código precisava de um componente do
+design system, já que nenhuma peça do catálogo desenha um.
+
+**O levantamento.** Nenhuma tela do app desenhava um QR à mão, e o catálogo não
+tinha peça de código. O componente compõe o que existe: o `Button` e o
+`Tooltip confirmation` para a cópia, e o `Skeleton` / `SkeletonGroup` para o
+osso. Camada: molécula, pelo `taxonomy.test.ts` (passou sem ajuste). O desenho é
+um SVG próprio, na lista `DRAWN_SVG_FILES` do auditor, porque a matriz do QR é o
+dado, e não um ícone.
+
+**As escolhas do dono (2026-11-01).**
+- Desktop com o QR, telefone com as duas linhas (opção C dos wireframes).
+- **Redesenho:** placa sempre clara, módulos escuros nos dois temas; sem escada
+  de tamanho, sem módulos arredondados, sem símbolo no centro.
+- **Peças:** `QrCodeSkeleton` e "Copiar link" (`QrCodeCopy`); sem legenda.
+- **Comportamento:** nome acessível exigido (`label`); abre no toque; cresce
+  levemente no cursor.
+- **App:** só Configurações.
+
+**A biblioteca.** `uqr@0.1.3`: `encode(valor, { ecc, border })` devolve a
+matriz (`data`, `size`) sem tocar no DOM, então o componente decide sozinho como
+desenhar. Correção `M` e `border: 0`: a margem de silêncio é da placa, não da
+matriz. Os módulos escuros viram **um `<path>` só** (`M{x} {y}h1v1h-1z`), com
+`shape-rendering: crispEdges` para não haver emenda de subpixel. Um `value` que
+não cabe no maior QR faz o `encode` lançar; `qrCodeMatriz` devolve `null` e o
+`QrCode` mostra o esqueleto.
+
+**Medido.** O link `https://app.finance.com.br/settings#no-celular` gera 33
+módulos por lado; nos 104px de dentro da placa (128 menos os 2 × 12 da margem),
+isso dá 3,15px por módulo. A placa tem 128px; o recuo `p-3` é a margem de
+silêncio.
+
+**O que ficou de fora.** Escada de tamanho, módulos arredondados, símbolo
+central e legenda (decisão do dono). O link do `<a>` só recebe o clique no toque
+(`pointer-events-none` com `pointer-coarse:pointer-events-auto`): no cursor o
+código é para a câmera de outro aparelho. Não foi medida a leitura por câmera
+real nem o contraste da placa nos dois temas; o catálogo não afirma nenhum dos
+dois.
+
+**Trava.** `qr-code-versions.test.ts` tranca a matriz, o `null` fora da
+capacidade, a placa por tokens, o `label` obrigatório, o link só no toque e a
+cópia pelo resultado.

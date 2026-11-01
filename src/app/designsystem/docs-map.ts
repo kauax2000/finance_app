@@ -60,6 +60,7 @@ import PaginationDoc from "./docs/pagination"
 import PopoverDoc from "./docs/popover"
 import PresenceCursorDoc from "./docs/presence-cursor"
 import ProgressDoc from "./docs/progress"
+import QrCodeDoc from "./docs/qr-code"
 import RadioDoc from "./docs/radio"
 import RadioGroupDoc from "./docs/radio-group"
 import ResizableDoc from "./docs/resizable"
@@ -151,6 +152,7 @@ export const DOCS: Record<string, ComponentType> = {
   "popover": PopoverDoc,
   "presence-cursor": PresenceCursorDoc,
   "progress": ProgressDoc,
+  "qr-code": QrCodeDoc,
   "radio": RadioDoc,
   "radio-group": RadioGroupDoc,
   "resizable": ResizableDoc,
