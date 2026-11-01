@@ -1,6 +1,6 @@
 "use client"
 
-import { createElement } from "react"
+import { createElement, type CSSProperties } from "react"
 import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
 import { Label } from "@/components/ui/label"
 import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
@@ -28,7 +28,7 @@ import {
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
-import { TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
+import { corExataDaCarteira, TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 
 type WorkspaceAppearanceFormFieldsProps = {
@@ -140,7 +140,10 @@ export function WorkspaceAppearanceFormFields({
                             toggleVariants({ variant: "swatch", size: "icon-lg" }),
                             "relative cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/45"
                         )}
-                        style={toggleStyle(daPaleta ? null : previewColor)}
+                        style={toggleStyle(
+                            daPaleta ? null : previewColor,
+                            daPaleta ? undefined : (corExataDaCarteira(previewColor) as CSSProperties | undefined)
+                        )}
                     >
                         {daPaleta ? <EyeDropperIcon aria-hidden /> : <CheckIcon aria-hidden />}
                         <input

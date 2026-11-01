@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+    corExataDaCarteira,
     TILE_COLORS,
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
@@ -74,5 +75,25 @@ describe("tileColorFor", () => {
             i === 0 ? m + 360 - matizes[matizes.length - 1]! : m - matizes[i - 1]!
         )
         expect(Math.min(...gaps)).toBe(28)
+    })
+})
+
+describe("corExataDaCarteira", () => {
+    it("a cor livre aparece como foi escolhida", () => {
+        expect(corExataDaCarteira("#123456")?.["--tile-surface"]).toBe("#123456")
+    })
+
+    it("a tinta acompanha a superfície: clara no escuro, escura no claro", () => {
+        expect(corExataDaCarteira("#000000")?.["--tile-ink"]).toBe("var(--scrim-foreground)")
+        expect(corExataDaCarteira("#123456")?.["--tile-ink"]).toBe("var(--scrim-foreground)")
+        expect(corExataDaCarteira("#ffffff")?.["--tile-ink"]).toBe("var(--identity-foreground)")
+    })
+
+    it("a paleta, o preset legado e o valor vazio seguem a régua do ladrilho", () => {
+        for (const { hex } of TILE_PALETTE) expect(corExataDaCarteira(hex)).toBeUndefined()
+        expect(corExataDaCarteira(TILE_PALETTE[0].hex.toLowerCase())).toBeUndefined()
+        expect(corExataDaCarteira("#2563EB")).toBeUndefined()
+        expect(corExataDaCarteira(null)).toBeUndefined()
+        expect(corExataDaCarteira("azul")).toBeUndefined()
     })
 })
