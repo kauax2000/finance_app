@@ -42,7 +42,12 @@ export function ThemeSettings() {
             <SettingsSection titulo="Aparência" alcance="Vale só neste aparelho.">
                 <Card padding="none">
                     <SettingsRow titulo="Tema">
-                        <ThemeToggle size="lg" labels={!isMobile} className="shrink-0" />
+                        <ThemeToggle
+                            size="lg"
+                            labels={!isMobile}
+                            // A pele do `Tabs` da busca, logo abaixo: moldura com anel e marcador cinza.
+                            className="shrink-0 bg-popover ring-1 ring-foreground/10 [&_[data-slot=theme-toggle-thumb]]:bg-muted [&_[data-slot=theme-toggle-thumb]]:shadow-none"
+                        />
                     </SettingsRow>
                     <div className="max-lg:hidden">
                         <Separator />
