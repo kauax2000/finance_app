@@ -55,7 +55,7 @@ export function ThemeSettings() {
                                 onValueChange={(proxima) => definirBusca(proxima as BuscaDoCabecalho)}
                                 className="shrink-0"
                             >
-                                <TabsList variant="solid" aria-label="Busca no cabeçalho">
+                                <TabsList aria-label="Busca no cabeçalho">
                                     <TabsTrigger value="barra">Barra</TabsTrigger>
                                     <TabsTrigger value="botao">Botão</TabsTrigger>
                                 </TabsList>
