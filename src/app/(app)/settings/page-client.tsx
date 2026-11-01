@@ -16,7 +16,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-w-0 space-y-8">
-            <PageHeader>
+            <PageHeader collapse>
                 <PageHeaderTitle asChild>
                     {/* O `<h1>` da página é o da barra do topo. */}
                     <p aria-hidden="true">Configurações</p>

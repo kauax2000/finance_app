@@ -15,6 +15,7 @@ describe("Configurações: ordem", () => {
 describe("Configurações: cabeçalho", () => {
     it("mostra o título sem um segundo h1", () => {
         const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        expect(fonte).toContain("<PageHeader collapse>")
         expect(fonte).toContain("<PageHeaderTitle asChild>")
         expect(fonte).toContain('<p aria-hidden="true">Configurações</p>')
     })

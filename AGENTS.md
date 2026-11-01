@@ -725,8 +725,9 @@ declaração de `background-color` no trilho).
   **576** · 672 · 1280 · sem teto, e a calha (`gutter`) é **opt-in**, porque
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
-  `PageSectionContent`. Toda tela revisada abre com o `PageHeader`, com `PageHeaderTitle asChild` e
-  `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
+  `PageSectionContent`. Toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
+  título sobe para a barra, à direita do botão de recolher), com
+  `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
   no telefone o título visível é a carteira, no centro, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
