@@ -45,8 +45,8 @@ export function ThemeSettings() {
                         <ThemeToggle
                             size="lg"
                             labels={!isMobile}
-                            // A pele do `Tabs` da busca, logo abaixo: moldura com anel e marcador cinza.
-                            className="shrink-0 bg-popover ring-1 ring-foreground/10 [&_[data-slot=theme-toggle-thumb]]:bg-muted [&_[data-slot=theme-toggle-thumb]]:shadow-none"
+                            // A pele do `Tabs` da busca, logo abaixo: moldura com anel e marcador cinza, também com anel.
+                            className="shrink-0 bg-popover ring-1 ring-foreground/10 [&_[data-slot=theme-toggle-thumb]]:bg-muted [&_[data-slot=theme-toggle-thumb]]:shadow-xs [&_[data-slot=theme-toggle-thumb]]:ring-1 [&_[data-slot=theme-toggle-thumb]]:ring-foreground/10"
                         />
                     </SettingsRow>
                     <div className="max-lg:hidden">
