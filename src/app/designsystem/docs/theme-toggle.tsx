@@ -85,10 +85,10 @@ export default function ThemeToggleDoc() {
 
       <DocNote title="Uma peça só, esticando em fase com a corrida">
         <p>
-          Houve três nós — cabeça, rastro e pescoço —, e eles liam como duas bolas. Hoje é <strong>uma</strong> pílula, com a mecânica do <a href="https://21st.dev/community/components?q=glass&amp;preview=%2F%40dennysdionigi%2Fcomponents%2Fapple-liquid-glass-switcher" target="_blank" rel="noreferrer">apple-liquid-glass-switcher</a> (Dennys Dionigi): um trajeto com inércia (<code>cubic-bezier(1, 0, .4, 1)</code>, 400ms), um <strong>esticão</strong> em <code>scale</code> com a origem na borda de trás — a forma estica para a frente — e o volume conservado: esticando em X, ela afina em Y (34,1 × 25,2 no auge).
+          Houve três nós — cabeça, rastro e pescoço —, e eles liam como duas bolas. Hoje é <strong>uma</strong> pílula, com a mecânica do <a href="https://21st.dev/community/components?q=glass&amp;preview=%2F%40dennysdionigi%2Fcomponents%2Fapple-liquid-glass-switcher" target="_blank" rel="noreferrer">apple-liquid-glass-switcher</a> (Dennys Dionigi): um trajeto com inércia (o <code>TRAJETO_MACIO</code> do <code>Tabs</code>: <code>cubic-bezier(.65, 0, .25, 1)</code>, 480ms), um <strong>esticão</strong> em <code>scale</code> com a origem na borda de trás — a forma estica para a frente — e o volume conservado: esticando em X, ela afina em Y (34,1 × 25,2 no auge).
         </p>
         <p>
-          O esticão roda num relógio de <strong>640ms</strong>, contra 400 do trajeto (a versão anterior desta página dizia que eram o mesmo). Os 400 primeiros são o esticão, com o pico em 0,58 do trajeto, perto do pico de velocidade (0,667) — a referência o punha anticorrelacionado, e a forma esticava parada. Os 240 que sobram são o <strong>pouso</strong>: um mergulho só, ancorado na borda da frente. A amplitude é a velocidade — 1,11 num salto de uma parada, 1,22 no de duas —, e o teto é a borda do trilho: 87,7 dos 88px no salto longo.
+          O esticão roda num relógio de <strong>768ms</strong>, contra 480 do trajeto (a versão anterior desta página dizia que eram o mesmo). Os 480 primeiros são o esticão, com o pico em 0,58 do trajeto, logo depois do pico de velocidade (0,45) — a referência o punha anticorrelacionado, e a forma esticava parada. Os 288 que sobram são o <strong>pouso</strong>: um mergulho só, ancorado na borda da frente. A amplitude é a velocidade — 1,11 num salto de uma parada, 1,22 no de duas —, e o teto é a borda do trilho: 87,7 dos 88px no salto longo.
         </p>
       </DocNote>
 

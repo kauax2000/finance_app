@@ -18,7 +18,7 @@ import { composeRefs } from "radix-ui/internal"
 import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { AMPLITUDE_POR_SALTO, viajarLiquido } from "@/lib/liquid-move"
+import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
 
 /**
  * As três paradas, na ordem do trilho (a do menu de tema do macOS, por decisão
@@ -85,7 +85,7 @@ const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
  * sempre. O CSS que desliga o esmaecer padrão mora em `globals.css`, escopado por
  * `.theme-reveal` no `<html>` enquanto a transição dura.
  */
-const REVELACAO = { duration: 560, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+const REVELACAO = { duration: 320, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
 
 type DocumentoComTransicao = Document & {
     startViewTransition?: (cb: () => void) => {
@@ -222,12 +222,13 @@ export function ThemeToggle({
         peca.style.transformOrigin = paraDireita ? "0% 50%" : "100% 50%"
 
         // Sem tamanho nas caixas: a peça não muda de tamanho, e só a posição e
-        // o esticão animam — o trajeto e o perfil de sempre (`TRAJETO`).
+        // o esticão animam — o trajeto macio do `Tabs`: o `TRAJETO` só saía do lugar depois
+        // de a revelação já ter coberto a tela.
         emCurso.current = viajarLiquido(
             peca,
             { x: de * passo, y: 0 },
             { x: indice * passo, y: 0 },
-            { amplitude },
+            { amplitude, trajeto: TRAJETO_MACIO },
         )
     }, [indice, montado, passo, face])
 

@@ -96,6 +96,10 @@ describe("o trilho de tema", () => {
     it("5. o esticão anda em fase com a velocidade, e não contra ela", () => {
         // A curva do trajeto é a da referência, por decisão do dono.
         expect(CODIGO).toContain('easing: "cubic-bezier(1,0,0.4,1)"')
+        // A troca não pode parecer lenta: o marcador anda no trajeto macio, e a revelação
+        // não segura a tela depois de cobri-la.
+        expect(CODIGO).toContain("{ amplitude, trajeto: TRAJETO_MACIO }")
+        expect(CODIGO).toContain("const REVELACAO = { duration: 320")
 
         // A asserção que importa: o pico do esticão e o relógio da escala têm de estar em fase
         // com a velocidade do trajeto (pico em 0,58, perto do pico de velocidade 0,667), senão
