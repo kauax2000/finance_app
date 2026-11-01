@@ -319,7 +319,9 @@ flowchart TD
     del --> impact[("RPC get_workspace_delete_impact")]
     del -->|"Excluir"| delRpc[("RPC delete_workspace")] --> fallback(["Se era a atual, volta para a pessoal"])
     owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
-    settings --> pwa(["Instalar app: folha de instalação"])
+    settings -->|"telefone"| pwa(["Neste celular: lançamento inteligente e instalar o app"])
+    settings -->|"desktop"| qr(["No celular: QR Code ou Copiar link"])
+    qr -->|"câmera do telefone"| settingsTel["/settings#no-celular no telefone"]
     settings --> notif(["Preferências de notificação: canais e tópicos"])
     settings --> ia(["IA e privacidade: Groq e Cloudflare, sem treino; até 30 por dia"])
     ia -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
@@ -386,6 +388,7 @@ flowchart TD
 | O ex-convidado (Bloco 9) | `workspace_ex_convidados(workspace_id, user_id, saiu_em)`, com RLS ligada e sem grant, é preenchida pelo gatilho `lembrar_ex_convidado` (depois de apagar um membro com `role = 'guest'`; pula a cascata). O `accept_workspace_invite` devolve o status `ex_convidado` para um convite **por link** de quem está nela, e a Edge `workspace-invites-accept` responde 403 "Peça ao dono um convite por e-mail."; o convite por e-mail passa, e um aceite com sucesso apaga a linha (fecha a lacuna 60). **A Edge sobe antes da migração**: sem o `case`, o status novo cai no `default` e vira 500 | `supabase/migrations/20261102120000_bloco9.sql`, `supabase/functions/workspace-invites-accept/index.ts` |
 | Lista de membros e convites (Bloco 7A) | O selo mostra Dono, Membro ou Convidado (`rotuloDoPapel`); o convite por e-mail pendente mostra o papel; a troca de papel é da linha do membro e só do dono (ver 15a). O membro adulto também lê a seção Limites (ver 16) | `src/app/(app)/members/page-client.tsx`, `src/components/members/workspace-invite-dialog.tsx` |
 | IA e privacidade (Bloco 3B) | Configurações mostra a seção "IA e privacidade": Groq e Cloudflare, sem treinar com os dados, o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/settings/ia-privacidade-settings.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
+| No celular e Neste celular (1/nov/2026) | A seção de Configurações com `id="no-celular"` muda de forma pela largura (`md`, 768px). Do `md` para cima (desktop e tablet) chama-se "No celular": mostra um QR Code (`QrCode`) que aponta para `/settings#no-celular` e o botão "Copiar link", e não tem a chave do lançamento inteligente nem "Instalar o app"; com pendências na fila, aparece a linha "Sincronização". Abaixo do `md` (telefone) chama-se "Neste celular": o interruptor do Lançamento inteligente e "Instalar o app"; o "Como instalar" do iPhone abre a folha de instalação. Quem lê o QR no telefone cai em `/settings#no-celular` e a página rola até a seção; sem sessão no telefone, o `AuthGuard` age antes (lacuna 107) | `src/components/settings/theme-settings.tsx`, `src/components/settings/settings-page.test.ts` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Modelos de carteira (Bloco 7C) | Criar carteira ganha a regra da escolha e os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento, que criam pela RPC `criar_carteira_de_modelo` (com as categorias e o modo de cada um); "Sem modelo" segue o `create_shared_workspace`. Ver a jornada 18 | `src/components/workspace/project-form-dialog.tsx`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx` |
 
@@ -2174,6 +2177,7 @@ continuam aqui para registro.
 | 104 | G5 | Fechar o lançamento inteligente (Esc, fora) descarta o que foi lido ou editado sem perguntar; o formulário clássico pergunta "Descartar alterações?". |
 | 105 | G5 | Os wireframes antigos `frase-rapida-wireframe.tsx` e `foto-recibo-wireframe.tsx` ficam sem uso no repositório até o dono aprovar apagá-los. |
 | 106 | G5, G10 | A Edge `capture` compartilha o parser melhorado (dias da semana, receita, motivo do tipo), mas não foi publicada: o Atalho do iPhone e o Apple Pay seguem com o parser antigo até a próxima publicação. |
+| 107 | G2 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas não se mediu se a âncora sobrevive ao login quando o telefone não tem sessão: o `AuthGuard` entra antes e leva ao login, e depois do login a pessoa pode cair em `/dashboard` em vez da seção. |
 
 ### Fechadas no Bloco 9b (26/out/2026)
 
