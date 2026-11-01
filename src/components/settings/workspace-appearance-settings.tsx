@@ -184,11 +184,22 @@ export function WorkspaceAppearanceSettings() {
                                         {currentWorkspace.name}
                                     </p>
                                 </div>
-                                {owner ? (
-                                    <Button type="button" variant="secondary" onClick={openEdit}>
-                                        Editar
-                                    </Button>
-                                ) : null}
+                                <div className="flex shrink-0 items-center gap-1">
+                                    {owner ? (
+                                        <Button type="button" variant="secondary" onClick={openEdit}>
+                                            Editar
+                                        </Button>
+                                    ) : null}
+                                    {canDeleteProject ? (
+                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} aria-label="Excluir carteira" onClick={() => setDeleteOpen(true)}>
+                                            Excluir
+                                        </Button>
+                                    ) : !owner ? (
+                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} aria-label="Sair da carteira" onClick={() => setLeaveOpen(true)}>
+                                            Sair
+                                        </Button>
+                                    ) : null}
+                                </div>
                             </div>
                             {!owner ? (
                                 <CardNote>
@@ -222,25 +233,6 @@ export function WorkspaceAppearanceSettings() {
                                         aria-label="Alterar datas e orçamento"
                                         onClick={() => setDatasOpen(true)}
                                     />
-                                </>
-                            ) : null}
-                            {canDeleteProject ? (
-                                <>
-                                    <Separator />
-                                    <SettingsRow titulo="Excluir carteira">
-                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} onClick={() => setDeleteOpen(true)}>
-                                            Excluir
-                                        </Button>
-                                    </SettingsRow>
-                                </>
-                            ) : !owner ? (
-                                <>
-                                    <Separator />
-                                    <SettingsRow titulo="Sair da carteira">
-                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} onClick={() => setLeaveOpen(true)}>
-                                            Sair
-                                        </Button>
-                                    </SettingsRow>
                                 </>
                             ) : null}
                         </CardContent>
