@@ -90,7 +90,7 @@ describe("Carteira em linhas", () => {
 
     it("os dois diálogos abrem por Alterar", () => {
         const f = carteira()
-        expect(f.match(/>\s*Alterar\s*</g)).toHaveLength(2)
+        expect(f.match(/<SettingsLink/g)).toHaveLength(2)
         expect(f).toContain("setDivisaoOpen(true)")
         expect(f).toContain("setDatasOpen(true)")
         expect(f).toContain("<CarteiraDivisaoDialog")
@@ -116,14 +116,14 @@ describe("Carteira em linhas", () => {
     })
 
     it("Divisão ainda indisponível não tem Alterar", () => {
-        expect(carteira()).toMatch(/splitMode === undefined \? null : \(\s*<Button/)
+        expect(carteira()).toMatch(/splitMode === undefined \? \(\s*<SettingsRow titulo="Divisão" descricao=\{AINDA_NAO_DISPONIVEL\} \/>/)
         expect(carteira()).toContain("AINDA_NAO_DISPONIVEL")
     })
 
     it("a última linha: excluir, sair, ou nada para o dono da pessoal", () => {
         const f = carteira()
         expect(f).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*!owner \?[\s\S]*Sair da carteira[\s\S]*: null/)
-        expect(f).toContain('variant="destructive"')
+        expect(f.match(/className=\{ACAO_DE_PERIGO\}/g)).toHaveLength(2)
     })
 })
 
@@ -168,5 +168,13 @@ describe("opcoesDeModo", () => {
 
     it("nunca trava o Pote único", () => {
         expect(opcoesDeModo(false, "pooled").find((m) => m.value === "pooled")).not.toHaveProperty("disabled")
+    })
+})
+
+describe("A capa da carteira", () => {
+    it("é a cor da carteira no ColorTile, sem texto em cima e sem cor crua", () => {
+        const f = carteira()
+        expect(f).toMatch(/<ColorTile\s+color=\{currentWorkspace\.icon_background_color\}\s+className="h-16 w-full rounded-none"\s*\/>/)
+        expect(f).not.toContain("backgroundColor: currentWorkspace")
     })
 })

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { Item, ItemChevron, ItemContent, ItemTitle } from "@/components/ui/item"
 import { Muted } from "@/components/ui/typography"
 import {
     PageSection,
@@ -52,6 +53,31 @@ export function SettingsRow({
             </div>
             {children}
         </div>
+    )
+}
+
+/** A linha que abre um ajuste: a linha inteira é o botão, com o valor de hoje à direita. */
+export function SettingsLink({
+    titulo,
+    valor,
+    onClick,
+    "aria-label": rotulo,
+}: {
+    titulo: string
+    valor: string
+    onClick: () => void
+    "aria-label": string
+}) {
+    return (
+        <Item variant="flush" interactive asChild className="px-4">
+            <button type="button" aria-label={rotulo} onClick={onClick}>
+                <ItemContent>
+                    <ItemTitle>{titulo}</ItemTitle>
+                </ItemContent>
+                <Muted className="min-w-0 truncate">{valor}</Muted>
+                <ItemChevron />
+            </button>
+        </Item>
     )
 }
 

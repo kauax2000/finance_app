@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
-import { SettingsRow, SettingsSection } from "@/components/settings/settings-section"
+import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
 import { InformationCircleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -13,11 +13,15 @@ import { WorkspaceLeaveDialog } from "@/components/settings/workspace-leave-dial
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
+import { ColorTile } from "@/components/ui/color-tile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
+
+/** Sair e excluir são ações de texto: o peso fica na confirmação, não na página. */
+const ACAO_DE_PERIGO = "text-destructive [--button-hover-fill:var(--destructive-muted)]"
 
 function WorkspaceAppearanceSkeleton() {
     return (
@@ -27,12 +31,13 @@ function WorkspaceAppearanceSkeleton() {
             </div>
             <Card padding="none">
                 <CardContent className="flex flex-col">
+                    <Skeleton className="h-16 w-full rounded-none" />
                     <div
                         className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5"
                         aria-busy="true"
                     >
                         <div className="flex items-center gap-3">
-                            <Skeleton className="size-12 shrink-0 rounded-lg" />
+                            <Skeleton className="size-12 shrink-0 rounded-row-lg" />
                             <Skeleton className="h-4 w-36 max-w-full" />
                         </div>
                         <Skeleton shape="tile" size="lg" />
@@ -169,15 +174,20 @@ export function WorkspaceAppearanceSettings() {
                 >
                     <Card padding="none">
                         <CardContent className="flex flex-col">
-                            <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
-                                <div className="flex min-w-0 items-center gap-3">
+                            {/* A capa é a cor da carteira, sem nada escrito em cima. */}
+                            <ColorTile
+                                color={currentWorkspace.icon_background_color}
+                                className="h-16 w-full rounded-none"
+                            />
+                            <div className="flex min-h-13 min-w-0 items-center justify-between gap-3 px-4 pt-2 pb-3">
+                                <div className="flex min-w-0 gap-3 self-stretch">
                                     <WorkspaceBrandMark
                                         iconKey={currentWorkspace.icon}
                                         backgroundColor={currentWorkspace.icon_background_color}
-                                        className="size-12 shrink-0 rounded-lg"
-                                        iconClassName="size-5"
+                                        size="xl"
+                                        className="relative -mt-9 size-14 self-start rounded-row-lg ring-4 ring-card"
                                     />
-                                    <p className="min-w-0 truncate text-sm font-medium">
+                                    <p className="min-w-0 self-center truncate text-base font-medium">
                                         {currentWorkspace.name}
                                     </p>
                                 </div>
@@ -198,39 +208,34 @@ export function WorkspaceAppearanceSettings() {
                             {podeDivisao ? (
                                 <>
                                     <Separator />
-                                    <SettingsRow
-                                        titulo="Divisão"
-                                        descricao={
-                                            splitMode === undefined
-                                                ? AINDA_NAO_DISPONIVEL
-                                                : splitMode === "split"
-                                                  ? "Dividida"
-                                                  : "Pote único"
-                                        }
-                                    >
-                                        {splitMode === undefined ? null : (
-                                            <Button type="button" variant="secondary" aria-label="Alterar divisão" onClick={() => setDivisaoOpen(true)}>
-                                                Alterar
-                                            </Button>
-                                        )}
-                                    </SettingsRow>
+                                    {splitMode === undefined ? (
+                                        <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
+                                    ) : (
+                                        <SettingsLink
+                                            titulo="Divisão"
+                                            valor={splitMode === "split" ? "Dividida" : "Pote único"}
+                                            aria-label="Alterar divisão"
+                                            onClick={() => setDivisaoOpen(true)}
+                                        />
+                                    )}
                                 </>
                             ) : null}
                             {podeDatas ? (
                                 <>
                                     <Separator />
-                                    <SettingsRow titulo="Datas e orçamento" descricao={resumoDoCalendario(currentWorkspace)}>
-                                        <Button type="button" variant="secondary" aria-label="Alterar datas e orçamento" onClick={() => setDatasOpen(true)}>
-                                            Alterar
-                                        </Button>
-                                    </SettingsRow>
+                                    <SettingsLink
+                                        titulo="Datas e orçamento"
+                                        valor={resumoDoCalendario(currentWorkspace)}
+                                        aria-label="Alterar datas e orçamento"
+                                        onClick={() => setDatasOpen(true)}
+                                    />
                                 </>
                             ) : null}
                             {canDeleteProject ? (
                                 <>
                                     <Separator />
-                                    <SettingsRow titulo="Excluir carteira" descricao="Apaga a carteira e tudo que há nela.">
-                                        <Button type="button" variant="destructive" onClick={() => setDeleteOpen(true)}>
+                                    <SettingsRow titulo="Excluir carteira">
+                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} onClick={() => setDeleteOpen(true)}>
                                             Excluir
                                         </Button>
                                     </SettingsRow>
@@ -238,8 +243,8 @@ export function WorkspaceAppearanceSettings() {
                             ) : !owner ? (
                                 <>
                                     <Separator />
-                                    <SettingsRow titulo="Sair da carteira" descricao="Você perde o acesso a esta carteira.">
-                                        <Button type="button" variant="destructive" onClick={() => setLeaveOpen(true)}>
+                                    <SettingsRow titulo="Sair da carteira">
+                                        <Button type="button" variant="tertiary" className={ACAO_DE_PERIGO} onClick={() => setLeaveOpen(true)}>
                                             Sair
                                         </Button>
                                     </SettingsRow>
