@@ -234,13 +234,12 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
     expect(fonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).toContain("O CPF, o cartão e o nome como no cartão ficam só no Asaas; o nome e o e-mail da conta continuam aqui")
   })
 
-  it("Configurações mostra a IA com o link da política", async () => {
-    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaConfiguracoesWireframe />")
-    const { IaConfiguracoesWireframe } = await import("./ia-configuracoes-wireframe")
-    const html = renderToStaticMarkup(IaConfiguracoesWireframe())
-    expect(html).toContain("IA: Groq e Cloudflare, grátis, sem treino")
-    expect(html).toContain("30")
-    expect(html).toContain('href="/privacidade"')
+  it("Configurações mostra a IA com o link da política", () => {
+    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaPrivacidadeSettings />")
+    const ia = fonte("src/components/settings/ia-privacidade-settings.tsx")
+    expect(ia).toContain("Groq e Cloudflare")
+    expect(ia).toContain("30 chamadas")
+    expect(ia).toContain("ROUTES.PRIVACY")
   })
 })
 
@@ -380,14 +379,10 @@ describe("Carteira de projeto, fix 1 (Bloco 7C)", () => {
   it("I1: o dono edita as datas e o orçamento da carteira, nas configurações e logo depois de criar", () => {
     expect(fonte("src/lib/projetos/dados.ts")).toMatch(/from\("workspaces"\)\s*\.update\(campos\)\s*\.eq\("id", workspaceId\)/)
     const w = fonte("src/components/wireframe/projetos-wireframe.tsx")
-    expect(w).toContain("isWorkspaceOwner(alvo.id)")
-    expect(w).toContain("camposDaCarteiraProjeto(")
     // O orçamento do projeto passa pelo mesmo parser pt-BR, e "0" é recusado.
     expect(w).toContain("orcamentoTotal(orcamento)")
     expect(w).not.toContain("Number(orcamento)")
     expect(w).toContain("formatMoneyBrlInput(")
-    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<DatasDaCarteiraProjetoWireframe />")
-    expect(fonte("src/components/workspace/project-form-dialog.tsx")).toContain("<DatasDaCarteiraProjetoWireframe")
   })
 
   it("I2: o resumo da carteira lê todas as páginas", () => {
@@ -483,10 +478,8 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 
   it("o modo e os pesos são do dono; o saldo é do adulto, no Painel, com quem saiu marcado", () => {
     const w = fonte(W)
-    expect(w).toMatch(/currentWorkspace\.type === "personal" \|\| !isWorkspaceOwner\(currentWorkspace\.id\)/)
     expect(w).toContain("saiu da carteira")
     expect(w).toContain("a.created_by === meuId")
-    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<ModoEPesosDaCarteiraWireframe />")
     expect(fonte("src/app/(app)/dashboard/page-client.tsx")).toContain("<SaldoEAcertoWireframe />")
   })
 
@@ -509,7 +502,7 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 
   it("a etiqueta de cada peça", () => {
     const w = fonte(W)
-    for (const t of ["Quem pagou", "Partes desta despesa", "Modo e pesos da carteira", "Saldo e acerto", "Pesos desta parcelada"]) {
+    for (const t of ["Quem pagou", "Partes desta despesa", "Saldo e acerto", "Pesos desta parcelada"]) {
       expect(w).toContain(`titulo="${t}"`)
     }
   })

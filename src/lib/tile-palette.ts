@@ -84,3 +84,25 @@ export function tileColorFor(
     const dobrado = LEGACY[bruto.toUpperCase()]
     return dobrado === undefined ? bruto : dobrado
 }
+
+const canalLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+
+/**
+ * A cor que a pessoa escolheu no seletor livre da carteira, como ela é. O
+ * ladrilho normaliza claridade e croma para prender o contraste, e aí preto,
+ * branco e cinza viravam o mesmo cinza. A cor livre passa por cima da fórmula, e
+ * a tinta sai da luminância dela. Quem não veio do seletor (paleta, preset
+ * legado, vazio) segue a fórmula: nada a devolver.
+ */
+export function corExataDaCarteira(stored: string | null | undefined) {
+    const cor = tileColorFor(stored)
+    if (!cor || !/^#[0-9a-f]{6}$/i.test(cor)) return undefined
+    if (TILE_PALETTE.some(({ hex }) => hex.toLowerCase() === cor.toLowerCase())) return undefined
+    const [r, g, b] = [1, 3, 5].map((i) => canalLinear(parseInt(cor.slice(i, i + 2), 16) / 255))
+    const luminancia = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return {
+        "--tile-surface": cor,
+        // 0,179 é onde as duas tintas empatam em contraste.
+        "--tile-ink": luminancia > 0.179 ? "var(--identity-foreground)" : "var(--scrim-foreground)",
+    }
+}

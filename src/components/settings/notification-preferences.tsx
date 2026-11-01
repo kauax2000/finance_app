@@ -1,21 +1,13 @@
 "use client"
 
-import { useCallback, useState, type ReactNode } from "react"
+import { useCallback, useState } from "react"
 import { FormSwitch } from "@/components/ui/form"
-import {
-    PageSection,
-    PageSectionHeader,
-    PageSectionTitle,
-} from "@/components/ui/page-section"
-import { ArrowRightIcon } from "@heroicons/react/16/solid"
+import { Separator } from "@/components/ui/separator"
+import { SettingsSection } from "@/components/settings/settings-section"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-    Alert,
-    AlertDescription,
-    AlertTitle,
-} from "@/components/ui/alert"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardToolbar } from "@/components/ui/card"
+import { Card, CardToolbar } from "@/components/ui/card"
 import { useAuth } from "@/components/providers"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
@@ -29,30 +21,11 @@ import {
     unsubscribeFromPush,
 } from "@/lib/push/subscribe"
 
-function PrefSubheaderBar({
-    children,
-    withTopBorder,
-}: {
-    children: ReactNode
-    withTopBorder?: boolean
-}) {
-    return (
-        <CardToolbar>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {children}
-            </p>
-        </CardToolbar>
-    )
-}
-
 function PrefRowSkeleton() {
     return (
-        <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
-            <div className="min-w-0 flex-1 space-y-1.5 pr-2">
-                <Skeleton className="h-4 w-40 max-w-full" />
-                <Skeleton className="h-3 w-full max-w-56" />
-            </div>
-            <Skeleton className="mt-0.5 h-6 w-11 shrink-0 rounded-full" />
+        <div className="flex items-center justify-between gap-4 px-4 py-3">
+            <Skeleton className="h-4 w-40 max-w-full" />
+            <Skeleton className="h-6 w-11 shrink-0" />
         </div>
     )
 }
@@ -60,34 +33,27 @@ function PrefRowSkeleton() {
 function NotificationPreferencesSkeleton() {
     return (
         <>
-            <PrefSubheaderBar>Canais de entrega</PrefSubheaderBar>
-            <ul className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4" role="list">
-                <li>
+            <CardToolbar variant="label">Como avisar</CardToolbar>
+            <PrefRowSkeleton />
+            <Separator />
+            <PrefRowSkeleton />
+            <Separator />
+            <PrefRowSkeleton />
+            <CardToolbar variant="label">Sobre o quê</CardToolbar>
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={i}>
+                    {i > 1 ? <Separator /> : null}
                     <PrefRowSkeleton />
-                </li>
-                <li>
-                    <PrefRowSkeleton />
-                </li>
-                <li>
-                    <PrefRowSkeleton />
-                </li>
-            </ul>
-            <PrefSubheaderBar withTopBorder>Tipos de notificação</PrefSubheaderBar>
-            <ul className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4" role="list">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <li key={i}>
-                        <PrefRowSkeleton />
-                    </li>
-                ))}
-            </ul>
+                </div>
+            ))}
         </>
     )
 }
 
 export function NotificationPreferences() {
     const { loading: authLoading } = useAuth()
-    const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { prefs, loading, updating, error, patch } = useWorkspaceNotificationPrefs()
+    const { currentWorkspace, currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
+    const { prefs, loading, error, patch } = useWorkspaceNotificationPrefs()
     const { open: openNotifications } = useNotificationsUi()
     const { isStandalone } = useDisplayMode()
     const isIos = useIsIos()
@@ -135,207 +101,184 @@ export function NotificationPreferences() {
         [prefs, pushUnsupported, isIos, isStandalone, patch]
     )
 
-    const disabled = loading || updating || !prefs || !currentWorkspaceId || pushBusy
+    const disabled = loading || !prefs || !currentWorkspaceId
 
-    const showSkeleton =
-        authLoading || workspaceLoading || (Boolean(currentWorkspaceId) && loading)
-
-    const showNoWorkspaceMessage =
-        !authLoading && !workspaceLoading && !currentWorkspaceId
+    const showSkeleton = authLoading || workspaceLoading || (Boolean(currentWorkspaceId) && loading)
 
     return (
-        <PageSection id="notificacoes">
-            <PageSectionHeader
-                actions={
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-11"
-                        onClick={() => openNotifications()}
-                    >
-                        Ver histórico
-                        <ArrowRightIcon className="size-3.5 opacity-70" />
-                    </Button>
-                }
-            >
-                <PageSectionTitle>Notificações desta carteira</PageSectionTitle>
-            </PageSectionHeader>
+        <SettingsSection
+            id="notificacoes"
+            className="scroll-mt-(--top-bar-bottom)"
+            titulo="Notificações"
+            alcance={
+                currentWorkspace
+                    ? `Vale para você em ${currentWorkspace.name}.`
+                    : "Selecione uma carteira."
+            }
+            actions={
+                <Button type="button" variant="tertiary" onClick={() => openNotifications()}>
+                    Ver histórico
+                </Button>
+            }
+        >
+            {showSkeleton || currentWorkspaceId ? (
             <Card padding="none">
-                <CardContent className="flex flex-col">
-                    {showNoWorkspaceMessage ? (
-                        <div className="px-4 py-4">
-                            <Alert>
-                                <AlertDescription>
-                                    Selecione uma carteira na barra lateral para ajustar notificações
-                                    desse espaço.
-                                </AlertDescription>
-                            </Alert>
+                {error ? (
+                    <div className="px-4 py-3">
+                        <Alert tone="destructive" size="sm">
+                            <AlertTitle>{error}</AlertTitle>
+                        </Alert>
+                    </div>
+                ) : null}
+                {showSkeleton ? <NotificationPreferencesSkeleton /> : null}
+                {!loading && currentWorkspaceId && prefs ? (
+                    <>
+                        <CardToolbar variant="label">Como avisar</CardToolbar>
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-email"
+                                label="Notificações por email"
+                                checked={!!prefs?.notify_email}
+                                onCheckedChange={(checked) => void patch({ notify_email: checked })}
+                                disabled={disabled}
+                            />
                         </div>
-                    ) : null}
-                    {error ? (
-                        <div className="border-b border-border px-4 py-3">
-                            <Alert tone="destructive" size="sm">
-                                <AlertTitle>{error}</AlertTitle>
-                            </Alert>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-inapp"
+                                label="Central do app"
+                                checked={!!prefs?.notify_in_app}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_in_app: checked })
+                                }
+                                disabled={disabled}
+                            />
                         </div>
-                    ) : null}
-                    {showSkeleton ? (
-                        <NotificationPreferencesSkeleton />
-                    ) : null}
-                    {!loading && currentWorkspaceId ? (
-                        <>
-                            <PrefSubheaderBar>Canais de entrega</PrefSubheaderBar>
-                            <ul
-                                className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
-                                role="list"
-                            >
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-email"
-                                        label="Notificações por email"
-                                        description="Avisos na sua caixa de email"
-                                        checked={!!prefs?.notify_email}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_email: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-inapp"
-                                        label="Central do app"
-                                        description="Lista de notificações dentro do app"
-                                        checked={!!prefs?.notify_in_app}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_in_app: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-push"
-                                        label="Push no dispositivo"
-                                        description={
-                                            pushUnsupported
-                                                ? "Não disponível neste navegador"
-                                                : pushSupport === "denied"
-                                                  ? "Permissão bloqueada — abra Ajustes do sistema e permita notificações"
-                                                  : "Alertas na bandeja do celular ou desktop (requer app instalado no iPhone)"
-                                        }
-                                        checked={!!prefs?.notify_push}
-                                        onCheckedChange={(checked) => void handlePushToggle(checked)}
-                                        disabled={
-                                            disabled || pushUnsupported || pushSupport === "denied"
-                                        }
-                                    />
-                                </li>
-                            </ul>
-                            {pushMessage ? (
-                                <div className="border-t border-border px-4 pb-3">
-                                    <p className="text-xs text-muted-foreground">{pushMessage}</p>
-                                    {isIos && !isStandalone ? (
-                                        <Button
-                                            type="button"
-                                            variant="link"
-                                            className="h-auto px-0 text-xs"
-                                            onClick={() => setInstallPwaOpen(true)}
-                                        >
-                                            Como instalar no iPhone
-                                        </Button>
-                                    ) : null}
-                                </div>
-                            ) : null}
-                            <InstallPwaSheet open={installPwaOpen} onOpenChange={setInstallPwaOpen} />
-                            <PrefSubheaderBar withTopBorder>
-                                Tipos de notificação
-                            </PrefSubheaderBar>
-                            <ul
-                                className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
-                                role="list"
-                            >
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-tx"
-                                        label="Despesas de outros membros"
-                                        description="Quando outro membro adiciona uma despesa na carteira compartilhada"
-                                        checked={!!prefs?.notify_transactions}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_transactions: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-budget"
-                                        label="Alertas de orçamento"
-                                        description="Ao se aproximar ou atingir limites"
-                                        checked={!!prefs?.notify_budget}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_budget: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-cc-spend"
-                                        label="Cartões: limite e categorias"
-                                        description="Fatura aberta — limite do cartão e alertas por categoria"
-                                        checked={prefs?.notify_credit_cards !== false}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_credit_cards: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-cc-cal"
-                                        label="Cartões: fatura e vencimento"
-                                        description="Lembretes de fechamento e vencimento estimado (agendado)"
-                                        checked={
-                                            prefs?.notify_credit_card_calendar !== false
-                                        }
-                                        onCheckedChange={(checked) =>
-                                            void patch({
-                                                notify_credit_card_calendar: checked,
-                                            })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-bills"
-                                        label="Contas a pagar"
-                                        description="Vencimento e lembretes de contas cadastradas"
-                                        checked={prefs?.notify_bills !== false}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_bills: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
-                                {/* "Promoções e ofertas" saiu: nada envia promoção. O
-                                    `notify_promotions` continua no banco e volta aqui
-                                    junto com o primeiro produtor. */}
-                            </ul>
-                        </>
-                    ) : null}
-                </CardContent>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-push"
+                                label="Push no dispositivo"
+                                description={
+                                    pushUnsupported
+                                        ? "Não disponível neste navegador"
+                                        : pushSupport === "denied"
+                                          ? "Permissão bloqueada — abra Ajustes do sistema e permita notificações"
+                                          : "Desligar remove este aparelho de todas as carteiras."
+                                }
+                                checked={!!prefs?.notify_push}
+                                onCheckedChange={(checked) => void handlePushToggle(checked)}
+                                disabled={disabled || pushBusy || pushUnsupported || pushSupport === "denied"}
+                            />
+                        </div>
+                        {pushMessage ? (
+                            <div className="px-4 pb-3">
+                                <p className="text-xs text-muted-foreground">{pushMessage}</p>
+                                {isIos && !isStandalone ? (
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        className="h-auto px-0 text-xs"
+                                        onClick={() => setInstallPwaOpen(true)}
+                                    >
+                                        Como instalar no iPhone
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ) : null}
+                        <InstallPwaSheet open={installPwaOpen} onOpenChange={setInstallPwaOpen} />
+                        <CardToolbar variant="label">Sobre o quê</CardToolbar>
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-tx"
+                                label="Despesas de outros membros"
+                                checked={!!prefs?.notify_transactions}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_transactions: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-budget"
+                                label="Alertas de orçamento"
+                                checked={!!prefs?.notify_budget}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_budget: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-cc-spend"
+                                label="Cartões: limite e categorias"
+                                checked={prefs?.notify_credit_cards !== false}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_credit_cards: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-cc-cal"
+                                label="Cartões: fatura e vencimento"
+                                checked={prefs?.notify_credit_card_calendar !== false}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_credit_card_calendar: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-bills"
+                                label="Contas a pagar"
+                                checked={prefs?.notify_bills !== false}
+                                onCheckedChange={(checked) => void patch({ notify_bills: checked })}
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-review"
+                                label="Lembrete de itens a conferir"
+                                description="Às 20h."
+                                checked={prefs?.notify_review !== false}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_review: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id="pref-insights"
+                                label="Insights"
+                                description="No máximo 3 push por semana."
+                                checked={prefs?.notify_insights !== false}
+                                onCheckedChange={(checked) =>
+                                    void patch({ notify_insights: checked })
+                                }
+                                disabled={disabled}
+                            />
+                        </div>
+                        {/* "Promoções e ofertas" saiu: nada envia promoção. O
+                        `notify_promotions` continua no banco e volta aqui
+                        junto com o primeiro produtor. */}
+                    </>
+                ) : null}
             </Card>
-        </PageSection>
+            ) : null}
+        </SettingsSection>
     )
 }
