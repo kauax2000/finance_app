@@ -28694,10 +28694,14 @@ silêncio.
 
 **O que ficou de fora.** Escada de tamanho, módulos arredondados, símbolo
 central e legenda (decisão do dono). O link do `<a>` só recebe o clique no toque
-(`pointer-events-none` com `pointer-coarse:pointer-events-auto`): no cursor o
-código é para a câmera de outro aparelho. Não foi medida a leitura por câmera
-real nem o contraste da placa nos dois temas; o catálogo não afirma nenhum dos
-dois.
+(`pointer-events-none` com `pointer-coarse:pointer-events-auto`); `Tab` e
+Enter ainda o alcançam.
+
+**Medido no navegador (tema escuro).** Placa `lab(98.26 0 0)` e módulos
+`lab(2.75 0 0)`; o `BarcodeDetector` do Chromium decodificou o link nas duas
+polaridades, claro sobre escuro inclusive. A placa clara nos dois temas é
+decisão do dono e a polaridade do padrão do código. A leitura por câmera de
+telefone não foi medida, e o catálogo não afirma que um sentido lê melhor.
 
 **Trava.** `qr-code-versions.test.ts` tranca a matriz, o `null` fora da
 capacidade, a placa por tokens, o `label` obrigatório, o link só no toque e a

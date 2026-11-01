@@ -81,7 +81,7 @@ export default function QrCodeDoc() {
       </DocSection>
 
       <DocNote title="A placa é clara nos dois temas">
-        A placa pinta <code>bg-background</code> no tema claro e <code>bg-foreground</code> no escuro, com a tinta do módulo no par oposto (<code>text-foreground</code> e <code>dark:text-background</code>, lida por <code>currentColor</code>). Um QR invertido, claro sobre escuro, é o que mais falha em leitores de câmera; quem garante o contraste é a placa. O anel é <code>ring-foreground/10</code>, para a placa não sumir contra o cartão.
+        A placa pinta <code>bg-background</code> no tema claro e <code>bg-foreground</code> no escuro, com a tinta do módulo no par oposto (<code>text-foreground</code> e <code>dark:text-background</code>, lida por <code>currentColor</code>). É decisão do dono, e é a polaridade do padrão do código: módulos escuros sobre fundo claro. Medido no navegador, no tema escuro: placa <code>lab(98.26 0 0)</code> e módulos <code>lab(2.75 0 0)</code>, e o <code>BarcodeDetector</code> do Chromium decodificou o link do código nas duas polaridades. A leitura pela câmera de um telefone não foi medida. O anel é <code>ring-foreground/10</code>, para a placa não sumir contra o cartão.
       </DocNote>
 
       <DocNote title="A margem de silêncio é 12px">
@@ -89,7 +89,7 @@ export default function QrCodeDoc() {
       </DocNote>
 
       <DocNote title="No cursor o link não abre; no toque abre">
-        O código existe para a câmera de outro aparelho, e um clique acidental no desktop navegaria para a mesma tela de onde ele saiu. Por isso o <code>&lt;a&gt;</code> tem <code>pointer-events-none</code> e só recebe o clique com <code>pointer-coarse:</code> — que vale com o dedo e abaixo de 48rem. Quem está no telefone toca no código e o link abre. O <code>label</code> é obrigatório: nomeia o link para o leitor de tela, que não lê o desenho.
+        O <code>&lt;a&gt;</code> tem <code>pointer-events-none</code> e só recebe o clique com <code>pointer-coarse:</code> — que vale com o dedo e abaixo de 48rem. No desktop o link não recebe clique do cursor; <code>Tab</code> e Enter continuam alcançando-o. Quem está no telefone toca no código e o link abre. O <code>label</code> é obrigatório: nomeia o link para o leitor de tela, que não lê o desenho.
       </DocNote>
 
       <DocSection

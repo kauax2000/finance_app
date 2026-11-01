@@ -14,8 +14,10 @@ import { cn } from "@/lib/utils"
  * O código que a câmera lê, desenhado em SVG com tokens.
  *
  * A placa é **clara nos dois temas** (`bg-background` no claro, `bg-foreground`
- * no escuro, com a tinta do módulo no par oposto): leitor de câmera falha mais
- * com o QR invertido, e é a placa, não o módulo, que garante o contraste. O
+ * no escuro, com a tinta do módulo no par oposto): decisão do dono, e a
+ * polaridade do padrão do código (módulo escuro sobre fundo claro). O
+ * `BarcodeDetector` do Chromium leu as duas polaridades; câmera de telefone
+ * não foi medida. O
  * `p-3` é a margem de silêncio que a leitura exige; não reduza.
  *
  * Os módulos escuros viram **um `<path>` só** (`M{x} {y}h1v1h-1z` por módulo),
@@ -43,9 +45,8 @@ function qrCodeMatriz(value: string): { tamanho: number; caminho: string } | nul
 
 /**
  * O código de `value`, 128px. A placa cresce no cursor e no toque (`scale-110`);
- * o link que abre `value` só recebe o clique no toque: no cursor o código é para
- * a câmera de outro aparelho, e um clique acidental não deve navegar. `label`
- * nomeia o link para o leitor de tela e é obrigatório.
+ * o link que abre `value` só recebe o clique no toque (no cursor o `<a>` não
+ * recebe clique, e `Tab` e Enter ainda o alcançam). `label` nomeia o link para o leitor de tela e é obrigatório.
  */
 function QrCode({
   value,

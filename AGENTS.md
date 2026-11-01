@@ -1878,12 +1878,13 @@ declaração de `background-color` no trilho).
   aparelho, desenhado em SVG com tokens (`uqr`, correção `M`, sem borda; os
   módulos escuros são **um `<path>` só**). **A placa é clara nos dois
   temas** (`bg-background` no claro, `bg-foreground` no escuro, a tinta do
-  módulo no par oposto por `currentColor`): leitor de câmera falha mais com o
-  QR invertido. **A margem de silêncio é a placa**, `p-3` (12px) — não reduza.
+  módulo no par oposto por `currentColor`): decisão do dono e a polaridade do
+  padrão do código; o `BarcodeDetector` do Chromium leu as duas polaridades,
+  câmera de telefone não foi medida. **A margem de silêncio é a placa**, `p-3` (12px) — não reduza.
   **`label` é obrigatório**: nomeia o link para o leitor de tela. **O link só
   abre no toque**: no cursor o `<a>` é `pointer-events-none`
-  (`pointer-coarse:pointer-events-auto`), porque o código é para a câmera de
-  outro aparelho e um clique acidental navegaria. 128px, **sem escada**.
+  (`pointer-coarse:pointer-events-auto`), e `Tab` e Enter ainda o alcançam.
+  128px, **sem escada**.
   `QrCodeCopy` é a peça solta que copia o link (`Tooltip confirmation` ligada
   pelo resultado) e `QrCodeSkeleton` o osso; sem `value`, ou com um que não
   cabe no maior QR, `QrCode` cai no esqueleto. Fora: escada de tamanho,
