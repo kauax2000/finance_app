@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import { toastSuccess } from "@/lib/toast"
 import type { Workspace } from "@/lib/supabase"
 
 type WorkspaceDeleteDialogProps = {
@@ -106,6 +107,7 @@ export function WorkspaceDeleteDialog({
         const result = await deleteWorkspace(workspace.id)
         setDeleting(false)
         if (result.ok) {
+            toastSuccess(`${workspace.name} excluída.`)
             resetLocalState()
             onOpenChange(false)
         } else {
@@ -169,7 +171,6 @@ export function WorkspaceDeleteDialog({
                             Digite <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span> para confirmar
                         </span>
                     }
-                    placeholder={workspace?.name ?? ""}
                     disabled={impactLoading || Boolean(impactError)}
                 />
                 {deleteError ? <AlertDialogError>{deleteError}</AlertDialogError> : null}

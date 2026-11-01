@@ -53,7 +53,7 @@ function NotificationPreferencesSkeleton() {
 export function NotificationPreferences() {
     const { loading: authLoading } = useAuth()
     const { currentWorkspace, currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { prefs, loading, updating, error, patch } = useWorkspaceNotificationPrefs()
+    const { prefs, loading, error, patch } = useWorkspaceNotificationPrefs()
     const { open: openNotifications } = useNotificationsUi()
     const { isStandalone } = useDisplayMode()
     const isIos = useIsIos()
@@ -101,7 +101,7 @@ export function NotificationPreferences() {
         [prefs, pushUnsupported, isIos, isStandalone, patch]
     )
 
-    const disabled = loading || updating || !prefs || !currentWorkspaceId || pushBusy
+    const disabled = loading || !prefs || !currentWorkspaceId
 
     const showSkeleton = authLoading || workspaceLoading || (Boolean(currentWorkspaceId) && loading)
 
@@ -169,7 +169,7 @@ export function NotificationPreferences() {
                                 }
                                 checked={!!prefs?.notify_push}
                                 onCheckedChange={(checked) => void handlePushToggle(checked)}
-                                disabled={disabled || pushUnsupported || pushSupport === "denied"}
+                                disabled={disabled || pushBusy || pushUnsupported || pushSupport === "denied"}
                             />
                         </div>
                         {pushMessage ? (

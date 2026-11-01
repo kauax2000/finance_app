@@ -1,7 +1,33 @@
 import { describe, expect, it, vi } from "vitest"
 import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications-panel-empty"
 import { rolarAteAncora } from "@/components/settings/settings-section"
+import { desfazerPatch, type WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notification-prefs"
 import { lerFonte } from "@/test/fonte"
+
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
+
+describe("Notificações: cada chave por si", () => {
+    it("salvar uma chave não trava as outras", () => {
+        const fonte = lerFonte("src/components/settings/notification-preferences.tsx")
+        expect(fonte).not.toContain("updating")
+        expect(lerFonte("src/hooks/use-workspace-notification-prefs.ts")).not.toContain("setUpdating")
+    })
+
+    it("a falha desfaz só as chaves daquele pedido", () => {
+        const antes = { notify_email: true, notify_bills: true } as WorkspaceMemberNotificationPrefs
+        const agora = { notify_email: false, notify_bills: false } as WorkspaceMemberNotificationPrefs
+        expect(desfazerPatch(agora, antes, { notify_email: false })).toMatchObject({ notify_email: true, notify_bills: false })
+        expect(desfazerPatch(null, antes, { notify_email: false })).toBeNull()
+    })
+})
+
+describe("Excluir carteira", () => {
+    it("o campo nasce vazio e a exclusão se anuncia", () => {
+        const fonte = lerFonte("src/components/settings/workspace-delete-dialog.tsx")
+        expect(fonte).not.toContain("placeholder=")
+        expect(fonte).toContain("toastSuccess(")
+    })
+})
 
 describe("Configurações: ordem", () => {
     it("Carteira vem primeiro", () => {
