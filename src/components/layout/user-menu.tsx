@@ -2,6 +2,7 @@
 
 import { createElement } from "react"
 import { useAuth } from "@/components/providers"
+import { toastError } from "@/lib/toast"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -57,7 +58,10 @@ export function UserMenu({ children }: UserMenuProps) {
                     </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onSelect={() => signOut()}>
+                <DropdownMenuItem variant="destructive" onSelect={async () => {
+                    const { error } = await signOut()
+                    if (error) toastError(error)
+                }}>
                     <ArrowRightStartOnRectangleIcon />
                     Sair
                 </DropdownMenuItem>

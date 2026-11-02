@@ -100,6 +100,8 @@ export function NesteCelularGrupo() {
                         {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
                         {instalado ? (
                             shell && shell.pendingSyncCount > 0 ? (
+                                <>
+                                <Separator />
                                 <Item variant="flush" className="min-h-12">
                                     <ItemContent>
                                         <ItemTitle className="pointer-coarse:text-base">Sincronização</ItemTitle>
@@ -109,6 +111,7 @@ export function NesteCelularGrupo() {
                                         <SyncStatusChip />
                                     </ItemActions>
                                 </Item>
+                                </>
                             ) : null
                         ) : (
                             <>

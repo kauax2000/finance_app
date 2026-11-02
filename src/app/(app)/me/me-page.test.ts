@@ -30,7 +30,13 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("<PageSectionTitle>{grupo.label}</PageSectionTitle>")
         expect(PAGINA).toContain("<AlertDialog")
         expect(PAGINA).toContain("Sair da conta?")
-        expect(PAGINA.indexOf("<NesteCelularGrupo")).toBeLessThan(PAGINA.indexOf("signOut()"))
+        expect(PAGINA.indexOf("<NesteCelularGrupo")).toBeLessThan(PAGINA.indexOf("<AlertDialogTrigger"))
+        // Sem rede o sair falha: o diálogo fica aberto, pendente, e mostra o erro.
+        expect(PAGINA).toContain("pending={saindo}")
+        expect(PAGINA).toContain("<AlertDialogTrigger asChild>")
+        expect(PAGINA).toContain("e.preventDefault()")
+        expect(PAGINA).toContain("<AlertDialogError>{erro}</AlertDialogError>")
+        expect(PAGINA).toContain("const { error } = await signOut()")
         expect(PAGINA).toContain("grupo.items.length === 0")
         expect(PAGINA).toContain('<VoceAvatar size="xl" />')
     })
@@ -52,5 +58,23 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("miniIconFor(")
         // Nenhum componente declarado na tela (invariante 1): só o default export.
         expect(PAGINA.match(/function \w+\(/g)).toHaveLength(1)
+    })
+})
+
+describe("signOut do provedor", () => {
+    it("só limpa fila e caches depois de o Supabase sair de verdade", () => {
+        const fonte = semComentarios(lerFonte("src/components/providers.tsx"))
+        const corpo = fonte.slice(fonte.indexOf("const signOut = useCallback"), fonte.indexOf("const updateProfile"))
+        expect(corpo).toContain("Não foi possível sair. Confira a conexão e tente de novo.")
+        expect(corpo.indexOf("supabase.auth.signOut()")).toBeGreaterThan(-1)
+        expect(corpo.indexOf("supabase.auth.signOut()")).toBeLessThan(corpo.indexOf("clearClientCaches()"))
+        expect(corpo.indexOf("supabase.auth.signOut()")).toBeLessThan(corpo.indexOf("clearCurrentSession()"))
+        expect(fonte).toContain("signOut: () => Promise<{ error: string | null }>")
+    })
+    it("quem chama mostra o erro", () => {
+        for (const f of ["src/app/(app)/account/page-client.tsx", "src/components/layout/user-menu.tsx"]) {
+            const fonte = semComentarios(lerFonte(f))
+            expect(fonte).toContain("toastError(error)")
+        }
     })
 })

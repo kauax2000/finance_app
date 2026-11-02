@@ -1699,12 +1699,16 @@ declaração de `background-color` no trilho).
   convidados), **Conta** (Minha conta, Cofre aberto com "Seus dados: exportar e
   apagar", Configurações) e **Neste celular** (`NesteCelularGrupo`, `#no-celular`:
   tema, lançamento inteligente, instalar o app; no telefone isso não existe em
-  Configurações). As linhas são `Item variant="flush" interactive asChild` iguais
-  (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`); em Neste celular, Lançamento inteligente e Instalar o app ficam com o ladrilho de 36.
+  Configurações). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
+  iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
+  as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
+  Lançamento inteligente e Instalar o app ficam com o ladrilho de 36.
   No fim, o **Sair** num cartão à parte, com o `AlertDialog` "Sair da conta?",
-  porque sair limpa a fila offline; o Sair de Minha conta continua, sem
-  confirmação, e Planos fica dentro de Minha conta. No desktop nada muda: `/me`
-  renderiza, mas nada leva a ela.
+  porque sair limpa a fila offline; o `signOut` só limpa quando o Supabase saiu de
+  verdade (sem rede, o diálogo fica aberto com o erro); o Sair de Minha conta continua,
+  sem confirmação (erro em toast), e Planos fica dentro de Minha conta. No desktop nada
+  leva a `/me`, mas aberta a 768px ou mais ela mostra os grupos com título e o Sair, sem
+  Neste celular.
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
   viram quadradas; a linha do título é o eixo. Com `collapse` é o título grande do
   iOS: 34 no telefone, qualquer que seja o degrau, 8px mais perto da barra, e

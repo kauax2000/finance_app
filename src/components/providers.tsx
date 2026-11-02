@@ -39,7 +39,7 @@ interface AuthContextType {
     loading: boolean
     /** True once the profiles row is known (fetched, or kept from the last visit) — avoids the email fallback flash before `avatar_color` loads. */
     profileReady: boolean
-    signOut: () => Promise<void>
+    signOut: () => Promise<{ error: string | null }>
     updateProfile: (data: {
         full_name?: string
         avatar_url?: string
@@ -76,7 +76,7 @@ const AuthContext = createContext<AuthContextType>({
     session: null,
     loading: true,
     profileReady: false,
-    signOut: async () => {},
+    signOut: async () => ({ error: null }),
     updateProfile: async () => ({ error: "Not initialized" }),
     updateEmail: async () => ({
         error: "Not initialized",
@@ -241,9 +241,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [clearClientCaches])
 
     const signOut = useCallback(async () => {
+        // Sem rede o Supabase devolve `error` e mantém a sessão local: só se apaga
+        // a fila offline e os caches depois de sair de verdade. O SIGNED_OUT já
+        // zera o estado e os caches; o que segue é o resto do aparelho.
+        const falha = { error: "Não foi possível sair. Confira a conexão e tente de novo." }
+        try {
+            const { error } = await supabase.auth.signOut()
+            if (error) return falha
+        } catch {
+            return falha
+        }
         clearCurrentSession()
         await clearClientCaches()
-        await supabase.auth.signOut()
+        return { error: null }
     }, [clearClientCaches])
 
     const updateProfile = useCallback(async (data: {

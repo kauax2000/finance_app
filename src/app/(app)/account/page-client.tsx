@@ -11,6 +11,7 @@ import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/components/providers"
+import { toastError } from "@/lib/toast"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -113,7 +114,10 @@ export default function AccountPage() {
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             variant="destructive"
-                                            onClick={() => signOut()}
+                                            onClick={async () => {
+                                                const { error } = await signOut()
+                                                if (error) toastError(error)
+                                            }}
                                         >
                                             <ArrowRightStartOnRectangleIcon aria-hidden />
                                             Sair

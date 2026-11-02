@@ -15,10 +15,12 @@ import {
     AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
+    AlertDialogError,
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import {
@@ -38,6 +40,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 export default function MePage() {
     const { user, loading, profileReady, signOut } = useAuth()
     const [saindo, setSaindo] = useState(false)
+    const [erro, setErro] = useState<string | null>(null)
     const grupos = getVoceGroups(useAbasFora(), useWorkspace().papel)
     const isMobile = useIsMobile()
     const esperando = loading || (user && !profileReady)
@@ -50,6 +53,17 @@ export default function MePage() {
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const userEmail = user?.email || ""
+
+    const sair = async () => {
+        setErro(null)
+        setSaindo(true)
+        const { error } = await signOut()
+        // Com sucesso a tela troca para o login; sem, o diálogo fica com o erro.
+        if (error) {
+            setErro(error)
+            setSaindo(false)
+        }
+    }
 
     // Como em Minha conta: sem o perfil, o nome e o tom do avatar ainda não são os
     // da pessoa, e a página inteira espera no esqueleto da rota.
@@ -107,25 +121,39 @@ export default function MePage() {
             {isMobile ? <NesteCelularGrupo /> : null}
 
             {/* Sair limpa a fila offline e a linha fica à vista: pede confirmação. */}
-            <Card padding="none">
-                <Item variant="flush" interactive asChild className="min-h-12">
-                    <button type="button" onClick={() => setSaindo(true)}>
-                        <ItemContent className="items-center">
-                            <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
-                        </ItemContent>
-                    </button>
-                </Item>
-            </Card>
-
-            <AlertDialog open={saindo} onOpenChange={setSaindo}>
+            <AlertDialog
+                pending={saindo}
+                onOpenChange={(aberto) => {
+                    if (!aberto) setErro(null)
+                }}
+            >
+                <Card padding="none">
+                    <AlertDialogTrigger asChild>
+                        <Item variant="flush" interactive asChild className="min-h-12">
+                            <button type="button">
+                                <ItemContent className="items-center">
+                                    <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
+                                </ItemContent>
+                            </button>
+                        </Item>
+                    </AlertDialogTrigger>
+                </Card>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Sair da conta?</AlertDialogTitle>
                         <AlertDialogDescription>Lançamentos que ainda não sincronizaram serão perdidos.</AlertDialogDescription>
                     </AlertDialogHeader>
+                    {erro ? <AlertDialogError>{erro}</AlertDialogError> : null}
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => signOut()}>Sair</AlertDialogAction>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault()
+                                void sair()
+                            }}
+                        >
+                            Sair
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
