@@ -385,7 +385,7 @@ export function WorkspaceInviteDialog({
                                                                 )}
                                                             </Button>
                                                         </TooltipTrigger>
-                                                        <TooltipContent side="top">
+                                                        <TooltipContent side="bottom">
                                                             Copiar link
                                                         </TooltipContent>
                                                     </Tooltip>

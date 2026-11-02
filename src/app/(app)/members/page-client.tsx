@@ -894,7 +894,7 @@ export default function MembersPage() {
                                                             )}
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top">
+                                                    <TooltipContent side="bottom">
                                                         Copiar link
                                                     </TooltipContent>
                                                 </Tooltip>
