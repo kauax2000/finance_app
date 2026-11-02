@@ -267,7 +267,7 @@ function Alert({
             "pointer-coarse:static pointer-coarse:mt-3 pointer-coarse:h-11 pointer-coarse:w-auto pointer-coarse:px-3 pointer-coarse:text-sm",
             "pointer-coarse:col-[1/-1] pointer-coarse:group-has-[>[data-slot=alert-actions]]/alert:col-[-2/-1]",
             // A receita do × da `AnnouncementBar` sem a borda do cursor: flor em
-            // `currentColor`, tinta presa, alvo de 46 no dedo por pseudo-elemento.
+            // `currentColor`, tinta presa. O alvo no dedo é o próprio botão (44).
             "text-current",
             "[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             "hover:text-current active:text-current",

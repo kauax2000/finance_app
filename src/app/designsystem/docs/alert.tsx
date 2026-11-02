@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { IphoneFrame } from "../ds-frame"
 
 function DemoDispensar() {
   const [aberto, setAberto] = React.useState(true)
@@ -27,6 +28,81 @@ function DemoDispensar() {
     <Button variant="tertiary" size="sm" onClick={() => setAberto(true)}>
       mostrar o aviso de novo
     </Button>
+  )
+}
+
+/**
+ * O `storageKey` lembra no aparelho, e a dispensa não tem volta pela API: cada
+ * "mostrar de novo" apaga a chave anterior e usa uma nova, para a demo
+ * recomeçar sem deixar lixo no armazenamento do catálogo.
+ */
+function DemoLembrar() {
+  const [rodada, setRodada] = React.useState(0)
+  const chave = `catalogo-lembrar-${rodada}`
+  const [dispensado, setDispensado] = React.useState(false)
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <Alert
+        key={chave}
+        tone="warning"
+        storageKey={chave}
+        onDismiss={() => setDispensado(true)}
+      >
+        <AlertTitle>Este aparelho bloqueou os avisos</AlertTitle>
+        <AlertDescription>
+          Libere as notificações nas configurações do navegador para receber os
+          lembretes de vencimento.
+        </AlertDescription>
+      </Alert>
+      {dispensado ? (
+        <Button
+          variant="tertiary"
+          size="sm"
+          className="self-start"
+          onClick={() => {
+            try {
+              localStorage.removeItem(`alert-dispensado:${chave}`)
+            } catch {
+              // Sem armazenamento não há o que apagar.
+            }
+            setDispensado(false)
+            setRodada((r) => r + 1)
+          }}
+        >
+          mostrar o aviso de novo
+        </Button>
+      ) : null}
+    </div>
+  )
+}
+
+function NoTelefone() {
+  const [aberto, setAberto] = React.useState(true)
+  return (
+    <IphoneFrame title="O alerta com ação e dispensar num iPhone">
+      <div className="flex h-full flex-col gap-3 px-4 pt-16">
+        {aberto ? (
+          <Alert tone="warning" onDismiss={() => setAberto(false)}>
+            <AlertTitle>Orçamento de Mercado em 88%</AlertTitle>
+            <AlertDescription>
+              Faltam 9 dias para o mês virar e restam R$ 186,40 do limite.
+            </AlertDescription>
+            <AlertActions>
+              <AlertAction>Revisar orçamento</AlertAction>
+            </AlertActions>
+          </Alert>
+        ) : (
+          <Button
+            variant="tertiary"
+            size="sm"
+            className="self-start"
+            onClick={() => setAberto(true)}
+          >
+            mostrar o aviso de novo
+          </Button>
+        )}
+      </div>
+    </IphoneFrame>
   )
 }
 
@@ -95,7 +171,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="O ícone"
-        description="O do tom vem sozinho: ⓘ, ✓, ⚠ e o círculo com × — o destrutivo não é o triângulo do warning, senão só a cor separaria atenção de falha. icon troca por outro nó; icon={false} tira, e o texto começa na borda do respiro. Não escreva o svg como filho."
+        description="O do tom vem sozinho: ⓘ, ✓, ⚠ e o círculo com × — o destrutivo não é o triângulo do warning, senão só a cor separaria atenção de falha. Ele mora num poço redondo que o Alert desenha na tinta do texto a 15%; icon troca o nó de dentro, e icon={false} tira o ícone e o poço junto. Não escreva o svg como filho."
         code={`<Alert tone="info" icon={<LockClosedIcon />}>…</Alert>
 <Alert tone="info" icon={false}>…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
@@ -116,7 +192,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Corpo"
-        description="md fala com a tela; sm fala com um campo, colado ao controle que explica. O degrau encolhe texto, respiro e ícone juntos. Uma linha só não precisa de descrição."
+        description="md fala com a tela; sm fala com um campo, colado ao controle que explica. O degrau encolhe texto, respiro, poço e ícone juntos; o raio não encolhe, os dois vestem o do Card (22px). Uma linha só não precisa de descrição."
         code={`<Alert tone="info">…</Alert>            {/* md */}
 <Alert tone="info" size="sm">…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
@@ -134,7 +210,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Com ação"
-        description="AlertActions no pé, alinhada ao texto, é o padrão. placement=&quot;inline&quot; põe a ação à direita, para o aviso curto de uma saída só — e ela desce para o pé quando o alerta tem menos de 28rem, perguntando à largura dele e não à da janela. AlertAction não declara cor: sai de currentColor e serve os cinco tons."
+        description="AlertActions no pé, alinhada ao texto, é o padrão. placement=&quot;inline&quot; põe a ação à direita, para o aviso curto de uma saída só — e ela desce para o pé quando o alerta tem menos de 20rem, perguntando à largura dele e não à da janela. AlertAction não declara cor: sai de currentColor e serve os cinco tons."
         code={`<Alert tone="destructive">
   <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
   <AlertDescription>A conexão caiu no meio do carregamento.</AlertDescription>
@@ -173,11 +249,37 @@ export default function AlertDoc() {
 
       <DocSection
         title="Dispensar"
-        description="onDismiss põe o × no canto, na tinta do tom e com alvo de 46px no dedo — o mesmo da AnnouncementBar. O alerta não se esconde sozinho: quem chama o desmonta, e decide se lembra da escolha. Para o aviso explicativo que a pessoa já leu; um erro não se dispensa, se conserta."
+        description="onDismiss põe o × no canto, na tinta do tom. Ele não esconde o alerta: quem chama o desmonta. No dedo o × some e o mesmo botão vira o texto Agora não (dismissText troca), na linha de baixo. Para o aviso explicativo que a pessoa já leu; um erro não se dispensa, se conserta."
         code={`<Alert tone="info" onDismiss={() => setAberto(false)}>…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
       >
         <DemoDispensar />
+      </DocSection>
+
+      <DocSection
+        title="Dispensar e lembrar"
+        description="storageKey põe o × e guarda a dispensa neste aparelho, em localStorage, na chave alert-dispensado:push-bloqueado quando a storageKey é push-bloqueado: o aviso não volta a cada visita. Sem localStorage — modo privado, armazenamento bloqueado — o × some com o aviso até recarregar, e nada quebra. No servidor o alerta sai aberto e some depois de hidratar, se o aparelho já o dispensou. A chave é de quem chama e identifica o aviso, não a tela; onDismiss soma ao lembrar, e serve para avisar o resto da tela."
+        code={`<Alert tone="warning" size="sm" storageKey="push-bloqueado">
+  <AlertTitle>Este aparelho bloqueou os avisos.</AlertTitle>
+</Alert>`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        <DemoLembrar />
+      </DocSection>
+
+      <DocSection
+        title="No telefone"
+        description="Abaixo de 48rem, ou com o dedo, o alerta vira a leitura de iOS: o sm veste o corpo do md (texto 14, poço 32, ícone 16), o recuo é 12 nas quatro bordas, e a ação e o Agora não dividem a linha de baixo meio a meio, a 8px, com 44 de altura; sozinhos, ocupam a linha. A ação inline nunca sobe à direita aqui. É a moldura de 375px de largura, onde essas regras valem de verdade."
+        code={`<Alert tone="warning" onDismiss={fechar}>
+  <AlertTitle>Orçamento de Mercado em 88%</AlertTitle>
+  <AlertDescription>Faltam 9 dias para o mês virar.</AlertDescription>
+  <AlertActions>
+    <AlertAction>Revisar orçamento</AlertAction>
+  </AlertActions>
+</Alert>`}
+        previewClassName="items-start justify-center"
+      >
+        <NoTelefone />
       </DocSection>
 
       <DocSection
@@ -251,7 +353,21 @@ export default function AlertDoc() {
             type: '() => void · string',
             default: '— · "Dispensar aviso"',
             description:
-              "Põe o × no canto; quem chama desmonta o alerta.",
+              "Põe o × no canto; quem chama desmonta o alerta. dismissLabel é o nome do × com o mouse.",
+          },
+          {
+            prop: "dismissText",
+            type: "string",
+            default: '"Agora não"',
+            description:
+              "O texto do botão que toma o lugar do × no dedo; é também o nome acessível dele ali.",
+          },
+          {
+            prop: "storageKey",
+            type: "string",
+            default: "—",
+            description:
+              "Põe o × e lembra a dispensa neste aparelho, em localStorage na chave alert-dispensado:<storageKey>. Sem localStorage, vale até recarregar.",
           },
           {
             prop: "role",
@@ -283,7 +399,7 @@ export default function AlertDoc() {
             type: '"block" | "inline"',
             default: '"block"',
             description:
-              "A linha da saída: no pé, alinhada ao texto, ou à direita dele num alerta de 28rem ou mais.",
+              "A linha da saída: no pé, alinhada ao texto, ou à direita dele num alerta de 20rem ou mais. No dedo é sempre o pé, dividido com o Agora não.",
           },
           {
             prop: "AlertAction",
@@ -296,6 +412,10 @@ export default function AlertDoc() {
 
       <DocNote title="O ícone era escolhido por quem chamava">
           Seis telas escreviam o <code>svg</code> como filho, e cada uma escolhia: o destrutivo saía triângulo em cinco (o mesmo do <code>warning</code>) e círculo com × no catálogo, e as telas de acesso — login, cadastro, recuperação, convite — não tinham ícone nenhum. Desde a rodada 186 o ícone é do tom, e <code>alert-icon.test.ts</code> reprova o <code>svg</code> escrito como filho. O mesmo teste cobra o <code>break-words</code> que três diálogos escreviam no título: a mensagem do servidor pode ser uma palavra só, e quem a quebra é o <code>AlertTitle</code>.
+      </DocNote>
+
+      <DocNote title="O poço é do Alert, e o raio é o do Card">
+          O ícone mora num círculo desenhado pelo próprio <code>Alert</code> (<code>data-slot=&quot;alert-icon&quot;</code>), na cor do texto a 15% — <code>bg-current/15</code> —, com 24 no <code>sm</code> e 32 no <code>md</code> e o ícone de 14 e 16 dentro. A grade pergunta pelo poço e não pelo <code>svg</code>, então <code>icon={'{false}'}</code> não deixa coluna vazia. O raio saiu da escala de linha: o <code>sm</code> tinha 12px ao lado do <code>Card</code> de 22, e o <code>md</code> 16; hoje os dois vestem <code>rounded-surface</code>.
       </DocNote>
 
       <DocNote title="Houve um variant=&quot;plain&quot;, e ele saiu">
@@ -315,7 +435,7 @@ export default function AlertDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-          Em doze telas. Os erros e sucessos dos formulários de acesso e dos diálogos de conta (<code>destructive</code> e <code>success</code>, muitos em <code>sm</code>), o aviso de fatura no formulário de cartão (<code>info</code> <code>sm</code>), os dois neutros de permissão em membros e notificações, os detalhes técnicos da tela de erro, e o erro de carteiras do painel — desde a rodada 186 com a ação na linha. Nenhuma tela usa <code>brand</code> nem <code>onDismiss</code>.
+          Em 21 arquivos, 31 usos. Os erros e sucessos dos formulários de acesso e dos diálogos de conta (<code>destructive</code> e <code>success</code>, muitos em <code>sm</code>), o aviso de fatura no formulário de cartão (<code>info</code> <code>sm</code>), os dois neutros de permissão em membros e notificações, os detalhes técnicos da tela de erro, e o erro de carteiras do painel — desde a rodada 186 com a ação na linha. Nenhuma tela usa <code>brand</code> nem <code>onDismiss</code>; <code>storageKey</code> só o aviso de notificações bloqueadas em Configurações.
       </DocNote>
 
       <DocNote title="Alert, AnnouncementBar e toast não se substituem">

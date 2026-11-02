@@ -541,7 +541,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
     busca, `Toggle`, `ToggleGroup`, `Tabs`, `Menubar`, `NavigationMenu`,
     `Badge`, `TopBar floating`.
   - **Superfície** (`rounded-surface`, 22px): o que contém — `Card`,
-    `Accordion contained`, toast, `Table`. E **a placa flutuante** (`menuPanelSurfaceClassName`: `Select`, `DropdownMenu`,
+    `Accordion contained`, `Alert`, toast, `Table`. E **a placa flutuante** (`menuPanelSurfaceClassName`: `Select`, `DropdownMenu`,
     `ContextMenu`, `Menubar`, `Popover`, `Combobox`, `HoverCard`,
     `NavigationMenu`, também o `DropdownMenu variant="panel"`) e a placa da paleta do `Command`: as listas recuam 8
     (`p-2`; o separador é recuado como no iOS, `mx-2`, sem encostar nas bordas) e a linha mede 36 (`py-2`).
@@ -550,13 +550,13 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   - **Linha** (`rounded-row`, 12px): a linha de lista selecionável (a linha e
     o subitem da `Sidebar`), o `ColorTile` do `md` ao `2xl` e a amostra do
     `Toggle swatch`, o `Item sm`, o
-    item do `Accordion separated`, o `Alert sm`, o `Tooltip md`, o seletor de
+    item do `Accordion separated`, o `Tooltip md`, o seletor de
     mês e de ano do `Calendar`, e as caixas do app que eram `rounded-lg`.
   - **Linha alta** (`rounded-row-lg`, 16px): a linha selecionável de 44, o
     `Textarea` e o `InputGroup` com bloco ou textarea, o `Item md`/`lg`, o
     cartão do `RadioGroup`, o cartão de escolha do `FieldLabel`, a linha do
     `FormPickerPopover`, o `Collapsible card`, o
-    `CardField`, o `Alert md`, e as caixas do app que eram `rounded-xl`.
+    `CardField`, e as caixas do app que eram `rounded-xl`.
   - **Concêntrico** (`@utility concentric`): o que está dentro — o raio do pai
     menos o recuo, com mínimo de 6px. Quem contém publica `--radius-parent` e
     `--radius-inset` (a placa flutuante, o `Card`, o `DialogContent`, o
@@ -1080,15 +1080,27 @@ declaração de `background-color` no trilho).
   `destructive`) — **não existe `variant` para a cor**; `variant` é a forma
   (`soft`, o padrão, ou `brand`); `size` é o corpo (`sm` | **`md`**). **`brand`
   não aceita `tone` nem `size="sm"`.**
-  - O raio desce com o `size` (`md` linha alta, `sm` linha) e o ícone se
-    desloca por degrau. **O tom chega ao texto**: não carimbe `text-foreground`
+  - **Os dois degraus vestem `rounded-surface` (22px), o do `Card`**: o `sm`
+    tinha 12px ao lado dele (rodada 360). O ícone mora num **poço** que o
+    `Alert` desenha (`data-slot="alert-icon"`, `rounded-full bg-current/15`,
+    24 no `sm` e 32 no `md`, ícone de 14 e 16); sem ícone ou com `icon={false}`
+    não há poço. **O tom chega ao texto**: não carimbe `text-foreground`
     nem `text-muted-foreground` em `AlertTitle`/`AlertDescription`.
   - **Nenhuma chamada escreve o `svg` como filho**: cada tom traz o seu
     (`TONE_ICON`), `icon` troca e `icon={false}` tira — `alert-icon.test.ts`.
   - **A ação é o `AlertAction`** (tira tinta e realce de `currentColor`): não
     escreva `border-destructive/40 hover:bg-destructive/10`. `AlertActions
-    placement="inline"` põe a ação à direita com o alerta a partir de 28rem (os
-    filhos leem `--alert-text-col`). `onDismiss` é o ×. Entra esmaecendo.
+    placement="inline"` põe a ação à direita com o alerta a partir de 20rem (os
+    filhos leem `--alert-text-col`). `onDismiss` é o ×; **`storageKey`** põe o
+    × e lembra a dispensa no aparelho (`localStorage`, chave
+    `alert-dispensado:<storageKey>`; sem `localStorage` vale até recarregar).
+    Entra esmaecendo.
+  - **No dedo (`pointer-coarse:`, ou abaixo de 48rem) o × some** e o mesmo
+    botão vira o texto "Agora não" (`dismissText`). A ação e ele dividem a linha
+    de baixo 50/50, a 8px, com 44 de altura; sozinhos, ocupam a linha. A ação
+    `inline` nunca sobe à direita ali, o `sm` veste o corpo do `md` (14, poço
+    32, ícone 16) e o recuo é 12 nas quatro bordas. O × de 24 com alvo de 48
+    ficava a 2px da ação e cobria 10px dela.
 - **`AnnouncementBar`**: no telefone do app ela não aparece — o aviso de offline
   (`OfflinePill`) é uma pílula de vidro no tom de aviso, no `accessory` da
   `BottomBar` (rodadas 347–348), porque uma faixa presa sob o cabeçalho de borrão

@@ -28830,3 +28830,36 @@ O título grande ficou só nas telas de aba. A subpágina, toda rota com voltar,
 conteúdo, e o nome sobe ao centro da barra depois de 8px de rolagem: o `TituloDaTela`
 publica pelo mesmo canal do `PageHeader collapse`, sem um título para passar por baixo da
 barra. Pedido do dono, depois de ver as subpáginas com o título grande.
+
+### Rodada 360 — o Alert na identidade do cartão
+
+Pedido do dono: levar o `Alert` ao jeito do app, em todos os alertas. As quatro escolhas
+da `AskUserQuestion`, depois dos mockups: **Redesenho** "22px, tinta inteira" (a caixa
+segue tonal, só o canto muda); **Peças** "Poço do ícone próprio" e "Ação na mesma linha";
+**Comportamento** "Dispensar e lembrar"; **App** "Todos os alertas". Nenhum token novo.
+
+O raio: o `Alert sm` tinha 12px (`rounded-row`) e o `md` 16 (`rounded-row-lg`), e o `sm`
+aparecia ao lado do `Card` de 22 como outra família. Os dois degraus vestem
+`rounded-surface`, apontando para a escala, e `Alert sm` e `Alert md` saíram das linhas de
+`rounded-row` e `rounded-row-lg` em Shape & Elevation. O raio continua não descendo com o
+`size`.
+
+O poço é do componente (`data-slot="alert-icon"`): círculo `bg-current/15`, 24 no `sm` e 32
+no `md`, com o ícone de 14 e 16. A grade pergunta pelo poço e não mais pelo `svg`. A ação
+`inline` sobe à direita a partir de 20rem do alerta (era 28rem), e `storageKey` guarda a
+dispensa no `localStorage` na chave `alert-dispensado:<storageKey>`, sem quebrar quando o
+armazenamento falha.
+
+O telefone, decidido no meio da rodada, também pelo dono. Defeito medido: o × de 24 tinha
+alvo de 48 a 2px da ação e cobria 10px dela, e a ação tinha 28 de altura. No dedo
+(`pointer-coarse:`, ou abaixo de 48rem) o × some e o mesmo botão vira o texto "Agora não"
+(`dismissText`); ele e a ação dividem a linha de baixo 50/50, a 8px, com 44 de altura,
+e sozinhos ocupam a linha. A ação `inline` nunca sobe à direita no dedo, o `sm` veste o
+corpo do `md` (14, poço 32, ícone 16) e o recuo é 12 nas quatro bordas. O nome acessível do
+botão saiu do `aria-label` para dois `span`, para conter o texto visível (WCAG 2.5.3).
+Medido no app: a 439px de largura, alerta de 407×114 e ação e "Agora não" de 187×44 cada;
+a 1280 com mouse, alerta `sm` de 46, ação inline e × de 24.
+
+A `AnnouncementBar` importa o `TONE_ICON` e não mudou. A página do catálogo ganhou o
+poço, o `storageKey` (com a chave dita), o "No telefone" no `IphoneFrame` e as duas props
+novas na tabela. O contraste do ícone no poço não foi medido nesta rodada.

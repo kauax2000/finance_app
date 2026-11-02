@@ -25,7 +25,7 @@ const ESCALA = [
     cls: "rounded-surface",
     token: "--radius-surface",
     use: "superfície: o que contém. O CSS limita o raio à metade do lado, então até 44px de altura já sai cápsula",
-    who: ["Card", "Accordion", "Toast", "Table", "EmptyState", "Carousel", "Tabs vertical", "Popover", "DropdownMenu", "Select (lista)", "HoverCard", "Command", "Combobox"],
+    who: ["Card", "Alert", "Accordion", "Toast", "Table", "EmptyState", "Carousel", "Tabs vertical", "Popover", "DropdownMenu", "Select (lista)", "HoverCard", "Command", "Combobox"],
   },
   {
     cls: "rounded-modal",
@@ -37,13 +37,13 @@ const ESCALA = [
     cls: "rounded-row",
     token: "--radius-row",
     use: "linha: a linha de lista selecionável — retângulo de canto arredondado numa linha de 32 (a cápsula seria 16)",
-    who: ["Accordion separated", "Alert sm", "Tooltip md", "SidebarMenuButton", "SidebarMenuSubButton", "ColorTile (md a 2xl)", "Item sm"],
+    who: ["Accordion separated", "Tooltip md", "SidebarMenuButton", "SidebarMenuSubButton", "ColorTile (md a 2xl)", "Item sm"],
   },
   {
     cls: "rounded-row-lg",
     token: "--radius-row-lg",
     use: "linha alta: a linha selecionável de 44 — retângulo arredondado onde a superfície daria cápsula (22 é a metade)",
-    who: ["Item", "DropdownMenu panel", "Alert md", "CardField", "Collapsible card", "Textarea", "InputGroup com bloco", "lista de seleção (Checkbox)", "RadioGroup card", "cartão de escolha (Field)", "FormPickerPopoverItem"],
+    who: ["Item", "DropdownMenu panel", "CardField", "Collapsible card", "Textarea", "InputGroup com bloco", "lista de seleção (Checkbox)", "RadioGroup card", "cartão de escolha (Field)", "FormPickerPopoverItem"],
   },
   {
     cls: "concentric",
@@ -218,7 +218,7 @@ export default function ShapeElevationDoc() {
       </Group>
 
       <DocNote title="O raio é do componente, não da variante">
-        Canto não é moldura. O <code>Alert</code> já levou o raio dentro do <code>variant</code> — um com <code>rounded-xl</code>, outro com <code>rounded-lg</code> — e dois alertas lado a lado saíam com 14px e 10px. E o raio não desce com o <code>size</code>: raio por degrau é desvio, e nenhum controle do sistema o faz.
+        Canto não é moldura. O <code>Alert</code> já levou o raio dentro do <code>variant</code> — um com <code>rounded-xl</code>, outro com <code>rounded-lg</code> — e dois alertas lado a lado saíam com 14px e 10px. Depois o raio passou a descer com o <code>size</code> (12px no <code>sm</code>, 16px no <code>md</code>), e o <code>sm</code> ficava ao lado do <code>Card</code> de 22 como outra família. Hoje os dois degraus vestem <code>rounded-surface</code>, o do <code>Card</code>: raio por degrau é desvio, e nenhum controle do sistema o faz.
       </DocNote>
 
       <DocNote title="Por que não o squircle">
