@@ -3164,8 +3164,8 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
    um segundo tranco: um movimento só, não um vaivém (o de dois tempos lia
    mecânico, e o giro foi recusado). A curva mora em cada trecho do keyframe.
    Os dois estados usam keyframes de nome diferente para a animação recomeçar a cada
-   troca, e só depois da primeira troca (`data-toggled` no invólucro), para não
-   balançar ao carregar. Anima `transform`, inteiro. Sem movimento reduzido. */
+   troca, e só durante o gesto (`data-toggled` no invólucro, por 600ms), para não
+   balançar ao carregar nem ao remontar. Anima `transform`, inteiro. Sem movimento reduzido. */
 @keyframes sidebar-media-sway-open {
   0% {
     transform: translateX(0);

@@ -40,6 +40,8 @@ import { SIDEBAR_STATE_COOKIE_NAME } from "@/lib/sidebar-state-cookie"
 
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+/** O balanço de `@utility sidebar-media-sway`, em ms. */
+const SIDEBAR_SWAY_MS = 600
 const SIDEBAR_WIDTH = "16rem"
 // O trilho recolhido: 16 + o botão de 32 + 16. Com 48 o ladrilho da carteira e o
 // avatar encostavam na borda da placa.
@@ -169,14 +171,19 @@ function SidebarProvider({
   // O estado interno. `open`/`onOpenChange` controlam de fora.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
-  // Se a barra já foi recolhida ou aberta nesta página: o balanço da mídia do degrau
-  // `lg` (`@utility sidebar-media-sway`) só toca depois disso, e não ao carregar.
+  // Se a barra acabou de recolher ou abrir: o balanço da mídia do degrau `lg` e do
+  // botão (`@utility sidebar-media-sway`) só vale durante o gesto. Armado para sempre,
+  // qualquer remontagem ou troca de `data-collapsible` tocaria o balanço de novo.
   const [alternou, setAlternou] = React.useState(false)
+  const fimDoBalanco = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  React.useEffect(() => () => clearTimeout(fimDoBalanco.current), [])
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
       setAlternou(true)
+      clearTimeout(fimDoBalanco.current)
+      fimDoBalanco.current = setTimeout(() => setAlternou(false), SIDEBAR_SWAY_MS)
       if (setOpenProp) {
         setOpenProp(openState)
       } else {

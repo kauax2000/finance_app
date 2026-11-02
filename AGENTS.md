@@ -1589,8 +1589,8 @@ declaração de `background-color` no trilho).
   saída e volta em mola amortecida, 600ms; sem rotação nem vaivém) — e o botão
   de recolher do `header` balança junto (`@utility sidebar-trigger-sway`, que
   pergunta ao invólucro por `:has` se a placa recolheu) —, só
-  depois da primeira troca (`data-toggled` no invólucro) e nunca com movimento
-  reduzido.
+  durante o gesto (`data-toggled` no invólucro, por 600ms: armado para sempre, tocaria de
+  novo a cada remontagem) e nunca com movimento reduzido.
   Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e recolhida (a
   caixa a 8 da borda nos dois; recolhida ela declara o recuo de 8, porque o
   publicado de 16 no modo ícone vale para os itens de 32).

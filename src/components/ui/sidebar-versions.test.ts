@@ -131,6 +131,10 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)] sidebar-media-sway"')
     // O balanço da mídia ao recolher e abrir, só depois da primeira troca.
     expect(CODIGO).toContain('"data-toggled": alternou || undefined,')
+    // O balanço vale só no gesto: armado para sempre, remontar o tocaria de novo.
+    expect(CODIGO).toContain("setTimeout(() => setAlternou(false), SIDEBAR_SWAY_MS)")
+    expect(lerFonte("src/app/globals.css")).toMatch(/sidebar-media-sway-open 600ms/)
+    expect(CODIGO).toContain("SIDEBAR_SWAY_MS = 600")
     // O botão de recolher do `header` balança junto, perguntando ao invólucro se a placa recolheu.
     expect(CODIGO).toContain('className={toggle === "header" ? "sidebar-trigger-sway" : undefined}')
     expect(lerFonte("src/app/globals.css")).toContain('[data-toggled]:has([data-slot="sidebar"][data-collapsible="icon"]) & {')
