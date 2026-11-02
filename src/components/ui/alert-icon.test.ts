@@ -45,7 +45,7 @@ describe("o alerta", () => {
   it("a ação na linha vence a do pé por atributo, não por ordem", () => {
     // Por condição em JS, `col-[-2/-1]` e `col-start-2` empatariam em
     // especificidade e a ordem de emissão decidiria.
-    expect(ALERT).toContain("@md/alert:data-[placement=inline]:col-[-2/-1]")
+    expect(ALERT).toContain("@xs/alert:data-[placement=inline]:col-[-2/-1]")
     // E o contêiner só existe com ela: `inline-size` num pai que encolhe ao
     // conteúdo levaria o alerta a 0.
     expect(ALERT).toContain("has-[>[data-placement=inline]]:@container/alert")

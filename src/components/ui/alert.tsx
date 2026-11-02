@@ -28,28 +28,25 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 const alertVariants = cva(
   [
     // Sem `gap-y`: o respiro entre título e descrição é margem da descrição,
-    // para a ação `inline` poder ocupar duas linhas sem somar 2px.
-    "group/alert relative grid w-full items-start",
+    // para a ação `inline` poder ocupar duas linhas sem somar 2px. Título
+    // sozinho centra no poço do ícone; com descrição, o texto começa no topo.
+    "group/alert relative grid w-full items-center has-[>[data-slot=alert-description]]:items-start",
     // A ação na linha mora numa terceira coluna `auto`. Uma container query não
     // enxerga o próprio contêiner, então quem pergunta a largura do alerta são
     // os filhos. O contêiner só existe com ela: `inline-size` tira do conteúdo
     // o poder de medir a caixa. Estreita, a ação atravessa as duas colunas.
     "has-[>[data-placement=inline]]:@container/alert",
     "has-[>[data-placement=inline]]:grid-cols-[1fr_auto]",
-    "has-[>svg]:has-[>[data-placement=inline]]:grid-cols-[var(--alert-icon)_1fr_auto]",
+    "has-[>[data-slot=alert-icon]]:has-[>[data-placement=inline]]:grid-cols-[var(--alert-well)_1fr_auto]",
     // A coluna do texto, que as três peças leem; sem ela uma peça cairia na
     // `auto` por auto-posicionamento.
-    "[--alert-text-col:1] has-[>svg]:[--alert-text-col:2]",
+    "[--alert-text-col:1] has-[>[data-slot=alert-icon]]:[--alert-text-col:2]",
     // O × não ocupa célula (é `absolute`); o texto recua para não passar por baixo.
     "has-[>[data-slot=alert-dismiss]]:pe-10 data-[size=sm]:has-[>[data-slot=alert-dismiss]]:pe-8",
     // Quem surge no meio de um formulário esmaece subindo 4px, sem JS.
     "transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) starting:translate-y-1 starting:opacity-0",
-    // A coluna do ícone é a mesma medida do ícone: uma variável declarada pelo `size`.
-    "has-[>svg]:grid-cols-[var(--alert-icon)_1fr]",
-    // O raio é do componente, não da variante (canto não é moldura), e desce
-    // com o `size`: `md` na linha alta (16), `sm` na linha (12).
-    // O deslocamento do ícone é por degrau: (entrelinha − ícone) / 2.
-    "[&>svg]:size-(--alert-icon) [&>svg]:shrink-0 [&>svg]:text-current",
+    // A coluna do ícone é a do poço: `--alert-well`, declarada pelo `size`.
+    "has-[>[data-slot=alert-icon]]:grid-cols-[var(--alert-well)_1fr]",
   ],
   {
     variants: {
@@ -84,8 +81,10 @@ const alertVariants = cva(
         ].join(" "),
       },
       size: {
-        sm: "rounded-row px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2 [&>svg]:translate-y-px",
-        md: "rounded-row-lg px-4 py-3 text-sm [--alert-icon:--spacing(4)] has-[>svg]:gap-x-3 [&>svg]:translate-y-0.5",
+        // O raio é do cartão nos dois degraus; o poço mede 24 (`sm`) e 32 (`md`)
+        // e o ícone dentro dele 14 e 16. O recuo à esquerda encosta o poço.
+        sm: "rounded-surface px-3.5 py-2 text-xs [--alert-well:--spacing(6)] [--alert-icon:--spacing(3.5)] has-[>[data-slot=alert-icon]]:ps-2 has-[>[data-slot=alert-icon]]:gap-x-2",
+        md: "rounded-surface px-4 py-3 text-sm [--alert-well:--spacing(8)] [--alert-icon:--spacing(4)] has-[>[data-slot=alert-icon]]:ps-3 has-[>[data-slot=alert-icon]]:gap-x-3",
       },
     },
     defaultVariants: {
@@ -108,7 +107,64 @@ type AlertBase = React.ComponentProps<"div"> &
     /** Põe o × no canto; quem chama desmonta o aviso. */
     onDismiss?: () => void
     dismissLabel?: string
+    /**
+     * Põe o × e lembra o dispensar neste aparelho (`localStorage`, na chave
+     * `alert-dispensado:<storageKey>`): o aviso não volta a cada visita. Sem
+     * `localStorage`, vale até recarregar.
+     */
+    storageKey?: string
   }
+
+/** A chave onde o aparelho lembra que o aviso foi dispensado. */
+function alertDispensadoKey(storageKey: string) {
+  return `alert-dispensado:${storageKey}`
+}
+
+// Quem dispensou nesta sessão: o lugar onde o × vale quando o `localStorage`
+// falha (modo privado, bloqueado) e o que notifica os alertas montados.
+const dispensadosNaSessao = new Set<string>()
+const ouvintes = new Set<() => void>()
+
+function assinar(avisar: () => void) {
+  ouvintes.add(avisar)
+  // Outra aba dispensando o mesmo aviso.
+  window.addEventListener("storage", avisar)
+  return () => {
+    ouvintes.delete(avisar)
+    window.removeEventListener("storage", avisar)
+  }
+}
+
+function foiDispensado(chave: string) {
+  if (dispensadosNaSessao.has(chave)) return true
+  try {
+    return localStorage.getItem(chave) === "1"
+  } catch {
+    return false
+  }
+}
+
+/** `[dispensado, dispensar]`; sem `storageKey` nunca está dispensado. */
+function useDispensado(storageKey?: string): [boolean, () => void] {
+  const chave = storageKey ? alertDispensadoKey(storageKey) : null
+  // O servidor não lê o aparelho: `false`, e o cliente corrige depois de hidratar.
+  const dispensado = React.useSyncExternalStore(
+    assinar,
+    () => (chave ? foiDispensado(chave) : false),
+    () => false
+  )
+  const dispensar = () => {
+    if (!chave) return
+    dispensadosNaSessao.add(chave)
+    try {
+      localStorage.setItem(chave, "1")
+    } catch {
+      // Sem `localStorage`, a memória da sessão já guarda.
+    }
+    ouvintes.forEach((avisar) => avisar())
+  }
+  return [dispensado, dispensar]
+}
 
 /** Um por tom, todos `16/solid`. O destrutivo é o círculo com ×: com o triângulo igual, só a cor separaria "atenção" de "falhou". */
 const TONE_ICON = {
@@ -139,10 +195,14 @@ function Alert({
   icon,
   onDismiss,
   dismissLabel = "Dispensar aviso",
+  storageKey,
   ...props
 }: AlertProps) {
   const { tone, variant, ...rest } = props as AlertBase
   const glowRef = useBrandGlow(variant === "brand")
+  const [dispensado, dispensar] = useDispensado(storageKey)
+  // Depois dos hooks: voltar antes deles mudaria a ordem entre renders.
+  if (dispensado) return null
 
   // Em `brand` a superfície é a neutra, e `data-tone` diz isso: é ele que faz o
   // cinza do `AlertDescription` seguir a superfície.
@@ -163,19 +223,30 @@ function Alert({
       className={cn(alertVariants({ tone, variant, size }), className)}
       {...rest}
     >
-      {iconNode}
+      {iconNode ? (
+        <span
+          data-slot="alert-icon"
+          aria-hidden
+          className="flex size-(--alert-well) shrink-0 items-center justify-center rounded-full bg-current/15 [&>svg]:size-(--alert-icon)"
+        >
+          {iconNode}
+        </span>
+      ) : null}
       {children}
-      {onDismiss ? (
+      {onDismiss || storageKey ? (
         <Button
           data-slot="alert-dismiss"
           type="button"
           variant="tertiary"
           size="icon-xs"
-          onClick={onDismiss}
+          onClick={() => {
+            dispensar()
+            onDismiss?.()
+          }}
           aria-label={dismissLabel}
           className={cn(
-            // Centrado na primeira linha: (respiro + entrelinha/2) − 12.
-            "absolute end-2.5 top-2.5 group-data-[size=sm]/alert:end-1.5 group-data-[size=sm]/alert:top-1",
+            // Centrado no poço do ícone: (respiro + poço/2) − 12.
+            "absolute end-2 top-4 group-data-[size=sm]/alert:end-1.5 group-data-[size=sm]/alert:top-2",
             // A receita do × da `AnnouncementBar` sem a borda do cursor: flor em
             // `currentColor`, tinta presa, alvo de 46 no dedo por pseudo-elemento.
             "text-current",
@@ -242,7 +313,7 @@ function AlertActions({
   placement = "block",
   ...props
 }: React.ComponentProps<"div"> & {
-  /** `block` no pé, sob o texto; `inline` à direita dele, descendo para o pé quando o alerta tem menos de 28rem. */
+  /** `block` no pé, sob o texto; `inline` à direita dele, descendo para o pé quando o alerta tem menos de 20rem. */
   placement?: "block" | "inline"
 }) {
   return (
@@ -255,7 +326,7 @@ function AlertActions({
         // Estreita, atravessa o texto e a coluna `auto` (que então mede 0);
         // larga, ocupa só a `auto`, ao lado do título e da descrição.
         "data-[placement=inline]:col-[var(--alert-text-col)/-1]",
-        "@md/alert:data-[placement=inline]:col-[-2/-1] @md/alert:data-[placement=inline]:row-[1/span_2] @md/alert:data-[placement=inline]:mt-0 @md/alert:data-[placement=inline]:self-center @md/alert:data-[placement=inline]:ps-3",
+        "@xs/alert:data-[placement=inline]:col-[-2/-1] @xs/alert:data-[placement=inline]:row-[1/span_2] @xs/alert:data-[placement=inline]:mt-0 @xs/alert:data-[placement=inline]:self-center @xs/alert:data-[placement=inline]:ps-3",
         className
       )}
       {...props}
@@ -292,6 +363,7 @@ function AlertAction({
 }
 
 export {
+  alertDispensadoKey,
   Alert,
   AlertAction,
   AlertActions,

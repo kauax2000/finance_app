@@ -101,7 +101,7 @@ export function NotificationPreferences() {
                                     </AlertActions>
                                 </Alert>
                             ) : getPushSupportState() === "denied" ? (
-                                <Alert tone="warning" size="sm">
+                                <Alert tone="warning" size="sm" storageKey="push-bloqueado">
                                     <AlertTitle>Este aparelho bloqueou os avisos.</AlertTitle>
                                     <AlertActions placement="inline">
                                         <AlertAction asChild>
