@@ -99,6 +99,11 @@ describe("os comportamentos", () => {
     expect(lerFonte("src/components/ui/top-bar.tsx")).toContain("usePageTitleDock(doc)")
   })
 
+  it("com collapse, o telefone tem o título grande, e o esqueleto ocupa o mesmo lugar", () => {
+    expect(CODIGO).toContain('TITULO_GRANDE = "max-sm:-mt-2 max-sm:[--page-title:2.125rem]"')
+    expect(CODIGO.split("collapse && TITULO_GRANDE").length - 1).toBe(2)
+  })
+
   it("o ⋯ é o da Toolbar, com a conta do cabeçalho", () => {
     expect(CODIGO).toContain('useOverflowActions(ref, overflow === "menu", CASA_DO_CABECALHO)')
     expect(CODIGO).toContain("Math.min(raiz.clientWidth * 0.35, 240)")

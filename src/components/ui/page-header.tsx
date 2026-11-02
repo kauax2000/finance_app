@@ -53,6 +53,12 @@ const pageHeaderVariants = cva(
   }
 )
 
+/**
+ * O título que sobe é o título grande do iOS: no telefone, 34 (o degrau não conta)
+ * e mais perto da barra, como nos prints do WhatsApp de 2026-11-02.
+ */
+const TITULO_GRANDE = "max-sm:-mt-2 max-sm:[--page-title:2.125rem]"
+
 const PageHeaderContext = React.createContext<{ collapse: boolean }>({ collapse: false })
 
 function PageHeader({
@@ -86,6 +92,7 @@ function PageHeader({
           // A linha do título é o eixo: com sobrancelha ela desce 28px (16 de linha + 12
           // de respiro), e quem se alinha ao título desce junto.
           "has-[[data-slot=page-header-eyebrow]]:[--page-header-lead:1.75rem]",
+          collapse && TITULO_GRANDE,
           className
         )}
         {...props}
@@ -594,12 +601,15 @@ function PageHeaderSkeleton({
   description = true,
   actions = 1,
   stats = 0,
+  collapse = false,
   className,
 }: {
   size?: "sm" | "md" | "lg"
   description?: boolean
   actions?: number
   stats?: number
+  /** O do `PageHeader` que vem: o título grande do telefone ocupa outra altura. */
+  collapse?: boolean
   className?: string
 }) {
   return (
@@ -609,6 +619,7 @@ function PageHeaderSkeleton({
       className={cn(
         pageHeaderVariants({ size, reveal: false }),
         "[--page-title-line:calc(var(--page-title)*1.25)]",
+        collapse && TITULO_GRANDE,
         className
       )}
     >

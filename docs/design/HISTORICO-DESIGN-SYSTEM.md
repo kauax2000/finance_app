@@ -28733,3 +28733,23 @@ navegador.
 **Depois, a pedido do dono.** A placa do `QrCode` não cresce mais no cursor nem no
 toque, e o `QrCodeCopy` não tem dica: a recusa também aparece no botão, com o
 ícone e o rótulo "Não deu para copiar".
+
+### Rodada 357 — o título grande do telefone
+
+Pedido do dono, com dois prints do WhatsApp como referência: título grande na
+tela e, ao rolar, o nome no centro da barra. O fundo da barra fica como está.
+
+- **`PageHeader collapse` no telefone**: 34px (abaixo de `sm`, qualquer que seja
+  o degrau) e `-mt-2`, com a caixa do título a 8px da base da barra. Medido a
+  375px: o título ia de 72 a 97 e foi a 64 a 107. Configurações passa de
+  `space-y-8` a `space-y-4 sm:space-y-8`. O `PageHeaderSkeleton` ganhou `collapse`,
+  para o esqueleto não pular.
+- **`TopBarTitle pageTitle` no centro**: o `AppHeader` o põe no telefone, nas
+  telas em que o seletor de carteira saiu, em 16 semibold, o corpo da carteira.
+- **O gesto continua o do desktop** (sobe 6px e acende), com o desfoque dos
+  miolos que trocam na barra. A troca é por limiar, e não presa à rolagem: é o
+  que o iOS faz, e não fica pela metade numa rolagem rápida. Medido a 375px:
+  y 49 fora, y 51 dentro.
+- Conferido no Safari do Simulador (iPhone 18 Pro Max), no topo e rolado. Numa
+  aba em segundo plano o `requestAnimationFrame` para e o `IntersectionObserver`
+  não responde: teste de título que sobe pede a aba na frente.

@@ -132,6 +132,13 @@ describe("os comportamentos", () => {
     expect(topBarVariants({})).toContain("max-md:data-hidden:-translate-y-")
   })
 
+  it("o título que sobe chega do desfoque, e o que cede o lugar sai nele", () => {
+    const codigo = lerFonte("src/components/ui/top-bar.tsx")
+    expect(codigo).toContain("transition-[opacity,translate,filter]")
+    expect(codigo).toContain("group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0 group-data-docked/top-bar-title:blur-xs")
+    expect(codigo).toContain("translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none")
+  })
+
   it("tocar no título sobe ao topo, só no telefone", () => {
     expect(CODIGO).toContain('janela.matchMedia("(max-width: 767px)").matches')
     expect(CODIGO).toContain("scrollTo({ top: 0, behavior: suave })")

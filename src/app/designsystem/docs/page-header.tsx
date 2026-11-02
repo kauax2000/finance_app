@@ -299,7 +299,7 @@ export default function PageHeaderDoc() {
 
       <DocSection
         title="No telefone"
-        description="O cabeçalho compacto: o título desce um degrau, e as ações ficam na linha dele — as que têm ícone viram quadradas, com o rótulo como nome, e o que não cabe vai para o ⋯. Com collapse, o título sobe para a barra do topo quando rola para baixo dela (TopBarTitle pageTitle), como o título grande do iOS. Role a tela. É um primeiro desenho: o telefone vai ser revisto quando as telas do app adotarem o cabeçalho."
+        description="O cabeçalho compacto: o título desce um degrau, e as ações ficam na linha dele — as que têm ícone viram quadradas, com o rótulo como nome, e o que não cabe vai para o ⋯. Com collapse, o título é o grande do iOS: 34px no telefone, qualquer que seja o degrau, 8px mais perto da barra, e sobe para ela quando rola para baixo dela (TopBarTitle pageTitle). Role a tela. É um primeiro desenho: o telefone vai ser revisto quando as telas do app adotarem o cabeçalho."
         code={`<TopBar>
   <TopBarTitle pageTitle />
 </TopBar>
@@ -361,7 +361,7 @@ export default function PageHeaderDoc() {
             prop: "collapse",
             type: "boolean",
             default: "false",
-            description: "O título sobe para a barra do topo ao rolar para baixo dela — a barra o mostra com TopBarTitle pageTitle.",
+            description: "O título sobe para a barra do topo ao rolar para baixo dela — a barra o mostra com TopBarTitle pageTitle. No telefone, ele mede 34px. No PageHeaderSkeleton, reserva a mesma altura.",
           },
         ]}
       />

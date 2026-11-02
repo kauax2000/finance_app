@@ -728,7 +728,7 @@ declaração de `background-color` no trilho).
   `PageSectionContent`. Toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
-  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, com o sino à esquerda e
+  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor: lá o centro é do título que sobe —, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
   Membros, Minha conta e Configurações voltam a ela, e uma aba que saiu da barra
@@ -1681,7 +1681,10 @@ declaração de `background-color` no trilho).
   conta, Configurações); Planos e o sair ficam dentro de Minha conta. No desktop
   nada muda: `/me` renderiza, mas nada leva a ela.
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
-  viram quadradas; a linha do título é o eixo. `PageHeaderMedia`,
+  viram quadradas; a linha do título é o eixo. Com `collapse` é o título grande do
+  iOS: 34 no telefone, qualquer que seja o degrau, 8px mais perto da barra, e
+  entra nela subindo 6px, do desfoque (rodada 357); o `PageHeaderSkeleton collapse`
+  reserva a mesma altura. `PageHeaderMedia`,
   `PageHeaderStat` (**nenhuma tela escreve `dt`/`dd` à mão**), `PageHeaderNav`,
   `PageHeaderSkeleton`; `collapse`, `PageHeaderActions overflow="menu"`, o
   voltar pelo histórico (`history={false}`; ligá-lo no `app-header` é mudança

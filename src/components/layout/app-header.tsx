@@ -246,19 +246,22 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
                             lado com uma ação em cada ponta; 7rem quando a direita
-                            tem a lupa e o filtro. Na página Você e nas telas dela,
-                            nada no centro: a aba que saiu da barra segue sendo aba,
-                            por isso a lista vazia, como no `voceBackHref`. */}
-                        {isVoceTabActive(pathname, []) ? null : (
-                            <div
-                                className={cn(
-                                    "absolute flex justify-center",
-                                    filtro ? "inset-x-28" : "inset-x-16"
-                                )}
-                            >
+                            tem a lupa e o filtro. Na página Você e nas telas dela o
+                            centro é do título que sobe ao rolar: a aba que saiu da
+                            barra segue sendo aba, por isso a lista vazia, como no
+                            `voceBackHref`. */}
+                        <div
+                            className={cn(
+                                "absolute flex justify-center",
+                                filtro ? "inset-x-28" : "inset-x-16"
+                            )}
+                        >
+                            {isVoceTabActive(pathname, []) ? (
+                                <TopBarTitle pageTitle className="text-center text-base font-semibold" />
+                            ) : (
                                 <WorkspaceSwitcher appearance="header" />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </>
                 }
                 className="lg:flex-none lg:-me-2"

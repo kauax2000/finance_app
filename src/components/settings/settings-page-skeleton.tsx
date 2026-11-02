@@ -6,8 +6,8 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 export function SettingsPageSkeleton() {
     return (
         <SkeletonGroup className="min-w-0 max-w-full" label="Carregando configurações…" delay>
-            <div className="min-w-0 space-y-8">
-                <PageHeaderSkeleton description={false} actions={0} />
+            <div className="min-w-0 space-y-4 sm:space-y-8">
+                <PageHeaderSkeleton description={false} actions={0} collapse />
                 <div className="min-w-0 space-y-5">
                     {[0, 1].map((i) => (
                         <Card key={i} padding="none">

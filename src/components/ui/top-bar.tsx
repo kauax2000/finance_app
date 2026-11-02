@@ -334,7 +334,7 @@ function TopBarTitle({
   asChild?: boolean
   /**
    * O título que sobe: quando o título de um `PageHeader collapse` rola para baixo
-   * da barra, ele aparece aqui (subindo 6px e acendendo) e o que a barra mostrava
+   * da barra, ele aparece aqui (subindo 6px e saindo do desfoque) e o que a barra mostrava
    * (`children`) cede o lugar; ao voltar, desce. É o título grande do iOS. O texto
    * que sobe é `aria-hidden`: o `<h1>` da página segue sendo o nome dela.
    */
@@ -394,7 +394,7 @@ const TITULO_CENTRADO =
   "in-data-[title-align=center]:max-md:[grid-area:title] in-data-[title-align=center]:max-md:text-center"
 
 const TROCA_DO_TITULO =
-  "[grid-area:1/1] min-w-0 truncate transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out)"
+  "[grid-area:1/1] min-w-0 truncate transition-[opacity,translate,filter] duration-(--duration-base) ease-(--ease-out)"
 
 function TopBarPageTitle({ className, children, ...props }: React.ComponentProps<"div">) {
   const [doc, setDoc] = React.useState<Document | null>(null)
@@ -413,7 +413,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
       {...props}
     >
       {children ? (
-        <span className={cn(TROCA_DO_TITULO, "group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0")}>
+        <span className={cn(TROCA_DO_TITULO, "group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0 group-data-docked/top-bar-title:blur-xs")}>
           {children}
         </span>
       ) : null}
@@ -421,7 +421,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
         aria-hidden
         className={cn(
           TROCA_DO_TITULO,
-          "translate-y-1.5 opacity-0 group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100"
+          "translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none"
         )}
       >
         {dock?.text}
