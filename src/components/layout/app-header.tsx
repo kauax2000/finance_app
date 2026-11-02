@@ -125,6 +125,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
     const mobileBackHref =
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
+    // Na página Você e nas telas dela não há seletor: a aba que saiu da barra segue
+    // sendo aba, por isso a lista vazia, como no `voceBackHref`.
+    const seletor = isVoceTabActive(pathname, []) ? null : <WorkspaceSwitcher appearance="header" />
     // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
     // `origem`: é a do telefone, de onde a busca nasce.
     const lupa = (origem = false) => (
@@ -221,20 +224,20 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
                             lado com uma ação em cada ponta; 7rem quando a direita
-                            tem a lupa e o filtro. Na página Você e nas telas dela o
-                            centro é do título que sobe ao rolar: a aba que saiu da
-                            barra segue sendo aba, por isso a lista vazia, como no
-                            `voceBackHref`. */}
+                            tem a lupa e o filtro. Ao rolar, o título sobe e toma o
+                            lugar dela; no Painel, a tela da carteira, ela fica. */}
                         <div
                             className={cn(
                                 "absolute flex justify-center",
                                 filtro ? "inset-x-28" : "inset-x-16"
                             )}
                         >
-                            {isVoceTabActive(pathname, []) ? (
-                                <TopBarTitle pageTitle className="text-center text-base font-semibold" />
+                            {pathname === ROUTES.DASHBOARD ? (
+                                seletor
                             ) : (
-                                <WorkspaceSwitcher appearance="header" />
+                                <TopBarTitle pageTitle className="text-center text-base font-semibold">
+                                    {seletor}
+                                </TopBarTitle>
                             )}
                         </div>
                     </>

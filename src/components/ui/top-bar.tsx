@@ -350,6 +350,8 @@ function TopBarTitle({
   const subir = (e: React.MouseEvent<HTMLHeadingElement>) => {
     onClick?.(e)
     if (!scrollToTop || e.defaultPrevented) return
+    // Um controle no lugar do título tem o próprio toque: rolar fecharia o menu dele.
+    if ((e.target as Element).closest("a, button")) return
     const barra = (e.currentTarget as HTMLElement).closest<HTMLElement>("[data-slot=top-bar]")
     const janela = barra?.ownerDocument.defaultView
     if (!barra || !janela || !janela.matchMedia("(max-width: 767px)").matches) return
@@ -413,7 +415,14 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
       {...props}
     >
       {children ? (
-        <span className={cn(TROCA_DO_TITULO, "group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0 group-data-docked/top-bar-title:blur-xs")}>
+        <span
+          // O controle que cede o lugar sai de alcance, e não recorta o anel de foco.
+          inert={subiu || undefined}
+          className={cn(
+            TROCA_DO_TITULO,
+            "has-[button]:overflow-visible group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0 group-data-docked/top-bar-title:blur-xs"
+          )}
+        >
           {children}
         </span>
       ) : null}
@@ -421,7 +430,8 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
         aria-hidden
         className={cn(
           TROCA_DO_TITULO,
-          "translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none"
+          // Mora na mesma célula, por cima do controle que cede o lugar: não pega o toque.
+          "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none"
         )}
       >
         {dock?.text}

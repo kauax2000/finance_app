@@ -28748,6 +28748,12 @@ tela e, ao rolar, o nome no centro da barra. O fundo da barra fica como está.
   para o `<h1>`. Configurações só escreve o `PageHeader` fora do telefone.
 - **`TopBarTitle pageTitle` no centro**: o `AppHeader` o põe no telefone, nas
   telas em que o seletor de carteira saiu, em 16 semibold, o corpo da carteira.
+- **O seletor de carteira cede o lugar**, escolha do dono entre três mockups, em
+  Transações e Categorias: é o filho do `TopBarTitle pageTitle`. Docado, ele fica
+  `inert`, e o toque num controle dentro do título não rola ao topo (rolar fecharia
+  o menu). O título mora na mesma célula, por cima do seletor, e vazio roubava o
+  toque: é `pointer-events-none`, medido com o clique real a y 30. No Painel, por
+  pedido dele, o seletor fica sempre.
 - **O gesto continua o do desktop** (sobe 6px e acende), com o desfoque dos
   miolos que trocam na barra. A troca é por limiar, e não presa à rolagem: é o
   que o iOS faz, e não fica pela metade numa rolagem rápida. Medido a 375px:

@@ -730,7 +730,7 @@ declaração de `background-color` no trilho).
   `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
-  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor: lá o centro é do título que sobe —, com o sino à esquerda e
+  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
   Membros, Minha conta e Configurações voltam a ela, e uma aba que saiu da barra
