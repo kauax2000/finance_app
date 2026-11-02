@@ -110,9 +110,10 @@ describe("Configurações: página única", () => {
         for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
     })
 
-    it("Notificações: um cartão com Como avisar e Sobre o quê, sem o desenho antigo", () => {
+    it("Notificações: duas linhas de resumo que abrem os ajustes, com saída para o push bloqueado", () => {
         const f = lerFonte("src/components/settings/notification-preferences.tsx")
-        for (const texto of ["id=\"notificacoes\"", "notify_review", "notify_insights", "Como avisar", "Sobre o quê", "Às 20h.", "No máximo 3 push por semana.", "Desligar remove este aparelho de todas as carteiras."]) expect(f).toContain(texto)
-        for (const fora of ["uppercase", "variant=\"card\"", "border-dashed", "h-8", "PrefSubheaderBar"]) expect(f).not.toContain(fora)
+        for (const texto of ['id="notificacoes"', "Ver histórico", "Onde chega", "Sobre o quê", "resumoDosCanais(prefs)", "resumoDosTemas(prefs)", "<NotificacoesCanaisDialog", "<NotificacoesTemasDialog", "Este aparelho bloqueou os avisos.", "Como liberar", "Nenhum canal ligado. Os avisos da carteira não vão chegar.", "Escolher canais"]) expect(f).toContain(texto)
+        for (const fora of ["FormSwitch", "subscribeToPush", "CardToolbar"]) expect(f).not.toContain(fora)
+        expect(f).toMatch(/semCanal\(prefs\) \?[\s\S]+: getPushSupportState\(\) === "denied"/)
     })
 })

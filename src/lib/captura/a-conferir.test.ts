@@ -133,9 +133,10 @@ describe("telas de a conferir", () => {
     })
 
     it("Configurações liga e desliga o lembrete", () => {
-        const f = fonte("src/components/settings/notification-preferences.tsx")
-        expect(f).toContain("patch({ notify_review:")
-        expect(f).toContain("Lembrete de itens a conferir")
+        const f = fonte("src/components/settings/notificacoes-temas-dialog.tsx")
+        expect(f).toContain("notify_review")
+        expect(f).toContain("patch({ [tema]: checked })")
+        expect(f).toContain("Itens a conferir")
     })
 })
 

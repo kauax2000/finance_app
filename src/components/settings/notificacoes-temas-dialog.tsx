@@ -12,6 +12,8 @@ import type {
     WorkspaceNotificationPrefsPatch,
 } from "@/lib/workspace-notification-prefs"
 
+// "Promoções e ofertas" saiu: nada envia promoção. O `notify_promotions`
+// continua no banco e volta aqui junto com o primeiro produtor.
 const GRUPOS: { titulo: string; temas: { tema: TemaDeNotificacao; label: string; description?: string }[] }[] = [
     {
         titulo: "Carteira",

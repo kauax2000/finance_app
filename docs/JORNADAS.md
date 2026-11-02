@@ -322,7 +322,10 @@ flowchart TD
     settings -->|"desktop"| qr(["No celular: QR Code ou Copiar link"])
     qr -->|"câmera do telefone"| meTel["/me#no-celular no telefone"]
     meTel --> pwa(["Neste celular: tema, lançamento inteligente e instalar o app"])
-    settings --> notif(["Preferências de notificação: canais e tópicos"])
+    settings --> notif(["Notificações: duas linhas de resumo"])
+    notif -->|"Onde chega"| canais(["Diálogo de canais: email, central do app e push neste aparelho"])
+    notif -->|"Sobre o quê"| temas(["Diálogo de temas: carteira, cartões e rotina"])
+    notif -.->|"alerta: push bloqueado ou nenhum canal"| canais
     settings --> ia(["IA e privacidade: Groq e Cloudflare, sem treino; até 30 por dia"])
     ia -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
     settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
