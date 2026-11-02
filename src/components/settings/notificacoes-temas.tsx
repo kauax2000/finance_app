@@ -37,7 +37,7 @@ const GRUPOS: { titulo: string; temas: { tema: TemaDeNotificacao; label: string;
 ]
 
 /**
- * Sobre o quê avisar, a segunda peça da seção. As chaves salvam ao tocar, então
+ * O que receber, a lista de temas, a segunda peça da seção. As chaves salvam ao tocar, então
  * não há rodapé; a seção cuida do erro e do carregamento.
  */
 export function NotificacoesTemas({
@@ -50,7 +50,7 @@ export function NotificacoesTemas({
     return (
         <PageSection size="sm">
             <PageSectionHeader>
-                <PageSectionTitle>Sobre o quê</PageSectionTitle>
+                <PageSectionTitle>O que receber</PageSectionTitle>
             </PageSectionHeader>
             <div className="space-y-3">
                 {GRUPOS.map((grupo) => (

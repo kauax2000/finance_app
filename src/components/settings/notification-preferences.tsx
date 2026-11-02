@@ -41,7 +41,7 @@ function NotificationPreferencesSkeleton() {
 }
 
 /**
- * Notificações em Configurações: os avisos, "Canais" e "Sobre o quê". As
+ * Notificações em Configurações: os avisos, "Canais" e "O que receber". As
  * chaves salvam ao tocar, então a seção não tem rodapé; o erro e o
  * carregamento são dela, e as peças só desenham as chaves.
  */

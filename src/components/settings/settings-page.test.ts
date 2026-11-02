@@ -108,7 +108,7 @@ describe("Configurações: página única", () => {
         expect(aparelho).not.toContain('id="no-celular"')
     })
 
-    it("Notificações: os avisos, depois Canais e Sobre o quê, sem rota nem Ver histórico", () => {
+    it("Notificações: os avisos, depois Canais e O que receber, sem rota nem Ver histórico", () => {
         const f = lerFonte("src/components/settings/notification-preferences.tsx")
         for (const texto of ['id="notificacoes"', "<NotificacoesCanais", "<NotificacoesTemas", "Este aparelho bloqueou os avisos.", 'storageKey="push-bloqueado"', "NotificationPreferencesSkeleton"]) expect(f).toContain(texto)
         for (const fora of ["subscribeToPush", "CardToolbar", "Ver histórico", "AlertAction", "ROUTES", "next/link"]) expect(f).not.toContain(fora)
