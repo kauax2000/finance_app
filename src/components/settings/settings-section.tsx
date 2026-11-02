@@ -35,24 +35,36 @@ export function SettingsSection({
     )
 }
 
-/** A linha de uma seção: texto à esquerda, controle à direita. */
+/** A linha de uma seção: a mídia opcional e o texto à esquerda, controle à direita. */
 export function SettingsRow({
     titulo,
     descricao,
+    media,
     children,
 }: {
     titulo: ReactNode
     descricao?: ReactNode
+    media?: ReactNode
     children?: ReactNode
 }) {
     return (
         <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
+            {media}
+            <div className="min-w-0 flex-1">
                 {titulo ? <p className="text-sm font-medium">{titulo}</p> : null}
                 {descricao ? <Muted>{descricao}</Muted> : null}
             </div>
             {children}
         </div>
+    )
+}
+
+/** O ladrilho do ícone de uma linha, na medida do ícone do app ao lado. */
+export function SettingsTile({ children }: { children: ReactNode }) {
+    return (
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-row bg-muted text-foreground">
+            {children}
+        </span>
     )
 }
 

@@ -84,7 +84,7 @@ describe("Configurações: página única", () => {
         for (const texto of [
             "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet",
             "Neste celular", "No celular", 'id="no-celular"', "#no-celular",
-            "Digite uma frase no + e o app preenche o resto.",
+            "Digite uma frase no +",
             "pendingSyncCount",
         ]) expect(aparelho).toContain(texto)
         const cartao = lerFonte("src/components/settings/no-celular-cartao.tsx")
@@ -104,6 +104,10 @@ describe("Configurações: página única", () => {
         expect(aparelho).toMatch(/<NoCelularCartao value=\{noTelefone\} \/>[\s\S]*<Card padding="none">/)
         expect(aparelho).not.toContain("Só tem efeito no telefone.")
         expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(2)
+        // No telefone o Tema fica no grupo, com ícone em cada linha e o CTA primário.
+        expect(aparelho).toMatch(/titulo="Neste celular"[\s\S]*titulo="Tema"[\s\S]*titulo="Aparência"/)
+        expect(aparelho.match(/<SettingsTile>/g)).toHaveLength(2)
+        expect(aparelho).toMatch(/variant="primary"\s+className="w-full"/)
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")
         for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
     })
