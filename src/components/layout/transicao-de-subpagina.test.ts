@@ -20,41 +20,41 @@ describe("a transição de subpágina", () => {
         expect(CSS).toMatch(/html\[data-subpagina\] \[data-slot="bottom-bar-tabs"\] \{\s+background-color: var\(--bottom-bar-surface\);/)
     })
 
-    it("a casca envolve o conteúdo, e quem chama não marca link", () => {
-        expect(CASCA).toMatch(/<TransicaoDeSubpagina pathname=\{pathname\}>\s+<div data-workspace-content/)
-        expect(lerFonte("next.config.ts")).toContain("viewTransition: true")
+    it("a casca liga a transição, e quem chama não marca link", () => {
+        expect(CASCA).toContain("<TransicaoDeSubpagina />")
+        expect(T).toContain('document.addEventListener("click", aoClicar, true)')
     })
 
-    it("só o telefone anima, e a classe dura uma troca", () => {
-        expect(T).toContain('default="none"')
-        expect(T).toContain("isMobile ? direcaoDaTela(")
-        expect(T).toMatch(/useEffect\([\s\S]+setDirecao\(null\)/)
+    it("o gesto espera a tela nova: a navegação corre dentro da promessa, e há um teto", () => {
+        expect(T).toMatch(/startViewTransition\(async \(\) => \{\s+router\.push\([\s\S]+await telaPronta\(rotaDeAntes\)/)
+        expect(T).toContain("const LIMITE_DA_ESPERA_MS = 1200")
+        expect(T).toContain(`'[aria-busy="true"], [data-slot="skeleton"]'`)
     })
 
-    it("as barras só têm nome durante a troca, para não perder o borrão em repouso", () => {
-        expect(T).toContain("dataset.subpagina")
-        expect(CSS).toContain('html[data-subpagina] [data-slot="top-bar"]')
-        expect(CSS).toContain('html[data-subpagina] [data-slot="bottom-bar"]')
-        expect(CSS).not.toContain("html:not(.theme-reveal, .workspace-switch)")
+    it("só o telefone, sem movimento reduzido, fora de diálogo e de link externo", () => {
+        expect(T).toContain("if (!isMobile) return")
+        expect(T).toContain('"(prefers-reduced-motion: reduce)"')
+        expect(T).toContain(`link.closest('[role="dialog"]')`)
+        expect(T).toContain("destino.origin !== location.origin")
     })
 
-    it("a tela velha rolada fica onde estava: o desvio da rolagem vai às fotos dela", () => {
-        expect(T).toMatch(/"--subpagina-desvio",\s*`\$\{-window\.scrollY\}px`/)
-        expect(T).not.toContain("onUpdate")
+    it("o estado dura a transição inteira, sem temporizador", () => {
+        expect(T).toContain("raiz.dataset.subpagina = direcao")
+        expect(T).toContain("transicao.finished.finally(() => delete raiz.dataset.subpagina)")
+    })
+
+    it("a tela velha não pula: as duas fotos de saída descem o quanto a rolagem mudou", () => {
+        expect(T).toContain("window.scrollY - rolagemDeAntes")
         expect(CSS).toContain("translate: 0 var(--subpagina-desvio, 0px);")
         expect(CSS).toContain("translate: -30% var(--subpagina-desvio, 0px);")
         expect(CSS).toContain("translate: 100% var(--subpagina-desvio, 0px);")
     })
 
     it("as duas direções e o movimento reduzido estão no CSS", () => {
-        for (const t of [
-            "::view-transition-old(.subpagina-entra)",
-            "::view-transition-new(.subpagina-entra)",
-            "::view-transition-old(.subpagina-volta)",
-            "::view-transition-new(.subpagina-volta)",
-        ]) {
-            expect(CSS).toContain(t)
+        for (const direcao of ["entra", "volta"]) {
+            expect(CSS).toContain(`html[data-subpagina="${direcao}"]::view-transition-old(subpagina-conteudo)`)
+            expect(CSS).toContain(`html[data-subpagina="${direcao}"]::view-transition-new(subpagina-conteudo)`)
         }
-        expect(CSS).toMatch(/prefers-reduced-motion: reduce\)[\s\S]{0,300}subpagina/)
+        expect(CSS).toMatch(/prefers-reduced-motion: reduce\)[\s\S]{0,200}subpagina-conteudo/)
     })
 })

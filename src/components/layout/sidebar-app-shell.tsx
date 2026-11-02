@@ -111,13 +111,12 @@ export function SidebarAppShell({
                                 <AppSidebar />
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
-                                    <TransicaoDeSubpagina pathname={pathname}>
-                                        <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
-                                            <TituloDaTela pathname={pathname} titleMode={titleMode} />
-                                            <SomenteLeituraWireframe />
-                                            {children}
-                                        </div>
-                                    </TransicaoDeSubpagina>
+                                    <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
+                                        <TituloDaTela pathname={pathname} titleMode={titleMode} />
+                                        <SomenteLeituraWireframe />
+                                        {children}
+                                    </div>
+                                    <TransicaoDeSubpagina />
                                     <MobileBottomNav />
                                 </SidebarInset>
                         </GlobalShellDialogsProvider>

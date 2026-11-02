@@ -1,54 +1,90 @@
-/// <reference types="react/canary" />
 "use client"
 
-import { useEffect, useState, ViewTransition } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { defaultMobileBackHref } from "@/components/layout/app-header"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { direcaoDaTela, type DirecaoDaTela } from "@/lib/direcao-da-tela"
+import { direcaoDaTela } from "@/lib/direcao-da-tela"
 
-// `--duration-slow` (300ms) mais uma folga: as barras precisam do nome até o retrato novo.
-const TEMPO_DO_NOME_MS = 400
+/** Quanto a tela velha espera a nova. Passou disso, anima com o que tiver. */
+const LIMITE_DA_ESPERA_MS = 1200
+/** Sem esqueleto e sem o DOM mudar por esse tempo, a tela nova está pronta. */
+const SOSSEGO_MS = 80
+
+/** O bloco à espera e o osso solto, que uma seção desenha sem `SkeletonGroup`. */
+const ESPERANDO = '[aria-busy="true"], [data-slot="skeleton"]'
+
+type DocumentoComTransicao = Document & {
+    startViewTransition?: (trocar: () => Promise<void>) => { finished: Promise<void> }
+}
+
+/** Resolve quando a rota já mudou e nenhum esqueleto segue à espera no conteúdo. */
+function telaPronta(rotaDeAntes: string): Promise<void> {
+    const conteudo = document.querySelector("[data-workspace-content]")
+    if (!conteudo) return Promise.resolve()
+    return new Promise((pronta) => {
+        let sossego: ReturnType<typeof setTimeout> | undefined
+        const acabar = () => {
+            clearTimeout(limite)
+            clearTimeout(sossego)
+            observador.disconnect()
+            pronta()
+        }
+        const conferir = () => {
+            clearTimeout(sossego)
+            const esperando = conteudo.querySelector(ESPERANDO)
+            if (location.pathname !== rotaDeAntes && !esperando) sossego = setTimeout(acabar, SOSSEGO_MS)
+        }
+        const limite = setTimeout(acabar, LIMITE_DA_ESPERA_MS)
+        const observador = new MutationObserver(conferir)
+        observador.observe(conteudo, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-busy"] })
+        conferir()
+    })
+}
 
 /**
- * A direção sai da troca de rota, e não do link: nenhuma tela marca nada.
- * shortcut: o gesto de voltar do Safari, fora do app instalado, soma a própria animação à daqui, rever se esse uso pesar.
+ * A transição das subpáginas do telefone. O navegador segura a tela velha enquanto a
+ * promessa do `startViewTransition` corre: a tela nova monta e carrega por baixo, e só
+ * pronta o gesto começa, sem esqueleto à vista. Vale para todo link, e nenhuma tela
+ * marca nada. O voltar do navegador fica de fora, porque o gesto do Safari já anima.
  */
-export function TransicaoDeSubpagina({
-    pathname,
-    children,
-}: {
-    pathname: string
-    children: React.ReactElement
-}) {
+export function TransicaoDeSubpagina() {
+    const router = useRouter()
     const isMobile = useIsMobile()
-    const [atual, setAtual] = useState(pathname)
-    const [direcao, setDirecao] = useState<DirecaoDaTela | null>(null)
-    if (pathname !== atual) {
-        const proxima = isMobile ? direcaoDaTela(atual, pathname, defaultMobileBackHref) : null
-        setAtual(pathname)
-        // O WebKit resolve os quadros antes do `onUpdate`, e a tela nova sempre começa do topo.
-        document.documentElement.style.setProperty("--subpagina-desvio", `${-window.scrollY}px`)
-        // eslint-disable-next-line react-hooks/immutability -- precisa estar no `<html>` antes do retrato da tela velha
-        if (proxima) document.documentElement.dataset.subpagina = proxima
-        setDirecao(proxima)
-    }
 
-    // O nome faz da barra uma raiz de fundo, e o borrão some em repouso.
     useEffect(() => {
+        if (!isMobile) return
+        const doc = document as DocumentoComTransicao
         const raiz = document.documentElement
-        if (!raiz.dataset.subpagina) return
-        const timer = setTimeout(() => delete raiz.dataset.subpagina, TEMPO_DO_NOME_MS)
-        return () => clearTimeout(timer)
-    }, [atual])
 
-    // Limpa depois da troca: a montagem adiada é outra transição e não pode repetir o gesto.
-    useEffect(() => {
-        if (direcao) setDirecao(null)
-    }, [direcao])
+        const aoClicar = (e: MouseEvent) => {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+            const link = (e.target as Element).closest?.<HTMLAnchorElement>("a[href]")
+            // Link de dentro de um diálogo fecha o diálogo antes (`useLinkQueFecha`).
+            if (!link || link.target || link.hasAttribute("download") || link.closest('[role="dialog"]')) return
+            const destino = new URL(link.href)
+            if (destino.origin !== location.origin) return
+            const rotaDeAntes = location.pathname
+            const direcao = direcaoDaTela(rotaDeAntes, destino.pathname, defaultMobileBackHref)
+            if (!direcao || !doc.startViewTransition) return
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    return (
-        <ViewTransition default="none" update={direcao ? `subpagina-${direcao}` : "none"}>
-            {children}
-        </ViewTransition>
-    )
+            // O `Link` não navega com o padrão impedido, e o `onClick` de quem chama segue valendo.
+            e.preventDefault()
+            if (raiz.dataset.subpagina) return
+            const rolagemDeAntes = window.scrollY
+            raiz.dataset.subpagina = direcao
+            const transicao = doc.startViewTransition(async () => {
+                router.push(`${destino.pathname}${destino.search}${destino.hash}`)
+                await telaPronta(rotaDeAntes)
+                raiz.style.setProperty("--subpagina-desvio", `${window.scrollY - rolagemDeAntes}px`)
+            })
+            void transicao.finished.finally(() => delete raiz.dataset.subpagina)
+        }
+
+        document.addEventListener("click", aoClicar, true)
+        return () => document.removeEventListener("click", aoClicar, true)
+    }, [isMobile, router])
+
+    return null
 }

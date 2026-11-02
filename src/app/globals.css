@@ -2261,9 +2261,12 @@
    ganham nome só durante a troca (`data-subpagina` no `<html>`) para ficar paradas
    por cima: o nome faz da barra uma raiz de fundo, e o borrão sumiria em repouso. O
    grupo fica no lugar da tela nova, então a foto velha desce o quanto a rolagem mudou
-   (`--subpagina-desvio`, no render da troca), para não pular. A foto do conteúdo é
+   (`--subpagina-desvio`), para não pular. A foto do conteúdo é
    transparente: a de cima leva o fundo da página, e `normal` tira a soma de brilho do
    cruzamento padrão. */
+html[data-subpagina] [data-workspace-content] {
+  view-transition-name: subpagina-conteudo;
+}
 html[data-subpagina] [data-slot="top-bar"] {
   view-transition-name: barra-do-topo;
 }
@@ -2292,33 +2295,30 @@ html[data-subpagina]::view-transition-old(root),
 html[data-subpagina]::view-transition-new(root) {
   animation: none;
 }
-::view-transition-group(.subpagina-entra),
-::view-transition-group(.subpagina-volta) {
+::view-transition-group(subpagina-conteudo) {
   animation: none;
 }
-::view-transition-new(.subpagina-entra),
-::view-transition-old(.subpagina-volta) {
+html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo),
+html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
   z-index: 1;
   background-color: var(--background);
   mix-blend-mode: normal;
 }
-::view-transition-old(.subpagina-entra) {
+html[data-subpagina="entra"]::view-transition-old(subpagina-conteudo) {
   animation: var(--duration-slow) var(--ease-out) both subpagina-esquerda;
 }
-::view-transition-new(.subpagina-entra) {
+html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
   animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
 }
-::view-transition-old(.subpagina-volta) {
+html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
   animation: var(--duration-slow) var(--ease-out) both subpagina-sai-direita;
 }
-::view-transition-new(.subpagina-volta) {
+html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   animation: var(--duration-slow) var(--ease-out) both subpagina-vem-esquerda;
 }
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(.subpagina-entra),
-  ::view-transition-new(.subpagina-entra),
-  ::view-transition-old(.subpagina-volta),
-  ::view-transition-new(.subpagina-volta) {
+  ::view-transition-old(subpagina-conteudo),
+  ::view-transition-new(subpagina-conteudo) {
     animation: none;
   }
 }

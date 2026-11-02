@@ -734,7 +734,7 @@ declaração de `background-color` no trilho).
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
   `PageSectionContent`. **No telefone toda tela abre com o título grande, menos a página Você, e quem o escreve é a casca**
   (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
-  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
+  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. Ela segura a tela velha até a nova ficar pronta, sem esqueleto à vista, com teto de 1,2s. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
   no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e
@@ -896,7 +896,8 @@ declaração de `background-color` no trilho).
   espera, é o `SpinnerBlock`, que anuncia e só aparece depois de 300ms
   (`@starting-style`, sem timer). `variant="brand"` é o anel em arco-íris da
   tela de abertura — uma por tela.
-- **A troca de tela é no clique, e a página carrega depois.** Toda rota do
+- **A troca de tela é no clique, e a página carrega depois**, menos na subpágina do
+  telefone, que anima já pronta (`TransicaoDeSubpagina`). Toda rota do
   app tem um `loading.tsx` com o esqueleto dela (o de `(app)/loading.tsx` é
   vazio, para quem não tem esqueleto), e o `page.tsx` embrulha o cliente em
   `<AdiarMontagem fallback={<Loading />}>` (`components/layout/adiar-montagem`).

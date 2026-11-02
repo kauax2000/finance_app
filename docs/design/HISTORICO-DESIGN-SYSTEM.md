@@ -28801,3 +28801,22 @@ Safari do Simulador: sem navegar, com o CSS velho o texto aparecia; um `touch` n
 `globals.css`, e ele sumiu. Agora nenhum nome é permanente, um teste reprova seletor
 fora do estado da troca, e nesse instante a pílula fica chapada, porque com nome ela
 continua sem borrão.
+
+### Rodada 359 — a subpágina anima pronta
+
+Pedido do dono: abrir, ver o esqueleto e depois o conteúdo "quebra totalmente a
+experiência", e no iOS a tela abre com tudo. O `startViewTransition` segura a tela velha
+enquanto a promessa dele corre, então a navegação foi para dentro dela: a tela nova monta
+e carrega por baixo, e o gesto começa quando a rota mudou, não há osso nem bloco à espera
+no conteúdo e o DOM sossegou por 80ms. O teto é de 1,2s; passou, anima com o que tiver.
+
+Isso aposentou o `ViewTransition` do React, que não sabe esperar, junto com a opção
+experimental do Next, a escrita no `<html>` durante o render e o temporizador do nome das
+barras: o estado agora dura o `finished` da transição, e o desvio da rolagem sai da conta
+real, depois de a tela nova rolar. Um ouvinte de clique em captura pega todo link, então
+nenhuma tela marca nada. O `router.push` fica de fora, e o voltar do navegador também,
+porque o gesto do Safari já anima.
+
+Medido no Safari do Simulador: de Você para Configurações o primeiro quadro já traz
+`Email e app` e `7 de 7 temas`, e a de `Onde chega` já traz as chaves. A primeira medida
+pegou um `Skeleton` solto, sem `aria-busy`: a espera procura os dois.

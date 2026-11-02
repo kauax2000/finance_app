@@ -32,9 +32,6 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
-  experimental: {
-    viewTransition: true,
-  },
   async redirects() {
     return [
       {
