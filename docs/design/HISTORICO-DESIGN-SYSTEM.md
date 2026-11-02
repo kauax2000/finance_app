@@ -28783,6 +28783,8 @@ Do Painel para Transações não são páginas diferentes, são lugares diferent
   apareceria através dela; com fundo, a soma de brilho do cruzamento padrão estouraria.
 - **A tela velha rolada pulava** no primeiro quadro, visto em vídeo do Safari no
   Simulador: o grupo parado fica na posição da tela nova, e a foto velha saía de lá.
-  O `onUpdate` publica `--subpagina-desvio` (a rolagem de depois menos a de antes),
-  que as duas animações da foto velha levam no Y do `translate`.
+  A casca publica `--subpagina-desvio` (`-window.scrollY`) no render da troca, antes
+  do retrato: no `onUpdate` era tarde, o WebKit já tinha resolvido os quadros, e a
+  tela nova sempre começa do topo. As duas animações da foto velha o levam no Y do
+  `translate`.
 - Com movimento reduzido, troca na hora.
