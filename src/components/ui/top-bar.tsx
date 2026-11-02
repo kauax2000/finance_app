@@ -409,7 +409,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
       data-slot="top-bar-title"
       data-docked={subiu || undefined}
       className={cn(
-        "group/top-bar-title grid min-w-0 flex-1 font-heading text-sm font-medium text-foreground",
+        "group/top-bar-title grid min-w-0 flex-1 items-center font-heading text-sm font-medium text-foreground",
         className
       )}
       {...props}

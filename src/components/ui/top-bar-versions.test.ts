@@ -136,6 +136,8 @@ describe("os comportamentos", () => {
     const codigo = lerFonte("src/components/ui/top-bar.tsx")
     expect(codigo).toContain("inert={subiu || undefined}")
     expect(codigo).toContain("has-[button]:overflow-visible")
+    // O controle dá a altura à célula, e o título se centra nela.
+    expect(codigo).toContain("group/top-bar-title grid min-w-0 flex-1 items-center")
     expect(codigo).toContain('(e.target as Element).closest("a, button")')
   })
 
