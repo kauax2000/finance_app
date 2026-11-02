@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-    semCanal,
     temaLigado,
 } from "@/lib/notificacoes-resumo"
 import type { WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notification-prefs"
@@ -22,10 +21,5 @@ describe("notificacoes-resumo", () => {
     it("lê os temas com o padrão de hoje: dois pedem true, os outros só caem com false", () => {
         expect(temaLigado({ ...base, notify_bills: null as never }, "notify_bills")).toBe(true)
         expect(temaLigado({ ...base, notify_budget: null as never }, "notify_budget")).toBe(false)
-    })
-
-    it("sem canal é os três desligados", () => {
-        expect(semCanal({ ...base, notify_email: false, notify_in_app: false })).toBe(true)
-        expect(semCanal(base)).toBe(false)
     })
 })

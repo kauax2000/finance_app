@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
-import { Separator } from "@/components/ui/separator"
 import { Caption } from "@/components/ui/typography"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
@@ -119,25 +118,6 @@ export function NotificacoesCanais({
                                 ) : null}
                             </div>
                         ) : null}
-                    </div>
-                    <Separator />
-                    <div className="px-4 py-3">
-                        <FormSwitch
-                            id="pref-email"
-                            label="Email"
-                            checked={!!prefs.notify_email}
-                            onCheckedChange={(checked) => void patch({ notify_email: checked })}
-                        />
-                    </div>
-                    <Separator />
-                    <div className="px-4 py-3">
-                        <FormSwitch
-                            id="pref-inapp"
-                            label="No app"
-                            description="No sino do Finance."
-                            checked={!!prefs.notify_in_app}
-                            onCheckedChange={(checked) => void patch({ notify_in_app: checked })}
-                        />
                     </div>
                 </Card>
             </PageSection>

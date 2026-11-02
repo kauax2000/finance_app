@@ -18,7 +18,3 @@ const PEDEM_TRUE: readonly TemaDeNotificacao[] = ["notify_transactions", "notify
 export function temaLigado(prefs: WorkspaceMemberNotificationPrefs, tema: TemaDeNotificacao): boolean {
     return PEDEM_TRUE.includes(tema) ? !!prefs[tema] : prefs[tema] !== false
 }
-
-export function semCanal(prefs: WorkspaceMemberNotificationPrefs): boolean {
-    return !prefs.notify_email && !prefs.notify_in_app && !prefs.notify_push
-}

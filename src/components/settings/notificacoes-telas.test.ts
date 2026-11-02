@@ -21,7 +21,7 @@ describe("Notificações: as chaves moram na seção de Configurações", () => 
     })
     it("o aviso vem antes das chaves, sem botão de ação", () => {
         expect(secao.indexOf("Este aparelho bloqueou os avisos.")).toBeLessThan(secao.indexOf("<NotificacoesCanais"))
-        expect(secao.indexOf("Nenhum canal ligado.")).toBeLessThan(secao.indexOf("<NotificacoesCanais"))
+        expect(secao).not.toContain("Nenhum canal ligado.")
         expect(secao).not.toContain("AlertAction")
         expect(secao).toContain('storageKey="push-bloqueado"')
     })

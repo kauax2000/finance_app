@@ -10,7 +10,6 @@ import { NotificacoesTemas } from "@/components/settings/notificacoes-temas"
 import { useAuth } from "@/components/providers"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
 import { useWorkspace } from "@/components/workspace-provider"
-import { semCanal } from "@/lib/notificacoes-resumo"
 import { getPushSupportState } from "@/lib/push/subscribe"
 
 /** Uma linha de chave esperando: o rótulo e o trilho do `Switch`. */
@@ -70,13 +69,7 @@ export function NotificationPreferences() {
                     ) : null}
                     {prefs ? (
                         <>
-                            {semCanal(prefs) ? (
-                                <Alert tone="warning" size="sm">
-                                    <AlertTitle>
-                                        Nenhum canal ligado. Os avisos da carteira não vão chegar.
-                                    </AlertTitle>
-                                </Alert>
-                            ) : getPushSupportState() === "denied" ? (
+                            {getPushSupportState() === "denied" ? (
                                 <Alert tone="warning" size="sm" storageKey="push-bloqueado">
                                     <AlertTitle>Este aparelho bloqueou os avisos.</AlertTitle>
                                 </Alert>
