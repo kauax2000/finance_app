@@ -246,15 +246,18 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
                             lado com uma ação em cada ponta; 7rem quando a direita
-                            tem a lupa e o filtro. */}
-                        <div
-                            className={cn(
-                                "absolute flex justify-center",
-                                filtro ? "inset-x-28" : "inset-x-16"
-                            )}
-                        >
-                            <WorkspaceSwitcher appearance="header" />
-                        </div>
+                            tem a lupa e o filtro. Na página Você, nada no centro:
+                            ela é da pessoa, e não da carteira. */}
+                        {pathname === ROUTES.ME ? null : (
+                            <div
+                                className={cn(
+                                    "absolute flex justify-center",
+                                    filtro ? "inset-x-28" : "inset-x-16"
+                                )}
+                            >
+                                <WorkspaceSwitcher appearance="header" />
+                            </div>
+                        )}
                     </>
                 }
                 className="lg:flex-none lg:-me-2"
