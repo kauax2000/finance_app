@@ -28,7 +28,7 @@ import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import { ROUTES } from "@/config/navigation"
 import { isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 
-function defaultMobileBackHref(pathname: string): string | undefined {
+export function defaultMobileBackHref(pathname: string): string | undefined {
     const sub = resolveAppSubPageMeta(pathname)
     if (sub) return sub.parent
     if (
