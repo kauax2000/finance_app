@@ -11,29 +11,14 @@ import type { WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notificat
 
 // "Promoções e ofertas" saiu: nada envia promoção. O `notify_promotions`
 // continua no banco e volta aqui junto com o primeiro produtor.
-const GRUPOS: { titulo: string; temas: { tema: TemaDeNotificacao; label: string; description?: string }[] }[] = [
-    {
-        titulo: "Carteira",
-        temas: [
-            { tema: "notify_transactions", label: "Despesas de outros membros" },
-            { tema: "notify_budget", label: "Orçamento" },
-            { tema: "notify_bills", label: "Contas a pagar" },
-        ],
-    },
-    {
-        titulo: "Cartões",
-        temas: [
-            { tema: "notify_credit_cards", label: "Limite e categorias" },
-            { tema: "notify_credit_card_calendar", label: "Fatura e vencimento" },
-        ],
-    },
-    {
-        titulo: "Rotina",
-        temas: [
-            { tema: "notify_review", label: "Itens a conferir", description: "Às 20h." },
-            { tema: "notify_insights", label: "Insights", description: "No máximo 3 push por semana." },
-        ],
-    },
+const TEMAS: { tema: TemaDeNotificacao; label: string }[] = [
+    { tema: "notify_transactions", label: "Despesas de outros membros" },
+    { tema: "notify_budget", label: "Orçamento" },
+    { tema: "notify_bills", label: "Contas a pagar" },
+    { tema: "notify_credit_cards", label: "Limite e categorias" },
+    { tema: "notify_credit_card_calendar", label: "Fatura e vencimento" },
+    { tema: "notify_review", label: "Itens a conferir" },
+    { tema: "notify_insights", label: "Insights" },
 ]
 
 /**
@@ -52,26 +37,21 @@ export function NotificacoesTemas({
             <PageSectionHeader>
                 <PageSectionTitle>O que receber</PageSectionTitle>
             </PageSectionHeader>
-            <div className="space-y-3">
-                {GRUPOS.map((grupo) => (
-                    <Card key={grupo.titulo} padding="none">
-                        {grupo.temas.map(({ tema, label, description }, i) => (
-                            <Fragment key={tema}>
-                                {i > 0 ? <Separator /> : null}
-                                <div className="px-4 py-3">
-                                    <FormSwitch
-                                        id={`pref-${tema}`}
-                                        label={label}
-                                        description={description}
-                                        checked={temaLigado(prefs, tema)}
-                                        onCheckedChange={(checked) => void patch({ [tema]: checked })}
-                                    />
-                                </div>
-                            </Fragment>
-                        ))}
-                    </Card>
+            <Card padding="none">
+                {TEMAS.map(({ tema, label }, i) => (
+                    <Fragment key={tema}>
+                        {i > 0 ? <Separator /> : null}
+                        <div className="px-4 py-3">
+                            <FormSwitch
+                                id={`pref-${tema}`}
+                                label={label}
+                                checked={temaLigado(prefs, tema)}
+                                onCheckedChange={(checked) => void patch({ [tema]: checked })}
+                            />
+                        </div>
+                    </Fragment>
                 ))}
-            </div>
+            </Card>
         </PageSection>
     )
 }

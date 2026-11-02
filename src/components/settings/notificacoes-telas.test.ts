@@ -13,11 +13,12 @@ describe("Notificações: as chaves moram na seção de Configurações", () => 
         expect(secao).toContain("<NotificacoesCanais")
         expect(secao).toContain("<NotificacoesTemas")
     })
-    it("o layout C: dois subtítulos e três cartões de tema", () => {
+    it("o layout C: dois subtítulos, e os temas num cartão só, sem cabeçalho nem descrição", () => {
         expect(canais).toContain(">Canais<")
         expect(temas).toContain(">O que receber<")
         expect(temas).not.toContain("CardToolbar")
-        for (const grupo of ["Carteira", "Cartões", "Rotina"]) expect(temas).toContain(`titulo: "${grupo}"`)
+        expect(temas.match(/<Card /g)).toHaveLength(1)
+        for (const fora of ["Às 20h.", "No máximo 3 push por semana.", "description="]) expect(temas).not.toContain(fora)
     })
     it("o aviso vem antes das chaves, sem botão de ação", () => {
         expect(secao.indexOf("Este aparelho bloqueou os avisos.")).toBeLessThan(secao.indexOf("<NotificacoesCanais"))
@@ -38,7 +39,7 @@ describe("Notificações: as chaves moram na seção de Configurações", () => 
         }
     })
     it("os temas vêm com os nomes novos e leem pelo `temaLigado`", () => {
-        for (const t of ["Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Às 20h.", "Insights", "No máximo 3 push por semana."]) expect(temas).toContain(t)
+        for (const t of ["Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Insights"]) expect(temas).toContain(t)
         expect(temas).toContain("temaLigado(prefs, ")
     })
 })
