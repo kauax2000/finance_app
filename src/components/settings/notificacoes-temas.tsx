@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment } from "react"
-import { Card, CardToolbar } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Separator } from "@/components/ui/separator"
@@ -55,7 +55,6 @@ export function NotificacoesTemas({
             <div className="space-y-3">
                 {GRUPOS.map((grupo) => (
                     <Card key={grupo.titulo} padding="none">
-                        <CardToolbar variant="label">{grupo.titulo}</CardToolbar>
                         {grupo.temas.map(({ tema, label, description }, i) => (
                             <Fragment key={tema}>
                                 {i > 0 ? <Separator /> : null}
