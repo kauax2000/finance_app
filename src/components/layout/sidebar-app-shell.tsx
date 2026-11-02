@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation"
 import { AppSidebar } from "@/components/layout/app-sidebar"
-import { AppHeader } from "@/components/layout/app-header"
+import { AppHeader, defaultMobileBackHref } from "@/components/layout/app-header"
 import { AuthGuard } from "@/components/layout/auth-guard"
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav"
 import {
@@ -112,7 +112,11 @@ export function SidebarAppShell({
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
                                     <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
-                                        <TituloDaTela pathname={pathname} titleMode={titleMode} />
+                                        <TituloDaTela
+                                            pathname={pathname}
+                                            titleMode={titleMode}
+                                            subpagina={Boolean(defaultMobileBackHref(pathname))}
+                                        />
                                         <SomenteLeituraWireframe />
                                         {children}
                                     </div>

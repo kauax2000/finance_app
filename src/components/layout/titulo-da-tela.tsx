@@ -1,10 +1,15 @@
 "use client"
 
+import { useEffect } from "react"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { APP_PAGE_TITLES, DASHBOARD_PAGE_TITLES, ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { publishPageTitle } from "@/hooks/use-page-title-dock"
+
+/** Quanto a tela rola antes de o nome subir à barra: o tremor do dedo não o acende. */
+const ROLAGEM_MINIMA = 8
 
 export function defaultMobileTitle(
     pathname: string,
@@ -31,20 +36,35 @@ export function defaultMobileTitle(
 type TituloDaTelaProps = {
     pathname: string
     titleMode: "dashboard" | "app"
+    /** Tem voltar: é subpágina, e o nome só aparece na barra, depois de rolar. */
+    subpagina: boolean
 }
 
 /**
- * O título grande de toda tela no telefone: mora na casca, e não em cada página,
+ * O título grande das telas de aba no telefone: mora na casca, e não em cada página,
  * para aparecer no clique, antes do `AdiarMontagem`. O `<h1>` é o da barra do topo.
- * A página Você não o tem: quem a abre é a identidade da pessoa. No desktop cada
- * tela revisada escreve o próprio `PageHeader`.
+ * A página Você não o tem: quem a abre é a identidade da pessoa. A subpágina também
+ * não: o nome dela sobe à barra ao rolar. No desktop cada tela revisada escreve o
+ * próprio `PageHeader`.
  */
-export function TituloDaTela({ pathname, titleMode }: TituloDaTelaProps) {
+export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaProps) {
     const chrome = usePageChromeState()
     const isMobile = useIsMobile()
-    if (!isMobile || pathname === ROUTES.ME) return null
-
     const titulo = chrome?.title ?? defaultMobileTitle(pathname, titleMode)
+
+    useEffect(() => {
+        if (!isMobile || !subpagina) return
+        const publicar = () =>
+            publishPageTitle(document, { text: titulo, docked: window.scrollY > ROLAGEM_MINIMA })
+        publicar()
+        window.addEventListener("scroll", publicar, { passive: true })
+        return () => {
+            window.removeEventListener("scroll", publicar)
+            publishPageTitle(document, null)
+        }
+    }, [isMobile, subpagina, titulo])
+
+    if (!isMobile || subpagina || pathname === ROUTES.ME) return null
     return (
         <PageHeader key={pathname} collapse>
             <PageHeaderTitle asChild>

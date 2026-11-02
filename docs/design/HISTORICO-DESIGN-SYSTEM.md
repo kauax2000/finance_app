@@ -28825,3 +28825,8 @@ As preferências de notificação saíram do estado da tela para o React Query
 (`notificationPrefsKeys`): o `PushNotificationProvider` usa o gancho na raiz, então elas
 carregam no boot e ficam gravadas no IndexedDB. Medido a 1280px: nenhum osso em
 Notificações, entrando pela navegação (o resumo em 156ms) ou recarregando (305ms).
+
+O título grande ficou só nas telas de aba. A subpágina, toda rota com voltar, começa no
+conteúdo, e o nome sobe ao centro da barra depois de 8px de rolagem: o `TituloDaTela`
+publica pelo mesmo canal do `PageHeader collapse`, sem um título para passar por baixo da
+barra. Pedido do dono, depois de ver as subpáginas com o título grande.
