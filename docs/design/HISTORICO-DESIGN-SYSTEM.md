@@ -28776,8 +28776,11 @@ Do Painel para Transações não são páginas diferentes, são lugares diferent
   e não pode repetir o gesto, então um efeito a limpa depois do commit.
 - **O gesto**: entrar traz a tela nova de 100% a 0, sobre a velha, que recua a -30%;
   voltar é o contrário. `--duration-slow`, `--ease-out`, e cada foto anda: o grupo
-  e a raiz ficam parados. Abaixo de `48rem` as barras ganham nome e ficam por cima,
-  fora do tema e da troca de carteira, que seguem como eram.
+  e a raiz ficam parados. As barras ficam por cima porque ganham nome, mas só durante
+  a troca: `data-subpagina` no `<html>`, posto no render e tirado 400ms depois
+  (`--duration-slow` mais folga). O nome faz do elemento uma raiz de fundo: permanente,
+  ele tirou o borrão da `surface="edge"` em repouso, e o título ficou nítido sob a barra
+  numa captura do Simulador. Tema e troca de carteira seguem como eram.
 - **`background-color` e `mix-blend-mode: normal` na foto de cima**, a mais do que o
   plano dizia: a foto do conteúdo não tem fundo (ele é do `body`), e a de baixo
   apareceria através dela; com fundo, a soma de brilho do cruzamento padrão estouraria.

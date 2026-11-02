@@ -2258,57 +2258,56 @@
 
 /* A subpágina do telefone (`TransicaoDeSubpagina`): a tela de cima corre sobre a de
    baixo, que recua. O grupo não anima porque quem anda é cada foto, e as barras
-   ganham nome para ficar paradas por cima. O grupo fica no lugar da tela nova, então
-   a foto velha desce o quanto a rolagem mudou (`--subpagina-desvio`, em `onUpdate`),
-   para não pular. A foto do conteúdo é transparente: a de
-   cima leva o fundo da página, e `normal` tira a soma de brilho do cruzamento padrão.
-   Fora do tema e da carteira, a única transição do app é esta: é o que escopa a raiz. */
-@media (width < 48rem) {
-  html:not(.theme-reveal, .workspace-switch) [data-slot="top-bar"] {
-    view-transition-name: barra-do-topo;
-  }
-  html:not(.theme-reveal, .workspace-switch) [data-slot="bottom-bar"] {
-    view-transition-name: barra-de-baixo;
-  }
-  ::view-transition-group(barra-do-topo),
-  ::view-transition-group(barra-de-baixo) {
-    animation: none;
-    z-index: 100;
-  }
-  ::view-transition-old(barra-do-topo),
-  ::view-transition-old(barra-de-baixo) {
-    display: none;
-  }
-  ::view-transition-new(barra-do-topo),
-  ::view-transition-new(barra-de-baixo) {
-    animation: none;
-  }
-  html:not(.theme-reveal, .workspace-switch)::view-transition-old(root),
-  html:not(.theme-reveal, .workspace-switch)::view-transition-new(root) {
-    animation: none;
-  }
-  ::view-transition-group(.subpagina-entra),
-  ::view-transition-group(.subpagina-volta) {
-    animation: none;
-  }
-  ::view-transition-new(.subpagina-entra),
-  ::view-transition-old(.subpagina-volta) {
-    z-index: 1;
-    background-color: var(--background);
-    mix-blend-mode: normal;
-  }
-  ::view-transition-old(.subpagina-entra) {
-    animation: var(--duration-slow) var(--ease-out) both subpagina-esquerda;
-  }
-  ::view-transition-new(.subpagina-entra) {
-    animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
-  }
-  ::view-transition-old(.subpagina-volta) {
-    animation: var(--duration-slow) var(--ease-out) both subpagina-sai-direita;
-  }
-  ::view-transition-new(.subpagina-volta) {
-    animation: var(--duration-slow) var(--ease-out) both subpagina-vem-esquerda;
-  }
+   ganham nome só durante a troca (`data-subpagina` no `<html>`) para ficar paradas
+   por cima: o nome faz da barra uma raiz de fundo, e o borrão sumiria em repouso. O
+   grupo fica no lugar da tela nova, então a foto velha desce o quanto a rolagem mudou
+   (`--subpagina-desvio`, no render da troca), para não pular. A foto do conteúdo é
+   transparente: a de cima leva o fundo da página, e `normal` tira a soma de brilho do
+   cruzamento padrão. */
+html[data-subpagina] [data-slot="top-bar"] {
+  view-transition-name: barra-do-topo;
+}
+html[data-subpagina] [data-slot="bottom-bar"] {
+  view-transition-name: barra-de-baixo;
+}
+::view-transition-group(barra-do-topo),
+::view-transition-group(barra-de-baixo) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(barra-do-topo),
+::view-transition-old(barra-de-baixo) {
+  display: none;
+}
+::view-transition-new(barra-do-topo),
+::view-transition-new(barra-de-baixo) {
+  animation: none;
+}
+html[data-subpagina]::view-transition-old(root),
+html[data-subpagina]::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.subpagina-entra),
+::view-transition-group(.subpagina-volta) {
+  animation: none;
+}
+::view-transition-new(.subpagina-entra),
+::view-transition-old(.subpagina-volta) {
+  z-index: 1;
+  background-color: var(--background);
+  mix-blend-mode: normal;
+}
+::view-transition-old(.subpagina-entra) {
+  animation: var(--duration-slow) var(--ease-out) both subpagina-esquerda;
+}
+::view-transition-new(.subpagina-entra) {
+  animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
+}
+::view-transition-old(.subpagina-volta) {
+  animation: var(--duration-slow) var(--ease-out) both subpagina-sai-direita;
+}
+::view-transition-new(.subpagina-volta) {
+  animation: var(--duration-slow) var(--ease-out) both subpagina-vem-esquerda;
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(.subpagina-entra),

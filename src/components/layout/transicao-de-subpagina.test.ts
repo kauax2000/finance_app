@@ -17,9 +17,11 @@ describe("a transição de subpágina", () => {
         expect(T).toMatch(/useEffect\([\s\S]+setDirecao\(null\)/)
     })
 
-    it("as barras ficam paradas, menos nas outras transições do app", () => {
-        expect(CSS).toContain('html:not(.theme-reveal, .workspace-switch) [data-slot="top-bar"]')
-        expect(CSS).toContain('html:not(.theme-reveal, .workspace-switch) [data-slot="bottom-bar"]')
+    it("as barras só têm nome durante a troca, para não perder o borrão em repouso", () => {
+        expect(T).toContain("dataset.subpagina")
+        expect(CSS).toContain('html[data-subpagina] [data-slot="top-bar"]')
+        expect(CSS).toContain('html[data-subpagina] [data-slot="bottom-bar"]')
+        expect(CSS).not.toContain("html:not(.theme-reveal, .workspace-switch)")
     })
 
     it("a tela velha rolada fica onde estava: o desvio da rolagem vai às fotos dela", () => {
