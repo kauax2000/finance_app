@@ -36,12 +36,13 @@ type TituloDaTelaProps = {
 /**
  * O título grande de toda tela no telefone: mora na casca, e não em cada página,
  * para aparecer no clique, antes do `AdiarMontagem`. O `<h1>` é o da barra do topo.
- * No desktop cada tela revisada escreve o próprio `PageHeader`.
+ * A página Você não o tem: quem a abre é a identidade da pessoa. No desktop cada
+ * tela revisada escreve o próprio `PageHeader`.
  */
 export function TituloDaTela({ pathname, titleMode }: TituloDaTelaProps) {
     const chrome = usePageChromeState()
     const isMobile = useIsMobile()
-    if (!isMobile) return null
+    if (!isMobile || pathname === ROUTES.ME) return null
 
     const titulo = chrome?.title ?? defaultMobileTitle(pathname, titleMode)
     return (

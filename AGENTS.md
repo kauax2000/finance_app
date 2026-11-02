@@ -725,7 +725,7 @@ declaração de `background-color` no trilho).
   **576** · 672 · 1280 · sem teto, e a calha (`gutter`) é **opt-in**, porque
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
-  `PageSectionContent`. **No telefone toda tela abre com o título grande, e quem o escreve é a casca**
+  `PageSectionContent`. **No telefone toda tela abre com o título grande, menos a página Você, e quem o escreve é a casca**
   (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
   `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com

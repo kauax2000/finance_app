@@ -10,8 +10,8 @@ describe("o título grande do telefone", () => {
         expect(CASCA.indexOf("<TituloDaTela")).toBeLessThan(CASCA.indexOf("{children}"))
     })
 
-    it("só existe no telefone, sobe para a barra e não abre um segundo h1", () => {
-        expect(TITULO).toContain("if (!isMobile) return null")
+    it("só existe no telefone, menos na página Você, sobe para a barra e não abre um segundo h1", () => {
+        expect(TITULO).toContain("if (!isMobile || pathname === ROUTES.ME) return null")
         expect(TITULO).toContain("<PageHeader key={pathname} collapse>")
         expect(TITULO).toContain('<p aria-hidden="true">{titulo}</p>')
     })

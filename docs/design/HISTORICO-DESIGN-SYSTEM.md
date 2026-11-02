@@ -28745,7 +28745,8 @@ tela e, ao rolar, o nome no centro da barra. O fundo da barra fica como está.
 - **O padrão é de toda tela do telefone**, palavra do dono. Por isso ele mora na
   casca (`TituloDaTela`), acima da página: aparece no clique, sem esqueleto próprio,
   a 16px do conteúdo (o `gap-4` da casca), com o título que o `AppHeader` já tinha
-  para o `<h1>`. Configurações só escreve o `PageHeader` fora do telefone.
+  para o `<h1>`. Configurações só escreve o `PageHeader` fora do telefone. A página
+  Você fica de fora, por pedido dele: quem a abre é a identidade da pessoa.
 - **`TopBarTitle pageTitle` no centro**: o `AppHeader` o põe no telefone, nas
   telas em que o seletor de carteira saiu, em 16 semibold, o corpo da carteira.
 - **O seletor de carteira cede o lugar**, escolha do dono entre três mockups, em
