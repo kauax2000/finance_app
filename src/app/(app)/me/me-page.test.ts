@@ -51,7 +51,7 @@ describe("a página Você", () => {
         expect(grupo).toContain(">Neste celular<")
         expect(grupo).toContain('label="Lançamento inteligente"')
         expect(grupo).toContain('titulo="Instalar o app"')
-        expect(grupo).toContain('className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"')
+        expect(grupo).toContain("flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10")
     })
     it("cada linha é um link com ícone mini, nome e chevron", () => {
         expect(PAGINA).toContain("<ItemChevron")

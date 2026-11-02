@@ -120,13 +120,16 @@ export function NesteCelularGrupo() {
                                     titulo="Instalar o app"
                                     descricao={descricaoDoApp}
                                     media={
-                                        <Image
-                                            src="/icons/apple-touch-icon.png"
-                                            alt=""
-                                            width={36}
-                                            height={36}
-                                            className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"
-                                        />
+                                        // A capa do app é preta: o ícone entra menor sobre ela, para a capa aparecer em volta do logo.
+                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10">
+                                            <Image
+                                                src="/icons/apple-touch-icon.png"
+                                                alt=""
+                                                width={22}
+                                                height={22}
+                                                className="size-5.5"
+                                            />
+                                        </span>
                                     }
                                 >
                                     <SyncStatusChip />

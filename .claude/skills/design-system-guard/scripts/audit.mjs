@@ -77,6 +77,9 @@ const RUNTIME_COLOR_FILES = [
   // A marca do Google no botão de entrar: quatro hexadecimais que são de outra
   // pessoa e não seguem o tema.
   "google-icon",
+  // A capa do ícone do app, que é preta nos dois temas: o ícone instalável é um
+  // objeto do mundo, e o fundo dele não segue o tema.
+  "neste-celular-grupo",
   "workspace-appearance-form-fields",
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
