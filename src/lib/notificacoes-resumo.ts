@@ -12,7 +12,7 @@ export const TEMAS_DE_NOTIFICACAO = [
 
 export type TemaDeNotificacao = (typeof TEMAS_DE_NOTIFICACAO)[number]
 
-// Mesma leitura de isTypeAllowedForPrefs: estes dois só ligam com true; os outros só caem com false.
+// A leitura que a tela de configurações usa hoje: estes dois com `!!`, os outros com `!== false`.
 const PEDEM_TRUE: readonly TemaDeNotificacao[] = ["notify_transactions", "notify_budget"]
 
 export function temaLigado(prefs: WorkspaceMemberNotificationPrefs, tema: TemaDeNotificacao): boolean {
