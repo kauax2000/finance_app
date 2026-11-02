@@ -179,6 +179,7 @@ export type MobileAccountMenuNavItem = {
     href: string
     icon: NavigationItem["icon"] | HeroIcon
     beta?: boolean
+    description?: string
 }
 
 /** Todas as telas que a página Você pode abrir (as de fora da barra, a carteira e o perfil). */
@@ -198,13 +199,28 @@ export function getMobileAccountMenuNavItems(): MobileAccountMenuNavItem[] {
     ]
 }
 
+/** A ordem da carteira na página Você: o que se abre mais vezes vem antes. */
+const ORDEM_DA_CARTEIRA: readonly string[] = [
+    ROUTES.CREDIT_CARDS,
+    ROUTES.BILLS,
+    ROUTES.SUBSCRIPTIONS,
+    ROUTES.PROJETOS,
+    ROUTES.MEMBERS,
+]
+
 export function getMobileAccountMenuPinnedNavItems(): MobileAccountMenuNavItem[] {
-    return getMobileAccountMenuNavItems().filter(
-        (item) =>
-            !ACCOUNT_MENU_PROFILE_LINK_ITEMS.some(
-                (profileItem) => profileItem.href === item.href
-            )
-    )
+    const posicao = (href: string) => {
+        const i = ORDEM_DA_CARTEIRA.indexOf(href)
+        return i === -1 ? ORDEM_DA_CARTEIRA.length : i
+    }
+    return getMobileAccountMenuNavItems()
+        .filter(
+            (item) =>
+                !ACCOUNT_MENU_PROFILE_LINK_ITEMS.some(
+                    (profileItem) => profileItem.href === item.href
+                )
+        )
+        .sort((a, b) => posicao(a.href) - posicao(b.href))
 }
 
 export function isMobileAccountMenuNavItemActive(
@@ -273,7 +289,12 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             label: "Conta",
             items: [
                 ...ACCOUNT_MENU_PROFILE_LINK_ITEMS.filter((item) => item.href !== ROUTES.PLANS).map(
-                    ({ href, label, icon }) => ({ href, name: label, icon })
+                    ({ href, label, icon }) => ({
+                        href,
+                        name: label,
+                        icon,
+                        ...(href === ROUTES.COFRE ? { description: "Seus dados: exportar e apagar" } : {}),
+                    })
                 ),
                 ...configuracoes,
             ],

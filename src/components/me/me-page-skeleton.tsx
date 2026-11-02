@@ -4,7 +4,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 /** Uma linha do cartão da página Você: o ícone de 20, o nome e o chevron. */
 function LinhaEsqueleto() {
     return (
-        <div className="flex items-center gap-2.5 px-4 py-3 pointer-coarse:min-h-11">
+        <div className="flex items-center gap-2.5 px-4 py-3 min-h-12">
             <Skeleton className="size-5 shrink-0 rounded" />
             <Skeleton className="h-4 w-36 max-w-full" />
             <Skeleton className="ml-auto size-4 shrink-0 rounded" />
@@ -14,8 +14,8 @@ function LinhaEsqueleto() {
 
 /**
  * A espera da página Você, na forma dela: o avatar de 56 com o nome e o
- * e-mail, e os dois cartões de linhas — a carteira (4, o telefone comum, sem
- * abas fora da barra) e a conta (2).
+ * e-mail, e os dois grupos, cada um com a barra do título acima do cartão —
+ * a carteira (5, o telefone comum, sem abas fora da barra) e a conta (3).
  */
 export function MePageSkeleton() {
     return (
@@ -27,12 +27,15 @@ export function MePageSkeleton() {
                     <Skeleton className="h-4 w-48 max-w-full" />
                 </div>
             </div>
-            {[4, 2].map((linhas) => (
-                <Card key={linhas} padding="none" className="divide-y divide-border">
-                    {Array.from({ length: linhas }, (_, i) => (
-                        <LinhaEsqueleto key={i} />
-                    ))}
-                </Card>
+            {[5, 3].map((linhas) => (
+                <div key={linhas} className="space-y-3">
+                    <Skeleton className="h-4 w-20" />
+                    <Card padding="none" className="divide-y divide-border">
+                        {Array.from({ length: linhas }, (_, i) => (
+                            <LinhaEsqueleto key={i} />
+                        ))}
+                    </Card>
+                </div>
             ))}
         </SkeletonGroup>
     )

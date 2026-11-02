@@ -5,13 +5,13 @@ import Image from "next/image"
 import { SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { FormSwitch } from "@/components/ui/form"
-import { Separator } from "@/components/ui/separator"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
+import { Switch } from "@/components/ui/switch"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 import { SyncStatusChip } from "@/components/pwa/sync-status-chip"
-import { SettingsRow, SettingsTile } from "@/components/settings/settings-section"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import { useLancamentoInteligente } from "@/hooks/use-lancamento-inteligente"
 
@@ -61,82 +61,91 @@ export function NesteCelularGrupo() {
 
     return (
         <>
-            <Card
+            <PageSection
                 id="no-celular"
-                padding="none"
-                role="group"
-                aria-label="Neste celular"
+                size="sm"
                 className="scroll-mt-[calc(var(--top-bar-bottom)+--spacing(6))]"
             >
-                <SettingsRow
-                    titulo="Tema"
-                    media={
-                        <SettingsTile>
-                            <SwatchIcon className="size-5" />
-                        </SettingsTile>
-                    }
-                >
-                    <SeletorDeTema labels={false} />
-                </SettingsRow>
-                <Separator />
-                <div className="flex min-w-0 items-center gap-3 px-4 py-3">
-                    <SettingsTile>
-                        <SparklesIcon className="size-5" />
-                    </SettingsTile>
-                    <FormSwitch
-                        className="min-w-0 flex-1 items-center"
-                        label="Lançamento inteligente"
-                        description="Digite uma frase no +"
-                        checked={lancamentoInteligente}
-                        onCheckedChange={definirLancamentoInteligente}
-                    />
-                </div>
-                {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
-                {instalado ? (
-                    shell && shell.pendingSyncCount > 0 ? (
-                        <>
-                            <Separator />
-                            <SettingsRow
-                                titulo="Sincronização"
-                                descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
-                            >
-                                <SyncStatusChip />
-                            </SettingsRow>
-                        </>
-                    ) : null
-                ) : (
-                    <>
-                        <Separator />
-                        <SettingsRow
-                            titulo="Instalar o app"
-                            descricao={descricaoDoApp}
-                            media={
-                                <Image
-                                    src="/icons/apple-touch-icon.png"
-                                    alt=""
-                                    width={36}
-                                    height={36}
-                                    className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"
+                <PageSectionHeader>
+                    <PageSectionTitle>Neste celular</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
+                    <ItemGroup variant="divided">
+                        <Item variant="flush" className="min-h-12">
+                            <ItemMedia variant="icon">
+                                <SwatchIcon className="size-5" aria-hidden />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle className="pointer-coarse:text-base">Tema</ItemTitle>
+                            </ItemContent>
+                            <ItemActions>
+                                <SeletorDeTema labels={false} />
+                            </ItemActions>
+                        </Item>
+                        <Item variant="flush" className="min-h-12">
+                            <ItemMedia variant="icon">
+                                <SparklesIcon className="size-5" aria-hidden />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle className="pointer-coarse:text-base">Lançamento inteligente</ItemTitle>
+                                <ItemDescription>Digite uma frase no +</ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                                <Switch
+                                    aria-label="Lançamento inteligente"
+                                    checked={lancamentoInteligente}
+                                    onCheckedChange={definirLancamentoInteligente}
                                 />
-                            }
-                        >
-                            <SyncStatusChip />
-                        </SettingsRow>
-                    </>
-                )}
-                {instalarNoIphone ? (
-                    <div className="px-4 pb-3">
-                        <Button
-                            type="button"
-                            variant="primary"
-                            className="w-full"
-                            onClick={() => setInstallOpen(true)}
-                        >
-                            Como instalar
-                        </Button>
-                    </div>
-                ) : null}
-            </Card>
+                            </ItemActions>
+                        </Item>
+                        {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
+                        {instalado ? (
+                            shell && shell.pendingSyncCount > 0 ? (
+                                <Item variant="flush" className="min-h-12">
+                                    <ItemContent>
+                                        <ItemTitle className="pointer-coarse:text-base">Sincronização</ItemTitle>
+                                        {!shell.isOnline ? <ItemDescription>{SEM_CONEXAO}</ItemDescription> : null}
+                                    </ItemContent>
+                                    <ItemActions>
+                                        <SyncStatusChip />
+                                    </ItemActions>
+                                </Item>
+                            ) : null
+                        ) : (
+                            <Item variant="flush" className="min-h-12">
+                                <ItemMedia>
+                                    <Image
+                                        src="/icons/apple-touch-icon.png"
+                                        alt=""
+                                        width={20}
+                                        height={20}
+                                        className="size-5 shrink-0 rounded-md ring-1 ring-foreground/10"
+                                    />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="pointer-coarse:text-base">Instalar o app</ItemTitle>
+                                    <ItemDescription>{descricaoDoApp}</ItemDescription>
+                                </ItemContent>
+                                <ItemActions>
+                                    <SyncStatusChip />
+                                </ItemActions>
+                            </Item>
+                        )}
+                    </ItemGroup>
+                    {instalarNoIphone ? (
+                        <div className="px-4 pb-3">
+                            <Button
+                                type="button"
+                                variant="primary"
+                                className="w-full"
+                                onClick={() => setInstallOpen(true)}
+                            >
+                                Como instalar
+                            </Button>
+                        </div>
+                    ) : null}
+                </Card>
+            </PageSection>
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
         </>
     )
