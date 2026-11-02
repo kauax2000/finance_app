@@ -7,12 +7,14 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
+  DialogBody,
   DialogCloseButton,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { P, Muted } from "@/components/ui/typography"
 import {
     PWA_INSTALL_DISMISSED_KEY,
@@ -74,6 +76,14 @@ const PASSOS: Passo[] = [
     },
 ]
 
+function dispensarAviso() {
+    try {
+        localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, "1")
+    } catch {
+        /* ignore */
+    }
+}
+
 export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
     const [passo, setPasso] = useState(0)
     const [abertoAntes, setAbertoAntes] = useState(open)
@@ -83,11 +93,7 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
     }
 
     const handleDismiss = () => {
-        try {
-            localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, "1")
-        } catch {
-            /* ignore */
-        }
+        dispensarAviso()
         onOpenChange(false)
     }
 
@@ -100,52 +106,49 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
             <SheetContent
                 side="bottom"
                 variant="flush"
-                fillMobileViewport
-                className="gap-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+                className="max-h-dvh gap-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
             >
                 <DialogHeader>
                     <DialogTitle>Instalar no iPhone</DialogTitle>
                     <DialogDescription>
-                        Use o Finance como app, sem a barra do Safari.
+                        Use o Finance como app, sem a barra do Safari. Abra pelo Safari: em outro navegador o caminho muda.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="relative mx-auto h-72 w-60 overflow-hidden">
-                    <Image
-                        key={passo}
-                        src={atual.imagem}
-                        alt=""
-                        sizes="240px"
-                        className={`absolute inset-x-0 ${ancora} h-auto w-60 max-w-none`}
-                    />
-                    <div className={`absolute inset-x-0 ${ancora} aspect-[720/1488]`}>
-                        <span
-                            className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
-                            style={{ left: `${atual.ponto.x}%`, top: `${atual.ponto.y}%` }}
-                            aria-hidden
-                        >
-                            <span className="absolute inset-0 rounded-full bg-foreground/30 motion-safe:animate-ping" />
-                            <span className="absolute inset-0 rounded-full ring-2 ring-foreground" />
-                        </span>
-                    </div>
-                </div>
-                <div aria-hidden className="flex justify-center gap-1.5">
-                    {PASSOS.map((p, i) => (
-                        <span
-                            key={p.titulo}
-                            className={`size-1.5 rounded-full ${i === passo ? "bg-foreground" : "bg-muted-foreground/40"}`}
+                <DialogBody className="flex flex-col gap-4">
+                    <div className="relative mx-auto h-72 w-60 shrink-0 overflow-hidden">
+                        <Image
+                            key={passo}
+                            src={atual.imagem}
+                            alt=""
+                            sizes="240px"
+                            placeholder="blur"
+                            className={cn("absolute inset-x-0 h-auto w-60 max-w-none", ancora)}
                         />
-                    ))}
-                </div>
-                <div aria-live="polite">
-                    <P className="font-semibold">{atual.titulo}</P>
-                    <Muted>{atual.texto}</Muted>
-                </div>
-                {passo === 0 && (
-                    <Muted className="text-xs">
-                        Use o Safari: em outro navegador o caminho muda.
-                    </Muted>
-                )}
-                <div className="flex gap-2">
+                        <div className={cn("absolute inset-x-0 aspect-[720/1488]", ancora)}>
+                            <span
+                                className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
+                                style={{ left: `${atual.ponto.x}%`, top: `${atual.ponto.y}%` }}
+                                aria-hidden
+                            >
+                                <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
+                                <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
+                            </span>
+                        </div>
+                    </div>
+                    <div aria-hidden className="flex shrink-0 justify-center gap-1.5">
+                        {PASSOS.map((p, i) => (
+                            <span
+                                key={p.titulo}
+                                className={cn("size-1.5 rounded-full", i === passo ? "bg-foreground" : "bg-muted-foreground/40")}
+                            />
+                        ))}
+                    </div>
+                    <div aria-live="polite" className="shrink-0">
+                        <P className="font-semibold">{atual.titulo}</P>
+                        <Muted>{atual.texto}</Muted>
+                    </div>
+                </DialogBody>
+                <div className="flex shrink-0 gap-2 px-(--dialog-px)">
                     {passo > 0 && (
                         <Button type="button" variant="tertiary" onClick={() => setPasso(passo - 1)}>
                             Voltar
@@ -189,5 +192,11 @@ export function InstallPwaSheetAuto() {
 
     if (!isIos || isStandalone) return null
 
-    return <InstallPwaSheet open={open} onOpenChange={setOpen} />
+    // Fechar pelo × ou pelo gesto também dispensa: o "Entendi" está a três toques.
+    const handleOpenChange = (next: boolean) => {
+        if (!next) dispensarAviso()
+        setOpen(next)
+    }
+
+    return <InstallPwaSheet open={open} onOpenChange={handleOpenChange} />
 }

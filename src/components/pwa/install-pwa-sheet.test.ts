@@ -22,4 +22,20 @@ describe("InstallPwaSheet", () => {
   it("o passo fica numa região viva", () => {
     expect(f).toContain('aria-live="polite"')
   })
+  it("o corpo rola num DialogBody e a folha abraça o conteúdo", () => {
+    expect(f).toContain("DialogBody")
+    expect(f).not.toContain("fillMobileViewport")
+  })
+  it("o ponto é a tinta sobre foto, nos dois temas", () => {
+    expect(f).toContain("ring-scrim-foreground")
+    expect(f).not.toContain("ring-foreground\"")
+  })
+  it("a imagem aparece borrada até carregar", () => {
+    expect(f).toContain('placeholder="blur"')
+  })
+  it("fechar o aviso automático também o dispensa", () => {
+    const auto = f.slice(f.indexOf("export function InstallPwaSheetAuto"))
+    expect(auto).toContain("dispensarAviso()")
+    expect(f).toContain("PWA_INSTALL_DISMISSED_KEY")
+  })
 })
