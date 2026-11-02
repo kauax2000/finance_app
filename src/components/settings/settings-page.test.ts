@@ -97,8 +97,11 @@ describe("Configurações: página única", () => {
             "wave={onda}",
             "Abra o Finance no telefone",
             "@container/no-celular",
+            "@max-xl/no-celular:hidden",
+            "onCopied",
         ]) expect(cartao).toContain(texto)
         expect(aparelho).toContain("NoCelularCartao")
+        expect(aparelho).toMatch(/<NoCelularCartao value=\{noTelefone\} \/>[\s\S]*<Card padding="none">/)
         expect(aparelho).not.toContain("Só tem efeito no telefone.")
         expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(2)
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")

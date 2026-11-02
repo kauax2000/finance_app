@@ -120,11 +120,11 @@ export function ThemeSettings() {
                 <SettingsSection titulo="No celular" alcance="Lance por frase e instale o app no telefone.">
                     <NoCelularCartao value={noTelefone} />
                     {instalarNoIphone ? (
-                        <Card padding="none" className="mt-3">
+                        <Card padding="none">
                             {linhaDoApp}
                         </Card>
                     ) : shell && shell.pendingSyncCount > 0 ? (
-                        <Card padding="none" className="mt-3">
+                        <Card padding="none">
                             <SettingsRow
                                 titulo="Sincronização"
                                 descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
