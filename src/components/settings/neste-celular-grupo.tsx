@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
-import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { SettingsRow } from "@/components/settings/settings-section"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
@@ -107,7 +106,6 @@ export function NesteCelularGrupo() {
                         {instalado ? (
                             shell && shell.pendingSyncCount > 0 ? (
                                 <>
-                                <Separator />
                                 <Item variant="flush" className="min-h-12">
                                     <ItemContent>
                                         <ItemTitle className="pointer-coarse:text-base">Sincronização</ItemTitle>
@@ -121,7 +119,6 @@ export function NesteCelularGrupo() {
                             ) : null
                         ) : (
                             <>
-                                <Separator />
                                 <SettingsRow
                                     titulo="Instalar o app"
                                     descricao={descricaoDoApp}
