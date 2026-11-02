@@ -4,9 +4,10 @@ import { useCallback, useState } from "react"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormSwitch } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
+import { Caption } from "@/components/ui/typography"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import {
@@ -41,6 +42,11 @@ export function NotificacoesCanaisDialog({ open, onOpenChange, prefs, patch, dis
     const pushUnsupported = !isPushSupported()
     const precisaInstalar = isIos && !isStandalone
 
+    const abrirInstalacao = useCallback(() => {
+        onOpenChange(false)
+        setInstallPwaOpen(true)
+    }, [onOpenChange])
+
     const handlePushToggle = useCallback(
         async (checked: boolean) => {
             setPushMessage(null)
@@ -57,7 +63,7 @@ export function NotificacoesCanaisDialog({ open, onOpenChange, prefs, patch, dis
                         setPushMessage(
                             "No iPhone, adicione o Finance à Tela de Início antes de ativar push."
                         )
-                        setInstallPwaOpen(true)
+                        abrirInstalacao()
                         return
                     }
                     const result = await subscribeToPush()
@@ -70,11 +76,13 @@ export function NotificacoesCanaisDialog({ open, onOpenChange, prefs, patch, dis
                     await unsubscribeFromPush()
                     await patch({ notify_push: false })
                 }
+            } catch (e) {
+                setPushMessage(e instanceof Error ? e.message : "Não foi possível alterar o push.")
             } finally {
                 setPushBusy(false)
             }
         },
-        [pushUnsupported, isIos, isStandalone, patch]
+        [pushUnsupported, isIos, isStandalone, patch, abrirInstalacao]
     )
 
     // No iPhone sem o app instalado o navegador não oferece push: o motivo vale mais que "indisponível".
@@ -89,70 +97,72 @@ export function NotificacoesCanaisDialog({ open, onOpenChange, prefs, patch, dis
             : "Desligar remove este aparelho de todas as carteiras."
 
     return (
-        <Dialog surface="auto" pending={pushBusy} open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Onde chega</DialogTitle>
-                </DialogHeader>
-                <DialogBody className="flex flex-col gap-4">
-                    {error ? (
-                        <Alert tone="destructive" size="sm">
-                            <AlertTitle>{error}</AlertTitle>
-                        </Alert>
-                    ) : null}
-                    <Card padding="none">
-                        <div className="px-4 py-3">
-                            <FormSwitch
-                                id="pref-push"
-                                label="Push neste aparelho"
-                                description={descricaoDoPush}
-                                checked={!!prefs.notify_push}
-                                onCheckedChange={(checked) => void handlePushToggle(checked)}
-                                disabled={disabled || pushBusy || pushUnsupported || pushSupport === "denied"}
-                            />
-                            {pushMessage || precisaInstalar ? (
-                                <div className="mt-2">
-                                    {pushMessage ? (
-                                        <p className="text-xs text-muted-foreground">{pushMessage}</p>
-                                    ) : null}
-                                    {precisaInstalar ? (
-                                        <Button
-                                            type="button"
-                                            variant="link"
-                                            className="h-auto px-0 text-xs"
-                                            onClick={() => setInstallPwaOpen(true)}
-                                        >
-                                            Como instalar
-                                        </Button>
-                                    ) : null}
-                                </div>
-                            ) : null}
-                        </div>
-                        <Separator />
-                        <div className="px-4 py-3">
-                            <FormSwitch
-                                id="pref-email"
-                                label="Email"
-                                checked={!!prefs.notify_email}
-                                onCheckedChange={(checked) => void patch({ notify_email: checked })}
-                                disabled={disabled}
-                            />
-                        </div>
-                        <Separator />
-                        <div className="px-4 py-3">
-                            <FormSwitch
-                                id="pref-inapp"
-                                label="No app"
-                                description="No sino do Finance."
-                                checked={!!prefs.notify_in_app}
-                                onCheckedChange={(checked) => void patch({ notify_in_app: checked })}
-                                disabled={disabled}
-                            />
-                        </div>
-                    </Card>
-                </DialogBody>
-            </DialogContent>
+        <>
+            <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Onde chega</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4">
+                        {error ? (
+                            <Alert tone="destructive" size="sm">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
+                        ) : null}
+                        <Card padding="none">
+                            <div className="px-4 py-3">
+                                <FormSwitch
+                                    id="pref-push"
+                                    label="Push neste aparelho"
+                                    description={descricaoDoPush}
+                                    checked={!!prefs.notify_push}
+                                    onCheckedChange={(checked) => void handlePushToggle(checked)}
+                                    disabled={disabled || pushBusy || pushUnsupported || pushSupport === "denied"}
+                                />
+                                {pushMessage || precisaInstalar ? (
+                                    <div className="mt-2">
+                                        {pushMessage ? (
+                                            <Caption role="status">{pushMessage}</Caption>
+                                        ) : null}
+                                        {precisaInstalar ? (
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto px-0 text-xs"
+                                                onClick={abrirInstalacao}
+                                            >
+                                                Como instalar
+                                            </Button>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <Separator />
+                            <div className="px-4 py-3">
+                                <FormSwitch
+                                    id="pref-email"
+                                    label="Email"
+                                    checked={!!prefs.notify_email}
+                                    onCheckedChange={(checked) => void patch({ notify_email: checked })}
+                                    disabled={disabled}
+                                />
+                            </div>
+                            <Separator />
+                            <div className="px-4 py-3">
+                                <FormSwitch
+                                    id="pref-inapp"
+                                    label="No app"
+                                    description="No sino do Finance."
+                                    checked={!!prefs.notify_in_app}
+                                    onCheckedChange={(checked) => void patch({ notify_in_app: checked })}
+                                    disabled={disabled}
+                                />
+                            </div>
+                        </Card>
+                    </div>
+                </DialogContent>
+            </Dialog>
             <InstallPwaSheet open={installPwaOpen} onOpenChange={setInstallPwaOpen} />
-        </Dialog>
+        </>
     )
 }

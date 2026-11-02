@@ -79,14 +79,14 @@ export function NotificationPreferences() {
                                 <SettingsLink
                                     titulo="Onde chega"
                                     valor={resumoDosCanais(prefs)}
-                                    aria-label="Escolher onde os avisos chegam"
+                                    aria-label={`Onde chega: ${resumoDosCanais(prefs)}. Escolher onde os avisos chegam`}
                                     onClick={() => setCanaisOpen(true)}
                                 />
                                 <Separator />
                                 <SettingsLink
                                     titulo="Sobre o quê"
                                     valor={resumoDosTemas(prefs)}
-                                    aria-label="Escolher sobre o que avisar"
+                                    aria-label={`Sobre o quê: ${resumoDosTemas(prefs)}. Escolher sobre o que avisar`}
                                     onClick={() => setTemasOpen(true)}
                                 />
                             </>

@@ -11,11 +11,17 @@ describe("Notificações: diálogos de canais e temas", () => {
             expect(f).toContain('<Alert tone="destructive" size="sm">')
         }
     })
+    it("só os temas têm altura fixa; os canais ficam no layout automático sem DialogBody", () => {
+        expect(TEMAS).toContain('layout="fixed"')
+        expect(CANAIS).not.toContain('layout="fixed"')
+        expect(CANAIS).not.toContain("DialogBody")
+    })
     it("os temas vêm em três grupos, com os nomes novos", () => {
         for (const t of ["Carteira", "Cartões", "Rotina", "Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Às 20h.", "Insights", "No máximo 3 push por semana."]) expect(TEMAS).toContain(t)
         expect(TEMAS).toContain("temaLigado(prefs, ")
     })
-    it("o push mantém o tratamento de hoje, trava o fechamento e tem saída", () => {
-        for (const t of ["Push neste aparelho", "No sino do Finance.", "subscribeToPush", "unsubscribeFromPush", "pending={pushBusy}", "Desligar remove este aparelho de todas as carteiras.", "Não disponível neste navegador", "InstallPwaSheet", "Como instalar", "isIos && !isStandalone", "Ajustes", "configurações do site"]) expect(CANAIS).toContain(t)
+    it("o push mantém o tratamento de hoje e não trava o fechamento", () => {
+        expect(CANAIS).not.toContain("pending={pushBusy}")
+        for (const t of ["Push neste aparelho", "No sino do Finance.", "subscribeToPush", "unsubscribeFromPush", "abrirInstalacao", "catch (e)", "Desligar remove este aparelho de todas as carteiras.", "Não disponível neste navegador", "InstallPwaSheet", "Como instalar", "isIos && !isStandalone", "Ajustes", "configurações do site"]) expect(CANAIS).toContain(t)
     })
 })

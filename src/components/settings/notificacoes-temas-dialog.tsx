@@ -52,7 +52,7 @@ type Props = {
 export function NotificacoesTemasDialog({ open, onOpenChange, prefs, patch, disabled, error }: Props) {
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Sobre o quê</DialogTitle>
                 </DialogHeader>
