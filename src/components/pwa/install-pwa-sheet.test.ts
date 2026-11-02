@@ -44,8 +44,9 @@ describe("InstallPwaSheet", () => {
     expect(f).toContain("[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]")
   })
 
-  it("a troca de passo anima: ponto na viagem líquida, telas no fade, alvo e aparelho na mola", () => {
-    expect(f).toContain("viajarLiquido(")
+  it("a troca de passo anima: ponto em pílula, telas no fade, alvo e aparelho na mola", () => {
+    expect(f).toContain('i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"')
+    expect(f).not.toContain("viajarLiquido")
     expect(f).toContain("transition-opacity")
     expect(f).toContain("AnimatePresence")
     expect(f).toContain("animate={{ y: atual.ancora")

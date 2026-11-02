@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import Image, { type StaticImageData } from "next/image"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
 import { MOLA, SAIDA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 import { P, Muted } from "@/components/ui/typography"
@@ -89,34 +88,15 @@ function dispensarAviso() {
 
 /** A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */
 const SUBIDA_DO_APARELHO = -208
-/** Um ponto de 6 mais o vão de 6. */
-const PASSO_DO_PONTO = 12
-/** Maior que a do `Tabs`: num ponto de 6, os 11% de lá não apareceriam. */
-const ESTICAO_DO_PONTO = 0.9
 
 export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
     const [passo, setPasso] = useState(0)
     const reduzido = useReducedMotion()
-    const marcador = useRef<HTMLSpanElement>(null)
-    const passoAntes = useRef(passo)
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
         setAbertoAntes(open)
         if (open) setPasso(0)
     }
-
-    // O ponto aceso viaja como o marcador do `Tabs`: o repouso é o `translate` do estilo.
-    useEffect(() => {
-        const de = passoAntes.current
-        passoAntes.current = passo
-        if (!marcador.current || de === passo) return
-        viajarLiquido(
-            marcador.current,
-            { x: de * PASSO_DO_PONTO, y: 0 },
-            { x: passo * PASSO_DO_PONTO, y: 0 },
-            { amplitude: ESTICAO_DO_PONTO, trajeto: TRAJETO_MACIO }
-        )
-    }, [passo])
 
     const handleDismiss = () => {
         dispensarAviso()
@@ -183,15 +163,16 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                             </motion.span>
                         </motion.div>
                     </div>
-                    <div aria-hidden className="relative mx-auto flex shrink-0 gap-1.5">
-                        {PASSOS.map((p) => (
-                            <span key={p.titulo} className="size-1.5 rounded-full bg-muted-foreground/40" />
+                    <div aria-hidden className="flex shrink-0 justify-center gap-1.5">
+                        {PASSOS.map((p, i) => (
+                            <span
+                                key={p.titulo}
+                                className={cn(
+                                    "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-spring) ease-(--ease-spring)",
+                                    i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"
+                                )}
+                            />
                         ))}
-                        <span
-                            ref={marcador}
-                            className="absolute top-0 left-0 size-1.5 rounded-full bg-foreground"
-                            style={{ translate: `${passo * PASSO_DO_PONTO}px` }}
-                        />
                     </div>
                     <div aria-live="polite" className="shrink-0">
                         <AnimatePresence mode="wait" initial={false}>
