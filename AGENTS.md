@@ -1246,10 +1246,10 @@ declaração de `background-color` no trilho).
     `inset`), `size` (`full` | `md` | `lg`) e `fill`.
   - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet. A conta
     do telefone **não** é gaveta nem menu: a aba "Você" (o avatar no lugar do
-    glifo) abre a página `/me`, com as telas da carteira e da conta em dois
-    grupos de linhas (o `MobileAccountMenu` e o painel que brotava da aba "Mais"
-    saíram na rodada 346); o tema mora em Você e o sair em Minha
-    conta. O "+ Adicionar" não tem menu: abre
+    glifo) abre a página `/me`, com as telas da carteira e da conta e o aparelho
+    em três seções com título (o `MobileAccountMenu` e o painel que brotava da
+    aba "Mais" saíram na rodada 346); o tema mora em Você (Neste celular) e o
+    Sair fica no fim dela, com confirmação, além do de Minha conta. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
@@ -1693,14 +1693,18 @@ declaração de `background-color` no trilho).
   toda tela que a página lista, subrotas incluídas (`isVoceTabActive`, em
   `config/mobile-navigation.ts`, onde também moram `getVoceGroups` e
   `voceBackHref`). **A página `/me`** é a identidade centrada (avatar 56, nome,
-  e-mail), dois `Card padding="none"` de `ItemGroup variant="divided"` e, por
-  último, o grupo do aparelho (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
-  inteligente, instalar o app; no telefone isso não existe em Configurações), com
-  linhas `Item variant="flush" interactive asChild` + `Link` (ícone mini, texto
-  16 no toque, `Badge` Beta, `ItemChevron`): **Carteira** (as abas que saíram,
-  Assinaturas, Contas a pagar, Cartões, Membros e convidados) e **Conta** (Minha
-  conta, Configurações); Planos e o sair ficam dentro de Minha conta. No desktop
-  nada muda: `/me` renderiza, mas nada leva a ela.
+  e-mail) e três seções com título (`PageSection`), cada uma num `Card
+  padding="none"` de `ItemGroup variant="divided"`: **Carteira** (as abas que saíram
+  da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e
+  convidados), **Conta** (Minha conta, Cofre aberto com "Seus dados: exportar e
+  apagar", Configurações) e **Neste celular** (`NesteCelularGrupo`, `#no-celular`:
+  tema, lançamento inteligente, instalar o app; no telefone isso não existe em
+  Configurações). As linhas são `Item variant="flush" interactive asChild` iguais
+  (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`).
+  No fim, o **Sair** num cartão à parte, com o `AlertDialog` "Sair da conta?",
+  porque sair limpa a fila offline; o Sair de Minha conta continua, sem
+  confirmação, e Planos fica dentro de Minha conta. No desktop nada muda: `/me`
+  renderiza, mas nada leva a ela.
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
   viram quadradas; a linha do título é o eixo. Com `collapse` é o título grande do
   iOS: 34 no telefone, qualquer que seja o degrau, 8px mais perto da barra, e
