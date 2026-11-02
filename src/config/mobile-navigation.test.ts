@@ -22,6 +22,7 @@ describe("a página Você", () => {
         expect(isVoceTabActive(ROUTES.ME, [])).toBe(true)
         expect(isVoceTabActive(ROUTES.ACCOUNT_SESSIONS, [])).toBe(true)
         expect(isVoceTabActive(`${ROUTES.CREDIT_CARDS}/abc`, [])).toBe(true)
+        expect(isVoceTabActive(`${ROUTES.PROJETOS}/abc`, [])).toBe(true)
         expect(isVoceTabActive(ROUTES.TRANSACTIONS, [])).toBe(false)
         expect(isVoceTabActive(ROUTES.DASHBOARD_CATEGORIES, [])).toBe(false)
         expect(isVoceTabActive(`${ROUTES.DASHBOARD_CATEGORIES}/x`, [ROUTES.DASHBOARD_CATEGORIES])).toBe(true)

@@ -14,4 +14,8 @@ describe("o voltar do telefone nas telas da página Você", () => {
         expect(corpo).toContain("if (pathname === ROUTES.PLANS) return ROUTES.ACCOUNT")
         expect(corpo.indexOf("ROUTES.PLANS")).toBeLessThan(corpo.indexOf("voceBackHref(pathname)"))
     })
+
+    it("a página Você e as telas dela não têm o seletor de carteira", () => {
+        expect(HEADER).toMatch(/isVoceTabActive\(pathname, \[\]\) \? null : \(\s+<div[\s\S]+<WorkspaceSwitcher appearance="header" \/>/)
+    })
 })

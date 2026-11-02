@@ -214,6 +214,7 @@ export function isMobileAccountMenuNavItemActive(
     switch (item.href) {
         case ROUTES.CREDIT_CARDS:
         case ROUTES.DASHBOARD_CATEGORIES:
+        case ROUTES.PROJETOS:
             return (
                 pathname === item.href ||
                 pathname.startsWith(`${item.href}/`)
