@@ -58,6 +58,9 @@ const alertVariants = cva(
     "pointer-coarse:has-[>[data-slot=alert-icon]]:grid-cols-[var(--alert-well)_1fr_calc(50%_-_var(--spacing))]!",
     "pointer-coarse:has-[>[data-placement=inline]]:[container-type:normal]!",
     "pointer-coarse:gap-x-2! pointer-coarse:p-3!",
+    // Sozinho no dedo, o "Agora não" ganha a borda da ação (só contorno, sem
+    // preenchimento); com a ação ao lado, é a ação que leva a borda.
+    "[--solo-border:color-mix(in_oklab,currentColor_25%,transparent)] has-[>[data-slot=alert-actions]]:[--solo-border:transparent]",
   ],
   {
     variants: {
@@ -272,6 +275,7 @@ function Alert({
             "text-current",
             "[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             "hover:text-current active:text-current",
+            "pointer-coarse:border-(--solo-border)",
           )}
         >
           {/* O nome acessível contém o texto visível (WCAG 2.5.3): no mouse o
