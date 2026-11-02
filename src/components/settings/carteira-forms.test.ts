@@ -68,7 +68,7 @@ describe("Formulários da Carteira", () => {
     })
 
     it("os wireframes saíram, e a página não os monta", () => {
-        const pagina = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const pagina = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         const divisao = lerFonte("src/components/wireframe/divisao-wireframe.tsx")
         const projetos = lerFonte("src/components/wireframe/projetos-wireframe.tsx")
         for (const fora of ["ModoEPesosDaCarteiraWireframe", "function ModoEPesos", "FormularioDoModo"]) expect(divisao).not.toContain(fora)

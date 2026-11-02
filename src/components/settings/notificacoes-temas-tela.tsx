@@ -47,21 +47,34 @@ export function NotificacoesTemasTela() {
     const { currentWorkspace } = useWorkspace()
     const { prefs, loading, error, patch } = useWorkspaceNotificationPrefs()
 
-    if (loading || !prefs || !currentWorkspace) return <NotificacoesTelaSkeleton linhas={7} />
+    if (loading) return <NotificacoesTelaSkeleton linhas={7} />
+
+    // No telefone o título é o da casca (`TituloDaTela`).
+    const topo = isMobile ? null : (
+        <PageHeader collapse>
+            <PageHeaderTitleRow back={`${ROUTES.SETTINGS}#notificacoes`} backHistory={false}>
+                <PageHeaderTitle asChild>
+                    {/* O `<h1>` da página é o da barra do topo. */}
+                    <p aria-hidden="true">Sobre o quê</p>
+                </PageHeaderTitle>
+            </PageHeaderTitleRow>
+        </PageHeader>
+    )
+
+    if (!prefs || !currentWorkspace) {
+        return (
+            <div className="min-w-0 space-y-4">
+                {topo}
+                <Alert tone="destructive" size="sm">
+                    <AlertTitle>{error ?? "Não foi possível carregar as preferências."}</AlertTitle>
+                </Alert>
+            </div>
+        )
+    }
 
     return (
         <div className="min-w-0 space-y-4">
-            {/* No telefone o título é o da casca (`TituloDaTela`). */}
-            {isMobile ? null : (
-                <PageHeader collapse>
-                    <PageHeaderTitleRow back={`${ROUTES.SETTINGS}#notificacoes`}>
-                        <PageHeaderTitle asChild>
-                            {/* O `<h1>` da página é o da barra do topo. */}
-                            <p aria-hidden="true">Sobre o quê</p>
-                        </PageHeaderTitle>
-                    </PageHeaderTitleRow>
-                </PageHeader>
-            )}
+            {topo}
             <Muted>Vale para você em {currentWorkspace.name}.</Muted>
             {error ? (
                 <Alert tone="destructive" size="sm">

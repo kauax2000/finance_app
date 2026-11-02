@@ -23,7 +23,7 @@ describe("Notificações: cada chave por si", () => {
 
 describe("Configurações: ordem", () => {
     it("Carteira vem primeiro", () => {
-        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         const ordem = ["<WorkspaceAppearanceSettings", "<ThemeSettings", "<NotificationPreferences", "<IaPrivacidadeSettings"].map((peca) => fonte.indexOf(peca))
         expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
         expect(ordem[0]).toBeGreaterThan(-1)
@@ -32,7 +32,7 @@ describe("Configurações: ordem", () => {
 
 describe("Configurações: cabeçalho", () => {
     it("mostra o título sem um segundo h1, e no telefone quem o mostra é a casca", () => {
-        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         expect(fonte).toMatch(/isMobile \? null : \(\s+<PageHeader collapse>/)
         expect(fonte).toContain("<PageHeaderTitle asChild>")
         expect(fonte).toContain('<p aria-hidden="true">Configurações</p>')
@@ -41,7 +41,7 @@ describe("Configurações: cabeçalho", () => {
 
 describe("Configurações: página única", () => {
     it("a página não tem abas, nem lê a query, e rola até a âncora", () => {
-        const fonte = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         for (const proibido of ["Tabs", "useSearchParams", "useTelaLarga"]) expect(fonte).not.toContain(proibido)
         expect(fonte).toContain("rolarAteAncora")
     })
@@ -78,7 +78,7 @@ describe("Configurações: página única", () => {
     })
 
     it("Este aparelho e IA e privacidade ficam em linhas, sem os três arquivos antigos", () => {
-        const pagina = lerFonte("src/app/(app)/settings/page-client.tsx")
+        const pagina = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe"]) expect(pagina).not.toContain(fora)
         const aparelho = lerFonte("src/components/settings/theme-settings.tsx")
         for (const texto of [

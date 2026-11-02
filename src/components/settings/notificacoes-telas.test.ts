@@ -25,6 +25,15 @@ describe("Notificações: telas de canais e temas", () => {
             expect(f).toContain('<div className="min-w-0 space-y-4">')
             expect(f).toContain("isMobile ? null : (")
             expect(f).toContain("back={`${ROUTES.SETTINGS}#notificacoes`}")
+            expect(f).toContain("backHistory={false}")
+        }
+    })
+    it("a falha de carga não deixa o esqueleto para sempre: só `loading` o mostra", () => {
+        for (const f of [CANAIS, TEMAS]) {
+            expect(f).toContain("if (loading) return <NotificacoesTelaSkeleton")
+            expect(f).not.toContain("loading || !prefs")
+            expect(f).toContain("Não foi possível carregar as preferências.")
+            expect(f).toContain("if (!prefs || !currentWorkspace)")
         }
     })
     it("os temas vêm em três grupos, com os nomes novos", () => {

@@ -235,7 +235,7 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
   })
 
   it("Configurações mostra a IA com o link da política", () => {
-    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaPrivacidadeSettings />")
+    expect(fonte("src/app/(app)/settings/(raiz)/page-client.tsx")).toContain("<IaPrivacidadeSettings />")
     const ia = fonte("src/components/settings/ia-privacidade-settings.tsx")
     expect(ia).toContain("Groq e Cloudflare")
     expect(ia).toContain("30 chamadas")
