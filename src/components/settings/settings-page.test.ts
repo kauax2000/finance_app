@@ -85,9 +85,20 @@ describe("Configurações: página única", () => {
             "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet",
             "Neste celular", "No celular", 'id="no-celular"', "#no-celular",
             "Digite uma frase no + e o app preenche o resto.",
-            "Abra o Finance no telefone", "QrCode", "QrCodeCopy",
             "pendingSyncCount",
         ]) expect(aparelho).toContain(texto)
+        const cartao = lerFonte("src/components/settings/no-celular-cartao.tsx")
+        for (const texto of [
+            "overflow-visible",
+            "iphone-17-pro-prata.webp",
+            'alt=""',
+            "QrCodeCopy",
+            "link={false}",
+            "wave={onda}",
+            "Abra o Finance no telefone",
+            "@container/no-celular",
+        ]) expect(cartao).toContain(texto)
+        expect(aparelho).toContain("NoCelularCartao")
         expect(aparelho).not.toContain("Só tem efeito no telefone.")
         expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(2)
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")

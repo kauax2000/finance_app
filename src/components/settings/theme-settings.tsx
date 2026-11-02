@@ -4,14 +4,13 @@ import { useState, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
-import { QrCode, QrCodeCopy } from "@/components/ui/qr-code"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { Muted } from "@/components/ui/typography"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 import { SyncStatusChip } from "@/components/pwa/sync-status-chip"
+import { NoCelularCartao } from "@/components/settings/no-celular-cartao"
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section"
 import { ROUTES } from "@/config/navigation"
 import { useBuscaDoCabecalho, type BuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
@@ -38,8 +37,6 @@ export function ThemeSettings() {
     const isIos = useIsIos()
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
-    // Cada cópia feita soma 1, e o `QrCode` toca a onda.
-    const [onda, setOnda] = useState(0)
     const origem = useSyncExternalStore(semAssinatura, () => window.location.origin, () => "")
     const noTelefone = origem ? `${origem}${ROUTES.SETTINGS}#no-celular` : ""
 
@@ -121,36 +118,21 @@ export function ThemeSettings() {
                 </SettingsSection>
             ) : (
                 <SettingsSection titulo="No celular" alcance="Lance por frase e instale o app no telefone.">
-                    <Card padding="none">
-                        <div className="flex min-w-0 items-center justify-between gap-6 px-4 py-4">
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium">Abra o Finance no telefone</p>
-                                <Muted>Aponte a câmera para o código. Lá você liga o lançamento inteligente e instala o app.</Muted>
-                                <QrCodeCopy
-                                    value={noTelefone}
-                                    onCopied={() => setOnda((n) => n + 1)}
-                                    className="mt-3"
-                                />
-                            </div>
-                            <QrCode value={noTelefone} label="Abrir o Finance no telefone" link={false} wave={onda} />
-                        </div>
-                        {instalarNoIphone ? (
-                            <>
-                                <Separator />
-                                {linhaDoApp}
-                            </>
-                        ) : shell && shell.pendingSyncCount > 0 ? (
-                            <>
-                                <Separator />
-                                <SettingsRow
-                                    titulo="Sincronização"
-                                    descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
-                                >
-                                    <SyncStatusChip />
-                                </SettingsRow>
-                            </>
-                        ) : null}
-                    </Card>
+                    <NoCelularCartao value={noTelefone} />
+                    {instalarNoIphone ? (
+                        <Card padding="none" className="mt-3">
+                            {linhaDoApp}
+                        </Card>
+                    ) : shell && shell.pendingSyncCount > 0 ? (
+                        <Card padding="none" className="mt-3">
+                            <SettingsRow
+                                titulo="Sincronização"
+                                descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
+                            >
+                                <SyncStatusChip />
+                            </SettingsRow>
+                        </Card>
+                    ) : null}
                 </SettingsSection>
             )}
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
