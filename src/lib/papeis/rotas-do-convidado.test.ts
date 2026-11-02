@@ -12,8 +12,6 @@ describe("as rotas do convidado", () => {
         expect(rotaPermitidaAoConvidado("/credit-cards")).toBe(true)
         expect(rotaPermitidaAoConvidado("/me")).toBe(true)
         expect(rotaPermitidaAoConvidado("/settings")).toBe(true)
-        expect(rotaPermitidaAoConvidado(ROUTES.SETTINGS_NOTIFICACOES_CANAIS)).toBe(true)
-        expect(rotaPermitidaAoConvidado(ROUTES.SETTINGS_NOTIFICACOES_TEMAS)).toBe(true)
         expect(rotaPermitidaAoConvidado("/account/sessions")).toBe(true)
         // Ruling 7: exportar e apagar sempre liberados (spec §15.6), e os planos são da pessoa.
         expect(rotaPermitidaAoConvidado("/cofre")).toBe(true)

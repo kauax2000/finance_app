@@ -136,10 +136,10 @@ describe("Achados da revisão final", () => {
         expect(semComentarios(lerFonte("src/lib/divisao/use-adultos.ts"), "tudo")).toContain("erro: q.isError")
     })
 
-    it("Notificações: sem preferências não há linhas, sem carteira não há cartão", () => {
+    it("Notificações: sem preferências não há chaves, sem carteira só o título", () => {
         const f = semComentarios(lerFonte("src/components/settings/notification-preferences.tsx"), "tudo")
-        expect(f).toContain("!loading && currentWorkspaceId && prefs ?")
-        expect(f).toContain("showSkeleton || currentWorkspaceId ?")
+        expect(f).toContain("!showSkeleton && currentWorkspaceId ?")
+        expect(f).toContain("{prefs ? (")
     })
 
     it("Carteira: Alterar com nome acessível próprio", () => {

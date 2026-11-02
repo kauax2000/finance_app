@@ -1,20 +1,16 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
-import { PageHeader, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Separator } from "@/components/ui/separator"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
-import { NotificacoesTelaSkeleton } from "@/components/settings/notificacoes-tela-skeleton"
-import { useWorkspace } from "@/components/workspace-provider"
-import { ROUTES } from "@/config/navigation"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
+import type { WorkspaceNotificationPrefsState } from "@/hooks/use-workspace-notification-prefs"
+import type { WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notification-prefs"
 import {
     getPushSupportState,
     isPushSupported,
@@ -22,11 +18,17 @@ import {
     unsubscribeFromPush,
 } from "@/lib/push/subscribe"
 
-/** Onde as notificações chegam. As chaves salvam ao tocar, então a tela não tem rodapé. */
-export function NotificacoesCanaisTela() {
-    const isMobile = useIsMobile()
-    const { currentWorkspace } = useWorkspace()
-    const { prefs, loading, error, patch } = useWorkspaceNotificationPrefs()
+/**
+ * Onde as notificações chegam, a primeira peça da seção. As chaves salvam ao
+ * tocar, então não há rodapé; a seção cuida do erro e do carregamento.
+ */
+export function NotificacoesCanais({
+    prefs,
+    patch,
+}: {
+    prefs: WorkspaceMemberNotificationPrefs
+    patch: WorkspaceNotificationPrefsState["patch"]
+}) {
     const { isStandalone } = useDisplayMode()
     const isIos = useIsIos()
     const [installPwaOpen, setInstallPwaOpen] = useState(false)
@@ -86,41 +88,12 @@ export function NotificacoesCanaisTela() {
                 : "Abra as configurações do site no navegador e permita as notificações."
             : "Desligar remove este aparelho de todas as carteiras."
 
-    if (loading) return <NotificacoesTelaSkeleton linhas={3} />
-
-    // No telefone o título é o da casca (`TituloDaTela`).
-    const topo = isMobile ? null : (
-        <PageHeader collapse>
-            <PageHeaderTitleRow back={`${ROUTES.SETTINGS}#notificacoes`} backHistory={false}>
-                <PageHeaderTitle asChild>
-                    {/* O `<h1>` da página é o da barra do topo. */}
-                    <p aria-hidden="true">Onde chega</p>
-                </PageHeaderTitle>
-            </PageHeaderTitleRow>
-        </PageHeader>
-    )
-
-    if (!prefs || !currentWorkspace) {
-        return (
-            <div className="min-w-0 space-y-4">
-                {topo}
-                <Alert tone="destructive" size="sm">
-                    <AlertTitle>{error ?? "Não foi possível carregar as preferências."}</AlertTitle>
-                </Alert>
-            </div>
-        )
-    }
-
     return (
         <>
-            <div className="min-w-0 space-y-4">
-                {topo}
-                <Muted>Vale para você em {currentWorkspace.name}.</Muted>
-                {error ? (
-                    <Alert tone="destructive" size="sm">
-                        <AlertTitle>{error}</AlertTitle>
-                    </Alert>
-                ) : null}
+            <PageSection size="sm">
+                <PageSectionHeader>
+                    <PageSectionTitle>Onde chega</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <div className="px-4 py-3">
                         <FormSwitch
@@ -167,7 +140,7 @@ export function NotificacoesCanaisTela() {
                         />
                     </div>
                 </Card>
-            </div>
+            </PageSection>
             <InstallPwaSheet open={installPwaOpen} onOpenChange={setInstallPwaOpen} />
         </>
     )

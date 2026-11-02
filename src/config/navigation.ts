@@ -8,10 +8,6 @@ export const ROUTES = {
     TRANSACTIONS: "/transactions",
     DASHBOARD_CATEGORIES: "/categories",
     SETTINGS: "/settings",
-    /** Onde as notificações chegam: subpágina de Configurações. */
-    SETTINGS_NOTIFICACOES_CANAIS: "/settings/notificacoes/canais",
-    /** Sobre o que avisar: subpágina de Configurações. */
-    SETTINGS_NOTIFICACOES_TEMAS: "/settings/notificacoes/temas",
     CREDIT_CARDS: "/credit-cards",
     SUBSCRIPTIONS: "/subscriptions",
     BILLS: "/bills",
@@ -170,16 +166,6 @@ export const APP_PAGE_TITLES: Record<string, string> = {
 
 /** Sub-routes with breadcrumb + back button metadata */
 export const APP_SUB_PAGE_TITLES: Record<string, SubPageMeta> = {
-    [ROUTES.SETTINGS_NOTIFICACOES_CANAIS]: {
-        parent: `${ROUTES.SETTINGS}#notificacoes`,
-        parentTitle: "Configurações",
-        title: "Onde chega",
-    },
-    [ROUTES.SETTINGS_NOTIFICACOES_TEMAS]: {
-        parent: `${ROUTES.SETTINGS}#notificacoes`,
-        parentTitle: "Configurações",
-        title: "Sobre o quê",
-    },
     [ROUTES.ACCOUNT_SESSIONS]: {
         parent: ROUTES.ACCOUNT,
         parentTitle: "Minha conta",

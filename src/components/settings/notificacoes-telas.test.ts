@@ -1,49 +1,44 @@
+import { existsSync } from "node:fs"
 import { describe, expect, it } from "vitest"
-import { APP_SUB_PAGE_TITLES, ROUTES } from "@/config/navigation"
-import { rotaPermitidaAoConvidado } from "@/lib/papeis/rotas-do-convidado"
 import { lerFonte } from "@/test/fonte"
 
-const CANAIS = lerFonte("src/components/settings/notificacoes-canais-tela.tsx")
-const TEMAS = lerFonte("src/components/settings/notificacoes-temas-tela.tsx")
+const secao = lerFonte("src/components/settings/notification-preferences.tsx")
+const canais = lerFonte("src/components/settings/notificacoes-canais.tsx")
+const temas = lerFonte("src/components/settings/notificacoes-temas.tsx")
 
-describe("Notificações: telas de canais e temas", () => {
-    it("as rotas têm título e voltam à seção", () => {
-        expect(APP_SUB_PAGE_TITLES[ROUTES.SETTINGS_NOTIFICACOES_CANAIS]).toEqual({ parent: `${ROUTES.SETTINGS}#notificacoes`, parentTitle: "Configurações", title: "Onde chega" })
-        expect(APP_SUB_PAGE_TITLES[ROUTES.SETTINGS_NOTIFICACOES_TEMAS]).toEqual({ parent: `${ROUTES.SETTINGS}#notificacoes`, parentTitle: "Configurações", title: "Sobre o quê" })
+describe("Notificações: as chaves moram na seção de Configurações", () => {
+    it("as chaves moram na seção, sem rota própria", () => {
+        expect(existsSync("src/app/(app)/settings/notificacoes")).toBe(false)
+        expect(lerFonte("src/config/navigation.ts")).not.toContain("SETTINGS_NOTIFICACOES")
+        expect(secao).toContain("<NotificacoesCanais")
+        expect(secao).toContain("<NotificacoesTemas")
     })
-    it("o convidado abre as duas telas", () => {
-        expect(rotaPermitidaAoConvidado(ROUTES.SETTINGS_NOTIFICACOES_CANAIS)).toBe(true)
-        expect(rotaPermitidaAoConvidado(ROUTES.SETTINGS_NOTIFICACOES_TEMAS)).toBe(true)
+    it("o layout C: dois subtítulos e três cartões de tema", () => {
+        expect(canais).toContain(">Onde chega<")
+        expect(temas).toContain(">Sobre o quê<")
+        expect(temas).toContain('variant="label"')
+        for (const grupo of ["Carteira", "Cartões", "Rotina"]) expect(temas).toContain(`titulo: "${grupo}"`)
     })
-    it("as telas não são diálogos, leem as próprias preferências e mostram o erro de salvar", () => {
-        for (const f of [CANAIS, TEMAS]) {
-            expect(f).not.toContain("<Dialog")
-            expect(f).toContain("useWorkspaceNotificationPrefs()")
-            expect(f).toContain('<Alert tone="destructive" size="sm">')
-            expect(f).toContain("Vale para você em {currentWorkspace.name}.")
-            expect(f).toContain("NotificacoesTelaSkeleton")
-            expect(f).toContain('<div className="min-w-0 space-y-4">')
-            expect(f).toContain("isMobile ? null : (")
-            expect(f).toContain("back={`${ROUTES.SETTINGS}#notificacoes`}")
-            expect(f).toContain("backHistory={false}")
+    it("o aviso vem antes das chaves, sem botão de ação", () => {
+        expect(secao.indexOf("Este aparelho bloqueou os avisos.")).toBeLessThan(secao.indexOf("<NotificacoesCanais"))
+        expect(secao.indexOf("Nenhum canal ligado.")).toBeLessThan(secao.indexOf("<NotificacoesCanais"))
+        expect(secao).not.toContain("AlertAction")
+        expect(secao).toContain('storageKey="push-bloqueado"')
+    })
+    it("sem Ver histórico, e o push segue na seção", () => {
+        expect(secao).not.toContain("Ver histórico")
+        expect(secao).not.toContain("useNotificationsUi")
+        for (const t of ["pref-push", "InstallPwaSheet", "subscribeToPush", "Como instalar"]) expect(canais).toContain(t)
+    })
+    it("as peças não abrem rota, não leem a carteira nem o erro: a seção é dona deles", () => {
+        for (const f of [canais, temas]) {
+            expect(f).not.toContain("useWorkspaceNotificationPrefs()")
+            expect(f).not.toContain("PageHeader ")
+            expect(f).toContain('<PageSection size="sm">')
         }
     })
-    it("a falha de carga não deixa o esqueleto para sempre: só `loading` o mostra", () => {
-        for (const f of [CANAIS, TEMAS]) {
-            expect(f).toContain("if (loading) return <NotificacoesTelaSkeleton")
-            expect(f).not.toContain("loading || !prefs")
-            expect(f).toContain("Não foi possível carregar as preferências.")
-            expect(f).toContain("if (!prefs || !currentWorkspace)")
-        }
-    })
-    it("os temas vêm em três grupos, com os nomes novos", () => {
-        for (const t of ["Carteira", "Cartões", "Rotina", "Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Às 20h.", "Insights", "No máximo 3 push por semana."]) expect(TEMAS).toContain(t)
-        expect(TEMAS).toContain("temaLigado(prefs, ")
-    })
-    it("o push mantém o tratamento de hoje e Como instalar só abre a folha", () => {
-        expect(CANAIS).not.toContain("pending={pushBusy}")
-        expect(CANAIS).not.toContain("abrirInstalacao")
-        expect(CANAIS).toContain("setInstallPwaOpen(true)")
-        for (const t of ["Push neste aparelho", "No sino do Finance.", "subscribeToPush", "unsubscribeFromPush", "catch (e)", "Desligar remove este aparelho de todas as carteiras.", "Não disponível neste navegador", "InstallPwaSheet", "Como instalar", "isIos && !isStandalone", "Ajustes", "configurações do site", '<Caption role="status">']) expect(CANAIS).toContain(t)
+    it("os temas vêm com os nomes novos e leem pelo `temaLigado`", () => {
+        for (const t of ["Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Às 20h.", "Insights", "No máximo 3 push por semana."]) expect(temas).toContain(t)
+        expect(temas).toContain("temaLigado(prefs, ")
     })
 })

@@ -13,7 +13,8 @@ import {
     type WorkspaceNotificationPrefsPatch,
 } from "@/lib/workspace-notification-prefs"
 
-type State = {
+/** O retorno do gancho: as peças das chaves recebem `prefs` e `patch` dele. */
+export type WorkspaceNotificationPrefsState = {
     prefs: WorkspaceMemberNotificationPrefs | null
     loading: boolean
     error: string | null
@@ -27,7 +28,7 @@ const mensagem = (e: unknown, reserva: string) => (e instanceof Error ? e.messag
  * `PushNotificationProvider` usa este gancho na raiz do app, então elas carregam no
  * boot, e Configurações entra sem esqueleto.
  */
-export function useWorkspaceNotificationPrefs(): State {
+export function useWorkspaceNotificationPrefs(): WorkspaceNotificationPrefsState {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
     const queryClient = useQueryClient()
