@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import { DevicePhoneMobileIcon, SparklesIcon } from "@heroicons/react/16/solid"
 import { Card } from "@/components/ui/card"
 import { QrCode, QrCodeCopy } from "@/components/ui/qr-code"
-import { Muted } from "@/components/ui/typography"
 import iphone from "./assets/iphone-17-pro-prata.webp"
 
 /**
@@ -33,8 +33,17 @@ export function NoCelularCartao({ value }: { value: string }) {
                 </div>
                 <div className="flex h-full min-w-0 items-center justify-between gap-6 p-4">
                     <div className="flex min-w-0 flex-col justify-center @xl/no-celular:w-54">
-                        <p className="text-sm font-medium">Abra o Finance no telefone</p>
-                        <Muted>Aponte a câmera para o código. Lá você liga o lançamento inteligente e instala o app.</Muted>
+                        <p className="text-base font-semibold">Abra o Finance no telefone</p>
+                        <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
+                            <li className="flex items-center gap-2">
+                                <SparklesIcon aria-hidden="true" className="size-4 shrink-0 text-foreground" />
+                                Lance digitando uma frase
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <DevicePhoneMobileIcon aria-hidden="true" className="size-4 shrink-0 text-foreground" />
+                                Tenha o app na tela inicial
+                            </li>
+                        </ul>
                         <QrCodeCopy value={value} onCopied={() => setOnda((n) => n + 1)} className="mt-3" />
                     </div>
                     <QrCode
