@@ -92,7 +92,7 @@ export function NotificacoesCanais({
         <>
             <PageSection size="sm">
                 <PageSectionHeader>
-                    <PageSectionTitle>Onde chega</PageSectionTitle>
+                    <PageSectionTitle>Canais</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
                     <div className="px-4 py-3">

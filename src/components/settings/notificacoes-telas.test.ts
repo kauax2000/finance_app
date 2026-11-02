@@ -14,7 +14,7 @@ describe("Notificações: as chaves moram na seção de Configurações", () => 
         expect(secao).toContain("<NotificacoesTemas")
     })
     it("o layout C: dois subtítulos e três cartões de tema", () => {
-        expect(canais).toContain(">Onde chega<")
+        expect(canais).toContain(">Canais<")
         expect(temas).toContain(">Sobre o quê<")
         expect(temas).toContain('variant="label"')
         for (const grupo of ["Carteira", "Cartões", "Rotina"]) expect(temas).toContain(`titulo: "${grupo}"`)
