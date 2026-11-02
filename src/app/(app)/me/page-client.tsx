@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAbasFora } from "@/components/layout/abas-fora"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
@@ -90,57 +90,59 @@ export default function MePage() {
                     </div>
                 </div>
 
-                {grupos.map((grupo) =>
-                    grupo.items.length === 0 ? null : (
-                        <PageSection key={grupo.id} size="sm">
-                            <PageSectionHeader>
-                                <PageSectionTitle>{grupo.label}</PageSectionTitle>
-                            </PageSectionHeader>
-                            <Card padding="none">
-                                <ItemGroup variant="divided">
-                                    {grupo.items.map((item) => {
-                                        const Icon = miniIconFor(item.icon) ?? item.icon
-                                        return (
-                                            <Item key={item.href} variant="flush" interactive asChild className="min-h-12">
-                                                <Link href={item.href}>
-                                                    <ItemMedia variant="icon">
-                                                        <Icon className="size-5" aria-hidden />
-                                                    </ItemMedia>
-                                                    <ItemContent>
-                                                        {/* 16 no toque, como as linhas dos menus (`menu-classes`): o `ItemTitle` para em 14. */}
-                                                        <ItemTitle className="pointer-coarse:text-base">
-                                                            {item.name}
-                                                            {item.beta ? <Badge size="xs">Beta</Badge> : null}
-                                                        </ItemTitle>
-                                                        {item.description ? <ItemDescription>{item.description}</ItemDescription> : null}
-                                                    </ItemContent>
-                                                    <ItemChevron />
-                                                </Link>
+                {grupos.map((grupo) => (
+                    <Fragment key={grupo.id}>
+                        {grupo.items.length === 0 ? null : (
+                            <PageSection size="sm">
+                                <PageSectionHeader>
+                                    <PageSectionTitle>{grupo.label}</PageSectionTitle>
+                                </PageSectionHeader>
+                                <Card padding="none">
+                                    <ItemGroup variant="divided">
+                                        {grupo.items.map((item) => {
+                                            const Icon = miniIconFor(item.icon) ?? item.icon
+                                            return (
+                                                <Item key={item.href} variant="flush" interactive asChild className="min-h-12">
+                                                    <Link href={item.href}>
+                                                        <ItemMedia variant="icon">
+                                                            <Icon className="size-5" aria-hidden />
+                                                        </ItemMedia>
+                                                        <ItemContent>
+                                                            {/* 16 no toque, como as linhas dos menus (`menu-classes`): o `ItemTitle` para em 14. */}
+                                                            <ItemTitle className="pointer-coarse:text-base">
+                                                                {item.name}
+                                                                {item.beta ? <Badge size="xs">Beta</Badge> : null}
+                                                            </ItemTitle>
+                                                            {item.description ? <ItemDescription>{item.description}</ItemDescription> : null}
+                                                        </ItemContent>
+                                                        <ItemChevron />
+                                                    </Link>
+                                                </Item>
+                                            )
+                                        })}
+                                        {/* Sair limpa a fila offline: pede confirmação. Não abre tela, então não tem chevron. */}
+                                        {grupo.id === "conta" ? (
+                                            <Item variant="flush" interactive asChild className="min-h-12">
+                                                <AlertDialogTrigger asChild>
+                                                    <button type="button">
+                                                        <ItemMedia variant="icon" className="text-destructive">
+                                                            <ArrowRightStartOnRectangleIcon className="size-5" aria-hidden />
+                                                        </ItemMedia>
+                                                        <ItemContent>
+                                                            <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
+                                                        </ItemContent>
+                                                    </button>
+                                                </AlertDialogTrigger>
                                             </Item>
-                                        )
-                                    })}
-                                    {/* Sair limpa a fila offline: pede confirmação. Não abre tela, então não tem chevron. */}
-                                    {grupo.id === "conta" ? (
-                                        <Item variant="flush" interactive asChild className="min-h-12">
-                                            <AlertDialogTrigger asChild>
-                                                <button type="button">
-                                                    <ItemMedia variant="icon" className="text-destructive">
-                                                        <ArrowRightStartOnRectangleIcon className="size-5" aria-hidden />
-                                                    </ItemMedia>
-                                                    <ItemContent>
-                                                        <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
-                                                    </ItemContent>
-                                                </button>
-                                            </AlertDialogTrigger>
-                                        </Item>
-                                    ) : null}
-                                </ItemGroup>
-                            </Card>
-                        </PageSection>
-                    ),
-                )}
-
-                {isMobile ? <NesteCelularGrupo /> : null}
+                                        ) : null}
+                                    </ItemGroup>
+                                </Card>
+                            </PageSection>
+                        )}
+                        {/* No meio: entre a carteira e a conta. */}
+                        {grupo.id === "carteira" && isMobile ? <NesteCelularGrupo /> : null}
+                    </Fragment>
+                ))}
 
                 <AlertDialogContent>
                     <AlertDialogHeader>

@@ -1696,10 +1696,9 @@ declaração de `background-color` no trilho).
   e-mail) e três seções com título (`PageSection`), cada uma num `Card
   padding="none"` de `ItemGroup variant="divided"`: **Carteira** (as abas que saíram
   da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e
-  convidados), **Conta** (Minha conta, Cofre aberto com "Seus dados: exportar e
-  apagar", Configurações) e **Neste celular** (`NesteCelularGrupo`, `#no-celular`:
-  tema, lançamento inteligente, instalar o app; no telefone isso não existe em
-  Configurações). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
+  convidados), **Neste celular** (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
+  inteligente, instalar o app; no telefone isso não existe em Configurações) e **Conta**
+  (Minha conta, Cofre aberto com "Seus dados: exportar e apagar", Configurações). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
   iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
   as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
   Lançamento inteligente leva o ícone solto, como o Tema, e só Instalar o app fica com o ícone do app em 36.

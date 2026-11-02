@@ -13,8 +13,7 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("getVoceGroups(useAbasFora(), useWorkspace().papel)")
         expect(PAGINA).toContain('<VoceAvatar size="xl" />')
     })
-    it("o grupo do telefone fecha a página, só abaixo do md, e a âncora do QR rola até ele", () => {
-        expect(PAGINA).toContain("{isMobile ? <NesteCelularGrupo /> : null}")
+    it("o grupo do telefone fica entre Carteira e Conta, só abaixo do md, e a âncora do QR rola até ele", () => {
         expect(PAGINA).toContain("rolarAteAncora(window.location.hash, document)")
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         for (const texto of ['id="no-celular"', ">Neste celular<", "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Digite uma frase no +"]) expect(grupo).toContain(texto)
@@ -33,7 +32,7 @@ describe("a página Você", () => {
         // Última linha do grupo Conta, com ícone e sem chevron.
         expect(PAGINA).toContain('grupo.id === "conta" ?')
         expect(PAGINA).toContain("<ArrowRightStartOnRectangleIcon")
-        expect(PAGINA.indexOf("<AlertDialogTrigger")).toBeLessThan(PAGINA.indexOf("<NesteCelularGrupo"))
+        expect(PAGINA).toContain('{grupo.id === "carteira" && isMobile ? <NesteCelularGrupo /> : null}')
         // Sem rede o sair falha: o diálogo fica aberto, pendente, e mostra o erro.
         expect(PAGINA).toContain("pending={saindo}")
         expect(PAGINA).toContain("<AlertDialogTrigger asChild>")
