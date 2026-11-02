@@ -47,6 +47,16 @@ const alertVariants = cva(
     "transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) starting:translate-y-1 starting:opacity-0",
     // A coluna do ícone é a do poço: `--alert-well`, declarada pelo `size`.
     "has-[>[data-slot=alert-icon]]:grid-cols-[var(--alert-well)_1fr]",
+    // No dedo (ou abaixo de 48rem) a ação e o "Agora não" dividem a linha de
+    // baixo 50/50, com 8px entre eles: a última coluna mede meia largura menos
+    // 4px, e o resto da metade fica para poço, vão e texto. Daí os pés serem
+    // `col-[1/-2]` e `col-[-2/-1]`, com ou sem poço. O `!` é porque as classes
+    // `has-*` acima têm mais especificidade. A ação nunca sobe para a direita
+    // (sem contêiner, os `@xs/alert` não valem) e o recuo é 12 nas quatro bordas.
+    "pointer-coarse:grid-cols-[1fr_calc(50%_-_var(--spacing))]!",
+    "pointer-coarse:has-[>[data-slot=alert-icon]]:grid-cols-[var(--alert-well)_1fr_calc(50%_-_var(--spacing))]!",
+    "pointer-coarse:has-[>[data-placement=inline]]:[container-type:normal]!",
+    "pointer-coarse:gap-x-2! pointer-coarse:p-3!",
   ],
   {
     variants: {
@@ -83,8 +93,10 @@ const alertVariants = cva(
       size: {
         // O raio é do cartão nos dois degraus; o poço mede 24 (`sm`) e 32 (`md`)
         // e o ícone dentro dele 14 e 16. O recuo à esquerda encosta o poço.
-        sm: "rounded-surface px-3.5 py-2 text-xs [--alert-well:--spacing(6)] [--alert-icon:--spacing(3.5)] has-[>[data-slot=alert-icon]]:ps-2 has-[>[data-slot=alert-icon]]:gap-x-2",
-        md: "rounded-surface px-4 py-3 text-sm [--alert-well:--spacing(8)] [--alert-icon:--spacing(4)] has-[>[data-slot=alert-icon]]:ps-3 has-[>[data-slot=alert-icon]]:gap-x-3",
+        // O × sem poço sobe à linha do texto: `--alert-dismiss-top`. No dedo o
+        // corpo do `sm` é o do `md`.
+        sm: "rounded-surface px-3.5 py-2 text-xs [--alert-well:--spacing(6)] [--alert-icon:--spacing(3.5)] [--alert-dismiss-top:--spacing(1)] has-[>[data-slot=alert-icon]]:[--alert-dismiss-top:--spacing(2)] has-[>[data-slot=alert-icon]]:ps-2 has-[>[data-slot=alert-icon]]:gap-x-2 pointer-coarse:text-sm pointer-coarse:[--alert-well:--spacing(8)] pointer-coarse:[--alert-icon:--spacing(4)]",
+        md: "rounded-surface px-4 py-3 text-sm [--alert-well:--spacing(8)] [--alert-icon:--spacing(4)] [--alert-dismiss-top:--spacing(2.5)] has-[>[data-slot=alert-icon]]:[--alert-dismiss-top:--spacing(4)] has-[>[data-slot=alert-icon]]:ps-3 has-[>[data-slot=alert-icon]]:gap-x-3",
       },
     },
     defaultVariants: {
@@ -107,6 +119,8 @@ type AlertBase = React.ComponentProps<"div"> &
     /** Põe o × no canto; quem chama desmonta o aviso. */
     onDismiss?: () => void
     dismissLabel?: string
+    /** O texto do botão que toma o lugar do × no dedo. */
+    dismissText?: string
     /**
      * Põe o × e lembra o dispensar neste aparelho (`localStorage`, na chave
      * `alert-dispensado:<storageKey>`): o aviso não volta a cada visita. Sem
@@ -195,6 +209,7 @@ function Alert({
   icon,
   onDismiss,
   dismissLabel = "Dispensar aviso",
+  dismissText = "Agora não",
   storageKey,
   ...props
 }: AlertProps) {
@@ -243,19 +258,26 @@ function Alert({
             dispensar()
             onDismiss?.()
           }}
-          aria-label={dismissLabel}
           className={cn(
-            // Centrado no poço do ícone: (respiro + poço/2) − 12.
-            "absolute end-2 top-4 group-data-[size=sm]/alert:end-1.5 group-data-[size=sm]/alert:top-2",
+            // Centrado no poço do ícone (ou na linha do texto, sem poço):
+            // `--alert-dismiss-top` vem do `size` e do ícone.
+            "absolute end-2 top-(--alert-dismiss-top) group-data-[size=sm]/alert:end-1.5",
+            // No dedo o × vira o "Agora não": sai do canto e divide a linha de
+            // baixo com a ação (a metade da direita), ou ocupa a linha sozinho.
+            "pointer-coarse:static pointer-coarse:mt-3 pointer-coarse:h-11 pointer-coarse:w-auto pointer-coarse:px-3 pointer-coarse:text-sm",
+            "pointer-coarse:col-[1/-1] pointer-coarse:group-has-[>[data-slot=alert-actions]]/alert:col-[-2/-1]",
             // A receita do × da `AnnouncementBar` sem a borda do cursor: flor em
             // `currentColor`, tinta presa, alvo de 46 no dedo por pseudo-elemento.
             "text-current",
             "[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             "hover:text-current active:text-current",
-            "pointer-coarse:after:absolute pointer-coarse:after:-inset-3 pointer-coarse:after:content-['']"
           )}
         >
-          <XMarkIcon aria-hidden />
+          {/* O nome acessível contém o texto visível (WCAG 2.5.3): no mouse o
+              nome é o do ×, no dedo é o "Agora não". */}
+          <span className="sr-only pointer-coarse:hidden">{dismissLabel}</span>
+          <span className="hidden pointer-coarse:inline">{dismissText}</span>
+          <XMarkIcon aria-hidden className="pointer-coarse:hidden" />
         </Button>
       ) : null}
     </div>
@@ -274,7 +296,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         // `wrap-break-word`: a mensagem de erro do servidor pode ser uma palavra só.
         "font-heading font-medium tracking-tight text-balance wrap-break-word",
-        "col-start-(--alert-text-col)",
+        "col-start-(--alert-text-col) pointer-coarse:col-end-[-1]",
         className
       )}
       {...props}
@@ -294,7 +316,7 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
         "text-current/85 group-data-[tone=default]/alert:text-muted-foreground wrap-break-word",
         // O respiro sob o título.
         "[[data-slot=alert-title]~&]:mt-0.5",
-        "col-start-(--alert-text-col)",
+        "col-start-(--alert-text-col) pointer-coarse:col-end-[-1]",
         "[&_p]:leading-relaxed",
         className
       )}
@@ -326,6 +348,10 @@ function AlertActions({
         // Estreita, atravessa o texto e a coluna `auto` (que então mede 0);
         // larga, ocupa só a `auto`, ao lado do título e da descrição.
         "data-[placement=inline]:col-[var(--alert-text-col)/-1]",
+        // No dedo a linha de baixo ocupa a largura toda, ou a metade da
+        // esquerda quando há "Agora não"; os botões dividem 50/50 e a ação nunca sobe.
+        "pointer-coarse:col-[1/-1]! pointer-coarse:group-has-[>[data-slot=alert-dismiss]]/alert:col-[1/-2]!",
+        "pointer-coarse:mt-3! pointer-coarse:flex-nowrap pointer-coarse:[&>*]:flex-1",
         "@xs/alert:data-[placement=inline]:col-[-2/-1] @xs/alert:data-[placement=inline]:row-[1/span_2] @xs/alert:data-[placement=inline]:mt-0 @xs/alert:data-[placement=inline]:self-center @xs/alert:data-[placement=inline]:ps-3",
         className
       )}
@@ -352,6 +378,7 @@ function AlertAction({
       size="sm"
       className={cn(
         "border-current/25 bg-transparent text-current",
+        "pointer-coarse:h-11 pointer-coarse:text-sm",
         // A cor do realce na pele do alerta: `currentColor` a 10%.
         "[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
         "hover:text-current active:text-current",

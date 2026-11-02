@@ -45,4 +45,36 @@ describe("o redesenho do alerta", () => {
         expect(alertVariants({ tone: "warning" })).toContain("bg-warning-muted")
         expect(alertVariants({ tone: "destructive" })).toContain("bg-destructive-muted")
     })
+
+    it("no dedo a ação e o dispensar dividem a linha 50/50", () => {
+        expect(ALERT).toContain('dismissText = "Agora não"')
+        expect(ALERT).toContain("dismissText?: string")
+        // Os pés, por extenso: a ação com dispensar, o dispensar com ação, e os dois sozinhos.
+        expect(ALERT).toContain("pointer-coarse:group-has-[>[data-slot=alert-dismiss]]/alert:col-[1/-2]!")
+        expect(ALERT).toContain("pointer-coarse:group-has-[>[data-slot=alert-actions]]/alert:col-[-2/-1]")
+        expect(ALERT).toContain("pointer-coarse:col-[1/-1]!")
+        expect(ALERT).toContain("pointer-coarse:col-[1/-1] ")
+        // As duas grades do dedo, com e sem poço.
+        expect(ALERT).toContain("pointer-coarse:grid-cols-[1fr_calc(50%_-_var(--spacing))]!")
+        expect(ALERT).toContain(
+            "pointer-coarse:has-[>[data-slot=alert-icon]]:grid-cols-[var(--alert-well)_1fr_calc(50%_-_var(--spacing))]!"
+        )
+        // Sem contêiner no dedo, a ação inline nunca sobe.
+        expect(ALERT).toContain("[container-type:normal]!")
+        // O alvo é o próprio botão: o pseudo-elemento ampliado saiu.
+        expect(ALERT).not.toContain("pointer-coarse:after")
+    })
+
+    it("o nome do dispensar contém o texto visível", () => {
+        expect(ALERT).not.toContain("aria-label={dismissLabel}")
+        expect(ALERT).toContain("sr-only pointer-coarse:hidden")
+        expect(ALERT).toContain("hidden pointer-coarse:inline")
+    })
+
+    it("o × sem poço sobe à linha do texto", () => {
+        expect(ALERT).toContain("top-(--alert-dismiss-top)")
+        for (const v of ["--spacing(1)", "--spacing(2)", "--spacing(2.5)", "--spacing(4)"]) {
+            expect(ALERT).toContain(`[--alert-dismiss-top:${v}]`)
+        }
+    })
 })
