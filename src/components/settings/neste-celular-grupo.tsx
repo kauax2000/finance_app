@@ -10,7 +10,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { SettingsRow, SettingsTile } from "@/components/settings/settings-section"
+import { SettingsRow } from "@/components/settings/settings-section"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 import { SyncStatusChip } from "@/components/pwa/sync-status-chip"
@@ -84,11 +84,11 @@ export function NesteCelularGrupo() {
                                 <SeletorDeTema labels={false} />
                             </ItemActions>
                         </Item>
-                        {/* O ladrilho, na medida do ícone do app logo abaixo. */}
+                        {/* O ícone solto, como o do Tema; a linha inteira é o alvo da chave. */}
                         <div className="flex min-w-0 items-center gap-3 px-4 py-3">
-                            <SettingsTile>
-                                <SparklesIcon className="size-5" />
-                            </SettingsTile>
+                            <ItemMedia variant="icon">
+                                <SparklesIcon className="size-5" aria-hidden />
+                            </ItemMedia>
                             <FormSwitch
                                 className="min-w-0 flex-1 items-center"
                                 label="Lançamento inteligente"

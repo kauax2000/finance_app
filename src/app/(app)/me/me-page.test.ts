@@ -18,8 +18,8 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("rolarAteAncora(window.location.hash, document)")
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         for (const texto of ['id="no-celular"', ">Neste celular<", "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Digite uma frase no +"]) expect(grupo).toContain(texto)
-        // O ladrilho fica em Lançamento inteligente e no ícone do app, a pedido do dono.
-        expect(grupo.match(/<SettingsTile>/g)).toHaveLength(1)
+        // O ladrilho ficou só no ícone do app: Lançamento inteligente leva o ícone solto, como o Tema.
+        expect(grupo).not.toContain("SettingsTile")
         // Com o app instalado a linha some, e a fila pendente segue alcançável.
         expect(grupo).toMatch(/instalado \? \(\s+shell && shell\.pendingSyncCount > 0/)
         expect(grupo).toContain(">Sincronização<")
@@ -46,7 +46,7 @@ describe("a página Você", () => {
         expect(grupos[0].items.map((i) => i.name)).toEqual(["Cartões", "Contas a pagar", "Assinaturas", "Projetos", "Membros e convidados"])
         expect(grupos[1].items.find((i) => i.name === "Cofre aberto")?.description).toBe("Seus dados: exportar e apagar")
     })
-    it("Neste celular: título, e o ladrilho no app e no lançamento inteligente", () => {
+    it("Neste celular: título, e o ladrilho só no ícone do app", () => {
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         expect(grupo).toContain(">Neste celular<")
         expect(grupo).toContain('label="Lançamento inteligente"')

@@ -1702,7 +1702,7 @@ declaração de `background-color` no trilho).
   Configurações). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
   iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
   as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
-  Lançamento inteligente e Instalar o app ficam com o ladrilho de 36.
+  Lançamento inteligente leva o ícone solto, como o Tema, e só Instalar o app fica com o ícone do app em 36.
   No fim, o **Sair** num cartão à parte, com o `AlertDialog` "Sair da conta?",
   porque sair limpa a fila offline; o `signOut` só limpa quando o Supabase saiu de
   verdade (sem rede, o diálogo fica aberto com o erro); o Sair de Minha conta continua,
