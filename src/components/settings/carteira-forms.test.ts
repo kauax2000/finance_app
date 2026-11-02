@@ -85,7 +85,7 @@ describe("Carteira em linhas", () => {
         expect(f).toContain("export function WorkspaceAppearanceSettings() {")
         expect(f).not.toContain("actions=")
         expect(f.match(/<Card padding="none">/g)).toHaveLength(2) // o do esqueleto e o da seção
-        expect(f).toContain("Vale para todos em ${currentWorkspace.name}.")
+        expect(f).not.toContain("Vale para todos")
     })
 
     it("os dois diálogos abrem por Alterar", () => {

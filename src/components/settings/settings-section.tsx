@@ -8,7 +8,7 @@ import {
     PageSectionTitle,
 } from "@/components/ui/page-section"
 
-/** A seção de Configurações: título, o alcance ("Vale para …") e a ação à direita. */
+/** A seção de Configurações: título, o alcance opcional ("Vale para …") e a ação à direita. */
 export function SettingsSection({
     id,
     className,
@@ -20,7 +20,7 @@ export function SettingsSection({
     id?: string
     className?: string
     titulo: string
-    alcance: string
+    alcance?: string
     actions?: ReactNode
     children?: ReactNode
 }) {
@@ -28,7 +28,7 @@ export function SettingsSection({
         <PageSection id={id} className={className}>
             <PageSectionHeader actions={actions}>
                 <PageSectionTitle>{titulo}</PageSectionTitle>
-                <PageSectionDescription>{alcance}</PageSectionDescription>
+                {alcance ? <PageSectionDescription>{alcance}</PageSectionDescription> : null}
             </PageSectionHeader>
             {children}
         </PageSection>

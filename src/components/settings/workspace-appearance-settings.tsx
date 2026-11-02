@@ -171,7 +171,6 @@ export function WorkspaceAppearanceSettings() {
             ) : (
                 <SettingsSection
                     titulo="Carteira"
-                    alcance={`Vale para todos em ${currentWorkspace.name}.`}
                 >
                     <Card padding="none">
                         <CardContent className="flex flex-col">
