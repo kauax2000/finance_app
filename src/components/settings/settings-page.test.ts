@@ -24,7 +24,7 @@ describe("Notificações: cada chave por si", () => {
 describe("Configurações: ordem", () => {
     it("Carteira vem primeiro", () => {
         const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
-        const ordem = ["<WorkspaceAppearanceSettings", "<ThemeSettings", "<NotificationPreferences", "<IaPrivacidadeSettings"].map((peca) => fonte.indexOf(peca))
+        const ordem = ["<WorkspaceAppearanceSettings", "<ThemeSettings", "<NotificationPreferences"].map((peca) => fonte.indexOf(peca))
         expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
         expect(ordem[0]).toBeGreaterThan(-1)
     })
@@ -77,9 +77,9 @@ describe("Configurações: página única", () => {
         expect(fonte).toMatch(/: null/)
     })
 
-    it("Este aparelho e IA e privacidade ficam em linhas, sem os três arquivos antigos", () => {
+    it("Este aparelho fica em linhas, sem os três arquivos antigos, e a IA saiu da página", () => {
         const pagina = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
-        for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe"]) expect(pagina).not.toContain(fora)
+        for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe", "IaPrivacidadeSettings"]) expect(pagina).not.toContain(fora)
         const aparelho = lerFonte("src/components/settings/theme-settings.tsx")
         for (const texto of [
             "SyncStatusChip", "InstallPwaSheet",
@@ -106,8 +106,6 @@ describe("Configurações: página única", () => {
         // No telefone nada daqui aparece: o grupo mora em Você.
         expect(aparelho).toContain("if (isMobile) return null")
         expect(aparelho).not.toContain('id="no-celular"')
-        const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")
-        for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
     })
 
     it("Notificações: duas linhas de resumo que abrem os ajustes, com saída para o push bloqueado", () => {

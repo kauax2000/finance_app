@@ -4,7 +4,6 @@ import * as React from "react"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-appearance-settings"
-import { IaPrivacidadeSettings } from "@/components/settings/ia-privacidade-settings"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { ThemeSettings } from "@/components/settings/theme-settings"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -32,7 +31,6 @@ export default function SettingsPage() {
                 <WorkspaceAppearanceSettings />
                 <ThemeSettings />
                 <NotificationPreferences />
-                <IaPrivacidadeSettings />
             </div>
         </div>
     )

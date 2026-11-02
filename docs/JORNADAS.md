@@ -100,7 +100,6 @@ flowchart LR
     G10 -->|"token do Atalho: lançar pelo iPhone sem abrir o app"| G5
     G4 -->|"contagem a conferir"| G5
     G3 -->|"lembrete das 20h, atalhos do ícone, compartilhar texto, foto e PDF do Android"| G5
-    G2 -->|"Configurações: a linha da IA leva à política"| privacy["/privacidade, pública"]
 
     G1 -->|"link público de preços"| G11(("G11 Plano e só leitura"))
     G11 -->|"Cadastrar: teste de 14 dias"| G1
@@ -328,8 +327,6 @@ flowchart TD
     canais -->|"voltar a /settings#notificacoes"| notif
     temas -->|"voltar a /settings#notificacoes"| notif
     notif -.->|"alerta: push bloqueado ou nenhum canal"| canais
-    settings --> ia(["IA e privacidade: Groq e Cloudflare, sem treino; até 30 por dia"])
-    ia -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
     settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
 ```
 
@@ -392,7 +389,7 @@ flowchart TD
 | O aceite grava o papel e o responsável (Bloco 7A) | `accept_workspace_invite` grava `role = v_invite.role` (era `'member'` fixo) e, no convidado, `sponsor_user_id = v_invite.created_by`. A RPC continua só da service role: a Edge de aceite não mudou | `supabase/migrations/20261029120000_papeis.sql` |
 | O ex-convidado (Bloco 9) | `workspace_ex_convidados(workspace_id, user_id, saiu_em)`, com RLS ligada e sem grant, é preenchida pelo gatilho `lembrar_ex_convidado` (depois de apagar um membro com `role = 'guest'`; pula a cascata). O `accept_workspace_invite` devolve o status `ex_convidado` para um convite **por link** de quem está nela, e a Edge `workspace-invites-accept` responde 403 "Peça ao dono um convite por e-mail."; o convite por e-mail passa, e um aceite com sucesso apaga a linha (fecha a lacuna 60). **A Edge sobe antes da migração**: sem o `case`, o status novo cai no `default` e vira 500 | `supabase/migrations/20261102120000_bloco9.sql`, `supabase/functions/workspace-invites-accept/index.ts` |
 | Lista de membros e convites (Bloco 7A) | O selo mostra Dono, Membro ou Convidado (`rotuloDoPapel`); o convite por e-mail pendente mostra o papel; a troca de papel é da linha do membro e só do dono (ver 15a). O membro adulto também lê a seção Limites (ver 16) | `src/app/(app)/members/page-client.tsx`, `src/components/members/workspace-invite-dialog.tsx` |
-| IA e privacidade (Bloco 3B) | Configurações mostra a seção "IA e privacidade": Groq e Cloudflare, sem treinar com os dados, o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/settings/ia-privacidade-settings.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
+| Política de privacidade (Bloco 3B) | `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta. A seção "IA e privacidade" saiu de Configurações em 2/nov/2026, e nenhuma tela do app leva mais a ela (lacuna 107) | `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Onde chega e Sobre o quê (2/nov/2026) | São rotas, `/settings/notificacoes/canais` e `/settings/notificacoes/temas`, com `loading.tsx` e `AdiarMontagem`. Eram diálogos. As duas linhas de resumo e os links do alerta ("Como liberar", "Escolher canais") as abrem, e o voltar leva a `/settings#notificacoes` (`APP_SUB_PAGE_TITLES`) | `src/config/navigation.ts`, `src/components/settings/notificacoes-canais-tela.tsx`, `src/components/settings/notificacoes-temas-tela.tsx` |
 | No celular e Neste celular (2/nov/2026) | Do `md` para cima, Configurações tem Aparência e "No celular", e o QR abre `/me#no-celular`. Abaixo do `md`, Configurações não mostra nenhuma das duas: o grupo "Neste celular" (Tema, Lançamento inteligente e Instalar o app, `id="no-celular"`) mora no fim da página Você, `NesteCelularGrupo`. Com o app instalado a linha "Instalar o app" some, e no lugar dela, só com pendências na fila, fica a linha "Sincronização". No desktop e no tablet, o QR (`QrCode link={false}`, sem link, porque ele apontaria para a própria tela) e o "Copiar link" levam ao telefone; num iPhone ou iPad não instalado aparece a linha "Instalar o app" com o "Como instalar" (a folha de instalação), e senão, com pendências na fila, a linha "Sincronização". Na página Você, o "Como instalar" do iPhone abre a mesma folha. A folha de instalação tem quatro passos, com o caminho do iOS 27 (menu, Compartilhar, Ver Mais, Adicionar à Tela de Início, Adicionar), e fechar o aviso automático também o dispensa. | `src/components/settings/theme-settings.tsx`, `src/components/settings/neste-celular-grupo.tsx`, `src/components/settings/no-celular-cartao.tsx`, `src/app/(app)/me/page-client.tsx`, `src/components/ui/qr-code.tsx` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
@@ -2184,6 +2181,7 @@ continuam aqui para registro.
 | 104 | G5 | Fechar o lançamento inteligente (Esc, fora) descarta o que foi lido ou editado sem perguntar; o formulário clássico pergunta "Descartar alterações?". |
 | 105 | G5 | Os wireframes antigos `frase-rapida-wireframe.tsx` e `foto-recibo-wireframe.tsx` ficam sem uso no repositório até o dono aprovar apagá-los. |
 | 106 | G5, G10 | A Edge `capture` compartilha o parser melhorado (dias da semana, receita, motivo do tipo), mas não foi publicada: o Atalho do iPhone e o Apple Pay seguem com o parser antigo até a próxima publicação. |
+| 107 | G2 | Nenhuma tela do app leva mais à política de privacidade: a seção "IA e privacidade" saiu de Configurações em 2/nov/2026, a pedido do dono. `/privacidade` segue pública, só por endereço direto, e o aviso de quem lê os dados (Groq e Cloudflare) e do limite de 30 chamadas por dia mora só nela. |
 
 ### Fechadas em 1/nov/2026
 
