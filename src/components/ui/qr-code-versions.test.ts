@@ -9,7 +9,13 @@ describe("QrCode", () => {
   it("qrCodeMatriz desenha só os módulos escuros", () => {
     const m = qrCodeMatriz("https://app.exemplo.com/settings#no-celular")!
     expect(m.tamanho).toBeGreaterThanOrEqual(21)
-    expect(m.caminho).toMatch(/^M\d+ \d+h1v1h-1z/)
+    expect(m.diagonais.join("")).toMatch(/^M\d+ \d+h1v1h-1z/)
+  })
+
+  it("cada diagonal é um caminho, a 0 no canto de baixo à esquerda", () => {
+    const m = qrCodeMatriz("https://app.exemplo.com/settings#no-celular")!
+    expect(m.diagonais).toHaveLength(2 * m.tamanho - 1)
+    expect(m.diagonais[0]).toBe(`M0 ${m.tamanho - 1}h1v1h-1z`)
   })
 
   it("sem valor ou além da capacidade, não lança e devolve null", () => {
@@ -37,9 +43,16 @@ describe("QrCode", () => {
 
   it("copiar confirma pelo Tooltip e trata a recusa", () => {
     const f = semComentarios(lerFonte(FONTE))
+    expect(f).toContain('role="status"')
     expect(f).toContain('"Link copiado"')
     expect(f).toContain('"Não deu para copiar"')
     expect(f).toMatch(/catch\s*\{\s*setEstado\("falhou"\)/)
+  })
+
+  it("a onda respeita o movimento reduzido, e o onCopied só corre com a cópia feita", () => {
+    const f = semComentarios(lerFonte(FONTE))
+    expect(f).toMatch(/if \(!wave \|\| reduzido\) return/)
+    expect(f).toMatch(/setEstado\("copiado"\)\s*onCopied\?\.\(\)/)
   })
 
   it("a dica do Copiar link abre à direita, no lado vazio da linha", () => {

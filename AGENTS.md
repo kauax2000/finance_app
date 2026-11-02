@@ -1876,7 +1876,7 @@ declaração de `background-color` no trilho).
   `showcase-versions.test.ts`.
 - **`QrCode`** (Molécula, rodada 355): o código que leva de uma tela a outro
   aparelho, desenhado em SVG com tokens (`uqr`, correção `M`, sem borda; os
-  módulos escuros são **um `<path>` só**). **A placa é clara nos dois
+  módulos escuros são **um `<path>` por diagonal**). **A placa é clara nos dois
   temas** (`bg-background` no claro, `bg-foreground` no escuro, a tinta do
   módulo no par oposto por `currentColor`): decisão do dono e a polaridade do
   padrão do código; o `BarcodeDetector` do Chromium decodificou o caminho do
@@ -1890,8 +1890,13 @@ declaração de `background-color` no trilho).
   sem o `<a>`: é o que Configurações usa, onde o link apontaria para a própria
   tela. O anel de foco do link é `ring-current/45` (o `--ring` tem a cor da
   placa no escuro). 128px, **sem escada**.
-  `QrCodeCopy` é a peça solta que copia o link (`Tooltip confirmation` ligada
-  pelo resultado) e `QrCodeSkeleton` o osso; sem `value`, ou com um que não
+  `QrCodeCopy` é a peça solta que copia o link: **confirma no próprio botão**
+  (tique, "Copiado", largura em `MOLA`), e a recusa vai pela `Tooltip
+  confirmation`. `onCopied` só corre com a cópia feita, e a tela soma 1 ao
+  `wave` do `QrCode`, que toca **a onda** (cada diagonal esmaece a 12% e volta
+  em 300ms, 13ms depois da anterior, do canto de baixo à esquerda; rodada
+  356). A troca de ícone ou rótulo no lugar é `TrocaSuave`
+  (`lib/troca-suave.tsx`), e o pai dela é `relative`. `QrCodeSkeleton` é o osso; sem `value`, ou com um que não
   cabe no maior QR, `QrCode` cai no esqueleto. Fora: escada de tamanho,
   módulos arredondados, símbolo central e legenda. `qr-code-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra

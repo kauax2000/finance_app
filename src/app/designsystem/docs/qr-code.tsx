@@ -14,6 +14,7 @@ const LINK = "https://app.finance.com.br/settings#no-celular"
 function DemoNaTela() {
   const [copiar, setCopiar] = React.useState(true)
   const [esqueleto, setEsqueleto] = React.useState(false)
+  const [onda, setOnda] = React.useState(0)
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -26,10 +27,10 @@ function DemoNaTela() {
         }
       />
       <div className="flex flex-col items-start gap-4">
-        {esqueleto ? <QrCodeSkeleton /> : <QrCode value={LINK} label="Abrir o Finance no celular" />}
-        {copiar ? <QrCodeCopy value={LINK} /> : null}
+        {esqueleto ? <QrCodeSkeleton /> : <QrCode value={LINK} label="Abrir o Finance no celular" wave={onda} />}
+        {copiar ? <QrCodeCopy value={LINK} onCopied={() => setOnda((n) => n + 1)} /> : null}
       </div>
-      <Caption>No cursor o link do código não recebe clique: a placa só cresce. Passe o cursor para ver.</Caption>
+      <Caption>No cursor o link do código não recebe clique: a placa só cresce. Copie o link para ver a onda.</Caption>
     </div>
   )
 }
@@ -73,8 +74,10 @@ export default function QrCodeDoc() {
       <DocSection
         title="Na tela"
         description="O código desenhado em SVG com tokens, e o botão que copia o link para quem não pode apontar a câmera. Sem value, ou com um que não cabe no maior QR, a peça mostra o esqueleto."
-        code={`<QrCode value={link} label="Abrir o Finance no celular" />
-<QrCodeCopy value={link} />`}
+        code={`const [onda, setOnda] = useState(0)
+
+<QrCode value={link} label="Abrir o Finance no celular" wave={onda} />
+<QrCodeCopy value={link} onCopied={() => setOnda((n) => n + 1)} />`}
         previewClassName="items-stretch"
       >
         <DemoNaTela />
@@ -100,7 +103,11 @@ export default function QrCodeDoc() {
       </DocSection>
 
       <DocNote title="A placa cresce com o cursor e com o toque">
-        <code>hover:scale-110</code> com o par <code>active:scale-110</code>, em <code>--duration-fast</code> na curva <code>--ease-out</code>. É o único movimento da peça; não há laço.
+        <code>hover:scale-110</code> com o par <code>active:scale-110</code>, em <code>--duration-fast</code> na curva <code>--ease-out</code>.
+      </DocNote>
+
+      <DocNote title="Copiar confirma no botão, e a onda atravessa o código">
+        <code>QrCodeCopy</code> troca o ícone pelo tique e o rótulo por "Copiado", com a largura na mola (<code>MOLA</code>); depois de 2 segundos, volta. Quem liga a onda é a tela: <code>onCopied</code> soma 1 ao contador que vai em <code>wave</code>, e a cópia recusada não toca nada. Os módulos são um <code>&lt;path&gt;</code> por diagonal, e cada um esmaece até 12% e volta em 300ms, 13ms depois do anterior, a partir do canto de baixo à esquerda. Com movimento reduzido, a onda não toca e a troca é na hora; o leitor de tela ouve "Link copiado" pelo <code>role="status"</code>.
       </DocNote>
 
       <DocSection
@@ -118,6 +125,7 @@ export default function QrCodeDoc() {
         rows={[
           { prop: "value", type: "string", description: "O que o código leva, em geral um link. Vazio, ou além da capacidade do maior QR, mostra o QrCodeSkeleton. Correção M, sem borda." },
           { prop: "label", type: "string", description: "Para onde o código leva, lido pelo leitor de tela como o nome do link. Obrigatório." },
+          { prop: "wave", type: "number", default: "0", description: "Contador: cada valor novo toca a onda. 0 não toca." },
           { prop: "link", type: "boolean", default: "true", description: "false desenha o código como role=\"img\", sem o <a>, para a tela cujo destino é ela mesma (Configurações)." },
           { prop: "className", type: "string", description: "Posição e margem de quem monta; nunca cor nem tamanho do código." },
         ]}
@@ -127,6 +135,7 @@ export default function QrCodeDoc() {
         title="Props de QrCodeCopy"
         rows={[
           { prop: "value", type: "string", description: "O texto copiado. Vazio desabilita o botão." },
+          { prop: "onCopied", type: "() => void", description: "Depois da cópia feita, e só dela. É por onde a tela toca a onda." },
           { prop: "className", type: "string", description: "Posição de quem monta, aplicada ao contêiner do botão." },
         ]}
       />

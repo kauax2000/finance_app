@@ -28712,3 +28712,20 @@ sem o `<a>`, e Configurações o usa porque o link apontaria para a própria tel
 capacidade, a placa por tokens, o `label` obrigatório, o link só no toque, o
 anel de foco, o `link={false}`, a margem e a cópia pelo resultado (o `catch`
 grava `falhou`).
+
+### Rodada 356 — copiar: o botão confirma, e a onda atravessa o código
+
+**O pedido.** Uma animação bonita ao clicar em copiar. Quatro protótipos clicáveis
+foram ao navegador (o botão confirma, a pílula brota, o fio de arco-íris, o código
+responde), e o dono escolheu o último.
+
+**O que mudou.** `QrCodeCopy` troca o ícone pelo tique e o rótulo por "Copiado",
+com a largura em `MOLA`, e deixa a dica só para a recusa. `onCopied` corre só com
+a cópia feita, e a tela soma 1 ao `wave` do `QrCode`. Os módulos passaram de um
+`<path>` para um por diagonal: a onda anima dezenas de nós, e não centenas.
+`TrocaSuave` (`lib/troca-suave.tsx`) é a troca no lugar, e o botão de copiar do
+convite (diálogo e Membros) a usa no ícone. Com movimento reduzido nada anda.
+
+**Trava.** `qr-code-versions.test.ts` tranca as diagonais, o movimento reduzido e
+o `onCopied` depois da cópia. O gesto não é medido por teste: foi conferido no
+navegador.

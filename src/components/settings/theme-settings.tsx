@@ -38,6 +38,8 @@ export function ThemeSettings() {
     const isIos = useIsIos()
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
+    // Cada cópia feita soma 1, e o `QrCode` toca a onda.
+    const [onda, setOnda] = useState(0)
     const origem = useSyncExternalStore(semAssinatura, () => window.location.origin, () => "")
     const noTelefone = origem ? `${origem}${ROUTES.SETTINGS}#no-celular` : ""
 
@@ -124,9 +126,13 @@ export function ThemeSettings() {
                             <div className="min-w-0">
                                 <p className="text-sm font-medium">Abra o Finance no telefone</p>
                                 <Muted>Aponte a câmera para o código. Lá você liga o lançamento inteligente e instala o app.</Muted>
-                                <QrCodeCopy value={noTelefone} className="mt-3" />
+                                <QrCodeCopy
+                                    value={noTelefone}
+                                    onCopied={() => setOnda((n) => n + 1)}
+                                    className="mt-3"
+                                />
                             </div>
-                            <QrCode value={noTelefone} label="Abrir o Finance no telefone" link={false} />
+                            <QrCode value={noTelefone} label="Abrir o Finance no telefone" link={false} wave={onda} />
                         </div>
                         {instalarNoIphone ? (
                             <>

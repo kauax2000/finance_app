@@ -36,6 +36,7 @@ import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { PAPEL_DO_CONVITE_INICIAL, PapelDoConviteWireframe } from "@/components/wireframe/papeis-wireframe"
 import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import { toastError, toastSuccess } from "@/lib/toast"
+import { TrocaSuave } from "@/lib/troca-suave"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
 import {
@@ -378,11 +379,18 @@ export function WorkspaceInviteDialog({
                                                                     void copyPersistedLink()
                                                                 }
                                                             >
-                                                                {linkCopied ? (
-                                                                    <CheckIcon className="text-success" />
-                                                                ) : (
-                                                                    <DocumentDuplicateIcon />
-                                                                )}
+                                                                <span className="relative size-4 pointer-coarse:size-5">
+                                                                    <TrocaSuave
+                                                                        chave={linkCopied ? "tique" : "copiar"}
+                                                                        className="absolute inset-0 flex items-center justify-center"
+                                                                    >
+                                                                        {linkCopied ? (
+                                                                            <CheckIcon className="text-success" />
+                                                                        ) : (
+                                                                            <DocumentDuplicateIcon />
+                                                                        )}
+                                                                    </TrocaSuave>
+                                                                </span>
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
