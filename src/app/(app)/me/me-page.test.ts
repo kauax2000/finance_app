@@ -26,11 +26,14 @@ describe("a página Você", () => {
         expect(grupo).not.toContain("instalado neste aparelho")
         expect(grupo).toMatch(/variant="primary"\s+className="w-full"/)
     })
-    it("os grupos têm nome, e Sair pede confirmação e fecha a página", () => {
+    it("os grupos têm nome, e Sair é a última linha de Conta, com confirmação", () => {
         expect(PAGINA).toContain("<PageSectionTitle>{grupo.label}</PageSectionTitle>")
         expect(PAGINA).toContain("<AlertDialog")
         expect(PAGINA).toContain("Sair da conta?")
-        expect(PAGINA.indexOf("<NesteCelularGrupo")).toBeLessThan(PAGINA.indexOf("<AlertDialogTrigger"))
+        // Última linha do grupo Conta, com ícone e sem chevron.
+        expect(PAGINA).toContain('grupo.id === "conta" ?')
+        expect(PAGINA).toContain("<ArrowRightStartOnRectangleIcon")
+        expect(PAGINA.indexOf("<AlertDialogTrigger")).toBeLessThan(PAGINA.indexOf("<NesteCelularGrupo"))
         // Sem rede o sair falha: o diálogo fica aberto, pendente, e mostra o erro.
         expect(PAGINA).toContain("pending={saindo}")
         expect(PAGINA).toContain("<AlertDialogTrigger asChild>")

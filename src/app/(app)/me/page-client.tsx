@@ -9,6 +9,7 @@ import { NesteCelularGrupo } from "@/components/settings/neste-celular-grupo"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/20/solid"
 import { Badge } from "@/components/ui/badge"
 import {
     AlertDialog,
@@ -72,72 +73,75 @@ export default function MePage() {
     }
 
     return (
-        <div className="min-w-0 max-w-full space-y-5">
-            {/* Não é link: a conta tem a linha dela no grupo Conta. */}
-            <div className="flex flex-col items-center gap-3 text-center">
-                <VoceAvatar size="xl" />
-                {/* Nome sobre e-mail é par de identidade: sem `gap`. */}
-                <div className="min-w-0 max-w-full">
-                    <H2 className="truncate">{userName}</H2>
-                    {userEmail ? <Muted className="truncate">{userEmail}</Muted> : null}
+        <AlertDialog
+            pending={saindo}
+            onOpenChange={(aberto) => {
+                if (!aberto) setErro(null)
+            }}
+        >
+            <div className="min-w-0 max-w-full space-y-5">
+                {/* Não é link: a conta tem a linha dela no grupo Conta. */}
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <VoceAvatar size="xl" />
+                    {/* Nome sobre e-mail é par de identidade: sem `gap`. */}
+                    <div className="min-w-0 max-w-full">
+                        <H2 className="truncate">{userName}</H2>
+                        {userEmail ? <Muted className="truncate">{userEmail}</Muted> : null}
+                    </div>
                 </div>
-            </div>
 
-            {grupos.map((grupo) =>
-                grupo.items.length === 0 ? null : (
-                    <PageSection key={grupo.id} size="sm">
-                        <PageSectionHeader>
-                            <PageSectionTitle>{grupo.label}</PageSectionTitle>
-                        </PageSectionHeader>
-                        <Card padding="none">
-                            <ItemGroup variant="divided">
-                                {grupo.items.map((item) => {
-                                    const Icon = miniIconFor(item.icon) ?? item.icon
-                                    return (
-                                        <Item key={item.href} variant="flush" interactive asChild className="min-h-12">
-                                            <Link href={item.href}>
-                                                <ItemMedia variant="icon">
-                                                    <Icon className="size-5" aria-hidden />
-                                                </ItemMedia>
-                                                <ItemContent>
-                                                    {/* 16 no toque, como as linhas dos menus (`menu-classes`): o `ItemTitle` para em 14. */}
-                                                    <ItemTitle className="pointer-coarse:text-base">
-                                                        {item.name}
-                                                        {item.beta ? <Badge size="xs">Beta</Badge> : null}
-                                                    </ItemTitle>
-                                                    {item.description ? <ItemDescription>{item.description}</ItemDescription> : null}
-                                                </ItemContent>
-                                                <ItemChevron />
-                                            </Link>
+                {grupos.map((grupo) =>
+                    grupo.items.length === 0 ? null : (
+                        <PageSection key={grupo.id} size="sm">
+                            <PageSectionHeader>
+                                <PageSectionTitle>{grupo.label}</PageSectionTitle>
+                            </PageSectionHeader>
+                            <Card padding="none">
+                                <ItemGroup variant="divided">
+                                    {grupo.items.map((item) => {
+                                        const Icon = miniIconFor(item.icon) ?? item.icon
+                                        return (
+                                            <Item key={item.href} variant="flush" interactive asChild className="min-h-12">
+                                                <Link href={item.href}>
+                                                    <ItemMedia variant="icon">
+                                                        <Icon className="size-5" aria-hidden />
+                                                    </ItemMedia>
+                                                    <ItemContent>
+                                                        {/* 16 no toque, como as linhas dos menus (`menu-classes`): o `ItemTitle` para em 14. */}
+                                                        <ItemTitle className="pointer-coarse:text-base">
+                                                            {item.name}
+                                                            {item.beta ? <Badge size="xs">Beta</Badge> : null}
+                                                        </ItemTitle>
+                                                        {item.description ? <ItemDescription>{item.description}</ItemDescription> : null}
+                                                    </ItemContent>
+                                                    <ItemChevron />
+                                                </Link>
+                                            </Item>
+                                        )
+                                    })}
+                                    {/* Sair limpa a fila offline: pede confirmação. Não abre tela, então não tem chevron. */}
+                                    {grupo.id === "conta" ? (
+                                        <Item variant="flush" interactive asChild className="min-h-12">
+                                            <AlertDialogTrigger asChild>
+                                                <button type="button">
+                                                    <ItemMedia variant="icon" className="text-destructive">
+                                                        <ArrowRightStartOnRectangleIcon className="size-5" aria-hidden />
+                                                    </ItemMedia>
+                                                    <ItemContent>
+                                                        <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
+                                                    </ItemContent>
+                                                </button>
+                                            </AlertDialogTrigger>
                                         </Item>
-                                    )
-                                })}
-                            </ItemGroup>
-                        </Card>
-                    </PageSection>
-                ),
-            )}
+                                    ) : null}
+                                </ItemGroup>
+                            </Card>
+                        </PageSection>
+                    ),
+                )}
 
-            {isMobile ? <NesteCelularGrupo /> : null}
+                {isMobile ? <NesteCelularGrupo /> : null}
 
-            {/* Sair limpa a fila offline e a linha fica à vista: pede confirmação. */}
-            <AlertDialog
-                pending={saindo}
-                onOpenChange={(aberto) => {
-                    if (!aberto) setErro(null)
-                }}
-            >
-                <Card padding="none">
-                    <AlertDialogTrigger asChild>
-                        <Item variant="flush" interactive asChild className="min-h-12">
-                            <button type="button">
-                                <ItemContent className="items-center">
-                                    <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
-                                </ItemContent>
-                            </button>
-                        </Item>
-                    </AlertDialogTrigger>
-                </Card>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Sair da conta?</AlertDialogTitle>
@@ -156,7 +160,7 @@ export default function MePage() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog>
-        </div>
+            </div>
+        </AlertDialog>
     )
 }

@@ -1249,7 +1249,7 @@ declaração de `background-color` no trilho).
     glifo) abre a página `/me`, com as telas da carteira e da conta e o aparelho
     em três seções com título (o `MobileAccountMenu` e o painel que brotava da
     aba "Mais" saíram na rodada 346); o tema mora em Você (Neste celular) e o
-    Sair fica no fim dela, com confirmação, além do de Minha conta. O "+ Adicionar" não tem menu: abre
+    Sair é a última linha do grupo Conta dela, com confirmação, além do de Minha conta. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
@@ -1703,7 +1703,7 @@ declaração de `background-color` no trilho).
   iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
   as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
   Lançamento inteligente leva o ícone solto, como o Tema, e só Instalar o app fica com o ícone do app em 36.
-  No fim, o **Sair** num cartão à parte, com o `AlertDialog` "Sair da conta?",
+  A última linha de Conta é o **Sair**, com ícone e sem chevron, e o `AlertDialog` "Sair da conta?",
   porque sair limpa a fila offline; o `signOut` só limpa quando o Supabase saiu de
   verdade (sem rede, o diálogo fica aberto com o erro); o Sair de Minha conta continua,
   sem confirmação (erro em toast), e Planos fica dentro de Minha conta. No desktop nada

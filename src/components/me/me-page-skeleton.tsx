@@ -27,7 +27,7 @@ export function MePageSkeleton() {
                     <Skeleton className="h-4 w-48 max-w-full" />
                 </div>
             </div>
-            {[5, 3].map((linhas) => (
+            {[5, 4].map((linhas) => (
                 <div key={linhas} className="space-y-3">
                     <Skeleton className="h-4 w-20" />
                     <Card padding="none" className="divide-y divide-border">
