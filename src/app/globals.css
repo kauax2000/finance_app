@@ -2256,6 +2256,87 @@
   }
 }
 
+/* A subpágina do telefone (`TransicaoDeSubpagina`): a tela de cima corre sobre a de
+   baixo, que recua. O grupo não anima porque quem anda é cada foto, e as barras
+   ganham nome para ficar paradas por cima. A foto do conteúdo é transparente: a de
+   cima leva o fundo da página, e `normal` tira a soma de brilho do cruzamento padrão.
+   Fora do tema e da carteira, a única transição do app é esta: é o que escopa a raiz. */
+@media (width < 48rem) {
+  html:not(.theme-reveal, .workspace-switch) [data-slot="top-bar"] {
+    view-transition-name: barra-do-topo;
+  }
+  html:not(.theme-reveal, .workspace-switch) [data-slot="bottom-bar"] {
+    view-transition-name: barra-de-baixo;
+  }
+  ::view-transition-group(barra-do-topo),
+  ::view-transition-group(barra-de-baixo) {
+    animation: none;
+    z-index: 100;
+  }
+  ::view-transition-old(barra-do-topo),
+  ::view-transition-old(barra-de-baixo) {
+    display: none;
+  }
+  ::view-transition-new(barra-do-topo),
+  ::view-transition-new(barra-de-baixo) {
+    animation: none;
+  }
+  html:not(.theme-reveal, .workspace-switch)::view-transition-old(root),
+  html:not(.theme-reveal, .workspace-switch)::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(.subpagina-entra),
+  ::view-transition-group(.subpagina-volta) {
+    animation: none;
+  }
+  ::view-transition-new(.subpagina-entra),
+  ::view-transition-old(.subpagina-volta) {
+    z-index: 1;
+    background-color: var(--background);
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(.subpagina-entra) {
+    animation: var(--duration-slow) var(--ease-out) both subpagina-esquerda;
+  }
+  ::view-transition-new(.subpagina-entra) {
+    animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
+  }
+  ::view-transition-old(.subpagina-volta) {
+    animation: var(--duration-slow) var(--ease-out) both subpagina-sai-direita;
+  }
+  ::view-transition-new(.subpagina-volta) {
+    animation: var(--duration-slow) var(--ease-out) both subpagina-vem-esquerda;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.subpagina-entra),
+  ::view-transition-new(.subpagina-entra),
+  ::view-transition-old(.subpagina-volta),
+  ::view-transition-new(.subpagina-volta) {
+    animation: none;
+  }
+}
+@keyframes subpagina-direita {
+  from {
+    translate: 100% 0;
+  }
+}
+@keyframes subpagina-esquerda {
+  to {
+    translate: -30% 0;
+  }
+}
+@keyframes subpagina-sai-direita {
+  to {
+    translate: 100% 0;
+  }
+}
+@keyframes subpagina-vem-esquerda {
+  from {
+    translate: -30% 0;
+  }
+}
+
 /* As cores de identidade e de ladrilho têm duas versões: a viva (uma claridade, o
    croma da marca, tinta escura) e a suave (quase branca, com a letra no tom forte do
    mesmo matiz). As utilities publicam variáveis e o componente pinta com

@@ -727,7 +727,7 @@ declaração de `background-color` no trilho).
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
   `PageSectionContent`. **No telefone toda tela abre com o título grande, menos a página Você, e quem o escreve é a casca**
   (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
-  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
+  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
   no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e

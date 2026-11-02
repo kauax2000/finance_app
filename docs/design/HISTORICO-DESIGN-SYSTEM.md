@@ -28762,3 +28762,23 @@ tela e, ao rolar, o nome no centro da barra. O fundo da barra fica como está.
 - Conferido no Safari do Simulador (iPhone 18 Pro Max), no topo e rolado. Numa
   aba em segundo plano o `requestAnimationFrame` para e o `IntersectionObserver`
   não responde: teste de título que sobe pede a aba na frente.
+
+### Rodada 358 — a transição de subpágina
+
+Pedido do dono: as transições entre páginas são um padrão só, e só de subpágina.
+Do Painel para Transações não são páginas diferentes, são lugares diferentes.
+
+- **Quem decide é a rota, não o link**: `direcaoDaTela` compara a tela de antes e a
+  de agora pela cadeia de `defaultMobileBackHref`. Aba com aba, e irmãs, não animam.
+- **Mora na casca** (`TransicaoDeSubpagina`), em volta do `data-workspace-content`,
+  um `ViewTransition` do React com `default="none"`. Nenhuma tela marca link.
+- **A classe dura uma troca**: a montagem adiada (`AdiarMontagem`) é outra transição
+  e não pode repetir o gesto, então um efeito a limpa depois do commit.
+- **O gesto**: entrar traz a tela nova de 100% a 0, sobre a velha, que recua a -30%;
+  voltar é o contrário. `--duration-slow`, `--ease-out`, e cada foto anda: o grupo
+  e a raiz ficam parados. Abaixo de `48rem` as barras ganham nome e ficam por cima,
+  fora do tema e da troca de carteira, que seguem como eram.
+- **`background-color` e `mix-blend-mode: normal` na foto de cima**, a mais do que o
+  plano dizia: a foto do conteúdo não tem fundo (ele é do `body`), e a de baixo
+  apareceria através dela; com fundo, a soma de brilho do cruzamento padrão estouraria.
+- Com movimento reduzido, troca na hora.
