@@ -107,7 +107,7 @@ export default function QrCodeDoc() {
       </DocNote>
 
       <DocNote title="Copiar confirma no botão, e a onda atravessa o código">
-        <code>QrCodeCopy</code> troca o ícone pelo tique e o rótulo por "Copiado", com a largura na mola (<code>MOLA</code>); depois de 2 segundos, volta. Quem liga a onda é a tela: <code>onCopied</code> soma 1 ao contador que vai em <code>wave</code>, e a cópia recusada não toca nada. Os módulos são um <code>&lt;path&gt;</code> por diagonal, e cada um esmaece até 12% e volta em 300ms, 13ms depois do anterior, a partir do canto de baixo à esquerda. Com movimento reduzido, a onda não toca e a troca é na hora; o leitor de tela ouve "Link copiado" pelo <code>role="status"</code>.
+        <code>QrCodeCopy</code> troca o ícone pelo tique e o rótulo por &quot;Copiado&quot;, com a largura na mola (<code>MOLA</code>); depois de 2 segundos, volta. Quem liga a onda é a tela: <code>onCopied</code> soma 1 ao contador que vai em <code>wave</code>, e a cópia recusada não toca nada. Os módulos são um <code>&lt;path&gt;</code> por diagonal, e cada um esmaece até 12% e volta em 300ms, 13ms depois do anterior, a partir do canto de baixo à esquerda. Com movimento reduzido, a onda não toca e a troca é na hora; o leitor de tela ouve &quot;Link copiado&quot; pelo <code>role=&quot;status&quot;</code>.
       </DocNote>
 
       <DocSection
