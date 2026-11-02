@@ -82,9 +82,8 @@ describe("Configurações: página única", () => {
         for (const fora of ["LancamentoSettings", "PwaSettingsSection", "IaConfiguracoesWireframe"]) expect(pagina).not.toContain(fora)
         const aparelho = lerFonte("src/components/settings/theme-settings.tsx")
         for (const texto of [
-            "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet",
-            "Neste celular", "No celular", 'id="no-celular"', "#no-celular",
-            "Digite uma frase no +",
+            "SyncStatusChip", "InstallPwaSheet",
+            "No celular", "ROUTES.ME", "#no-celular",
             "pendingSyncCount",
         ]) expect(aparelho).toContain(texto)
         const cartao = lerFonte("src/components/settings/no-celular-cartao.tsx")
@@ -103,11 +102,10 @@ describe("Configurações: página única", () => {
         expect(aparelho).toContain("NoCelularCartao")
         expect(aparelho).toMatch(/<NoCelularCartao value=\{noTelefone\} \/>[\s\S]*<Card padding="none">/)
         expect(aparelho).not.toContain("Só tem efeito no telefone.")
-        expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(2)
-        // No telefone o Tema fica no grupo, com ícone em cada linha e o CTA primário.
-        expect(aparelho).toMatch(/titulo="Neste celular"[\s\S]*titulo="Tema"[\s\S]*titulo="Aparência"/)
-        expect(aparelho.match(/<SettingsTile>/g)).toHaveLength(2)
-        expect(aparelho).toMatch(/variant="primary"\s+className="w-full"/)
+        expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(1)
+        // No telefone nada daqui aparece: o grupo mora em Você.
+        expect(aparelho).toContain("if (isMobile) return null")
+        expect(aparelho).not.toContain('id="no-celular"')
         const ia = lerFonte("src/components/settings/ia-privacidade-settings.tsx")
         for (const texto of ["ROUTES.PRIVACY", "Groq e Cloudflare", "30 chamadas"]) expect(ia).toContain(texto)
     })

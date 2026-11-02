@@ -12,6 +12,14 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("getVoceGroups(useAbasFora(), useWorkspace().papel)")
         expect(PAGINA).toContain('<VoceAvatar size="xl" />')
     })
+    it("o grupo do telefone fecha a página, só abaixo do md, e a âncora do QR rola até ele", () => {
+        expect(PAGINA).toContain("{isMobile ? <NesteCelularGrupo /> : null}")
+        expect(PAGINA).toContain("rolarAteAncora(window.location.hash, document)")
+        const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
+        for (const texto of ['id="no-celular"', 'aria-label="Neste celular"', "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Digite uma frase no +"]) expect(grupo).toContain(texto)
+        expect(grupo.match(/<SettingsTile>/g)).toHaveLength(2)
+        expect(grupo).toMatch(/variant="primary"\s+className="w-full"/)
+    })
     it("cada linha é um link com ícone mini, nome e chevron", () => {
         expect(PAGINA).toContain("<ItemChevron")
         expect(PAGINA).toContain("miniIconFor(")

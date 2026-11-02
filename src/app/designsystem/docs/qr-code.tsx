@@ -9,7 +9,7 @@ import { Controles, DocNote, DocSection, Interruptor, Interruptores, PropsTable,
 import { IphoneFrame } from "../ds-frame"
 
 /** O link que a tela de Configurações leva ao outro aparelho. */
-const LINK = "https://app.finance.com.br/settings#no-celular"
+const LINK = "https://app.finance.com.br/me#no-celular"
 
 function DemoNaTela() {
   const [copiar, setCopiar] = React.useState(true)

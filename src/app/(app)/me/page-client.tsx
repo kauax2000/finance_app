@@ -1,9 +1,12 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { useAbasFora } from "@/components/layout/abas-fora"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
 import { MePageSkeleton } from "@/components/me/me-page-skeleton"
+import { NesteCelularGrupo } from "@/components/settings/neste-celular-grupo"
+import { rolarAteAncora } from "@/components/settings/settings-section"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -18,10 +21,18 @@ import {
 } from "@/components/ui/item"
 import { H2, Muted } from "@/components/ui/typography"
 import { getVoceGroups, miniIconFor } from "@/config/mobile-navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function MePage() {
     const { user, loading, profileReady } = useAuth()
     const grupos = getVoceGroups(useAbasFora(), useWorkspace().papel)
+    const isMobile = useIsMobile()
+    const esperando = loading || (user && !profileReady)
+
+    // O QR do desktop abre em `#no-celular`, e o grupo só existe depois do esqueleto.
+    useEffect(() => {
+        if (!esperando) rolarAteAncora(window.location.hash, document)
+    }, [esperando])
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
@@ -29,7 +40,7 @@ export default function MePage() {
 
     // Como em Minha conta: sem o perfil, o nome e o tom do avatar ainda não são os
     // da pessoa, e a página inteira espera no esqueleto da rota.
-    if (loading || (user && !profileReady)) {
+    if (esperando) {
         return <MePageSkeleton />
     }
 
@@ -72,6 +83,8 @@ export default function MePage() {
                     </ItemGroup>
                 </Card>
             ))}
+
+            {isMobile ? <NesteCelularGrupo /> : null}
         </div>
     )
 }

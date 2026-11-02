@@ -1227,7 +1227,7 @@ declaração de `background-color` no trilho).
     do telefone **não** é gaveta nem menu: a aba "Você" (o avatar no lugar do
     glifo) abre a página `/me`, com as telas da carteira e da conta em dois
     grupos de linhas (o `MobileAccountMenu` e o painel que brotava da aba "Mais"
-    saíram na rodada 346); o tema mora em Configurações e o sair em Minha
+    saíram na rodada 346); o tema mora em Você e o sair em Minha
     conta. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
@@ -1672,7 +1672,9 @@ declaração de `background-color` no trilho).
   toda tela que a página lista, subrotas incluídas (`isVoceTabActive`, em
   `config/mobile-navigation.ts`, onde também moram `getVoceGroups` e
   `voceBackHref`). **A página `/me`** é a identidade centrada (avatar 56, nome,
-  e-mail) e dois `Card padding="none"` de `ItemGroup variant="divided"`, com
+  e-mail), dois `Card padding="none"` de `ItemGroup variant="divided"` e, por
+  último, o grupo do aparelho (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
+  inteligente, instalar o app; no telefone isso não existe em Configurações), com
   linhas `Item variant="flush" interactive asChild` + `Link` (ícone mini, texto
   16 no toque, `Badge` Beta, `ItemChevron`): **Carteira** (as abas que saíram,
   Assinaturas, Contas a pagar, Cartões, Membros e convidados) e **Conta** (Minha

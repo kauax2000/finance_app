@@ -109,7 +109,7 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Um: a seção Aparência de Configurações (<code>ThemeSettings</code>), no degrau <code>lg</code>, com rótulos no desktop e só ícones no telefone, e com a revelação circular. O menu da conta do desktop teve o seu até 1º de novembro de 2026. O catálogo usa mais dois no cabeçalho.
+        Dois, no degrau <code>lg</code> e com a revelação circular: a seção Aparência de Configurações (<code>ThemeSettings</code>), com rótulos, do <code>md</code> para cima; e o grupo da página Você (<code>NesteCelularGrupo</code>), só com ícones, no telefone. O menu da conta do desktop teve o seu até 1º de novembro de 2026. O catálogo usa mais dois no cabeçalho.
       </DocNote>
 
       <PropsTable
