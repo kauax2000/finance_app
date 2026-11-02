@@ -26,7 +26,8 @@ describe("o redesenho do alerta", () => {
     })
 
     it("título sozinho centra, e com descrição o texto começa no topo", () => {
-        expect(ALERT).toContain("items-center has-[>[data-slot=alert-description]]:items-start")
+        expect(ALERT).toContain("items-center has-[>[data-slot=alert-title]~[data-slot=alert-description]]:items-start")
+        expect(ALERT).toContain("group-has-[>[data-slot=alert-title]~[data-slot=alert-description]]/alert:row-span-2")
     })
 
     it("a ação inline sobe a partir de 20rem", () => {

@@ -1099,8 +1099,7 @@ declaração de `background-color` no trilho).
     botão vira o texto "Agora não" (`dismissText`). A ação e ele dividem a linha
     de baixo 50/50, a 8px, com 44 de altura; sozinhos, ocupam a linha. A ação
     `inline` nunca sobe à direita ali, o `sm` veste o corpo do `md` (14, poço
-    32, ícone 16) e o recuo é 12 nas quatro bordas. O × de 24 com alvo de 48
-    ficava a 2px da ação e cobria 10px dela.
+    32, ícone 16) e o recuo é 12 nas quatro bordas.
 - **`AnnouncementBar`**: no telefone do app ela não aparece — o aviso de offline
   (`OfflinePill`) é uma pílula de vidro no tom de aviso, no `accessory` da
   `BottomBar` (rodadas 347–348), porque uma faixa presa sob o cabeçalho de borrão

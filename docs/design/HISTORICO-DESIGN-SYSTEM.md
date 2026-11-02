@@ -28862,4 +28862,4 @@ a 1280 com mouse, alerta `sm` de 46, ação inline e × de 24.
 
 A `AnnouncementBar` importa o `TONE_ICON` e não mudou. A página do catálogo ganhou o
 poço, o `storageKey` (com a chave dita), o "No telefone" no `IphoneFrame` e as duas props
-novas na tabela. O contraste do ícone no poço não foi medido nesta rodada.
+novas na tabela. Contraste do ícone no poço medido: pior caso 4,94:1 (ícone, `destructive` no claro), e o texto do mesmo alerta a 6,26:1.

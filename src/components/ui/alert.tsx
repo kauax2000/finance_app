@@ -29,8 +29,9 @@ const alertVariants = cva(
   [
     // Sem `gap-y`: o respiro entre título e descrição é margem da descrição,
     // para a ação `inline` poder ocupar duas linhas sem somar 2px. Título
-    // sozinho centra no poço do ícone; com descrição, o texto começa no topo.
-    "group/alert relative grid w-full items-center has-[>[data-slot=alert-description]]:items-start",
+    // sozinho, ou descrição sozinha, centra no poço do ícone; com os dois, o texto
+    // começa no topo e o poço ocupa as duas linhas, para não abrir vão entre eles.
+    "group/alert relative grid w-full items-center has-[>[data-slot=alert-title]~[data-slot=alert-description]]:items-start",
     // A ação na linha mora numa terceira coluna `auto`. Uma container query não
     // enxerga o próprio contêiner, então quem pergunta a largura do alerta são
     // os filhos. O contêiner só existe com ela: `inline-size` tira do conteúdo
@@ -242,7 +243,7 @@ function Alert({
         <span
           data-slot="alert-icon"
           aria-hidden
-          className="flex size-(--alert-well) shrink-0 items-center justify-center rounded-full bg-current/15 [&>svg]:size-(--alert-icon)"
+          className="flex size-(--alert-well) shrink-0 items-center justify-center rounded-full bg-current/15 group-has-[>[data-slot=alert-title]~[data-slot=alert-description]]/alert:row-span-2 [&>svg]:size-(--alert-icon)"
         >
           {iconNode}
         </span>

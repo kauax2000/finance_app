@@ -152,13 +152,7 @@ function DemoNaTela() {
       <Controles
         inicio={
           <>
-            <Eixo
-              rotulo="variant"
-              valores={FORMAS}
-              valor={forma}
-              onChange={setForma}
-              rotulos={{ soft: "soft", brand: "brand" }}
-            />
+            <Eixo rotulo="variant" valores={FORMAS} valor={forma} onChange={setForma} />
             {/* A marca não aceita tone nem sm: os dois eixos saem em vez de mentir. */}
             {marca ? null : (
               <>
@@ -247,7 +241,7 @@ export default function AlertDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-          Em 21 arquivos, 31 usos. Os erros e sucessos dos formulários de acesso e dos diálogos de conta (<code>destructive</code> e <code>success</code>, muitos em <code>sm</code>), o aviso de fatura no formulário de cartão (<code>info</code> <code>sm</code>), os dois neutros de permissão em membros e notificações, os detalhes técnicos da tela de erro, e o erro de carteiras do painel — desde a rodada 186 com a ação na linha. Nenhuma tela usa <code>brand</code> nem <code>onDismiss</code>; <code>storageKey</code> só o aviso de notificações bloqueadas em Configurações.
+          Em 20 arquivos, 30 usos. Os erros e sucessos dos formulários de acesso e dos diálogos de conta (<code>destructive</code> e <code>success</code>, muitos em <code>sm</code>), o aviso de fatura no formulário de cartão (<code>info</code> <code>sm</code>), os dois neutros de permissão em membros e notificações, os detalhes técnicos da tela de erro, e o erro de carteiras do painel — desde a rodada 186 com a ação na linha. Nenhuma tela usa <code>brand</code> nem <code>onDismiss</code>; <code>storageKey</code> só o aviso de notificações bloqueadas em Configurações.
       </DocNote>
 
       <DocNote title="Alert, AnnouncementBar e toast não se substituem">
