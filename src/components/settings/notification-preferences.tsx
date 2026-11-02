@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { SettingsLink, SettingsSection } from "@/components/settings/settings-section"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,8 +11,7 @@ import { useAuth } from "@/components/providers"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
 import { useWorkspace } from "@/components/workspace-provider"
-import { NotificacoesCanaisDialog } from "@/components/settings/notificacoes-canais-dialog"
-import { NotificacoesTemasDialog } from "@/components/settings/notificacoes-temas-dialog"
+import { ROUTES } from "@/config/navigation"
 import { resumoDosCanais, resumoDosTemas, semCanal } from "@/lib/notificacoes-resumo"
 import { getPushSupportState } from "@/lib/push/subscribe"
 
@@ -38,12 +37,8 @@ function NotificationPreferencesSkeleton() {
 export function NotificationPreferences() {
     const { loading: authLoading } = useAuth()
     const { currentWorkspace, currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { prefs, loading, error, patch } = useWorkspaceNotificationPrefs()
+    const { prefs, loading, error } = useWorkspaceNotificationPrefs()
     const { open: openNotifications } = useNotificationsUi()
-    const [canaisOpen, setCanaisOpen] = useState(false)
-    const [temasOpen, setTemasOpen] = useState(false)
-
-    const disabled = loading || !prefs || !currentWorkspaceId
 
     const showSkeleton = authLoading || workspaceLoading || (Boolean(currentWorkspaceId) && loading)
 
@@ -80,14 +75,14 @@ export function NotificationPreferences() {
                                     titulo="Onde chega"
                                     valor={resumoDosCanais(prefs)}
                                     aria-label={`Onde chega: ${resumoDosCanais(prefs)}. Escolher onde os avisos chegam`}
-                                    onClick={() => setCanaisOpen(true)}
+                                    href={ROUTES.SETTINGS_NOTIFICACOES_CANAIS}
                                 />
                                 <Separator />
                                 <SettingsLink
                                     titulo="Sobre o quê"
                                     valor={resumoDosTemas(prefs)}
                                     aria-label={`Sobre o quê: ${resumoDosTemas(prefs)}. Escolher sobre o que avisar`}
-                                    onClick={() => setTemasOpen(true)}
+                                    href={ROUTES.SETTINGS_NOTIFICACOES_TEMAS}
                                 />
                             </>
                         ) : null}
@@ -100,8 +95,8 @@ export function NotificationPreferences() {
                                         Nenhum canal ligado. Os avisos da carteira não vão chegar.
                                     </AlertTitle>
                                     <AlertActions placement="inline">
-                                        <AlertAction onClick={() => setCanaisOpen(true)}>
-                                            Escolher canais
+                                        <AlertAction asChild>
+                                            <Link href={ROUTES.SETTINGS_NOTIFICACOES_CANAIS}>Escolher canais</Link>
                                         </AlertAction>
                                     </AlertActions>
                                 </Alert>
@@ -109,28 +104,12 @@ export function NotificationPreferences() {
                                 <Alert tone="warning" size="sm">
                                     <AlertTitle>Este aparelho bloqueou os avisos.</AlertTitle>
                                     <AlertActions placement="inline">
-                                        <AlertAction onClick={() => setCanaisOpen(true)}>
-                                            Como liberar
+                                        <AlertAction asChild>
+                                            <Link href={ROUTES.SETTINGS_NOTIFICACOES_CANAIS}>Como liberar</Link>
                                         </AlertAction>
                                     </AlertActions>
                                 </Alert>
                             ) : null}
-                            <NotificacoesCanaisDialog
-                                open={canaisOpen}
-                                onOpenChange={setCanaisOpen}
-                                prefs={prefs}
-                                patch={patch}
-                                disabled={disabled}
-                                error={error}
-                            />
-                            <NotificacoesTemasDialog
-                                open={temasOpen}
-                                onOpenChange={setTemasOpen}
-                                prefs={prefs}
-                                patch={patch}
-                                disabled={disabled}
-                                error={error}
-                            />
                         </>
                     ) : null}
                 </>

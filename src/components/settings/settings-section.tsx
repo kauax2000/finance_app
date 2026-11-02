@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import Link from "next/link"
 import { Item, ItemChevron, ItemContent, ItemTitle } from "@/components/ui/item"
 import { Muted } from "@/components/ui/typography"
 import {
@@ -68,26 +69,43 @@ export function SettingsTile({ children }: { children: ReactNode }) {
     )
 }
 
-/** A linha que abre um ajuste: a linha inteira é o botão, com o valor de hoje à direita. */
+/**
+ * A linha que abre um ajuste, com o valor de hoje à direita: com `href` é um
+ * link para a subpágina; com `onClick`, o botão de um diálogo.
+ */
 export function SettingsLink({
     titulo,
     valor,
+    href,
     onClick,
     "aria-label": rotulo,
 }: {
     titulo: string
     valor: string
-    onClick: () => void
     "aria-label": string
-}) {
+} & ({ href: string; onClick?: never } | { href?: never; onClick: () => void })) {
+    const corpo = (
+        <>
+            <ItemContent>
+                <ItemTitle>{titulo}</ItemTitle>
+            </ItemContent>
+            <Muted className="min-w-0 truncate">{valor}</Muted>
+            <ItemChevron />
+        </>
+    )
+    if (href) {
+        return (
+            <Item variant="flush" interactive asChild className="px-4">
+                <Link href={href} aria-label={rotulo}>
+                    {corpo}
+                </Link>
+            </Item>
+        )
+    }
     return (
         <Item variant="flush" interactive asChild className="px-4">
             <button type="button" aria-label={rotulo} onClick={onClick}>
-                <ItemContent>
-                    <ItemTitle>{titulo}</ItemTitle>
-                </ItemContent>
-                <Muted className="min-w-0 truncate">{valor}</Muted>
-                <ItemChevron />
+                {corpo}
             </button>
         </Item>
     )

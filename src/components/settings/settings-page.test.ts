@@ -112,8 +112,8 @@ describe("Configurações: página única", () => {
 
     it("Notificações: duas linhas de resumo que abrem os ajustes, com saída para o push bloqueado", () => {
         const f = lerFonte("src/components/settings/notification-preferences.tsx")
-        for (const texto of ['id="notificacoes"', "Ver histórico", "Onde chega", "Sobre o quê", "resumoDosCanais(prefs)", "resumoDosTemas(prefs)", "<NotificacoesCanaisDialog", "<NotificacoesTemasDialog", "Este aparelho bloqueou os avisos.", "Como liberar", "Nenhum canal ligado. Os avisos da carteira não vão chegar.", "Escolher canais"]) expect(f).toContain(texto)
-        for (const fora of ["FormSwitch", "subscribeToPush", "CardToolbar"]) expect(f).not.toContain(fora)
+        for (const texto of ['id="notificacoes"', "Ver histórico", "Onde chega", "Sobre o quê", "resumoDosCanais(prefs)", "resumoDosTemas(prefs)", "href={ROUTES.SETTINGS_NOTIFICACOES_CANAIS}", "href={ROUTES.SETTINGS_NOTIFICACOES_TEMAS}", "Este aparelho bloqueou os avisos.", "Como liberar", "Nenhum canal ligado. Os avisos da carteira não vão chegar.", "Escolher canais"]) expect(f).toContain(texto)
+        for (const fora of ["FormSwitch", "subscribeToPush", "CardToolbar", "Dialog"]) expect(f).not.toContain(fora)
         expect(f).toMatch(/semCanal\(prefs\) \?[\s\S]+: getPushSupportState\(\) === "denied"/)
     })
 })
