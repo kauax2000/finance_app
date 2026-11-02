@@ -5,10 +5,12 @@ import Image from "next/image"
 import { SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { FormSwitch } from "@/components/ui/form"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
-import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { SettingsRow, SettingsTile } from "@/components/settings/settings-section"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 import { SyncStatusChip } from "@/components/pwa/sync-status-chip"
@@ -82,22 +84,19 @@ export function NesteCelularGrupo() {
                                 <SeletorDeTema labels={false} />
                             </ItemActions>
                         </Item>
-                        <Item variant="flush" className="min-h-12">
-                            <ItemMedia variant="icon">
-                                <SparklesIcon className="size-5" aria-hidden />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="pointer-coarse:text-base">Lançamento inteligente</ItemTitle>
-                                <ItemDescription>Digite uma frase no +</ItemDescription>
-                            </ItemContent>
-                            <ItemActions>
-                                <Switch
-                                    aria-label="Lançamento inteligente"
-                                    checked={lancamentoInteligente}
-                                    onCheckedChange={definirLancamentoInteligente}
-                                />
-                            </ItemActions>
-                        </Item>
+                        {/* O ladrilho, na medida do ícone do app logo abaixo. */}
+                        <div className="flex min-w-0 items-center gap-3 px-4 py-3">
+                            <SettingsTile>
+                                <SparklesIcon className="size-5" />
+                            </SettingsTile>
+                            <FormSwitch
+                                className="min-w-0 flex-1 items-center"
+                                label="Lançamento inteligente"
+                                description="Digite uma frase no +"
+                                checked={lancamentoInteligente}
+                                onCheckedChange={definirLancamentoInteligente}
+                            />
+                        </div>
                         {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
                         {instalado ? (
                             shell && shell.pendingSyncCount > 0 ? (
@@ -112,24 +111,24 @@ export function NesteCelularGrupo() {
                                 </Item>
                             ) : null
                         ) : (
-                            <Item variant="flush" className="min-h-12">
-                                <ItemMedia>
-                                    <Image
-                                        src="/icons/apple-touch-icon.png"
-                                        alt=""
-                                        width={20}
-                                        height={20}
-                                        className="size-5 shrink-0 rounded-md ring-1 ring-foreground/10"
-                                    />
-                                </ItemMedia>
-                                <ItemContent>
-                                    <ItemTitle className="pointer-coarse:text-base">Instalar o app</ItemTitle>
-                                    <ItemDescription>{descricaoDoApp}</ItemDescription>
-                                </ItemContent>
-                                <ItemActions>
+                            <>
+                                <Separator />
+                                <SettingsRow
+                                    titulo="Instalar o app"
+                                    descricao={descricaoDoApp}
+                                    media={
+                                        <Image
+                                            src="/icons/apple-touch-icon.png"
+                                            alt=""
+                                            width={36}
+                                            height={36}
+                                            className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"
+                                        />
+                                    }
+                                >
                                     <SyncStatusChip />
-                                </ItemActions>
-                            </Item>
+                                </SettingsRow>
+                            </>
                         )}
                     </ItemGroup>
                     {instalarNoIphone ? (

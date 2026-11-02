@@ -18,8 +18,8 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("rolarAteAncora(window.location.hash, document)")
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         for (const texto of ['id="no-celular"', ">Neste celular<", "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Digite uma frase no +"]) expect(grupo).toContain(texto)
-        expect(grupo).not.toContain("SettingsTile")
-        expect(grupo).not.toContain("SettingsRow")
+        // O ladrilho fica em Lançamento inteligente e no ícone do app, a pedido do dono.
+        expect(grupo.match(/<SettingsTile>/g)).toHaveLength(1)
         // Com o app instalado a linha some, e a fila pendente segue alcançável.
         expect(grupo).toMatch(/instalado \? \(\s+shell && shell\.pendingSyncCount > 0/)
         expect(grupo).toContain(">Sincronização<")
@@ -40,10 +40,12 @@ describe("a página Você", () => {
         expect(grupos[0].items.map((i) => i.name)).toEqual(["Cartões", "Contas a pagar", "Assinaturas", "Projetos", "Membros e convidados"])
         expect(grupos[1].items.find((i) => i.name === "Cofre aberto")?.description).toBe("Seus dados: exportar e apagar")
     })
-    it("Neste celular veste as mesmas linhas", () => {
+    it("Neste celular: título, e o ladrilho no app e no lançamento inteligente", () => {
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         expect(grupo).toContain(">Neste celular<")
-        expect(grupo.match(/pointer-coarse:text-base/g)?.length).toBeGreaterThanOrEqual(3)
+        expect(grupo).toContain('label="Lançamento inteligente"')
+        expect(grupo).toContain('titulo="Instalar o app"')
+        expect(grupo).toContain('className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"')
     })
     it("cada linha é um link com ícone mini, nome e chevron", () => {
         expect(PAGINA).toContain("<ItemChevron")

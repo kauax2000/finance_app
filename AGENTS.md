@@ -1700,7 +1700,7 @@ declaração de `background-color` no trilho).
   apagar", Configurações) e **Neste celular** (`NesteCelularGrupo`, `#no-celular`:
   tema, lançamento inteligente, instalar o app; no telefone isso não existe em
   Configurações). As linhas são `Item variant="flush" interactive asChild` iguais
-  (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`).
+  (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`); em Neste celular, Lançamento inteligente e Instalar o app ficam com o ladrilho de 36.
   No fim, o **Sair** num cartão à parte, com o `AlertDialog` "Sair da conta?",
   porque sair limpa a fila offline; o Sair de Minha conta continua, sem
   confirmação, e Planos fica dentro de Minha conta. No desktop nada muda: `/me`
