@@ -42,6 +42,10 @@ describe("QrCode", () => {
     expect(f).toMatch(/catch\s*\{\s*setEstado\("falhou"\)/)
   })
 
+  it("a dica do Copiar link abre à direita, no lado vazio da linha", () => {
+    expect(semComentarios(lerFonte(FONTE))).toContain('<TooltipContent side="right">')
+  })
+
   it("o anel de foco do link segue a tinta da placa, não o --ring", () => {
     const f = semComentarios(lerFonte(FONTE))
     expect(f).toContain("focus-visible:ring-current/45")

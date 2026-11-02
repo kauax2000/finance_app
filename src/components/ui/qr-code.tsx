@@ -139,7 +139,7 @@ function QrCodeCopy({ value, className }: { value: string; className?: string })
             Copiar link
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="top">Copia o link para abrir no celular</TooltipContent>
+        <TooltipContent side="right">Copia o link para abrir no celular</TooltipContent>
       </Tooltip>
     </div>
   )
