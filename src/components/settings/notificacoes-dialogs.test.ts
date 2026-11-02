@@ -15,6 +15,7 @@ describe("Notificações: diálogos de canais e temas", () => {
         expect(TEMAS).toContain('layout="fixed"')
         expect(CANAIS).not.toContain('layout="fixed"')
         expect(CANAIS).not.toContain("DialogBody")
+        expect(CANAIS).toContain('className="flex flex-col gap-4 max-md:px-(--dialog-px)"')
     })
     it("os temas vêm em três grupos, com os nomes novos", () => {
         for (const t of ["Carteira", "Cartões", "Rotina", "Despesas de outros membros", "Orçamento", "Contas a pagar", "Limite e categorias", "Fatura e vencimento", "Itens a conferir", "Às 20h.", "Insights", "No máximo 3 push por semana."]) expect(TEMAS).toContain(t)

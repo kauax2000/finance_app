@@ -103,7 +103,8 @@ export function NotificacoesCanaisDialog({ open, onOpenChange, prefs, patch, dis
                     <DialogHeader>
                         <DialogTitle>Onde chega</DialogTitle>
                     </DialogHeader>
-                    <div className="flex flex-col gap-4">
+                    {/* A gaveta não tem o recuo que o layout `auto` dá no diálogo. */}
+                    <div className="flex flex-col gap-4 max-md:px-(--dialog-px)">
                         {error ? (
                             <Alert tone="destructive" size="sm">
                                 <AlertTitle>{error}</AlertTitle>
