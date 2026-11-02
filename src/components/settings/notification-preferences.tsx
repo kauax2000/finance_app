@@ -58,11 +58,7 @@ export function NotificationPreferences() {
             id="notificacoes"
             className="scroll-mt-(--top-bar-bottom)"
             titulo="Notificações"
-            alcance={
-                currentWorkspace
-                    ? `Vale para você em ${currentWorkspace.name}.`
-                    : "Selecione uma carteira."
-            }
+            alcance={currentWorkspace ? undefined : "Selecione uma carteira."}
         >
             {showSkeleton ? <NotificationPreferencesSkeleton /> : null}
             {!showSkeleton && currentWorkspaceId ? (
