@@ -14,6 +14,7 @@ import { NotificationsUiProvider } from "@/components/layout/notifications-ui-pr
 import { NotificationsSheet } from "@/components/layout/notifications-sheet"
 import { GlobalShellDialogsProvider } from "@/components/layout/global-shell-dialogs-provider"
 import { PageChromeProvider } from "@/components/layout/page-chrome-provider"
+import { TituloDaTela } from "@/components/layout/titulo-da-tela"
 import { DASHBOARD_PAGE_TITLES, ROUTES } from "@/config/navigation"
 import { SomenteLeituraWireframe } from "@/components/wireframe/somente-leitura-wireframe"
 import { sidebarLabVersion } from "@/lib/sidebar-lab"
@@ -108,6 +109,7 @@ export function SidebarAppShell({
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
                                     <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
+                                        <TituloDaTela pathname={pathname} titleMode={titleMode} />
                                         <SomenteLeituraWireframe />
                                         {children}
                                     </div>

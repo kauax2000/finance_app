@@ -601,15 +601,12 @@ function PageHeaderSkeleton({
   description = true,
   actions = 1,
   stats = 0,
-  collapse = false,
   className,
 }: {
   size?: "sm" | "md" | "lg"
   description?: boolean
   actions?: number
   stats?: number
-  /** O do `PageHeader` que vem: o título grande do telefone ocupa outra altura. */
-  collapse?: boolean
   className?: string
 }) {
   return (
@@ -619,7 +616,6 @@ function PageHeaderSkeleton({
       className={cn(
         pageHeaderVariants({ size, reveal: false }),
         "[--page-title-line:calc(var(--page-title)*1.25)]",
-        collapse && TITULO_GRANDE,
         className
       )}
     >

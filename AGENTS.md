@@ -725,7 +725,9 @@ declaração de `background-color` no trilho).
   **576** · 672 · 1280 · sem teto, e a calha (`gutter`) é **opt-in**, porque
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
-  `PageSectionContent`. Toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
+  `PageSectionContent`. **No telefone toda tela abre com o título grande, e quem o escreve é a casca**
+  (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
+  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
   no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor: lá o centro é do título que sobe —, com o sino à esquerda e
@@ -1683,8 +1685,7 @@ declaração de `background-color` no trilho).
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
   viram quadradas; a linha do título é o eixo. Com `collapse` é o título grande do
   iOS: 34 no telefone, qualquer que seja o degrau, 8px mais perto da barra, e
-  entra nela subindo 6px, do desfoque (rodada 357); o `PageHeaderSkeleton collapse`
-  reserva a mesma altura. `PageHeaderMedia`,
+  entra nela subindo 6px, do desfoque (rodada 357). `PageHeaderMedia`,
   `PageHeaderStat` (**nenhuma tela escreve `dt`/`dd` à mão**), `PageHeaderNav`,
   `PageHeaderSkeleton`; `collapse`, `PageHeaderActions overflow="menu"`, o
   voltar pelo histórico (`history={false}`; ligá-lo no `app-header` é mudança

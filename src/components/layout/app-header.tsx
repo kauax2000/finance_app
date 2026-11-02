@@ -21,37 +21,12 @@ import {
     TopBarTitle,
 } from "@/components/ui/top-bar"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
+import { defaultMobileTitle } from "@/components/layout/titulo-da-tela"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
 import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
-import {
-    APP_PAGE_TITLES,
-    DASHBOARD_PAGE_TITLES,
-    ROUTES,
-} from "@/config/navigation"
+import { ROUTES } from "@/config/navigation"
 import { isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
-
-function defaultMobileTitle(
-    pathname: string,
-    titleMode: "dashboard" | "app",
-): string {
-    const sub = resolveAppSubPageMeta(pathname)
-    if (sub?.title) return sub.title
-    if (pathname === `${ROUTES.DASHBOARD_CATEGORIES}/new`) {
-        return "Nova categoria"
-    }
-    if (
-        /^\/categories\/[^/]+$/.test(pathname) &&
-        pathname !== ROUTES.DASHBOARD_CATEGORIES
-    ) {
-        return "Detalhes da categoria"
-    }
-    if (/^\/projetos\/[^/]+$/.test(pathname)) return "Projeto"
-    if (titleMode === "dashboard") {
-        return DASHBOARD_PAGE_TITLES[pathname] ?? "Painel"
-    }
-    return APP_PAGE_TITLES[pathname] ?? "Finance App"
-}
 
 function defaultMobileBackHref(pathname: string): string | undefined {
     const sub = resolveAppSubPageMeta(pathname)

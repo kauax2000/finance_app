@@ -28741,9 +28741,11 @@ tela e, ao rolar, o nome no centro da barra. O fundo da barra fica como está.
 
 - **`PageHeader collapse` no telefone**: 34px (abaixo de `sm`, qualquer que seja
   o degrau) e `-mt-2`, com a caixa do título a 8px da base da barra. Medido a
-  375px: o título ia de 72 a 97 e foi a 64 a 107. Configurações passa de
-  `space-y-8` a `space-y-4 sm:space-y-8`. O `PageHeaderSkeleton` ganhou `collapse`,
-  para o esqueleto não pular.
+  375px: o título ia de 72 a 97 e foi a 64 a 107.
+- **O padrão é de toda tela do telefone**, palavra do dono. Por isso ele mora na
+  casca (`TituloDaTela`), acima da página: aparece no clique, sem esqueleto próprio,
+  a 16px do conteúdo (o `gap-4` da casca), com o título que o `AppHeader` já tinha
+  para o `<h1>`. Configurações só escreve o `PageHeader` fora do telefone.
 - **`TopBarTitle pageTitle` no centro**: o `AppHeader` o põe no telefone, nas
   telas em que o seletor de carteira saiu, em 16 semibold, o corpo da carteira.
 - **O gesto continua o do desktop** (sobe 6px e acende), com o desfoque dos

@@ -361,7 +361,7 @@ export default function PageHeaderDoc() {
             prop: "collapse",
             type: "boolean",
             default: "false",
-            description: "O título sobe para a barra do topo ao rolar para baixo dela — a barra o mostra com TopBarTitle pageTitle. No telefone, ele mede 34px. No PageHeaderSkeleton, reserva a mesma altura.",
+            description: "O título sobe para a barra do topo ao rolar para baixo dela — a barra o mostra com TopBarTitle pageTitle. No telefone, ele mede 34px.",
           },
         ]}
       />

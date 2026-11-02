@@ -99,9 +99,9 @@ describe("os comportamentos", () => {
     expect(lerFonte("src/components/ui/top-bar.tsx")).toContain("usePageTitleDock(doc)")
   })
 
-  it("com collapse, o telefone tem o título grande, e o esqueleto ocupa o mesmo lugar", () => {
+  it("com collapse, o telefone tem o título grande", () => {
     expect(CODIGO).toContain('TITULO_GRANDE = "max-sm:-mt-2 max-sm:[--page-title:2.125rem]"')
-    expect(CODIGO.split("collapse && TITULO_GRANDE").length - 1).toBe(2)
+    expect(CODIGO).toContain("collapse && TITULO_GRANDE")
   })
 
   it("o ⋯ é o da Toolbar, com a conta do cabeçalho", () => {
