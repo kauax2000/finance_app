@@ -23,13 +23,10 @@ export function useInstalarApp() {
     const isIos = useIsIos()
     const shell = usePwaShellOptional()
 
-    const textoDoApp = isStandalone
-        ? "O Finance está instalado neste aparelho."
-        : isIos
-          ? "Pelo Safari, na tela inicial do iPhone."
-          : "Pelo menu do navegador do celular."
+    const textoDoApp = isIos ? "Pelo Safari, na tela inicial do iPhone." : "Pelo menu do navegador do celular."
 
     return {
+        instalado: isStandalone,
         instalarNoIphone: isIos && !isStandalone,
         descricaoDoApp: (
             <>
@@ -58,7 +55,8 @@ export function SeletorDeTema({ labels }: { labels: boolean }) {
  */
 export function NesteCelularGrupo() {
     const [lancamentoInteligente, definirLancamentoInteligente] = useLancamentoInteligente()
-    const { instalarNoIphone, descricaoDoApp } = useInstalarApp()
+    const { instalado, instalarNoIphone, descricaoDoApp } = useInstalarApp()
+    const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
 
     return (
@@ -93,22 +91,39 @@ export function NesteCelularGrupo() {
                         onCheckedChange={definirLancamentoInteligente}
                     />
                 </div>
-                <Separator />
-                <SettingsRow
-                    titulo="Instalar o app"
-                    descricao={descricaoDoApp}
-                    media={
-                        <Image
-                            src="/icons/apple-touch-icon.png"
-                            alt=""
-                            width={36}
-                            height={36}
-                            className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"
-                        />
-                    }
-                >
-                    <SyncStatusChip />
-                </SettingsRow>
+                {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
+                {instalado ? (
+                    shell && shell.pendingSyncCount > 0 ? (
+                        <>
+                            <Separator />
+                            <SettingsRow
+                                titulo="Sincronização"
+                                descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
+                            >
+                                <SyncStatusChip />
+                            </SettingsRow>
+                        </>
+                    ) : null
+                ) : (
+                    <>
+                        <Separator />
+                        <SettingsRow
+                            titulo="Instalar o app"
+                            descricao={descricaoDoApp}
+                            media={
+                                <Image
+                                    src="/icons/apple-touch-icon.png"
+                                    alt=""
+                                    width={36}
+                                    height={36}
+                                    className="size-9 shrink-0 rounded-row ring-1 ring-foreground/10"
+                                />
+                            }
+                        >
+                            <SyncStatusChip />
+                        </SettingsRow>
+                    </>
+                )}
                 {instalarNoIphone ? (
                     <div className="px-4 pb-3">
                         <Button

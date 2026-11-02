@@ -18,6 +18,10 @@ describe("a página Você", () => {
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         for (const texto of ['id="no-celular"', 'aria-label="Neste celular"', "useLancamentoInteligente", "SyncStatusChip", "InstallPwaSheet", "Digite uma frase no +"]) expect(grupo).toContain(texto)
         expect(grupo.match(/<SettingsTile>/g)).toHaveLength(2)
+        // Com o app instalado a linha some, e a fila pendente segue alcançável.
+        expect(grupo).toMatch(/instalado \? \(\s+shell && shell\.pendingSyncCount > 0/)
+        expect(grupo).toContain('titulo="Sincronização"')
+        expect(grupo).not.toContain("instalado neste aparelho")
         expect(grupo).toMatch(/variant="primary"\s+className="w-full"/)
     })
     it("cada linha é um link com ícone mini, nome e chevron", () => {
