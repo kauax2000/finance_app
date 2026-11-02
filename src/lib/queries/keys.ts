@@ -33,10 +33,16 @@ export const queryRoot = {
     fraseHistorico: "fraseHistorico",
     /** Os lançamentos `needs_review` da carteira: a lista e a contagem do Painel. */
     aConferir: "aConferir",
+    notificationPrefs: "notificationPrefs",
 } as const
 
 export const fraseHistoricoKeys = {
     list: (workspaceId: string) => [queryRoot.fraseHistorico, workspaceId] as const,
+}
+
+export const notificationPrefsKeys = {
+    detail: (userId: string, workspaceId: string) =>
+        [queryRoot.notificationPrefs, userId, workspaceId] as const,
 }
 
 export const aConferirKeys = {

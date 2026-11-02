@@ -1,8 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { notificationPrefsKeys } from "@/lib/queries/keys"
 import {
     desfazerPatch,
     ensureWorkspaceNotificationPrefsRow,
@@ -18,78 +20,68 @@ type State = {
     patch: (p: WorkspaceNotificationPrefsPatch) => Promise<void>
 }
 
+const mensagem = (e: unknown, reserva: string) => (e instanceof Error ? e.message : reserva)
+
+/**
+ * As preferências da pessoa nesta carteira. Moram no cache, e não na tela: o
+ * `PushNotificationProvider` usa este gancho na raiz do app, então elas carregam no
+ * boot, e Configurações entra sem esqueleto.
+ */
 export function useWorkspaceNotificationPrefs(): State {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [prefs, setPrefs] = useState<WorkspaceMemberNotificationPrefs | null>(null)
+    const queryClient = useQueryClient()
+    const [erroAoSalvar, setErroAoSalvar] = useState<string | null>(null)
 
-    useEffect(() => {
-        let alive = true
-        async function run() {
-            if (authLoading || workspaceLoading) {
-                if (!alive) return
-                setLoading(true)
-                return
-            }
-            if (!user?.id || !currentWorkspaceId) {
-                if (!alive) return
-                setPrefs(null)
-                setLoading(false)
-                return
-            }
-            setLoading(true)
-            setError(null)
-            try {
-                const row = await ensureWorkspaceNotificationPrefsRow(
-                    user.id,
-                    currentWorkspaceId
-                )
-                if (!alive) return
-                setPrefs(row)
-            } catch (e) {
-                if (!alive) return
-                setError(
-                    e instanceof Error ? e.message : "Erro ao carregar preferências da carteira"
-                )
-            } finally {
-                if (!alive) return
-                setLoading(false)
-            }
-        }
-        void run()
-        return () => {
-            alive = false
-        }
-    }, [authLoading, workspaceLoading, user?.id, currentWorkspaceId])
+    const userId = user?.id
+    const key = useMemo(
+        () => notificationPrefsKeys.detail(userId ?? "", currentWorkspaceId ?? ""),
+        [userId, currentWorkspaceId]
+    )
+    const consulta = useQuery({
+        queryKey: key,
+        queryFn: () => ensureWorkspaceNotificationPrefsRow(userId!, currentWorkspaceId!),
+        enabled: Boolean(userId && currentWorkspaceId),
+        // As telas mostram o erro no lugar: o toast repetiria o mesmo aviso.
+        meta: { errorToast: false },
+    })
 
     // Em fila: duas mudanças da mesma chave chegam ao banco na ordem do toque.
     const fila = useRef(Promise.resolve())
 
     const patch = useCallback(
         (p: WorkspaceNotificationPrefsPatch) => {
-            if (!user?.id || !currentWorkspaceId) return Promise.resolve()
-            const userId = user.id
-            setError(null)
-            setPrefs((cur) => (cur ? { ...cur, ...p } : null))
+            if (!userId || !currentWorkspaceId) return Promise.resolve()
+            setErroAoSalvar(null)
+            // Uma releitura em andamento traria o valor de antes por cima do toque.
+            void queryClient.cancelQueries({ queryKey: key })
+            const antes = queryClient.getQueryData<WorkspaceMemberNotificationPrefs>(key) ?? null
+            queryClient.setQueryData<WorkspaceMemberNotificationPrefs>(key, (cur) =>
+                cur ? { ...cur, ...p } : cur
+            )
             fila.current = fila.current.then(async () => {
                 try {
                     await patchWorkspaceNotificationPrefs(userId, currentWorkspaceId, p)
                 } catch (e) {
-                    setPrefs((cur) => desfazerPatch(cur, prefs, p))
-                    setError(
-                        e instanceof Error ? e.message : "Erro ao salvar preferências da carteira"
+                    queryClient.setQueryData<WorkspaceMemberNotificationPrefs>(
+                        key,
+                        (cur) => desfazerPatch(cur ?? null, antes, p) ?? cur
                     )
+                    setErroAoSalvar(mensagem(e, "Erro ao salvar preferências da carteira"))
                 }
             })
             return fila.current
         },
-        [user?.id, currentWorkspaceId, prefs]
+        [userId, currentWorkspaceId, queryClient, key]
     )
 
+    const erroAoCarregar = consulta.error
+        ? mensagem(consulta.error, "Erro ao carregar preferências da carteira")
+        : null
+    const loading = authLoading || workspaceLoading || (Boolean(userId && currentWorkspaceId) && consulta.isPending)
+
     return useMemo(
-        () => ({ prefs, loading, error, patch }),
-        [prefs, loading, error, patch]
+        () => ({ prefs: consulta.data ?? null, loading, error: erroAoSalvar ?? erroAoCarregar, patch }),
+        [consulta.data, loading, erroAoSalvar, erroAoCarregar, patch]
     )
 }

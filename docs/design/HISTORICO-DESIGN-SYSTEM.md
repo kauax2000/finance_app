@@ -28820,3 +28820,8 @@ porque o gesto do Safari já anima.
 Medido no Safari do Simulador: de Você para Configurações o primeiro quadro já traz
 `Email e app` e `7 de 7 temas`, e a de `Onde chega` já traz as chaves. A primeira medida
 pegou um `Skeleton` solto, sem `aria-busy`: a espera procura os dois.
+
+As preferências de notificação saíram do estado da tela para o React Query
+(`notificationPrefsKeys`): o `PushNotificationProvider` usa o gancho na raiz, então elas
+carregam no boot e ficam gravadas no IndexedDB. Medido a 1280px: nenhum osso em
+Notificações, entrando pela navegação (o resumo em 156ms) ou recarregando (305ms).
