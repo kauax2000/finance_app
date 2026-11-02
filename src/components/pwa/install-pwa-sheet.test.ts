@@ -43,4 +43,17 @@ describe("InstallPwaSheet", () => {
     expect(f).toContain("[mask-image:linear-gradient(to_top,transparent,#000_4rem)]")
     expect(f).toContain("[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]")
   })
+
+  it("a troca de passo anima: ponto na viagem líquida, telas no fade, alvo e aparelho na mola", () => {
+    expect(f).toContain("viajarLiquido(")
+    expect(f).toContain("transition-opacity")
+    expect(f).toContain("AnimatePresence")
+    expect(f).toContain("animate={{ y: atual.ancora")
+    expect(f).toContain("animate={{ left: `${atual.ponto.x}%`")
+  })
+
+  it("com movimento reduzido, nada anda", () => {
+    expect(f).toContain("useReducedMotion()")
+    expect(f).toContain("reduzido ? { duration: 0 } : MOLA")
+  })
 })

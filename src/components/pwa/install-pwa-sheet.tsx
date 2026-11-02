@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image, { type StaticImageData } from "next/image"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
   Sheet,
   SheetContent,
@@ -14,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
+import { MOLA, SAIDA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 import { P, Muted } from "@/components/ui/typography"
 import {
@@ -84,13 +87,36 @@ function dispensarAviso() {
     }
 }
 
+/** A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */
+const SUBIDA_DO_APARELHO = -208
+/** Um ponto de 6 mais o vão de 6. */
+const PASSO_DO_PONTO = 12
+/** Maior que a do `Tabs`: num ponto de 6, os 11% de lá não apareceriam. */
+const ESTICAO_DO_PONTO = 0.9
+
 export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
     const [passo, setPasso] = useState(0)
+    const reduzido = useReducedMotion()
+    const marcador = useRef<HTMLSpanElement>(null)
+    const passoAntes = useRef(passo)
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
         setAbertoAntes(open)
         if (open) setPasso(0)
     }
+
+    // O ponto aceso viaja como o marcador do `Tabs`: o repouso é o `translate` do estilo.
+    useEffect(() => {
+        const de = passoAntes.current
+        passoAntes.current = passo
+        if (!marcador.current || de === passo) return
+        viajarLiquido(
+            marcador.current,
+            { x: de * PASSO_DO_PONTO, y: 0 },
+            { x: passo * PASSO_DO_PONTO, y: 0 },
+            { amplitude: ESTICAO_DO_PONTO, trajeto: TRAJETO_MACIO }
+        )
+    }, [passo])
 
     const handleDismiss = () => {
         dispensarAviso()
@@ -99,7 +125,7 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
 
     const atual = PASSOS[passo]
     const ultimo = passo === PASSOS.length - 1
-    const ancora = atual.ancora === "topo" ? "top-0" : "bottom-0"
+    const movimento = reduzido ? { duration: 0 } : MOLA
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -124,36 +150,62 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                                 : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
                         )}
                     >
-                        <Image
-                            key={passo}
-                            src={atual.imagem}
-                            alt=""
-                            sizes="240px"
-                            placeholder="blur"
-                            className={cn("absolute inset-x-0 h-auto w-60 max-w-none", ancora)}
-                        />
-                        <div className={cn("absolute inset-x-0 aspect-[720/1488]", ancora)}>
-                            <span
+                        {/* Um aparelho só: as telas trocam no fade, ele anda quando o corte muda
+                            de lado e o alvo desliza até o próximo toque. */}
+                        <motion.div
+                            initial={false}
+                            animate={{ y: atual.ancora === "topo" ? 0 : SUBIDA_DO_APARELHO }}
+                            transition={movimento}
+                            className="absolute inset-x-0 top-0 aspect-[720/1488]"
+                        >
+                            {PASSOS.map((p, i) => (
+                                <Image
+                                    key={p.titulo}
+                                    src={p.imagem}
+                                    alt=""
+                                    sizes="240px"
+                                    placeholder="blur"
+                                    className={cn(
+                                        "absolute inset-0 h-auto w-60 max-w-none transition-opacity duration-(--duration-slow) ease-(--ease-out)",
+                                        i === passo ? "opacity-100" : "opacity-0"
+                                    )}
+                                />
+                            ))}
+                            <motion.span
+                                initial={false}
+                                animate={{ left: `${atual.ponto.x}%`, top: `${atual.ponto.y}%` }}
+                                transition={movimento}
                                 className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
-                                style={{ left: `${atual.ponto.x}%`, top: `${atual.ponto.y}%` }}
                                 aria-hidden
                             >
                                 <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
                                 <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
-                            </span>
-                        </div>
+                            </motion.span>
+                        </motion.div>
                     </div>
-                    <div aria-hidden className="flex shrink-0 justify-center gap-1.5">
-                        {PASSOS.map((p, i) => (
-                            <span
-                                key={p.titulo}
-                                className={cn("size-1.5 rounded-full", i === passo ? "bg-foreground" : "bg-muted-foreground/40")}
-                            />
+                    <div aria-hidden className="relative mx-auto flex shrink-0 gap-1.5">
+                        {PASSOS.map((p) => (
+                            <span key={p.titulo} className="size-1.5 rounded-full bg-muted-foreground/40" />
                         ))}
+                        <span
+                            ref={marcador}
+                            className="absolute top-0 left-0 size-1.5 rounded-full bg-foreground"
+                            style={{ translate: `${passo * PASSO_DO_PONTO}px` }}
+                        />
                     </div>
                     <div aria-live="polite" className="shrink-0">
-                        <P className="font-semibold">{atual.titulo}</P>
-                        <Muted>{atual.texto}</Muted>
+                        <AnimatePresence mode="wait" initial={false}>
+                            <motion.div
+                                key={passo}
+                                initial={reduzido ? false : { opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={reduzido ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, y: -6, transition: SAIDA }}
+                                transition={MOLA}
+                            >
+                                <P className="font-semibold">{atual.titulo}</P>
+                                <Muted>{atual.texto}</Muted>
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </DialogBody>
                 <div className="flex shrink-0 gap-2 px-(--dialog-px)">
