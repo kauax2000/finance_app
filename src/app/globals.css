@@ -2270,6 +2270,11 @@ html[data-subpagina] [data-slot="top-bar"] {
 html[data-subpagina] [data-slot="bottom-bar"] {
   view-transition-name: barra-de-baixo;
 }
+/* Com nome, o borrão de dentro da barra não alcança a página, e sem ele o texto
+   passaria pela pílula: nesse instante ela fica chapada. */
+html[data-subpagina] [data-slot="bottom-bar-tabs"] {
+  background-color: var(--bottom-bar-surface);
+}
 ::view-transition-group(barra-do-topo),
 ::view-transition-group(barra-de-baixo) {
   animation: none;

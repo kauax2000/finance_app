@@ -446,6 +446,13 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   `accent`, `sidebar`) nos dois temas, nunca só contra o cartão. Não há script
   que guarde esse número: quem mexer em `--secondary` ou `--accent` remede à
   mão. O anel do campo não transiciona.
+- **`view-transition-name` nunca é permanente**: ele faz do elemento uma raiz de fundo, e
+  todo `backdrop-filter` de dentro para de enxergar a página. O vidro vira só tinta, com o
+  texto passando por ele. O nome vale só durante a troca (`html[data-subpagina]`,
+  `.workspace-switch`), e `transicao-de-subpagina.test.ts` reprova outro seletor.
+- **CSS novo só conta depois de servido**: o `next dev` pode seguir com o `globals.css`
+  velho. Antes de dar por visto, procure a regra em `.next/dev/static/chunks/`; se faltar,
+  um `touch src/app/globals.css` recompila. Vidro se confere com conteúdo atrás dele.
 - **Pegadinhas de CSS que valem fora da marca**: `<input>`, `<textarea>` e
   `<select>` não pintam pseudo-elemento (e `getComputedStyle` mente sobre
   isso); `@property` novo não registra em aba patchada por HMR; uma transição

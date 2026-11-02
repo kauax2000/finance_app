@@ -28791,3 +28791,13 @@ Do Painel para Transações não são páginas diferentes, são lugares diferent
   tela nova sempre começa do topo. As duas animações da foto velha o levam no Y do
   `translate`.
 - Com movimento reduzido, troca na hora.
+
+**O fundo da `BottomBar` quebrou (2026-11-02).** O `view-transition-name` permanente
+nas barras fez delas raízes de fundo, e a pílula perdeu o borrão: o texto da página
+aparecia dentro dela, e o título ficava nítido sob a barra do topo. O commit `59dea075`
+tirou o nome permanente do fonte, mas o `next dev` seguiu servindo o `globals.css`
+anterior, e a captura da conferência não tinha conteúdo atrás da pílula. Provado no
+Safari do Simulador: sem navegar, com o CSS velho o texto aparecia; um `touch` no
+`globals.css`, e ele sumiu. Agora nenhum nome é permanente, um teste reprova seletor
+fora do estado da troca, e nesse instante a pílula fica chapada, porque com nome ela
+continua sem borrão.

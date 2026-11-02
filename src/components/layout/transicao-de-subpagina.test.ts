@@ -6,6 +6,20 @@ const CASCA = semComentarios(lerFonte("src/components/layout/sidebar-app-shell.t
 const CSS = lerFonte("src/app/globals.css")
 
 describe("a transição de subpágina", () => {
+    // `view-transition-name` faz do elemento uma raiz de fundo: o `backdrop-filter` de
+    // dentro dele para de enxergar a página, e o vidro vira só tinta (2026-11-02).
+    it("nenhum nome de transição é permanente: todo seletor depende de um estado que dura a troca", () => {
+        const regras = [...CSS.matchAll(/([^{}]+)\{[^{}]*view-transition-name:[^{}]*\}/g)].map((m) =>
+            m[1].replace(/\/\*[\s\S]*?\*\//g, "").trim()
+        )
+        expect(regras.length).toBeGreaterThan(0)
+        for (const seletor of regras) expect(seletor).toMatch(/^(html\[data-subpagina\]|\.workspace-switch) /)
+    })
+
+    it("com nome, a pílula da barra fica chapada: sem borrão, o texto passaria por ela", () => {
+        expect(CSS).toMatch(/html\[data-subpagina\] \[data-slot="bottom-bar-tabs"\] \{\s+background-color: var\(--bottom-bar-surface\);/)
+    })
+
     it("a casca envolve o conteúdo, e quem chama não marca link", () => {
         expect(CASCA).toMatch(/<TransicaoDeSubpagina pathname=\{pathname\}>\s+<div data-workspace-content/)
         expect(lerFonte("next.config.ts")).toContain("viewTransition: true")
