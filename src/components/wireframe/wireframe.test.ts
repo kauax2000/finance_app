@@ -171,6 +171,11 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
   })
 
+  it("Minha conta leva à política de privacidade, e Configurações não", () => {
+    expect(fonte("src/app/(app)/account/page-client.tsx")).toContain("href={ROUTES.PRIVACY}")
+    expect(fonte("src/app/(app)/settings/(raiz)/page-client.tsx")).not.toContain("ROUTES.PRIVACY")
+  })
+
   it("a conta mostra o wireframe dos tokens", () => {
     expect(fonte("src/app/(app)/account/page-client.tsx")).toMatch(
       /import\s*\{[^}]*\bCapturaTokensWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/captura-tokens-wireframe["']/,

@@ -20,7 +20,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, SparklesIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, SparklesIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { cn, getInitials } from "@/lib/utils"
 import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
@@ -162,7 +162,7 @@ export default function AccountPage() {
                         </Link>
                         <Link
                             href={ROUTES.ACCOUNT_ACTIVITY}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
+                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
@@ -172,6 +172,23 @@ export default function AccountPage() {
                                     <p className="text-sm font-medium">Histórico de atividades</p>
                                     <p className="text-xs text-muted-foreground">
                                         Veja ações recentes na sua conta
+                                    </p>
+                                </div>
+                            </div>
+                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                        <Link
+                            href={ROUTES.PRIVACY}
+                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
+                        >
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                                    <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium">Política de privacidade</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        O que o app guarda e quem lê seus dados
                                     </p>
                                 </div>
                             </div>
