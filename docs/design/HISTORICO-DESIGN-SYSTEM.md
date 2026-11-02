@@ -28781,4 +28781,8 @@ Do Painel para Transações não são páginas diferentes, são lugares diferent
 - **`background-color` e `mix-blend-mode: normal` na foto de cima**, a mais do que o
   plano dizia: a foto do conteúdo não tem fundo (ele é do `body`), e a de baixo
   apareceria através dela; com fundo, a soma de brilho do cruzamento padrão estouraria.
+- **A tela velha rolada pulava** no primeiro quadro, visto em vídeo do Safari no
+  Simulador: o grupo parado fica na posição da tela nova, e a foto velha saía de lá.
+  O `onUpdate` publica `--subpagina-desvio` (a rolagem de depois menos a de antes),
+  que as duas animações da foto velha levam no Y do `translate`.
 - Com movimento reduzido, troca na hora.

@@ -20,8 +20,11 @@ export function TransicaoDeSubpagina({
     const isMobile = useIsMobile()
     const [atual, setAtual] = useState(pathname)
     const [direcao, setDirecao] = useState<DirecaoDaTela | null>(null)
+    const [scrollAntes, setScrollAntes] = useState(0)
     if (pathname !== atual) {
         setAtual(pathname)
+        // A rolagem ainda é a da tela velha neste render: o Next só a zera no commit.
+        setScrollAntes(window.scrollY)
         setDirecao(isMobile ? direcaoDaTela(atual, pathname, defaultMobileBackHref) : null)
     }
 
@@ -32,7 +35,16 @@ export function TransicaoDeSubpagina({
     }, [direcao])
 
     return (
-        <ViewTransition default="none" update={direcao ? `subpagina-${direcao}` : "none"}>
+        <ViewTransition
+            default="none"
+            update={direcao ? `subpagina-${direcao}` : "none"}
+            onUpdate={() =>
+                document.documentElement.style.setProperty(
+                    "--subpagina-desvio",
+                    `${window.scrollY - scrollAntes}px`,
+                )
+            }
+        >
             {children}
         </ViewTransition>
     )

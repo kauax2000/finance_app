@@ -22,6 +22,15 @@ describe("a transição de subpágina", () => {
         expect(CSS).toContain('html:not(.theme-reveal, .workspace-switch) [data-slot="bottom-bar"]')
     })
 
+    it("a tela velha rolada fica onde estava: o desvio da rolagem vai às fotos dela", () => {
+        expect(T).toContain("setScrollAntes(window.scrollY)")
+        expect(T).toContain("onUpdate={")
+        expect(T).toContain('"--subpagina-desvio"')
+        expect(CSS).toContain("translate: 0 var(--subpagina-desvio, 0px);")
+        expect(CSS).toContain("translate: -30% var(--subpagina-desvio, 0px);")
+        expect(CSS).toContain("translate: 100% var(--subpagina-desvio, 0px);")
+    })
+
     it("as duas direções e o movimento reduzido estão no CSS", () => {
         for (const t of [
             "::view-transition-old(.subpagina-entra)",
