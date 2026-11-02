@@ -48,6 +48,27 @@ export function ThemeSettings() {
           ? "Pelo Safari, na tela inicial do iPhone."
           : "Pelo menu do navegador do celular."
 
+    const linhaDoApp = (
+        <SettingsRow
+            titulo="Instalar o app"
+            descricao={
+                <>
+                    {textoDoApp}
+                    {shell && !shell.isOnline ? <span className="block">{SEM_CONEXAO}</span> : null}
+                </>
+            }
+        >
+            <div className="flex shrink-0 items-center gap-2">
+                <SyncStatusChip />
+                {instalarNoIphone ? (
+                    <Button type="button" variant="secondary" onClick={() => setInstallOpen(true)}>
+                        Como instalar
+                    </Button>
+                ) : null}
+            </div>
+        </SettingsRow>
+    )
+
     return (
         <>
             <SettingsSection titulo="Aparência" alcance="Vale só neste aparelho.">
@@ -93,28 +114,8 @@ export function ThemeSettings() {
                             />
                         </div>
                         <Separator />
-                        <SettingsRow
-                            titulo="Instalar o app"
-                            descricao={
-                                <>
-                                    {textoDoApp}
-                                    {shell && !shell.isOnline ? (
-                                        <span className="block">{SEM_CONEXAO}</span>
-                                    ) : null}
-                                </>
-                            }
-                        >
-                            <div className="flex shrink-0 items-center gap-2">
-                                <SyncStatusChip />
-                                {instalarNoIphone ? (
-                                    <Button type="button" variant="secondary" onClick={() => setInstallOpen(true)}>
-                                        Como instalar
-                                    </Button>
-                                ) : null}
-                            </div>
-                        </SettingsRow>
+                        {linhaDoApp}
                     </Card>
-                    <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
                 </SettingsSection>
             ) : (
                 <SettingsSection titulo="No celular" alcance="Lance por frase e instale o app no telefone.">
@@ -125,9 +126,14 @@ export function ThemeSettings() {
                                 <Muted>Aponte a câmera para o código. Lá você liga o lançamento inteligente e instala o app.</Muted>
                                 <QrCodeCopy value={noTelefone} className="mt-3" />
                             </div>
-                            <QrCode value={noTelefone} label="Abrir o Finance no telefone" />
+                            <QrCode value={noTelefone} label="Abrir o Finance no telefone" link={false} />
                         </div>
-                        {shell && shell.pendingSyncCount > 0 ? (
+                        {instalarNoIphone ? (
+                            <>
+                                <Separator />
+                                {linhaDoApp}
+                            </>
+                        ) : shell && shell.pendingSyncCount > 0 ? (
                             <>
                                 <Separator />
                                 <SettingsRow
@@ -141,6 +147,7 @@ export function ThemeSettings() {
                     </Card>
                 </SettingsSection>
             )}
+            <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
         </>
     )
 }

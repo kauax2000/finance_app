@@ -39,6 +39,23 @@ describe("QrCode", () => {
     const f = semComentarios(lerFonte(FONTE))
     expect(f).toContain('"Link copiado"')
     expect(f).toContain('"Não deu para copiar"')
-    expect(f).toMatch(/navigator\.clipboard\?\.writeText|try\s*\{/)
+    expect(f).toMatch(/catch\s*\{\s*setEstado\("falhou"\)/)
+  })
+
+  it("o anel de foco do link segue a tinta da placa, não o --ring", () => {
+    const f = semComentarios(lerFonte(FONTE))
+    expect(f).toContain("focus-visible:ring-current/45")
+    expect(f).not.toContain("focus-visible:ring-ring")
+  })
+
+  it("link={false} desenha a figura como role=img, sem o <a>", () => {
+    const f = semComentarios(lerFonte(FONTE))
+    expect(f).toMatch(/link = true/)
+    expect(f).toMatch(/<div role="img" aria-label=\{label\} data-slot="qr-code-link"/)
+  })
+
+  it("a margem da placa é p-3.5 (14px)", () => {
+    const f = semComentarios(lerFonte(FONTE))
+    expect(f).toContain("rounded-row p-3.5")
   })
 })

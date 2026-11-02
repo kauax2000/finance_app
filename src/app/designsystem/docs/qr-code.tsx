@@ -67,7 +67,7 @@ export default function QrCodeDoc() {
   return (
     <>
       <Usage>
-        O código que leva de uma tela a outro aparelho: o desktop mostra o QR e a câmera do celular abre o link. Use-o quando a pessoa precisa continuar a jornada em <strong>outro</strong> aparelho. Não o use para um link que abre na mesma tela — isso é um <code>Link</code>. Quem usa: Configurações, uma tela (a seção “No celular”, no desktop). A placa tem 128px e não tem escada de tamanho; a margem de silêncio ocupa 12px de cada lado.
+        O código que leva de uma tela a outro aparelho: o desktop mostra o QR e a câmera do celular abre o link. Use-o quando a pessoa precisa continuar a jornada em <strong>outro</strong> aparelho. Não o use para um link que abre na mesma tela — isso é um <code>Link</code>. Quem usa: Configurações, uma tela (a seção “No celular”, no desktop). A placa tem 128px e não tem escada de tamanho; a margem ocupa 14px de cada lado.
       </Usage>
 
       <DocSection
@@ -81,15 +81,15 @@ export default function QrCodeDoc() {
       </DocSection>
 
       <DocNote title="A placa é clara nos dois temas">
-        A placa pinta <code>bg-background</code> no tema claro e <code>bg-foreground</code> no escuro, com a tinta do módulo no par oposto (<code>text-foreground</code> e <code>dark:text-background</code>, lida por <code>currentColor</code>). É decisão do dono, e é a polaridade do padrão do código: módulos escuros sobre fundo claro. Medido no navegador, no tema escuro: placa <code>lab(98.26 0 0)</code> e módulos <code>lab(2.75 0 0)</code>, e o <code>BarcodeDetector</code> do Chromium decodificou o link do código nas duas polaridades. A leitura pela câmera de um telefone não foi medida. O anel é <code>ring-foreground/10</code>, para a placa não sumir contra o cartão.
+        A placa pinta <code>bg-background</code> no tema claro e <code>bg-foreground</code> no escuro, com a tinta do módulo no par oposto (<code>text-foreground</code> e <code>dark:text-background</code>, lida por <code>currentColor</code>). É decisão do dono, e é a polaridade do padrão do código: módulos escuros sobre fundo claro. Medido no navegador, no tema escuro: placa <code>lab(98.26 0 0)</code> e módulos <code>lab(2.75 0 0)</code>, e o <code>BarcodeDetector</code> do Chromium decodificou o caminho do código desenhado num canvas. A câmera de telefone não foi medida. O anel é <code>ring-foreground/10</code>, para a placa não sumir contra o cartão.
       </DocNote>
 
-      <DocNote title="A margem de silêncio é 12px">
-        O <code>p-3</code> da placa é a margem de silêncio que a leitura exige, e o código é gerado com <code>border: 0</code> justamente para ela ser da placa. Os 104px de dentro, com o link desta página (33 módulos por lado, correção <code>M</code>), dão 3,15px por módulo. Não reduza o recuo para caber numa linha apertada.
+      <DocNote title="A margem é 14px">
+        O <code>p-3.5</code> da placa deixa 14px de margem e 100px de área, e o código é gerado com <code>border: 0</code> justamente para a margem ser da placa. Com o link desta página (33 módulos por lado, correção <code>M</code>) são 3,03px por módulo e 4,6 módulos de margem; com 29 módulos, 4,06. A câmera de telefone não foi medida. Não reduza o recuo para caber numa linha apertada.
       </DocNote>
 
       <DocNote title="No cursor o link não abre; no toque abre">
-        O <code>&lt;a&gt;</code> tem <code>pointer-events-none</code> e só recebe o clique com <code>pointer-coarse:</code> — que vale com o dedo e abaixo de 48rem. No desktop o link não recebe clique do cursor; <code>Tab</code> e Enter continuam alcançando-o. Quem está no telefone toca no código e o link abre. O <code>label</code> é obrigatório: nomeia o link para o leitor de tela, que não lê o desenho.
+        O <code>&lt;a&gt;</code> tem <code>pointer-events-none</code> e só recebe o clique com <code>pointer-coarse:</code> — que vale com o dedo e abaixo de 48rem. No desktop o link não recebe clique do cursor; <code>Tab</code> e Enter continuam alcançando-o. Quem está no telefone toca no código e o link abre. Quando o link apontaria para a própria tela, <code>link={false}</code> desenha a mesma figura como <code>role=&quot;img&quot;</code>, sem o <code>&lt;a&gt;</code>: Configurações usa assim. O <code>label</code> é obrigatório: nomeia o link para o leitor de tela, que não lê o desenho.
       </DocNote>
 
       <DocSection
@@ -118,6 +118,7 @@ export default function QrCodeDoc() {
         rows={[
           { prop: "value", type: "string", description: "O que o código leva, em geral um link. Vazio, ou além da capacidade do maior QR, mostra o QrCodeSkeleton. Correção M, sem borda." },
           { prop: "label", type: "string", description: "Para onde o código leva, lido pelo leitor de tela como o nome do link. Obrigatório." },
+          { prop: "link", type: "boolean", default: "true", description: "false desenha o código como role=\"img\", sem o <a>, para a tela cujo destino é ela mesma (Configurações)." },
           { prop: "className", type: "string", description: "Posição e margem de quem monta; nunca cor nem tamanho do código." },
         ]}
       />

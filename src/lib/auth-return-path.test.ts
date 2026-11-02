@@ -14,6 +14,13 @@ describe("getSafeInternalNextPath", () => {
         expect(getSafeInternalNextPath("/invites/accept?token=abc")).toBe(
             "/invites/accept?token=abc",
         )
+        // A âncora atravessa o login: o QR de Configurações depende dela.
+        expect(getSafeInternalNextPath("/settings#no-celular")).toBe("/settings#no-celular")
+        expect(
+            getSafeInternalNextPath(
+                new URLSearchParams({ next: "/settings#no-celular" }).get("next"),
+            ),
+        ).toBe("/settings#no-celular")
         // O espaço em volta é ruído de URL, não intenção.
         expect(getSafeInternalNextPath("  /transactions  ")).toBe("/transactions")
     })

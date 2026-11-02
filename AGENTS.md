@@ -1879,12 +1879,17 @@ declaração de `background-color` no trilho).
   módulos escuros são **um `<path>` só**). **A placa é clara nos dois
   temas** (`bg-background` no claro, `bg-foreground` no escuro, a tinta do
   módulo no par oposto por `currentColor`): decisão do dono e a polaridade do
-  padrão do código; o `BarcodeDetector` do Chromium leu as duas polaridades,
-  câmera de telefone não foi medida. **A margem de silêncio é a placa**, `p-3` (12px) — não reduza.
+  padrão do código; o `BarcodeDetector` do Chromium decodificou o caminho do
+  código desenhado num canvas, e a câmera de telefone não foi medida. **A margem
+  é a placa**, `p-3.5` (14px, 100px de área: 3,03px por módulo no link de 33
+  módulos da demo, 4,6 módulos de margem; 4,06 com 29) — não reduza.
   **`label` é obrigatório**: nomeia o link para o leitor de tela. **O link só
   abre no toque**: no cursor o `<a>` é `pointer-events-none`
   (`pointer-coarse:pointer-events-auto`), e `Tab` e Enter ainda o alcançam.
-  128px, **sem escada**.
+  **`link={false}`** (padrão `true`) desenha a mesma figura como `role="img"`,
+  sem o `<a>`: é o que Configurações usa, onde o link apontaria para a própria
+  tela. O anel de foco do link é `ring-current/45` (o `--ring` tem a cor da
+  placa no escuro). 128px, **sem escada**.
   `QrCodeCopy` é a peça solta que copia o link (`Tooltip confirmation` ligada
   pelo resultado) e `QrCodeSkeleton` o osso; sem `value`, ou com um que não
   cabe no maior QR, `QrCode` cai no esqueleto. Fora: escada de tamanho,

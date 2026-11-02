@@ -31,7 +31,8 @@ function AuthGuardInner({ children }: AuthGuardProps) {
     useEffect(() => {
         if (loading || user) return
         const query = searchParams.toString()
-        const next = query ? `${pathname}?${query}` : pathname
+        // O hash só existe no navegador: sem ele o QR de Configurações perde a âncora no login.
+        const next = `${query ? `${pathname}?${query}` : pathname}${window.location.hash}`
         const params = new URLSearchParams({ next })
         // Só existe quando a saída não foi a pessoa que pediu — hoje, sessão
         // revogada em outro aparelho. `take` limpa ao ler.

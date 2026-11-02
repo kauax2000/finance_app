@@ -16,9 +16,10 @@ import { cn } from "@/lib/utils"
  * A placa é **clara nos dois temas** (`bg-background` no claro, `bg-foreground`
  * no escuro, com a tinta do módulo no par oposto): decisão do dono, e a
  * polaridade do padrão do código (módulo escuro sobre fundo claro). O
- * `BarcodeDetector` do Chromium leu as duas polaridades; câmera de telefone
- * não foi medida. O
- * `p-3` é a margem de silêncio que a leitura exige; não reduza.
+ * `BarcodeDetector` do Chromium decodificou o caminho do código desenhado num
+ * canvas; a câmera de telefone não foi medida. O `p-3.5` deixa 14px de margem
+ * e 100px de área: 3,03px por módulo no link de 33 módulos da demo, 4,6
+ * módulos de margem (4,06 com 29). Não reduza.
  *
  * Os módulos escuros viram **um `<path>` só** (`M{x} {y}h1v1h-1z` por módulo),
  * sem `<rect>` por célula. `crispEdges` evita a emenda de subpixel entre eles.
@@ -47,45 +48,60 @@ function qrCodeMatriz(value: string): { tamanho: number; caminho: string } | nul
  * O código de `value`, 128px. A placa cresce no cursor e no toque (`scale-110`);
  * o link que abre `value` só recebe o clique no toque (no cursor o `<a>` não
  * recebe clique, e `Tab` e Enter ainda o alcançam). `label` nomeia o link para o leitor de tela e é obrigatório.
+ * `link={false}` desenha a mesma figura sem o `<a>` (`role="img"`), para a tela
+ * cujo destino é ela mesma.
  */
 function QrCode({
   value,
   label,
+  link = true,
   className,
 }: {
   value: string
   /** Para onde o código leva, lido pelo leitor de tela. */
   label: string
+  /** `false` quando o link apontaria para a própria tela. */
+  link?: boolean
   className?: string
 }) {
   const matriz = React.useMemo(() => qrCodeMatriz(value), [value])
   if (!matriz) return <QrCodeSkeleton className={className} />
 
+  const figura = (
+    <svg
+      viewBox={`0 0 ${matriz.tamanho} ${matriz.tamanho}`}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+      className="size-full"
+    >
+      <path fill="currentColor" d={matriz.caminho} />
+    </svg>
+  )
+
   return (
     <div
       data-slot="qr-code"
       className={cn(
-        "size-32 shrink-0 rounded-row p-3 ring-1 ring-foreground/10",
+        "size-32 shrink-0 rounded-row p-3.5 ring-1 ring-foreground/10",
         "bg-background text-foreground dark:bg-foreground dark:text-background",
         "transition-[scale] duration-(--duration-fast) ease-(--ease-out) hover:scale-110 active:scale-110",
         className
       )}
     >
-      <a
-        href={value}
-        aria-label={label}
-        data-slot="qr-code-link"
-        className="block size-full rounded-md pointer-events-none pointer-coarse:pointer-events-auto focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-none"
-      >
-        <svg
-          viewBox={`0 0 ${matriz.tamanho} ${matriz.tamanho}`}
-          shapeRendering="crispEdges"
-          aria-hidden="true"
-          className="size-full"
+      {link ? (
+        <a
+          href={value}
+          aria-label={label}
+          data-slot="qr-code-link"
+          className="block size-full rounded-md pointer-events-none pointer-coarse:pointer-events-auto focus-visible:ring-3 focus-visible:ring-current/45 focus-visible:outline-none"
         >
-          <path fill="currentColor" d={matriz.caminho} />
-        </svg>
-      </a>
+          {figura}
+        </a>
+      ) : (
+        <div role="img" aria-label={label} data-slot="qr-code-link" className="size-full">
+          {figura}
+        </div>
+      )}
     </div>
   )
 }

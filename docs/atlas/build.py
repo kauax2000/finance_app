@@ -68,7 +68,7 @@ tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
 # Criar uma carteira, @@D26@@, Projeto, @@D27@@, Carteira de projeto, e @@D28@@, Dividir e acertar).
 # O Bloco 8 partiu a jornada 11 em duas: a 11b (@@D16@@, Assinar, renovar e reembolsar) entrou logo
 # depois da 11a (@@D15@@) e deslocou de Confiança em diante um a mais (@@D17@@ a @@D29@@).
-assert len(diagrams) == 31 and len(tables) == 32, (len(diagrams), len(tables))
+assert len(diagrams) == 31 and len(tables) == 33, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out

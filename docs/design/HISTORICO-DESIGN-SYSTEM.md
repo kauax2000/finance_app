@@ -28688,9 +28688,9 @@ não cabe no maior QR faz o `encode` lançar; `qrCodeMatriz` devolve `null` e o
 `QrCode` mostra o esqueleto.
 
 **Medido.** O link `https://app.finance.com.br/settings#no-celular` gera 33
-módulos por lado; nos 104px de dentro da placa (128 menos os 2 × 12 da margem),
-isso dá 3,15px por módulo. A placa tem 128px; o recuo `p-3` é a margem de
-silêncio.
+módulos por lado; nos 100px de dentro da placa (128 menos os 2 × 14 da margem),
+isso dá 3,03px por módulo e 4,6 módulos de margem (4,06 com 29 módulos). A placa
+tem 128px; o recuo `p-3.5` é a margem. A câmera de telefone não foi medida.
 
 **O que ficou de fora.** Escada de tamanho, módulos arredondados, símbolo
 central e legenda (decisão do dono). O link do `<a>` só recebe o clique no toque
@@ -28698,11 +28698,17 @@ central e legenda (decisão do dono). O link do `<a>` só recebe o clique no toq
 Enter ainda o alcançam.
 
 **Medido no navegador (tema escuro).** Placa `lab(98.26 0 0)` e módulos
-`lab(2.75 0 0)`; o `BarcodeDetector` do Chromium decodificou o link nas duas
-polaridades, claro sobre escuro inclusive. A placa clara nos dois temas é
-decisão do dono e a polaridade do padrão do código. A leitura por câmera de
-telefone não foi medida, e o catálogo não afirma que um sentido lê melhor.
+`lab(2.75 0 0)`; o `BarcodeDetector` do Chromium decodificou o caminho do código
+desenhado num canvas. A placa clara nos dois temas é decisão do dono e a
+polaridade do padrão do código. A câmera de telefone não foi medida, e o
+catálogo não afirma que um sentido lê melhor.
+
+**Revisão final.** A margem passou de `p-3` (12px) para `p-3.5` (14px). O anel
+de foco do link é `ring-current/45`: no escuro `--ring` tem a cor da placa e o
+anel sumia. `link={false}` (padrão `true`) desenha a figura como `role="img"`,
+sem o `<a>`, e Configurações o usa porque o link apontaria para a própria tela.
 
 **Trava.** `qr-code-versions.test.ts` tranca a matriz, o `null` fora da
-capacidade, a placa por tokens, o `label` obrigatório, o link só no toque e a
-cópia pelo resultado.
+capacidade, a placa por tokens, o `label` obrigatório, o link só no toque, o
+anel de foco, o `link={false}`, a margem e a cópia pelo resultado (o `catch`
+grava `falhou`).
