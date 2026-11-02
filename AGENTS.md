@@ -1891,8 +1891,8 @@ declaração de `background-color` no trilho).
   tela. O anel de foco do link é `ring-current/45` (o `--ring` tem a cor da
   placa no escuro). 128px, **sem escada**.
   `QrCodeCopy` é a peça solta que copia o link: **confirma no próprio botão**
-  (tique, "Copiado", largura em `MOLA`), e a recusa vai pela `Tooltip
-  confirmation`. `onCopied` só corre com a cópia feita, e a tela soma 1 ao
+  (tique, "Copiado", largura em `MOLA`), inclusive a recusa ("Não deu para
+  copiar"), sem dica. `onCopied` só corre com a cópia feita, e a tela soma 1 ao
   `wave` do `QrCode`, que toca **a onda** (cada diagonal esmaece a 12% e volta
   em 300ms, 13ms depois da anterior, do canto de baixo à esquerda; rodada
   356). A troca de ícone ou rótulo no lugar é `TrocaSuave`

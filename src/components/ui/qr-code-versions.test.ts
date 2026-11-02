@@ -35,17 +35,18 @@ describe("QrCode", () => {
     expect(f).toContain("aria-label={label}")
   })
 
-  it("o link só recebe o clique no toque, e o crescimento tem o par de toque", () => {
+  it("o link só recebe o clique no toque, e a placa não cresce", () => {
     const f = semComentarios(lerFonte(FONTE))
     expect(f).toContain("pointer-events-none pointer-coarse:pointer-events-auto")
-    expect(f).toContain("hover:scale-110 active:scale-110")
+    expect(f).not.toContain("scale-110")
   })
 
-  it("copiar confirma pelo Tooltip e trata a recusa", () => {
+  it("copiar confirma e recusa no próprio botão, sem Tooltip", () => {
     const f = semComentarios(lerFonte(FONTE))
     expect(f).toContain('role="status"')
     expect(f).toContain('"Link copiado"')
     expect(f).toContain('"Não deu para copiar"')
+    expect(f).not.toContain("Tooltip")
     expect(f).toMatch(/catch\s*\{\s*setEstado\("falhou"\)/)
   })
 
@@ -53,10 +54,6 @@ describe("QrCode", () => {
     const f = semComentarios(lerFonte(FONTE))
     expect(f).toMatch(/if \(!wave \|\| reduzido\) return/)
     expect(f).toMatch(/setEstado\("copiado"\)\s*onCopied\?\.\(\)/)
-  })
-
-  it("a dica do Copiar link abre à direita, no lado vazio da linha", () => {
-    expect(semComentarios(lerFonte(FONTE))).toContain('<TooltipContent side="right">')
   })
 
   it("o anel de foco do link segue a tinta da placa, não o --ring", () => {

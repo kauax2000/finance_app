@@ -28729,3 +28729,7 @@ convite (diálogo e Membros) a usa no ícone. Com movimento reduzido nada anda.
 **Trava.** `qr-code-versions.test.ts` tranca as diagonais, o movimento reduzido e
 o `onCopied` depois da cópia. O gesto não é medido por teste: foi conferido no
 navegador.
+
+**Depois, a pedido do dono.** A placa do `QrCode` não cresce mais no cursor nem no
+toque, e o `QrCodeCopy` não tem dica: a recusa também aparece no botão, com o
+ícone e o rótulo "Não deu para copiar".

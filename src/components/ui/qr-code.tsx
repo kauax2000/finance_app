@@ -1,13 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, LinkIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, ExclamationCircleIcon, LinkIcon } from "@heroicons/react/16/solid"
 import { animate, useReducedMotion } from "motion/react"
 import { encode } from "uqr"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTimeout } from "@/hooks/use-timeout"
 import { MOLA } from "@/lib/spring"
 import { TrocaSuave } from "@/lib/troca-suave"
@@ -55,8 +54,7 @@ function qrCodeMatriz(value: string): { tamanho: number; diagonais: string[] } |
 }
 
 /**
- * O código de `value`, 128px. A placa cresce no cursor e no toque (`scale-110`);
- * o link que abre `value` só recebe o clique no toque (no cursor o `<a>` não
+ * O código de `value`, 128px. O link que abre `value` só recebe o clique no toque (no cursor o `<a>` não
  * recebe clique, e `Tab` e Enter ainda o alcançam). `label` nomeia o link para o leitor de tela e é obrigatório.
  * `link={false}` desenha a mesma figura sem o `<a>` (`role="img"`), para a tela
  * cujo destino é ela mesma. Cada valor novo de `wave` toca a onda, que parte do
@@ -115,7 +113,6 @@ function QrCode({
       className={cn(
         "size-32 shrink-0 rounded-row p-3.5 ring-1 ring-foreground/10",
         "bg-background text-foreground dark:bg-foreground dark:text-background",
-        "transition-[scale] duration-(--duration-fast) ease-(--ease-out) hover:scale-110 active:scale-110",
         className
       )}
     >
@@ -141,8 +138,8 @@ function QrCode({
  * Copia `value` e confirma **no próprio botão**: o ícone vira tique, o rótulo
  * troca e a largura anda na mola. `onCopied` só corre com a cópia feita, e é por
  * onde a tela toca a onda do `QrCode`. Uma cópia recusada, ou sem
- * `navigator.clipboard` (contexto inseguro), não confirma: diz "Não deu para
- * copiar" pela dica (`Tooltip confirmation`, ligada pelo **resultado**).
+ * `navigator.clipboard` (contexto inseguro), não confirma: o botão diz "Não deu
+ * para copiar".
  */
 function QrCodeCopy({
   value,
@@ -159,7 +156,7 @@ function QrCodeCopy({
   const reduzido = useReducedMotion()
   const botao = React.useRef<HTMLButtonElement>(null)
   const largura = React.useRef(0)
-  const copiado = estado === "copiado"
+  const rotulo = estado === "copiado" ? "Copiado" : estado === "falhou" ? "Não deu para copiar" : "Copiar link"
 
   // O `popLayout` já tirou o rótulo velho do fluxo: a medida aqui é a do novo.
   React.useLayoutEffect(() => {
@@ -174,7 +171,7 @@ function QrCodeCopy({
       el.style.width = ""
     })
     return () => mola.stop()
-  }, [copiado, reduzido])
+  }, [estado, reduzido])
 
   const copiar = async () => {
     if (estado) return
@@ -191,30 +188,31 @@ function QrCodeCopy({
 
   return (
     <div data-slot="qr-code-copy" className={className}>
-      <Tooltip confirmation={estado === "falhou" ? "Não deu para copiar" : null}>
-        <TooltipTrigger asChild>
-          <Button
-            ref={botao}
-            type="button"
-            variant="secondary"
-            disabled={!value}
-            onClick={() => void copiar()}
-            className="relative overflow-hidden"
-          >
-            <span className="relative size-4">
-              <TrocaSuave chave={copiado ? "tique" : "link"} className="absolute inset-0 flex items-center justify-center">
-                {copiado ? <CheckIcon className="text-success" /> : <LinkIcon />}
-              </TrocaSuave>
-            </span>
-            <TrocaSuave chave={copiado ? "copiado" : "copiar"} className="inline-block">
-              {copiado ? "Copiado" : "Copiar link"}
-            </TrocaSuave>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">Copia o link para abrir no celular</TooltipContent>
-      </Tooltip>
+      <Button
+        ref={botao}
+        type="button"
+        variant="secondary"
+        disabled={!value}
+        onClick={() => void copiar()}
+        className="relative overflow-hidden"
+      >
+        <span className="relative size-4">
+          <TrocaSuave chave={estado ?? "copiar"} className="absolute inset-0 flex items-center justify-center">
+            {estado === "copiado" ? (
+              <CheckIcon className="text-success" />
+            ) : estado === "falhou" ? (
+              <ExclamationCircleIcon className="text-destructive" />
+            ) : (
+              <LinkIcon />
+            )}
+          </TrocaSuave>
+        </span>
+        <TrocaSuave chave={estado ?? "copiar"} className="inline-block">
+          {rotulo}
+        </TrocaSuave>
+      </Button>
       <span role="status" className="sr-only">
-        {copiado ? "Link copiado" : ""}
+        {estado === "copiado" ? "Link copiado" : estado === "falhou" ? rotulo : ""}
       </span>
     </div>
   )

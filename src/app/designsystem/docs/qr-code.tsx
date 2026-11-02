@@ -30,7 +30,7 @@ function DemoNaTela() {
         {esqueleto ? <QrCodeSkeleton /> : <QrCode value={LINK} label="Abrir o Finance no celular" wave={onda} />}
         {copiar ? <QrCodeCopy value={LINK} onCopied={() => setOnda((n) => n + 1)} /> : null}
       </div>
-      <Caption>No cursor o link do código não recebe clique: a placa só cresce. Copie o link para ver a onda.</Caption>
+      <Caption>No cursor o link do código não recebe clique. Copie o link para ver a onda.</Caption>
     </div>
   )
 }
@@ -101,10 +101,6 @@ export default function QrCodeDoc() {
       >
         <NoTelefone />
       </DocSection>
-
-      <DocNote title="A placa cresce com o cursor e com o toque">
-        <code>hover:scale-110</code> com o par <code>active:scale-110</code>, em <code>--duration-fast</code> na curva <code>--ease-out</code>.
-      </DocNote>
 
       <DocNote title="Copiar confirma no botão, e a onda atravessa o código">
         <code>QrCodeCopy</code> troca o ícone pelo tique e o rótulo por &quot;Copiado&quot;, com a largura na mola (<code>MOLA</code>); depois de 2 segundos, volta. Quem liga a onda é a tela: <code>onCopied</code> soma 1 ao contador que vai em <code>wave</code>, e a cópia recusada não toca nada. Os módulos são um <code>&lt;path&gt;</code> por diagonal, e cada um esmaece até 12% e volta em 300ms, 13ms depois do anterior, a partir do canto de baixo à esquerda. Com movimento reduzido, a onda não toca e a troca é na hora; o leitor de tela ouve &quot;Link copiado&quot; pelo <code>role=&quot;status&quot;</code>.
