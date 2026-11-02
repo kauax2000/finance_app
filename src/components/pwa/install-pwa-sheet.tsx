@@ -115,7 +115,15 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogBody className="flex flex-col gap-4">
-                    <div className="relative mx-auto h-72 w-60 shrink-0 overflow-hidden">
+                    <div
+                        className={cn(
+                            "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
+                            // O aparelho dissolve no lado em que a janela o corta.
+                            atual.ancora === "topo"
+                                ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
+                                : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
+                        )}
+                    >
                         <Image
                             key={passo}
                             src={atual.imagem}

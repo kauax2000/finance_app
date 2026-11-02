@@ -38,4 +38,9 @@ describe("InstallPwaSheet", () => {
     expect(auto).toContain("dispensarAviso()")
     expect(f).toContain("PWA_INSTALL_DISMISSED_KEY")
   })
+
+  it("o aparelho dissolve no lado em que a janela o corta", () => {
+    expect(f).toContain("[mask-image:linear-gradient(to_top,transparent,#000_4rem)]")
+    expect(f).toContain("[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]")
+  })
 })
