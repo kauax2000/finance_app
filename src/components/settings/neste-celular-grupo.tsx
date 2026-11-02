@@ -5,7 +5,7 @@ import Image from "next/image"
 import { SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { FormSwitch } from "@/components/ui/form"
+import { Switch } from "@/components/ui/switch"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Separator } from "@/components/ui/separator"
@@ -84,19 +84,25 @@ export function NesteCelularGrupo() {
                                 <SeletorDeTema labels={false} />
                             </ItemActions>
                         </Item>
-                        {/* O ícone solto, como o do Tema; a linha inteira é o alvo da chave. */}
-                        <div className="flex min-w-0 items-center gap-3 px-4 py-3">
-                            <ItemMedia variant="icon">
-                                <SparklesIcon className="size-5" aria-hidden />
-                            </ItemMedia>
-                            <FormSwitch
-                                className="min-w-0 flex-1 items-center"
-                                label="Lançamento inteligente"
-                                description="Digite uma frase no +"
-                                checked={lancamentoInteligente}
-                                onCheckedChange={definirLancamentoInteligente}
-                            />
-                        </div>
+                        {/* Como as linhas de Cofre aberto: o `Item` põe o ícone na linha do título. O `label` faz a linha inteira ser o alvo da chave. */}
+                        <Item variant="flush" asChild className="min-h-12">
+                            <label>
+                                <ItemMedia variant="icon">
+                                    <SparklesIcon className="size-5" aria-hidden />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="pointer-coarse:text-base">Lançamento inteligente</ItemTitle>
+                                    <ItemDescription>Digite uma frase no +</ItemDescription>
+                                </ItemContent>
+                                <ItemActions>
+                                    <Switch
+                                        aria-label="Lançamento inteligente"
+                                        checked={lancamentoInteligente}
+                                        onCheckedChange={definirLancamentoInteligente}
+                                    />
+                                </ItemActions>
+                            </label>
+                        </Item>
                         {/* Instalado, não há o que instalar: da linha só fica a fila, quando existe. */}
                         {instalado ? (
                             shell && shell.pendingSyncCount > 0 ? (

@@ -49,7 +49,8 @@ describe("a página Você", () => {
     it("Neste celular: título, e o ladrilho só no ícone do app", () => {
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
         expect(grupo).toContain(">Neste celular<")
-        expect(grupo).toContain('label="Lançamento inteligente"')
+        expect(grupo).toContain('aria-label="Lançamento inteligente"')
+        expect(grupo).toContain("<label>")
         expect(grupo).toContain('titulo="Instalar o app"')
         expect(grupo).toContain("flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10")
     })
