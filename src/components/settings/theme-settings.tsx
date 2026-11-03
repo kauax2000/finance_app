@@ -48,7 +48,7 @@ export function ThemeSettings() {
 
     return (
         <>
-            <SettingsSection titulo="Aparência" alcance="Vale só neste aparelho.">
+            <SettingsSection titulo="Aparência">
                 <Card padding="none">
                     <SettingsRow titulo="Tema"><SeletorDeTema labels /></SettingsRow>
                     <div className="max-lg:hidden">

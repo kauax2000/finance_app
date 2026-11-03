@@ -102,7 +102,7 @@ describe("Configurações: página única", () => {
         expect(aparelho).toContain("NoCelularCartao")
         expect(aparelho).toMatch(/<NoCelularCartao value=\{noTelefone\} \/>[\s\S]*<Card padding="none">/)
         expect(aparelho).not.toContain("Só tem efeito no telefone.")
-        expect(aparelho.match(/Vale só neste aparelho/g)).toHaveLength(1)
+        expect(aparelho).not.toContain("Vale só neste aparelho")
         // No telefone nada daqui aparece: o grupo mora em Você.
         expect(aparelho).toContain("if (isMobile) return null")
         expect(aparelho).not.toContain('id="no-celular"')
