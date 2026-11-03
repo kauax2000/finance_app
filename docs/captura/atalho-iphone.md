@@ -1,5 +1,31 @@
 # Lançar gasto sem abrir o app
 
+## Para o dono: publicar o atalho pronto
+
+O guia "Conectar o iPhone" do app oferece o botão **Abrir o atalho**, que leva a
+um atalho já montado. Você monta esse atalho uma vez e publica o link. Sem o
+link, o guia mostra "O atalho pronto ainda não está disponível." e ensina a
+montar à mão.
+
+1. No app **Atalhos**, crie um atalho chamado **Lançar gasto**.
+2. Primeira ação: **Se** a **Entrada do atalho** tem algum valor. Com a entrada
+   (a transação da Carteira: valor, comerciante e cartão), monte o corpo com os
+   campos separados da seção 4. Senão, use **Ditar texto** (Português do Brasil)
+   e monte o corpo com `text`, como na seção 3.
+3. **Obter conteúdo de URL**, com `POST` para `<URL>`, o cabeçalho
+   `Authorization` = `Bearer ` seguido do código, e o corpo JSON da seção 2.
+4. **Obter valor do dicionário** (`resumo`) e **Mostrar notificação** com ele.
+5. Em **Configurações do atalho** › **Perguntas de importação**, crie uma
+   pergunta para o campo do código, com o texto "Cole o código do aparelho".
+   Cada pessoa cola o próprio código ao adicionar o atalho, e o seu fica de fora.
+6. Teste com um código seu. Depois **tire o seu código** do atalho (a pergunta
+   de importação fica vazia) e revogue esse código no app.
+7. **Compartilhar** › **Copiar link do iCloud**.
+8. Ponha o link em `NEXT_PUBLIC_CAPTURE_SHORTCUT_URL`, na Vercel e no
+   `.env.local`, e refaça o deploy. A variável é lida na compilação.
+
+O resto deste guia é a referência de quem monta à mão.
+
 Este guia liga o iPhone ao app para lançar um gasto sem abri-lo. Há três caminhos:
 
 - o Atalho "Lançar gasto", por voz;
@@ -14,26 +40,27 @@ valor real de nenhum deles.**
 
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
-| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Como configurar |
-| `<TOKEN>` | o seu token pessoal | Minha conta › "Lançar sem abrir o app" › Novo aparelho (aparece uma vez só) |
+| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Conectar aparelho › passo 2 › "Montar à mão" › Endereço |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar sem abrir o app" › Conectar aparelho (passo 1 o cria; ele aparece nos passos 1 e 2, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Minha conta**.
-2. Na seção "Lançar sem abrir o app", toque em **Novo aparelho** e escreva o nome do aparelho, por exemplo
-   "iPhone da Ana".
+2. Na seção "Lançar sem abrir o app", toque em **Conectar aparelho** (ou em
+   **Conectar o iPhone**, quando ainda não há nenhum) e escreva o nome do
+   aparelho, por exemplo "iPhone da Ana".
 3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
    não diz outra carteira.
-4. Toque em **Criar**.
-5. Copie o token na hora. Ele **não aparece de novo**. Se perder o token, revogue
-   e crie outro.
+4. Toque em **Criar código**.
+5. Copie o código na hora, se o navegador não o copiou sozinho. Ele **não aparece
+   de novo**. Se perder o código, desconecte o aparelho e crie outro.
 
 Cada pessoa tem no máximo 10 tokens ativos.
 
 > **Cuidado ao compartilhar o atalho.** O token fica gravado dentro do atalho.
 > Quem recebe o atalho recebe também o token, e isso vale para o link do
 > iCloud, a exportação do arquivo e o envio por mensagem. Se você compartilhou
-> o atalho, revogue o token no app e crie um novo (seção 6).
+> o atalho, desconecte o aparelho no app e crie um novo código (seção 6).
 
 ## 2. O pedido que todos os caminhos fazem
 
@@ -214,10 +241,10 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 
 ## 6. Perdeu o aparelho? Revogue o token
 
-Em **Minha conta** › "Lançar sem abrir o app", toque em **Revogar** no token do
-aparelho. Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
+Em **Minha conta** › "Lançar sem abrir o app", toque em **Desconectar** no
+aparelho e confirme em "Desconectar este aparelho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
-O token revogado sai da lista. Para voltar a lançar, crie um token novo.
+O aparelho desconectado sai da lista. Para voltar a lançar, conecte de novo.
 
 ## 7. Opcional: Android avançado
 
