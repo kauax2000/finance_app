@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { opcoesDeModo } from "@/components/settings/carteira-divisao-dialog"
+import { opcoesDeModo } from "@/components/settings/carteira-divisao"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -8,7 +8,7 @@ vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 const carteira = () => semComentarios(lerFonte("src/components/settings/workspace-appearance-settings.tsx"), "tudo")
 // O valor passado a `acoes=`, até o fim do `WorkspaceAppearanceEditDialog`.
 const acoesDe = (f: string) => f.slice(f.indexOf("acoes={"), f.indexOf("\n            />", f.indexOf("acoes={")))
-const FORMULARIOS = ["src/components/settings/carteira-divisao-dialog.tsx", "src/components/settings/carteira-projeto-form.tsx"]
+const FORMULARIOS = ["src/components/settings/carteira-projeto-form.tsx"]
 
 describe("ymdParaData", () => {
     it("1º de março é 1º de março em qualquer fuso", async () => {
@@ -54,9 +54,16 @@ describe("Formulários da Carteira", () => {
         expect(fonte).not.toContain("<input")
     })
 
-    it("Divisão: grava como o wireframe, só o que mudou, e avisa ao salvar", () => {
-        const f = lerFonte("src/components/settings/carteira-divisao-dialog.tsx")
-        for (const texto of ["gravarModo", "gravarPesos", "refreshWorkspaces", "chaves.pesos", "chaves.saldos", "NADA_MUDOU", "lerPeso", "toastSuccess", "FormRadioGroup"]) expect(f).toContain(texto)
+    it("Divisão: grava só o que mudou, no Salvar do Editar carteira", () => {
+        const f = lerFonte("src/components/settings/carteira-divisao.tsx")
+        for (const texto of ["gravarModo", "gravarPesos", "refreshWorkspaces", "chaves.pesos", "chaves.saldos", "NADA_MUDOU", "lerPeso", "<TabsList", "<FormInput"]) expect(f).toContain(texto)
+        expect(f).not.toContain("<input")
+        const dialogo = semComentarios(lerFonte("src/components/settings/workspace-appearance-edit-dialog.tsx"), "tudo")
+        // Pesos inválidos param antes de gravar o nome; a divisão grava depois dele.
+        expect(dialogo.indexOf("divisao?.validar()")).toBeLessThan(dialogo.indexOf("await updateWorkspace("))
+        expect(dialogo.indexOf("await updateWorkspace(")).toBeLessThan(dialogo.indexOf("await divisao.salvar()"))
+        expect(dialogo).toContain("<CamposDaDivisao divisao={divisao} />")
+        expect(dialogo).toContain("<DialogFooter start={rodapeInicio}>")
     })
 
     it("Datas: o mesmo formulário nas Configurações e na criação", () => {
@@ -90,18 +97,20 @@ describe("Carteira em linhas", () => {
         expect(f).not.toContain("Vale para todos")
     })
 
-    it("os dois diálogos abrem por Alterar", () => {
+    it("a divisão mora no Editar; Datas abre o diálogo dela", () => {
         const f = carteira()
-        expect(f.match(/<SettingsLink/g)).toHaveLength(2)
-        expect(f).toContain("setDivisaoOpen(true)")
+        expect(f.match(/<SettingsLink/g)).toHaveLength(1)
+        expect(f).not.toContain("CarteiraDivisaoDialog")
+        expect(f).toContain("divisao={podeDivisao && splitMode !== undefined ? divisao : undefined}")
+        // A divisão só é lida com o Editar aberto.
+        expect(f).toContain("useDivisaoEditavel(dialogOpen && podeDivisao && splitMode !== undefined ? currentWorkspace : null)")
         expect(f).toContain("setDatasOpen(true)")
-        expect(f).toContain("<CarteiraDivisaoDialog")
         expect(f).toContain("<CarteiraProjetoForm")
     })
 
     it("trocar de carteira fecha todos os diálogos", () => {
         expect(carteira()).toMatch(
-            /setDeleteOpen\(false\)[\s\S]*setLeaveOpen\(false\)[\s\S]*setDivisaoOpen\(false\)[\s\S]*setDatasOpen\(false\)[\s\S]*?\[currentWorkspace\?\.id\]\)/,
+            /setDeleteOpen\(false\)[\s\S]*setLeaveOpen\(false\)[\s\S]*setDatasOpen\(false\)[\s\S]*?\[currentWorkspace\?\.id\]\)/,
         )
     })
 
@@ -115,12 +124,9 @@ describe("Carteira em linhas", () => {
         expect(f).toContain("owner && currentWorkspace && !isPrimeira")
         expect(f).toMatch(/podeDatas = owner && currentWorkspace\?\.purpose === "project"/)
         const acoes = acoesDe(f)
-        expect(acoes).toMatch(/\{podeDivisao \? \(/)
         expect(acoes).toMatch(/\{podeDatas \? \(/)
-        expect(acoes).toContain('titulo="Divisão"')
         expect(acoes).toContain('titulo="Datas e orçamento"')
         // Um diálogo aberto não sobrevive a perder a permissão.
-        expect(f).toContain("open={divisaoOpen && podeDivisao}")
         expect(f).toContain("open={datasOpen && podeDatas}")
     })
 
@@ -131,7 +137,7 @@ describe("Carteira em linhas", () => {
 
     it("Excluir mora no acoes do Editar; Sair fica no cartão, só para quem não é dono", () => {
         const f = carteira()
-        expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
+        expect(f).toMatch(/rodapeInicio=\{\s*canDeleteProject \?[\s\S]*Excluir carteira/)
         expect(f.replace(acoesDe(f), "")).toMatch(/!owner \?[\s\S]*Sair da carteira/)
         expect(acoesDe(f)).not.toContain("Sair da carteira")
     })
@@ -139,10 +145,10 @@ describe("Carteira em linhas", () => {
 
 describe("Achados da revisão final", () => {
     it("Divisão: pesos antes do modo, e erro de carga visível", () => {
-        const f = semComentarios(lerFonte("src/components/settings/carteira-divisao-dialog.tsx"), "tudo")
+        const f = semComentarios(lerFonte("src/components/settings/carteira-divisao.tsx"), "tudo")
         expect(f.indexOf("await gravarPesos(")).toBeLessThan(f.indexOf("await gravarModo("))
-        expect(f).toContain("erro || pesos.isError")
-        expect(f).toContain("Não foi possível carregar.")
+        expect(f).toContain("erroAdultos || pesos.isError")
+        expect(f).toContain("Não foi possível carregar a divisão.")
         expect(semComentarios(lerFonte("src/lib/divisao/use-adultos.ts"), "tudo")).toContain("erro: q.isError")
     })
 
@@ -154,7 +160,6 @@ describe("Achados da revisão final", () => {
 
     it("Carteira: Alterar com nome acessível próprio", () => {
         const f = carteira()
-        expect(f).toContain('aria-label="Alterar divisão"')
         expect(f).toContain('aria-label="Alterar datas e orçamento"')
     })
 })

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
+import { useDivisaoEditavel } from "@/components/settings/carteira-divisao"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
 import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
 import { ArrowRightStartOnRectangleIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -51,7 +51,6 @@ export function WorkspaceAppearanceSettings() {
     const [editTargetId, setEditTargetId] = useState<string | null>(null)
     const [deleteOpen, setDeleteOpen] = useState(false)
     const [leaveOpen, setLeaveOpen] = useState(false)
-    const [divisaoOpen, setDivisaoOpen] = useState(false)
     const [datasOpen, setDatasOpen] = useState(false)
     const [salvandoDatas, setSalvandoDatas] = useState(false)
 
@@ -88,7 +87,6 @@ export function WorkspaceAppearanceSettings() {
         /* eslint-disable react-hooks/set-state-in-effect -- close destructive flows when switching workspace */
         setDeleteOpen(false)
         setLeaveOpen(false)
-        setDivisaoOpen(false)
         setDatasOpen(false)
         /* eslint-enable react-hooks/set-state-in-effect */
     }, [currentWorkspace?.id])
@@ -108,6 +106,7 @@ export function WorkspaceAppearanceSettings() {
     const podeDivisao = owner
     const podeDatas = owner && currentWorkspace?.purpose === "project"
     const splitMode = currentWorkspace?.split_mode
+    const divisao = useDivisaoEditavel(dialogOpen && podeDivisao && splitMode !== undefined ? currentWorkspace : null)
 
     return (
         <>
@@ -115,45 +114,35 @@ export function WorkspaceAppearanceSettings() {
                 open={dialogOpen}
                 onOpenChange={handleDialogOpenChange}
                 workspace={dialogOpen ? currentWorkspace : null}
+                divisao={podeDivisao && splitMode !== undefined ? divisao : undefined}
                 acoes={
-                    podeDivisao || podeDatas || canDeleteProject ? (
-                        <>
-                            {podeDivisao || podeDatas ? (
-                                <ItemGroup variant="divided">
-                                    {podeDivisao ? (
-                                        splitMode === undefined ? (
-                                            <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
-                                        ) : (
-                                            <SettingsLink
-                                                titulo="Divisão"
-                                                valor={splitMode === "split" ? "Dividida" : "Pote único"}
-                                                aria-label="Alterar divisão"
-                                                onClick={() => setDivisaoOpen(true)}
-                                            />
-                                        )
-                                    ) : null}
-                                    {podeDatas ? (
-                                        <SettingsLink
-                                            titulo="Datas e orçamento"
-                                            valor={currentWorkspace ? resumoDoCalendario(currentWorkspace) : ""}
-                                            aria-label="Alterar datas e orçamento"
-                                            onClick={() => setDatasOpen(true)}
-                                        />
-                                    ) : null}
-                                </ItemGroup>
+                    (podeDivisao && splitMode === undefined) || podeDatas ? (
+                        <ItemGroup variant="divided">
+                            {podeDivisao && splitMode === undefined ? (
+                                <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
                             ) : null}
-                            {canDeleteProject ? (
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    className="self-start text-destructive hover:text-destructive active:text-destructive"
-                                    onClick={() => setDeleteOpen(true)}
-                                >
-                                    <TrashIcon data-icon="inline-start" aria-hidden />
-                                    Excluir carteira
-                                </Button>
+                            {podeDatas ? (
+                                <SettingsLink
+                                    titulo="Datas e orçamento"
+                                    valor={currentWorkspace ? resumoDoCalendario(currentWorkspace) : ""}
+                                    aria-label="Alterar datas e orçamento"
+                                    onClick={() => setDatasOpen(true)}
+                                />
                             ) : null}
-                        </>
+                        </ItemGroup>
+                    ) : null
+                }
+                rodapeInicio={
+                    canDeleteProject ? (
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            className="text-destructive hover:text-destructive active:text-destructive"
+                            onClick={() => setDeleteOpen(true)}
+                        >
+                            <TrashIcon data-icon="inline-start" aria-hidden />
+                            Excluir carteira
+                        </Button>
                     ) : null
                 }
             />
@@ -168,11 +157,6 @@ export function WorkspaceAppearanceSettings() {
                 open={leaveOpen}
                 onOpenChange={setLeaveOpen}
                 workspace={leaveOpen ? currentWorkspace : null}
-            />
-            <CarteiraDivisaoDialog
-                open={divisaoOpen && podeDivisao}
-                onOpenChange={setDivisaoOpen}
-                workspace={podeDivisao ? currentWorkspace : null}
             />
             <Dialog
                 surface="auto"
