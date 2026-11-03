@@ -1,5 +1,6 @@
 "use client"
 
+import { MicrophoneIcon } from "@heroicons/react/24/outline"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -19,6 +20,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
@@ -90,9 +98,11 @@ export function AtalhoSecao() {
         <SettingsSection
             titulo="Lançar sem abrir o app"
             actions={
-                <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
-                    Conectar aparelho
-                </Button>
+                tokens.length > 0 ? (
+                    <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
+                        Conectar aparelho
+                    </Button>
+                ) : undefined
             }
         >
             <Card padding="none">
@@ -108,7 +118,20 @@ export function AtalhoSecao() {
                         {lista.isError ? (
                             <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
                         ) : tokens.length === 0 ? (
-                            <CardMessage>Nenhum aparelho conectado.</CardMessage>
+                            <EmptyState variant="plain" size="sm">
+                                <EmptyStateIcon>
+                                    <MicrophoneIcon />
+                                </EmptyStateIcon>
+                                <EmptyStateTitle>Lance gastos falando com a Siri</EmptyStateTitle>
+                                <EmptyStateDescription>
+                                    Conecte o iPhone uma vez. Depois é só dizer “42 mercado” e o gasto entra sozinho.
+                                </EmptyStateDescription>
+                                <EmptyStateActions>
+                                    <Button type="button" variant="primary" onClick={() => setGuiaAberto(true)}>
+                                        Conectar o iPhone
+                                    </Button>
+                                </EmptyStateActions>
+                            </EmptyState>
                         ) : (
                             tokens.map((t) => (
                                 <Item key={t.id} variant="flush" className="px-4">

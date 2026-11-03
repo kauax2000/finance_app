@@ -154,3 +154,14 @@ describe("CampoDeCopiar", () => {
         expect(f).toContain("useRef")
     })
 })
+
+describe("Lançar sem abrir o app: o vazio", () => {
+    it("o vazio convida a conectar, e o cabeçalho não repete a ação", () => {
+        const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
+        expect(s).toContain("Lance gastos falando com a Siri")
+        expect(s).toContain("Conectar o iPhone")
+        expect(s).toMatch(/<EmptyState/)
+        expect(s).not.toContain("Nenhum aparelho conectado.")
+        expect(s).toMatch(/tokens\.length > 0 \?[\s\S]*Conectar aparelho/)
+    })
+})
