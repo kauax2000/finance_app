@@ -10,3 +10,12 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 - A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.
+
+<!-- claude-reflect: learned rules (saved from the band; edit freely) -->
+## Learned rules
+- For plans that change this app's screens, use indicative wireframes that deliberately differ from the design system and default look, so the user can spot needed elements later.
+- Do not merge or push finance-app-2.0 to main until all planned blocks are finished.
+- Add a header to every page in the app from now on.
+- Use the collapsing large-title header animation (centered name appears under the top bar) on all mobile screens, not only Settings.
+- Apply the same page transition to every subpage in the app; switching between main menu sections is not a page change and needs no transition.
+<!-- end claude-reflect -->
