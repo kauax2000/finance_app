@@ -1,5 +1,7 @@
 # Publicar o Bloco 7C: projetos, modelos de carteira e divisão da conta
 
+**3/11/2026: as duas migrações deste bloco subiram à produção**, a pedido do dono, junto com `20261025120000_planos.sql` e `20261029120000_papeis.sql` (das quais dependem), numa transação só. O pgTAP não rodou: a validação foi um ensaio das quatro com `rollback` contra a produção, sem erro. O front do 2.0 continua sem publicar. Retrato anterior em `backups-prod/antes-planos-papeis-projetos-divisao-20261103-1715.json`.
+
 Reúne os projetos, os modelos de carteira e a divisão por quem pagou:
 
 - a migração `20261031120000_projetos.sql`:

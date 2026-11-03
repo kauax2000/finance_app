@@ -1,5 +1,7 @@
 # Publicar o Bloco 7A: papéis e limites
 
+**3/11/2026: só a migração `20261029120000_papeis.sql` subiu à produção** (para a divisão), numa transação com planos, projetos e divisão, depois de um ensaio com `rollback`. A `20261029130000_limites.sql` não subiu. Retrato anterior em `backups-prod/antes-planos-papeis-projetos-divisao-20261103-1715.json`.
+
 Reúne o convidado, o limite por pessoa e o app do convidado:
 
 - a migração `20261029120000_papeis.sql`: o papel `guest` em `workspace_members`

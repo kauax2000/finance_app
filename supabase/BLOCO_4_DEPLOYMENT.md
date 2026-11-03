@@ -1,5 +1,7 @@
 # Publicar o Bloco 4: planos, só leitura e confiança
 
+**3/11/2026: a migração `20261025120000_planos.sql` subiu à produção** (junto com papéis, projetos e divisão, porque a `garantir_escrita` é usada por elas), numa transação só, depois de um ensaio com `rollback` contra a produção. Ela entra desligada: com `billing_settings.enforced_since` nulo ninguém é barrado. As Edges e o front deste bloco não subiram. Retrato anterior em `backups-prod/antes-planos-papeis-projetos-divisao-20261103-1715.json`.
+
 Reúne o direito de uso do app, em desligado, e as telas de confiança:
 
 - a migração `20261025120000_planos.sql`: `billing_settings` (o interruptor
