@@ -9,6 +9,7 @@ com o ícone do Finance recortado da própria captura. Nenhum logo da Apple: a
 Siri aparece pela borda, não pelo símbolo (marca registrada).
 
     python3 scripts/atalho/cenas.py <inicio.png> <saida-siri.png> <saida-notificacao.png>
+    python3 scripts/atalho/cenas.py --orbe <saida.webp>      # a esfera do vazio da seção
 
 As saídas são telas cruas (1320×2868); `moldura.py` as põe no iPhone 17 Pro prata.
 Precisa do Pillow.
@@ -107,6 +108,8 @@ def notificacao(inicio: Image.Image) -> Image.Image:
 
 
 def main() -> None:
+    if sys.argv[1:2] == ["--orbe"]:
+        return
     inicio = Image.open(sys.argv[1])
     siri(inicio).save(sys.argv[2])
     notificacao(inicio).save(sys.argv[3])
@@ -114,3 +117,35 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def orbe(tamanho: int = 480) -> Image.Image:
+    """A esfera de luz no estilo da Siri, para o vazio da seção: manchas nas cores da borda, borradas, com um miolo claro."""
+    from PIL import ImageChops
+
+    t = tamanho
+    camada = Image.new("RGBA", (t, t), (0, 0, 0, 0))
+    d = ImageDraw.Draw(camada)
+    manchas = [
+        ((0.10, 0.14, 0.60, 0.64), (255, 159, 10)),
+        ((0.34, 0.12, 0.88, 0.62), (255, 45, 146)),
+        ((0.30, 0.38, 0.86, 0.90), (175, 82, 222)),
+        ((0.10, 0.36, 0.62, 0.88), (10, 132, 255)),
+        ((0.42, 0.34, 0.62, 0.56), (255, 255, 255)),
+    ]
+    for (x0, y0, x1, y1), cor in manchas:
+        d.ellipse((x0 * t, y0 * t, x1 * t, y1 * t), fill=cor + (235,))
+    camada = camada.filter(ImageFilter.GaussianBlur(t * 0.07))
+    # Recorta num círculo, com a borda macia.
+    mascara = Image.new("L", (t, t), 0)
+    ImageDraw.Draw(mascara).ellipse((t * 0.12, t * 0.12, t * 0.88, t * 0.88), fill=255)
+    mascara = mascara.filter(ImageFilter.GaussianBlur(t * 0.015))
+    camada.putalpha(ImageChops.multiply(camada.getchannel("A"), mascara))
+    # Um halo fraco em volta.
+    halo = camada.filter(ImageFilter.GaussianBlur(t * 0.06))
+    halo.putalpha(halo.getchannel("A").point(lambda a: int(a * 0.55)))
+    return Image.alpha_composite(halo, camada)
+
+
+if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "--orbe":
+    orbe().save(sys.argv[2], "WEBP", quality=90, method=6)

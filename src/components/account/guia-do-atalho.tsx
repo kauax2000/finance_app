@@ -47,9 +47,6 @@ type Tela = {
  * Os passos 6 e 7 são montados sobre a tela de início real (`scripts/atalho/cenas.py`): o simulador
  * não tem Siri nem Apple Pay. shortcut: montagens, não capturas; trocar pelo print do iPhone quando houver.
  */
-/** A notificação depois do Apple Pay: a tela do passo 7 e a do vazio da seção. */
-export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
-
 const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Dê um nome a este iPhone" },
     { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
@@ -60,18 +57,16 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
     },
     { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
     { titulo: "Fale com a Siri", tela: { imagem: siri, ancora: "topo" } },
-    { titulo: "Lance ao pagar (opcional)", tela: TELA_DA_NOTIFICACAO },
+    { titulo: "Lance ao pagar (opcional)", tela: { imagem: applePay, ancora: "topo" } },
 ]
 
 /** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
-export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compacta?: boolean }) {
+function JanelaDoAparelho({ tela }: { tela: Tela }) {
     return (
         <div
             aria-hidden
             className={cn(
-                "relative mx-auto shrink-0 overflow-hidden",
-                // Compacta: só o topo do aparelho, para o vazio da seção.
-                compacta ? "h-36 w-48" : "h-72 w-60",
+                "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
                 // O aparelho dissolve no lado em que a janela o corta.
                 tela.ancora === "topo"
                     ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
@@ -88,9 +83,9 @@ export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compa
                 <Image
                     src={tela.imagem}
                     alt=""
-                    sizes={compacta ? "192px" : "240px"}
+                    sizes="240px"
                     placeholder="blur"
-                    className={cn("absolute inset-0 h-auto max-w-none", compacta ? "w-48" : "w-60")}
+                    className="absolute inset-0 h-auto w-60 max-w-none"
                 />
                 {tela.ponto ? (
                     <span
