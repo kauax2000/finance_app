@@ -32,9 +32,9 @@ export default function SettingsPage() {
             <div className="min-w-0 space-y-5">
                 <WorkspaceAppearanceSettings />
                 <ThemeSettings />
-                <NotificationPreferences />
                 <AtalhoSecao />
                 <IasSecao />
+                <NotificationPreferences />
             </div>
         </div>
     )

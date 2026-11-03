@@ -135,9 +135,9 @@ describe("tokens de captura", () => {
 })
 
 describe("Configurações", () => {
-    it("guarda os aparelhos de captura e as IAs, depois das notificações", () => {
+    it("guarda os aparelhos de captura e as IAs, antes das notificações, que fecham a página", () => {
         const f = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
-        const ordem = ["<NotificationPreferences", "<AtalhoSecao", "<IasSecao"].map((t) => f.indexOf(t))
+        const ordem = ["<AtalhoSecao", "<IasSecao", "<NotificationPreferences"].map((t) => f.indexOf(t))
         expect(ordem.every((n) => n >= 0)).toBe(true)
         expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
     })
