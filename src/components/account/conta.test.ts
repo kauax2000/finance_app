@@ -163,5 +163,6 @@ describe("Lançar sem abrir o app: o vazio", () => {
         expect(s).toMatch(/<EmptyState/)
         expect(s).not.toContain("Nenhum aparelho conectado.")
         expect(s).toMatch(/tokens\.length > 0 \?[\s\S]*Conectar aparelho/)
+        expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?/)
     })
 })

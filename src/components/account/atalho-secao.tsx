@@ -98,7 +98,7 @@ export function AtalhoSecao() {
         <SettingsSection
             titulo="Lançar sem abrir o app"
             actions={
-                tokens.length > 0 ? (
+                lista.isError || tokens.length > 0 ? (
                     <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
                         Conectar aparelho
                     </Button>
