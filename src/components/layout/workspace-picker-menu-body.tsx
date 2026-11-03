@@ -87,7 +87,7 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                         key={workspace.id}
                         value={workspace.id}
                         indicator="media"
-                        className={editar || sair ? "min-w-0 flex-1" : undefined}
+                        className={editar || sair ? "pr-10 pointer-coarse:pr-12" : undefined}
                         // Os tons da barra lateral, de onde o seletor abre: a passagem é o hover
                         // de uma linha dela (`--sidebar-accent` a 50%), e a carteira atual é a
                         // pílula do ativo (`--sidebar-accent` cheio) — mais forte que a passagem,
@@ -102,14 +102,16 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                     </DropdownMenuRadioItem>
                 )
                 if (!editar && !sair) return item
-                // A ação da carteira atual é uma linha irmã, só de ícone; o menu fecha
-                // antes, para o diálogo não abrir com o menu por cima.
+                // A ação da carteira atual mora dentro da linha, à direita, mas é um item
+                // irmão (um botão dentro do `menuitemradio` seria interativo aninhado). O
+                // `data-menu-row` devolve o respiro entre as linhas (`MENU_ROW_GAP`). O menu
+                // fecha antes, para o diálogo não abrir com o menu por cima.
                 return (
-                    <div key={workspace.id} className="flex items-center gap-1">
+                    <div key={workspace.id} data-menu-row className="relative">
                         {item}
                         {editar ? (
                             <DropdownMenuItem
-                                className="shrink-0"
+                                className="absolute top-1/2 right-1 -translate-y-1/2 pointer-coarse:min-h-9"
                                 aria-label={`Editar carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()
@@ -120,7 +122,7 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                             </DropdownMenuItem>
                         ) : sair ? (
                             <DropdownMenuItem
-                                className="shrink-0"
+                                className="absolute top-1/2 right-1 -translate-y-1/2 pointer-coarse:min-h-9"
                                 aria-label={`Sair da carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()
