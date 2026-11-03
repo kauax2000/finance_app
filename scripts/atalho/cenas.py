@@ -68,7 +68,7 @@ def borda_da_siri(w: int, h: int) -> Image.Image:
             px.append(tuple(round(c0[k] + (c1[k] - c0[k]) * f) for k in range(3)))
     campo.putdata(px)
     campo = campo.resize((w, h), Image.BILINEAR).convert("RGBA")
-    campo.putalpha(anel.point(lambda a: min(255, int(a * 1.9))))
+    campo.putalpha(anel.point(lambda a: int(a * 0.95)))
     return campo
 
 
