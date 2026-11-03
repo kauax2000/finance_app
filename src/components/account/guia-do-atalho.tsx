@@ -140,12 +140,14 @@ export function GuiaDoAtalho({
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
+    const [copiado, setCopiado] = useState(false)
     const [criando, setCriando] = useState(false)
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
         setAbertoAntes(open)
         setCodigo(null)
+        setCopiado(false)
         if (open) {
             setPasso(0)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
@@ -188,14 +190,16 @@ export function GuiaDoAtalho({
         setPasso(1)
         aoCriar()
         // Sem permissão ou sem área de transferência, o código segue à vista para copiar.
-        if ("clipboard" in navigator) navigator.clipboard.writeText(data).catch(() => {})
+        // No Safari a cópia depois da espera costuma ser recusada: o texto só promete o que houve.
+        if ("clipboard" in navigator)
+            navigator.clipboard.writeText(data).then(() => setCopiado(true)).catch(() => {})
     }
 
     const textos: ReactNode[] = [
         "O nome ajuda a reconhecer o aparelho na lista.",
         <>
-            Toque no botão, depois em <strong>Adicionar atalho</strong>. Quando ele pedir o código, cole: já está
-            copiado.
+            Toque no botão, depois em <strong>Adicionar atalho</strong>. Quando ele pedir o código,{" "}
+            {copiado ? "cole: já está copiado." : "copie o código abaixo e cole."}
         </>,
         <>
             Diga <strong>E aí Siri, lançar gasto</strong> e depois o gasto: <strong>42 mercado nubank</strong>. Ele

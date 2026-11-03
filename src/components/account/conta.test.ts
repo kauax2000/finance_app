@@ -67,14 +67,22 @@ describe("tokens de captura", () => {
         expect(g).toContain("O atalho pronto ainda não está disponível.")
         expect(g).toContain("Montar à mão")
     })
-    it("a cópia automática não quebra sem permissão", () => {
-        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toMatch(/clipboard\.writeText\([^)]*\)\.catch\(/)
+    it("a cópia automática não quebra sem permissão, e o texto só promete a cópia que houve", () => {
+        const g = lerFonte("src/components/account/guia-do-atalho.tsx")
+        expect(g).toMatch(/clipboard\.writeText\([^)]*\)\.then\(\(\) => setCopiado\(true\)\)\.catch\(/)
+        expect(g).toMatch(/copiado \? "cole: já está copiado\." : "copie o código abaixo e cole\."/)
+    })
+    it("a seção não fala em token na tela", () => {
+        const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
+        expect(s).toContain("Desconectar este aparelho?")
+        // Revogar saiu do texto; nenhuma frase (entre aspas, numa linha só) fala em token.
+        expect(s).not.toMatch(/>\s*Revogar|"[^"\n]*(\btokens?\b|Revog)[^"\n]*"/)
     })
     it("os erros do banco em português", async () => {
         const { mensagemDoErroDeToken } = await import("./atalho-secao")
         expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_membro" })).toBe("Você não é membro dessa carteira.")
         expect(mensagemDoErroDeToken({ code: "P0001", message: "limite_tokens" })).toBe(
-            "Limite de 10 tokens ativos. Revogue um para criar outro.",
+            "Limite de 10 aparelhos conectados. Desconecte um para conectar outro.",
         )
         expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
         expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")

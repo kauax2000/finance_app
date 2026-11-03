@@ -35,7 +35,7 @@ export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 export function mensagemDoErroDeToken(erro: { code?: string; message?: string }): string {
     if (erro.code === "23514" || erro.code === "23502") return NOME_INVALIDO
     if (erro.message?.includes("nao_membro")) return "Você não é membro dessa carteira."
-    if (erro.message?.includes("limite_tokens")) return "Limite de 10 tokens ativos. Revogue um para criar outro."
+    if (erro.message?.includes("limite_tokens")) return "Limite de 10 aparelhos conectados. Desconecte um para conectar outro."
     return "Não foi possível concluir. Tente de novo."
 }
 
@@ -123,7 +123,7 @@ export function AtalhoSecao() {
                                     </ItemContent>
                                     <ItemActions>
                                         <Button type="button" variant="tertiary" onClick={() => setAlvo(t)}>
-                                            Revogar
+                                            Desconectar
                                         </Button>
                                     </ItemActions>
                                 </Item>
@@ -138,22 +138,22 @@ export function AtalhoSecao() {
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Revogar o token?</AlertDialogTitle>
+                        <AlertDialogTitle>Desconectar este aparelho?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {alvo ? `Revogar o token "${alvo.name}"? O aparelho para de lançar.` : null}
+                            {alvo ? `"${alvo.name}" para de lançar gastos. Para usar de novo, conecte outra vez.` : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     {erro ? <AlertDialogError>{erro}</AlertDialogError> : null}
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                            pendingLabel="Revogando…"
+                            pendingLabel="Desconectando…"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void revogar()
                             }}
                         >
-                            Revogar
+                            Desconectar
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
