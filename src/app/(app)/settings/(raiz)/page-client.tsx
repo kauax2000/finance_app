@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { AtalhoSecao } from "@/components/account/atalho-secao"
+import { IasSecao } from "@/components/account/ias-secao"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-appearance-settings"
@@ -31,6 +33,8 @@ export default function SettingsPage() {
                 <WorkspaceAppearanceSettings />
                 <ThemeSettings />
                 <NotificationPreferences />
+                <AtalhoSecao />
+                <IasSecao />
             </div>
         </div>
     )

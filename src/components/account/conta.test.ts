@@ -134,12 +134,22 @@ describe("tokens de captura", () => {
     })
 })
 
+describe("Configurações", () => {
+    it("guarda os aparelhos de captura e as IAs, depois das notificações", () => {
+        const f = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
+        const ordem = ["<NotificationPreferences", "<AtalhoSecao", "<IasSecao"].map((t) => f.indexOf(t))
+        expect(ordem.every((n) => n >= 0)).toBe(true)
+        expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
+    })
+})
+
 describe("a página Minha conta", () => {
     const p = () => lerFonte("src/app/(app)/account/page-client.tsx")
     it("compõe as seções, nesta ordem, sem wireframe nem menu ⋯", () => {
         const f = p()
-        const ordem = ["Acesso e plano", "<AtalhoSecao", "<IasSecao", "Privacidade", "Sair", "Excluir conta"].map((t) => f.indexOf(t))
+        const ordem = ["Acesso e plano", "Privacidade", "Sair", "Excluir conta"].map((t) => f.indexOf(t))
         expect(ordem.every((n) => n >= 0)).toBe(true)
+        expect(f).not.toMatch(/AtalhoSecao|IasSecao/)
         expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
         expect(f).not.toMatch(/Wireframe|DropdownMenu|md:hidden/)
     })
