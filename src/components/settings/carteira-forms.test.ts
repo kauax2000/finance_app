@@ -63,7 +63,7 @@ describe("Formulários da Carteira", () => {
         expect(dialogo.indexOf("divisao?.validar()")).toBeLessThan(dialogo.indexOf("await updateWorkspace("))
         expect(dialogo.indexOf("await updateWorkspace(")).toBeLessThan(dialogo.indexOf("await divisao.salvar()"))
         expect(dialogo).toContain("<CamposDaDivisao divisao={divisao} />")
-        expect(dialogo).toContain("<DialogFooter start={rodapeInicio}>")
+        expect(dialogo).not.toContain("rodapeInicio")
     })
 
     it("Datas: o mesmo formulário nas Configurações e na criação", () => {
@@ -137,7 +137,7 @@ describe("Carteira em linhas", () => {
 
     it("Excluir mora no acoes do Editar; Sair fica no cartão, só para quem não é dono", () => {
         const f = carteira()
-        expect(f).toMatch(/rodapeInicio=\{\s*canDeleteProject \?[\s\S]*Excluir carteira/)
+        expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
         expect(f.replace(acoesDe(f), "")).toMatch(/!owner \?[\s\S]*Sair da carteira/)
         expect(acoesDe(f)).not.toContain("Sair da carteira")
     })

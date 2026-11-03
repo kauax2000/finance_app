@@ -72,7 +72,7 @@ describe("Configurações: página única", () => {
         expect(fonte.match(/openEdit/g)).toHaveLength(2) // a definição e o único uso
         const ini = fonte.indexOf("acoes={")
         const acoes = fonte.slice(ini, fonte.indexOf("\n            />", ini))
-        expect(fonte).toMatch(/rodapeInicio=\{\s*canDeleteProject \?[\s\S]*Excluir carteira/)
+        expect(acoes).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
         expect(fonte.replace(acoes, "")).toMatch(/!owner\s*\?[\s\S]*Sair da carteira/)
         for (const texto of ["Divisão", "Datas e orçamento", "{podeDatas ? ("]) expect(acoes).toContain(texto)
         const dialogo = lerFonte("src/components/settings/workspace-appearance-edit-dialog.tsx")

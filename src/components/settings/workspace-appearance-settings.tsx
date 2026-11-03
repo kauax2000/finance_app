@@ -116,33 +116,35 @@ export function WorkspaceAppearanceSettings() {
                 workspace={dialogOpen ? currentWorkspace : null}
                 divisao={podeDivisao && splitMode !== undefined ? divisao : undefined}
                 acoes={
-                    (podeDivisao && splitMode === undefined) || podeDatas ? (
-                        <ItemGroup variant="divided">
-                            {podeDivisao && splitMode === undefined ? (
-                                <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
+                    (podeDivisao && splitMode === undefined) || podeDatas || canDeleteProject ? (
+                        <>
+                            {(podeDivisao && splitMode === undefined) || podeDatas ? (
+                                <ItemGroup variant="divided">
+                                    {podeDivisao && splitMode === undefined ? (
+                                        <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
+                                    ) : null}
+                                    {podeDatas ? (
+                                        <SettingsLink
+                                            titulo="Datas e orçamento"
+                                            valor={currentWorkspace ? resumoDoCalendario(currentWorkspace) : ""}
+                                            aria-label="Alterar datas e orçamento"
+                                            onClick={() => setDatasOpen(true)}
+                                        />
+                                    ) : null}
+                                </ItemGroup>
                             ) : null}
-                            {podeDatas ? (
-                                <SettingsLink
-                                    titulo="Datas e orçamento"
-                                    valor={currentWorkspace ? resumoDoCalendario(currentWorkspace) : ""}
-                                    aria-label="Alterar datas e orçamento"
-                                    onClick={() => setDatasOpen(true)}
-                                />
+                            {canDeleteProject ? (
+                                <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    className="w-full text-destructive hover:text-destructive active:text-destructive"
+                                    onClick={() => setDeleteOpen(true)}
+                                >
+                                    <TrashIcon data-icon="inline-start" aria-hidden />
+                                    Excluir carteira
+                                </Button>
                             ) : null}
-                        </ItemGroup>
-                    ) : null
-                }
-                rodapeInicio={
-                    canDeleteProject ? (
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            className="text-destructive hover:text-destructive active:text-destructive"
-                            onClick={() => setDeleteOpen(true)}
-                        >
-                            <TrashIcon data-icon="inline-start" aria-hidden />
-                            Excluir carteira
-                        </Button>
+                        </>
                     ) : null
                 }
             />

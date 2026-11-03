@@ -29,8 +29,6 @@ type WorkspaceAppearanceEditDialogProps = {
     acoes?: React.ReactNode
     /** A divisão editável: vai logo abaixo da aparência e grava no mesmo Salvar. */
     divisao?: DivisaoEditavel
-    /** A ação à esquerda do rodapé (Excluir carteira). */
-    rodapeInicio?: React.ReactNode
 }
 
 export function WorkspaceAppearanceEditDialog({
@@ -39,7 +37,6 @@ export function WorkspaceAppearanceEditDialog({
     workspace,
     acoes,
     divisao,
-    rodapeInicio,
 }: WorkspaceAppearanceEditDialogProps) {
     const { updateWorkspace, error: contextError } = useWorkspace()
 
@@ -150,7 +147,7 @@ export function WorkspaceAppearanceEditDialog({
                         {divisao ? <CamposDaDivisao divisao={divisao} /> : null}
                         {acoes}
                     </DialogBody>
-                    <DialogFooter start={rodapeInicio}>
+                    <DialogFooter>
                         <DialogClose asChild>
                             <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
