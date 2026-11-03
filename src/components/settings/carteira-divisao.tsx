@@ -5,7 +5,13 @@ import { useState } from "react"
 
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
 import { ChartSplit, type ChartConfig } from "@/components/ui/chart"
 import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field"
 import { FormInput } from "@/components/ui/form"
@@ -146,31 +152,38 @@ function ExemploDaDivisao({ divisao }: { divisao: DivisaoEditavel }) {
     const total = currencyBRL(TOTAL_DO_EXEMPLO)
     const config: ChartConfig = Object.fromEntries(ex.partes.map((p) => [p.user_id, { label: p.nome }]))
     return (
-        <Card variant="muted" padding="sm" className="gap-3">
-            <Muted>
-                Exemplo: {ex.pagador.nome} paga o mercado de {total}.
-            </Muted>
-            {divisao.modo === "pooled" ? (
-                <P>Os {total} saem do pote de todos. Ninguém fica devendo.</P>
-            ) : ex.devem.length === 0 ? (
-                <P>Quando outro adulto entrar na carteira, cada gasto vira partes entre vocês.</P>
-            ) : (
-                <>
-                    <ChartSplit
-                        labels="legend"
-                        config={config}
-                        data={ex.partes.map((p) => ({ pessoa: p.user_id, valor: p.valor }))}
-                        nameKey="pessoa"
-                        dataKey="valor"
-                        label={`Como o mercado de ${total} se divide`}
-                    />
-                    {ex.devem.map((p) => (
-                        <P key={p.user_id}>
-                            {p.nome} fica devendo {currencyBRL(p.valor)} a {ex.pagador.nome}.
-                        </P>
-                    ))}
-                </>
-            )}
+        <Card variant="muted" padding="sm">
+            <CardContent className="flex flex-col gap-3">
+                <P className="font-medium">
+                    Se {ex.pagador.nome} pagar o mercado de {total}
+                </P>
+                {divisao.modo === "pooled" ? (
+                    <Muted>O valor sai do pote de todos, e ninguém fica devendo nada.</Muted>
+                ) : ex.devem.length === 0 ? (
+                    <Muted>Quando outro adulto entrar na carteira, cada gasto vira partes entre vocês.</Muted>
+                ) : (
+                    <>
+                        <ChartSplit
+                            labels="legend"
+                            config={config}
+                            data={ex.partes.map((p) => ({ pessoa: p.user_id, valor: p.valor }))}
+                            nameKey="pessoa"
+                            dataKey="valor"
+                            label={`Como o mercado de ${total} se divide`}
+                        />
+                        <DescriptionList divided>
+                            {ex.devem.map((p) => (
+                                <DescriptionListItem key={p.user_id}>
+                                    <DescriptionTerm>
+                                        {p.nome} fica devendo a {ex.pagador.nome}
+                                    </DescriptionTerm>
+                                    <DescriptionDetails>{currencyBRL(p.valor)}</DescriptionDetails>
+                                </DescriptionListItem>
+                            ))}
+                        </DescriptionList>
+                    </>
+                )}
+            </CardContent>
         </Card>
     )
 }

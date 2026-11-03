@@ -140,6 +140,8 @@ describe("Carteira em linhas", () => {
         expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
         expect(f.replace(acoesDe(f), "")).toMatch(/!owner \?[\s\S]*Sair da carteira/)
         expect(acoesDe(f)).not.toContain("Sair da carteira")
+        // A pessoal não se apaga: no lugar do botão, o aviso.
+        expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*: owner && isPrimeira \?[\s\S]*não pode ser excluída/)
     })
 })
 
