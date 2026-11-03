@@ -9,6 +9,7 @@ com o ícone do Finance recortado da própria captura. Nenhum logo da Apple: a
 Siri aparece pela borda, não pelo símbolo (marca registrada).
 
     python3 scripts/atalho/cenas.py <inicio.png> <saida-siri.png> <saida-notificacao.png> <mask-screen.png>
+    python3 scripts/atalho/cenas.py --pagamento <inicio.png> <saida-pagamento.png>
 
 As saídas são telas cruas (1320×2868); `moldura.py` as põe no iPhone 17 Pro prata.
 Precisa do Pillow.
@@ -115,6 +116,8 @@ def notificacao(inicio: Image.Image) -> Image.Image:
 
 
 def main() -> None:
+    if sys.argv[1:2] == ["--pagamento"]:
+        return
     global MASCARA_DA_TELA
     MASCARA_DA_TELA = sys.argv[4]
     inicio = Image.open(sys.argv[1])
@@ -125,3 +128,44 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+
+
+def pagamento(inicio: Image.Image) -> Image.Image:
+    """A tela de pagar com o iPhone: um cartão genérico (sem banco nem logo da Apple), o valor e a dica do botão lateral."""
+    w, h = inicio.size
+    tela = inicio.convert("RGBA").filter(ImageFilter.GaussianBlur(28))
+    tela = Image.alpha_composite(tela, Image.new("RGBA", tela.size, (0, 0, 0, 150)))
+    # O cartão: grafite com um brilho na diagonal, o chip e o final do número.
+    cx0, cy0, cx1, cy1 = 150, 330, w - 150, 330 + round((w - 300) * 0.63)
+    cartao = Image.new("RGBA", (cx1 - cx0, cy1 - cy0))
+    dc = ImageDraw.Draw(cartao)
+    for y in range(cartao.height):
+        t = y / cartao.height
+        dc.line([(0, y), (cartao.width, y)], fill=(round(58 - 22 * t), round(60 - 22 * t), round(70 - 24 * t), 255))
+    brilho = Image.new("RGBA", cartao.size, (0, 0, 0, 0))
+    ImageDraw.Draw(brilho).polygon([(0, 0), (cartao.width * 0.55, 0), (cartao.width * 0.2, cartao.height), (0, cartao.height)], fill=(255, 255, 255, 22))
+    cartao = Image.alpha_composite(cartao, brilho)
+    dc = ImageDraw.Draw(cartao)
+    dc.rounded_rectangle((70, 150, 70 + 130, 150 + 100), radius=18, fill=(214, 186, 120, 255))
+    dc.text((70, cartao.height - 130), "•••• 4242", font=fonte(64, 500), fill=(255, 255, 255, 230))
+    mascara = Image.new("L", cartao.size, 0)
+    ImageDraw.Draw(mascara).rounded_rectangle((0, 0, cartao.width - 1, cartao.height - 1), radius=56, fill=255)
+    sombra = Image.new("RGBA", tela.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sombra).rounded_rectangle((cx0, cy0 + 30, cx1, cy1 + 30), radius=56, fill=(0, 0, 0, 160))
+    tela = Image.alpha_composite(tela, sombra.filter(ImageFilter.GaussianBlur(40)))
+    tela.paste(cartao, (cx0, cy0), mascara)
+    d = ImageDraw.Draw(tela)
+    # A dica do botão lateral, no alto à direita, como o iOS mostra.
+    dica = "Confirme com o botão lateral"
+    f = fonte(48, 600)
+    d.text((w - 140 - d.textlength(dica, font=f), 190), dica, font=f, fill=(255, 255, 255, 235))
+    d.rounded_rectangle((w - 34, 150, w - 8, 330), radius=13, fill=(255, 255, 255, 200))
+    # O que se paga, embaixo do cartão.
+    for texto, y, tam, peso, cor in [("Mercado", cy1 + 110, 56, 500, (235, 235, 245, 200)), ("R$ 42,90", cy1 + 190, 110, 600, (255, 255, 255, 255))]:
+        fo = fonte(tam, peso)
+        d.text(((w - d.textlength(texto, font=fo)) / 2, y), texto, font=fo, fill=cor)
+    return tela.convert("RGB")
+
+
+if __name__ == "__main__" and len(sys.argv) == 4 and sys.argv[1] == "--pagamento":
+    pagamento(Image.open(sys.argv[2])).save(sys.argv[3])

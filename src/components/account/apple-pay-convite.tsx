@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 import { GuiaDoApplePay } from "@/components/account/guia-do-apple-pay"
-import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
+import { JanelaDoAparelho, TELA_DO_PAGAMENTO } from "@/components/account/passo-a-passo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Muted, P } from "@/components/ui/typography"
@@ -19,7 +19,7 @@ export function ApplePayConvite() {
         <>
             <Card padding="none">
                 <div className="flex items-center gap-4 p-4">
-                    <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="mini" />
+                    <JanelaDoAparelho tela={TELA_DO_PAGAMENTO} tamanho="mini" />
                     <div className="flex min-w-0 flex-col items-start gap-3">
                         <div>
                             <P className="font-semibold">Lance ao pagar com Apple Pay</P>
