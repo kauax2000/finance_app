@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useDivisaoEditavel } from "@/components/settings/carteira-divisao"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
 import { SettingsLink, SettingsRow } from "@/components/settings/settings-section"
@@ -17,17 +17,22 @@ import { ItemGroup } from "@/components/ui/item"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
 /**
- * Editar e sair da carteira atual, com os diálogos deles. Mora no seletor de
+ * Editar e sair de uma carteira, com os diálogos deles. Mora no seletor de
  * carteira, que é montado duas vezes (barra lateral e cabeçalho do telefone):
- * cada um chama o hook e tem o seu estado.
+ * cada um chama o hook e tem o seu estado. Editar vale para qualquer carteira de
+ * que a pessoa é dona (o lápis aparece na passagem, sem precisar entrar nela);
+ * sair, para a atual de quem não é dono.
  */
 export function useAcoesDaCarteira(): {
-    editar: (() => void) | null
+    podeEditar: (id: string) => boolean
+    editar: (id: string) => void
     sair: (() => void) | null
-    dialogos: React.ReactNode
+    dialogos: ReactNode
 } {
     const { user } = useAuth()
-    const { currentWorkspace, isWorkspaceOwner } = useWorkspace()
+    const { currentWorkspace: atual, workspaces, isWorkspaceOwner } = useWorkspace()
+    const eDono = (w: { id: string; created_by?: string | null } | null | undefined) =>
+        Boolean(w && (isWorkspaceOwner(w.id) || w.created_by === user?.id))
 
     const [editOpen, setEditOpen] = useState(false)
     const [editTargetId, setEditTargetId] = useState<string | null>(null)
@@ -36,14 +41,12 @@ export function useAcoesDaCarteira(): {
     const [datasOpen, setDatasOpen] = useState(false)
     const [salvandoDatas, setSalvandoDatas] = useState(false)
 
-    const dialogOpen =
-        editOpen &&
-        editTargetId !== null &&
-        editTargetId === currentWorkspace?.id
+    // A carteira dos diálogos: a escolhida no lápis, senão a atual.
+    const currentWorkspace = (editTargetId ? workspaces.find((w) => w.id === editTargetId) : null) ?? atual
+    const dialogOpen = editOpen && editTargetId !== null && currentWorkspace?.id === editTargetId
 
-    const openEdit = () => {
-        if (!currentWorkspace) return
-        setEditTargetId(currentWorkspace.id)
+    const openEdit = (id: string) => {
+        setEditTargetId(id)
         setEditOpen(true)
     }
 
@@ -54,30 +57,29 @@ export function useAcoesDaCarteira(): {
         }
     }
 
+    // A carteira editada que sumiu (excluída, ou a pessoa saiu dela) fecha tudo.
     useEffect(() => {
         if (editTargetId == null) return
-        if (currentWorkspace?.id !== editTargetId) {
-            /* eslint-disable react-hooks/set-state-in-effect -- reset edit scope when sidebar project changes */
+        if (!workspaces.some((w) => w.id === editTargetId)) {
+            /* eslint-disable react-hooks/set-state-in-effect -- reset edit scope when the edited wallet is gone */
             setEditOpen(false)
             setEditTargetId(null)
             /* eslint-enable react-hooks/set-state-in-effect */
         }
-    }, [currentWorkspace?.id, editTargetId])
+    }, [workspaces, editTargetId])
 
     useEffect(() => {
-        if (!currentWorkspace?.id) return
+        if (!atual?.id) return
         /* eslint-disable react-hooks/set-state-in-effect -- close destructive flows when switching workspace */
         setDeleteOpen(false)
         setLeaveOpen(false)
         setDatasOpen(false)
+        setEditOpen(false)
+        setEditTargetId(null)
         /* eslint-enable react-hooks/set-state-in-effect */
-    }, [currentWorkspace?.id])
+    }, [atual?.id])
 
-    const owner = Boolean(
-        currentWorkspace &&
-            (isWorkspaceOwner(currentWorkspace.id) ||
-                currentWorkspace.created_by === user?.id),
-    )
+    const owner = eDono(currentWorkspace)
 
     // Toda carteira se comporta igual; a primeira só não se apaga, porque a conta
     // precisa ter ao menos uma (o banco também recusa).
@@ -173,9 +175,10 @@ export function useAcoesDaCarteira(): {
     )
 
     return {
-        editar: owner ? openEdit : null,
+        podeEditar: (id) => eDono(workspaces.find((w) => w.id === id)),
+        editar: openEdit,
         // Sem carteira atual não há linha no seletor onde o botão apareça.
-        sair: !owner ? () => setLeaveOpen(true) : null,
+        sair: atual && !eDono(atual) ? () => setLeaveOpen(true) : null,
         dialogos,
     }
 }

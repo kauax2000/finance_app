@@ -111,13 +111,13 @@ describe("Carteira em linhas", () => {
 
     it("trocar de carteira fecha todos os diálogos", () => {
         expect(carteira()).toMatch(
-            /setDeleteOpen\(false\)[\s\S]*setLeaveOpen\(false\)[\s\S]*setDatasOpen\(false\)[\s\S]*?\[currentWorkspace\?\.id\]\)/,
+            /setDeleteOpen\(false\)[\s\S]*setLeaveOpen\(false\)[\s\S]*setDatasOpen\(false\)[\s\S]*?\[atual\?\.id\]\)/,
         )
     })
 
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
-        expect(f).toContain("editar: owner ? openEdit : null")
+        expect(f).toContain("editar: openEdit,")
         expect(f).not.toContain("DropdownMenu")
         expect(f).not.toContain("EllipsisVerticalIcon")
         // Toda carteira divide e convida; a primeira só não se apaga.
@@ -139,7 +139,7 @@ describe("Carteira em linhas", () => {
     it("Excluir mora no acoes do Editar; Sair é do seletor, só para quem não é dono", () => {
         const f = carteira()
         expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
-        expect(f.replace(acoesDe(f), "")).toMatch(/sair: !owner \? \(\) => setLeaveOpen\(true\)/)
+        expect(f.replace(acoesDe(f), "")).toMatch(/sair: atual && !eDono\(atual\) \? \(\) => setLeaveOpen\(true\)/)
         expect(acoesDe(f)).not.toContain("setLeaveOpen")
         // A pessoal não se apaga: no lugar do botão, o aviso.
         expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*: owner && isPrimeira \?[\s\S]*não pode ser excluída/)

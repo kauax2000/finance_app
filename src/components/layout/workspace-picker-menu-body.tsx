@@ -23,13 +23,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 
 export type WorkspacePickerMenuBodyCallbacks = {
     closePicker: () => void
     afterWorkspaceChosen?: () => void
     openCreateDialog: () => void
-    /** Na linha da carteira atual: o lápis do dono. */
-    editarCarteira?: () => void
+    /** O lápis do dono: sempre à vista na carteira atual, nas outras na passagem. */
+    editarCarteira?: (id: string) => void
+    /** Se a pessoa é dona da carteira (e a linha dela leva o lápis). */
+    podeEditarCarteira?: (id: string) => boolean
     /** Na linha da carteira atual: sair, para quem não é dono. */
     sairDaCarteira?: () => void
 }
@@ -80,8 +83,9 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
         >
             {lista.map((workspace) => {
                 const atual = workspace.id === currentWorkspaceId
-                const editar = atual ? callbacks.editarCarteira : undefined
-                const sair = atual && !editar ? callbacks.sairDaCarteira : undefined
+                const podeEditar = callbacks.podeEditarCarteira?.(workspace.id) ?? false
+                const editar = podeEditar ? callbacks.editarCarteira : undefined
+                const sair = atual && !podeEditar ? callbacks.sairDaCarteira : undefined
                 const item = (
                     <DropdownMenuRadioItem
                         key={workspace.id}
@@ -107,22 +111,28 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                 // `data-menu-row` devolve o respiro entre as linhas (`MENU_ROW_GAP`). O menu
                 // fecha antes, para o diálogo não abrir com o menu por cima.
                 return (
-                    <div key={workspace.id} data-menu-row className="relative">
+                    <div key={workspace.id} data-menu-row className="group/linha relative">
                         {item}
                         {editar ? (
                             <DropdownMenuItem
-                                className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 pointer-coarse:min-h-9"
+                                className={cn(
+                                    "absolute top-1/2 right-1 mt-0! -translate-y-1/2 rounded-full! pointer-coarse:min-h-9",
+                                    // Fora da atual, o lápis aparece na passagem do cursor e com o
+                                    // foco na linha; no toque fica sempre à vista.
+                                    !atual &&
+                                        "opacity-0 transition-opacity group-hover/linha:opacity-100 group-focus-within/linha:opacity-100 pointer-coarse:opacity-100",
+                                )}
                                 aria-label={`Editar carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()
-                                    editar()
+                                    editar(workspace.id)
                                 }}
                             >
                                 <PencilIcon aria-hidden />
                             </DropdownMenuItem>
                         ) : sair ? (
                             <DropdownMenuItem
-                                className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 pointer-coarse:min-h-9"
+                                className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 rounded-full! pointer-coarse:min-h-9"
                                 aria-label={`Sair da carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()

@@ -123,7 +123,8 @@ export function WorkspaceSwitcher({
                     callbacks={{
                         closePicker: () => setMenuOpen(false),
                         openCreateDialog: () => setCreateOpen(true),
-                        editarCarteira: acoes.editar ?? undefined,
+                        editarCarteira: acoes.editar,
+                        podeEditarCarteira: acoes.podeEditar,
                         sairDaCarteira: acoes.sair ?? undefined,
                     }}
                 />
