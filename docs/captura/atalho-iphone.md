@@ -50,7 +50,7 @@ valor real de nenhum deles.**
 
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
-| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Conectar aparelho › passo 5 › "Montar à mão" › Endereço |
+| `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
 | `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar sem abrir o app" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
