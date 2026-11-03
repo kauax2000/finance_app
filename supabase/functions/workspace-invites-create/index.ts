@@ -109,14 +109,11 @@ Deno.serve(async (req: Request) => {
 
   const { data: workspace, error: workspaceErr } = await supabaseAdmin
     .from('workspaces')
-    .select('id,name,type')
+    .select('id,name')
     .eq('id', workspaceId)
     .maybeSingle()
   if (workspaceErr) return json(500, { error: internalError('workspace-invites-create', workspaceErr) })
   if (!workspace) return json(404, { error: 'Workspace not found' })
-  if (workspace.type === 'personal') {
-    return json(400, { error: 'Personal workspaces cannot be shared' })
-  }
 
   const appBase = resolvePublicAppBase(req)
   if (!appBase) {

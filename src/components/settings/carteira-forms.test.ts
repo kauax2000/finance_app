@@ -106,7 +106,9 @@ describe("Carteira em linhas", () => {
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
         expect(f).toMatch(/owner \? \(\s*<DropdownMenuItem onSelect=\{openEdit\}/)
-        expect(f).toMatch(/podeDivisao = owner && !isPersonal/)
+        // Toda carteira divide e convida; a primeira só não se apaga.
+        expect(f).toMatch(/podeDivisao = owner$/m)
+        expect(f).toContain("owner && currentWorkspace && !isPrimeira")
         expect(f).toMatch(/podeDatas = owner && currentWorkspace\?\.purpose === "project"/)
         expect(f).toMatch(/\{podeDivisao \? \(/)
         expect(f).toMatch(/\{podeDatas \? \(/)

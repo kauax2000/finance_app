@@ -313,9 +313,9 @@ flowchart TD
 
     settings["/settings"] --> owner{"É dona da carteira?"}
     owner -->|"sim"| edit(["Editar: nome, ícone, cor"])
-    owner -->|"sim, e não é pessoal"| divisao(["Alterar Divisão: diálogo com modo e pesos"])
+    owner -->|"sim"| divisao(["Alterar Divisão: diálogo com modo e pesos"])
     owner -->|"sim, carteira de projeto"| datas(["Alterar Datas e orçamento: diálogo"])
-    owner -->|"sim, e não é pessoal"| del(["Excluir carteira: digitar o nome"])
+    owner -->|"sim, e não é a primeira"| del(["Excluir carteira: digitar o nome"])
     del --> impact[("RPC get_workspace_delete_impact")]
     del -->|"Excluir"| delRpc[("RPC delete_workspace")] --> fallback(["Se era a atual, volta para a pessoal"])
     owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
@@ -340,7 +340,6 @@ flowchart TD
     menorQ -->|"não"| create
     menorQ -->|"sim"| consent(["Caixa obrigatória: sou o responsável legal e autorizo o uso do app (LGPD, art. 14)"])
     consent -->|"marcada"| create
-    create -->|"carteira pessoal"| rejected(["Servidor recusa: carteira pessoal não se compartilha"])
     create -->|"convidado no link, menor sem consentimento ou menor que não é convidado"| recusa(["400: convidado_requer_email, consentimento_obrigatorio ou menor_requer_convidado, que o montarConvite já recusa no cliente com a frase da tela"])
     create -->|"sucesso"| mail(["Email com /invites/accept?token=..., o de menor com o parágrafo do responsável legal"])
     actions -->|"gerar link"| link(["Link copiável, sempre de membro, substitui o anterior"])
@@ -2100,7 +2099,6 @@ continuam aqui para registro.
 
 | # | Jornada | Lacuna |
 |---|---|---|
-| 1 | G2 | `/members` mostra o formulário de convite numa carteira pessoal, e o servidor recusa só depois do envio. |
 | 2 | G3 | O provider global expõe abrir convite, mas nada chama essa função. (Nova categoria e novo cartão saem da paleta ⌘K desde 16/out/2026.) |
 | 3 | G10 | `/account/sessions` e `/account/activity` redirecionam para `/login` sem `next`, então a pessoa não volta para a página depois de entrar. |
 | 4 | G1 | A política de senha não vale para a troca de senha de dentro do app (`ChangePasswordDialog`), que ainda confere só o comprimento. |

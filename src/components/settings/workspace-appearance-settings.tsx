@@ -105,11 +105,13 @@ export function WorkspaceAppearanceSettings() {
                 currentWorkspace.created_by === user?.id),
     )
 
-    const isPersonal = currentWorkspace?.type === "personal"
+    // Toda carteira se comporta igual; a primeira só não se apaga, porque a conta
+    // precisa ter ao menos uma (o banco também recusa).
+    const isPrimeira = currentWorkspace?.type === "personal"
     const canDeleteProject = Boolean(
-        owner && currentWorkspace && !isPersonal,
+        owner && currentWorkspace && !isPrimeira,
     )
-    const podeDivisao = owner && !isPersonal
+    const podeDivisao = owner
     const podeDatas = owner && currentWorkspace?.purpose === "project"
     const splitMode = currentWorkspace?.split_mode
 

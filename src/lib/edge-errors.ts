@@ -11,7 +11,6 @@ const EDGE_ERROR_PT: Record<string, string> = {
     "Invite exhausted": "Este convite já atingiu o limite de usos.",
     "Only owner can invite": "Só quem é dono da carteira pode convidar.",
     "Only owner can resend invites": "Só quem é dono da carteira pode reenviar convites.",
-    "Personal workspaces cannot be shared": "A carteira pessoal não pode ser compartilhada.",
     "Link invites cannot be resent by email": "Convite por link não é reenviado por e-mail.",
     "Not a member of this workspace": "Você não faz parte desta carteira.",
     "Invalid or expired token": "Sessão inválida ou expirada; faça login novamente.",
