@@ -20,7 +20,6 @@ import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, F
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { MOLA } from "@/lib/spring"
 import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -125,7 +124,6 @@ export function GuiaDoAtalho({
     const { workspaces, currentWorkspaceId } = useWorkspace()
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState(0)
-    const [direcao, setDirecao] = useState<1 | -1>(1)
     // O primeiro passo ao abrir não entra pelo lado: só a troca de passo anda.
     const [mudou, setMudou] = useState(false)
     const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
@@ -156,7 +154,6 @@ export function GuiaDoAtalho({
     const ultimo = passo === PASSOS.length - 1
 
     function irPara(n: number) {
-        setDirecao(n > passo ? 1 : -1)
         setMudou(true)
         setPasso(n)
     }
@@ -252,9 +249,10 @@ export function GuiaDoAtalho({
                                 return (
                                     <motion.div
                                         key={p.titulo}
-                                        initial={reduzido || !mudou ? false : { opacity: 0, x: direcao * 16 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={reduzido ? { duration: 0 } : MOLA}
+                                        // Só a opacidade: um deslize de lado somado à altura que anda lia como diagonal.
+                                        initial={reduzido || !mudou ? false : { opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={reduzido ? { duration: 0 } : { duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
                                         className="flex flex-col gap-4"
                                     >
                                         <div>
