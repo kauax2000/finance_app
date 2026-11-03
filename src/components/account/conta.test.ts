@@ -78,6 +78,28 @@ describe("tokens de captura", () => {
         )
         expect(g).not.toMatch(/Toque no botão/)
     })
+    it("os passos dividem uma célula só, e o inativo fica inerte", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toContain('className="grid"')
+        expect(g).toContain("col-start-1 row-start-1")
+        expect(g).toMatch(/inert=\{!ativo\}/)
+        expect(g).toMatch(/!ativo && "invisible"/)
+        expect(g).not.toContain("AnimatePresence")
+    })
+    it("os pontos ficam depois dos passos e antes do rodapé", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        const passos = g.indexOf("col-start-1 row-start-1")
+        const pontos = g.indexOf('<div aria-hidden className="flex shrink-0 justify-center gap-1.5')
+        const rodape = g.indexOf("<DialogFooter")
+        expect(passos).toBeGreaterThan(0)
+        expect(pontos).toBeGreaterThan(passos)
+        expect(rodape).toBeGreaterThan(pontos)
+    })
+    it("o passo da Siri ensina a digitar, sem ditado", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toContain("<strong>digite</strong>")
+        expect(g).not.toContain("Ditar")
+    })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
         expect(s).toContain("Desconectar este aparelho?")

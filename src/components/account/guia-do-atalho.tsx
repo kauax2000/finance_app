@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import Image, { type StaticImageData } from "next/image"
-import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { motion, useReducedMotion } from "motion/react"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { useAuth } from "@/components/providers"
@@ -37,9 +37,6 @@ export function enderecoDeCaptura(): string {
     return `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "")}/functions/v1/capture`
 }
 
-/** A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */
-const SUBIDA_DO_APARELHO = -208
-
 type Tela = {
     imagem: StaticImageData
     /** Onde tocar, em % da imagem inteira. */
@@ -50,7 +47,8 @@ type Tela = {
 
 /*
  * Capturas do iOS 27 na moldura do PSD de `docs/design/mockups/` (`scripts/atalho/moldura.py`).
- * shortcut: sem captura real da Siri; o simulador não tem Siri, entra com o print do iPhone do dono.
+ * shortcut: sem captura real da Siri nem da caixa de digitar do Pedir Entrada; o simulador não tem Siri
+ * e a caixa não pôde ser capturada nele. Entra com o print do iPhone do dono.
  * shortcut: sem captura real da automação da Carteira; entra com o print do iPhone do dono.
  */
 const PASSOS: { titulo: string; tela?: Tela }[] = [
@@ -66,7 +64,44 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Lance ao pagar (opcional)" },
 ]
 
-const TELAS = PASSOS.flatMap((p) => (p.tela ? [p.tela] : []))
+/** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
+function JanelaDoAparelho({ tela }: { tela: Tela }) {
+    return (
+        <div
+            aria-hidden
+            className={cn(
+                "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
+                // O aparelho dissolve no lado em que a janela o corta.
+                tela.ancora === "topo"
+                    ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
+                    : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
+            )}
+        >
+            {/* A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */}
+            <div
+                className={cn(
+                    "absolute inset-x-0 aspect-[720/1488]",
+                    tela.ancora === "topo" ? "top-0" : "-top-52"
+                )}
+            >
+                <Image
+                    src={tela.imagem}
+                    alt=""
+                    sizes="240px"
+                    placeholder="blur"
+                    className="absolute inset-0 h-auto w-60 max-w-none"
+                />
+                <span
+                    style={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
+                    className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
+                >
+                    <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
+                    <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
+                </span>
+            </div>
+        </div>
+    )
+}
 
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
@@ -87,6 +122,7 @@ export function GuiaDoAtalho({
     const { workspaces, currentWorkspaceId } = useWorkspace()
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState(0)
+    const [direcao, setDirecao] = useState<1 | -1>(1)
     const [nome, setNome] = useState("")
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
@@ -111,8 +147,11 @@ export function GuiaDoAtalho({
     const carteiraEscolhida = carteira || currentWorkspaceId || workspaces[0]?.id || ""
     const nomeDaCarteira = workspaces.find((w) => w.id === carteiraEscolhida)?.name ?? "sua carteira"
     const ultimo = passo === PASSOS.length - 1
-    const tela = PASSOS[passo].tela
-    const movimento = reduzido ? { duration: 0 } : MOLA
+
+    function irPara(n: number) {
+        setDirecao(n > passo ? 1 : -1)
+        setPasso(n)
+    }
 
     function fechar() {
         setCodigo(null)
@@ -126,7 +165,7 @@ export function GuiaDoAtalho({
 
     async function criar() {
         // Voltar ao passo 1 com o código criado só segue: criar de novo faria outro aparelho.
-        if (codigo) return setPasso(1)
+        if (codigo) return irPara(1)
         const n = nome.trim()
         if (n.length < 1 || n.length > 60) return setErro(NOME_INVALIDO)
         if (!carteiraEscolhida) return setErro("Escolha a carteira dos gastos.")
@@ -142,7 +181,7 @@ export function GuiaDoAtalho({
         const { data, error } = resposta
         if (error) return setErro(mensagemDoErroDeToken(error))
         setCodigo(data)
-        setPasso(1)
+        irPara(1)
         aoCriar()
         // Sem permissão ou sem área de transferência, o código segue à vista para copiar.
         // No Safari a cópia depois da espera costuma ser recusada: o texto só promete o que houve.
@@ -167,8 +206,9 @@ export function GuiaDoAtalho({
             Depois, <strong>Adicionar Atalho</strong>.
         </>,
         <>
-            Diga <strong>E aí Siri, lançar gasto</strong> e depois o gasto: <strong>42 mercado nubank</strong>. Ele
-            cai em {nomeDaCarteira}; o que ficar em dúvida vai para A conferir.
+            Diga <strong>E aí Siri, lançar gasto</strong> e responda o gasto, ou toque no atalho (ou no Botão de
+            Ação) e <strong>digite</strong> na caixa que abre no topo: <strong>42 mercado nubank</strong>. Ele cai em{" "}
+            {nomeDaCarteira}; o que ficar em dúvida vai para A conferir.
         </>,
         <>
             No app Atalhos, abra o <strong>Lançar gasto</strong>, toque em <strong>Adicionar automação</strong>,
@@ -191,145 +231,128 @@ export function GuiaDoAtalho({
                     }}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogBody className="flex flex-col gap-4">
-                        <div aria-hidden className="flex shrink-0 justify-center gap-1.5">
-                            {PASSOS.map((p, i) => (
-                                <span
-                                    key={p.titulo}
-                                    className={cn(
-                                        "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-spring) ease-(--ease-spring)",
-                                        i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"
-                                    )}
-                                />
-                            ))}
-                        </div>
-                        <div aria-live="polite" className="shrink-0">
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.div
-                                    key={passo}
-                                    initial={reduzido ? false : { opacity: 0, y: 6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={
-                                        reduzido
-                                            ? { opacity: 0, transition: { duration: 0 } }
-                                            : { opacity: 0, y: -6, transition: SAIDA }
-                                    }
-                                    transition={MOLA}
-                                >
-                                    <P className="font-semibold">
-                                        {passo + 1} · {PASSOS[passo].titulo}
-                                        <span className="sr-only"> de {PASSOS.length}</span>
-                                    </P>
-                                    <Muted>{textos[passo]}</Muted>
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-
-                        {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
-                        {passo === 1 ? (
-                            <Button asChild variant="primary">
-                                <a href={ARQUIVO_DO_ATALHO} download>
-                                    Baixar o atalho
-                                </a>
-                            </Button>
-                        ) : null}
-                        {passo === 4 ? <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} /> : null}
-
-                        {tela ? (
-                            <div
-                                aria-hidden
-                                className={cn(
-                                    "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
-                                    // O aparelho dissolve no lado em que a janela o corta.
-                                    tela.ancora === "topo"
-                                        ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
-                                        : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
-                                )}
-                            >
-                                {/* Um aparelho só: as telas trocam no fade, ele anda quando o corte muda
-                                    de lado e o alvo desliza até o próximo toque. */}
-                                <motion.div
-                                    initial={false}
-                                    animate={{ y: tela.ancora === "topo" ? 0 : SUBIDA_DO_APARELHO }}
-                                    transition={movimento}
-                                    className="absolute inset-x-0 top-0 aspect-[720/1488]"
-                                >
-                                    {TELAS.map((t) => (
-                                        <Image
-                                            key={t.imagem.src}
-                                            src={t.imagem}
-                                            alt=""
-                                            sizes="240px"
-                                            placeholder="blur"
-                                            className={cn(
-                                                "absolute inset-0 h-auto w-60 max-w-none transition-opacity duration-(--duration-slow) ease-(--ease-out)",
-                                                t === tela ? "opacity-100" : "opacity-0"
-                                            )}
-                                        />
-                                    ))}
-                                    <motion.span
+                    <DialogBody>
+                        <span aria-live="polite" className="sr-only">
+                            Passo {passo + 1} de {PASSOS.length}: {PASSOS[passo].titulo}
+                        </span>
+                        {/* Todos os passos na mesma célula: a folha mede o mais alto e não muda de altura. */}
+                        <div className="grid">
+                            {PASSOS.map((p, i) => {
+                                const ativo = i === passo
+                                return (
+                                    <motion.div
+                                        key={p.titulo}
+                                        aria-hidden={!ativo || undefined}
+                                        inert={!ativo}
                                         initial={false}
-                                        animate={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
-                                        transition={movimento}
-                                        className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
+                                        animate={
+                                            ativo
+                                                ? {
+                                                      opacity: 1,
+                                                      // O passo entra pelo lado para onde se anda.
+                                                      x: reduzido ? 0 : [direcao * 16, 0],
+                                                      visibility: "visible",
+                                                      transition: reduzido ? { duration: 0 } : MOLA,
+                                                  }
+                                                : {
+                                                      opacity: 0,
+                                                      transition: reduzido ? { duration: 0 } : SAIDA,
+                                                      transitionEnd: { visibility: "hidden" },
+                                                  }
+                                        }
+                                        className={cn(
+                                            "col-start-1 row-start-1 flex flex-col gap-4",
+                                            !ativo && "invisible"
+                                        )}
                                     >
-                                        <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
-                                        <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
-                                    </motion.span>
-                                </motion.div>
-                            </div>
-                        ) : null}
+                                        <div>
+                                            <P className="font-semibold">
+                                                {i + 1} · {p.titulo}
+                                                <span className="sr-only"> de {PASSOS.length}</span>
+                                            </P>
+                                            <Muted>{textos[i]}</Muted>
+                                        </div>
 
-                        {passo === 0 ? (
-                            <>
-                                <FormInput
-                                    label="Nome do aparelho"
-                                    value={nome}
-                                    maxLength={60}
-                                    disabled={codigo != null}
-                                    onChange={(e) => setNome(e.target.value)}
-                                />
-                                {workspaces.length > 1 ? (
-                                    <FormField label="Os gastos caem em">
-                                        <Select
-                                            value={carteiraEscolhida}
-                                            onValueChange={setCarteira}
-                                            disabled={codigo != null}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Selecione a carteira" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {workspaces.map((w) => (
-                                                    <SelectItem key={w.id} value={w.id}>
-                                                        {w.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormField>
-                                ) : null}
-                                <FormError>{erro}</FormError>
-                            </>
-                        ) : null}
+                                        {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
+                                        {i === 1 ? (
+                                            <Button asChild variant="primary">
+                                                <a href={ARQUIVO_DO_ATALHO} download>
+                                                    Baixar o atalho
+                                                </a>
+                                            </Button>
+                                        ) : null}
+                                        {i === 4 ? (
+                                            <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                                        ) : null}
 
-                        {passo === 4 ? (
-                            <Collapsible variant="card">
-                                <CollapsibleRow>Montar à mão</CollapsibleRow>
-                                <CollapsibleContent>
-                                    <div className="flex flex-col gap-3">
-                                        <Muted>
-                                            Fora do iPhone, crie uma automação que envie o que você disser para este
-                                            endereço, junto com o código do aparelho.
-                                        </Muted>
-                                        <CampoDeCopiar rotulo="Endereço" valor={enderecoDeCaptura()} />
-                                    </div>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        ) : null}
+                                        {p.tela ? <JanelaDoAparelho tela={p.tela} /> : null}
+
+                                        {i === 0 ? (
+                                            <>
+                                                <FormInput
+                                                    label="Nome do aparelho"
+                                                    value={nome}
+                                                    maxLength={60}
+                                                    disabled={codigo != null}
+                                                    onChange={(e) => setNome(e.target.value)}
+                                                />
+                                                {workspaces.length > 1 ? (
+                                                    <FormField label="Os gastos caem em">
+                                                        <Select
+                                                            value={carteiraEscolhida}
+                                                            onValueChange={setCarteira}
+                                                            disabled={codigo != null}
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Selecione a carteira" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {workspaces.map((w) => (
+                                                                    <SelectItem key={w.id} value={w.id}>
+                                                                        {w.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormField>
+                                                ) : null}
+                                                <FormError>{erro}</FormError>
+                                            </>
+                                        ) : null}
+
+                                        {i === 4 ? (
+                                            <Collapsible variant="card">
+                                                <CollapsibleRow>Montar à mão</CollapsibleRow>
+                                                <CollapsibleContent>
+                                                    <div className="flex flex-col gap-3">
+                                                        <Muted>
+                                                            Fora do iPhone, crie uma automação que envie o que você
+                                                            disser para este endereço, junto com o código do aparelho.
+                                                        </Muted>
+                                                        <CampoDeCopiar rotulo="Endereço" valor={enderecoDeCaptura()} />
+                                                    </div>
+                                                </CollapsibleContent>
+                                            </Collapsible>
+                                        ) : null}
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
                     </DialogBody>
+                    {/* Os pontos têm lugar fixo, logo acima dos botões: não andam com o passo. */}
+                    <div aria-hidden className="flex shrink-0 justify-center gap-1.5 pt-4">
+                        {PASSOS.map((p, i) => (
+                            <span
+                                key={p.titulo}
+                                className={cn(
+                                    "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-spring) ease-(--ease-spring)",
+                                    i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"
+                                )}
+                            />
+                        ))}
+                    </div>
                     <DialogFooter>
                         {passo === 0 ? (
                             <>
@@ -338,13 +361,13 @@ export function GuiaDoAtalho({
                             </>
                         ) : (
                             <>
-                                <Button type="button" variant="tertiary" onClick={() => setPasso(passo - 1)}>
+                                <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
                                     Voltar
                                 </Button>
                                 <Button
                                     type="button"
                                     variant={passo === 1 ? "secondary" : "primary"}
-                                    onClick={ultimo ? fechar : () => setPasso(passo + 1)}
+                                    onClick={ultimo ? fechar : () => irPara(passo + 1)}
                                 >
                                     {ultimo ? "Pronto" : "Próximo"}
                                 </Button>

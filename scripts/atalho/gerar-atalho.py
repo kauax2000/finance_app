@@ -7,8 +7,9 @@ importação numa ação Texto, vazia de propósito), e a cada vez:
 
 - com uma entrada (a transação da Carteira, na automação do Apple Pay), manda o
   texto dela com `source: apple_pay`;
-- sem entrada (Siri ou toque), pede o gasto por ditado e manda com
-  `source: shortcut`;
+- sem entrada, pergunta "Qual foi o gasto?" (Pedir Entrada): tocado ou pelo
+  Botão de Ação abre um campo para digitar no topo da tela; pela Siri, a mesma
+  pergunta é respondida em voz. Manda com `source: shortcut`;
 
 num POST para a Edge `capture` com `Authorization: Bearer <código>`, e mostra o
 `resumo` da resposta numa notificação.
@@ -88,7 +89,7 @@ def acao(ident: str, **params) -> dict:
 
 
 def atalho(url: str, frase_de_teste: str | None = None) -> dict:
-    codigo, ditado, resposta, resumo, pay, voz = (str(uuid.uuid4()).upper() for _ in range(6))
+    codigo, pedido, resposta, resumo, pay, voz = (str(uuid.uuid4()).upper() for _ in range(6))
     se = str(uuid.uuid4()).upper()
     acoes = [
         # 0: o código do aparelho, preenchido pela pergunta de importação.
@@ -98,11 +99,11 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         acao("gettext", UUID=pay, WFTextActionText=texto("apple_pay")),
         acao("setvariable", WFVariableName="origem", WFInput=anexo(saida(pay, "Texto"))),
         acao("conditional", GroupingIdentifier=se, WFControlFlowMode=1),
-        # No teste o simulador não dita: a frase fixa entra no lugar do ditado.
-        acao("gettext", UUID=ditado, WFTextActionText=texto(frase_de_teste))
+        # No teste a frase fixa entra no lugar da pergunta, para o pedido sair sem ninguém digitar.
+        acao("gettext", UUID=pedido, WFTextActionText=texto(frase_de_teste))
         if frase_de_teste
-        else acao("dictatetext", UUID=ditado),
-        acao("setvariable", WFVariableName="frase", WFInput=anexo(saida(ditado, "Texto" if frase_de_teste else "Texto Ditado"))),
+        else acao("ask", UUID=pedido, WFInputType="Text", WFAskActionPrompt=texto("Qual foi o gasto? Ex.: 42 mercado nubank")),
+        acao("setvariable", WFVariableName="frase", WFInput=anexo(saida(pedido, "Texto" if frase_de_teste else "Entrada Fornecida"))),
         acao("gettext", UUID=voz, WFTextActionText=texto("shortcut")),
         acao("setvariable", WFVariableName="origem", WFInput=anexo(saida(voz, "Texto"))),
         acao("conditional", GroupingIdentifier=se, WFControlFlowMode=2),
@@ -164,6 +165,8 @@ def verificar() -> None:
     assert [v.get("OutputUUID") for v in valor["attachmentsByRange"].values()] == [codigo]
     chaves = [i["WFKey"]["Value"]["string"] for i in pedido["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]]
     assert chaves == ["text", "source"], chaves
+    assert any(a["WFWorkflowActionIdentifier"].endswith(".ask") for a in acoes), "falta Pedir Entrada"
+    assert not any(a["WFWorkflowActionIdentifier"].endswith(".dictatetext") for a in acoes)
     for a in acoes:
         if a["WFWorkflowActionIdentifier"].endswith(".setvariable"):
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"

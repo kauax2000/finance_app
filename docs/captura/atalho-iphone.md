@@ -23,8 +23,9 @@ O atalho tem, nesta ordem:
    aparelho que o Finance mostrou.". Cada pessoa cola o próprio código ao
    adicionar o atalho.
 2. **Se** há **Entrada do atalho**: a frase é a entrada (a transação da
-   Carteira) e a origem é `apple_pay`. Senão, **Ditar texto**, e a origem é
-   `shortcut`.
+   Carteira) e a origem é `apple_pay`. Senão, **Pedir Entrada** ("Qual foi o
+   gasto?"), e a origem é `shortcut`: tocado ou pelo Botão de Ação, a pessoa
+   digita na caixa que abre no topo da tela; pela Siri, responde em voz.
 3. **Obter conteúdo de URL**: `POST` para a Edge `capture`, com o cabeçalho
    `Authorization` = `Bearer ` seguido do Texto da ação 1 (o `Bearer ` fica no
    cabeçalho, fora da pergunta), e o corpo JSON `{ "text", "source" }`.
@@ -37,7 +38,7 @@ O resto deste guia é a referência de quem monta à mão.
 
 Este guia liga o iPhone ao app para lançar um gasto sem abri-lo. Há três caminhos:
 
-- o Atalho "Lançar gasto", por voz;
+- o Atalho "Lançar gasto", por voz ou digitando;
 - a automação do Apple Pay;
 - a folha de compartilhar, com foto de recibo.
 
@@ -152,24 +153,25 @@ Quando dá errado, a resposta traz `error`:
 
 Quando o app não entende a frase, ele pede ajuda à IA antes de desistir.
 
-## 3. O Atalho "Lançar gasto" (voz)
+## 3. O Atalho "Lançar gasto" (voz ou texto)
 
 No app **Atalhos**, crie um atalho chamado "Lançar gasto" com estas ações, nesta
 ordem:
 
-1. **Ditar texto**. O idioma é Português (Brasil).
+1. **Pedir Entrada**, do tipo Texto, com a pergunta "Qual foi o gasto?".
 2. **Obter conteúdo de URL**, com estes ajustes:
    - URL: `<URL>`;
    - Método: `POST`;
    - Cabeçalhos: `Authorization` = `Bearer <TOKEN>`;
    - Corpo da solicitação: `JSON`;
-   - campo `text` (Texto) = a variável **Texto Ditado**;
+   - campo `text` (Texto) = a variável **Entrada Fornecida**;
    - campo `source` (Texto) = `shortcut`.
 3. **Obter valor do dicionário**, com a chave `resumo` do **Conteúdo do URL**.
 4. **Mostrar resultado**, com o **Valor do dicionário**.
 
-Para usar, diga "E aí Siri, lançar gasto" e fale a frase, por exemplo "42 e 90
-mercado no nubank".
+Para usar, diga "E aí Siri, lançar gasto" e responda a frase, por exemplo "42 e
+90 mercado no nubank". Tocado ou pelo Botão de Ação, o atalho abre uma caixa no
+topo da tela para digitar a mesma frase.
 
 Se o resultado vier vazio, troque a chave do passo 3 por `error`. Assim o
 atalho mostra o motivo do erro.
