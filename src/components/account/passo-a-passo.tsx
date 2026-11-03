@@ -6,7 +6,6 @@ import { motion, type Variants } from "motion/react"
 import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { cn } from "@/lib/utils"
 import applePay from "./assets/atalho-6-apple-pay.webp"
-import pagamento from "./assets/atalho-7-pagamento.webp"
 
 /** Uma peça do passo: surge do desfoque, como as linhas dos diálogos (`menu-content-in`, 500ms, `--ease-out`). */
 export const PECA: Variants = {
@@ -28,9 +27,6 @@ export type Tela = {
 
 /** A notificação depois do Apple Pay: a tela do último passo do guia e a do vazio da seção. */
 export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
-
-/** A tela de pagar com o iPhone (montada em `scripts/atalho/cenas.py --pagamento`): o convite do Apple Pay. */
-export const TELA_DO_PAGAMENTO: Tela = { imagem: pagamento, ancora: "topo" }
 
 /** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
 /** As janelas por tamanho, por extenso: a do guia, a do vazio e a miniatura do convite do Apple Pay. */
