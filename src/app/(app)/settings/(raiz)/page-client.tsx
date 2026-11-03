@@ -5,7 +5,6 @@ import { AtalhoSecao } from "@/components/account/atalho-secao"
 import { IasSecao } from "@/components/account/ias-secao"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
-import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-appearance-settings"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { ThemeSettings } from "@/components/settings/theme-settings"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -30,7 +29,6 @@ export default function SettingsPage() {
                 </PageHeader>
             )}
             <div className="min-w-0 space-y-5">
-                <WorkspaceAppearanceSettings />
                 <ThemeSettings />
                 <AtalhoSecao />
                 <IasSecao />

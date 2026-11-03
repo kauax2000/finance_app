@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { PlusIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import {
@@ -28,6 +28,10 @@ export type WorkspacePickerMenuBodyCallbacks = {
     closePicker: () => void
     afterWorkspaceChosen?: () => void
     openCreateDialog: () => void
+    /** Na linha da carteira atual: o lápis do dono. */
+    editarCarteira?: () => void
+    /** Na linha da carteira atual: sair, para quem não é dono. */
+    sairDaCarteira?: () => void
 }
 
 type WorkspacePickerMenuBodyProps = {
@@ -74,24 +78,61 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
             value={currentWorkspaceId ?? ""}
             onValueChange={pickWorkspace}
         >
-            {lista.map((workspace) => (
-                <DropdownMenuRadioItem
-                    key={workspace.id}
-                    value={workspace.id}
-                    indicator="media"
-                    // Os tons da barra lateral, de onde o seletor abre: a passagem é o hover
-                    // de uma linha dela (`--sidebar-accent` a 50%), e a carteira atual é a
-                    // pílula do ativo (`--sidebar-accent` cheio) — mais forte que a passagem,
-                    // inclusive com o foco nela.
-                >
-                    <WorkspaceBrandMark
-                        iconKey={workspace.icon}
-                        backgroundColor={workspace.icon_background_color}
-                        size="xs"
-                    />
-                    <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
-                </DropdownMenuRadioItem>
-            ))}
+            {lista.map((workspace) => {
+                const atual = workspace.id === currentWorkspaceId
+                const editar = atual ? callbacks.editarCarteira : undefined
+                const sair = atual && !editar ? callbacks.sairDaCarteira : undefined
+                const item = (
+                    <DropdownMenuRadioItem
+                        key={workspace.id}
+                        value={workspace.id}
+                        indicator="media"
+                        className={editar || sair ? "min-w-0 flex-1" : undefined}
+                        // Os tons da barra lateral, de onde o seletor abre: a passagem é o hover
+                        // de uma linha dela (`--sidebar-accent` a 50%), e a carteira atual é a
+                        // pílula do ativo (`--sidebar-accent` cheio) — mais forte que a passagem,
+                        // inclusive com o foco nela.
+                    >
+                        <WorkspaceBrandMark
+                            iconKey={workspace.icon}
+                            backgroundColor={workspace.icon_background_color}
+                            size="xs"
+                        />
+                        <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+                    </DropdownMenuRadioItem>
+                )
+                if (!editar && !sair) return item
+                // A ação da carteira atual é uma linha irmã, só de ícone; o menu fecha
+                // antes, para o diálogo não abrir com o menu por cima.
+                return (
+                    <div key={workspace.id} className="flex items-center gap-1">
+                        {item}
+                        {editar ? (
+                            <DropdownMenuItem
+                                className="shrink-0"
+                                aria-label={`Editar carteira ${workspace.name}`}
+                                onSelect={() => {
+                                    callbacks.closePicker()
+                                    editar()
+                                }}
+                            >
+                                <PencilIcon aria-hidden />
+                            </DropdownMenuItem>
+                        ) : sair ? (
+                            <DropdownMenuItem
+                                className="shrink-0"
+                                aria-label={`Sair da carteira ${workspace.name}`}
+                                onSelect={() => {
+                                    callbacks.closePicker()
+                                    sair()
+                                }}
+                            >
+                                <ArrowRightStartOnRectangleIcon aria-hidden />
+                            </DropdownMenuItem>
+                        ) : null}
+                    </div>
+                )
+            })}
         </DropdownMenuRadioGroup>
     )
 

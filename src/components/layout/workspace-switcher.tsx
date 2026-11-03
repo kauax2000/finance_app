@@ -4,6 +4,7 @@ import * as React from "react"
 import { ChevronDownIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid"
 import { UserGroupIcon as UserGroupMiniIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useAcoesDaCarteira } from "@/components/workspace/acoes-da-carteira"
 import { CreateProjectDialog } from "@/components/workspace/create-project-dialog"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { WorkspacePickerMenuBody } from "@/components/layout/workspace-picker-menu-body"
@@ -30,6 +31,7 @@ export function WorkspaceSwitcher({
 
     const [menuOpen, setMenuOpen] = React.useState(false)
     const [createOpen, setCreateOpen] = React.useState(false)
+    const acoes = useAcoesDaCarteira()
 
     // No header (só no telefone) a carteira é o título da barra, como o
     // "Instagram ⌄": o ícone e o nome em branco, sem o ladrilho de cor, e o
@@ -121,6 +123,8 @@ export function WorkspaceSwitcher({
                     callbacks={{
                         closePicker: () => setMenuOpen(false),
                         openCreateDialog: () => setCreateOpen(true),
+                        editarCarteira: acoes.editar ?? undefined,
+                        sairDaCarteira: acoes.sair ?? undefined,
                     }}
                 />
             </DropdownMenuContent>
@@ -130,6 +134,7 @@ export function WorkspaceSwitcher({
     return (
         <>
             <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+            {acoes.dialogos}
             {appearance === "header" ? (
                 // Encolhe com a caixa do centro da barra: o nome trunca em vez de
                 // passar por cima das ações.

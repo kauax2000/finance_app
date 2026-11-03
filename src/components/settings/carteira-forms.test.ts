@@ -5,7 +5,7 @@ import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-const carteira = () => semComentarios(lerFonte("src/components/settings/workspace-appearance-settings.tsx"), "tudo")
+const carteira = () => semComentarios(lerFonte("src/components/workspace/acoes-da-carteira.tsx"), "tudo")
 // O valor passado a `acoes=`, até o fim do `WorkspaceAppearanceEditDialog`.
 const acoesDe = (f: string) => f.slice(f.indexOf("acoes={"), f.indexOf("\n            />", f.indexOf("acoes={")))
 const FORMULARIOS = ["src/components/settings/carteira-projeto-form.tsx"]
@@ -83,17 +83,18 @@ describe("Formulários da Carteira", () => {
         for (const fora of ["ModoEPesosDaCarteiraWireframe", "function ModoEPesos", "FormularioDoModo"]) expect(divisao).not.toContain(fora)
         for (const fora of ["DatasDaCarteiraProjetoWireframe", "FormularioDaCarteiraProjeto"]) expect(projetos).not.toContain(fora)
         expect(pagina).not.toContain("Wireframe")
-        expect(pagina).toContain("<WorkspaceAppearanceSettings />")
+        expect(pagina).not.toContain("WorkspaceAppearanceSettings")
         expect(divisao).toContain('from "@/lib/divisao/use-adultos"')
     })
 })
 
 describe("Carteira em linhas", () => {
-    it("não recebe children e tudo mora num cartão só, sem ação no cabeçalho", () => {
+    it("é um hook só de ações e diálogos, sem cartão", () => {
         const f = carteira()
-        expect(f).toContain("export function WorkspaceAppearanceSettings() {")
+        expect(f).toContain("export function useAcoesDaCarteira(")
         expect(f).not.toContain("actions=")
-        expect(f.match(/<Card padding="none">/g)).toHaveLength(2) // o do esqueleto e o da seção
+        expect(f).not.toContain("<Card")
+        expect(f).not.toContain("SettingsSection")
         expect(f).not.toContain("Vale para todos")
     })
 
@@ -116,7 +117,7 @@ describe("Carteira em linhas", () => {
 
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
-        expect(f).toMatch(/owner \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{openEdit\}/)
+        expect(f).toContain("editar: owner ? openEdit : null")
         expect(f).not.toContain("DropdownMenu")
         expect(f).not.toContain("EllipsisVerticalIcon")
         // Toda carteira divide e convida; a primeira só não se apaga.
@@ -135,11 +136,11 @@ describe("Carteira em linhas", () => {
         expect(carteira()).toContain("AINDA_NAO_DISPONIVEL")
     })
 
-    it("Excluir mora no acoes do Editar; Sair fica no cartão, só para quem não é dono", () => {
+    it("Excluir mora no acoes do Editar; Sair é do seletor, só para quem não é dono", () => {
         const f = carteira()
         expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
-        expect(f.replace(acoesDe(f), "")).toMatch(/!owner \?[\s\S]*Sair da carteira/)
-        expect(acoesDe(f)).not.toContain("Sair da carteira")
+        expect(f.replace(acoesDe(f), "")).toMatch(/sair: !owner \? \(\) => setLeaveOpen\(true\)/)
+        expect(acoesDe(f)).not.toContain("setLeaveOpen")
         // A pessoal não se apaga: no lugar do botão, o aviso.
         expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*: owner && isPrimeira \?[\s\S]*não pode ser excluída/)
     })

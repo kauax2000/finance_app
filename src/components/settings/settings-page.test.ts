@@ -22,9 +22,11 @@ describe("Notificações: cada chave por si", () => {
 })
 
 describe("Configurações: ordem", () => {
-    it("Carteira vem primeiro", () => {
+    it("a Carteira saiu para o seletor; Aparelho vem primeiro", () => {
         const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
-        const ordem = ["<WorkspaceAppearanceSettings", "<ThemeSettings", "<NotificationPreferences"].map((peca) => fonte.indexOf(peca))
+        expect(fonte).not.toContain("WorkspaceAppearanceSettings")
+        expect(fonte).not.toContain("Carteira")
+        const ordem = ["<ThemeSettings", "<NotificationPreferences"].map((peca) => fonte.indexOf(peca))
         expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
         expect(ordem[0]).toBeGreaterThan(-1)
     })
@@ -63,17 +65,18 @@ describe("Configurações: página única", () => {
         expect(() => rolarAteAncora("", doc)).not.toThrow()
     })
 
-    it("Carteira: cartão enxuto, ações dentro do Editar carteira", () => {
-        const fonte = lerFonte("src/components/settings/workspace-appearance-settings.tsx")
+    it("Carteira: ações dentro do Editar carteira, abertas pelo seletor", () => {
+        const fonte = lerFonte("src/components/workspace/acoes-da-carteira.tsx")
         expect(fonte).not.toContain("DropdownMenu")
         expect(fonte).not.toContain("EllipsisVerticalIcon")
-        for (const texto of ["Editar", "Sair da carteira", "Excluir carteira"]) expect(fonte).toContain(texto)
-        expect(fonte).toMatch(/owner \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{openEdit\}/)
+        expect(fonte).toContain("Excluir carteira")
+        expect(fonte).toContain("editar: owner ? openEdit : null")
         expect(fonte.match(/openEdit/g)).toHaveLength(2) // a definição e o único uso
         const ini = fonte.indexOf("acoes={")
         const acoes = fonte.slice(ini, fonte.indexOf("\n            />", ini))
         expect(acoes).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
-        expect(fonte.replace(acoes, "")).toMatch(/!owner\s*\?[\s\S]*Sair da carteira/)
+        expect(fonte).toMatch(/sair: !owner \? \(\) => setLeaveOpen\(true\)/)
+        expect(acoes).not.toContain("setLeaveOpen")
         for (const texto of ["Divisão", "Datas e orçamento", "{podeDatas ? ("]) expect(acoes).toContain(texto)
         const dialogo = lerFonte("src/components/settings/workspace-appearance-edit-dialog.tsx")
         expect(dialogo).toMatch(/acoes\?: (React\.)?ReactNode/)
