@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import Image, { type StaticImageData } from "next/image"
-import { motion, useReducedMotion } from "motion/react"
+import { motion, useReducedMotion, type Variants } from "motion/react"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { useAuth } from "@/components/providers"
@@ -32,6 +32,16 @@ import applePay from "./assets/atalho-6-apple-pay.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
+
+/** Uma peça do passo: surge do desfoque, como as linhas dos diálogos (`menu-content-in`, 500ms, `--ease-out`). */
+const PECA: Variants = {
+    oculto: { opacity: 0, filter: "blur(10px)" },
+    visivel: {
+        opacity: [0, 1, 1],
+        filter: ["blur(10px)", "blur(4px)", "blur(0px)"],
+        transition: { duration: 0.5, times: [0, 0.45, 1], ease: [0.16, 1, 0.3, 1] },
+    },
+}
 
 type Tela = {
     imagem: StaticImageData
@@ -249,36 +259,46 @@ export function GuiaDoAtalho({
                                 return (
                                     <motion.div
                                         key={p.titulo}
-                                        // Só a opacidade: um deslize de lado somado à altura que anda lia como diagonal.
-                                        initial={reduzido || !mudou ? false : { opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={reduzido ? { duration: 0 } : { duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                                        // As peças do passo chegam uma a uma, do desfoque e no lugar (o
+                                        // `menu-content-in` dos diálogos): nada anda de lado, e a única
+                                        // coisa que se move é a altura da caixa.
+                                        initial={reduzido || !mudou ? false : "oculto"}
+                                        animate="visivel"
+                                        transition={{ staggerChildren: 0.03, delayChildren: 0.04 }}
                                         className="flex flex-col gap-4"
                                     >
-                                        <div>
+                                        <motion.div variants={PECA}>
                                             <P className="font-semibold">
                                                 {i + 1} · {p.titulo}
                                                 <span className="sr-only"> de {PASSOS.length}</span>
                                             </P>
                                             <Muted>{textos[i]}</Muted>
-                                        </div>
+                                        </motion.div>
 
                                         {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
                                         {i === 1 ? (
-                                            <Button asChild variant="primary">
-                                                <a href={ARQUIVO_DO_ATALHO} download>
-                                                    Baixar o atalho
-                                                </a>
-                                            </Button>
+                                            <motion.div variants={PECA} className="flex flex-col">
+                                                <Button asChild variant="primary">
+                                                    <a href={ARQUIVO_DO_ATALHO} download>
+                                                        Baixar o atalho
+                                                    </a>
+                                                </Button>
+                                            </motion.div>
                                         ) : null}
                                         {i === 4 ? (
-                                            <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                                            <motion.div variants={PECA}>
+                                                <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                                            </motion.div>
                                         ) : null}
 
-                                        {p.tela ? <JanelaDoAparelho tela={p.tela} /> : null}
+                                        {p.tela ? (
+                                            <motion.div variants={PECA}>
+                                                <JanelaDoAparelho tela={p.tela} />
+                                            </motion.div>
+                                        ) : null}
 
                                         {i === 0 ? (
-                                            <>
+                                            <motion.div variants={PECA} className="flex flex-col gap-4">
                                                 <FormInput
                                                     label="Nome do aparelho"
                                                     value={nome}
@@ -309,7 +329,7 @@ export function GuiaDoAtalho({
                                                     </FormField>
                                                 ) : null}
                                                 <FormError>{erro}</FormError>
-                                            </>
+                                            </motion.div>
                                         ) : null}
                                     </motion.div>
                                 )
