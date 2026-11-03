@@ -61,16 +61,22 @@ describe("tokens de captura", () => {
         expect(g).toMatch(/<FormSubmit/)
         expect(g).toMatch(/if \(error\) return setErro\(mensagemDoErroDeToken\(error\)\)/)
     })
-    it("sem o link do atalho, o passo 2 avisa e abre o caminho à mão", () => {
+    it("o atalho assinado é baixado daqui, com as telas reais do iPhone", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
-        expect(g).toContain("NEXT_PUBLIC_CAPTURE_SHORTCUT_URL")
-        expect(g).toContain("O atalho pronto ainda não está disponível.")
+        for (const a of ["atalho-1-baixar", "atalho-2-arquivos", "atalho-3-configurar", "atalho-4-colar"])
+            expect(g).toContain(`from "./assets/${a}.webp"`)
+        expect(g).toContain('"/atalho/Lan%C3%A7ar%20gasto.shortcut"')
+        expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download>/)
+        expect(g).not.toMatch(/NEXT_PUBLIC_CAPTURE_SHORTCUT_URL|icloud\.com|DeviceFrame/)
         expect(g).toContain("Montar à mão")
     })
     it("a cópia automática não quebra sem permissão, e o texto só promete a cópia que houve", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
         expect(g).toMatch(/clipboard\.writeText\([^)]*\)\.then\(\(\) => setCopiado\(true\)\)\.catch\(/)
-        expect(g).toMatch(/copiado \? "cole: já está copiado\." : "copie o código abaixo e cole\."/)
+        expect(g).toMatch(
+            /copiado\s*\?\s*"Toque no campo e cole: o código já está copiado\."\s*:\s*"Copie o código abaixo, toque no campo e cole\."/,
+        )
+        expect(g).not.toMatch(/Toque no botão/)
     })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))

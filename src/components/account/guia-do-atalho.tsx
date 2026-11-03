@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
+import Image, { type StaticImageData } from "next/image"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { BoltIcon, ChevronRightIcon, CreditCardIcon, MicrophoneIcon } from "@heroicons/react/16/solid"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { useAuth } from "@/components/providers"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
-import { DeviceFrame } from "@/components/ui/device-frame"
 import {
     Dialog,
     DialogBody,
@@ -23,105 +21,58 @@ import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, F
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { currencyBRL } from "@/lib/formatters"
 import { MOLA, SAIDA } from "@/lib/spring"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
+import baixar from "./assets/atalho-1-baixar.webp"
+import arquivos from "./assets/atalho-2-arquivos.webp"
+import configurar from "./assets/atalho-3-configurar.webp"
+import colar from "./assets/atalho-4-colar.webp"
 
-/** O link do atalho pronto no iCloud; sem ele, o passo 2 ensina a montar à mão. */
-export const ATALHO_PRONTO: string | undefined = process.env.NEXT_PUBLIC_CAPTURE_SHORTCUT_URL || undefined
+/** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
+const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
 
 /** O endereço da captura no projeto Supabase, com ou sem barra no fim. */
 export function enderecoDeCaptura(): string {
     return `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "")}/functions/v1/capture`
 }
 
-/** A janela mede 288 e o aparelho (`h-130`), 520: ancorado embaixo, ele sobe 232. */
-const SUBIDA_DO_APARELHO = -232
+/** A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */
+const SUBIDA_DO_APARELHO = -208
 
-const TITULOS = [
-    "Dê um nome a este iPhone",
-    "Adicione o atalho",
-    "Fale com a Siri",
-    "Lance ao pagar (opcional)",
-] as const
-
-/** Que ponta do aparelho fica à vista na janela, por passo. */
-const ANCORA: ("topo" | "baixo")[] = ["topo", "baixo", "topo", "topo"]
-
-/** O alvo do toque: o anel que pulsa sobre o que a pessoa toca. */
-function Toque({ className }: { className?: string }) {
-    return (
-        <span className={cn("pointer-events-none absolute size-8 -translate-x-1/2 -translate-y-1/2", className)}>
-            <span className="absolute inset-0 rounded-full bg-foreground/15 motion-safe:animate-ping" />
-            <span className="absolute inset-0 rounded-full ring-2 ring-foreground/60" />
-        </span>
-    )
+type Tela = {
+    imagem: StaticImageData
+    /** Onde tocar, em % da imagem inteira. */
+    ponto: { x: number; y: number }
+    /** Que ponta da imagem fica à vista na janela. */
+    ancora: "topo" | "baixo"
 }
 
-/** As mini telas, uma por passo, desenhadas com tokens. */
-function TelaDoPasso({ passo, nome }: { passo: number; nome: string }) {
-    if (passo === 0)
-        return (
-            <div className="flex flex-col gap-3 px-4 pt-6">
-                <p className="text-sm font-semibold">Conectar o iPhone</p>
-                <div className="rounded-row bg-muted px-3 py-2 text-xs">
-                    <p className="text-muted-foreground">Nome do aparelho</p>
-                    <p className="truncate font-medium">{nome || "iPhone"}</p>
-                </div>
-                <div className="relative mt-2 flex h-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                    Criar código
-                    <Toque className="top-1/2 left-1/2" />
-                </div>
-            </div>
-        )
-    if (passo === 1)
-        return (
-            <div className="flex h-full flex-col items-center justify-end gap-4 px-4 pb-10 text-center">
-                <span className="flex size-14 items-center justify-center rounded-surface bg-info-muted text-info-muted-foreground">
-                    <BoltIcon className="size-4" />
-                </span>
-                <div>
-                    <p className="text-sm font-semibold">Lançar gasto</p>
-                    <p className="text-xs text-muted-foreground">Atalho do Finance</p>
-                </div>
-                <div className="relative flex h-8 w-full items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                    Adicionar atalho
-                    <Toque className="top-1/2 left-1/2" />
-                </div>
-            </div>
-        )
-    if (passo === 2)
-        return (
-            <div className="flex h-full flex-col justify-end gap-2 px-4 pb-10">
-                <p className="self-end rounded-surface bg-muted px-3 py-2 text-xs">E aí Siri, lançar gasto</p>
-                <p className="self-end rounded-surface bg-muted px-3 py-2 text-xs">42 mercado nubank</p>
-                <span className="mt-2 flex size-10 items-center justify-center self-center rounded-full bg-foreground/10">
-                    <MicrophoneIcon className="size-4" />
-                </span>
-            </div>
-        )
-    return (
-        <div className="flex flex-col gap-3 px-4 pt-6">
-            <p className="text-sm font-semibold">Automação</p>
-            <div className="flex flex-col rounded-row bg-muted text-xs">
-                {["Hora do dia", "Alarme", "Carteira", "Mensagem"].map((linha) => (
-                    <div key={linha} className="relative flex items-center gap-2 px-3 py-2">
-                        {linha === "Carteira" ? <CreditCardIcon className="size-3.5" /> : null}
-                        <span className="flex-1">{linha}</span>
-                        <ChevronRightIcon className="size-3.5 text-muted-foreground" />
-                        {linha === "Carteira" ? <Toque className="top-1/2 left-1/3" /> : null}
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-}
+/*
+ * Capturas do iOS 27 na moldura do PSD de `docs/design/mockups/` (`scripts/atalho/moldura.py`).
+ * shortcut: sem captura real da Siri; o simulador não tem Siri, entra com o print do iPhone do dono.
+ * shortcut: sem captura real da automação da Carteira; entra com o print do iPhone do dono.
+ */
+const PASSOS: { titulo: string; tela?: Tela }[] = [
+    { titulo: "Dê um nome a este iPhone" },
+    { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
+    { titulo: "Abra o arquivo", tela: { imagem: arquivos, ponto: { x: 50, y: 29.7 }, ancora: "topo" } },
+    {
+        titulo: "Toque em Configurar Atalho",
+        tela: { imagem: configurar, ponto: { x: 50, y: 92.4 }, ancora: "baixo" },
+    },
+    { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
+    { titulo: "Fale com a Siri" },
+    { titulo: "Lance ao pagar (opcional)" },
+]
+
+const TELAS = PASSOS.flatMap((p) => (p.tela ? [p.tela] : []))
 
 /**
- * O guia para conectar o iPhone: cria o código do aparelho, ensina a adicionar o
- * atalho, a falar com a Siri e a automação do pagamento. O código vive só no
- * estado deste guia: fechar por qualquer caminho o descarta.
+ * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
+ * assinado, ensina a colar o código nele, a falar com a Siri e a automação do
+ * pagamento. O código vive só no estado deste guia: fechar por qualquer caminho
+ * o descarta.
  */
 export function GuiaDoAtalho({
     open,
@@ -157,9 +108,10 @@ export function GuiaDoAtalho({
         }
     }
 
-    const carteiraEscolhida = carteira || currentWorkspaceId || ""
+    const carteiraEscolhida = carteira || currentWorkspaceId || workspaces[0]?.id || ""
     const nomeDaCarteira = workspaces.find((w) => w.id === carteiraEscolhida)?.name ?? "sua carteira"
-    const ultimo = passo === TITULOS.length - 1
+    const ultimo = passo === PASSOS.length - 1
+    const tela = PASSOS[passo].tela
     const movimento = reduzido ? { duration: 0 } : MOLA
 
     function fechar() {
@@ -180,11 +132,14 @@ export function GuiaDoAtalho({
         if (!carteiraEscolhida) return setErro("Escolha a carteira dos gastos.")
         setCriando(true)
         setErro(null)
-        const { data, error } = await supabase.rpc("create_capture_token", {
-            p_workspace_id: carteiraEscolhida,
-            p_name: n,
-        })
-        setCriando(false)
+        let resposta
+        try {
+            resposta = await supabase.rpc("create_capture_token", { p_workspace_id: carteiraEscolhida, p_name: n })
+        } finally {
+            // Um erro lançado não deixa o diálogo travado em `pending`.
+            setCriando(false)
+        }
+        const { data, error } = resposta
         if (error) return setErro(mensagemDoErroDeToken(error))
         setCodigo(data)
         setPasso(1)
@@ -198,17 +153,26 @@ export function GuiaDoAtalho({
     const textos: ReactNode[] = [
         "O nome ajuda a reconhecer o aparelho na lista.",
         <>
-            Toque no botão, depois em <strong>Adicionar atalho</strong>. Quando ele pedir o código,{" "}
-            {copiado ? "cole: já está copiado." : "copie o código abaixo e cole."}
+            Toque em <strong>Baixar o atalho</strong> e depois em <strong>Baixar</strong>.
+        </>,
+        <>
+            Toque em ⬇︎ na barra do Safari, ou abra o app <strong>Arquivos</strong>, e toque em{" "}
+            <strong>Lançar gasto</strong>.
+        </>,
+        "O app Atalhos abre com o Lançar gasto.",
+        <>
+            {copiado
+                ? "Toque no campo e cole: o código já está copiado."
+                : "Copie o código abaixo, toque no campo e cole."}{" "}
+            Depois, <strong>Adicionar Atalho</strong>.
         </>,
         <>
             Diga <strong>E aí Siri, lançar gasto</strong> e depois o gasto: <strong>42 mercado nubank</strong>. Ele
             cai em {nomeDaCarteira}; o que ficar em dúvida vai para A conferir.
         </>,
         <>
-            No app Atalhos: <strong>Automação › + › Carteira</strong>, escolha seus cartões, marque{" "}
-            <strong>Executar imediatamente</strong> e escolha <strong>Lançar gasto</strong>. Cada compra com o iPhone
-            entra sozinha.
+            No app Atalhos, abra o <strong>Lançar gasto</strong>, toque em <strong>Adicionar automação</strong>,
+            escolha <strong>Carteira</strong> e seus cartões e marque <strong>Executar imediatamente</strong>.
         </>,
     ]
 
@@ -228,54 +192,10 @@ export function GuiaDoAtalho({
                     className="flex min-h-0 flex-1 flex-col"
                 >
                     <DialogBody className="flex flex-col gap-4">
-                        <div
-                            aria-hidden
-                            className={cn(
-                                "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
-                                // O aparelho dissolve no lado em que a janela o corta.
-                                ANCORA[passo] === "topo"
-                                    ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
-                                    : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
-                            )}
-                        >
-                            <motion.div
-                                initial={false}
-                                animate={{ y: ANCORA[passo] === "topo" ? 0 : SUBIDA_DO_APARELHO }}
-                                transition={movimento}
-                                className="absolute inset-x-0 top-0"
-                            >
-                                <DeviceFrame
-                                    form="phone"
-                                    className="h-130"
-                                    notification={
-                                        passo === 2 ? (
-                                            <div className="text-xs">
-                                                <p className="font-semibold">Gasto lançado</p>
-                                                <p className="nums text-muted-foreground">
-                                                    {currencyBRL(42)} · Mercado
-                                                </p>
-                                            </div>
-                                        ) : undefined
-                                    }
-                                >
-                                    {TITULOS.map((t, i) => (
-                                        <div
-                                            key={t}
-                                            className={cn(
-                                                "absolute inset-0 transition-opacity duration-(--duration-slow) ease-(--ease-out)",
-                                                i === passo ? "opacity-100" : "opacity-0"
-                                            )}
-                                        >
-                                            <TelaDoPasso passo={i} nome={nome} />
-                                        </div>
-                                    ))}
-                                </DeviceFrame>
-                            </motion.div>
-                        </div>
                         <div aria-hidden className="flex shrink-0 justify-center gap-1.5">
-                            {TITULOS.map((t, i) => (
+                            {PASSOS.map((p, i) => (
                                 <span
-                                    key={t}
+                                    key={p.titulo}
                                     className={cn(
                                         "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-spring) ease-(--ease-spring)",
                                         i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"
@@ -297,12 +217,68 @@ export function GuiaDoAtalho({
                                     transition={MOLA}
                                 >
                                     <P className="font-semibold">
-                                        {passo + 1} · {TITULOS[passo]}
+                                        {passo + 1} · {PASSOS[passo].titulo}
+                                        <span className="sr-only"> de {PASSOS.length}</span>
                                     </P>
                                     <Muted>{textos[passo]}</Muted>
                                 </motion.div>
                             </AnimatePresence>
                         </div>
+
+                        {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
+                        {passo === 1 ? (
+                            <Button asChild variant="primary">
+                                <a href={ARQUIVO_DO_ATALHO} download>
+                                    Baixar o atalho
+                                </a>
+                            </Button>
+                        ) : null}
+                        {passo === 4 ? <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} /> : null}
+
+                        {tela ? (
+                            <div
+                                aria-hidden
+                                className={cn(
+                                    "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
+                                    // O aparelho dissolve no lado em que a janela o corta.
+                                    tela.ancora === "topo"
+                                        ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
+                                        : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
+                                )}
+                            >
+                                {/* Um aparelho só: as telas trocam no fade, ele anda quando o corte muda
+                                    de lado e o alvo desliza até o próximo toque. */}
+                                <motion.div
+                                    initial={false}
+                                    animate={{ y: tela.ancora === "topo" ? 0 : SUBIDA_DO_APARELHO }}
+                                    transition={movimento}
+                                    className="absolute inset-x-0 top-0 aspect-[720/1488]"
+                                >
+                                    {TELAS.map((t) => (
+                                        <Image
+                                            key={t.imagem.src}
+                                            src={t.imagem}
+                                            alt=""
+                                            sizes="240px"
+                                            placeholder="blur"
+                                            className={cn(
+                                                "absolute inset-0 h-auto w-60 max-w-none transition-opacity duration-(--duration-slow) ease-(--ease-out)",
+                                                t === tela ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                    ))}
+                                    <motion.span
+                                        initial={false}
+                                        animate={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
+                                        transition={movimento}
+                                        className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
+                                    >
+                                        <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
+                                        <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
+                                    </motion.span>
+                                </motion.div>
+                            </div>
+                        ) : null}
 
                         {passo === 0 ? (
                             <>
@@ -339,33 +315,19 @@ export function GuiaDoAtalho({
                             </>
                         ) : null}
 
-                        {passo === 1 ? (
-                            <>
-                                <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
-                                {ATALHO_PRONTO ? (
-                                    <Button asChild variant="primary">
-                                        <a href={ATALHO_PRONTO} target="_blank" rel="noreferrer">
-                                            Abrir o atalho
-                                        </a>
-                                    </Button>
-                                ) : (
-                                    <Alert tone="warning">
-                                        <AlertDescription>O atalho pronto ainda não está disponível.</AlertDescription>
-                                    </Alert>
-                                )}
-                                <Collapsible variant="card" defaultOpen={!ATALHO_PRONTO}>
-                                    <CollapsibleRow>Montar à mão</CollapsibleRow>
-                                    <CollapsibleContent>
-                                        <div className="flex flex-col gap-3">
-                                            <Muted>
-                                                No app Atalhos, crie um atalho que envie o que você disser para este
-                                                endereço, junto com o código do aparelho.
-                                            </Muted>
-                                            <CampoDeCopiar rotulo="Endereço" valor={enderecoDeCaptura()} />
-                                        </div>
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            </>
+                        {passo === 4 ? (
+                            <Collapsible variant="card">
+                                <CollapsibleRow>Montar à mão</CollapsibleRow>
+                                <CollapsibleContent>
+                                    <div className="flex flex-col gap-3">
+                                        <Muted>
+                                            Fora do iPhone, crie uma automação que envie o que você disser para este
+                                            endereço, junto com o código do aparelho.
+                                        </Muted>
+                                        <CampoDeCopiar rotulo="Endereço" valor={enderecoDeCaptura()} />
+                                    </div>
+                                </CollapsibleContent>
+                            </Collapsible>
                         ) : null}
                     </DialogBody>
                     <DialogFooter>
@@ -381,7 +343,7 @@ export function GuiaDoAtalho({
                                 </Button>
                                 <Button
                                     type="button"
-                                    variant={passo === 1 && ATALHO_PRONTO ? "secondary" : "primary"}
+                                    variant={passo === 1 ? "secondary" : "primary"}
                                     onClick={ultimo ? fechar : () => setPasso(passo + 1)}
                                 >
                                     {ultimo ? "Pronto" : "Próximo"}

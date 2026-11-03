@@ -1,28 +1,37 @@
 # Lançar gasto sem abrir o app
 
-## Para o dono: publicar o atalho pronto
+## Para o dono: o atalho pronto
 
-O guia "Conectar o iPhone" do app oferece o botão **Abrir o atalho**, que leva a
-um atalho já montado. Você monta esse atalho uma vez e publica o link. Sem o
-link, o guia mostra "O atalho pronto ainda não está disponível." e ensina a
-montar à mão.
+O guia "Conectar o iPhone" do app baixa o atalho assinado
+`public/atalho/Lançar gasto.shortcut` pelo botão **Baixar o atalho**. Não há
+link do iCloud nem variável de ambiente.
 
-1. No app **Atalhos**, crie um atalho chamado **Lançar gasto**.
-2. Primeira ação: **Se** a **Entrada do atalho** tem algum valor. Com a entrada
-   (a transação da Carteira: valor, comerciante e cartão), monte o corpo com os
-   campos separados da seção 4. Senão, use **Ditar texto** (Português do Brasil)
-   e monte o corpo com `text`, como na seção 3.
-3. **Obter conteúdo de URL**, com `POST` para `<URL>`, o cabeçalho
-   `Authorization` = `Bearer ` seguido do código, e o corpo JSON da seção 2.
-4. **Obter valor do dicionário** (`resumo`) e **Mostrar notificação** com ele.
-5. Em **Configurações do atalho** › **Perguntas de importação**, crie uma
-   pergunta para o campo do código, com o texto "Cole o código do aparelho".
-   Cada pessoa cola o próprio código ao adicionar o atalho, e o seu fica de fora.
-6. Teste com um código seu. Depois **tire o seu código** do atalho (a pergunta
-   de importação fica vazia) e revogue esse código no app.
-7. **Compartilhar** › **Copiar link do iCloud**.
-8. Ponha o link em `NEXT_PUBLIC_CAPTURE_SHORTCUT_URL`, na Vercel e no
-   `.env.local`, e refaça o deploy. A variável é lida na compilação.
+O arquivo é gerado e assinado por:
+
+```bash
+python3 scripts/atalho/gerar-atalho.py
+```
+
+Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
+do ambiente ou do `.env.local`. **Rode de novo se o endereço do Supabase
+mudar**, e versione o arquivo novo. `python3 scripts/atalho/gerar-atalho.py
+--verificar` confere o atalho sem assinar nem gravar.
+
+O atalho tem, nesta ordem:
+
+1. Uma ação **Texto** vazia, com a pergunta de importação "Cole o código do
+   aparelho que o Finance mostrou.". Cada pessoa cola o próprio código ao
+   adicionar o atalho.
+2. **Se** há **Entrada do atalho**: a frase é a entrada (a transação da
+   Carteira) e a origem é `apple_pay`. Senão, **Ditar texto**, e a origem é
+   `shortcut`.
+3. **Obter conteúdo de URL**: `POST` para a Edge `capture`, com o cabeçalho
+   `Authorization` = `Bearer ` seguido do Texto da ação 1 (o `Bearer ` fica no
+   cabeçalho, fora da pergunta), e o corpo JSON `{ "text", "source" }`.
+4. **Mostrar notificação** com o `resumo` da resposta.
+
+As telas do guia são capturas do iOS 27 na moldura do iPhone
+(`scripts/atalho/moldura.py`, sobre o PSD de `docs/design/mockups/`).
 
 O resto deste guia é a referência de quem monta à mão.
 
@@ -40,8 +49,8 @@ valor real de nenhum deles.**
 
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
-| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Conectar aparelho › passo 2 › "Montar à mão" › Endereço |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar sem abrir o app" › Conectar aparelho (passo 1 o cria; ele aparece nos passos 1 e 2, e some ao fechar o guia) |
+| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Conectar aparelho › passo 5 › "Montar à mão" › Endereço |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar sem abrir o app" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
