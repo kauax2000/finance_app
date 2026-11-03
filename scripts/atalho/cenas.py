@@ -8,7 +8,7 @@ cima entram a borda acesa da Siri, a pergunta e a resposta, ou a notificação
 com o ícone do Finance recortado da própria captura. Nenhum logo da Apple: a
 Siri aparece pela borda, não pelo símbolo (marca registrada).
 
-    python3 scripts/atalho/cenas.py <inicio.png> <saida-siri.png> <saida-notificacao.png>
+    python3 scripts/atalho/cenas.py <inicio.png> <saida-siri.png> <saida-notificacao.png> <mask-screen.png>
 
 As saídas são telas cruas (1320×2868); `moldura.py` as põe no iPhone 17 Pro prata.
 Precisa do Pillow.
@@ -41,37 +41,45 @@ def placa(base: Image.Image, caixa: tuple[int, int, int, int], raio: int, alfa: 
     base.paste(recorte, (x0, y0), mascara)
 
 
+MASCARA_DA_TELA = None  # o caminho da máscara da tela do PSD (`mask-screen.png`), passado por argumento
+
+
+def borda_da_siri(w: int, h: int) -> Image.Image:
+    import math
+
+    from PIL import ImageChops
+
+    mascara = Image.open(MASCARA_DA_TELA).getchannel("A").resize((w, h), Image.LANCZOS)
+    # O miolo é a máscara encolhida: borrar e cortar alto encolhe mantendo a curva dos cantos.
+    miolo = mascara.filter(ImageFilter.GaussianBlur(16)).point(lambda a: 255 if a > 250 else 0)
+    anel = ImageChops.subtract(mascara, miolo).filter(ImageFilter.GaussianBlur(22))
+    anel = ImageChops.multiply(anel, mascara)  # nada vaza para fora da tela
+    # As cores pelo ângulo em volta do centro, numa imagem pequena (o anel é borrado mesmo).
+    cores = [(255, 149, 0), (255, 45, 146), (175, 82, 222), (10, 132, 255), (90, 200, 250), (255, 149, 0)]
+    pw, ph = w // 8, h // 8
+    campo = Image.new("RGB", (pw, ph))
+    px = []
+    for y in range(ph):
+        for x in range(pw):
+            t = (math.atan2(y - ph / 2, x - pw / 2) / (2 * math.pi) + 0.5) % 1
+            a = t * (len(cores) - 1)
+            c0, c1 = cores[int(a)], cores[min(int(a) + 1, len(cores) - 1)]
+            f = a - int(a)
+            px.append(tuple(round(c0[k] + (c1[k] - c0[k]) * f) for k in range(3)))
+    campo.putdata(px)
+    campo = campo.resize((w, h), Image.BILINEAR).convert("RGBA")
+    campo.putalpha(anel.point(lambda a: min(255, int(a * 1.9))))
+    return campo
+
+
 def siri(inicio: Image.Image) -> Image.Image:
     w, h = inicio.size
     tela = inicio.convert("RGBA").filter(ImageFilter.GaussianBlur(18))
     tela = Image.alpha_composite(tela, Image.new("RGBA", tela.size, (0, 0, 0, 90)))
-    # A borda acesa da Siri: um contorno nas cores quentes e frias, borrado para dentro.
-    borda = Image.new("RGBA", tela.size, (0, 0, 0, 0))
-    d = ImageDraw.Draw(borda)
-    cores = [(255, 149, 0), (255, 45, 146), (175, 82, 222), (10, 132, 255), (90, 200, 250), (255, 149, 0)]
-    passos = 240
-    for i in range(passos):
-        t = i / passos
-        a = t * (len(cores) - 1)
-        c0, c1 = cores[int(a)], cores[min(int(a) + 1, len(cores) - 1)]
-        f = a - int(a)
-        cor = tuple(round(c0[k] + (c1[k] - c0[k]) * f) for k in range(3)) + (255,)
-        # Percorre o perímetro: topo, direita, base, esquerda.
-        per = 2 * (w + h)
-        p0, p1 = t * per, (i + 1) / passos * per
-
-        def ponto(p: float) -> tuple[float, float]:
-            if p < w:
-                return (p, 0)
-            if p < w + h:
-                return (w, p - w)
-            if p < 2 * w + h:
-                return (w - (p - w - h), h)
-            return (0, h - (p - 2 * w - h))
-
-        d.line([ponto(p0), ponto(p1)], fill=cor, width=70)
-    borda = borda.filter(ImageFilter.GaussianBlur(28))
-    tela = Image.alpha_composite(tela, borda)
+    # A borda acesa da Siri: um anel por dentro da tela, na curva dos cantos do aparelho (a
+    # máscara da tela do PSD), com as cores correndo em volta. Desenhada reta, ela era cortada
+    # nos cantos pela moldura.
+    tela = Image.alpha_composite(tela, borda_da_siri(w, h))
 
     d = ImageDraw.Draw(tela)
     # A pergunta do atalho, no topo, como a Siri responde.
@@ -107,6 +115,8 @@ def notificacao(inicio: Image.Image) -> Image.Image:
 
 
 def main() -> None:
+    global MASCARA_DA_TELA
+    MASCARA_DA_TELA = sys.argv[4]
     inicio = Image.open(sys.argv[1])
     siri(inicio).save(sys.argv[2])
     notificacao(inicio).save(sys.argv[3])
