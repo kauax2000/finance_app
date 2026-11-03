@@ -128,7 +128,7 @@ describe("tokens de captura", () => {
     })
     it("só tokens ativos, e revogar pede confirmação de verdade", () => {
         const f = lerFonte("src/components/account/atalho-secao.tsx")
-        expect(f).toContain("revoked_at")
+        expect(lerFonte("src/components/account/aparelhos-de-captura.ts")).toContain("revoked_at == null")
         expect(f).toContain("AlertDialog")
         expect(f).not.toContain("window.confirm")
     })
@@ -152,7 +152,7 @@ describe("a página Minha conta", () => {
         expect(p()).toContain('aria-hidden="true"')
     })
     it("as seções mostram o próprio erro, sem o toast global", () => {
-        for (const f of ["atalho-secao.tsx", "ias-secao.tsx"])
+        for (const f of ["aparelhos-de-captura.ts", "ias-secao.tsx"])
             expect(lerFonte(`src/components/account/${f}`)).toContain("meta: { errorToast: false }")
     })
     it("a data de membro é o selo, com a frase inteira como nome", () => {
@@ -197,5 +197,45 @@ describe("Lançar sem abrir o app: o vazio", () => {
         expect(s).not.toContain("Nenhum aparelho conectado.")
         expect(s).toMatch(/tokens\.length > 0 \?[\s\S]*Conectar aparelho/)
         expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?/)
+    })
+})
+
+describe("Lançar ao pagar", () => {
+    const conta = (a: string) => semComentarios(lerFonte(`src/components/account/${a}`))
+    it("as duas seções leem os aparelhos pelo mesmo hook", () => {
+        const h = conta("aparelhos-de-captura.ts")
+        expect(h).toContain('queryKey: ["capture_tokens", user?.id]')
+        expect(h).toContain("COLUNAS")
+        expect(h).toContain("revoked_at == null")
+        for (const f of ["apple-pay-secao.tsx", "atalho-secao.tsx"]) {
+            expect(conta(f)).toContain("useAparelhosDeCaptura()")
+            expect(conta(f)).not.toContain('from("capture_tokens")')
+        }
+    })
+    it("sem aparelho manda conectar antes; com aparelho, Configurar abre o guia", () => {
+        const s = conta("apple-pay-secao.tsx")
+        expect(s).toMatch(/ativos\.length === 0\s*\?[\s\S]*Conecte o iPhone primeiro, em Lançar sem abrir o app\.[\s\S]*Configurar/)
+        expect(s).toContain('titulo="Lançar ao pagar"')
+        expect(s).toContain("Não foi possível ver os aparelhos.")
+        expect(s).toContain("<GuiaDoApplePay")
+    })
+    it("o guia tem 3 passos, recomeça ao abrir e termina na notificação", () => {
+        const g = lerFonte("src/components/account/guia-do-apple-pay.tsx")
+        const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
+        expect(lista.match(/titulo: "/g)).toHaveLength(3)
+        expect(g).toContain("<CaixaDoPasso")
+        expect(g).toMatch(/setPasso\(0\)/)
+        expect(g).toContain("TELA_DA_NOTIFICACAO")
+        expect(g).toContain("shortcut:")
+    })
+    it("a página põe a seção logo depois de Lançar sem abrir o app", () => {
+        expect(lerFonte("src/app/(app)/account/page-client.tsx")).toMatch(/<AtalhoSecao \/>\s*<ApplePaySecao \/>/)
+    })
+    it("nenhum texto de tela fala em token", () => {
+        for (const f of ["apple-pay-secao.tsx", "guia-do-apple-pay.tsx"]) {
+            const s = conta(f)
+            expect(s).not.toMatch(/>[^<{]*\btokens?\b[^<]*</i)
+            expect(s).not.toMatch(/"[^"\n]*\btokens?\b[^"\n]*"/i)
+        }
     })
 })

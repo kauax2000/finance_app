@@ -1,11 +1,10 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
+import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
-import { useAuth } from "@/components/providers"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
     AlertDialog,
@@ -33,9 +32,6 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
 
-/** O authenticated só lê estas sete colunas: o hash nunca sai do banco, e `*` dá 42501. */
-const COLUNAS = "id, user_id, workspace_id, name, created_at, last_used_at, revoked_at"
-
 export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 
 /** O erro do banco (check, not null ou o `raise` das RPCs) na frase da tela. */
@@ -51,30 +47,15 @@ export function mensagemDoErroDeToken(erro: { code?: string; message?: string })
  * Apple Pay e compartilhar). Só os ativos aparecem; o código novo vive no guia.
  */
 export function AtalhoSecao() {
-    const { user } = useAuth()
     const { workspaces } = useWorkspace()
-    const lista = useQuery({
-        queryKey: ["capture_tokens", user?.id],
-        enabled: Boolean(user),
-        retry: false,
-        // A seção mostra o próprio erro: sem o toast global cru, em inglês.
-        meta: { errorToast: false },
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("capture_tokens")
-                .select(COLUNAS)
-                .order("created_at", { ascending: false })
-            if (error) throw error
-            return data as CaptureToken[]
-        },
-    })
+    const lista = useAparelhosDeCaptura()
     const [guiaAberto, setGuiaAberto] = useState(false)
     const [alvo, setAlvo] = useState<CaptureToken | null>(null)
     const [revogando, setRevogando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
 
     const nomeDaCarteira = (id: string) => workspaces.find((w) => w.id === id)?.name ?? "Carteira"
-    const tokens = (lista.data ?? []).filter((t) => t.revoked_at == null)
+    const tokens = lista.ativos
 
     function fecharRevogar(aberto: boolean) {
         if (aberto) return
@@ -105,7 +86,7 @@ export function AtalhoSecao() {
             }
         >
             <Card padding="none">
-                {lista.isPending && user ? (
+                {lista.isLoading ? (
                     <SkeletonGroup label="Carregando aparelhos…" delay>
                         <div className="flex flex-col gap-1 px-4 py-3">
                             <Skeleton className="h-4 w-40 max-w-full" />
