@@ -42,7 +42,6 @@ describe("tokens de captura", () => {
         const f = fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")
         expect(f).toContain('rpc("create_capture_token"')
         expect(f).toContain('rpc("revoke_capture_token"')
-        expect(f).toContain("/functions/v1/capture")
         expect(f).not.toMatch(/select\(\s*["']\*["']\s*\)/)
         expect(f).not.toMatch(/github\.com|docs\/captura/)
         // Nenhum "token" em texto de tela (entre > e <).
@@ -68,7 +67,7 @@ describe("tokens de captura", () => {
         expect(g).toContain('"/atalho/Lan%C3%A7ar%20gasto.shortcut"')
         expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download>/)
         expect(g).not.toMatch(/NEXT_PUBLIC_CAPTURE_SHORTCUT_URL|icloud\.com|DeviceFrame/)
-        expect(g).toContain("Montar à mão")
+        expect(g).not.toContain("Montar à mão")
     })
     it("a cópia automática não quebra sem permissão, e o texto só promete a cópia que houve", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
@@ -147,12 +146,6 @@ describe("a página Minha conta", () => {
     it("a data de membro é o selo, com a frase inteira como nome", () => {
         expect(p()).toContain("<Seal")
         expect(p()).toContain("label={`Membro desde ${formatTransactionMonthYearPtBr(user.created_at)}`}")
-    })
-    it("o endereço da captura não duplica a barra do fim", async () => {
-        const { enderecoDeCaptura } = await import("./guia-do-atalho")
-        vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co/")
-        expect(enderecoDeCaptura()).toBe("https://x.supabase.co/functions/v1/capture")
-        vi.unstubAllEnvs()
     })
 })
 

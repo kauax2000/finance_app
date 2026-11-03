@@ -7,7 +7,6 @@ import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
 import {
     Dialog,
     DialogBody,
@@ -32,11 +31,6 @@ import colar from "./assets/atalho-4-colar.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
-
-/** O endereço da captura no projeto Supabase, com ou sem barra no fim. */
-export function enderecoDeCaptura(): string {
-    return `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "")}/functions/v1/capture`
-}
 
 type Tela = {
     imagem: StaticImageData
@@ -310,21 +304,6 @@ export function GuiaDoAtalho({
                                                 ) : null}
                                                 <FormError>{erro}</FormError>
                                             </>
-                                        ) : null}
-
-                                        {i === 4 ? (
-                                            <Collapsible variant="card">
-                                                <CollapsibleRow>Montar à mão</CollapsibleRow>
-                                                <CollapsibleContent>
-                                                    <div className="flex flex-col gap-3">
-                                                        <Muted>
-                                                            Fora do iPhone, crie uma automação que envie o que você
-                                                            disser para este endereço, junto com o código do aparelho.
-                                                        </Muted>
-                                                        <CampoDeCopiar rotulo="Endereço" valor={enderecoDeCaptura()} />
-                                                    </div>
-                                                </CollapsibleContent>
-                                            </Collapsible>
                                         ) : null}
                                     </motion.div>
                                 )
