@@ -63,18 +63,21 @@ describe("Configurações: página única", () => {
         expect(() => rolarAteAncora("", doc)).not.toThrow()
     })
 
-    it("Carteira: as ações moram no ⋯, e cada uma respeita o papel", () => {
+    it("Carteira: cartão enxuto, ações dentro do Editar carteira", () => {
         const fonte = lerFonte("src/components/settings/workspace-appearance-settings.tsx")
-        expect(fonte).toContain("<EllipsisVerticalIcon aria-hidden />")
-        expect(fonte).toContain("<DropdownMenuContent")
+        expect(fonte).not.toContain("DropdownMenu")
+        expect(fonte).not.toContain("EllipsisVerticalIcon")
         for (const texto of ["Editar", "Sair da carteira", "Excluir carteira"]) expect(fonte).toContain(texto)
-        // Editar só sob `owner`; depois dele: excluir com canDeleteProject, sair com !owner, senão nada.
-        expect(fonte).toMatch(/owner \? \(\s*<DropdownMenuItem onSelect=\{openEdit\}/)
+        expect(fonte).toMatch(/owner \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{openEdit\}/)
         expect(fonte.match(/openEdit/g)).toHaveLength(2) // a definição e o único uso
-        // Excluir só com canDeleteProject; sair só com !owner; dono pessoal: nada.
-        expect(fonte).toMatch(/canDeleteProject\s*\?/)
-        expect(fonte).toMatch(/!owner\s*\?/)
-        expect(fonte).toMatch(/: null/)
+        const ini = fonte.indexOf("acoes={")
+        const acoes = fonte.slice(ini, fonte.indexOf("\n            />", ini))
+        expect(acoes).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
+        expect(fonte.replace(acoes, "")).toMatch(/!owner\s*\?[\s\S]*Sair da carteira/)
+        for (const texto of ["Divisão", "Datas e orçamento", "{podeDivisao ? (", "{podeDatas ? ("]) expect(acoes).toContain(texto)
+        const dialogo = lerFonte("src/components/settings/workspace-appearance-edit-dialog.tsx")
+        expect(dialogo).toMatch(/acoes\?: (React\.)?ReactNode/)
+        expect(dialogo).toMatch(/<DialogBody>[\s\S]*\{acoes \?[\s\S]*<\/DialogBody>/)
     })
 
     it("Este aparelho fica em linhas, sem os três arquivos antigos, e a IA saiu da página", () => {

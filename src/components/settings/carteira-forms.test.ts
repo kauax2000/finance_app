@@ -6,6 +6,8 @@ import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 const carteira = () => semComentarios(lerFonte("src/components/settings/workspace-appearance-settings.tsx"), "tudo")
+// O valor passado a `acoes=`, até o fim do `WorkspaceAppearanceEditDialog`.
+const acoesDe = (f: string) => f.slice(f.indexOf("acoes={"), f.indexOf("\n            />", f.indexOf("acoes={")))
 const FORMULARIOS = ["src/components/settings/carteira-divisao-dialog.tsx", "src/components/settings/carteira-projeto-form.tsx"]
 
 describe("ymdParaData", () => {
@@ -105,13 +107,18 @@ describe("Carteira em linhas", () => {
 
     it("Editar e Alterar só para o dono; Divisão fora da pessoal, Datas só em projeto", () => {
         const f = carteira()
-        expect(f).toMatch(/owner \? \(\s*<DropdownMenuItem onSelect=\{openEdit\}/)
+        expect(f).toMatch(/owner \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{openEdit\}/)
+        expect(f).not.toContain("DropdownMenu")
+        expect(f).not.toContain("EllipsisVerticalIcon")
         // Toda carteira divide e convida; a primeira só não se apaga.
         expect(f).toMatch(/podeDivisao = owner$/m)
         expect(f).toContain("owner && currentWorkspace && !isPrimeira")
         expect(f).toMatch(/podeDatas = owner && currentWorkspace\?\.purpose === "project"/)
-        expect(f).toMatch(/\{podeDivisao \? \(/)
-        expect(f).toMatch(/\{podeDatas \? \(/)
+        const acoes = acoesDe(f)
+        expect(acoes).toMatch(/\{podeDivisao \? \(/)
+        expect(acoes).toMatch(/\{podeDatas \? \(/)
+        expect(acoes).toContain('titulo="Divisão"')
+        expect(acoes).toContain('titulo="Datas e orçamento"')
         // Um diálogo aberto não sobrevive a perder a permissão.
         expect(f).toContain("open={divisaoOpen && podeDivisao}")
         expect(f).toContain("open={datasOpen && podeDatas}")
@@ -122,10 +129,11 @@ describe("Carteira em linhas", () => {
         expect(carteira()).toContain("AINDA_NAO_DISPONIVEL")
     })
 
-    it("a última linha: excluir, sair, ou nada para o dono da pessoal", () => {
+    it("Excluir mora no acoes do Editar; Sair fica no cartão, só para quem não é dono", () => {
         const f = carteira()
-        expect(f).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira[\s\S]*!owner \?[\s\S]*Sair da carteira[\s\S]*: null/)
-        expect(f.match(/<DropdownMenuItem variant="destructive"/g)).toHaveLength(2)
+        expect(acoesDe(f)).toMatch(/canDeleteProject \?[\s\S]*Excluir carteira/)
+        expect(f.replace(acoesDe(f), "")).toMatch(/!owner \?[\s\S]*Sair da carteira/)
+        expect(acoesDe(f)).not.toContain("Sair da carteira")
     })
 })
 

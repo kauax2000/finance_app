@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import type { Workspace } from "@/lib/supabase"
 import {
@@ -25,12 +26,14 @@ type WorkspaceAppearanceEditDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     workspace: Workspace | null
+    acoes?: React.ReactNode
 }
 
 export function WorkspaceAppearanceEditDialog({
     open,
     onOpenChange,
     workspace,
+    acoes,
 }: WorkspaceAppearanceEditDialogProps) {
     const { updateWorkspace, error: contextError } = useWorkspace()
 
@@ -127,6 +130,12 @@ export function WorkspaceAppearanceEditDialog({
                             idPrefix="settings-workspace-edit-dialog"
                             previewHint="Assim ela aparece na barra lateral e nos menus."
                         />
+                        {acoes ? (
+                            <>
+                                <Separator />
+                                {acoes}
+                            </>
+                        ) : null}
                     </DialogBody>
                     <DialogFooter>
                         <DialogClose asChild>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { CarteiraDivisaoDialog } from "@/components/settings/carteira-divisao-dialog"
 import { CarteiraProjetoForm, resumoDoCalendario } from "@/components/settings/carteira-projeto-form"
 import { SettingsLink, SettingsRow, SettingsSection } from "@/components/settings/settings-section"
-import { ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceEditDialog } from "@/components/settings/workspace-appearance-edit-dialog"
@@ -14,14 +14,8 @@ import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
-import { Separator } from "@/components/ui/separator"
+import { ItemGroup } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 
@@ -41,7 +35,7 @@ function WorkspaceAppearanceSkeleton() {
                             <Skeleton className="size-12 shrink-0 rounded-row-lg" />
                             <Skeleton className="h-4 w-36 max-w-full" />
                         </div>
-                        <Skeleton shape="tile" size="lg" />
+                        <Skeleton shape="pill" className="h-9 w-20 pointer-coarse:h-11" />
                     </div>
                 </CardContent>
             </Card>
@@ -121,6 +115,47 @@ export function WorkspaceAppearanceSettings() {
                 open={dialogOpen}
                 onOpenChange={handleDialogOpenChange}
                 workspace={dialogOpen ? currentWorkspace : null}
+                acoes={
+                    podeDivisao || podeDatas || canDeleteProject ? (
+                        <>
+                            {podeDivisao || podeDatas ? (
+                                <ItemGroup variant="divided">
+                                    {podeDivisao ? (
+                                        splitMode === undefined ? (
+                                            <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
+                                        ) : (
+                                            <SettingsLink
+                                                titulo="Divisão"
+                                                valor={splitMode === "split" ? "Dividida" : "Pote único"}
+                                                aria-label="Alterar divisão"
+                                                onClick={() => setDivisaoOpen(true)}
+                                            />
+                                        )
+                                    ) : null}
+                                    {podeDatas ? (
+                                        <SettingsLink
+                                            titulo="Datas e orçamento"
+                                            valor={currentWorkspace ? resumoDoCalendario(currentWorkspace) : ""}
+                                            aria-label="Alterar datas e orçamento"
+                                            onClick={() => setDatasOpen(true)}
+                                        />
+                                    ) : null}
+                                </ItemGroup>
+                            ) : null}
+                            {canDeleteProject ? (
+                                <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    className="self-start text-destructive hover:text-destructive active:text-destructive"
+                                    onClick={() => setDeleteOpen(true)}
+                                >
+                                    <TrashIcon data-icon="inline-start" aria-hidden />
+                                    Excluir carteira
+                                </Button>
+                            ) : null}
+                        </>
+                    ) : null
+                }
             />
             <WorkspaceDeleteDialog
                 open={deleteOpen}
@@ -188,37 +223,18 @@ export function WorkspaceAppearanceSettings() {
                                         {currentWorkspace.name}
                                     </p>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="tertiary"
-                                            size="icon-md"
-                                            aria-label={`Mais opções da carteira ${currentWorkspace.name}`}
-                                        >
-                                            <EllipsisVerticalIcon aria-hidden />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" size="md">
-                                        {owner ? (
-                                            <DropdownMenuItem onSelect={openEdit}>
-                                                <PencilIcon aria-hidden />
-                                                Editar
-                                            </DropdownMenuItem>
-                                        ) : null}
-                                        {canDeleteProject ? (
-                                            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
-                                                <TrashIcon aria-hidden />
-                                                Excluir carteira
-                                            </DropdownMenuItem>
-                                        ) : !owner ? (
-                                            <DropdownMenuItem variant="destructive" onSelect={() => setLeaveOpen(true)}>
-                                                <ArrowRightStartOnRectangleIcon aria-hidden />
-                                                Sair da carteira
-                                            </DropdownMenuItem>
-                                        ) : null}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {owner ? (
+                                    <Button type="button" variant="tertiary" onClick={openEdit}>
+                                        <PencilIcon data-icon="inline-start" aria-hidden />
+                                        Editar
+                                    </Button>
+                                ) : null}
+                                {!owner ? (
+                                    <Button type="button" variant="tertiary" onClick={() => setLeaveOpen(true)}>
+                                        <ArrowRightStartOnRectangleIcon data-icon="inline-start" aria-hidden />
+                                        Sair da carteira
+                                    </Button>
+                                ) : null}
                             </div>
                             {!owner ? (
                                 <CardNote>
@@ -227,32 +243,6 @@ export function WorkspaceAppearanceSettings() {
                                         Só o dono pode alterar nome, ícone e cor.
                                     </p>
                                 </CardNote>
-                            ) : null}
-                            {podeDivisao ? (
-                                <>
-                                    <Separator />
-                                    {splitMode === undefined ? (
-                                        <SettingsRow titulo="Divisão" descricao={AINDA_NAO_DISPONIVEL} />
-                                    ) : (
-                                        <SettingsLink
-                                            titulo="Divisão"
-                                            valor={splitMode === "split" ? "Dividida" : "Pote único"}
-                                            aria-label="Alterar divisão"
-                                            onClick={() => setDivisaoOpen(true)}
-                                        />
-                                    )}
-                                </>
-                            ) : null}
-                            {podeDatas ? (
-                                <>
-                                    <Separator />
-                                    <SettingsLink
-                                        titulo="Datas e orçamento"
-                                        valor={resumoDoCalendario(currentWorkspace)}
-                                        aria-label="Alterar datas e orçamento"
-                                        onClick={() => setDatasOpen(true)}
-                                    />
-                                </>
                             ) : null}
                         </CardContent>
                     </Card>
