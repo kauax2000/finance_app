@@ -3,10 +3,9 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
-import { ComoConfigurarDialog } from "@/components/account/como-configurar-dialog"
-import { NovoAparelhoDialog } from "@/components/account/novo-aparelho-dialog"
+import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { useAuth } from "@/components/providers"
-import { SettingsLink, SettingsSection } from "@/components/settings/settings-section"
+import { SettingsSection } from "@/components/settings/settings-section"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -42,7 +41,7 @@ export function mensagemDoErroDeToken(erro: { code?: string; message?: string })
 
 /**
  * Lançar sem abrir o app: os tokens de captura da pessoa (Atalho do iPhone,
- * Apple Pay e compartilhar). Só os ativos aparecem; o token novo vive no diálogo.
+ * Apple Pay e compartilhar). Só os ativos aparecem; o código novo vive no guia.
  */
 export function AtalhoSecao() {
     const { user } = useAuth()
@@ -62,7 +61,6 @@ export function AtalhoSecao() {
             return data as CaptureToken[]
         },
     })
-    const [novoAberto, setNovoAberto] = useState(false)
     const [guiaAberto, setGuiaAberto] = useState(false)
     const [alvo, setAlvo] = useState<CaptureToken | null>(null)
     const [revogando, setRevogando] = useState(false)
@@ -92,8 +90,8 @@ export function AtalhoSecao() {
         <SettingsSection
             titulo="Lançar sem abrir o app"
             actions={
-                <Button type="button" variant="secondary" onClick={() => setNovoAberto(true)}>
-                    Novo aparelho
+                <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
+                    Conectar aparelho
                 </Button>
             }
         >
@@ -131,17 +129,11 @@ export function AtalhoSecao() {
                                 </Item>
                             ))
                         )}
-                        <SettingsLink titulo="Como configurar" onClick={() => setGuiaAberto(true)} />
                     </ItemGroup>
                 )}
             </Card>
 
-            <NovoAparelhoDialog
-                open={novoAberto}
-                onOpenChange={setNovoAberto}
-                aoCriar={() => void lista.refetch()}
-            />
-            <ComoConfigurarDialog open={guiaAberto} onOpenChange={setGuiaAberto} />
+            <GuiaDoAtalho open={guiaAberto} onOpenChange={setGuiaAberto} aoCriar={() => void lista.refetch()} />
 
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>
                 <AlertDialogContent>

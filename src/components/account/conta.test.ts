@@ -38,23 +38,37 @@ describe("o que dependia de sessão saiu", () => {
 describe("tokens de captura", () => {
     const fonteTudo = (...arquivos: string[]) => arquivos.map((a) => semComentarios(lerFonte(`src/components/account/${a}`), "tudo")).join("\n")
 
-    it("cria, revoga e mostra o token uma vez só", () => {
-        const f = fonteTudo("atalho-secao.tsx", "novo-aparelho-dialog.tsx", "como-configurar-dialog.tsx")
+    it("cria, revoga e mostra o código uma vez só", () => {
+        const f = fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")
         expect(f).toContain('rpc("create_capture_token"')
         expect(f).toContain('rpc("revoke_capture_token"')
-        expect(f).toContain("Guarde agora: ele não aparece de novo.")
         expect(f).toContain("/functions/v1/capture")
-        expect(f).toContain("docs/captura/atalho-iphone.md")
-        // Só as sete colunas que o authenticated lê: `select('*')` dá 42501.
         expect(f).not.toMatch(/select\(\s*["']\*["']\s*\)/)
-        // Lido sem cortar comentário: o `tudo` come o `//` da URL.
-        expect(lerFonte("src/components/account/como-configurar-dialog.tsx")).toContain(
-            "https://github.com/kauax2000/finance_app/blob/main/docs/captura/atalho-iphone.md",
-        )
+        expect(f).not.toMatch(/github\.com|docs\/captura/)
+        // Nenhum "token" em texto de tela (entre > e <).
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).not.toMatch(/>[^<{]*\btoken\b[^<]*</i)
     })
-    it("o token vive só no estado do diálogo", () => {
-        const f = fonteTudo("atalho-secao.tsx", "novo-aparelho-dialog.tsx")
-        expect(f).not.toMatch(/localStorage|sessionStorage|setQueryData\(\s*\[\s*["']capture_tokens|console\./)
+    it("o código vive só no estado do guia, e fechar o descarta", () => {
+        const g = lerFonte("src/components/account/guia-do-atalho.tsx")
+        expect(g).toMatch(/setCodigo\(null\)/)
+        expect(g).toMatch(/setPasso\(0\)/)
+        expect(g).not.toMatch(/localStorage|sessionStorage|console\./)
+        expect(fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")).not.toMatch(/setQueryData\(\s*\[\s*["']capture_tokens/)
+    })
+    it("o passo 1 cria pelo formulário, e só o sucesso avança", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toContain("Criar código")
+        expect(g).toMatch(/<FormSubmit/)
+        expect(g).toMatch(/if \(error\) return setErro\(mensagemDoErroDeToken\(error\)\)/)
+    })
+    it("sem o link do atalho, o passo 2 avisa e abre o caminho à mão", () => {
+        const g = lerFonte("src/components/account/guia-do-atalho.tsx")
+        expect(g).toContain("NEXT_PUBLIC_CAPTURE_SHORTCUT_URL")
+        expect(g).toContain("O atalho pronto ainda não está disponível.")
+        expect(g).toContain("Montar à mão")
+    })
+    it("a cópia automática não quebra sem permissão", () => {
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toMatch(/clipboard\.writeText\([^)]*\)\.catch\(/)
     })
     it("os erros do banco em português", async () => {
         const { mensagemDoErroDeToken } = await import("./atalho-secao")
@@ -64,13 +78,6 @@ describe("tokens de captura", () => {
         )
         expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
         expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
-    })
-    it("o token novo vive no diálogo, e fechar o descarta", () => {
-        const d = lerFonte("src/components/account/novo-aparelho-dialog.tsx")
-        expect(d).toContain("Guarde agora: ele não aparece de novo.")
-        expect(d).toContain("Escolha a carteira padrão.")
-        expect(d).toMatch(/setTokenNovo\(null\)/)
-        expect(d).not.toMatch(/localStorage|sessionStorage|console\./)
     })
     it("só tokens ativos, e revogar pede confirmação de verdade", () => {
         const f = lerFonte("src/components/account/atalho-secao.tsx")
@@ -101,11 +108,12 @@ describe("a página Minha conta", () => {
         for (const f of ["atalho-secao.tsx", "ias-secao.tsx"])
             expect(lerFonte(`src/components/account/${f}`)).toContain("meta: { errorToast: false }")
     })
-    it("a data de membro não trunca", () => {
-        expect(p()).toContain("<Muted>Membro desde")
+    it("a data de membro é o selo, com a frase inteira como nome", () => {
+        expect(p()).toContain("<Seal")
+        expect(p()).toContain("label={`Membro desde ${formatTransactionMonthYearPtBr(user.created_at)}`}")
     })
     it("o endereço da captura não duplica a barra do fim", async () => {
-        const { enderecoDeCaptura } = await import("./como-configurar-dialog")
+        const { enderecoDeCaptura } = await import("./guia-do-atalho")
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co/")
         expect(enderecoDeCaptura()).toBe("https://x.supabase.co/functions/v1/capture")
         vi.unstubAllEnvs()
