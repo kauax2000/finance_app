@@ -3,8 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
-import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
-import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
+import { GuiaDoAtalho, JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/guia-do-atalho"
 import { useAuth } from "@/components/providers"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
@@ -118,7 +117,7 @@ export function AtalhoSecao() {
                             <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
                         ) : tokens.length === 0 ? (
                             <EmptyState variant="plain" size="sm">
-                                <OrbeDaSiri />
+                                <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} compacta />
                                 <EmptyStateTitle>Lance gastos falando com a Siri</EmptyStateTitle>
                                 <EmptyStateDescription>
                                     Conecte o iPhone uma vez. Depois é só dizer “42 mercado” e o gasto entra sozinho.
