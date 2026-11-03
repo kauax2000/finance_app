@@ -1,10 +1,9 @@
 "use client"
 
-import { MicrophoneIcon } from "@heroicons/react/24/outline"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
-import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
+import { GuiaDoAtalho, JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/guia-do-atalho"
 import { useAuth } from "@/components/providers"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
@@ -24,7 +23,6 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
-    EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
@@ -119,9 +117,7 @@ export function AtalhoSecao() {
                             <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
                         ) : tokens.length === 0 ? (
                             <EmptyState variant="plain" size="sm">
-                                <EmptyStateIcon>
-                                    <MicrophoneIcon />
-                                </EmptyStateIcon>
+                                <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} compacta />
                                 <EmptyStateTitle>Lance gastos falando com a Siri</EmptyStateTitle>
                                 <EmptyStateDescription>
                                     Conecte o iPhone uma vez. Depois é só dizer “42 mercado” e o gasto entra sozinho.

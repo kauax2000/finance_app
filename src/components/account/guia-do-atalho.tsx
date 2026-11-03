@@ -28,24 +28,28 @@ import baixar from "./assets/atalho-1-baixar.webp"
 import arquivos from "./assets/atalho-2-arquivos.webp"
 import configurar from "./assets/atalho-3-configurar.webp"
 import colar from "./assets/atalho-4-colar.webp"
+import siri from "./assets/atalho-5-siri.webp"
+import applePay from "./assets/atalho-6-apple-pay.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
 
 type Tela = {
     imagem: StaticImageData
-    /** Onde tocar, em % da imagem inteira. */
-    ponto: { x: number; y: number }
+    /** Onde tocar, em % da imagem inteira; sem ele, a tela só mostra o que acontece. */
+    ponto?: { x: number; y: number }
     /** Que ponta da imagem fica à vista na janela. */
     ancora: "topo" | "baixo"
 }
 
 /*
  * Capturas do iOS 27 na moldura do PSD de `docs/design/mockups/` (`scripts/atalho/moldura.py`).
- * shortcut: sem captura real da Siri nem da caixa de digitar do Pedir Entrada; o simulador não tem Siri
- * e a caixa não pôde ser capturada nele. Entra com o print do iPhone do dono.
- * shortcut: sem captura real da automação da Carteira; entra com o print do iPhone do dono.
+ * Os passos 6 e 7 são montados sobre a tela de início real (`scripts/atalho/cenas.py`): o simulador
+ * não tem Siri nem Apple Pay. shortcut: montagens, não capturas; trocar pelo print do iPhone quando houver.
  */
+/** A notificação depois do Apple Pay: a tela do passo 7 e a do vazio da seção. */
+export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
+
 const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Dê um nome a este iPhone" },
     { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
@@ -55,17 +59,19 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
         tela: { imagem: configurar, ponto: { x: 50, y: 92.4 }, ancora: "baixo" },
     },
     { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
-    { titulo: "Fale com a Siri" },
-    { titulo: "Lance ao pagar (opcional)" },
+    { titulo: "Fale com a Siri", tela: { imagem: siri, ancora: "topo" } },
+    { titulo: "Lance ao pagar (opcional)", tela: TELA_DA_NOTIFICACAO },
 ]
 
 /** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
-function JanelaDoAparelho({ tela }: { tela: Tela }) {
+export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compacta?: boolean }) {
     return (
         <div
             aria-hidden
             className={cn(
-                "relative mx-auto h-72 w-60 shrink-0 overflow-hidden",
+                "relative mx-auto shrink-0 overflow-hidden",
+                // Compacta: só o topo do aparelho, para o vazio da seção.
+                compacta ? "h-36 w-48" : "h-72 w-60",
                 // O aparelho dissolve no lado em que a janela o corta.
                 tela.ancora === "topo"
                     ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
@@ -82,17 +88,19 @@ function JanelaDoAparelho({ tela }: { tela: Tela }) {
                 <Image
                     src={tela.imagem}
                     alt=""
-                    sizes="240px"
+                    sizes={compacta ? "192px" : "240px"}
                     placeholder="blur"
-                    className="absolute inset-0 h-auto w-60 max-w-none"
+                    className={cn("absolute inset-0 h-auto max-w-none", compacta ? "w-48" : "w-60")}
                 />
-                <span
-                    style={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
-                    className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
-                >
-                    <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
-                    <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
-                </span>
+                {tela.ponto ? (
+                    <span
+                        style={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
+                        className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
+                    >
+                        <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
+                        <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
+                    </span>
+                ) : null}
             </div>
         </div>
     )
