@@ -21,7 +21,8 @@ import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, F
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { MOLA, SAIDA } from "@/lib/spring"
+import { MOLA } from "@/lib/spring"
+import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import baixar from "./assets/atalho-1-baixar.webp"
@@ -123,6 +124,9 @@ export function GuiaDoAtalho({
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState(0)
     const [direcao, setDirecao] = useState<1 | -1>(1)
+    // O primeiro passo ao abrir não entra pelo lado: só a troca de passo anda.
+    const [mudou, setMudou] = useState(false)
+    const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
     const [nome, setNome] = useState("")
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
@@ -137,6 +141,7 @@ export function GuiaDoAtalho({
         setCopiado(false)
         if (open) {
             setPasso(0)
+            setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
             setNome(primeiro ? `iPhone de ${primeiro}` : "iPhone")
             setCarteira("")
@@ -150,6 +155,7 @@ export function GuiaDoAtalho({
 
     function irPara(n: number) {
         setDirecao(n > passo ? 1 : -1)
+        setMudou(true)
         setPasso(n)
     }
 
@@ -235,35 +241,19 @@ export function GuiaDoAtalho({
                         <span aria-live="polite" className="sr-only">
                             Passo {passo + 1} de {PASSOS.length}: {PASSOS[passo].titulo}
                         </span>
-                        {/* Todos os passos na mesma célula: a folha mede o mais alto e não muda de altura. */}
-                        <div className="grid">
+                        {/* Cada passo tem a altura dele, e a caixa anda de uma altura à outra numa
+                            mola só: o passo entra no lugar, e os pontos e os botões vão junto com a
+                            borda. `data-altura-em-voo` diz ao diálogo que a altura já anda aqui. */}
+                        <div ref={alturaAnimada} data-altura-em-voo="">
                             {PASSOS.map((p, i) => {
-                                const ativo = i === passo
+                                if (i !== passo) return null
                                 return (
                                     <motion.div
                                         key={p.titulo}
-                                        aria-hidden={!ativo || undefined}
-                                        inert={!ativo}
-                                        initial={false}
-                                        animate={
-                                            ativo
-                                                ? {
-                                                      opacity: 1,
-                                                      // O passo entra pelo lado para onde se anda.
-                                                      x: reduzido ? 0 : [direcao * 16, 0],
-                                                      visibility: "visible",
-                                                      transition: reduzido ? { duration: 0 } : MOLA,
-                                                  }
-                                                : {
-                                                      opacity: 0,
-                                                      transition: reduzido ? { duration: 0 } : SAIDA,
-                                                      transitionEnd: { visibility: "hidden" },
-                                                  }
-                                        }
-                                        className={cn(
-                                            "col-start-1 row-start-1 flex flex-col gap-4",
-                                            !ativo && "invisible"
-                                        )}
+                                        initial={reduzido || !mudou ? false : { opacity: 0, x: direcao * 16 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={reduzido ? { duration: 0 } : MOLA}
+                                        className="flex flex-col gap-4"
                                     >
                                         <div>
                                             <P className="font-semibold">

@@ -78,17 +78,17 @@ describe("tokens de captura", () => {
         )
         expect(g).not.toMatch(/Toque no botão/)
     })
-    it("os passos dividem uma célula só, e o inativo fica inerte", () => {
+    it("só o passo ativo ocupa a folha, e a altura anda numa mola só", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toContain('className="grid"')
-        expect(g).toContain("col-start-1 row-start-1")
-        expect(g).toMatch(/inert=\{!ativo\}/)
-        expect(g).toMatch(/!ativo && "invisible"/)
+        expect(g).toMatch(/if \(i !== passo\) return null/)
+        expect(g).toMatch(/ref=\{alturaAnimada\} data-altura-em-voo=""/)
+        expect(g).toContain("useAlturaAnimada<HTMLDivElement>()")
+        expect(g).not.toContain("col-start-1 row-start-1")
         expect(g).not.toContain("AnimatePresence")
     })
     it("os pontos ficam depois dos passos e antes do rodapé", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        const passos = g.indexOf("col-start-1 row-start-1")
+        const passos = g.indexOf("data-altura-em-voo")
         const pontos = g.indexOf('<div aria-hidden className="flex shrink-0 justify-center gap-1.5')
         const rodape = g.indexOf("<DialogFooter")
         expect(passos).toBeGreaterThan(0)
