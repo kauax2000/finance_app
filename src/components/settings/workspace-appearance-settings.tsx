@@ -11,8 +11,8 @@ import { WorkspaceAppearanceEditDialog } from "@/components/settings/workspace-a
 import { WorkspaceDeleteDialog } from "@/components/settings/workspace-delete-dialog"
 import { WorkspaceLeaveDialog } from "@/components/settings/workspace-leave-dialog"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Muted } from "@/components/ui/typography"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EmptyState, EmptyStateDescription, EmptyStateTitle } from "@/components/ui/empty-state"
@@ -145,12 +145,10 @@ export function WorkspaceAppearanceSettings() {
                                     Excluir carteira
                                 </Button>
                             ) : owner && isPrimeira ? (
-                                <Alert size="sm">
-                                    <AlertDescription>
-                                        A carteira pessoal não pode ser excluída: ela é a sua carteira principal, e a conta
-                                        precisa ter ao menos uma.
-                                    </AlertDescription>
-                                </Alert>
+                                <Muted>
+                                    A carteira pessoal não pode ser excluída: ela é a sua carteira principal, e a conta
+                                    precisa ter ao menos uma.
+                                </Muted>
                             ) : null}
                         </>
                     ) : null
