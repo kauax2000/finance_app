@@ -111,7 +111,7 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                         {item}
                         {editar ? (
                             <DropdownMenuItem
-                                className="absolute top-1/2 right-1 -translate-y-1/2 pointer-coarse:min-h-9"
+                                className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 pointer-coarse:min-h-9"
                                 aria-label={`Editar carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()
@@ -122,7 +122,7 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                             </DropdownMenuItem>
                         ) : sair ? (
                             <DropdownMenuItem
-                                className="absolute top-1/2 right-1 -translate-y-1/2 pointer-coarse:min-h-9"
+                                className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 pointer-coarse:min-h-9"
                                 aria-label={`Sair da carteira ${workspace.name}`}
                                 onSelect={() => {
                                     callbacks.closePicker()

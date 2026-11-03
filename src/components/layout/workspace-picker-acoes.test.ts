@@ -12,7 +12,7 @@ describe("Ações da carteira no seletor", () => {
         // Dentro da linha, mas irmão do rádio; o `data-menu-row` mantém o respiro entre linhas.
         expect(f).toMatch(/<div key=\{workspace\.id\} data-menu-row className="relative">\s*\{item\}\s*\{editar \? \(\s*<DropdownMenuItem/)
         expect(f).toContain('className={editar || sair ? "pr-10 pointer-coarse:pr-12" : undefined}')
-        expect(f).toContain('className="absolute top-1/2 right-1 -translate-y-1/2 pointer-coarse:min-h-9"')
+        expect(f).toContain('className="absolute top-1/2 right-1 mt-0! -translate-y-1/2 pointer-coarse:min-h-9"')
         expect(f).toMatch(/aria-label=\{`Editar carteira \$\{workspace\.name\}`\}[\s\S]*?<PencilIcon aria-hidden \/>/)
         expect(f).toMatch(/aria-label=\{`Sair da carteira \$\{workspace\.name\}`\}[\s\S]*?<ArrowRightStartOnRectangleIcon aria-hidden \/>/)
         expect(f).toMatch(/callbacks\.closePicker\(\)\s*editar\(\)/)
