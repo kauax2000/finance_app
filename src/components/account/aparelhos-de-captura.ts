@@ -9,7 +9,7 @@ const COLUNAS = "id, user_id, workspace_id, name, created_at, last_used_at, revo
 
 /**
  * Os aparelhos de captura da pessoa (Atalho do iPhone, Apple Pay e compartilhar),
- * lidos por Lançar sem abrir o app e por Lançar ao pagar. `ativos` são os não revogados.
+ * lidos por Lançar gastos pelo iPhone e por Lançar ao pagar. `ativos` são os não revogados.
  */
 export function useAparelhosDeCaptura() {
     const { user } = useAuth()

@@ -188,7 +188,7 @@ describe("CampoDeCopiar", () => {
     })
 })
 
-describe("Lançar sem abrir o app: o vazio", () => {
+describe("Lançar gastos pelo iPhone: o vazio", () => {
     it("o vazio convida a conectar, e o cabeçalho não repete a ação", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
         expect(s).toContain("Lance gastos falando com a Siri")
@@ -214,7 +214,7 @@ describe("Lançar ao pagar", () => {
     })
     it("sem aparelho manda conectar antes; com aparelho, Configurar abre o guia", () => {
         const s = conta("apple-pay-secao.tsx")
-        expect(s).toMatch(/ativos\.length === 0\s*\?[\s\S]*Conecte o iPhone primeiro, em Lançar sem abrir o app\.[\s\S]*Configurar/)
+        expect(s).toMatch(/ativos\.length === 0\s*\?[\s\S]*Conecte o iPhone primeiro, na seção acima\.[\s\S]*Configurar/)
         expect(s).toContain('titulo="Lançar ao pagar"')
         expect(s).toContain("Não foi possível ver os aparelhos.")
         expect(s).toContain("<GuiaDoApplePay")
@@ -228,7 +228,7 @@ describe("Lançar ao pagar", () => {
         expect(g).toContain("TELA_DA_NOTIFICACAO")
         expect(g).toContain("shortcut:")
     })
-    it("a página põe a seção logo depois de Lançar sem abrir o app", () => {
+    it("a página põe a seção logo depois de Lançar gastos pelo iPhone", () => {
         expect(lerFonte("src/app/(app)/account/page-client.tsx")).toMatch(/<AtalhoSecao \/>\s*<ApplePaySecao \/>/)
     })
     it("nenhum texto de tela fala em token", () => {

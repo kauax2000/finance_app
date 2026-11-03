@@ -1,5 +1,6 @@
 "use client"
 
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { useState } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
@@ -43,7 +44,7 @@ export function mensagemDoErroDeToken(erro: { code?: string; message?: string })
 }
 
 /**
- * Lançar sem abrir o app: os tokens de captura da pessoa (Atalho do iPhone,
+ * Lançar gastos pelo iPhone: os tokens de captura da pessoa (Atalho do iPhone,
  * Apple Pay e compartilhar). Só os ativos aparecem; o código novo vive no guia.
  */
 export function AtalhoSecao() {
@@ -76,10 +77,11 @@ export function AtalhoSecao() {
 
     return (
         <SettingsSection
-            titulo="Lançar sem abrir o app"
+            titulo="Lançar gastos pelo iPhone"
             actions={
                 lista.isError || tokens.length > 0 ? (
-                    <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
+                    <Button type="button" variant="tertiary" onClick={() => setGuiaAberto(true)}>
+                        <PlusIcon aria-hidden data-icon="inline-start" />
                         Conectar aparelho
                     </Button>
                 ) : undefined

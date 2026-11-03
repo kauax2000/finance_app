@@ -1,5 +1,6 @@
 "use client"
 
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -75,7 +76,8 @@ export function IasSecao() {
         <SettingsSection
             titulo="IAs conectadas"
             actions={
-                <Button type="button" variant="secondary" onClick={() => setConectarAberto(true)}>
+                <Button type="button" variant="tertiary" onClick={() => setConectarAberto(true)}>
+                    <PlusIcon aria-hidden data-icon="inline-start" />
                     Conectar
                 </Button>
             }

@@ -37,7 +37,7 @@ export function ApplePaySecao() {
                             <ItemTitle>Lançar ao pagar com Apple Pay</ItemTitle>
                             <Muted>
                                 {lista.ativos.length === 0
-                                    ? "Conecte o iPhone primeiro, em Lançar sem abrir o app."
+                                    ? "Conecte o iPhone primeiro, na seção acima."
                                     : "Cada compra com o iPhone vira um gasto no Finance, sozinha."}
                             </Muted>
                         </ItemContent>

@@ -51,12 +51,12 @@ valor real de nenhum deles.**
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
 | `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar sem abrir o app" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Minha conta › "Lançar gastos pelo iPhone" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Minha conta**.
-2. Na seção "Lançar sem abrir o app", toque em **Conectar aparelho** (ou em
+2. Na seção "Lançar gastos pelo iPhone", toque em **Conectar aparelho** (ou em
    **Conectar o iPhone**, quando ainda não há nenhum) e escreva o nome do
    aparelho, por exemplo "iPhone da Ana".
 3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
@@ -182,7 +182,7 @@ Esta automação lança cada compra feita com o Apple Pay.
 
 No app, ela tem seção própria: **Minha conta** › **Lançar ao pagar**, com
 "Configurar" e um guia de 3 passos (precisa de um aparelho conectado em
-"Lançar sem abrir o app"). Os passos abaixo são a referência de quem monta à mão.
+"Lançar gastos pelo iPhone"). Os passos abaixo são a referência de quem monta à mão.
 
 1. No app Atalhos, abra **Automação** › **Nova automação** › **Transação**.
 2. Escolha os cartões da Wallet que devem lançar. Marque **Executar
@@ -256,7 +256,7 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 
 ## 6. Perdeu o aparelho? Revogue o token
 
-Em **Minha conta** › "Lançar sem abrir o app", toque em **Desconectar** no
+Em **Minha conta** › "Lançar gastos pelo iPhone", toque em **Desconectar** no
 aparelho e confirme em "Desconectar este aparelho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
 O aparelho desconectado sai da lista. Para voltar a lançar, conecte de novo.
