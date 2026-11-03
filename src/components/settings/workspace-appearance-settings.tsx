@@ -136,8 +136,8 @@ export function WorkspaceAppearanceSettings() {
                             {canDeleteProject ? (
                                 <Button
                                     type="button"
-                                    variant="tertiary"
-                                    className="w-full text-destructive hover:text-destructive active:text-destructive"
+                                    variant="destructive"
+                                    className="w-full"
                                     onClick={() => setDeleteOpen(true)}
                                 >
                                     <TrashIcon data-icon="inline-start" aria-hidden />
