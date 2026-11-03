@@ -1,10 +1,16 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import Image, { type StaticImageData } from "next/image"
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import { useReducedMotion } from "motion/react"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
+import {
+    CaixaDoPasso,
+    JanelaDoAparelho,
+    PecaDoPasso,
+    PontosDoPasso,
+    type Tela,
+} from "@/components/account/passo-a-passo"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,45 +26,21 @@ import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, F
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { supabase } from "@/lib/supabase"
-import { cn } from "@/lib/utils"
 import baixar from "./assets/atalho-1-baixar.webp"
 import arquivos from "./assets/atalho-2-arquivos.webp"
 import configurar from "./assets/atalho-3-configurar.webp"
 import colar from "./assets/atalho-4-colar.webp"
 import siri from "./assets/atalho-5-siri.webp"
-import applePay from "./assets/atalho-6-apple-pay.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
 
-/** Uma peça do passo: surge do desfoque, como as linhas dos diálogos (`menu-content-in`, 500ms, `--ease-out`). */
-const PECA: Variants = {
-    oculto: { opacity: 0, filter: "blur(10px)" },
-    visivel: {
-        opacity: [0, 1, 1],
-        filter: ["blur(10px)", "blur(4px)", "blur(0px)"],
-        transition: { duration: 0.5, times: [0, 0.45, 1], ease: [0.16, 1, 0.3, 1] },
-    },
-}
-
-type Tela = {
-    imagem: StaticImageData
-    /** Onde tocar, em % da imagem inteira; sem ele, a tela só mostra o que acontece. */
-    ponto?: { x: number; y: number }
-    /** Que ponta da imagem fica à vista na janela. */
-    ancora: "topo" | "baixo"
-}
-
 /*
  * Capturas do iOS 27 na moldura do PSD de `docs/design/mockups/` (`scripts/atalho/moldura.py`).
- * Os passos 6 e 7 são montados sobre a tela de início real (`scripts/atalho/cenas.py`): o simulador
+ * O passo 6 é montado sobre a tela de início real (`scripts/atalho/cenas.py`): o simulador
  * não tem Siri nem Apple Pay. shortcut: montagens, não capturas; trocar pelo print do iPhone quando houver.
  */
-/** A notificação depois do Apple Pay: a tela do passo 7 e a do vazio da seção. */
-export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
-
 const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Dê um nome a este iPhone" },
     { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
@@ -69,56 +51,11 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
     },
     { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
     { titulo: "Fale com a Siri", tela: { imagem: siri, ancora: "topo" } },
-    { titulo: "Lance ao pagar (opcional)", tela: TELA_DA_NOTIFICACAO },
 ]
-
-/** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
-export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compacta?: boolean }) {
-    return (
-        <div
-            aria-hidden
-            className={cn(
-                "relative mx-auto shrink-0 overflow-hidden",
-                // Compacta: só o topo do aparelho, para o vazio da seção.
-                compacta ? "h-36 w-48" : "h-72 w-60",
-                // O aparelho dissolve no lado em que a janela o corta.
-                tela.ancora === "topo"
-                    ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
-                    : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
-            )}
-        >
-            {/* A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */}
-            <div
-                className={cn(
-                    "absolute inset-x-0 aspect-[720/1488]",
-                    tela.ancora === "topo" ? "top-0" : "-top-52"
-                )}
-            >
-                <Image
-                    src={tela.imagem}
-                    alt=""
-                    sizes={compacta ? "192px" : "240px"}
-                    placeholder="blur"
-                    className={cn("absolute inset-0 h-auto max-w-none", compacta ? "w-48" : "w-60")}
-                />
-                {tela.ponto ? (
-                    <span
-                        style={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
-                        className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
-                    >
-                        <span className="absolute inset-0 rounded-full bg-scrim-foreground/30 motion-safe:animate-ping" />
-                        <span className="absolute inset-0 rounded-full ring-2 ring-scrim-foreground" />
-                    </span>
-                ) : null}
-            </div>
-        </div>
-    )
-}
 
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
- * assinado, ensina a colar o código nele, a falar com a Siri e a automação do
- * pagamento. O código vive só no estado deste guia: fechar por qualquer caminho
+ * assinado, ensina a colar o código nele e a falar com a Siri. O código vive só no estado deste guia: fechar por qualquer caminho
  * o descarta.
  */
 export function GuiaDoAtalho({
@@ -136,7 +73,6 @@ export function GuiaDoAtalho({
     const [passo, setPasso] = useState(0)
     // O primeiro passo ao abrir não entra pelo lado: só a troca de passo anda.
     const [mudou, setMudou] = useState(false)
-    const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
     const [nome, setNome] = useState("")
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
@@ -225,10 +161,6 @@ export function GuiaDoAtalho({
             Ação) e <strong>digite</strong> na caixa que abre no topo: <strong>42 mercado nubank</strong>. Ele cai em{" "}
             {nomeDaCarteira}; o que ficar em dúvida vai para A conferir.
         </>,
-        <>
-            No app Atalhos, abra o <strong>Lançar gasto</strong>, toque em <strong>Adicionar automação</strong>,
-            escolha <strong>Carteira</strong> e seus cartões e marque <strong>Executar imediatamente</strong>.
-        </>,
     ]
 
     return (
@@ -250,104 +182,75 @@ export function GuiaDoAtalho({
                         <span aria-live="polite" className="sr-only">
                             Passo {passo + 1} de {PASSOS.length}: {PASSOS[passo].titulo}
                         </span>
-                        {/* Cada passo tem a altura dele, e a caixa anda de uma altura à outra numa
-                            mola só: o passo entra no lugar, e os pontos e os botões vão junto com a
-                            borda. `data-altura-em-voo` diz ao diálogo que a altura já anda aqui. */}
-                        <div ref={alturaAnimada} data-altura-em-voo="">
-                            {PASSOS.map((p, i) => {
-                                if (i !== passo) return null
-                                return (
-                                    <motion.div
-                                        key={p.titulo}
-                                        // As peças do passo chegam uma a uma, do desfoque e no lugar (o
-                                        // `menu-content-in` dos diálogos): nada anda de lado, e a única
-                                        // coisa que se move é a altura da caixa.
-                                        initial={reduzido || !mudou ? false : "oculto"}
-                                        animate="visivel"
-                                        transition={{ staggerChildren: 0.03, delayChildren: 0.04 }}
-                                        className="flex flex-col gap-4"
-                                    >
-                                        <motion.div variants={PECA}>
-                                            <P className="font-semibold">
-                                                {i + 1} · {p.titulo}
-                                                <span className="sr-only"> de {PASSOS.length}</span>
-                                            </P>
-                                            <Muted>{textos[i]}</Muted>
-                                        </motion.div>
+                        <CaixaDoPasso chave={PASSOS[passo].titulo} entrar={!reduzido && mudou}>
+                            <PecaDoPasso>
+                                <P className="font-semibold">
+                                    {passo + 1} · {PASSOS[passo].titulo}
+                                    <span className="sr-only"> de {PASSOS.length}</span>
+                                </P>
+                                <Muted>{textos[passo]}</Muted>
+                            </PecaDoPasso>
 
-                                        {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
-                                        {i === 1 ? (
-                                            <motion.div variants={PECA} className="flex flex-col">
-                                                <Button asChild variant="primary">
-                                                    <a href={ARQUIVO_DO_ATALHO} download>
-                                                        Baixar o atalho
-                                                    </a>
-                                                </Button>
-                                            </motion.div>
-                                        ) : null}
-                                        {i === 4 ? (
-                                            <motion.div variants={PECA}>
-                                                <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
-                                            </motion.div>
-                                        ) : null}
+                            {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
+                            {passo === 1 ? (
+                                <PecaDoPasso className="flex flex-col">
+                                    <Button asChild variant="primary">
+                                        <a href={ARQUIVO_DO_ATALHO} download>
+                                            Baixar o atalho
+                                        </a>
+                                    </Button>
+                                </PecaDoPasso>
+                            ) : null}
+                            {passo === 4 ? (
+                                <PecaDoPasso>
+                                    <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                                </PecaDoPasso>
+                            ) : null}
 
-                                        {p.tela ? (
-                                            <motion.div variants={PECA}>
-                                                <JanelaDoAparelho tela={p.tela} />
-                                            </motion.div>
-                                        ) : null}
+                            {PASSOS[passo].tela ? (
+                                <PecaDoPasso>
+                                    <JanelaDoAparelho tela={PASSOS[passo].tela} />
+                                </PecaDoPasso>
+                            ) : null}
 
-                                        {i === 0 ? (
-                                            <motion.div variants={PECA} className="flex flex-col gap-4">
-                                                <FormInput
-                                                    label="Nome do aparelho"
-                                                    value={nome}
-                                                    maxLength={60}
-                                                    disabled={codigo != null}
-                                                    onChange={(e) => setNome(e.target.value)}
-                                                />
-                                                {workspaces.length > 1 ? (
-                                                    <FormField label="Os gastos caem em">
-                                                        <Select
-                                                            value={carteiraEscolhida}
-                                                            onValueChange={setCarteira}
-                                                            disabled={codigo != null}
-                                                        >
-                                                            <FormControl>
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Selecione a carteira" />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                {workspaces.map((w) => (
-                                                                    <SelectItem key={w.id} value={w.id}>
-                                                                        {w.name}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </FormField>
-                                                ) : null}
-                                                <FormError>{erro}</FormError>
-                                            </motion.div>
-                                        ) : null}
-                                    </motion.div>
-                                )
-                            })}
-                        </div>
+                            {passo === 0 ? (
+                                <PecaDoPasso className="flex flex-col gap-4">
+                                    <FormInput
+                                        label="Nome do aparelho"
+                                        value={nome}
+                                        maxLength={60}
+                                        disabled={codigo != null}
+                                        onChange={(e) => setNome(e.target.value)}
+                                    />
+                                    {workspaces.length > 1 ? (
+                                        <FormField label="Os gastos caem em">
+                                            <Select
+                                                value={carteiraEscolhida}
+                                                onValueChange={setCarteira}
+                                                disabled={codigo != null}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione a carteira" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {workspaces.map((w) => (
+                                                        <SelectItem key={w.id} value={w.id}>
+                                                            {w.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormField>
+                                    ) : null}
+                                    <FormError>{erro}</FormError>
+                                </PecaDoPasso>
+                            ) : null}
+                        </CaixaDoPasso>
                     </DialogBody>
                     {/* Os pontos têm lugar fixo, logo acima dos botões: não andam com o passo. */}
-                    <div aria-hidden className="flex shrink-0 justify-center gap-1.5 pt-4">
-                        {PASSOS.map((p, i) => (
-                            <span
-                                key={p.titulo}
-                                className={cn(
-                                    "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-spring) ease-(--ease-spring)",
-                                    i === passo ? "w-5 bg-foreground" : "w-1.5 bg-muted-foreground/40"
-                                )}
-                            />
-                        ))}
-                    </div>
+                    <PontosDoPasso total={PASSOS.length} atual={passo} />
                     <DialogFooter>
                         {passo === 0 ? (
                             <>

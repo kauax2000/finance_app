@@ -3,7 +3,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
-import { GuiaDoAtalho, JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/guia-do-atalho"
+import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
+import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
 import { useAuth } from "@/components/providers"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
