@@ -193,3 +193,27 @@ describe("O topo da Carteira", () => {
         expect(f).not.toContain("<ColorTile")
     })
 })
+
+describe("exemploDaDivisao", () => {
+    const adultos = [
+        { user_id: "k", nome: "Kauã" },
+        { user_id: "a", nome: "Ana" },
+    ]
+    it("pesos iguais: metade para cada, e Ana deve 50 a Kauã", async () => {
+        const { exemploDaDivisao } = await import("./carteira-divisao")
+        const ex = exemploDaDivisao(adultos, { k: "1", a: "1" }, "k")
+        expect(ex?.partes.map((p) => p.valor)).toEqual([50, 50])
+        expect(ex?.devem).toEqual([{ user_id: "a", nome: "Ana", valor: 50 }])
+    })
+    it("peso 2 paga o dobro; os centavos que sobram ficam com quem paga", async () => {
+        const { exemploDaDivisao } = await import("./carteira-divisao")
+        const ex = exemploDaDivisao(adultos, { k: "1", a: "2" }, "k")
+        expect(ex?.partes.map((p) => p.valor)).toEqual([33.34, 66.66])
+        expect(ex?.partes.reduce((t, p) => t + p.valor, 0)).toBeCloseTo(100)
+    })
+    it("peso inválido não dá exemplo; quem paga fora da lista vira o primeiro", async () => {
+        const { exemploDaDivisao } = await import("./carteira-divisao")
+        expect(exemploDaDivisao(adultos, { k: "0", a: "1" }, "k")).toBeNull()
+        expect(exemploDaDivisao(adultos, { k: "1", a: "1" }, "outro")?.pagador.user_id).toBe("k")
+    })
+})

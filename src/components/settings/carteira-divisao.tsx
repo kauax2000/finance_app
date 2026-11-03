@@ -3,7 +3,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
+import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { Card } from "@/components/ui/card"
+import { ChartSplit, type ChartConfig } from "@/components/ui/chart"
 import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field"
 import { FormInput } from "@/components/ui/form"
 import { SpinnerBlock } from "@/components/ui/spinner"
@@ -15,6 +18,7 @@ import { chaves, useAdultos } from "@/lib/divisao/use-adultos"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 import type { Workspace } from "@/lib/supabase"
 import { NADA_MUDOU } from "@/lib/supabase-errors"
+import { currencyBRL } from "@/lib/formatters"
 
 type Modo = "pooled" | "split"
 
@@ -110,6 +114,67 @@ export function useDivisaoEditavel(ws: Workspace | null) {
     }
 }
 
+/** O total do exemplo: um mercado de R$ 100. */
+export const TOTAL_DO_EXEMPLO = 100
+
+/**
+ * O exemplo da divisão: quanto de um gasto de `total`, pago por `pagadorId`,
+ * fica com cada adulto pelos pesos, e quem fica devendo a quem paga. Com um
+ * peso inválido, `null`. Os centavos que sobram do arredondamento ficam com
+ * quem paga.
+ */
+export function exemploDaDivisao(
+    adultos: Adulto[],
+    valores: Record<string, string>,
+    pagadorId: string,
+    total = TOTAL_DO_EXEMPLO,
+) {
+    const pesos = adultos.map((a) => lerPeso(valores[a.user_id] ?? "1"))
+    if (!adultos.length || pesos.some((p) => p == null)) return null
+    const soma = (pesos as number[]).reduce((t, p) => t + p, 0)
+    const partes = adultos.map((a, i) => ({ ...a, valor: Math.floor(((pesos[i] as number) / soma) * total * 100) / 100 }))
+    const pagador = partes.find((p) => p.user_id === pagadorId) ?? partes[0]
+    pagador.valor = Math.round((total - partes.filter((p) => p !== pagador).reduce((t, p) => t + p.valor, 0)) * 100) / 100
+    return { pagador, partes, devem: partes.filter((p) => p !== pagador && p.valor > 0) }
+}
+
+/** O mercado de R$ 100 com os nomes da carteira: o que o modo escolhido faz com ele. */
+function ExemploDaDivisao({ divisao }: { divisao: DivisaoEditavel }) {
+    const { user } = useAuth()
+    const ex = exemploDaDivisao(divisao.adultos, divisao.valores, user?.id ?? "")
+    if (!ex) return <Muted>Ajuste os pesos para ver o exemplo.</Muted>
+    const total = currencyBRL(TOTAL_DO_EXEMPLO)
+    const config: ChartConfig = Object.fromEntries(ex.partes.map((p) => [p.user_id, { label: p.nome }]))
+    return (
+        <Card variant="muted" padding="sm" className="gap-3">
+            <Muted>
+                Exemplo: {ex.pagador.nome} paga o mercado de {total}.
+            </Muted>
+            {divisao.modo === "pooled" ? (
+                <P>Os {total} saem do pote de todos. Ninguém fica devendo.</P>
+            ) : ex.devem.length === 0 ? (
+                <P>Quando outro adulto entrar na carteira, cada gasto vira partes entre vocês.</P>
+            ) : (
+                <>
+                    <ChartSplit
+                        labels="legend"
+                        config={config}
+                        data={ex.partes.map((p) => ({ pessoa: p.user_id, valor: p.valor }))}
+                        nameKey="pessoa"
+                        dataKey="valor"
+                        label={`Como o mercado de ${total} se divide`}
+                    />
+                    {ex.devem.map((p) => (
+                        <P key={p.user_id}>
+                            {p.nome} fica devendo {currencyBRL(p.valor)} a {ex.pagador.nome}.
+                        </P>
+                    ))}
+                </>
+            )}
+        </Card>
+    )
+}
+
 /** A seção Divisão do "Editar carteira": o trilho de dois modos e, dividida, os pesos. */
 export function CamposDaDivisao({ divisao }: { divisao: DivisaoEditavel }) {
     if (divisao.erro) return <P>Não foi possível carregar a divisão.</P>
@@ -128,6 +193,7 @@ export function CamposDaDivisao({ divisao }: { divisao: DivisaoEditavel }) {
                 </TabsList>
             </Tabs>
             {atual ? <FieldDescription>{atual.description}</FieldDescription> : null}
+            <ExemploDaDivisao divisao={divisao} />
             {divisao.opcoes
                 .filter((o) => (o as { disabled?: boolean }).disabled)
                 .map((o) => (
@@ -141,15 +207,15 @@ export function CamposDaDivisao({ divisao }: { divisao: DivisaoEditavel }) {
                         {divisao.adultos.map((a) => (
                             <FormInput
                                 key={a.user_id}
-                                label={a.nome}
+                                label={`Peso de ${a.nome}`}
                                 inputMode="decimal"
                                 value={divisao.valores[a.user_id] ?? ""}
                                 onChange={(e) => divisao.setPeso(a.user_id, e.target.value)}
                             />
                         ))}
                         <Muted>
-                            Peso 1 para todos é a divisão igual; peso 2 fica com o dobro de peso 1. O convidado não entra:
-                            quem é responsável por ele paga. Os pesos novos valem para as despesas novas e para as editadas.
+                            Peso 2 paga o dobro de peso 1. O convidado não entra: quem é responsável por ele paga. Os pesos
+                            valem para os gastos novos e para os editados.
                         </Muted>
                     </>
                 ) : (
