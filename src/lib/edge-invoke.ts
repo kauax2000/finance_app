@@ -2,15 +2,6 @@ import { FunctionsHttpError } from '@supabase/functions-js'
 import { supabase } from './supabase'
 import { describeEdgeInvokeClientFailure, parseEdgeFunctionError } from './edge-errors'
 
-/** Matches `SESSION_ID_KEY` in sessions.ts — avoid importing sessions here (circular). */
-const APP_SESSION_ID_STORAGE_KEY = 'finance_app_session_id'
-
-function getAppSessionIdHeader(): Record<string, string> {
-    if (typeof window === 'undefined') return {}
-    const id = localStorage.getItem(APP_SESSION_ID_STORAGE_KEY)?.trim()
-    return id ? { 'x-app-session-id': id } : {}
-}
-
 async function ensureSessionForEdgeCall(): Promise<void> {
     const {
         data: { session },
@@ -43,7 +34,6 @@ export async function invokeEdgeJson<T>(
     let { data, error, response } = await supabase.functions.invoke(path, {
         method,
         body: options.body,
-        headers: getAppSessionIdHeader(),
     })
 
     // Retrying non-idempotent edge calls can create duplicate writes if the first request
@@ -53,7 +43,6 @@ export async function invokeEdgeJson<T>(
         const second = await supabase.functions.invoke(path, {
             method,
             body: options.body,
-            headers: getAppSessionIdHeader(),
         })
         data = second.data
         error = second.error

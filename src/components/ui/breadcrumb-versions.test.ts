@@ -24,7 +24,7 @@ describe("Breadcrumb", () => {
       { collapse: "back" },
       degrau(h(BreadcrumbLink, { href: "/conta" }, "Minha conta"), "a"),
       degrau(h(BreadcrumbLink, { href: "/conta/seguranca" }, "Segurança"), "b"),
-      degrau(h(BreadcrumbPage, null, "Sessões"), "c")
+      degrau(h(BreadcrumbPage, null, "Aparência"), "c")
     )
     expect(html).toMatch(/<li data-slot="breadcrumb-back" class="[^"]*sm:hidden"><a [^>]*href="\/conta\/seguranca"[^>]*><svg/)
     // Os degraus continuam `<li>` filhos do `<ol>`: a classe vai neles.
@@ -54,7 +54,7 @@ describe("Breadcrumb", () => {
   })
 
   it("a página atual pode ser o h1, e continua aria-current", () => {
-    const html = trilha({}, degrau(h(BreadcrumbPage, { asChild: true }, h("h1", null, "Sessões")), "a"))
+    const html = trilha({}, degrau(h(BreadcrumbPage, { asChild: true }, h("h1", null, "Aparência")), "a"))
     expect(html).toMatch(/<h1 data-slot="breadcrumb-page" aria-current="page"/)
   })
 

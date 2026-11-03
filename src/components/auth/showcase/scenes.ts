@@ -29,7 +29,7 @@ export type SceneOverlay =
     | "notice-expired" | "invite-error" | "dim"
 
 export type SceneChip =
-    | "none" | "session-expired" | "success" | "synced" | "timeline" | "invite-accepted"
+    | "none" | "success" | "synced" | "timeline" | "invite-accepted"
 
 export type SceneCursor = {
     name: "Você" | "Ana" | "Rafael"
@@ -117,7 +117,6 @@ const RAFAEL_NA_INTERNET: SceneCursor = { name: "Rafael", tone: 5, anchor: "row-
 
 export const SCENES: Record<AuthSceneId, SceneSpec> = {
     login: { ...LOGIN, chip: "none", script: "palette-login" },
-    "login.session-expired": { ...LOGIN, chip: "session-expired", script: "palette-session" },
     "login.password-updated": { ...LOGIN, chip: "success", script: "palette-security" },
 
     register: {

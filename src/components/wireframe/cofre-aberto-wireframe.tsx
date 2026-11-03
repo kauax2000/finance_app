@@ -41,10 +41,10 @@ const GUARDADO: ReadonlyArray<readonly [dado: string, onde: string, quem: string
         "Conferir o convite quando ele é aberto.",
     ],
     [
-        "Sessões, aparelhos e registro de atividade da conta (com IP)",
+        "Registro de convites e mudanças de papel: a carteira, o convite (com o e-mail convidado, quando o convite é por e-mail), quem aceitou (pelo identificador) e, na mudança de papel, o membro, o papel de antes e o de depois. Sem IP nem aparelho",
         "Supabase (região a confirmar)",
-        "Você",
-        "Segurança: mostrar onde a conta está aberta.",
+        "Você e o servidor do app",
+        "Limitar o envio de convites. As mudanças de papel só ficam guardadas: nenhuma tela as lê.",
     ],
     [
         "Plano e cobrança: situação, fim do período, preço, os 4 últimos dígitos e a bandeira do cartão, o token do cartão e o cadastro que o Asaas devolve, e o IP da compra",

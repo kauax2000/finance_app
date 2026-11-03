@@ -164,7 +164,7 @@ function ConferindoOLink() {
 /**
  * A tela "Nova senha" do celular: o ladrilho, o título e a frase, e embaixo o campo — ou, pelo link do e-mail,
  * a linha que confere o link, no lugar dele (o link conferido vira o campo, e o cabeçalho não pisca). A linha
- * das sessões encerradas mora no pé: o `PasswordRequirements` só aparece na primeira tecla, e ela não pula.
+ * do aviso mora no pé: o `PasswordRequirements` só aparece na primeira tecla, e ela não pula.
  */
 function TelaDaSenha({ conferindo }: { conferindo: boolean }) {
     return (
@@ -192,7 +192,7 @@ function TelaDaSenha({ conferindo }: { conferindo: boolean }) {
                 </ItemMedia>
                 <ItemContent>
                     {/* Sem o corte em duas linhas: no celular de 201px (a janela de 1024) a frase pede três. */}
-                    <ItemDescription className="line-clamp-none text-foreground">Sessões em outros aparelhos serão encerradas</ItemDescription>
+                    <ItemDescription className="line-clamp-none text-foreground">Depois, entre com a senha nova</ItemDescription>
                 </ItemContent>
             </Item>
         </div>

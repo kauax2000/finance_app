@@ -26,8 +26,6 @@ export const queryRoot = {
     billsList: "billsList",
     creditCardExpenseRows: "creditCardExpenseRows",
     profile: "profile",
-    sessions: "sessions",
-    activity: "activity",
     userSettings: "userSettings",
     /** O histórico que a frase rápida lê (categoria e forma pela descrição). */
     fraseHistorico: "fraseHistorico",
@@ -173,16 +171,6 @@ export const creditCardExpenseRowsKeys = {
 export const profileKeys = {
     all: [queryRoot.profile] as const,
     detail: (userId: string) => [queryRoot.profile, "detail", userId] as const,
-}
-
-export const sessionsKeys = {
-    all: [queryRoot.sessions] as const,
-    list: (userId: string) => [queryRoot.sessions, "list", userId] as const,
-}
-
-export const activityKeys = {
-    all: [queryRoot.activity] as const,
-    list: (userId: string) => [queryRoot.activity, "list", userId] as const,
 }
 
 export const walletsKeys = {

@@ -343,10 +343,9 @@ function DemoNaTela() {
   )
 }
 
-/** As 17 cenas das telas de acesso, na ordem das famílias. */
+/** As 16 cenas das telas de acesso, na ordem das famílias. */
 const CENAS = [
   "login",
-  "login.session-expired",
   "login.password-updated",
   "invite.loading",
   "invite.idle",
@@ -364,7 +363,7 @@ const CENAS = [
   "recovery.done",
 ] as const satisfies readonly AuthSceneId[]
 
-/** A cena se escolhe em dois eixos — a família e o passo dela —, porque 17 pílulas numa fileira passam da página. */
+/** A cena se escolhe em dois eixos — a família e o passo dela —, porque 16 pílulas numa fileira passam da página. */
 const FAMILIAS = ["login", "invite", "register", "recovery"] as const satisfies readonly SceneFamily[]
 const ROTULO_DA_FAMILIA: Record<SceneFamily, string> = {
   login: "login",

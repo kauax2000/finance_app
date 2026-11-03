@@ -5,7 +5,7 @@ import { direcaoDaTela } from "./direcao-da-tela"
 const PAIS: Record<string, string> = {
     "/settings": "/me",
     "/account": "/me",
-    "/account/sessions": "/account",
+    "/settings/aparencia": "/settings",
     "/categories/x": "/categories?month=2026-11",
 }
 const pai = (r: string) => PAIS[r]
@@ -13,12 +13,12 @@ const pai = (r: string) => PAIS[r]
 describe("direcaoDaTela", () => {
     it("entra quando a tela nova é mais funda", () => {
         expect(direcaoDaTela("/me", "/settings", pai)).toBe("entra")
-        expect(direcaoDaTela("/account", "/account/sessions", pai)).toBe("entra")
+        expect(direcaoDaTela("/settings", "/settings/aparencia", pai)).toBe("entra")
         expect(direcaoDaTela("/dashboard", "/categories/x", pai)).toBe("entra")
     })
     it("volta quando a tela nova é um ancestral, com query ou hash no voltar", () => {
-        expect(direcaoDaTela("/account/sessions", "/account", pai)).toBe("volta")
-        expect(direcaoDaTela("/account/sessions", "/me", pai)).toBe("volta")
+        expect(direcaoDaTela("/settings/aparencia", "/settings", pai)).toBe("volta")
+        expect(direcaoDaTela("/settings/aparencia", "/me", pai)).toBe("volta")
         expect(direcaoDaTela("/categories/x", "/categories", pai)).toBe("volta")
     })
     it("aba não anima", () => {

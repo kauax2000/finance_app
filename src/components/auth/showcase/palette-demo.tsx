@@ -3,11 +3,8 @@
 import * as React from "react"
 
 import {
-    ArrowUturnLeftIcon,
     BanknotesIcon,
-    ComputerDesktopIcon,
     CreditCardIcon,
-    HomeIcon,
     KeyIcon,
 } from "@heroicons/react/16/solid"
 
@@ -151,16 +148,6 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
             className: cn(FORA_DO_XS, "pb-1 @min-xl/showcase:pb-3"),
         },
     ],
-    "palette-session": [
-        {
-            heading: "Ir para",
-            className: "pb-2.5",
-            linhas: [
-                { title: "Continuar de onde parou", description: "Painel · outubro", icon: ArrowUturnLeftIcon, meta: ENTER },
-                { title: "Painel", description: "Saldo, contas e orçamento", icon: HomeIcon },
-            ],
-        },
-    ],
     "palette-security": [
         {
             heading: "Segurança",
@@ -168,21 +155,11 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
             linhas: [
                 {
                     title: "Senha alterada",
-                    description: "Segurança · sessões encerradas",
+                    description: "Segurança · conta",
                     icon: KeyIcon,
                     meta: (
                         <Badge variant="soft" tone="success" size="xs" className={SELO}>
                             agora
-                        </Badge>
-                    ),
-                },
-                {
-                    title: "Sessões ativas",
-                    description: "Segurança · este computador",
-                    icon: ComputerDesktopIcon,
-                    meta: (
-                        <Badge variant="soft" tone="neutral" size="xs" className={SELO}>
-                            1 aparelho
                         </Badge>
                     ),
                 },

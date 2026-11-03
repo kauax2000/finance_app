@@ -1,5 +1,5 @@
 import { ArrowPathRoundedSquareIcon, RectangleStackIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, FolderIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
-import type { NavigationItem, SubPageMeta } from "@/types/navigation"
+import type { NavigationItem } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
 export const ROUTES = {
@@ -15,8 +15,6 @@ export const ROUTES = {
     /** A aba "Você" do telefone: a página que lista as telas fora da barra. */
     ME: "/me",
     ACCOUNT: "/account",
-    ACCOUNT_SESSIONS: "/account/sessions",
-    ACCOUNT_ACTIVITY: "/account/activity",
     MEMBERS: "/members",
     PLANS: "/plans",
     /** Os preços, públicos, fora da casca do app (Bloco 4). */
@@ -53,22 +51,12 @@ export function isCreditCardDetailPath(pathname: string): boolean {
     return /^\/credit-cards\/[^/]+$/.test(pathname)
 }
 
-/** Active sessions management under account settings. */
-export function isAccountSessionsPath(pathname: string): boolean {
-    return pathname === ROUTES.ACCOUNT_SESSIONS
-}
-
-/** Account activity log under account settings. */
-export function isAccountActivityPath(pathname: string): boolean {
-    return pathname === ROUTES.ACCOUNT_ACTIVITY
-}
-
 /** Plans and billing page. */
 export function isPlansPath(pathname: string): boolean {
     return pathname === ROUTES.PLANS
 }
 
-/** Account hub (profile), not sub-routes like sessions or activity. */
+/** Account hub (profile) only, not other account-adjacent routes. */
 export function isAccountHubPath(pathname: string): boolean {
     return pathname === ROUTES.ACCOUNT
 }
@@ -162,20 +150,6 @@ export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.SUBSCRIPTIONS]: "Assinaturas",
     [ROUTES.BILLS]: "Contas a pagar",
     [ROUTES.CREDIT_CARDS]: "Cartões de crédito",
-}
-
-/** Sub-routes with breadcrumb + back button metadata */
-export const APP_SUB_PAGE_TITLES: Record<string, SubPageMeta> = {
-    [ROUTES.ACCOUNT_SESSIONS]: {
-        parent: ROUTES.ACCOUNT,
-        parentTitle: "Minha conta",
-        title: "Sessões Ativas",
-    },
-    [ROUTES.ACCOUNT_ACTIVITY]: {
-        parent: ROUTES.ACCOUNT,
-        parentTitle: "Minha conta",
-        title: "Atividade",
-    },
 }
 
 export function isExactPath(pathname: string, href: string): boolean {

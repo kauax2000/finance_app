@@ -212,12 +212,7 @@ describe("os comportamentos", () => {
 })
 
 describe("o app", () => {
-  it("a atividade da conta e o histórico de cobranças são Timeline, sem o marcador à mão", () => {
-    const atividade = lerFonte("src/app/(app)/account/activity/page-client.tsx")
-    expect(atividade).toContain("<Timeline")
-    expect(atividade).toContain("groupByLocalDay(")
-    expect(atividade).not.toMatch(/h-8 w-8 shrink-0 items-center justify-center rounded-full/)
-
+  it("o histórico de cobranças é Timeline, sem o marcador à mão", () => {
     const cobrancas = lerFonte("src/components/bills/bill-detail-history-list.tsx")
     expect(cobrancas).toContain("<TimelineActions>")
     expect(cobrancas).not.toContain("instanceDotClass")
@@ -257,8 +252,7 @@ function passos(valor: string | undefined) {
 
 describe("escada da Timeline", () => {
   it("2. as medidas sobem monotonicamente, e `md` é o padrão", () => {
-    // O poço `md` é 32px (8 passos), a medida que `account/activity` renderiza à mão: âncora
-    // real, e não escala inventada.
+    // O poço `md` é 32px (8 passos), a âncora do degrau padrão, e não escala inventada.
     expect(passos(medida("md", "well-size"))).toBe(8)
     expect(timelineVariants({})).toBe(
       timelineVariants({ orientation: "vertical", marker: "dot", size: "md" })

@@ -55,9 +55,7 @@ import {
     ACCOUNT_MENU_WORKSPACE_LINK_ITEMS,
 } from "@/components/layout/account-menu-links"
 import {
-    isAccountActivityPath,
     isAccountHubPath,
-    isAccountSessionsPath,
     isExactPath,
     isPlansPath,
     isSettingsPath,
@@ -238,11 +236,7 @@ export function isMobileAccountMenuNavItemActive(
         case ROUTES.SETTINGS:
             return isSettingsPath(pathname)
         case ROUTES.ACCOUNT:
-            return (
-                isAccountHubPath(pathname) ||
-                isAccountSessionsPath(pathname) ||
-                isAccountActivityPath(pathname)
-            )
+            return isAccountHubPath(pathname)
         default:
             return isExactPath(pathname, item.href)
     }
@@ -318,7 +312,7 @@ export function isVoceTabActive(pathname: string, abasFora: readonly string[]): 
 
 /**
  * Para onde o voltar do telefone leva: a Você, só quando a rota é **exatamente**
- * uma tela que ela lista. Uma subpágina (`/settings/aparencia`, `/account/sessions`)
+ * uma tela que ela lista. Uma subpágina (`/settings/aparencia`)
  * tem o próprio pai e não passa por aqui.
  */
 export function voceBackHref(pathname: string): string | undefined {

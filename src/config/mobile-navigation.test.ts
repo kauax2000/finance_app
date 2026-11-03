@@ -20,7 +20,7 @@ describe("a página Você", () => {
 
     it("Você acende na página e nas telas que ela abre", () => {
         expect(isVoceTabActive(ROUTES.ME, [])).toBe(true)
-        expect(isVoceTabActive(ROUTES.ACCOUNT_SESSIONS, [])).toBe(true)
+        expect(isVoceTabActive(ROUTES.PLANS, [])).toBe(true)
         expect(isVoceTabActive(`${ROUTES.CREDIT_CARDS}/abc`, [])).toBe(true)
         expect(isVoceTabActive(`${ROUTES.PROJETOS}/abc`, [])).toBe(true)
         expect(isVoceTabActive(ROUTES.TRANSACTIONS, [])).toBe(false)
@@ -38,7 +38,6 @@ describe("a página Você", () => {
         expect(voceBackHref(ROUTES.SUBSCRIPTIONS)).toBe(ROUTES.ME)
         expect(voceBackHref(ROUTES.SETTINGS)).toBe(ROUTES.ME)
         expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
-        expect(voceBackHref(ROUTES.ACCOUNT_SESSIONS)).toBeUndefined()
         expect(voceBackHref(ROUTES.DASHBOARD_CATEGORIES)).toBeUndefined()
     })
 })

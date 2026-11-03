@@ -141,45 +141,9 @@ describe("estorno no formulário (Decisão 6)", () => {
 describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
 
-  it("tokens: cria, revoga e mostra o token uma vez só", () => {
-    const f = fonte("src/components/wireframe/captura-tokens-wireframe.tsx")
-    expect(f).toContain('rpc("create_capture_token"')
-    expect(f).toContain('rpc("revoke_capture_token"')
-    expect(f).toContain("Guarde agora: ele não aparece de novo.")
-    expect(f).toContain("/functions/v1/capture")
-    expect(f).toContain("docs/captura/atalho-iphone.md")
-    // Só as sete colunas que o authenticated lê: `select('*')` dá 42501.
-    expect(f).not.toMatch(/select\(\s*["']\*["']\s*\)/)
-    // Lido sem cortar comentário: o `tudo` come o `//` da URL.
-    expect(lerFonte("src/components/wireframe/captura-tokens-wireframe.tsx")).toContain(
-      "https://github.com/kauax2000/finance_app/blob/main/docs/captura/atalho-iphone.md",
-    )
-  })
-
-  it("tokens: o token vive só no estado do componente (Foco 2)", () => {
-    const f = fonte("src/components/wireframe/captura-tokens-wireframe.tsx")
-    expect(f).not.toMatch(/localStorage|sessionStorage|setQueryData\(\s*\[\s*["']capture_tokens|console\./)
-  })
-
-  it("tokens: os erros do banco em português", async () => {
-    const { mensagemDoErroDeToken } = await import("./captura-tokens-wireframe")
-    expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_membro" })).toBe("Você não é membro dessa carteira.")
-    expect(mensagemDoErroDeToken({ code: "P0001", message: "limite_tokens" })).toBe(
-      "Limite de 10 tokens ativos. Revogue um para criar outro.",
-    )
-    expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
-    expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
-  })
-
   it("Minha conta leva à política de privacidade, e Configurações não", () => {
     expect(fonte("src/app/(app)/account/page-client.tsx")).toContain("href={ROUTES.PRIVACY}")
     expect(fonte("src/app/(app)/settings/(raiz)/page-client.tsx")).not.toContain("ROUTES.PRIVACY")
-  })
-
-  it("a conta mostra o wireframe dos tokens", () => {
-    expect(fonte("src/app/(app)/account/page-client.tsx")).toMatch(
-      /import\s*\{[^}]*\bCapturaTokensWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/captura-tokens-wireframe["']/,
-    )
   })
 
   it("o guia não traz URL de projeto nem token", () => {

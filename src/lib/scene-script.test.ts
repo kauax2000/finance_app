@@ -14,7 +14,7 @@ import {
     type ScriptState,
 } from "./scene-script"
 
-const IDS: SceneScriptId[] = ["palette-login", "palette-session", "palette-security", "masked-password"]
+const IDS: SceneScriptId[] = ["palette-login", "palette-security", "masked-password"]
 
 const digitados = (plan: ScriptFrame[]) => plan.filter((f) => f.beat === "type").map((f) => f.text)
 const quando = (plan: ScriptFrame[], beat: ScriptFrame["beat"]) => plan.find((f) => f.beat === beat)?.at
@@ -45,9 +45,8 @@ describe("o roteiro das cenas", () => {
         expect(quando(plan, "morph-back")).toBe(4000)
     })
 
-    it("a sessão digita 'painel' e a segurança 'segurança', em cerca de 3s e sem D8", () => {
+    it("a segurança digita 'segurança', em cerca de 3s e sem D8", () => {
         for (const [id, consulta, escolhida] of [
-            ["palette-session", "painel", "Continuar de onde parou"],
             ["palette-security", "segurança", "Senha alterada"],
         ] as const) {
             const plan = planScript(id)

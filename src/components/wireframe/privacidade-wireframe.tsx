@@ -3,7 +3,7 @@ import { ROUTES } from "@/config/navigation"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
 /** Atualize a data sempre que o texto da política mudar. */
-const ATUALIZADA_EM = "26/10/2026"
+const ATUALIZADA_EM = "02/11/2026"
 
 /**
  * A política de privacidade mínima (Bloco 3B, Decisão 13): pública, sem
@@ -39,12 +39,11 @@ export function PrivacidadeWireframe() {
                     </li>
                     <li>As notificações do app e as preferências de aviso de cada carteira.</li>
                     <li>
-                        As sessões e os aparelhos conectados: tipo de aparelho, navegador, sistema, endereço IP e
-                        último acesso.
-                    </li>
-                    <li>
-                        O registro de atividade da conta (mudanças de perfil, e-mail, senha e da família), com o
-                        endereço IP e o aparelho.
+                        O registro dos convites e das mudanças de papel na carteira: a carteira, o convite (com o
+                        e-mail de quem foi convidado, quando o convite é por e-mail), quem aceitou (pelo
+                        identificador, sem e-mail) e, na mudança de papel, o membro, o papel de antes e o de depois,
+                        com a data. Os convites servem para limitar o envio de convites; nenhuma tela do app lê as
+                        mudanças de papel. Não guarda endereço IP nem aparelho.
                     </li>
                     <li>A inscrição de cada aparelho nas notificações push, quando você as liga.</li>
                     <li>

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import type { ReactNode } from "react"
 import { Item, ItemChevron, ItemContent, ItemTitle } from "@/components/ui/item"
 import { Muted } from "@/components/ui/typography"
@@ -69,34 +70,43 @@ export function SettingsTile({ children }: { children: ReactNode }) {
 }
 
 /**
- * A linha que abre um ajuste, com o valor de hoje à direita: o botão de um
- * diálogo.
+ * A linha que abre um ajuste, com o valor de hoje à direita (opcional): o
+ * botão de um diálogo, ou, com `href`, o link de uma tela.
  */
 export function SettingsLink({
     titulo,
     valor,
     onClick,
+    href,
     "aria-label": rotulo,
 }: {
     titulo: string
-    valor: string
-    "aria-label": string
-    onClick: () => void
+    valor?: string
+    "aria-label"?: string
+    onClick?: () => void
+    href?: string
 }) {
     const corpo = (
         <>
-            <ItemContent>
+            {/* Com valor, o título não cede: sem o `flex-none`, um e-mail longo o zeraria. */}
+            <ItemContent className={valor ? "flex-none" : undefined}>
                 <ItemTitle>{titulo}</ItemTitle>
             </ItemContent>
-            <Muted className="min-w-0 truncate">{valor}</Muted>
+            {valor ? <Muted className="ml-auto min-w-0 truncate">{valor}</Muted> : null}
             <ItemChevron />
         </>
     )
     return (
         <Item variant="flush" interactive asChild className="px-4">
-            <button type="button" aria-label={rotulo} onClick={onClick}>
-                {corpo}
-            </button>
+            {href ? (
+                <Link href={href} aria-label={rotulo}>
+                    {corpo}
+                </Link>
+            ) : (
+                <button type="button" aria-label={rotulo} onClick={onClick}>
+                    {corpo}
+                </button>
+            )}
         </Item>
     )
 }

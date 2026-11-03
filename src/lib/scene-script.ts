@@ -9,7 +9,7 @@
  * fixa, para o teste e a captura de tela verem a mesma coisa.
  */
 
-export type SceneScriptId = "palette-login" | "palette-session" | "palette-security" | "masked-password"
+export type SceneScriptId = "palette-login" | "palette-security" | "masked-password"
 
 /**
  * A batida de um quadro. `idle` é o quadro antes do primeiro: a cena parada,
@@ -84,10 +84,6 @@ export function planScript(script: SceneScriptId): ScriptFrame[] {
                 { at: 4000, beat: "morph-back" },
                 { at: 4650, beat: "done" },
             ]
-        case "palette-session": {
-            const quadros = paleta("painel", "Continuar de onde parou")
-            return [...quadros, { at: quadros[quadros.length - 1].at + 250, beat: "done" }]
-        }
         case "palette-security": {
             const quadros = paleta("segurança", "Senha alterada")
             return [...quadros, { at: quadros[quadros.length - 1].at + 250, beat: "done" }]

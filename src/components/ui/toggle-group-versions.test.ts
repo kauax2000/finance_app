@@ -75,9 +75,6 @@ describe("ToggleGroup", () => {
     expect(presets).not.toMatch(/aria-pressed|tagChipFilter|shadow-\[/)
     expect(presets).toContain('variant="segmented"')
     expect(presets).toContain('variant="chip"')
-    const atividade = lerFonte("src/app/(app)/account/activity/page-client.tsx")
-    expect(atividade).not.toMatch(/\{label\} \(/)
-    expect(atividade).toContain("count={activityCounts[key]}")
   })
 })
 

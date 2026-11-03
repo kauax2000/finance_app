@@ -218,7 +218,6 @@ flowchart TD
     nextOk -->|"não"| dash
     login -->|"Esqueceu a senha?"| forgot["/forgot-password?next"]
     login -->|"Criar conta"| register["/register?next"]
-    revoked(["reason=session-expired"]) -.->|"aviso no topo"| login
 
     register -->|"nome, e-mail, senha"| valid{"Senha cumpre a política e campos válidos?"}
     valid -->|"não"| register
@@ -259,13 +258,11 @@ flowchart TD
     expired -->|"Entrar"| loginPlain["/login?next"]
     token -->|"sim"| newPass
 
-    menus(["Menu do usuário no desktop, /account ou /me"]) -->|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut")]
+    menus(["Menu do usuário no desktop, /account ou /me"]) -->|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut sem scope, que é global")]
     signout --> guardOut{"AuthGuard sem usuário"}
     guardOut --> loginNext["/login?next=página onde estava"]
 
-    other(["Sessão encerrada em outro aparelho"]) --> check[("Edge sessions: sessão revogada")]
-    check -->|"ao abrir o app"| reason[("setAuthSignOutReason")] --> signout
-    guardOut -.->|"com motivo"| loginReason["/login?next=…&reason=session-expired"]
+    other(["Outro aparelho: o token vence, sem aviso"]) -.-> guardOut
 ```
 
 ### Regras técnicas
@@ -284,9 +281,8 @@ flowchart TD
 | Convite aceito | Depois do `workspace-invites-accept` a página mostra o status "Convite aceito" com "Abrir a carteira" para `/dashboard`; não há redirecionamento automático. O fallback de carregamento já veste o `AuthShell` | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Erros | Tudo passa por `formatAuthErrorMessagePt`, inclusive esqueci e redefinir senha | `src/lib/supabase-errors.ts` |
 | Primeira conta | Trigger `on_auth_user_created` → `handle_new_user` cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita | `supabase/migrations/00000000000000_baseline.sql` |
-| Sessões | Ao entrar registra o aparelho; ao abrir confere se foi revogado | `src/components/providers.tsx`, edge `sessions` |
+| Sair é global | `signOut()` não passa `scope`, e o padrão do Supabase é `global`: Sair encerra a conta em todos os aparelhos, e é o caminho para um aparelho perdido. Os outros só caem quando o token deles vence, sem aviso, e vão ao login (`AuthGuard`, com `next`). O segundo caminho para um aparelho perdido é trocar a senha: os outros aparelhos terminam quando o token deles vence, e este continua aberto. Não há lista de aparelhos nem encerrar um só | `src/components/providers.tsx` |
 | Sair | Não navega: chama o Supabase primeiro e só com sucesso limpa tudo (fila offline, caches, sessão do aparelho), deixando o `AuthGuard` redirecionar; sem rede nada se apaga e a pessoa vê o erro. Em `/me` pede confirmação antes, num `AlertDialog` "Sair da conta?" que fica aberto com o erro se falhar, porque a fila offline é perdida; em Minha conta não pede (o erro vai em toast) | `src/components/providers.tsx`, `src/app/(app)/me/page-client.tsx` |
-| Motivo da saída | Sessão revogada grava o motivo em memória; o `AuthGuard` o anexa como `reason=` e o login o mostra | `src/lib/auth-signout-reason.ts` |
 
 ---
 
@@ -480,8 +476,8 @@ flowchart TD
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Atalhos do ícone e compartilhar (Blocos 3A e 3B) | O app instalado traz três atalhos ao segurar o ícone: "Nova despesa" (`/transactions?new=1`; era "Nova transação"), "A conferir" (`/transactions?conferir=1`) e "Painel". O `share_target` do Android manda o texto, a foto e o PDF compartilhados por `POST` multipart a `/transactions/compartilhar`, que o service worker atende e redireciona a `/transactions?frase=…` ou `?compartilhado=…` (ver 5c; era `GET` com só o texto no Bloco 3A) | `src/app/manifest.ts`, `src/sw.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
-| Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A quarta aba da barra é a **"Você"**, com o avatar da pessoa no lugar do glifo (a foto ou as iniciais; enquanto o perfil não chega, o círculo neutro vazio, sem esqueleto): ela leva à página `/me` (`ROUTES.ME`, título "Você") e não abre mais um menu (o `MobileAccountMenu`, o painel da rodada 278, saiu). Ela fica ativa em `/me` e em toda tela que a página lista, subrotas incluídas (`/account/sessions`, `/credit-cards/<id>`, `/projetos/<id>`, `/settings/*`; `isVoceTabActive`). A página tem a identidade centrada (avatar, nome, e-mail) e três seções com título, cada uma num cartão: **Carteira** (as abas que saíram da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e convidados), **Neste celular** (só no telefone: tema, lançamento inteligente, instalar o app) e **Conta** (Minha conta, Cofre aberto, com "Seus dados: exportar e apagar", Configurações); as regras moram em `getVoceGroups`. As linhas de Carteira e Conta são `Item` iguais (ícone de 20, texto de 16 no toque, mínimo de 48). A última linha de Conta é o **Sair**, com ícone e sem chevron: abre o `AlertDialog` "Sair da conta?" ("Lançamentos que ainda não sincronizaram serão perdidos"), porque sair limpa a fila offline, e "Sair" chama `signOut()`, que só limpa o aparelho se o Supabase saiu; sem rede o diálogo fica aberto com o erro. Numa tela estreita, a aba que não cabe com folga na barra (o nome + 16, nunca menos de 44) sai do fim e entra no topo do grupo Carteira: num telefone de 320, Categorias; Painel e "Você" ficam sempre (rodada 342). A barra mede e publica quem saiu num armazém de módulo (`abas-fora.ts`, `useSyncExternalStore`) e a página o lê; no desktop, onde a barra some, nada é publicado. As telas das linhas da página (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) são subpáginas dela no telefone: o voltar toma o lugar do sino e leva a `/me` (`defaultMobileBackHref`); as que já têm pai (sessões e atividade → Minha conta, detalhe do cartão → Cartões) mantêm o pai, e a aba que saiu da barra não ganha o voltar. Tocar na aba "Você" já ativa numa dessas telas volta a `/me` (como no iOS, a pilha volta à raiz); só em `/me` o toque sobe ao topo (`BottomBarTab`). No desktop nada leva até `/me`, mas aberta a 768px ou mais ela mostra os grupos com título e o Sair, sem Neste celular. No telefone o tema mora em Você (Neste celular) e o Sair na última linha de Conta, com confirmação; o Sair de Minha conta (o menu ⋯ do perfil) continua, sem confirmação, e Planos e pagamentos (a seção Plano, só no telefone) mora em Minha conta. Antes foi um painel de `DropdownMenu` que brotava da aba "Mais", antes uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-bottom-nav.tsx`, `src/components/layout/abas-fora.ts`, `src/components/layout/voce-avatar.tsx`, `src/app/(app)/me/page-client.tsx`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx` |
-| Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra. No telefone a lupa vira a barra de pesquisa no topo, sobre um véu: a pílula nasce no círculo da lupa (`lupaRef`, o `origin` do `CommandDialog`) e se estica para a esquerda, com o × à direita e o teclado aberto no mesmo toque; o ×, Esc e o toque no véu fecham, e o foco volta à lupa (era uma gaveta de baixo até 2026-10-19). A raiz busca tudo, sem as sub-páginas de categorias e cartões: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. Telas (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) são as da barra lateral menos o Painel, mais Membros (`navigation.ts`); Painel, Configurações, Minha conta, Planos e pagamentos, Sessões ativas, Atividade e Notificações ficam fora da busca, por decisão do dono. Ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). Transações são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. Cartões e categorias leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); parcelas (`?plan=id`), assinaturas (`?sub=id`) e membros (`/members`) saem das listas do espaço; contas a pagar vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma carteira troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`). Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…, `lib/app-search-scopes`): o nome entra no campo como escopo, só aquele grupo aparece (até 50 linhas; 20 transações), e dois Backspaces com o campo vazio voltam à busca em tudo; num escopo de lista do espaço, enquanto ela carrega o grupo diz "Buscando…" e, sem dado e com erro, "Não deu para carregar … agora." (o "Nada em …" só vale depois da resposta) | `src/components/layout/app-command-palette.tsx`, `src/lib/app-search-scopes.ts`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
+| Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A quarta aba da barra é a **"Você"**, com o avatar da pessoa no lugar do glifo (a foto ou as iniciais; enquanto o perfil não chega, o círculo neutro vazio, sem esqueleto): ela leva à página `/me` (`ROUTES.ME`, título "Você") e não abre mais um menu (o `MobileAccountMenu`, o painel da rodada 278, saiu). Ela fica ativa em `/me` e em toda tela que a página lista, subrotas incluídas (`/credit-cards/<id>`, `/projetos/<id>`, `/settings/*`; `isVoceTabActive`). A página tem a identidade centrada (avatar, nome, e-mail) e três seções com título, cada uma num cartão: **Carteira** (as abas que saíram da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e convidados), **Neste celular** (só no telefone: tema, lançamento inteligente, instalar o app) e **Conta** (Minha conta, Cofre aberto, com "Seus dados: exportar e apagar", Configurações); as regras moram em `getVoceGroups`. As linhas de Carteira e Conta são `Item` iguais (ícone de 20, texto de 16 no toque, mínimo de 48). A última linha de Conta é o **Sair**, com ícone e sem chevron: abre o `AlertDialog` "Sair da conta?" ("Lançamentos que ainda não sincronizaram serão perdidos"), porque sair limpa a fila offline, e "Sair" chama `signOut()`, que só limpa o aparelho se o Supabase saiu; sem rede o diálogo fica aberto com o erro. Numa tela estreita, a aba que não cabe com folga na barra (o nome + 16, nunca menos de 44) sai do fim e entra no topo do grupo Carteira: num telefone de 320, Categorias; Painel e "Você" ficam sempre (rodada 342). A barra mede e publica quem saiu num armazém de módulo (`abas-fora.ts`, `useSyncExternalStore`) e a página o lê; no desktop, onde a barra some, nada é publicado. As telas das linhas da página (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) são subpáginas dela no telefone: o voltar toma o lugar do sino e leva a `/me` (`defaultMobileBackHref`); as que já têm pai (detalhe do cartão → Cartões) mantêm o pai, e a aba que saiu da barra não ganha o voltar. Tocar na aba "Você" já ativa numa dessas telas volta a `/me` (como no iOS, a pilha volta à raiz); só em `/me` o toque sobe ao topo (`BottomBarTab`). No desktop nada leva até `/me`, mas aberta a 768px ou mais ela mostra os grupos com título e o Sair, sem Neste celular. No telefone o tema mora em Você (Neste celular) e o Sair na última linha de Conta, com confirmação; o Sair de Minha conta (o menu ⋯ do perfil) continua, sem confirmação, e Planos e pagamentos (a seção Plano, só no telefone) mora em Minha conta. Antes foi um painel de `DropdownMenu` que brotava da aba "Mais", antes uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-bottom-nav.tsx`, `src/components/layout/abas-fora.ts`, `src/components/layout/voce-avatar.tsx`, `src/app/(app)/me/page-client.tsx`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx` |
+| Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra. No telefone a lupa vira a barra de pesquisa no topo, sobre um véu: a pílula nasce no círculo da lupa (`lupaRef`, o `origin` do `CommandDialog`) e se estica para a esquerda, com o × à direita e o teclado aberto no mesmo toque; o ×, Esc e o toque no véu fecham, e o foco volta à lupa (era uma gaveta de baixo até 2026-10-19). A raiz busca tudo, sem as sub-páginas de categorias e cartões: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. Telas (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) são as da barra lateral menos o Painel, mais Membros (`navigation.ts`); Painel, Configurações, Minha conta, Planos e pagamentos e Notificações ficam fora da busca, por decisão do dono. Ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). Transações são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. Cartões e categorias leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); parcelas (`?plan=id`), assinaturas (`?sub=id`) e membros (`/members`) saem das listas do espaço; contas a pagar vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma carteira troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`). Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…, `lib/app-search-scopes`): o nome entra no campo como escopo, só aquele grupo aparece (até 50 linhas; 20 transações), e dois Backspaces com o campo vazio voltam à busca em tudo; num escopo de lista do espaço, enquanto ela carrega o grupo diz "Buscando…" e, sem dado e com erro, "Não deu para carregar … agora." (o "Nada em …" só vale depois da resposta) | `src/components/layout/app-command-palette.tsx`, `src/lib/app-search-scopes.ts`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
 | Nome da tela e voltar | No telefone a barra do topo mostra a carteira no centro, menos em `/me` e nas telas que a aba "Você" acende (as da lista, com subrotas, e `/plans`; `isVoceTabActive`, com a lista de abas vazia: a aba que saiu da barra segue com o seletor), onde não há seletor de carteira: para trocar de carteira, a pessoa vai a uma das abas, e o centro fica vazio até o título da tela subir para ele ao rolar. As telas de aba do telefone abrem com esse título grande (`TituloDaTela`, na casca). `/me` abre na identidade da pessoa, e a subpágina não tem título: o nome só sobe à barra depois de rolar, e numa tela que não rola ele não aparece. Em Transações e Categorias o título que sobe toma o lugar do seletor, que volta no topo da tela; no Painel o seletor fica sempre. Ela também mostra o título e o voltar das subpáginas (`/categories/id`, `/categories/new`, `/credit-cards/id`, as de `/account`), pelo `usePageChromeSlot`. As telas que a página Você lista (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) ganham o voltar a `/me`, e `/plans` volta a `/account` (só no telefone: a migalha do desktop não muda; `defaultMobileBackHref`). Nessas telas a aba "Você" fica ativa, e tocar nela volta a `/me`. No desktop ela não mostra o nome da tela (o `<h1>` fica só para o leitor de tela) nem a trilha: a lateral marca onde se está e é o caminho de volta. A trilha com o link para a tela de cima ("Categorias", "Cartões de crédito") saiu em 2026-10-16 | `src/components/layout/app-header.tsx` |
 | Painel de notificações | O sino abre a folha flutuante (384px, recuo de 8px, o vidro do `Dialog`) no desktop e a gaveta no telefone (`NotificationsSheet`). As linhas se agrupam por dia local ("Hoje", "Ontem", a data), com o rótulo do dia preso ao rolar; cada uma tem o ladrilho de tom (âmbar, vermelho, azul ou cinza, por `notificationTone`), o título em negrito e o ponto enquanto não lida, a hora local e a seta quando leva a algum lugar. O filtro Todas / Não lidas aparece com ao menos uma notificação; sem nenhuma não lida, o filtro mostra "Tudo lido" com "Ver todas". A lista traz as 100 mais recentes e, cheia, avisa "Mostrando as 100 mais recentes". A falha de carga é um `Alert` com "Tentar de novo", nunca a caixa de entrada vazia (o "Limpar todas" otimista que falha não pode virar "Nenhuma notificação"). Trocar de carteira volta ao esqueleto | `src/components/layout/notifications-sheet.tsx`, `src/components/layout/notifications-panel.tsx`, `src/components/layout/notification-row.tsx`, `src/lib/notification-visuals.tsx` |
 | Transição de subpágina (2/nov/2026) | Só no telefone: quem desce pela cadeia do voltar (`defaultMobileBackHref`) entra da direita, sobre a tela velha, e quem sobe faz o contrário. Troca de aba e de tela irmã não anima; a direção sai da rota, e nenhum link a marca (`direcaoDaTela`, `TransicaoDeSubpagina`, na casca). A tela velha fica parada enquanto a nova monta e carrega por baixo, e o gesto só começa sem esqueleto, com teto de 1,2s. Vale para link: `router.push` (fatura em Contas a pagar, menu de contexto da categoria, busca) e o voltar do navegador trocam sem gesto | `src/components/layout/transicao-de-subpagina.tsx`, `src/lib/direcao-da-tela.ts` |
@@ -772,11 +768,11 @@ worker.
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account(("G10 /account")) --> tokens(["WIREFRAME Captura sem abrir o app: tokens"])
-    tokens -->|"nome, carteira padrão, Novo token"| createTok[("RPC create_capture_token: guarda o sha256; até 10 ativos")]
-    createTok --> shown(["O token fac_ aparece uma vez só: Copiar"])
-    tokens -->|"Revogar"| revokeTok[("RPC revoke_capture_token: revoked_at")]
-    tokens -->|"guia do Atalho"| guide(["docs/captura/atalho-iphone.md, aberto no GitHub"])
+    account(("G10 /account")) --> tokens(["Lançar sem abrir o app: a lista de aparelhos e Novo aparelho"])
+    tokens -->|"Novo aparelho: nome e carteira padrão"| createTok[("RPC create_capture_token: guarda o sha256; até 10 ativos")]
+    createTok --> shown(["No mesmo diálogo: o token fac_ aparece uma vez só, com Copiar e Já guardei"])
+    tokens -->|"Revogar, com confirmação num AlertDialog"| revokeTok[("RPC revoke_capture_token: revoked_at")]
+    tokens -->|"Como configurar: o endereço de captura e o guia do Atalho"| guide(["docs/captura/atalho-iphone.md, aberto no GitHub"])
     guide --> iphone(["Atalho do iPhone: ditar a frase, a foto do recibo redimensionada e em JPEG, ou Extrair texto da imagem"])
     guide --> wallet(["Automação da Wallet: valor, estabelecimento e cartão do Apple Pay"])
     iphone -->|"POST text, ou multipart file, Bearer fac_"| capture[("Edge capture")]
@@ -1196,45 +1192,47 @@ flowchart TD
 
 ## 10. Conta e segurança
 
-`/account` e subpáginas: o que é da pessoa, não da carteira.
+`/account`: o que é da pessoa, não da carteira. Uma página só, sem subpáginas; o menu ⋯ saiu, e tudo fica à vista.
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account["/account"] --> card(["Perfil: avatar, nome, email, membro desde"])
-    account -->|"⋯ Editar perfil"| profile(["Nome e avatar"])
+    account["/account"] --> card(["Identidade: avatar, nome, e-mail, membro desde"])
+    card -->|"Editar perfil"| profile(["EditProfileDialog: nome, avatar e e-mail"])
     profile -->|"enviar ou remover avatar, até 5 MB"| storage[("Storage avatars")]
     profile -->|"Salvar nome e avatar"| profileOk(["Perfil atualizado"])
-    profile -->|"trocar email"| emailPwd{"Senha atual confere?"}
+    profile -->|"trocar e-mail"| emailPwd{"Senha atual confere?"}
     emailPwd -->|"não"| profile
-    emailPwd -->|"sim"| emailUpd[("updateUser email")] --> emailSent(["Link de confirmação enviado ao novo email"])
-    profileOk --> log[("Edge activity-logs")]
-    emailSent --> log
+    emailPwd -->|"sim"| emailUpd[("updateUser email")] --> emailSent(["Link de confirmação enviado ao novo e-mail"])
 
-    account -->|"⋯ Alterar senha"| pwd(["Senha atual, nova, confirmação"])
+    account -->|"Senha: Alterar"| pwd(["ChangePasswordDialog: senha atual, nova, confirmação"])
     pwd --> pwdCheck{"Senha atual confere e nova é forte?"}
     pwdCheck -->|"não"| pwd
-    pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s; outras sessões continuam"])
-    pwdOk --> log
+    pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s; este aparelho segue aberto e os outros terminam quando o token vence"])
 
-    account -->|"⋯ Sair"| G1(("G1 Sair"))
-    account -->|"⋯ Excluir conta"| warn(["Aviso: carteiras compartilhadas que você é dona"])
-    warn -->|"Continuar"| confirmDel(["Digitar email e senha"])
+    account -->|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
+
+    account -->|"Novo aparelho, em Lançar sem abrir o app"| newDev(["Dialog: nome do aparelho e carteira padrão"])
+    newDev --> tokFlow(("G5c Tokens e Atalho"))
+    account -->|"Revogar, na linha do aparelho"| revDev(["AlertDialog: o aparelho para de lançar"])
+    revDev -->|"Revogar"| tokFlow
+    account -->|"Como configurar"| howTo(["Dialog: endereço de captura e link do guia"])
+
+    account -->|"Conectar, em IAs conectadas"| connAi(["Dialog: a URL do MCP e as três instruções"])
+    account -->|"Desconectar, na linha da IA"| discAi(["AlertDialog: ela perde o acesso na hora"])
+    connAi --> aiFlow(("G19 Conectar uma IA"))
+    discAi --> aiFlow
+
+    account -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
+
+    account -->|"Sair, sem confirmação"| G1(("G1 Sair, que é global"))
+    account -->|"Excluir conta"| warn(["Aviso: carteiras compartilhadas que você é dona"])
+    warn -->|"Continuar"| confirmDel(["Digitar e-mail e senha"])
     confirmDel -->|"Excluir"| delUser[("Edge delete-user, confere a senha")]
     delUser -->|"erro"| confirmDel
     delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
 
-    account -->|"Sessões"| sessions["/account/sessions"]
-    sessions -->|"Encerrar ou Encerrar todas"| sessFn[("Edge sessions")]
-    sessions -.->|"sem sessão"| plainLogin["/login sem next"]
-    account -->|"Atividade"| activity["/account/activity"]
-    activity -->|"filtros: todas, família, segurança, perfil"| activity
-    activity -.->|"sem sessão"| plainLogin
-    account -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
-
-    account -->|"WIREFRAME Captura sem abrir o app"| capTok(("G5c Tokens e Atalho"))
-
-    userMenu(("G3 Menu do usuário")) --> plans(("G11 /plans, o plano e a faixa de só leitura"))
+    userMenu(("G3 Menu do usuário")) --> plans
     account -->|"Cofre aberto, pelo menu do usuário e por /me"| cofre(("G12 /cofre: exportar tudo e apagar a conta"))
 ```
 
@@ -1244,9 +1242,10 @@ flowchart TD
 |---|---|---|
 | Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser` | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
 | Excluir conta | Dois passos; a senha é conferida na Edge Function. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
-| Sessões | Listar e encerrar pela edge `sessions` | `src/lib/sessions.ts` |
-| Atividade | Perfil, email e senha gravam log | edge `activity-logs` |
-| Tokens de captura (Bloco 3A) | Seção "Captura sem abrir o app" (wireframe): nome do aparelho (1 a 60 caracteres) e carteira padrão; "Novo token" chama `create_capture_token`, que devolve o `fac_…` uma vez só, para copiar; "Revogar" chama `revoke_capture_token`. A lista lê só as colunas sem o hash e nunca mostra o valor. Até 10 ativos por pessoa. O link do guia abre `docs/captura/atalho-iphone.md` no GitHub | `src/components/wireframe/captura-tokens-wireframe.tsx`, `docs/captura/atalho-iphone.md` |
+| Tela | Uma coluna: identidade, Acesso e plano (E-mail e Editar perfil abrem o `EditProfileDialog`, Senha abre o `ChangePasswordDialog`, Plano vai a `/plans`, agora também no desktop), Lançar sem abrir o app, IAs conectadas, Política de privacidade (`/privacidade`) e, no fim, Sair e Excluir conta. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
+| Sair | É global: o `signOut()` sem `scope` encerra a conta em todos os aparelhos, e os outros só caem quando o token vence, sem aviso, indo ao login. Sem confirmação nesta tela (o erro vai em toast). Segundo caminho para um aparelho perdido: trocar a senha encerra os outros aparelhos quando o token deles vence, e este segue aberto | `src/components/providers.tsx` |
+| Sem sessões nem atividade | A tela não lista aparelhos, não encerra sessão e não grava log: `createActivity` saiu do perfil e da senha, o `x-app-session-id` saiu das chamadas e o `reason=session-expired` não existe mais; o login só mostra `reason=password-updated`. **Pendência para o 2.0 subir à `main`**: ver a lacuna 108 | `src/components/providers.tsx`, `src/lib/edge-invoke.ts` |
+| Tokens de captura (Bloco 3A) | Seção "Lançar sem abrir o app": uma linha por token ativo (nome, carteira · último uso, "Revogar"; os revogados somem). "Novo aparelho" abre um `Dialog` com nome (1 a 60 caracteres) e carteira padrão e chama `create_capture_token`; **o mesmo diálogo** passa a "Guarde agora", com o `fac_…` uma vez só, Copiar, o endereço de captura e "Já guardei", e fechar por qualquer caminho descarta o token. "Revogar" é um `AlertDialog` e chama `revoke_capture_token`. "Como configurar" abre o endereço de captura e o link do guia, `docs/captura/atalho-iphone.md` no GitHub. A lista lê só as colunas sem o hash. Até 10 ativos por pessoa | `src/components/account/atalho-secao.tsx`, `src/components/account/novo-aparelho-dialog.tsx`, `src/components/account/como-configurar-dialog.tsx`, `docs/captura/atalho-iphone.md` |
 
 ---
 
@@ -2058,14 +2057,14 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account["/account"] --> ias(["WIREFRAME IAs conectadas: a URL do MCP com copiar, três instruções e a lista"])
-    ias -->|"Copiar a URL"| copiado(["URL na área de transferência"])
+    account["/account"] --> ias(["IAs conectadas: Conectar e a lista"])
+    ias -->|"Conectar: Copiar a URL, no Dialog com as três instruções"| copiado(["URL na área de transferência"])
     ias --> grants[("listGrants")]
     grants -->|"erro"| erroLista(["Não foi possível carregar as conexões"])
     grants --> lista{"Alguma IA conectada?"}
     lista -->|"não"| vazio(["Nenhuma IA conectada"])
-    lista -->|"sim"| linha(["Cada IA e desde quando, com Revogar"])
-    linha -->|"Revogar"| confirma(["Confirmação do navegador: ela perde o acesso na hora"])
+    lista -->|"sim"| linha(["Cada IA e desde quando, com Desconectar"])
+    linha -->|"Desconectar"| confirma(["AlertDialog: ela perde o acesso na hora"])
     confirma -->|"cancelar"| linha
     confirma -->|"confirmar"| revogar[("revokeGrant")]
     revogar -->|"erro"| erroRevoga(["A frase de erro, e a lista fica"])
@@ -2086,7 +2085,7 @@ flowchart TD
 | `registrar_lancamento` | A única escrita, com campos separados (sem frase livre nem Groq). Insere em `transactions` com `source = 'ia_externa'`, `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`. Parcelado chama a RPC `create_workspace_installment_plan`, a mesma do formulário, passando as três marcas (`p_source`, `p_needs_review`, `p_capture_meta`), que ela grava nas parcelas. Depois de uma despesa chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário; a falha deles é engolida (lacuna 101). A carteira em só leitura devolve a frase "sua carteira está só leitura no plano atual". Sem idempotência por `client_id` (lacuna 102) | `supabase/functions/mcp/index.ts`, `supabase/functions/_shared/mcp/lancamento.ts` |
 | O token da IA | O token OAuth é um JWT da pessoa com a claim `client_id` (`public.eh_token_de_ia()`). Políticas `as restrictive` `ia_somente_leitura_insert/update/delete` em toda tabela de `public` com política de escrita e em `storage.objects`: o token lê, insere só em `transactions`, e só marcado (`ia_lancamento_marcado`: `source = 'ia_externa'` e `needs_review`), e não altera nem apaga. A RPC do parcelado força a marca com token de IA. As Edges de usuário recusam o token (`getAuthUserFromJwt` → 401), menos `evaluate-budgets` e `evaluate-credit-card-alerts`. As RPCs `security definer` não passam pelo RLS: o `db_pre_request` `guarda_do_token_de_ia` recusa ao token toda RPC fora `create_workspace_installment_plan`, e todo PATCH, PUT e DELETE. Residual: lacuna 103 | `supabase/migrations/20261103130000_mcp_token_somente_leitura.sql`, `supabase/migrations/20261103140000_mcp_guarda_rpc.sql`, `supabase/functions/_shared/auth-user.ts` |
 | A origem `ia_externa` | A migração acrescenta `ia_externa` ao check de `transactions.source`. É ela e o `needs_review` que levam o lançamento à lista "A conferir" (G5c) e ao Painel, como os da captura | `supabase/migrations/20261103120000_mcp.sql` |
-| IAs conectadas | Bloco em `/account`, ao lado dos tokens de captura: a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) com copiar, três instruções (Claude, ChatGPT e `claude mcp add`), `listGrants` e `revokeGrant` com a confirmação do navegador | `src/app/(app)/account/page-client.tsx`, `src/components/wireframe/ias-conectadas-wireframe.tsx` |
+| IAs conectadas | Seção de `/account`, depois de "Lançar sem abrir o app": "Conectar" abre um `Dialog` com a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) para copiar e três instruções (Claude, ChatGPT e `claude mcp add`); uma linha por IA (nome, desde quando, "Desconectar"), com `listGrants`; "Desconectar" é um `AlertDialog` e chama `revokeGrant` | `src/app/(app)/account/page-client.tsx`, `src/components/account/ias-secao.tsx`, `src/components/account/conectar-ia-dialog.tsx` |
 | A ponte com a conferência | O lançamento da IA entra pela marca `needs_review` na conferência do Bloco 9: a pessoa vê o que a IA lançou e confirma ou apaga. Não há aviso nem bloqueio extra por ser da IA | G5c |
 
 ---
@@ -2100,7 +2099,6 @@ continuam aqui para registro.
 | # | Jornada | Lacuna |
 |---|---|---|
 | 2 | G3 | O provider global expõe abrir convite, mas nada chama essa função. (Nova categoria e novo cartão saem da paleta ⌘K desde 16/out/2026.) |
-| 3 | G10 | `/account/sessions` e `/account/activity` redirecionam para `/login` sem `next`, então a pessoa não volta para a página depois de entrar. |
 | 4 | G1 | A política de senha não vale para a troca de senha de dentro do app (`ChangePasswordDialog`), que ainda confere só o comprimento. |
 | 5 | G8 | O detalhe de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre (só existe `?new=1`). Por isso o toast de assinatura criada não tem "Ver", ao contrário de transação, cartão, conta e categoria (rodada 228). |
 | 6 | G5 | Excluir uma transação é físico e sem volta: não há `deleted_at` nem RPC de restaurar, então o "Desfazer" do toast não substitui a confirmação. Ter o desfazer exige exclusão lógica no banco. |
@@ -2108,7 +2106,7 @@ continuam aqui para registro.
 | 8 | G3 | O servidor das notificações foi revisado (textos, `?month=` no link do orçamento, regras de disparo), e o aviso de despesa e os crons passaram para uma migração (trigger e `pg_cron` com Vault). **Banco e funções publicados em 21/10/2026**: produção já manda os textos e as regras novas, o aviso de despesa vem do trigger e os dois crons diários estão agendados (não havia Webhook). Falta o front novo, depois dele apagar a `dispatch-notifications`, o teste de fumaça com duas pessoas e o backup semanal: ver `supabase/NOTIFICATION_DEPLOYMENT.md`. |
 | 9 | G5 | Só a exclusão avulsa online apaga o objeto do anexo na hora. A exclusão em lote, a de compra parcelada (o plano sai em cascata no banco), a feita offline e o desfazer de um lote importado apagam as linhas de `attachments` em cascata, mas deixam os objetos no bucket até o cron `attachments-cleanup-weekly` (domingo) apagar o que não tem linha e passou de 24 h. Até lá eles ocupam o armazenamento do projeto, não a cota da carteira. |
 | 12 | G5, G6, G7 | O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe. **Banco e funções publicados em 21/10/2026** (migrações, bucket, políticas e cron conferidos); o front novo não foi publicado, então ninguém usa nada disso ainda. Aberta até o front subir e o teste de fumaça passar: `supabase/BLOCO_2_DEPLOYMENT.md`. |
-| 14 | G3, G4, G5, G10 | O Bloco 3A (captura sem abrir o app) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, porque nada dele aparece no front de `main`: `supabase/BLOCO_3A_DEPLOYMENT.md`. |
+| 14 | G3, G4, G5, G10 | O Bloco 3A (captura sem abrir o app) está no repositório, com as telas em wireframe, menos os tokens de Minha conta, já no design system, e **nada foi publicado**. O backend pode subir antes do front, porque nada dele aparece no front de `main`: `supabase/BLOCO_3A_DEPLOYMENT.md`. |
 | 18 | G5 | Um item do Apple Pay com casamento parcial gravado antes de a `capture` guardar o `walletCard` nesse caso não tem `capture_meta.walletCard` e não oferece "Lembrar". |
 | 19 | G10 | O link do guia do Atalho aponta para `docs/captura/atalho-iphone.md` em `main` no GitHub e dá 404 até o `finance-app-2.0` ir para `main`. |
 | 20 | G5 | A captura pelo WhatsApp foi adiada pelo dono em 22/10/2026 e ficou fora do Bloco 3B. Só o Atalho do iPhone, o Apple Pay e o compartilhar do Android lançam de fora do app. |
@@ -2169,19 +2167,21 @@ continuam aqui para registro.
 | 93 | G3, G11 | Um aviso já entregue por push ou e-mail não se recolhe: se o fato muda depois (o lançamento apagado, o insight resolvido, o estorno desfeito), o texto que saiu continua com a pessoa. O `billing_avisos.pendente` só reenvia o que falhou na entrega. |
 | 98 | G5 | A importação por conta sugere a categoria pelo histórico sem olhar o tipo: um crédito pode ganhar a categoria de despesa de um débito parecido. Já era assim antes do Bloco 9. |
 | 99 | G2, G3, G4, G5, G6, G11, G14 | O Bloco 9 (correções antes do lançamento) e o 9b (as lacunas 94 a 97) estão no repositório e **nada foi publicado**. A Edge `workspace-invites-accept` sobe antes da migração `20261102120000_bloco9.sql`, a `capture` depois dela, e as de cobrança e as demais só com o 2.0 em `main`; a migração `20261102120000_bloco9.sql` (editada no lugar, com `billing_avisos.tentativas`) e as Edges `capture`, `credit-card-calendar-alerts` e `billing-daily` do 9b seguem a mesma ordem; o `bloco9.test.sql` (21 asserções) roda no projeto de teste: `supabase/BLOCO_9_DEPLOYMENT.md`. |
-| 100 | G19 | O MCP (conectar uma IA: a Edge `mcp`, o consentimento `/oauth/consent` e as IAs conectadas em Minha conta) está no repositório, com as telas em wireframe, e **nada foi publicado**. O servidor OAuth do Auth está desligado em produção (`feature_disabled`) e ligá-lo é passo do dono no painel. O fluxo OAuth nunca rodou de verdade: não há stack local nem banco de teste, e o primeiro teste de ponta a ponta no Claude e no ChatGPT é do roteiro. Também não está conferido que `supabase functions deploy mcp` resolve os imports `npm:` sem um `deno.json` (com falha, `--use-api`) nem que `/functions/v1/mcp/oauth-protected-resource` responde: `supabase/MCP_DEPLOYMENT.md`. |
+| 100 | G19 | O MCP (conectar uma IA: a Edge `mcp`, o consentimento `/oauth/consent` em wireframe e as IAs conectadas em Minha conta) está no repositório, e **nada foi publicado**. O servidor OAuth do Auth está desligado em produção (`feature_disabled`) e ligá-lo é passo do dono no painel. O fluxo OAuth nunca rodou de verdade: não há stack local nem banco de teste, e o primeiro teste de ponta a ponta no Claude e no ChatGPT é do roteiro. Também não está conferido que `supabase functions deploy mcp` resolve os imports `npm:` sem um `deno.json` (com falha, `--use-api`) nem que `/functions/v1/mcp/oauth-protected-resource` responde: `supabase/MCP_DEPLOYMENT.md`. |
 | 101 | G19 | O `registrar_lancamento` chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o token OAuth da IA, e a falha é engolida. As duas o aceitam de propósito (`permitirTokenDeIA`), mas isso nunca rodou no ar: se recusarem, o lançamento da IA grava e o aviso de orçamento ou de fatura não sai. |
 | 102 | G19 | O `registrar_lancamento` não tem idempotência por `client_id`: uma IA que repete a chamada cria dois lançamentos. O `needs_review` põe os dois na conferência, onde a pessoa apaga o repetido. |
 | 103 | G19 | O token da IA não altera nem apaga: o RLS fecha as tabelas e a guarda `guarda_do_token_de_ia` (o `db_pre_request` do PostgREST) recusa toda RPC fora a do parcelado e todo PATCH, PUT e DELETE. Falta conferir que o Auth recusa um `PUT /auth/v1/user` (trocar e-mail ou senha) com esse token: é checagem do roteiro, antes de ligar o registro dinâmico (`supabase/MCP_DEPLOYMENT.md` §1a). |
 | 104 | G5 | Fechar o lançamento inteligente (Esc, fora) descarta o que foi lido ou editado sem perguntar; o formulário clássico pergunta "Descartar alterações?". |
 | 105 | G5 | Os wireframes antigos `frase-rapida-wireframe.tsx` e `foto-recibo-wireframe.tsx` ficam sem uso no repositório até o dono aprovar apagá-los. |
 | 106 | G5, G10 | A Edge `capture` compartilha o parser melhorado (dias da semana, receita, motivo do tipo), mas não foi publicada: o Atalho do iPhone e o Apple Pay seguem com o parser antigo até a próxima publicação. |
+| 108 | G10 | **Pendência para o 2.0 subir à `main`** (a tela nova de Minha conta já não chama sessões nem atividade, mas o front de `main` ainda chama): (1) uma migração, antes de apagar, remove de `auth.sessions` o `auth_session_id` das linhas de `user_sessions` com `is_active=false` (a revogação do front de `main` só valia pelo `validateCurrentSession`, que saiu), apaga `user_sessions` (a função `cleanup_expired_sessions()`, do baseline, lê essa tabela e sai com ela; nenhum cron a chama nas migrações, confira no painel) e as linhas de `user_activity_logs` que não são de convite nem `family_role_changed` (de `papeis.sql`); (2) apagar as Edges `sessions` e `activity-logs`; (3) apagar `_shared/session-guard.ts`. A tabela `user_activity_logs` **fica**: as Edges de convite gravam nela e `_shared/invite-rate-limit.ts` lê dela o limite de convites. Até lá as Edges seguem no ar. |
 
-### Fechadas em 1/nov/2026
+### Fechadas em 1 e 2/nov/2026
 
 | Era | Lacuna | O que fechou |
 |---|---|---|
 | 107 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas, sem sessão no telefone, o `AuthGuard` montava o `next` do login sem o hash: depois do login a pessoa chegava ao topo de Configurações, não à seção | O `AuthGuard` soma `window.location.hash` ao `next` (codificado com o resto); `getSafeInternalNextPath` já aceita o `#`, e o `router.push` do login rola até a seção |
+| 3 | As subpáginas de sessões e de atividade redirecionavam para `/login` sem `next`, então a pessoa não voltava para a página depois de entrar | As duas subpáginas saíram com a tela nova de Minha conta (404), e o front não lista mais sessões nem atividade |
 
 ### Fechadas no Bloco 9b (26/out/2026)
 

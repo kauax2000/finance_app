@@ -142,7 +142,7 @@ export default function SkeletonDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Onze esqueletos de página (painel, transações, contas, assinaturas, cartões e o detalhe, categorias e o detalhe, membros, conta, atividade e sessões) — todos num <code>SkeletonGroup delay</code> desde a rodada 176. Nove escreviam <code>role=&quot;status&quot;</code> e <code>aria-busy</code> à mão, cada um de um jeito, e dois (o detalhe da categoria e os membros) não anunciavam nada. Das 403 chamadas, as formas que eram peças viraram <code>shape</code> — 23 ladrilhos e 6 pílulas —; o resto são linhas e blocos medidos pela tela, que continuam por <code>className</code>.
+        Nove esqueletos de página (painel, transações, contas, assinaturas, cartões e o detalhe, categorias e o detalhe, membros e conta) — todos num <code>SkeletonGroup delay</code> desde a rodada 176. Nove escreviam <code>role=&quot;status&quot;</code> e <code>aria-busy</code> à mão, cada um de um jeito, e dois (o detalhe da categoria e os membros) não anunciavam nada. Das 403 chamadas, as formas que eram peças viraram <code>shape</code> — 23 ladrilhos e 6 pílulas —; o resto são linhas e blocos medidos pela tela, que continuam por <code>className</code>.
       </DocNote>
 
       <PropsTable

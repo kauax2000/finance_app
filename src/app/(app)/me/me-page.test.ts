@@ -71,7 +71,6 @@ describe("signOut do provedor", () => {
         expect(corpo).toContain("Não foi possível sair. Confira a conexão e tente de novo.")
         expect(corpo.indexOf("supabase.auth.signOut()")).toBeGreaterThan(-1)
         expect(corpo.indexOf("supabase.auth.signOut()")).toBeLessThan(corpo.indexOf("clearClientCaches()"))
-        expect(corpo.indexOf("supabase.auth.signOut()")).toBeLessThan(corpo.indexOf("clearCurrentSession()"))
         expect(fonte).toContain("signOut: () => Promise<{ error: string | null }>")
     })
     it("quem chama mostra o erro", () => {

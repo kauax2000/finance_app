@@ -14,17 +14,17 @@ valor real de nenhum deles.**
 
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
-| `<URL>` | o endereço da captura | Minha conta › "Captura sem abrir o app" › Endereço |
-| `<TOKEN>` | o seu token pessoal | Minha conta › "Novo token" (aparece uma vez só) |
+| `<URL>` | o endereço da captura | Minha conta › "Lançar sem abrir o app" › Como configurar |
+| `<TOKEN>` | o seu token pessoal | Minha conta › "Lançar sem abrir o app" › Novo aparelho (aparece uma vez só) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Minha conta**.
-2. Na seção "Captura sem abrir o app", escreva o nome do aparelho, por exemplo
+2. Na seção "Lançar sem abrir o app", toque em **Novo aparelho** e escreva o nome do aparelho, por exemplo
    "iPhone da Ana".
 3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
    não diz outra carteira.
-4. Toque em **Novo token**.
+4. Toque em **Criar**.
 5. Copie o token na hora. Ele **não aparece de novo**. Se perder o token, revogue
    e crie outro.
 
@@ -214,11 +214,10 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 
 ## 6. Perdeu o aparelho? Revogue o token
 
-Em **Minha conta** › "Captura sem abrir o app", toque em **Revogar** no token do
+Em **Minha conta** › "Lançar sem abrir o app", toque em **Revogar** no token do
 aparelho. Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
-O token revogado continua na lista, marcado "revogado". Para voltar a lançar,
-crie um token novo.
+O token revogado sai da lista. Para voltar a lançar, crie um token novo.
 
 ## 7. Opcional: Android avançado
 

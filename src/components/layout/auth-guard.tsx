@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AppBootstrapScreen } from "@/components/layout/app-bootstrap-screen"
 import { useAuth } from "@/components/providers"
 import { ROUTES } from "@/config/navigation"
-import { takeAuthSignOutReason } from "@/lib/auth-signout-reason"
 
 type AuthGuardProps = {
     children: React.ReactNode
@@ -34,10 +33,6 @@ function AuthGuardInner({ children }: AuthGuardProps) {
         // O hash só existe no navegador: sem ele o QR de Configurações perde a âncora no login.
         const next = `${query ? `${pathname}?${query}` : pathname}${window.location.hash}`
         const params = new URLSearchParams({ next })
-        // Só existe quando a saída não foi a pessoa que pediu — hoje, sessão
-        // revogada em outro aparelho. `take` limpa ao ler.
-        const reason = takeAuthSignOutReason()
-        if (reason) params.set("reason", reason)
         // `replace`: com `push` o "voltar" do login devolvia à rota protegida,
         // que mandava de novo para o login.
         router.replace(`${ROUTES.LOGIN}?${params.toString()}`)

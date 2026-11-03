@@ -13,15 +13,8 @@ import {
 import { User, Session } from "@supabase/supabase-js"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase, type Profile } from "@/lib/supabase"
-import {
-    clearCurrentSession,
-    createSession,
-    sessionRegisteredRecently,
-    validateCurrentSession,
-} from "@/lib/sessions"
 import { callDeleteUserAccount } from "@/lib/delete-account"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
-import { setAuthSignOutReason } from "@/lib/auth-signout-reason"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaShellProvider } from "@/components/pwa/pwa-shell-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -94,8 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
     const prevSignedInUserIdRef = useRef<string | null>(null)
-    // Quem já teve a sessão registrada neste carregamento da página.
-    const sessaoRegistradaRef = useRef<string | null>(null)
 
     const profileQuery = useProfileQuery(user?.id)
     const profile = profileQuery.data ?? null
@@ -135,19 +126,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser((prev) => mesmoUsuario(prev, session.user))
                 prevSignedInUserIdRef.current = session.user.id
                 setLoading(false)
-
-                validateCurrentSession().then((ok) => {
-                    if (!ok) {
-                        // Sessão revogada em outro aparelho: além de sair da tela, some com
-                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
-                        // O motivo viaja junto para o `AuthGuard` poder dizer o
-                        // que aconteceu, em vez de devolver um login mudo.
-                        setAuthSignOutReason("session-expired")
-                        void clearClientCaches().finally(() =>
-                            supabase.auth.signOut({ scope: "local" }),
-                        )
-                    }
-                }).catch(() => {})
             } else {
                 setSession(null)
                 setUser(null)
@@ -176,24 +154,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         : (session.user ?? null),
                 )
                 setLoading(false)
-                void validateCurrentSession().then((ok) => {
-                    if (!ok) {
-                        // Sessão revogada em outro aparelho: além de sair da tela, some com
-                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
-                        // O motivo viaja junto para o `AuthGuard` poder dizer o
-                        // que aconteceu, em vez de devolver um login mudo.
-                        setAuthSignOutReason("session-expired")
-                        void clearClientCaches().finally(() =>
-                            supabase.auth.signOut({ scope: "local" }),
-                        )
-                    }
-                })
                 return
             }
 
             if (event === "SIGNED_OUT") {
                 prevSignedInUserIdRef.current = null
-                sessaoRegistradaRef.current = null
                 setSession(null)
                 setUser(null)
                 setLoading(false)
@@ -217,24 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser((prev) => mesmoUsuario(prev, nextUser))
             setLoading(false)
 
-            // O auth-js emite SIGNED_IN também a cada vez que a aba volta a ficar
-            // visível (`_recoverAndRefresh`), não só no login: registrar a sessão a
-            // cada foco eram duas chamadas à Edge `sessions` (1–2 s cada) e um
-            // UPDATE em `user_sessions` — metade do tempo do banco. Uma vez por
-            // carregamento basta, e nem isso se este navegador registrou há menos
-            // de 6 h (a revogação já foi conferida no `getSession`, acima).
-            if (event === "SIGNED_IN" && session && sessaoRegistradaRef.current !== session.user.id) {
-                sessaoRegistradaRef.current = session.user.id
-                if (sessionRegisteredRecently()) return
-                void (async () => {
-                    try {
-                        await createSession()
-                        await validateCurrentSession()
-                    } catch {
-                        /* rede / edge indisponível */
-                    }
-                })()
-            }
         })
 
         return () => subscription.unsubscribe()
@@ -251,7 +198,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
             return falha
         }
-        clearCurrentSession()
         await clearClientCaches()
         return { error: null }
     }, [clearClientCaches])

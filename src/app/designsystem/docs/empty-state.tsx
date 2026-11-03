@@ -153,18 +153,18 @@ export default function EmptyStateDoc() {
 
       <DocSection
         title="Tudo em dia"
-        description="O vazio que é boa notícia — nenhuma sessão aberta, nenhuma parcela terminando — não usa o leque de um filtro sem resultado. variant=&quot;done&quot; nasce na mola e o tique se desenha da esquerda para a direita, no tom success; sem filho, o tique é o padrão."
+        description="O vazio que é boa notícia — nenhuma conta vencendo, nenhuma parcela terminando — não usa o leque de um filtro sem resultado. variant=&quot;done&quot; nasce na mola e o tique se desenha da esquerda para a direita, no tom success; sem filho, o tique é o padrão."
         code={`<EmptyState variant="plain">
   <EmptyStateIcon variant="done" />
-  <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
+  <EmptyStateTitle>Nenhuma conta vencendo</EmptyStateTitle>
 </EmptyState>`}
         previewClassName="items-stretch"
       >
         <EmptyState variant="plain" className="w-full">
           <EmptyStateIcon variant="done" />
-          <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
+          <EmptyStateTitle>Nenhuma conta vencendo</EmptyStateTitle>
           <EmptyStateDescription>
-              Você só verá esta sessão ativa neste dispositivo.
+              Quando uma conta chegar perto do vencimento, ela aparece aqui.
           </EmptyStateDescription>
         </EmptyState>
       </DocSection>

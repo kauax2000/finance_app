@@ -11,7 +11,7 @@ import * as React from "react"
  * `AuthShell`; sem publicação, vale `defaultSceneFor(pathname)`.
  */
 export type AuthSceneId =
-    | "login" | "login.session-expired" | "login.password-updated"
+    | "login" | "login.password-updated"
     | "register" | "register.confirm" | "register.confirm-invite"
     | "recovery.email" | "recovery.code" | "recovery.password"
     | "recovery.link-checking" | "recovery.link-expired" | "recovery.done"

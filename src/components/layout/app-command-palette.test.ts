@@ -27,7 +27,7 @@ describe("a paleta do app", () => {
         const fontes = lerFonte("src/components/layout/app-search-sources.ts")
         for (const t of ["fatura", "boletos", "gastos"]) expect(fontes).toContain(t)
         // fora da busca, por decisão do dono: Painel, Configurações, a conta e as notificações
-        for (const t of ["ACCOUNT_SESSIONS", "ACCOUNT_ACTIVITY", "SETTINGS_NAV_ITEM", "ACCOUNT_MENU_PROFILE_LINK_ITEMS"]) expect(fontes).not.toContain(t)
+        for (const t of ["SETTINGS_NAV_ITEM", "ACCOUNT_MENU_PROFILE_LINK_ITEMS"]) expect(fontes).not.toContain(t)
         expect(fontes).toContain("item.href !== ROUTES.DASHBOARD")
         expect(fonte).not.toContain("Notificações")
     })

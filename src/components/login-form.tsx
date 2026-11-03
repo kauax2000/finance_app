@@ -48,16 +48,8 @@ function getFieldErrors(email: string, password: string): FieldErrors {
     return errors
 }
 
-/**
- * O motivo pelo qual a pessoa caiu aqui, quando não foi ela que pediu.
- *
- * A sessão encerrada em outro aparelho limpa tudo e deixa o `AuthGuard`
- * redirecionar — o que funcionava, mas devolvia uma tela de login sem
- * explicação nenhuma no lugar da página em que a pessoa estava.
- */
+/** O motivo pelo qual a pessoa caiu aqui, quando não foi ela que pediu. */
 const REASONS = {
-    "session-expired":
-        "Sua sessão foi encerrada. Entre de novo para continuar de onde parou.",
     "password-updated": "Senha atualizada. Entre com a senha nova.",
 } as const
 

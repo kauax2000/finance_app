@@ -20,7 +20,7 @@ export default function BreadcrumbDoc() {
       <Usage>
         A trilha até onde a pessoa está, para telas abaixo do primeiro nível.
         Numa tela de primeiro nível, uma trilha de um item só é ruído. A barra
-        do app a usa nas subpáginas (Minha conta › Sessões ativas, Cartões ›
+        do app a usa nas subpáginas (Configurações › Aparência, Cartões ›
         Detalhes do cartão).
       </Usage>
 
@@ -201,13 +201,13 @@ export default function BreadcrumbDoc() {
         <Breadcrumb>
           <BreadcrumbList collapse="back">
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">Minha conta</BreadcrumbLink>
+              <BreadcrumbLink href="#">Você</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">Segurança</BreadcrumbLink>
+              <BreadcrumbLink href="#">Configurações</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbPage>Sessões ativas</BreadcrumbPage>
+              <BreadcrumbPage>Aparência</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

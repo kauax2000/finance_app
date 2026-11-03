@@ -11,7 +11,6 @@ import { PasswordRequirements } from "@/components/auth/password-requirements"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
-import { createActivity } from "@/lib/activity"
 import {
   Dialog,
   DialogBody,
@@ -101,16 +100,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 setError(updateError.message)
                 setLoading(false)
                 return
-            }
-
-            try {
-                await createActivity({
-                    type: "password_change",
-                    description: "Senha alterada",
-                    status: "success",
-                })
-            } catch {
-                /* log opcional */
             }
 
             setSuccess(true)

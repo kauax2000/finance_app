@@ -1,37 +1,31 @@
 "use client"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-    PageSection,
-    PageSectionHeader,
-    PageSectionTitle,
-} from "@/components/ui/page-section"
-import { formatDateLongPtBr } from "@/lib/transaction-date"
-import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
-import Link from "next/link"
-import { useAuth } from "@/components/providers"
-import { toastError } from "@/lib/toast"
-import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, SparklesIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { cn, getInitials } from "@/lib/utils"
-import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
+import { AtalhoSecao } from "@/components/account/atalho-secao"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
+import { IasSecao } from "@/components/account/ias-secao"
+import { useAuth } from "@/components/providers"
+import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
+import { SettingsLink, SettingsSection } from "@/components/settings/settings-section"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ItemGroup } from "@/components/ui/item"
+import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
+import { Muted } from "@/components/ui/typography"
+import { ROUTES } from "@/config/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { identityToneFor } from "@/lib/avatar"
-import { CapturaTokensWireframe } from "@/components/wireframe/captura-tokens-wireframe"
-import { IasConectadasWireframe } from "@/components/wireframe/ias-conectadas-wireframe"
+import { resumoDoPlano, usePlano } from "@/lib/planos/plano"
+import { toastError } from "@/lib/toast"
+import { formatDateLongPtBr } from "@/lib/transaction-date"
+import { cn, getInitials } from "@/lib/utils"
 
 export default function AccountPage() {
     const { user, profile, loading, profileReady, signOut } = useAuth()
+    const { plano } = usePlano()
+    const isMobile = useIsMobile()
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [changePasswordOpen, setChangePasswordOpen] = useState(false)
     const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
@@ -43,10 +37,6 @@ export default function AccountPage() {
         profile?.avatar_color,
         user?.email || userName
     )
-    const createdAt = user?.created_at
-        ? formatDateLongPtBr(user.created_at)
-        : "N/A"
-
     const currentAvatarUrl = user?.user_metadata?.avatar_url
 
     if (loading || (user && !profileReady)) {
@@ -54,185 +44,97 @@ export default function AccountPage() {
     }
 
     return (
-        <div className="min-w-0 max-w-full space-y-5">
-            <PageSection>
-                <PageSectionHeader>
-                    <PageSectionTitle>Perfil</PageSectionTitle>
-                </PageSectionHeader>
-                <Card padding="none">
-                    <CardContent className="flex flex-col">
-                        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <Avatar size="lg" className="shrink-0">
-                                    {currentAvatarUrl ? (
-                                        <AvatarImage src={currentAvatarUrl} alt={userName} />
-                                    ) : null}
-                                    <AvatarFallback
-                                        className={cn(
-                                            "font-semibold",
-                                            avatarTone.surface,
-                                            avatarTone.ink
-                                        )}
-                                    >
-                                        {getInitials(userName)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0">
-                                    <p className="truncate text-sm font-medium">{userName}</p>
-                                    <p className="truncate text-xs text-muted-foreground">
-                                        {userEmail}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="shrink-0">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="tertiary"
-                                            size="icon-md"
-                                            className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
-                                            aria-label="Mais opções da conta"
-                                        >
-                                            <EllipsisVerticalIcon aria-hidden />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent
-                                        align="end"
-                                        size="md"
-                                    >
-                                        <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                                            <PencilIcon aria-hidden />
-                                            Editar perfil
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => setChangePasswordOpen(true)}
-                                        >
-                                            <LockClosedIcon aria-hidden />
-                                            Alterar senha
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            variant="destructive"
-                                            onClick={async () => {
-                                                const { error } = await signOut()
-                                                if (error) toastError(error)
-                                            }}
-                                        >
-                                            <ArrowRightStartOnRectangleIcon aria-hidden />
-                                            Sair
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            variant="destructive"
-                                            onClick={() => setDeleteAccountOpen(true)}
-                                        >
-                                            <TrashIcon aria-hidden />
-                                            Excluir conta
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </div>
-                        <CardNote className="items-center justify-center">
-                            <CalendarIcon className="size-3.5 shrink-0" aria-hidden />
-                            <p className="min-w-0 break-words">Membro desde {createdAt}</p>
-                        </CardNote>
-                    </CardContent>
-                </Card>
-            </PageSection>
+        <div className="min-w-0 max-w-full space-y-8">
+            {/* No telefone a rota é subpágina: o nome é o da casca, ao rolar. */}
+            {isMobile ? null : (
+                <PageHeader collapse>
+                    <PageHeaderTitle asChild>
+                        {/* O `<h1>` da página é o da barra do topo. */}
+                        <p aria-hidden="true">Minha conta</p>
+                    </PageHeaderTitle>
+                </PageHeader>
+            )}
 
-            <PageSection>
-                <PageSectionHeader>
-                    <PageSectionTitle>Segurança</PageSectionTitle>
-                </PageSectionHeader>
-                <Card padding="none">
-                    <CardContent className="flex flex-col">
-                        <Link
-                            href={ROUTES.ACCOUNT_SESSIONS}
-                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
+            <div className="min-w-0 space-y-5">
+                <div className="flex min-w-0 items-center gap-3">
+                    <Avatar size="lg" className="shrink-0">
+                        {currentAvatarUrl ? (
+                            <AvatarImage src={currentAvatarUrl} alt={userName} />
+                        ) : null}
+                        <AvatarFallback
+                            className={cn(
+                                "font-semibold",
+                                avatarTone.surface,
+                                avatarTone.ink
+                            )}
                         >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <CheckBadgeIcon className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium">Sessões ativas</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Gerencie suas sessões
-                                    </p>
-                                </div>
-                            </div>
-                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                        <Link
-                            href={ROUTES.ACCOUNT_ACTIVITY}
-                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
-                        >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <ChartBarIcon className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium">Histórico de atividades</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Veja ações recentes na sua conta
-                                    </p>
-                                </div>
-                            </div>
-                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                        <Link
-                            href={ROUTES.PRIVACY}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
-                        >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium">Política de privacidade</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        O que o app guarda e quem lê seus dados
-                                    </p>
-                                </div>
-                            </div>
-                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                    </CardContent>
-                </Card>
-            </PageSection>
+                            {getInitials(userName)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-base font-medium">{userName}</p>
+                        <Muted className="truncate">{userEmail}</Muted>
+                        {user?.created_at ? (
+                            <Muted>Membro desde {formatDateLongPtBr(user.created_at)}</Muted>
+                        ) : null}
+                    </div>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="shrink-0"
+                        onClick={() => setEditDialogOpen(true)}
+                    >
+                        Editar perfil
+                    </Button>
+                </div>
 
-            <CapturaTokensWireframe />
-            <IasConectadasWireframe />
+                <SettingsSection titulo="Acesso e plano">
+                    <Card padding="none">
+                        <ItemGroup variant="divided">
+                            <SettingsLink
+                                titulo="Senha"
+                                valor="Alterar"
+                                onClick={() => setChangePasswordOpen(true)}
+                            />
+                            <SettingsLink
+                                titulo="Plano"
+                                valor={plano ? resumoDoPlano(plano, new Date(), null).titulo : undefined}
+                                href={ROUTES.PLANS}
+                            />
+                        </ItemGroup>
+                    </Card>
+                </SettingsSection>
 
-            {/* No telefone o plano mora aqui, e não no menu da conta da barra de baixo;
-                no desktop ele segue no menu do usuário. */}
-            <PageSection className="md:hidden">
-                <PageSectionHeader>
-                    <PageSectionTitle>Plano</PageSectionTitle>
-                </PageSectionHeader>
-                <Card padding="none">
-                    <CardContent className="flex flex-col">
-                        <Link
-                            href={ROUTES.PLANS}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
-                        >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <SparklesIcon className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium">Planos e pagamentos</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Seu plano e as cobranças
-                                    </p>
-                                </div>
-                            </div>
-                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                    </CardContent>
-                </Card>
-            </PageSection>
+                <AtalhoSecao />
+                <IasSecao />
+
+                <SettingsSection titulo="Privacidade">
+                    <Card padding="none">
+                        <SettingsLink titulo="Política de privacidade" href={ROUTES.PRIVACY} />
+                    </Card>
+                </SettingsSection>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    onClick={async () => {
+                        const { error } = await signOut()
+                        if (error) toastError(error)
+                    }}
+                >
+                    Sair
+                </Button>
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    className="text-destructive hover:text-destructive active:text-destructive"
+                    onClick={() => setDeleteAccountOpen(true)}
+                >
+                    Excluir conta
+                </Button>
+            </div>
 
             <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
             <ChangePasswordDialog

@@ -165,8 +165,8 @@ describe("a orquestração (8c)", () => {
     const IDS = Object.keys(SCENES) as AuthSceneId[]
     const FONTE = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
 
-    it("as 17 cenas têm uma linha cada, na família do próprio id", () => {
-        expect(IDS).toHaveLength(17)
+    it("as 16 cenas têm uma linha cada, na família do próprio id", () => {
+        expect(IDS).toHaveLength(16)
         for (const id of IDS) expect(SCENES[id].family, id).toBe(sceneFamily(id))
     })
 
@@ -190,7 +190,6 @@ describe("a orquestração (8c)", () => {
         const comRoteiro = IDS.filter((id) => SCENES[id].script).map((id) => [id, SCENES[id].script])
         expect(comRoteiro).toEqual([
             ["login", "palette-login"],
-            ["login.session-expired", "palette-session"],
             ["login.password-updated", "palette-security"],
             ["recovery.password", "masked-password"],
         ])
@@ -330,7 +329,7 @@ describe("o login e a paleta (8d)", () => {
             screen: "invoice",
             phone: false,
         })
-        for (const script of ["palette-session", "palette-security"] as const) {
+        for (const script of ["palette-security"] as const) {
             const fim = planScript(script)
             expect(fim.some(({ beat }) => scriptStage(script, beat, false).phone), script).toBe(false)
             expect(scriptStage(script, finalFrame(fim).beat, false), script).toEqual(SCRIPT_STAGE_REST)
@@ -338,7 +337,7 @@ describe("o login e a paleta (8d)", () => {
     })
 
     it("com movimento reduzido o quadro é um só: a paleta aberta sobre o painel", () => {
-        for (const script of ["palette-login", "palette-session", "palette-security"] as const) {
+        for (const script of ["palette-login", "palette-security"] as const) {
             expect(scriptStage(script, finalFrame(planScript(script)).beat, true)).toEqual({
                 search: "palette",
                 screen: "dashboard",
@@ -438,7 +437,7 @@ describe("a recuperação (8f)", () => {
         const html = palco("recovery.password")
         expect(html).toContain('data-slot="auth-drawn-password"')
         expect(html).toContain('data-screen="new-password"')
-        expect(html).toContain("Sessões em outros aparelhos serão encerradas")
+        expect(html).toContain("Depois, entre com a senha nova")
         expect(html).not.toContain("<input")
         // O quadro do servidor é o de antes da primeira tecla: o campo focado, com o cursor de texto, vazio.
         expect(html).toMatch(/data-slot="auth-drawn-password"[^>]*><span class="type-caret/)
@@ -610,7 +609,7 @@ describe("as trancas (8h)", () => {
         const tipo = semComentarios(lerFonte("src/components/auth/showcase/scene-context.tsx"))
             .match(/export type AuthSceneId =([^]*?)\n\n/)?.[1]
         const ids = [...(tipo ?? "").matchAll(/"([\w.-]+)"/g)].map((m) => m[1])
-        expect(ids).toHaveLength(17)
+        expect(ids).toHaveLength(16)
         expect(Object.keys(SCENES).sort()).toEqual([...ids].sort())
     })
 

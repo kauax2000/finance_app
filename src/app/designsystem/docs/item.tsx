@@ -176,7 +176,7 @@ export default function ItemDoc() {
 
       <DocSection
         title="Selecionada"
-        description="selected marca a linha atual ou escolhida: o contorno e o fundo do cartão de escolha do Field (--primary-accent a 60%, o primeiro degrau com 3:1 de traço nos dois temas) e aria-current. É a sessão atual na tela de sessões. Destaque de passagem — a linha acesa porque o ponteiro está sobre a legenda de um gráfico — não é seleção, e não usa isto."
+        description="selected marca a linha atual ou escolhida: o contorno e o fundo do cartão de escolha do Field (--primary-accent a 60%, o primeiro degrau com 3:1 de traço nos dois temas) e aria-current. É a carteira atual no seletor de carteiras. Destaque de passagem — a linha acesa porque o ponteiro está sobre a legenda de um gráfico — não é seleção, e não usa isto."
         code={`<Item variant="outline" selected={sessao.atual}>…</Item>`}
         previewClassName="items-stretch"
       >

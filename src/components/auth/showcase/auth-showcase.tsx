@@ -10,7 +10,6 @@ import {
     EnvelopeIcon,
     KeyIcon,
     LinkSlashIcon,
-    LockClosedIcon,
     UserPlusIcon,
 } from "@heroicons/react/16/solid"
 
@@ -491,10 +490,8 @@ const CARTAO_SOB_O_CHIP = "transition-opacity duration-(--duration-base) ease-(-
 const VAGA_DO_CHIP: Partial<Record<SceneSpec["form"], ShowcaseSlotIndex>> = { phone: 3, tablet: 0 }
 
 function conteudoDoChip({ chip, timeline }: SceneSpec): React.ReactNode {
-    if (chip === "session-expired")
-        return <ChipSimples icon={LockClosedIcon} color={cor("índigo")} title="Sessão encerrada" description="Seus dados continuam aqui." />
     if (chip === "success")
-        return <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Senha atualizada" description="Sessões antigas encerradas." />
+        return <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Senha atualizada" description="Entre com a senha nova." />
     if (chip === "synced")
         return (
             <ChipSimples

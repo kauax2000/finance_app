@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowPathIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
-import { createActivity } from "@/lib/activity"
 import { identityToneFor } from "@/lib/avatar"
 
 type EditProfileDialogProps = {
@@ -193,21 +192,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     return
                 }
                 profileSaved = true
-                void createActivity({
-                    type: "profile_update",
-                    description: "Dados do perfil atualizados",
-                    status: "success",
-                    metadata: {
-                        full_name: editName,
-                        avatar_action: isRemovingPhoto
-                            ? "remove"
-                            : isAddingNewPhoto
-                              ? "add"
-                              : "none",
-                    },
-                }).catch(() => {
-                    /* opcional */
-                })
             }
 
             if (editEmail !== userEmail) {
@@ -229,20 +213,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         "Um link de confirmação foi enviado para o novo email. Clique no link para confirmar a alteração.",
                     )
                 }
-                void createActivity({
-                    type: "profile_update",
-                    description: needsConfirmation
-                        ? "Solicitação de alteração de email enviada"
-                        : "Email atualizado",
-                    status: needsConfirmation ? "pending" : "success",
-                    metadata: {
-                        email_change: true,
-                        target_email: editEmail,
-                        pending_confirmation: needsConfirmation,
-                    },
-                }).catch(() => {
-                    /* opcional */
-                })
             } else {
                 setSuccessMessage("Perfil atualizado com sucesso!")
             }
