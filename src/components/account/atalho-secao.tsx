@@ -4,6 +4,7 @@ import { PlusIcon } from "@heroicons/react/16/solid"
 import { useState } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
+import { ApplePayConvite } from "@/components/account/apple-pay-convite"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
 import { SettingsSection } from "@/components/settings/settings-section"
@@ -135,6 +136,9 @@ export function AtalhoSecao() {
                     </ItemGroup>
                 )}
             </Card>
+
+            {/* Com um aparelho conectado, o passo seguinte: lançar ao pagar com Apple Pay. */}
+            {!lista.isError && tokens.length > 0 ? <ApplePayConvite /> : null}
 
             <GuiaDoAtalho open={guiaAberto} onOpenChange={setGuiaAberto} aoCriar={() => void lista.refetch()} />
 

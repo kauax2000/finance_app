@@ -180,9 +180,9 @@ atalho mostra o motivo do erro.
 
 Esta automação lança cada compra feita com o Apple Pay.
 
-No app, ela tem seção própria: **Minha conta** › **Lançar ao pagar**, com
-"Configurar" e um guia de 3 passos (precisa de um aparelho conectado em
-"Lançar gastos pelo iPhone"). Os passos abaixo são a referência de quem monta à mão.
+No app, ela aparece em **Minha conta** › "Lançar gastos pelo iPhone", no cartão
+**Lançar ao pagar com Apple Pay**, que surge depois de conectar um aparelho:
+"Configurar" abre um guia de 3 passos. Os passos abaixo são a referência de quem monta à mão.
 
 1. No app Atalhos, abra **Automação** › **Nova automação** › **Transação**.
 2. Escolha os cartões da Wallet que devem lançar. Marque **Executar

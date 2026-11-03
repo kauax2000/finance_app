@@ -202,22 +202,23 @@ describe("Lançar gastos pelo iPhone: o vazio", () => {
 
 describe("Lançar ao pagar", () => {
     const conta = (a: string) => semComentarios(lerFonte(`src/components/account/${a}`))
-    it("as duas seções leem os aparelhos pelo mesmo hook", () => {
+    it("os aparelhos vêm do hook, numa queryKey só", () => {
         const h = conta("aparelhos-de-captura.ts")
         expect(h).toContain('queryKey: ["capture_tokens", user?.id]')
         expect(h).toContain("COLUNAS")
         expect(h).toContain("revoked_at == null")
-        for (const f of ["apple-pay-secao.tsx", "atalho-secao.tsx"]) {
-            expect(conta(f)).toContain("useAparelhosDeCaptura()")
-            expect(conta(f)).not.toContain('from("capture_tokens")')
-        }
+        expect(conta("atalho-secao.tsx")).toContain("useAparelhosDeCaptura()")
+        expect(conta("atalho-secao.tsx")).not.toContain('from("capture_tokens")')
     })
-    it("sem aparelho manda conectar antes; com aparelho, Configurar abre o guia", () => {
-        const s = conta("apple-pay-secao.tsx")
-        expect(s).toMatch(/ativos\.length === 0\s*\?[\s\S]*Conecte o iPhone primeiro, na seção acima\.[\s\S]*Configurar/)
-        expect(s).toContain('titulo="Lançar ao pagar"')
-        expect(s).toContain("Não foi possível ver os aparelhos.")
-        expect(s).toContain("<GuiaDoApplePay")
+    it("o convite mora na seção do iPhone e só aparece com aparelho conectado", () => {
+        const a = conta("atalho-secao.tsx")
+        expect(a).toMatch(/!lista\.isError && tokens\.length > 0 \? <ApplePayConvite \/> : null/)
+        const c = conta("apple-pay-convite.tsx")
+        expect(c).toContain("Lançar ao pagar com Apple Pay")
+        expect(c).toContain('<ItemMedia variant="tile">')
+        expect(c).toContain("Configurar")
+        expect(c).toContain("<GuiaDoApplePay")
+        expect(c).not.toContain("SettingsSection")
     })
     it("o guia tem 3 passos, recomeça ao abrir e termina na notificação", () => {
         const g = lerFonte("src/components/account/guia-do-apple-pay.tsx")
@@ -228,11 +229,11 @@ describe("Lançar ao pagar", () => {
         expect(g).toContain("TELA_DA_NOTIFICACAO")
         expect(g).toContain("shortcut:")
     })
-    it("a página põe a seção logo depois de Lançar gastos pelo iPhone", () => {
-        expect(lerFonte("src/app/(app)/account/page-client.tsx")).toMatch(/<AtalhoSecao \/>\s*<ApplePaySecao \/>/)
+    it("a página não tem mais uma seção própria para o Apple Pay", () => {
+        expect(lerFonte("src/app/(app)/account/page-client.tsx")).not.toContain("ApplePaySecao")
     })
     it("nenhum texto de tela fala em token", () => {
-        for (const f of ["apple-pay-secao.tsx", "guia-do-apple-pay.tsx"]) {
+        for (const f of ["apple-pay-convite.tsx", "guia-do-apple-pay.tsx"]) {
             const s = conta(f)
             expect(s).not.toMatch(/>[^<{]*\btokens?\b[^<]*</i)
             expect(s).not.toMatch(/"[^"\n]*\btokens?\b[^"\n]*"/i)
