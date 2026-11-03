@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications-panel-empty"
 import { rolarAteAncora } from "@/components/settings/settings-section"
@@ -42,6 +43,10 @@ describe("Configurações: cabeçalho", () => {
 })
 
 describe("Configurações: página única", () => {
+    it("a seção Carteira saiu: o componente antigo não existe mais", () => {
+        expect(existsSync("src/components/settings/workspace-appearance-settings.tsx")).toBe(false)
+    })
+
     it("a página não tem abas, nem lê a query, e rola até a âncora", () => {
         const fonte = lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx")
         for (const proibido of ["Tabs", "useSearchParams", "useTelaLarga"]) expect(fonte).not.toContain(proibido)
