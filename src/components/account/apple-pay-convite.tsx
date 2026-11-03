@@ -1,12 +1,12 @@
 "use client"
 
-import { CreditCardIcon } from "@heroicons/react/16/solid"
 import { useState } from "react"
 
 import { GuiaDoApplePay } from "@/components/account/guia-do-apple-pay"
+import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Muted, P } from "@/components/ui/typography"
 
 /**
  * O convite para lançar ao pagar: a automação da Carteira roda o Lançar gasto a
@@ -18,20 +18,18 @@ export function ApplePayConvite() {
     return (
         <>
             <Card padding="none">
-                <Item variant="flush" className="px-4">
-                    <ItemMedia variant="tile">
-                        <CreditCardIcon />
-                    </ItemMedia>
-                    <ItemContent className="min-w-0">
-                        <ItemTitle>Lançar ao pagar com Apple Pay</ItemTitle>
-                        <ItemDescription>Toda compra com o iPhone vira um gasto, sem você abrir nada.</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
+                <div className="flex items-center gap-4 p-4">
+                    <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="mini" />
+                    <div className="flex min-w-0 flex-col items-start gap-3">
+                        <div>
+                            <P className="font-semibold">Lance ao pagar com Apple Pay</P>
+                            <Muted>Cada compra com o iPhone vira um gasto, sem abrir nada.</Muted>
+                        </div>
                         <Button type="button" variant="secondary" onClick={() => setGuiaAberto(true)}>
                             Configurar
                         </Button>
-                    </ItemActions>
-                </Item>
+                    </div>
+                </div>
             </Card>
             <GuiaDoApplePay open={guiaAberto} onOpenChange={setGuiaAberto} />
         </>

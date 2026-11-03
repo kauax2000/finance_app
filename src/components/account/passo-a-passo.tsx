@@ -29,18 +29,30 @@ export type Tela = {
 export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
 
 /** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
-export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compacta?: boolean }) {
+/** As janelas por tamanho, por extenso: a do guia, a do vazio e a miniatura do convite do Apple Pay. */
+const JANELA = {
+    padrao: { caixa: "mx-auto h-72 w-60", imagem: "w-60", sizes: "240px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
+    compacta: { caixa: "mx-auto h-36 w-48", imagem: "w-48", sizes: "192px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
+    mini: { caixa: "h-24 w-36", imagem: "w-36", sizes: "144px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_2.5rem)]" },
+} as const
+
+export function JanelaDoAparelho({
+    tela,
+    tamanho = "padrao",
+}: {
+    tela: Tela
+    /** `padrao` nos passos, `compacta` no vazio da seção, `mini` ao lado de um texto. */
+    tamanho?: keyof typeof JANELA
+}) {
+    const j = JANELA[tamanho]
     return (
         <div
             aria-hidden
             className={cn(
-                "relative mx-auto shrink-0 overflow-hidden",
-                // Compacta: só o topo do aparelho, para o vazio da seção.
-                compacta ? "h-36 w-48" : "h-72 w-60",
+                "relative shrink-0 overflow-hidden",
+                j.caixa,
                 // O aparelho dissolve no lado em que a janela o corta.
-                tela.ancora === "topo"
-                    ? "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]"
-                    : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
+                tela.ancora === "topo" ? j.topo : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
             )}
         >
             {/* A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */}
@@ -53,9 +65,9 @@ export function JanelaDoAparelho({ tela, compacta = false }: { tela: Tela; compa
                 <Image
                     src={tela.imagem}
                     alt=""
-                    sizes={compacta ? "192px" : "240px"}
+                    sizes={j.sizes}
                     placeholder="blur"
-                    className={cn("absolute inset-0 h-auto max-w-none", compacta ? "w-48" : "w-60")}
+                    className={cn("absolute inset-0 h-auto max-w-none", j.imagem)}
                 />
                 {tela.ponto ? (
                     <span
