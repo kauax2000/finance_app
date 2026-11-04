@@ -250,3 +250,31 @@ describe("Lançar ao pagar", () => {
         }
     })
 })
+
+describe("Linha do aparelho e da IA", () => {
+    const atalho = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
+    const ias = semComentarios(lerFonte("src/components/account/ias-secao.tsx"))
+    for (const [nome, f] of [["atalho", atalho], ["ias", ias]] as const) {
+        it(`${nome}: ladrilho e ⋯ com Desconectar… destrutivo`, () => {
+            expect(f).toContain('ItemMedia variant="tile"')
+            expect(f).toContain('size="icon-md"')
+            expect(f).toContain("<EllipsisHorizontalIcon aria-hidden />")
+            expect(f).toContain('variant="destructive"')
+            expect(f).toContain("Desconectar…")
+            expect(f).not.toMatch(/<ItemActions>\s*<Button[^>]*>\s*Desconectar/)
+            expect(f).toContain("aria-label={`Mais opções para ${")
+        })
+        it(`${nome}: o AlertDialog fica fora do Card`, () => {
+            expect(f.indexOf("<AlertDialog")).toBeGreaterThan(f.lastIndexOf("</Card>"))
+        })
+    }
+    it("aparelho: ícone, marca da carteira e último gasto", () => {
+        for (const s of ["DevicePhoneMobileIcon", "WorkspaceBrandMark", "formatRelativeTimePtBr", '"ainda não lançou nada"', "último gasto"])
+            expect(atalho).toContain(s)
+        expect(atalho).not.toContain("formatDateTimeShortPtBr")
+        expect(atalho).not.toContain('"nunca usado"')
+    })
+    it("IA: ícone de brilho", () => {
+        expect(ias).toContain("SparklesIcon")
+    })
+})

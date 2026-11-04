@@ -1,6 +1,6 @@
 "use client"
 
-import { PlusIcon } from "@heroicons/react/16/solid"
+import { DevicePhoneMobileIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { useState } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
@@ -27,12 +27,24 @@ import {
     EmptyStateDescription,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
+import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type CaptureToken } from "@/lib/supabase"
-import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
+import { formatRelativeTimePtBr } from "@/lib/transaction-date"
+
+const relativo = (iso: string) => {
+    const s = formatRelativeTimePtBr(iso)
+    return s.charAt(0).toLowerCase() + s.slice(1)
+}
 
 export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 
@@ -56,7 +68,6 @@ export function AtalhoSecao() {
     const [revogando, setRevogando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
 
-    const nomeDaCarteira = (id: string) => workspaces.find((w) => w.id === id)?.name ?? "Carteira"
     const tokens = lista.ativos
 
     function fecharRevogar(aberto: boolean) {
@@ -114,24 +125,53 @@ export function AtalhoSecao() {
                                 </EmptyStateActions>
                             </EmptyState>
                         ) : (
-                            tokens.map((t) => (
-                                <Item key={t.id} variant="flush" className="px-4">
-                                    <ItemContent className="min-w-0">
-                                        <ItemTitle className="truncate">{t.name}</ItemTitle>
-                                        <Muted className="truncate">
-                                            {nomeDaCarteira(t.workspace_id)} ·{" "}
-                                            {t.last_used_at
-                                                ? `último uso ${formatDateTimeShortPtBr(t.last_used_at)}`
-                                                : "nunca usado"}
-                                        </Muted>
-                                    </ItemContent>
-                                    <ItemActions>
-                                        <Button type="button" variant="tertiary" onClick={() => setAlvo(t)}>
-                                            Desconectar
-                                        </Button>
-                                    </ItemActions>
-                                </Item>
-                            ))
+                            tokens.map((t) => {
+                                const carteira = workspaces.find((w) => w.id === t.workspace_id)
+                                return (
+                                    <Item key={t.id} variant="flush" className="px-4">
+                                        <ItemMedia variant="tile">
+                                            <DevicePhoneMobileIcon aria-hidden />
+                                        </ItemMedia>
+                                        <ItemContent className="min-w-0">
+                                            <ItemTitle className="truncate">{t.name}</ItemTitle>
+                                            <Muted className="flex min-w-0 items-center gap-1.5">
+                                                {carteira ? (
+                                                    <WorkspaceBrandMark
+                                                        size="xs"
+                                                        iconKey={carteira.icon}
+                                                        backgroundColor={carteira.icon_background_color}
+                                                    />
+                                                ) : null}
+                                                <span className="truncate">
+                                                    {carteira?.name ?? "Carteira"} ·{" "}
+                                                    {t.last_used_at
+                                                        ? `último gasto ${relativo(t.last_used_at)}`
+                                                        : "ainda não lançou nada"}
+                                                </span>
+                                            </Muted>
+                                        </ItemContent>
+                                        <ItemActions>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="tertiary"
+                                                        size="icon-md"
+                                                        aria-label={`Mais opções para ${t.name}`}
+                                                    >
+                                                        <EllipsisHorizontalIcon aria-hidden />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
+                                                        Desconectar…
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </ItemActions>
+                                    </Item>
+                                )
+                            })
                         )}
                     </ItemGroup>
                 )}

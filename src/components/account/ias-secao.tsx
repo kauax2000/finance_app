@@ -1,6 +1,6 @@
 "use client"
 
-import { PlusIcon } from "@heroicons/react/16/solid"
+import { SparklesIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -20,7 +20,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
-import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
 import { supabase } from "@/lib/supabase"
@@ -98,18 +104,34 @@ export function IasSecao() {
                     <ItemGroup variant="divided">
                         {grants.map((g) => (
                             <Item key={g.client.id} variant="flush" className="px-4">
+                                <ItemMedia variant="tile">
+                                    <SparklesIcon aria-hidden />
+                                </ItemMedia>
                                 <ItemContent className="min-w-0">
                                     <ItemTitle className="truncate">{g.client.name}</ItemTitle>
-                                    <Muted>desde {formatDatePtBr(g.granted_at)}</Muted>
+                                    <Muted className="truncate">desde {formatDatePtBr(g.granted_at)}</Muted>
                                 </ItemContent>
                                 <ItemActions>
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        onClick={() => setAlvo({ id: g.client.id, nome: g.client.name })}
-                                    >
-                                        Desconectar
-                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="tertiary"
+                                                size="icon-md"
+                                                aria-label={`Mais opções para ${g.client.name}`}
+                                            >
+                                                <EllipsisHorizontalIcon aria-hidden />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                variant="destructive"
+                                                onSelect={() => setAlvo({ id: g.client.id, nome: g.client.name })}
+                                            >
+                                                Desconectar…
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </ItemActions>
                             </Item>
                         ))}
