@@ -275,9 +275,11 @@ describe("CampoDeCopiar", () => {
 describe("Lançar gastos pelo iPhone: o vazio", () => {
     it("o vazio convida a conectar, e o cabeçalho não repete a ação", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
-        expect(s).toContain("Lance gastos sem abrir o app")
-        expect(s).toContain("Conectar o iPhone")
-        expect(s).toMatch(/<EmptyState/)
+        const vazio = semComentarios(lerFonte("src/components/account/lancar-pelo-iphone-vazio.tsx"))
+        expect(s).toContain("<LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />")
+        expect(vazio).toContain("Lance gastos sem abrir o app")
+        expect(vazio).toContain("Conectar o iPhone")
+        expect(vazio).toMatch(/<EmptyState/)
         expect(s).not.toContain("Nenhum aparelho conectado.")
         expect(s).toMatch(/tokens\.length > 0 \?[\s\S]*Conectar aparelho/)
         expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?/)

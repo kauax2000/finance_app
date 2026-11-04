@@ -2,17 +2,24 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
+import Link from "next/link"
+import { DevicePhoneMobileIcon, SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
+import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
+import { CartaoDeLancar } from "@/components/me/cartao-de-lancar"
+import { descricaoDaLista, lancarNaVoce } from "@/components/me/estado-na-voce"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Item, ItemActions, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { ConviteDeInstalar } from "@/components/settings/convite-de-instalar"
 import { SettingsRow } from "@/components/settings/settings-section"
+import { ROUTES } from "@/config/navigation"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 import { SyncStatusChip } from "@/components/pwa/sync-status-chip"
+import { useAparelhoDeLancar } from "@/hooks/use-aparelho-de-lancar"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import { useLancamentoInteligente } from "@/hooks/use-lancamento-inteligente"
 
@@ -59,15 +66,24 @@ export function SeletorDeTema({ labels }: { labels: boolean }) {
 }
 
 /**
- * O que vale só neste telefone, na página Você: tema, lançamento inteligente e o
- * app instalado. O QR do desktop abre aqui (`#no-celular`). O lançamento
- * inteligente só existe no telefone (`transaction-form-dialog.tsx`, `usarPaleta`).
+ * O que vale só neste telefone, na página Você: tema, Lançar pelo iPhone (só no
+ * iPhone), lançamento inteligente e o app instalado. O QR do desktop abre aqui
+ * (`#no-celular`). O lançamento inteligente só existe no telefone
+ * (`transaction-form-dialog.tsx`, `usarPaleta`).
  */
 export function NesteCelularGrupo() {
     const [lancamentoInteligente, definirLancamentoInteligente] = useLancamentoInteligente()
     const { instalado, instalarNoIphone, descricaoDoApp } = useInstalarApp()
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
+    const aparelhos = useAparelhosDeCaptura()
+    // Só no iPhone: instalado, o cartão até o primeiro aparelho e a linha depois; no navegador, o convite de instalar.
+    const lancar = lancarNaVoce(useAparelhoDeLancar(), {
+        carregando: aparelhos.isPending,
+        erro: aparelhos.isError,
+        quantos: aparelhos.ativos.length,
+    })
+    const descricaoDosAparelhos = descricaoDaLista(aparelhos.ativos.map((t) => t.name), "aparelhos")
 
     return (
         <>
@@ -79,6 +95,8 @@ export function NesteCelularGrupo() {
                 <PageSectionHeader>
                     <PageSectionTitle>Neste celular</PageSectionTitle>
                 </PageSectionHeader>
+                {lancar === "cartao" ? <CartaoDeLancar /> : null}
+                {lancar === "convite" ? <ConviteDeInstalar /> : null}
                 <Card padding="none">
                     <ItemGroup variant="divided">
                         <Item variant="flush" className="min-h-12">
@@ -92,6 +110,20 @@ export function NesteCelularGrupo() {
                                 <SeletorDeTema labels={false} />
                             </ItemActions>
                         </Item>
+                        {lancar === "linha" ? (
+                            <Item variant="flush" interactive asChild className="min-h-12">
+                                <Link href={ROUTES.SETTINGS_LANCAR}>
+                                    <ItemMedia variant="icon">
+                                        <DevicePhoneMobileIcon className="size-5" aria-hidden />
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle className="pointer-coarse:text-base">Lançar pelo iPhone</ItemTitle>
+                                        {descricaoDosAparelhos ? <ItemDescription>{descricaoDosAparelhos}</ItemDescription> : null}
+                                    </ItemContent>
+                                    <ItemChevron />
+                                </Link>
+                            </Item>
+                        ) : null}
                         {/* Como as linhas de Cofre aberto: o `Item` põe o ícone na linha do título. O `label` faz a linha inteira ser o alvo da chave. */}
                         <Item variant="flush" asChild className="min-h-12">
                             <label>
@@ -126,7 +158,7 @@ export function NesteCelularGrupo() {
                                 </Item>
                                 </>
                             ) : null
-                        ) : (
+                        ) : lancar === "convite" ? null : (
                             <>
                                 <SettingsRow
                                     titulo="Instalar o app"
@@ -138,7 +170,7 @@ export function NesteCelularGrupo() {
                             </>
                         )}
                     </ItemGroup>
-                    {instalarNoIphone ? (
+                    {instalarNoIphone && lancar !== "convite" ? (
                         <div className="px-4 pb-3">
                             <Button
                                 type="button"

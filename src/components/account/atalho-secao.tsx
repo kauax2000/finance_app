@@ -6,7 +6,7 @@ import { useState, type CSSProperties } from "react"
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
-import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
+import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
     AlertDialog,
@@ -22,12 +22,6 @@ import {
 import { BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
-import {
-    EmptyState,
-    EmptyStateActions,
-    EmptyStateDescription,
-    EmptyStateTitle,
-} from "@/components/ui/empty-state"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -118,18 +112,7 @@ export function AtalhoSecao() {
                         {lista.isError ? (
                             <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
                         ) : tokens.length === 0 ? (
-                            <EmptyState variant="plain" size="sm">
-                                <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" />
-                                <EmptyStateTitle>Lance gastos sem abrir o app</EmptyStateTitle>
-                                <EmptyStateDescription>
-                                    Conecte o iPhone uma vez. Depois, pela Siri, pelo Botão de Ação ou com um toque, o gasto entra em segundos.
-                                </EmptyStateDescription>
-                                <EmptyStateActions>
-                                    <Button type="button" variant="primary" onClick={() => setGuiaAberto(true)}>
-                                        Conectar o iPhone
-                                    </Button>
-                                </EmptyStateActions>
-                            </EmptyState>
+                            <LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />
                         ) : (
                             tokens.map((t) => {
                                 const carteira = workspaces.find((w) => w.id === t.workspace_id)

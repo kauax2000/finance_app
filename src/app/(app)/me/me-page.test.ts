@@ -64,6 +64,43 @@ describe("a página Você", () => {
     })
 })
 
+describe("os cartões e as linhas de Você", () => {
+    const GRUPO = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
+    it("a IA em Conta: o cartão até a primeira, e então a linha com os nomes", () => {
+        expect(PAGINA).toContain('{grupo.id === "conta" && ia === "cartao" ? <CartaoDaIa /> : null}')
+        expect(PAGINA).toContain('!(ia === "cartao" && item.href === ROUTES.SETTINGS_IAS)')
+        expect(PAGINA).toContain('descricaoDaLista((ias.data ?? []).map((g) => g.client.name), "IAs")')
+        // O cartão fica entre o cabeçalho e a lista do grupo.
+        const cabecalho = PAGINA.indexOf("</PageSectionHeader>")
+        expect(cabecalho).toBeLessThan(PAGINA.indexOf("<CartaoDaIa />"))
+        expect(PAGINA.indexOf("<CartaoDaIa />")).toBeLessThan(PAGINA.indexOf('<Card padding="none">'))
+    })
+    it("Lançar pelo iPhone em Neste celular: cartão, convite ou a linha depois do Tema", () => {
+        const lista = GRUPO.indexOf('<Card padding="none">')
+        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar /> : null}')).toBeGreaterThan(-1)
+        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar /> : null}')).toBeLessThan(lista)
+        expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalar /> : null}')).toBeGreaterThan(-1)
+        expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalar /> : null}')).toBeLessThan(lista)
+        expect(GRUPO).toContain("href={ROUTES.SETTINGS_LANCAR}")
+        expect(GRUPO.indexOf(">Tema<")).toBeLessThan(GRUPO.indexOf("href={ROUTES.SETTINGS_LANCAR}"))
+        expect(GRUPO).toContain('descricaoDaLista(aparelhos.ativos.map((t) => t.name), "aparelhos")')
+        // Com o convite, a linha e o botão de instalar saem: o convite já instala.
+        expect(GRUPO).toMatch(/lancar === "convite" \? null : \(\s+<>\s+<SettingsRow\s+titulo="Instalar o app"/)
+        expect(GRUPO).toContain('instalarNoIphone && lancar !== "convite"')
+    })
+    it("nenhum título nomeia a função só como Siri", () => {
+        for (const f of [
+            "src/components/me/cartao-da-ia.tsx",
+            "src/components/me/cartao-de-lancar.tsx",
+            "src/components/account/lancar-pelo-iphone-vazio.tsx",
+            "src/components/settings/neste-celular-grupo.tsx",
+        ]) {
+            const fonte = semComentarios(lerFonte(f))
+            expect(fonte).not.toMatch(/<(ItemTitle|EmptyStateTitle)[^>]*>[^<]*Siri/)
+        }
+    })
+})
+
 describe("signOut do provedor", () => {
     it("só limpa fila e caches depois de o Supabase sair de verdade", () => {
         const fonte = semComentarios(lerFonte("src/components/providers.tsx"))

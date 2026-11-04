@@ -4,6 +4,8 @@ import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAbasFora } from "@/components/layout/abas-fora"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
+import { CartaoDaIa } from "@/components/me/cartao-da-ia"
+import { descricaoDaLista, iaNaVoce } from "@/components/me/estado-na-voce"
 import { MePageSkeleton } from "@/components/me/me-page-skeleton"
 import { NesteCelularGrupo } from "@/components/settings/neste-celular-grupo"
 import { rolarAteAncora } from "@/components/settings/settings-section"
@@ -36,6 +38,8 @@ import {
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { H2, Muted } from "@/components/ui/typography"
 import { getVoceGroups, miniIconFor } from "@/config/mobile-navigation"
+import { ROUTES } from "@/config/navigation"
+import { useIasConectadas } from "@/hooks/use-ias-conectadas"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function MePage() {
@@ -45,6 +49,14 @@ export default function MePage() {
     const grupos = getVoceGroups(useAbasFora(), useWorkspace().papel)
     const isMobile = useIsMobile()
     const esperando = loading || (user && !profileReady)
+    const ias = useIasConectadas()
+    // Até a primeira IA, o cartão de conectar toma o lugar da linha de IAs conectadas.
+    const ia = iaNaVoce({
+        carregando: ias.isPending && Boolean(user),
+        erro: ias.isError,
+        quantos: ias.data?.length ?? 0,
+    })
+    const descricaoDasIas = descricaoDaLista((ias.data ?? []).map((g) => g.client.name), "IAs")
 
     // O QR do desktop abre em `#no-celular`, e o grupo só existe depois do esqueleto.
     useEffect(() => {
@@ -97,10 +109,12 @@ export default function MePage() {
                                 <PageSectionHeader>
                                     <PageSectionTitle>{grupo.label}</PageSectionTitle>
                                 </PageSectionHeader>
+                                {grupo.id === "conta" && ia === "cartao" ? <CartaoDaIa /> : null}
                                 <Card padding="none">
                                     <ItemGroup variant="divided">
-                                        {grupo.items.map((item) => {
+                                        {grupo.items.filter((item) => !(ia === "cartao" && item.href === ROUTES.SETTINGS_IAS)).map((item) => {
                                             const Icon = miniIconFor(item.icon) ?? item.icon
+                                            const descricao = item.href === ROUTES.SETTINGS_IAS ? descricaoDasIas : item.description
                                             return (
                                                 <Item key={item.href} variant="flush" interactive asChild className="min-h-12">
                                                     <Link href={item.href}>
@@ -113,7 +127,7 @@ export default function MePage() {
                                                                 {item.name}
                                                                 {item.beta ? <Badge size="xs">Beta</Badge> : null}
                                                             </ItemTitle>
-                                                            {item.description ? <ItemDescription>{item.description}</ItemDescription> : null}
+                                                            {descricao ? <ItemDescription>{descricao}</ItemDescription> : null}
                                                         </ItemContent>
                                                         <ItemChevron />
                                                     </Link>
