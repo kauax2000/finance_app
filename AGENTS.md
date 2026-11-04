@@ -740,7 +740,7 @@ declaração de `background-color` no trilho).
   no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
-  Membros, Minha conta, IAs conectadas, Notificações e Lançar pelo iPhone (`/settings/ias`, `/settings/notificacoes`, `/settings/lancar-pelo-iphone`) voltam a ela, e uma aba que saiu da barra
+  Membros, Planos e pagamentos (`/plans`), Política de privacidade, IAs conectadas, Notificações e Lançar pelo iPhone (`/settings/privacidade`, `/settings/ias`, `/settings/notificacoes`, `/settings/lancar-pelo-iphone`) voltam a ela, e uma aba que saiu da barra
   não ganha o voltar (`defaultMobileBackHref`, rodada 346); a tela com filtro
   o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
   334; a **rota declara** o filtro (`mobileHeaderFilterFor`, em
@@ -1159,8 +1159,8 @@ declaração de `background-color` no trilho).
   o `className`), com o anel na cor da superfície (`--avatar-badge-ring`, senão
   `--background`) e o corpo pela escala do avatar. `onEdit` faz da foto inteira
   o botão de editar (`editLabel`, padrão "Editar foto"), com o lápis no canto,
-  que vai a `--secondary-hover` no cursor e no toque. Minha conta edita o perfil
-  por ele. `avatar-badge-versions.test.ts`.
+  que vai a `--secondary-hover` no cursor e no toque. A Você edita o perfil
+  por ele (`/account` só redireciona; no desktop o item "Editar perfil" do menu do usuário abre o mesmo diálogo). `avatar-badge-versions.test.ts`.
 - **`AvatarGroup`**: a escada do `Avatar`, o anel na cor da superfície
   (`--avatar-group-ring`, senão `--avatar-group-surface`), uma dica só que
   viaja (`aria-hidden`). Os filhos são `AvatarGroupItem` — **nenhuma tela monta
@@ -1258,7 +1258,7 @@ declaração de `background-color` no trilho).
     glifo) abre a página `/me`, com as telas da carteira e da conta e o aparelho
     em três seções com título (o `MobileAccountMenu` e o painel que brotava da
     aba "Mais" saíram na rodada 346); o tema mora em Você (Neste celular) e o
-    Sair é a última linha do grupo Conta dela, com confirmação, além do de Minha conta. O "+ Adicionar" não tem menu: abre
+    Sair é a última linha do grupo Conta dela, com confirmação, além do menu do usuário do desktop. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
@@ -1707,14 +1707,14 @@ declaração de `background-color` no trilho).
   da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e
   convidados), **Neste celular** (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
   inteligente, instalar o app; no telefone isso não existe em Configurações; no iPhone com o app e sem aparelho ativo, o cartão "Lançar pelo iPhone" abre o grupo, e com aparelho vira a linha; no navegador do iPhone o cartão "Instale o app" toma o lugar da linha "Instalar o app"; `lancarNaVoce`) e **Conta**
-  (Minha conta, Cofre aberto com "Seus dados: exportar e apagar", IAs conectadas — um cartão de conectar acima da lista até a primeira IA, e depois a linha; `iaNaVoce` — e Notificações; **Configurações não existe no telefone**: abaixo de 768px `/settings` faz `replace` para `/me`, e as três rotas `/settings/lancar-pelo-iphone`, `/settings/ias` e `/settings/notificacoes` mostram cada seção sozinha, com voltar a Você e a aba Você acesa — `ROTAS_DE_VOCE_EM_SETTINGS`). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
+  (Planos e pagamentos, Política de privacidade — `/settings/privacidade`, dentro do app —, Cofre aberto com "Seus dados: exportar e apagar", IAs conectadas — um cartão de conectar acima da lista até a primeira IA, e depois a linha; `iaNaVoce` — e Notificações; **Configurações não existe no telefone**: abaixo de 768px `/settings` faz `replace` para `/me`, e as quatro rotas `/settings/lancar-pelo-iphone`, `/settings/privacidade`, `/settings/ias` e `/settings/notificacoes` mostram cada seção sozinha, com voltar a Você e a aba Você acesa — `ROTAS_DE_VOCE_EM_SETTINGS`). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
   iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
   as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
   Lançamento inteligente leva o ícone solto, como o Tema, e só Instalar o app fica com o ícone do app em 36.
   A última linha de Conta é o **Sair**, com ícone e sem chevron, e o `AlertDialog` "Sair da conta?",
   porque sair limpa a fila offline; o `signOut` só limpa quando o Supabase saiu de
-  verdade (sem rede, o diálogo fica aberto com o erro); o Sair de Minha conta continua,
-  sem confirmação (erro em toast), e Planos fica dentro de Minha conta. No desktop nada
+  verdade (sem rede, o diálogo fica aberto com o erro); o Sair do menu do usuário do desktop continua,
+  sem confirmação (erro em toast). No desktop nada
   leva a `/me`, mas aberta a 768px ou mais ela mostra os grupos com título e o Sair, sem
   Neste celular.
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
@@ -1929,8 +1929,8 @@ declaração de `background-color` no trilho).
   (`ehCursor`, variáveis no nó, sem render por evento), balança parado
   (`seal-sway`), e aberto inclina com o giroscópio (permissão pedida no toque
   que abre) e dá uma volta por toque. Movimento reduzido: sem balanço nem
-  volta. `SealSkeleton` é o círculo de 40. Minha conta o usa no lugar de
-  "Membro desde". `seal-versions.test.ts`.
+  volta. `SealSkeleton` é o círculo de 40. A Você o usa no lugar de
+  "Membro desde" (só nela: a página Minha conta acabou). `seal-versions.test.ts`.
 - **`QrCode`** (Molécula, rodada 355): o código que leva de uma tela a outro
   aparelho, desenhado em SVG com tokens (`uqr`, correção `M`, sem borda; os
   módulos escuros são **um `<path>` por diagonal**). **A placa é clara nos dois

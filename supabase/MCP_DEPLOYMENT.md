@@ -27,7 +27,7 @@ pôs no repositório:
   PATCH, PUT ou DELETE;
 - no front do 2.0: a rota `/oauth/consent` (consentimento, em
   `src/app/(app)/oauth/consent/`, wireframe `mcp-consentimento-wireframe.tsx`) e
-  o bloco "IAs conectadas" em `/account` (wireframe
+  a seção "IAs conectadas" de Configurações (no telefone, `/settings/ias`; wireframe
   `ias-conectadas-wireframe.tsx`: a URL do MCP com copiar, as instruções,
   `listGrants` e `revokeGrant`);
 - a ponte: o lançamento da IA entra na conferência do Bloco 9 por causa do
@@ -265,7 +265,7 @@ conferência: apague-o depois.
 
 1. **Claude** (claude.ai): Configurações › Conectores › Adicionar conector
    personalizado › a URL `https://<ref>.supabase.co/functions/v1/mcp` (o bloco
-   "IAs conectadas" de `/account` a mostra e copia). Conectar abre o login e o
+   "IAs conectadas", em Configurações no desktop e em `/settings/ias` no telefone, a mostra e copia). Conectar abre o login e o
    consentimento do app: confira o nome do cliente e **Permitir**.
 2. **ChatGPT:** Configurações › Conectores, com o modo desenvolvedor ligado ›
    criar um conector com a mesma URL, autenticação OAuth.
@@ -278,7 +278,7 @@ conferência: apague-o depois.
    origem da IA. Apague-o.
 6. Peça um parcelado ("em 3x") e confira as três parcelas, todas marcadas a
    conferir; apague o plano.
-7. Em `/account` › IAs conectadas, a IA aparece com a data. **Revogar**: a
+7. Em Configurações › IAs conectadas (`/settings/ias` no telefone), a IA aparece com a data. **Revogar**: a
    próxima chamada da IA tem de voltar 401 e pedir o consentimento de novo.
 8. Recuse uma vez (**Recusar** no consentimento) e confirme que a IA volta com
    o erro de acesso negado, sem criar conexão na lista.
