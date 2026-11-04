@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowDownTrayIcon, EllipsisVerticalIcon, Squares2X2Icon } from "@heroicons/react/16/solid"
+import { BellAlertIcon, BoltIcon, CloudArrowUpIcon } from "@heroicons/react/16/solid"
 
 import { JanelaDoAparelho, TELA_DA_NOTIFICACAO } from "@/components/account/passo-a-passo"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
@@ -15,7 +15,7 @@ import {
     EmptyStateDescription,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemGroupLabel, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Muted } from "@/components/ui/typography"
 
 const VANTAGENS_DO_IPHONE = [
@@ -24,11 +24,17 @@ const VANTAGENS_DO_IPHONE = [
     "O Apple Pay lança o gasto sozinho.",
 ]
 
-/** O caminho no Chrome do Android: o menu do navegador instala o app. */
+const VANTAGENS_DO_ANDROID = [
+    { icone: BoltIcon, texto: "Lance o gasto em segundos, na hora da compra" },
+    { icone: BellAlertIcon, texto: "Receba os avisos de contas e do orçamento" },
+    { icone: CloudArrowUpIcon, texto: "Lance sem internet: sincroniza quando voltar" },
+]
+
+/** O caminho no Chrome e no Samsung Internet: o menu do navegador instala o app. */
 const PASSOS_DO_ANDROID = [
-    { icone: EllipsisVerticalIcon, texto: "Toque em ⋮, no canto do navegador" },
-    { icone: ArrowDownTrayIcon, texto: "Toque em Instalar app" },
-    { icone: Squares2X2Icon, texto: "Abra o Finance pela tela de início" },
+    "Toque em ⋮ no canto do Chrome",
+    "Escolha Instalar app ou Adicionar à tela inicial",
+    "Abra o Finance pelo ícone novo",
 ]
 
 /** No navegador do celular: pede para pôr o app na tela de início. As vantagens do iPhone só vão a quem tem iPhone. */
@@ -37,7 +43,7 @@ export function ConviteDeInstalar({ iphone }: { iphone: boolean }) {
 
     if (!iphone)
         return (
-            <SettingsSection titulo="Use como app">
+            <SettingsSection titulo="Instale o app">
                 <Card padding="none">
                     <ItemGroup variant="divided">
                         <Item variant="flush">
@@ -45,27 +51,45 @@ export function ConviteDeInstalar({ iphone }: { iphone: boolean }) {
                                 <CapaDoApp />
                             </ItemMedia>
                             <ItemContent>
-                                <ItemTitle className="pointer-coarse:text-base">Ponha o Finance na tela de início</ItemTitle>
-                                <ItemDescription>Ele abre direto, em tela cheia, e pode te avisar do que importa.</ItemDescription>
+                                <ItemTitle className="pointer-coarse:text-base">Tenha o Finance como app</ItemTitle>
+                                <ItemDescription>
+                                    Fica na tela de início do celular e abre direto, em tela cheia, sem procurar no navegador.
+                                </ItemDescription>
                             </ItemContent>
                         </Item>
-                        {PASSOS_DO_ANDROID.map(({ icone: Icone, texto }) => (
+                        {VANTAGENS_DO_ANDROID.map(({ icone: Icone, texto }) => (
                             <Item key={texto} variant="flush">
-                                <ItemMedia variant="tile" tone="neutral">
-                                    <Icone aria-hidden="true" />
+                                <ItemMedia variant="icon">
+                                    <Icone className="text-foreground" aria-hidden="true" />
                                 </ItemMedia>
                                 <ItemContent>
-                                    <ItemTitle className="font-normal pointer-coarse:text-base">{texto}</ItemTitle>
+                                    <ItemTitle className="font-normal text-muted-foreground pointer-coarse:text-base">
+                                        {texto}
+                                    </ItemTitle>
                                 </ItemContent>
                             </Item>
                         ))}
+                        <ItemGroup variant="divided" role="list" aria-label="Como instalar">
+                            <ItemGroupLabel aria-hidden="true">Como instalar</ItemGroupLabel>
+                            {PASSOS_DO_ANDROID.map((texto, i) => (
+                                <Item key={texto} variant="flush" role="listitem">
+                                    {/* A ordem já vem da lista; o número é só o desenho. */}
+                                    <ItemMedia variant="tile" tone="neutral" aria-hidden="true">
+                                        {i + 1}
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle className="font-normal pointer-coarse:text-base">{texto}</ItemTitle>
+                                    </ItemContent>
+                                </Item>
+                            ))}
+                        </ItemGroup>
                     </ItemGroup>
                 </Card>
             </SettingsSection>
         )
 
     return (
-        <SettingsSection titulo="Use como app">
+        <SettingsSection titulo="Instale o app">
             <Card padding="none">
                 <EmptyState variant="plain" size="sm">
                     <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" />

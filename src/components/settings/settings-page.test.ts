@@ -141,12 +141,24 @@ describe("Configurações: o lançamento mora no celular", () => {
         const c = semComentarios(lerFonte("src/components/settings/convite-de-instalar.tsx"))
         expect(c).not.toMatch(/(?<![/\w-])PWA(?![/\w-])|standalone/i)
         expect(c).toContain("Ponha o Finance na tela de início")
-        for (const p of ["Toque em ⋮, no canto do navegador", "Toque em Instalar app", "Abra o Finance pela tela de início"])
-            expect(c).toContain(p)
+        expect(c).toContain('titulo="Instale o app"')
+        expect(c).not.toContain('titulo="Use como app"')
+        for (const t of [
+            "Tenha o Finance como app",
+            "Fica na tela de início do celular e abre direto, em tela cheia, sem procurar no navegador.",
+            "Lance o gasto em segundos, na hora da compra",
+            "Receba os avisos de contas e do orçamento",
+            "Lance sem internet: sincroniza quando voltar",
+            "Toque em ⋮ no canto do Chrome",
+            "Escolha Instalar app ou Adicionar à tela inicial",
+            "Abra o Finance pelo ícone novo",
+        ])
+            expect(c).toContain(t)
         expect(c).toContain("InstallPwaSheet")
-        // O Android volta antes: a tela do Apple Pay, as vantagens e o "Como instalar" ficam só no ramo do iPhone.
-        const android = c.slice(c.indexOf("if (!iphone)"), c.indexOf("PASSOS_DO_ANDROID.map") + 600)
-        expect(android).not.toMatch(/JanelaDoAparelho|VANTAGENS_DO_IPHONE|Como instalar/)
+        // O ramo do Android vai até a tela do iPhone: nada do Apple fica nele.
+        const android = c.slice(c.indexOf("if (!iphone)"), c.indexOf("<JanelaDoAparelho"))
+        expect(android).not.toMatch(/Siri|Apple Pay|Atalhos|JanelaDoAparelho|VANTAGENS_DO_IPHONE/)
+        expect(android).toMatch(/<ol|role="list"|aria-label="Como instalar"/)
         expect(c.indexOf("if (!iphone)")).toBeLessThan(c.indexOf("<JanelaDoAparelho"))
         expect(semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))).toMatch(
             /useAparelhoDeLancar\(\) === "computador"/,
