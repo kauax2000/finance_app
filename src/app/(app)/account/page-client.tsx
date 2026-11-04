@@ -5,7 +5,6 @@ import { AppLogo } from "@/components/layout/app-logo"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
 import { useAuth } from "@/components/providers"
-import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { SettingsLink, SettingsSection } from "@/components/settings/settings-section"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -27,8 +26,6 @@ export default function AccountPage() {
     const { plano } = usePlano()
     const isMobile = useIsMobile()
     const [editDialogOpen, setEditDialogOpen] = useState(false)
-    const [changePasswordOpen, setChangePasswordOpen] = useState(false)
-    const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
@@ -89,14 +86,9 @@ export default function AccountPage() {
                     ) : null}
                 </div>
 
-                <SettingsSection titulo="Acesso e plano">
+                <SettingsSection titulo="Plano">
                     <Card padding="none">
                         <ItemGroup variant="divided">
-                            <SettingsLink
-                                titulo="Senha"
-                                valor="Alterar"
-                                onClick={() => setChangePasswordOpen(true)}
-                            />
                             <SettingsLink
                                 titulo="Plano"
                                 valor={plano ? resumoDoPlano(plano, new Date(), null).titulo : undefined}
@@ -113,7 +105,7 @@ export default function AccountPage() {
                 </SettingsSection>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
                 <Button
                     type="button"
                     variant="tertiary"
@@ -124,22 +116,9 @@ export default function AccountPage() {
                 >
                     Sair
                 </Button>
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    className="text-destructive hover:text-destructive active:text-destructive"
-                    onClick={() => setDeleteAccountOpen(true)}
-                >
-                    Excluir conta
-                </Button>
             </div>
 
             <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
-            <ChangePasswordDialog
-                open={changePasswordOpen}
-                onOpenChange={setChangePasswordOpen}
-            />
-            <DeleteAccountDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen} />
         </div>
     )
 }

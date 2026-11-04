@@ -21,6 +21,11 @@ import {
     FormSubmit,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
+import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
+import { Card } from "@/components/ui/card"
+import { Item, ItemChevron, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
+import { KeyIcon, TrashIcon as TrashIcon20 } from "@heroicons/react/20/solid"
 import { Input } from "@/components/ui/input"
 import { ArrowPathIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
@@ -40,6 +45,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const [removeCurrentPhoto, setRemoveCurrentPhoto] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [senhaAberta, setSenhaAberta] = useState(false)
+    const [excluirAberto, setExcluirAberto] = useState(false)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -364,6 +371,38 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 />
             )}
 
+            <PageSection size="sm">
+                <PageSectionHeader>
+                    <PageSectionTitle>Segurança</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
+                    <ItemGroup variant="divided">
+                        <Item variant="flush" interactive asChild className="min-h-12">
+                            <button type="button" disabled={saving} onClick={() => setSenhaAberta(true)}>
+                                <ItemMedia variant="icon">
+                                    <KeyIcon className="size-5" aria-hidden />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="pointer-coarse:text-base">Alterar senha</ItemTitle>
+                                </ItemContent>
+                                <ItemChevron />
+                            </button>
+                        </Item>
+                        <Item variant="flush" interactive asChild className="min-h-12">
+                            <button type="button" disabled={saving} onClick={() => setExcluirAberto(true)}>
+                                <ItemMedia variant="icon" className="text-destructive">
+                                    <TrashIcon20 className="size-5" aria-hidden />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="text-destructive pointer-coarse:text-base">Excluir conta</ItemTitle>
+                                </ItemContent>
+                                <ItemChevron />
+                            </button>
+                        </Item>
+                    </ItemGroup>
+                </Card>
+            </PageSection>
+
             {errorMessage && (
                 <Alert tone="destructive" size="sm">
                     <AlertTitle>{errorMessage}</AlertTitle>
@@ -379,6 +418,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
     // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
+        <>
         <Dialog
             surface="auto"
             pending={saving}
@@ -416,5 +456,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 </CustomForm>
             </DialogContent>
         </Dialog>
+        <ChangePasswordDialog open={senhaAberta} onOpenChange={setSenhaAberta} />
+        <DeleteAccountDialog open={excluirAberto} onOpenChange={setExcluirAberto} />
+        </>
     )
 }

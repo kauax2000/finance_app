@@ -195,7 +195,7 @@ describe("a página Minha conta", () => {
     const p = () => lerFonte("src/app/(app)/account/page-client.tsx")
     it("compõe as seções, nesta ordem, sem wireframe nem menu ⋯", () => {
         const f = p()
-        const ordem = ["Acesso e plano", "Privacidade", "Sair", "Excluir conta"].map((t) => f.indexOf(t))
+        const ordem = ['titulo="Plano"', "Privacidade", "Sair"].map((t) => f.indexOf(t))
         expect(ordem.every((n) => n >= 0)).toBe(true)
         expect(f).not.toMatch(/AtalhoSecao|IasSecao/)
         expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
@@ -452,5 +452,27 @@ describe("Lançar ao pagar: o estado do cartão", () => {
         expect(g).toMatch(/onConcluir\?\.\(\)\s*onOpenChange\(false\)/)
         const c = semComentarios(lerFonte("src/components/account/apple-pay-convite.tsx"))
         for (const t of ["Aguardando a 1ª compra", "Funcionando", "Ver os passos de novo", "onConcluir="]) expect(c).toContain(t)
+    })
+})
+
+describe("Segurança no Editar perfil", () => {
+    it("a seção mora no diálogo, entre o e-mail e os alertas", () => {
+        const f = semComentarios(lerFonte("src/components/account/edit-profile-dialog.tsx"))
+        for (const t of [">Segurança<", ">Alterar senha<", ">Excluir conta<", "<ChangePasswordDialog", "<DeleteAccountDialog"])
+            expect(f).toContain(t)
+        expect(f).toMatch(/text-destructive[^>]*>Excluir conta</)
+        expect(f.match(/<button type="button" disabled=\{saving\}/g)).toHaveLength(2)
+        const i = f.indexOf('id="edit-email"')
+        const s = f.indexOf(">Segurança<")
+        expect(i).toBeGreaterThan(-1)
+        expect(s).toBeGreaterThan(i)
+        expect(f.indexOf("{errorMessage &&", s)).toBeGreaterThan(s)
+    })
+    it("a página não tem mais senha nem excluir conta", () => {
+        const f = semComentarios(lerFonte("src/app/(app)/account/page-client.tsx"))
+        for (const t of ['titulo="Senha"', "ChangePasswordDialog", "DeleteAccountDialog", "Excluir conta"])
+            expect(f).not.toContain(t)
+        expect(f).toContain('titulo="Plano"')
+        expect(f).toContain("Sair")
     })
 })
