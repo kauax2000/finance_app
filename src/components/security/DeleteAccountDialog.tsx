@@ -35,6 +35,8 @@ import {
     FormSubmit,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { Muted } from "@/components/ui/typography"
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { BanknotesIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
@@ -174,8 +176,8 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const description = success
         ? "Sua conta foi excluída com sucesso. Redirecionando..."
         : step === "warning"
-          ? "Passo 1 de 2 · Não dá para desfazer."
-          : "Passo 2 de 2 · Sua conta e os dados acima serão apagados."
+          ? "Não dá para desfazer."
+          : "Sua conta e os dados acima serão apagados."
 
     // Um cabeçalho só para as duas superfícies: `surface="auto"` faz do mesmo
     // diálogo a gaveta do telefone. Os passos somem na tela de sucesso, que não
@@ -228,11 +230,15 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         <DialogBody>
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                    <p className="text-sm font-medium text-muted-foreground">O que será apagado</p>
+                    <Muted id="delete-account-loss-title">O que será apagado</Muted>
                     <Card padding="none">
-                        <ItemGroup variant="divided">
+                        <ItemGroup
+                            variant="divided"
+                            role="list"
+                            aria-labelledby="delete-account-loss-title"
+                        >
                             {DATA_LOSS_ITEMS.map(({ label, icon: Icon }) => (
-                                <Item key={label} variant="flush">
+                                <Item key={label} variant="flush" role="listitem">
                                     <ItemMedia variant="icon">
                                         <Icon className="size-5 text-muted-foreground" aria-hidden />
                                     </ItemMedia>
@@ -259,14 +265,17 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                                                 </>
                                             ) : i ? (
                                                 <>
-                                                    <strong>{w.name}</strong> some para{" "}
-                                                    {plural(i.other_members, "outro membro", "outros membros")} ·{" "}
-                                                    {plural(i.transactions, "lançamento", "lançamentos")}
+                                                    <strong>{w.name}</strong>
+                                                    {i.other_members > 0 ? (
+                                                        <>
+                                                            {" "}some para{" "}
+                                                            {plural(i.other_members, "outro membro", "outros membros")}
+                                                        </>
+                                                    ) : null}
+                                                    {" "}· {plural(i.transactions, "lançamento", "lançamentos")}
                                                 </>
                                             ) : (
-                                                <>
-                                                    <strong>{w.name}</strong> some para todos os membros
-                                                </>
+                                                <strong>{w.name}</strong>
                                             )}
                                         </li>
                                     )
@@ -276,9 +285,9 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </Alert>
                 ) : null}
                 {/* Sozinho no corpo, o botão é `secondary`: a regra do par vale para o rodapé.
-                    `FormSubmit type="button"` só pela espera (`pending`): fora de formulário, não envia nada. */}
+                    No telefone o botão desce para baixo do texto, na largura toda. */}
                 <Card padding="none">
-                    <Item variant="flush">
+                    <Item variant="flush" className="max-sm:flex-col max-sm:items-stretch">
                         <ItemContent>
                             <ItemTitle>Quer guardar uma cópia antes?</ItemTitle>
                             {exportError ? (
@@ -287,16 +296,18 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                                 </ItemDescription>
                             ) : null}
                         </ItemContent>
-                        <ItemActions>
-                            <FormSubmit
+                        <ItemActions className="max-sm:w-full">
+                            <Button
                                 type="button"
                                 variant="secondary"
-                                pending={exportando}
-                                disabled={workspaces.length === 0}
+                                className="max-sm:w-full"
+                                disabled={exportando || workspaces.length === 0}
+                                aria-busy={exportando || undefined}
                                 onClick={() => void handleExport()}
                             >
-                                Exportar meus dados
-                            </FormSubmit>
+                                {exportando ? <Spinner /> : null}
+                                {exportando ? "Exportando meus dados…" : "Exportar meus dados"}
+                            </Button>
                         </ItemActions>
                     </Item>
                 </Card>
@@ -308,7 +319,8 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     // "Continuar" ainda não exclui nada: o `destructive` fica para o último passo.
     const footerWarning = (
         <DialogFooter showCloseButton>
-            <Button type="button" onClick={handleContinue}>
+            {/* Sair para o passo 2 no meio da exportação perderia a cópia. */}
+            <Button type="button" disabled={exportando} onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
