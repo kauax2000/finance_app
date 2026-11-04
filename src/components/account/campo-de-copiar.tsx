@@ -2,11 +2,13 @@
 
 import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/16/solid"
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { TopBarAction } from "@/components/ui/top-bar"
 import { Muted } from "@/components/ui/typography"
+import { fieldSurfaceClassName } from "@/lib/field-classes"
 import { TrocaSuave } from "@/lib/troca-suave"
+import { cn } from "@/lib/utils"
 
 /**
  * Um valor para copiar: o campo de um lado e o botão redondo do outro, que troca
@@ -54,13 +56,19 @@ export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: s
                         onFocus={(e) => e.currentTarget.select()}
                     />
                 )}
-                {/* O botão de vidro do cabeçalho (o sino, a lupa), o mesmo desenho aqui. */}
-                <TopBarAction plate label={`Copiar ${rotulo}`} className="shrink-0" onClick={() => void copiar()}>
+                {/* O botão veste a superfície do campo (fundo e borda), para os dois lerem como um par. */}
+                <Button
+                    variant="outline"
+                    size="icon-lg"
+                    aria-label={`Copiar ${rotulo}`}
+                    className={cn(fieldSurfaceClassName, "relative shrink-0 dark:bg-input-fill/50")}
+                    onClick={() => void copiar()}
+                >
                     {/* O ícone dá lugar ao tique na mola, e volta depois de 2s. */}
                     <TrocaSuave chave={copiado ? "copiado" : "copiar"} className="flex">
                         {copiado ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
                     </TrocaSuave>
-                </TopBarAction>
+                </Button>
             </div>
             <Muted aria-live="polite" className="break-all">
                 {estado === "recusado" ? "Não foi possível copiar. Selecione o texto e copie." : null}
