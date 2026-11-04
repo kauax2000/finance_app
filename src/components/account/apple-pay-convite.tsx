@@ -38,12 +38,12 @@ export function ApplePayConvite() {
     return (
         <>
             <Card padding="none">
-                <div className="flex items-center gap-4 p-4">
+                <div className="flex items-center gap-3 p-4">
                     <JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="mini" />
                     {carregando ? (
                         <SkeletonText lines={2} className="min-w-0 flex-1" />
                     ) : (
-                        <div className="flex min-w-0 flex-col items-start gap-3">
+                        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
                             {estado === "novo" ? (
                                 <div>
                                     <P className="font-semibold">Lance ao pagar com Apple Pay</P>
@@ -59,7 +59,7 @@ export function ApplePayConvite() {
                                                 Funcionando
                                             </Badge>
                                         ) : (
-                                            <Badge tone="warning">Aguardando a 1ª compra</Badge>
+                                            <Badge tone="warning" size="sm" className="whitespace-nowrap">Aguardando a 1ª compra</Badge>
                                         )}
                                     </P>
                                     <Muted>
@@ -69,16 +69,22 @@ export function ApplePayConvite() {
                                     </Muted>
                                 </div>
                             )}
-                            <Button
-                                type="button"
-                                variant={estado === "novo" ? "secondary" : "tertiary"}
-                                onClick={() => setGuiaAberto(true)}
-                            >
-                                {estado === "novo" ? "Configurar" : "Ver os passos de novo"}
-                            </Button>
                         </div>
                     )}
                 </div>
+                {/* Embaixo, na largura do cartão: ao lado do aparelho o rótulo não cabia a 375px. */}
+                {carregando ? null : (
+                    <div className="px-4 pb-4">
+                        <Button
+                            type="button"
+                            variant={estado === "novo" ? "secondary" : "tertiary"}
+                            className="w-full"
+                            onClick={() => setGuiaAberto(true)}
+                        >
+                            {estado === "novo" ? "Configurar" : "Ver os passos de novo"}
+                        </Button>
+                    </div>
+                )}
             </Card>
             <GuiaDoApplePay open={guiaAberto} onOpenChange={setGuiaAberto} onConcluir={() => void concluir()} />
         </>
