@@ -52,7 +52,7 @@ export function ConviteDeInstalar({ iphone }: { iphone: boolean }) {
                             </ItemMedia>
                             <ItemContent>
                                 <ItemTitle className="pointer-coarse:text-base">Tenha o Finance como app</ItemTitle>
-                                <ItemDescription>
+                                <ItemDescription className="line-clamp-none">
                                     Fica na tela de início do celular e abre direto, em tela cheia, sem procurar no navegador.
                                 </ItemDescription>
                             </ItemContent>
