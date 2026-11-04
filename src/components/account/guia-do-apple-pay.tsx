@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
+import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import {
     CaixaDoPasso,
     JanelaDoAparelho,
@@ -23,7 +24,11 @@ import {
 } from "@/components/ui/dialog"
 import { Muted, P } from "@/components/ui/typography"
 
-const PASSOS: { titulo: string; texto: ReactNode; tela?: Tela }[] = [
+/** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
+export const DESCRICAO_DA_AUTOMACAO =
+    "Quando eu pagar com qualquer cartão da Carteira, executar na hora o atalho Lançar gasto com a compra, sem pedir confirmação."
+
+const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela }[] = [
     {
         titulo: "Abra o app Atalhos",
         texto: (
@@ -45,36 +50,31 @@ const PASSOS: { titulo: string; texto: ReactNode; tela?: Tela }[] = [
         tela: TELAS_DO_APPLE_PAY.adicionar,
     },
     {
-        titulo: "Escolha Transação",
+        titulo: "Cole a descrição",
         texto: (
             <>
-                Role a lista e toque em <strong>Transação</strong>, a opção com o ícone da Carteira.
+                Copie o texto abaixo, toque em <strong>Descrever um atalho</strong> e cole. O iPhone monta a automação
+                sozinho.
             </>
         ),
-    },
-    {
-        titulo: "Escolha os cartões",
-        texto: (
+        extra: (
             <>
-                Em <strong>Cartão</strong>, toque em <strong>Escolher</strong> e marque os cartões que você usa para
-                pagar com o iPhone.
+                <CampoDeCopiar rotulo="Descrição da automação" valor={DESCRICAO_DA_AUTOMACAO} multilinha />
+                <Muted>
+                    Não aparece essa caixa? Em iPhones mais antigos, escolha <strong>Transação</strong>, marque os
+                    cartões e <strong>Executar Imediatamente</strong>, toque em <strong>Seguinte</strong> e escolha{" "}
+                    <strong>Lançar gasto</strong>.
+                </Muted>
             </>
         ),
+        tela: TELAS_DO_APPLE_PAY.descrever,
     },
     {
-        titulo: "Marque Executar Imediatamente",
+        titulo: "Confira e salve",
         texto: (
             <>
-                Marque <strong>Executar Imediatamente</strong> e toque em <strong>Seguinte</strong>, no canto de cima.
-            </>
-        ),
-    },
-    {
-        titulo: "Toque em Lançar gasto",
-        texto: (
-            <>
-                Em <strong>Meus Atalhos</strong>, toque em <strong>Lançar gasto</strong>. Pronto: a automação está
-                criada.
+                Veja se a automação roda o <strong>Lançar gasto</strong> quando você paga com a Carteira, sem pedir
+                confirmação. Se estiver certo, salve.
             </>
         ),
     },
@@ -118,7 +118,7 @@ export function GuiaDoApplePay({ open, onOpenChange }: { open: boolean; onOpenCh
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Lançar ao pagar</DialogTitle>
-                    <DialogDescription>Siga os passos no iPhone. Leva uns dois minutos.</DialogDescription>
+                    <DialogDescription>Siga os passos no iPhone. Leva um minuto.</DialogDescription>
                 </DialogHeader>
                 <DialogBody>
                     <span aria-live="polite" className="sr-only">
@@ -132,6 +132,7 @@ export function GuiaDoApplePay({ open, onOpenChange }: { open: boolean; onOpenCh
                             </P>
                             <Muted>{atual.texto}</Muted>
                         </PecaDoPasso>
+                        {atual.extra ? <PecaDoPasso className="flex flex-col gap-2">{atual.extra}</PecaDoPasso> : null}
                         {atual.tela ? (
                             <PecaDoPasso>
                                 <JanelaDoAparelho tela={atual.tela} />

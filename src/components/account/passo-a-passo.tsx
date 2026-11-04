@@ -9,6 +9,7 @@ import applePay from "./assets/atalho-6-apple-pay.webp"
 import carteira from "./assets/atalho-7-carteira.webp"
 import atalhos from "./assets/atalho-8-atalhos.webp"
 import automacao from "./assets/atalho-9-automacao.webp"
+import descrever from "./assets/atalho-10-descrever.webp"
 
 /** Uma peça do passo: surge do desfoque, como as linhas dos diálogos (`menu-content-in`, 500ms, `--ease-out`). */
 export const PECA: Variants = {
@@ -31,10 +32,11 @@ export type Tela = {
 /** A notificação depois do Apple Pay: a tela do último passo do guia e a do vazio da seção. */
 export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
 
-/** As telas reais do iPhone nos dois primeiros passos do guia do Apple Pay: o ícone do Atalhos e o + da Automação. */
-export const TELAS_DO_APPLE_PAY: { atalhos: Tela; adicionar: Tela } = {
+/** As telas reais do iPhone no guia do Apple Pay: o ícone do Atalhos, o + da Automação e a caixa de descrever (iOS 27). */
+export const TELAS_DO_APPLE_PAY: { atalhos: Tela; adicionar: Tela; descrever: Tela } = {
     atalhos: { imagem: atalhos, ponto: { x: 18.4, y: 58.6 }, ancora: "baixo" },
     adicionar: { imagem: automacao, ponto: { x: 50, y: 91.5 }, ancora: "baixo" },
+    descrever: { imagem: descrever, ponto: { x: 33.3, y: 92.5 }, ancora: "baixo" },
 }
 
 /** A Carteira na hora de pagar (print do iPhone do dono, sem os dados dele): o convite do Apple Pay. */

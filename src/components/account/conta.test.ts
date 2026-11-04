@@ -246,28 +246,30 @@ describe("Lançar ao pagar", () => {
 describe("Guia do Apple Pay", () => {
     const g = lerFonte("src/components/account/guia-do-apple-pay.tsx")
     const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
-    it("tem 7 passos na ordem, e só os dois primeiros e o último têm tela", () => {
+    it("tem 5 passos na ordem: o app, o +, colar a descrição, conferir e a notificação", () => {
         const titulos = [...lista.matchAll(/titulo: "([^"]+)"/g)].map((m) => m[1])
         expect(titulos).toEqual([
             "Abra o app Atalhos",
             "Toque em Automação e no +",
-            "Escolha Transação",
-            "Escolha os cartões",
-            "Marque Executar Imediatamente",
-            "Toque em Lançar gasto",
+            "Cole a descrição",
+            "Confira e salve",
             "Pague com o iPhone",
         ])
-        const corpo = lista.slice(lista.indexOf("= ["))
-        expect(corpo.match(/tela:/g)).toHaveLength(3)
-        const blocos = corpo.split("titulo:").slice(1)
-        for (const i of [2, 3, 4, 5]) expect(blocos[i]).not.toContain("tela:")
+        const blocos = lista.slice(lista.indexOf("= [")).split("titulo:").slice(1)
         expect(blocos[0]).toContain("TELAS_DO_APPLE_PAY.atalhos")
         expect(blocos[1]).toContain("TELAS_DO_APPLE_PAY.adicionar")
-        expect(blocos[6]).toContain("TELA_DA_NOTIFICACAO")
+        expect(blocos[2]).toContain("TELAS_DO_APPLE_PAY.descrever")
+        expect(blocos[2]).toMatch(/<CampoDeCopiar[^>]*valor=\{DESCRICAO_DA_AUTOMACAO\}[^>]*multilinha/)
+        expect(blocos[3]).not.toContain("tela:")
+        expect(blocos[4]).toContain("TELA_DA_NOTIFICACAO")
     })
-    it("o texto nomeia os botões e não fala difícil", () => {
+    it("a descrição nomeia a Carteira, o Lançar gasto e o sem confirmação", async () => {
+        const { DESCRICAO_DA_AUTOMACAO } = await import("./guia-do-apple-pay")
+        for (const t of ["Carteira", "Lançar gasto", "sem pedir confirmação"]) expect(DESCRICAO_DA_AUTOMACAO).toContain(t)
+    })
+    it("o texto nomeia os botões, guarda o caminho antigo e não fala difícil", () => {
         const s = semComentarios(g)
-        for (const n of ["Atalhos", "Automação", "Transação", "Escolher", "Executar Imediatamente", "Seguinte", "Lançar gasto"])
+        for (const n of ["Atalhos", "Automação", "Descrever um atalho", "Transação", "Executar Imediatamente", "Lançar gasto"])
             expect(s).toContain(`<strong>${n}</strong>`)
         expect(s).not.toMatch(/gatilho|token|Entrada do atalho/i)
         expect(g).not.toContain("shortcut:")

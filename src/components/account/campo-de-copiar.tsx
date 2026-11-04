@@ -1,11 +1,20 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+    InputGroupTextarea,
+} from "@/components/ui/input-group"
 import { Muted } from "@/components/ui/typography"
 
-/** Um valor para copiar: o botão confirma no lugar, e a recusa não some em silêncio. */
-export function CampoDeCopiar({ rotulo, valor }: { rotulo: string; valor: string }) {
+/**
+ * Um valor para copiar: o botão confirma no lugar, e a recusa não some em silêncio.
+ * `multilinha` mostra o texto inteiro (uma frase para colar), com o botão embaixo.
+ */
+export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: string; valor: string; multilinha?: boolean }) {
     const [estado, setEstado] = useState<"copiado" | "recusado" | null>(null)
 
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -26,13 +35,23 @@ export function CampoDeCopiar({ rotulo, valor }: { rotulo: string; valor: string
     return (
         <div className="flex min-w-0 flex-col gap-1">
             <InputGroup>
-                <InputGroupInput
-                    readOnly
-                    aria-label={rotulo}
-                    value={valor}
-                    onFocus={(e) => e.currentTarget.select()}
-                />
-                <InputGroupAddon align="inline-end">
+                {multilinha ? (
+                    <InputGroupTextarea
+                        readOnly
+                        aria-label={rotulo}
+                        value={valor}
+                        minRows={2}
+                        onFocus={(e) => e.currentTarget.select()}
+                    />
+                ) : (
+                    <InputGroupInput
+                        readOnly
+                        aria-label={rotulo}
+                        value={valor}
+                        onFocus={(e) => e.currentTarget.select()}
+                    />
+                )}
+                <InputGroupAddon align={multilinha ? "block-end" : "inline-end"}>
                     <InputGroupButton aria-label={`Copiar ${rotulo}`} onClick={() => void copiar()}>
                         {estado === "copiado" ? "Copiado" : "Copiar"}
                     </InputGroupButton>
