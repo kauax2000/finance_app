@@ -9,6 +9,7 @@ import {
   resumoDoErro,
   resumoDoLancamento,
   tipoDoArquivo,
+  usoDoToken,
   validarPedido,
   valoresDoPlano,
   type CamposDaIA,
@@ -762,4 +763,13 @@ Deno.test('montarLancamento (formulário): opção fora da lista é opcao_invali
   assertEquals(formulario({ amount: '42,90', category: 'Mercado', payment: 'Itaú' }), invalida)
   // Sem as opções lidas pela Edge, nada se resolve.
   assertEquals(montarLancamento({ amount: '1', category: 'Mercado' }, ctx()), invalida)
+})
+
+Deno.test('usoDoToken: a versão só entra com X-Atalho-Versao válido; sem ele, a coluna fica como está', () => {
+  const AGORA = '2026-04-10T15:00:00.000Z'
+  assertEquals(usoDoToken('2', AGORA), { last_used_at: AGORA, atalho_versao: 2 })
+  assertEquals(usoDoToken(' 99 ', AGORA), { last_used_at: AGORA, atalho_versao: 99 })
+  for (const h of [null, '', '0', '100', '02', '2.5', 'v2', '-1']) {
+    assertEquals(usoDoToken(h, AGORA), { last_used_at: AGORA })
+  }
 })

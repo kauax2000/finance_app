@@ -457,3 +457,17 @@ function montarDoFormulario(
     parcelas: null,
   }
 }
+
+/**
+ * O update de `capture_tokens` a cada uso válido. `atalho_versao` só entra com
+ * `X-Atalho-Versao` válido (1 a 99): a automação do Apple Pay e a folha de
+ * compartilhar usam o mesmo token sem o cabeçalho, e não podem zerar a versão
+ * (nulo = atalho v1, "baixe de novo").
+ */
+export function usoDoToken(
+  cabecalho: string | null,
+  agora: string,
+): { last_used_at: string; atalho_versao?: number } {
+  const v = cabecalho?.trim() ?? ''
+  return /^[1-9]\d?$/.test(v) ? { last_used_at: agora, atalho_versao: Number(v) } : { last_used_at: agora }
+}

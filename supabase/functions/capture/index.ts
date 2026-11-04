@@ -29,6 +29,7 @@ import {
   resumoDoErro,
   resumoDoLancamento,
   tipoDoArquivo,
+  usoDoToken,
   validarPedido,
   valoresDoPlano,
 } from '../_shared/captura.ts'
@@ -74,12 +75,6 @@ const ERRO_FOTO_GRANDE = 'Foto grande demais para a IA. Reduza a foto ou mande o
 const ERRO_RECEITA_DO_CONVIDADO = 'Convidado lança só despesa. Peça a um adulto da carteira para lançar a receita.'
 const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
 type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
-
-/** `X-Atalho-Versao`: inteiro de 1 a 99; ausente ou outra coisa é nulo (o atalho v1). */
-function versaoDoAtalho(req: Request): number | null {
-  const v = req.headers.get('x-atalho-versao')?.trim() ?? ''
-  return /^[1-9]\d?$/.test(v) ? Number(v) : null
-}
 
 type Gravado = {
   id: string
@@ -448,7 +443,7 @@ Deno.serve(async (req: Request) => {
 
   const { error: usoErr } = await admin
     .from('capture_tokens')
-    .update({ last_used_at: new Date().toISOString(), atalho_versao: versaoDoAtalho(req) })
+    .update(usoDoToken(req.headers.get('x-atalho-versao'), new Date().toISOString()))
     .eq('id', tokenId)
   if (usoErr) console.error('capture: last_used_at', usoErr)
 
