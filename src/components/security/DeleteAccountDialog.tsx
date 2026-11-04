@@ -16,6 +16,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { numberBR } from "@/lib/formatters"
 import { supabase } from "@/lib/supabase"
 import {
   Dialog,
@@ -40,17 +41,19 @@ import { Separator } from "@/components/ui/separator"
 import { Muted } from "@/components/ui/typography"
 import { TrashIcon } from "@heroicons/react/16/solid"
 
-import { BanknotesIcon, UserCircleIcon } from "@heroicons/react/20/solid"
+import { BanknotesIcon, TagIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon, TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
 
-const DATA_LOSS_ITEMS = [
-    { label: "Lançamentos, carteiras e categorias", icon: BanknotesIcon },
-    { label: "Perfil e preferências", icon: UserCircleIcon },
-] as const
+type Totais = { lancamentos: number; carteiras: number; categorias: number }
 
-function plural(n: number, one: string, many: string): string {
-    return `${n} ${n === 1 ? one : many}`
-}
+// O que some com a conta, com o total à direita (a RPC conta as carteiras que a
+// pessoa criou: a pessoal e as compartilhadas, que vão juntas pela cascata).
+const DATA_LOSS_ITEMS = [
+    { label: "Lançamentos", icon: BanknotesIcon, total: "lancamentos" },
+    { label: "Carteiras", icon: WalletIcon, total: "carteiras" },
+    { label: "Categorias", icon: TagIcon, total: "categorias" },
+    { label: "Perfil e preferências", icon: UserCircleIcon, total: null },
+] as const satisfies ReadonlyArray<{ label: string; icon: unknown; total: keyof Totais | null }>
 
 interface DeleteAccountDialogProps {
     open: boolean
@@ -67,42 +70,22 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    // Carteiras compartilhadas criadas pela pessoa somem com a conta (cascata em
-    // `created_by`), seja ela dona ou não hoje. Busca ao abrir, numa chamada só:
-    // a lista em cache pode não ter uma carteira criada em outro aparelho.
+    // O tamanho do que some, numa chamada só ao abrir. Sem a contagem (erro de
+    // rede), a lista aparece sem os números.
     const { workspaces } = useWorkspace()
-    const [sharedOwned, setSharedOwned] = useState<
-        { id: string; name: string; impact: { other_members: number; transactions: number } | null | undefined }[]
-    >([])
+    const [totais, setTotais] = useState<Totais | null>(null)
     useEffect(() => {
         if (!open || !user) return
         let cancelled = false
         void (async () => {
             const { data, error } = await supabase.rpc("get_account_delete_impact")
-            if (cancelled) return
-            if (error) {
-                // Sem a contagem, ainda dá para mostrar os nomes: a lista simples.
-                const { data: rows } = await supabase
-                    .from("workspaces")
-                    .select("id,name")
-                    .eq("type", "shared")
-                    .eq("created_by", user.id)
-                if (!cancelled) setSharedOwned(((rows ?? []) as { id: string; name: string }[]).map((w) => ({ ...w, impact: null })))
-                return
-            }
-            const lista = (Array.isArray(data) ? data : []) as {
-                id: string
-                name: string
-                other_members: number
-                transactions: number
-            }[]
-            setSharedOwned(
-                lista.map((w) => ({
-                    id: w.id,
-                    name: w.name,
-                    impact: { other_members: Number(w.other_members), transactions: Number(w.transactions) },
-                })),
-            )
+            if (cancelled || error || !data || typeof data !== "object" || Array.isArray(data)) return
+            const d = data as Record<string, unknown>
+            setTotais({
+                lancamentos: Number(d.lancamentos) || 0,
+                carteiras: Number(d.carteiras) || 0,
+                categorias: Number(d.categorias) || 0,
+            })
         })()
         return () => {
             cancelled = true
@@ -242,7 +225,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                         Será apagado
                     </Muted>
                     <ItemGroup role="list" aria-labelledby="delete-account-loss-title" className="gap-0">
-                        {DATA_LOSS_ITEMS.map(({ label, icon: Icon }) => (
+                        {DATA_LOSS_ITEMS.map(({ label, icon: Icon, total }) => (
                             <Item key={label} variant="flush" role="listitem">
                                 <ItemMedia variant="icon">
                                     <Icon className="size-5 text-muted-foreground" aria-hidden />
@@ -250,54 +233,15 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                                 <ItemContent>
                                     <ItemTitle>{label}</ItemTitle>
                                 </ItemContent>
+                                {total && totais ? (
+                                    <ItemActions>
+                                        <Muted className="nums">{numberBR(totais[total])}</Muted>
+                                    </ItemActions>
+                                ) : null}
                             </Item>
                         ))}
                     </ItemGroup>
                 </div>
-                {sharedOwned.length > 0 ? (
-                    <>
-                        <Separator />
-                        <div className="flex flex-col pt-3">
-                            <Muted
-                                id="delete-account-shared-title"
-                                className="px-4 text-xs text-warning-muted-foreground"
-                            >
-                                Carteiras compartilhadas que você criou
-                            </Muted>
-                            <ItemGroup
-                                role="list"
-                                aria-labelledby="delete-account-shared-title"
-                                className="gap-0"
-                            >
-                                {sharedOwned.map((w) => {
-                                    const i = w.impact
-                                    const meta =
-                                        i === undefined
-                                            ? "Contando…"
-                                            : i
-                                              ? i.other_members > 0
-                                                  ? `${plural(i.other_members, "membro", "membros")} · ${i.transactions} lanç.`
-                                                  : `${i.transactions} lanç.`
-                                              : null
-                                    return (
-                                        // Linha baixa e sem ícone: o aviso é do rótulo da seção, e cinco
-                                        // triângulos repetidos pesavam mais que os nomes.
-                                        <Item key={w.id} variant="flush" size="sm" role="listitem">
-                                            <ItemContent>
-                                                <ItemTitle>{w.name}</ItemTitle>
-                                            </ItemContent>
-                                            {meta ? (
-                                                <ItemActions>
-                                                    <Muted className="nums">{meta}</Muted>
-                                                </ItemActions>
-                                            ) : null}
-                                        </Item>
-                                    )
-                                })}
-                            </ItemGroup>
-                        </div>
-                    </>
-                ) : null}
                 <Separator />
                 <Item variant="flush">
                     <ItemContent>
