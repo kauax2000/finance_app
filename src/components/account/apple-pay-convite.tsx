@@ -1,17 +1,18 @@
 "use client"
 
+import { CheckCircleIcon, ClockIcon } from "@heroicons/react/16/solid"
 import { useState } from "react"
 
 import { GuiaDoApplePay } from "@/components/account/guia-do-apple-pay"
 import { useLancarAoPagar } from "@/components/account/lancar-ao-pagar"
 import { JanelaDoAparelho, TELA_DA_CARTEIRA } from "@/components/account/passo-a-passo"
-import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { SkeletonText } from "@/components/ui/skeleton"
 import { Muted, P } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import { toastError } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 import { formatRelativeTimePtBr } from "@/lib/transaction-date"
 
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
@@ -65,17 +66,22 @@ export function ApplePayConvite() {
                 {/* Embaixo, na largura do cartão: ao lado do aparelho o rótulo não cabia a 375px. */}
                 {carregando ? null : (
                     <div className="flex flex-col items-start gap-3 px-4 pb-4">
-                        {/* O estado logo acima do botão, um degrau maior que o chip de linha: ao lado do aparelho não cabia. */}
-                        {estado === "funcionando" ? (
-                            <Badge tone="success" className="w-full justify-center px-3 py-1 text-sm">
-                                <BadgeDot />
-                                Funcionando
-                            </Badge>
-                        ) : estado === "aguardando" ? (
-                            <Badge tone="warning" className="w-full justify-center px-3 py-1 text-sm">
-                                Aguardando a 1ª compra
-                            </Badge>
-                        ) : null}
+                        {/* O estado logo acima do botão, em texto na cor dele: ao lado do aparelho não cabia. */}
+                        {estado === "novo" ? null : (
+                            <P
+                                className={cn(
+                                    "flex w-full items-center justify-center gap-2 font-medium",
+                                    estado === "funcionando" ? "text-success" : "text-warning"
+                                )}
+                            >
+                                {estado === "funcionando" ? (
+                                    <CheckCircleIcon aria-hidden className="size-4" />
+                                ) : (
+                                    <ClockIcon aria-hidden className="size-4" />
+                                )}
+                                {estado === "funcionando" ? "Funcionando" : "Aguardando a 1ª compra"}
+                            </P>
+                        )}
                         <Button
                             type="button"
                             variant="secondary"
