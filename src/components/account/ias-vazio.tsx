@@ -1,7 +1,6 @@
 import { PlusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid"
 
 import { Capa, type Marca } from "@/components/account/marcas-de-ia"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -57,13 +56,12 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                     <p className="mt-1 text-sm text-muted-foreground">
                         Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.
                     </p>
-                    <ul className="mt-3 flex flex-wrap justify-center gap-1.5">
+                    {/* A lista fica no centro do cartão, com as linhas alinhadas à esquerda entre si. */}
+                    <ul className="mt-3 flex flex-col gap-1.5 text-left">
                         {GARANTIAS.map((g) => (
-                            <li key={g}>
-                                <Badge variant="outline" tone="neutral" size="md">
-                                    <ShieldCheckIcon aria-hidden="true" />
-                                    {g}
-                                </Badge>
+                            <li key={g} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <ShieldCheckIcon aria-hidden="true" className="mt-px size-4 shrink-0 text-foreground" />
+                                {g}
                             </li>
                         ))}
                     </ul>
