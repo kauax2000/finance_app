@@ -107,7 +107,7 @@ export default function MePage() {
                     {user?.created_at ? (
                         <div className="flex items-center justify-center gap-2">
                             <SeloDeMembro desde={user.created_at} />
-                            <Muted>Membro desde {formatTransactionMonthYearPtBr(user.created_at)}</Muted>
+                            <Muted aria-hidden="true">Membro desde {formatTransactionMonthYearPtBr(user.created_at)}</Muted>
                         </div>
                     ) : null}
                 </div>
