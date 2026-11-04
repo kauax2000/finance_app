@@ -1238,22 +1238,23 @@ flowchart TD
     emailPwd -->|"não"| profile
     emailPwd -->|"sim"| emailUpd[("updateUser email")] --> emailSent(["Link de confirmação enviado ao novo e-mail"])
 
-    account -->|"Senha: Alterar"| pwd(["ChangePasswordDialog: senha atual, nova, confirmação"])
+    profile -->|"Segurança: Alterar senha"| pwd(["ChangePasswordDialog por cima: senha atual, nova, confirmação"])
     pwd --> pwdCheck{"Senha atual confere e nova é forte?"}
     pwdCheck -->|"não"| pwd
-    pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s; este aparelho segue aberto e os outros terminam quando o token vence"])
+    pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s e volta ao Editar perfil; este aparelho segue aberto e os outros terminam quando o token vence"])
+
+    profile -->|"Segurança: Excluir conta"| warn(["DeleteAccountDialog por cima: aviso das carteiras compartilhadas que você é dona"])
+    warn -->|"Continuar"| confirmDel(["Digitar e-mail e senha"])
+    confirmDel -->|"Excluir"| delUser[("Edge delete-user, confere a senha")]
+    delUser -->|"erro"| confirmDel
+    delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
+    warn -->|"Cancelar ou fechar"| profile
 
     account -->|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
 
     account -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
 
     account -->|"Sair, sem confirmação"| G1(("G1 Sair, que é global"))
-    account -->|"Excluir conta"| warn(["Aviso: carteiras compartilhadas que você é dona"])
-    warn -->|"Continuar"| confirmDel(["Digitar e-mail e senha"])
-    confirmDel -->|"Excluir"| delUser[("Edge delete-user, confere a senha")]
-    delUser -->|"erro"| confirmDel
-    delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
-
     userMenu(("G3 Menu do usuário")) --> plans
     account -->|"Cofre aberto, pelo menu do usuário e por /me"| cofre(("G12 /cofre: exportar tudo e apagar a conta"))
 ```
@@ -1314,9 +1315,9 @@ flowchart TD
 
 | Ponto | Regra | Onde |
 |---|---|---|
-| Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser` | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
-| Excluir conta | Dois passos; a senha é conferida na Edge Function. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
-| Tela | Uma coluna: identidade, Acesso e plano (E-mail e Editar perfil abrem o `EditProfileDialog`, Senha abre o `ChangePasswordDialog`, Plano vai a `/plans`, agora também no desktop), Política de privacidade (`/privacidade`) e, no fim, Sair e Excluir conta. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
+| Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser`. A senha troca no `ChangePasswordDialog`, aberto por cima do Editar perfil (Segurança); ao fechar, a pessoa volta ao Editar perfil | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
+| Excluir conta | Dois passos; a senha é conferida na Edge Function. Abre do Editar perfil (Segurança), por cima dele; cancelar volta ao Editar perfil. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Tela | Uma coluna: identidade (a foto e o Editar perfil abrem o `EditProfileDialog`, que tem a seção Segurança com Alterar senha e Excluir conta; desde 4/nov/2026 as duas saíram da página), Plano (vai a `/plans`, agora também no desktop), Política de privacidade (`/privacidade`) e, no fim, Sair. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
 | Sair | É global: o `signOut()` sem `scope` encerra a conta em todos os aparelhos, e os outros só caem quando o token vence, sem aviso, indo ao login. Sem confirmação nesta tela (o erro vai em toast). Segundo caminho para um aparelho perdido: trocar a senha encerra os outros aparelhos quando o token deles vence, e este segue aberto | `src/components/providers.tsx` |
 | Sem sessões nem atividade | A tela não lista aparelhos, não encerra sessão e não grava log: `createActivity` saiu do perfil e da senha, o `x-app-session-id` saiu das chamadas e o `reason=session-expired` não existe mais; o login só mostra `reason=password-updated`. **Pendência para o 2.0 subir à `main`**: ver a lacuna 108 | `src/components/providers.tsx`, `src/lib/edge-invoke.ts` |
 
