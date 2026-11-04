@@ -2,9 +2,9 @@
 
 import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/16/solid"
 import { useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { TopBarAction } from "@/components/ui/top-bar"
 import { Muted } from "@/components/ui/typography"
 import { TrocaSuave } from "@/lib/troca-suave"
 
@@ -54,18 +54,13 @@ export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: s
                         onFocus={(e) => e.currentTarget.select()}
                     />
                 )}
-                <Button
-                    variant="secondary"
-                    size="icon-lg"
-                    aria-label={`Copiar ${rotulo}`}
-                    className="relative shrink-0"
-                    onClick={() => void copiar()}
-                >
+                {/* O botão de vidro do cabeçalho (o sino, a lupa), o mesmo desenho aqui. */}
+                <TopBarAction plate label={`Copiar ${rotulo}`} className="shrink-0" onClick={() => void copiar()}>
                     {/* O ícone dá lugar ao tique na mola, e volta depois de 2s. */}
                     <TrocaSuave chave={copiado ? "copiado" : "copiar"} className="flex">
                         {copiado ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
                     </TrocaSuave>
-                </Button>
+                </TopBarAction>
             </div>
             <Muted aria-live="polite" className="break-all">
                 {estado === "recusado" ? "Não foi possível copiar. Selecione o texto e copie." : null}
