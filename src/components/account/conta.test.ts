@@ -39,6 +39,16 @@ describe("o que dependia de sessão saiu", () => {
 describe("tokens de captura", () => {
     const fonteTudo = (...arquivos: string[]) => arquivos.map((a) => semComentarios(lerFonte(`src/components/account/${a}`), "tudo")).join("\n")
 
+    it("o aparelho do atalho antigo pede o atalho novo", () => {
+        expect(lerFonte("src/components/account/aparelhos-de-captura.ts")).toMatch(/const COLUNAS = "[^"]*\batalho_versao\b/)
+        const f = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
+        expect(f).toContain("Baixe o atalho de novo para ter o formulário")
+        expect(f).toContain("Baixar o atalho de novo")
+        expect(f).toContain("ArrowDownTrayIcon")
+        expect(f).toMatch(/t\.last_used_at != null && t\.atalho_versao == null/)
+        expect(f).toMatch(/passoInicial=\{1\}/)
+    })
+
     it("cria, revoga e mostra o código uma vez só", () => {
         const f = fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")
         expect(f).toContain('rpc("create_capture_token"')

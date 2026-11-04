@@ -1,6 +1,6 @@
 "use client"
 
-import { DevicePhoneMobileIcon, EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { ArrowDownTrayIcon, DevicePhoneMobileIcon, EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
@@ -46,6 +46,9 @@ const relativo = (iso: string) => {
     return s.charAt(0).toLowerCase() + s.slice(1)
 }
 
+/** Já lançou, mas pelo atalho antigo (sem `X-Atalho-Versao`): falta o formulário. */
+const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_versao == null
+
 export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 
 /** O erro do banco (check, not null ou o `raise` das RPCs) na frase da tela. */
@@ -64,6 +67,7 @@ export function AtalhoSecao() {
     const { workspaces } = useWorkspace()
     const lista = useAparelhosDeCaptura()
     const [guiaAberto, setGuiaAberto] = useState(false)
+    const [baixarDeNovo, setBaixarDeNovo] = useState(false)
     const [alvo, setAlvo] = useState<CaptureToken | null>(null)
     const [revogando, setRevogando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
@@ -150,6 +154,7 @@ export function AtalhoSecao() {
                                                 </span>
                                                 </div>
                                             </Muted>
+                                            {atalhoAntigo(t) ? <Muted>Baixe o atalho de novo para ter o formulário</Muted> : null}
                                         </ItemContent>
                                         <ItemActions>
                                             <DropdownMenu>
@@ -164,6 +169,12 @@ export function AtalhoSecao() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
+                                                    {atalhoAntigo(t) ? (
+                                                        <DropdownMenuItem onSelect={() => setBaixarDeNovo(true)}>
+                                                            <ArrowDownTrayIcon aria-hidden />
+                                                            Baixar o atalho de novo
+                                                        </DropdownMenuItem>
+                                                    ) : null}
                                                     <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
                                                         <LinkSlashIcon aria-hidden />
                                                         Desconectar
@@ -183,6 +194,13 @@ export function AtalhoSecao() {
             {!lista.isError && tokens.length > 0 ? <ApplePayConvite /> : null}
 
             <GuiaDoAtalho open={guiaAberto} onOpenChange={setGuiaAberto} aoCriar={() => void lista.refetch()} />
+            {/* O aparelho já tem código: o guia começa no download e não cria outro. */}
+            <GuiaDoAtalho
+                open={baixarDeNovo}
+                onOpenChange={setBaixarDeNovo}
+                aoCriar={() => void lista.refetch()}
+                passoInicial={1}
+            />
 
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>
                 <AlertDialogContent>

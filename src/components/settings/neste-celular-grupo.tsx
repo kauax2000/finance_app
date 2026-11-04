@@ -91,7 +91,7 @@ export function NesteCelularGrupo() {
                                 </ItemMedia>
                                 <ItemContent>
                                     <ItemTitle className="pointer-coarse:text-base">Lançamento inteligente</ItemTitle>
-                                    <ItemDescription>Digite uma frase no +</ItemDescription>
+                                    <ItemDescription>Digite uma frase no +; vale na conta, inclusive no atalho do iPhone.</ItemDescription>
                                 </ItemContent>
                                 <ItemActions>
                                     <Switch
