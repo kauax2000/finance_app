@@ -67,7 +67,7 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                     </ul>
                     <Button variant="primary" className="mt-4" onClick={onConectar}>
                         <PlusIcon aria-hidden data-icon="inline-start" />
-                        Conectar uma IA
+                        Conectar minha IA
                     </Button>
                 </div>
         </div>

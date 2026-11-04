@@ -381,7 +381,7 @@ describe("IAs conectadas: o vazio", () => {
             "Não edita nem apaga nada no Finance",
             "O que ela lança espera você conferir",
             "Você desconecta quando quiser",
-            "Conectar uma IA",
+            "Conectar minha IA",
         ])
             expect(v).toContain(t)
         expect(v).toMatch(/<Capa marca="claude"/)
