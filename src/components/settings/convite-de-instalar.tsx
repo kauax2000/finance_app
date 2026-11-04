@@ -21,12 +21,12 @@ const VANTAGENS_DO_IPHONE = [
     "O Apple Pay lança o gasto sozinho.",
 ]
 
-/** No navegador do iPhone: pede para pôr o app na tela de início. O Android já vê o convite fora de Configurações. */
-export function ConviteDeInstalar() {
+/** O cartão do convite, sem seção: a página Você o põe solto no grupo Neste celular. */
+export function ConviteDeInstalarCartao() {
     const [aberto, setAberto] = useState(false)
 
     return (
-        <SettingsSection titulo="Instale o app">
+        <>
             <Card padding="none">
                 <EmptyState variant="plain" size="sm">
                     <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" />
@@ -49,6 +49,15 @@ export function ConviteDeInstalar() {
                 </EmptyState>
             </Card>
             <InstallPwaSheet open={aberto} onOpenChange={setAberto} />
+        </>
+    )
+}
+
+/** No navegador do iPhone: pede para pôr o app na tela de início. O Android já vê o convite fora de Configurações. */
+export function ConviteDeInstalar() {
+    return (
+        <SettingsSection titulo="Instale o app">
+            <ConviteDeInstalarCartao />
         </SettingsSection>
     )
 }

@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Item, ItemActions, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { ConviteDeInstalar } from "@/components/settings/convite-de-instalar"
+import { ConviteDeInstalarCartao } from "@/components/settings/convite-de-instalar"
 import { SettingsRow } from "@/components/settings/settings-section"
 import { ROUTES } from "@/config/navigation"
 import { InstallPwaSheet } from "@/components/pwa/install-pwa-sheet"
@@ -96,7 +96,7 @@ export function NesteCelularGrupo() {
                     <PageSectionTitle>Neste celular</PageSectionTitle>
                 </PageSectionHeader>
                 {lancar === "cartao" ? <CartaoDeLancar /> : null}
-                {lancar === "convite" ? <ConviteDeInstalar /> : null}
+                {lancar === "convite" ? <ConviteDeInstalarCartao /> : null}
                 <Card padding="none">
                     <ItemGroup variant="divided">
                         <Item variant="flush" className="min-h-12">
