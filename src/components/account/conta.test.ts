@@ -253,7 +253,7 @@ describe("Conectar minha IA: o guia", () => {
             "Toque em Adicionar conector personalizado.",
             "Abra Configurações › Conectores › Avançado e ligue o Modo desenvolvedor.",
             "Depois, digite /mcp e entre com a sua conta do Finance.",
-            "Quanto gastei este mês por categoria?",
+            "Faça um raio-x do meu mês e me dê 3 dicas para economizar.",
             "Concluir",
         ])
             expect(g).toContain(t)

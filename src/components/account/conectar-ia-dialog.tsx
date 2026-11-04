@@ -209,7 +209,7 @@ export function ConectarIaDialog({
         conteudo = (
             <>
                 <PecaDoPasso>
-                    <CampoDeCopiar rotulo="Pergunta de exemplo" valor="Quanto gastei este mês por categoria?" />
+                    <CampoDeCopiar rotulo="Pergunta de exemplo" valor="Faça um raio-x do meu mês e me dê 3 dicas para economizar." />
                 </PecaDoPasso>
                 <PecaDoPasso>
                     <Muted>Pronto: ela aparece aqui em IAs conectadas, e você desconecta quando quiser.</Muted>
