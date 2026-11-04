@@ -31,6 +31,9 @@ export type PedidoCaptura = {
   card?: string
   date?: string
   source?: Origem
+  /** O formulário do atalho v2: os nomes escolhidos nas listas do GET. */
+  category?: string
+  payment?: string
   /** O que a IA leu (Decisão 9). Nunca vem do corpo: a Edge o põe depois de chamar a IA. */
   campos?: CamposDaIA
 }
@@ -61,9 +64,68 @@ export type ContextoCaptura = {
   cartoes: CartaoParaCasar[]
   historicoPorCarteira: Record<string, LinhaHistorico[]>
   hoje: string // YYYY-MM-DD, o dia de São Paulo
+  /** As listas do GET, lidas da carteira padrão: só o pedido do formulário as usa. */
+  formulario?: OpcoesDoFormulario
+}
+
+/** O código estável do erro: o atalho abre o formulário com `sem_valor`. */
+export type CodigoDoErro = 'sem_valor' | 'opcao_invalida'
+
+type FormaDaOpcao = 'credit_card' | 'pix' | 'debit_card' | 'cash' | null
+export type OpcoesDoFormulario = {
+  /** `descricao` é o nome de verdade (sem o sufixo de repetido), para a descrição vazia. */
+  categorias: { nome: string; id: string | null; descricao?: string }[]
+  pagamentos: { nome: string; forma: FormaDaOpcao; cartaoId: string | null }[]
+}
+
+const SEM_CATEGORIA = 'Sem categoria'
+const NAO_INFORMAR = 'Não informar'
+
+/**
+ * As listas do formulário do atalho: "Sem categoria" e "Não informar" no topo,
+ * as categorias e os cartões por nome, e as formas fixas no fim. O atalho manda
+ * de volta o nome, então cada nome é único na lista pela mesma comparação do
+ * `resolverOpcao` (sem acento e sem caixa): o repetido ganha " (2)", " (3)".
+ */
+export function opcoesDoFormulario(
+  categorias: { id: string; name: string }[],
+  cartoes: { id: string; name: string }[],
+): OpcoesDoFormulario {
+  const porNome = <T extends { name: string }>(l: T[]) => [...l].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  const unico = (usados: Set<string>) => (nome: string) => {
+    let n = 1
+    let c = nome
+    while (usados.has(normalizarDescricao(c))) c = `${nome} (${++n})`
+    usados.add(normalizarDescricao(c))
+    return c
+  }
+  const cat = unico(new Set())
+  const pag = unico(new Set())
+  return {
+    categorias: [
+      { nome: cat(SEM_CATEGORIA), id: null },
+      ...porNome(categorias).map((c) => ({ nome: cat(c.name), id: c.id, descricao: c.name })),
+    ],
+    pagamentos: [
+      { nome: pag(NAO_INFORMAR), forma: null, cartaoId: null },
+      ...porNome(cartoes).map((c) => ({ nome: pag(c.name), forma: 'credit_card' as const, cartaoId: c.id })),
+      { nome: pag('Pix'), forma: 'pix', cartaoId: null },
+      { nome: pag('Débito'), forma: 'debit_card', cartaoId: null },
+      { nome: pag('Dinheiro'), forma: 'cash', cartaoId: null },
+    ],
+  }
+}
+
+/** A opção pelo nome que o atalho devolveu, sem acento, sem caixa e aparando espaços. */
+export function resolverOpcao<T extends { nome: string }>(lista: T[], nome: string | undefined): T | null {
+  if (nome == null) return null
+  const alvo = normalizarDescricao(nome)
+  return lista.find((o) => normalizarDescricao(o.nome) === alvo) ?? null
 }
 
 export const ERRO_VALOR = 'Não entendi o valor. Ex.: 42 mercado'
+const ERRO_OPCAO = 'Escolha uma opção da lista.'
+const DESCRICAO_DO_FORMULARIO = 'Gasto'
 const ERRO_TEXTO = 'Texto acima de 500 caracteres.'
 const ERRO_LIMITE = 'Valor acima do limite.'
 const MAX_TEXTO = 500
@@ -87,10 +149,10 @@ function valorDoAmount(amount: unknown): number | null {
 export function validarPedido(
   body: unknown,
   comFoto = false,
-): { ok: true; pedido: PedidoCaptura } | { ok: false; erro: string } {
+): { ok: true; pedido: PedidoCaptura } | { ok: false; erro: string; codigo?: CodigoDoErro } {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return { ok: false, erro: 'Corpo inválido.' }
   const b = body as Record<string, unknown>
-  for (const campo of ['text', 'merchant', 'card', 'date'] as const) {
+  for (const campo of ['text', 'merchant', 'card', 'date', 'category', 'payment'] as const) {
     if (b[campo] != null && typeof b[campo] !== 'string') return { ok: false, erro: 'Corpo inválido.' }
     if (typeof b[campo] === 'string' && (b[campo] as string).length > MAX_TEXTO) return { ok: false, erro: ERRO_TEXTO }
   }
@@ -99,11 +161,13 @@ export function validarPedido(
   }
   if (b.source != null && !ORIGENS.includes(b.source as Origem)) return { ok: false, erro: 'Origem inválida.' }
   if (temAmount(b.amount)) {
-    if (valorDoAmount(b.amount) == null) return { ok: false, erro: ERRO_VALOR }
-  } else if (!comFoto && (typeof b.text !== 'string' || !b.text.trim())) return { ok: false, erro: ERRO_VALOR }
+    if (valorDoAmount(b.amount) == null) return { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' }
+  } else if (!comFoto && (typeof b.text !== 'string' || !b.text.trim())) {
+    return { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' }
+  }
   // Só os campos do contrato: `campos` (a IA) nunca entra pelo corpo.
-  const { id, text, amount, merchant, card, date, source } = b as PedidoCaptura
-  return { ok: true, pedido: { id, text, amount, merchant, card, date, source } }
+  const { id, text, amount, merchant, card, date, source, category, payment } = b as PedidoCaptura
+  return { ok: true, pedido: { id, text, amount, merchant, card, date, source, category, payment } }
 }
 
 /**
@@ -202,7 +266,10 @@ function dataValida(s: string | undefined): string | null {
 export function montarLancamento(
   pedido: PedidoCaptura,
   ctx: ContextoCaptura,
-): { ok: true; linha: LinhaCaptura; resumo: string; parcelas: number | null } | { ok: false; status: 422; erro: string } {
+):
+  | { ok: true; linha: LinhaCaptura; resumo: string; parcelas: number | null }
+  | { ok: false; status: 422; erro: string; codigo?: CodigoDoErro } {
+  if (pedido.category != null || pedido.payment != null) return montarDoFormulario(pedido, ctx)
   let valor: number | null
   let data: string
   let tipo: 'expense' | 'income' = 'expense'
@@ -256,7 +323,7 @@ export function montarLancamento(
     }
   }
 
-  if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR }
+  if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR, codigo: 'sem_valor' }
   if (valor > MAX_VALOR) return { ok: false, status: 422, erro: ERRO_LIMITE }
 
   // O cartão casado só vale numa carteira da pessoa (Foco 3); senão o
@@ -345,5 +412,48 @@ export function montarLancamento(
     },
     resumo: resumoDoLancamento(valor, descricao, nomeDoCartao),
     parcelas: parcelasDoPlano,
+  }
+}
+
+/**
+ * O formulário do atalho v2: a pessoa escolheu tudo, então é despesa, na
+ * carteira padrão, sem "a conferir" e sem histórico nem IA. Categoria ou
+ * pagamento ausente vale "Sem categoria" / "Não informar"; um nome fora das
+ * listas do GET é recusado (a lista mudou entre o GET e o POST).
+ */
+function montarDoFormulario(
+  pedido: PedidoCaptura,
+  ctx: ContextoCaptura,
+): { ok: true; linha: LinhaCaptura; resumo: string; parcelas: null } | { ok: false; status: 422; erro: string; codigo?: CodigoDoErro } {
+  const valor = valorDoAmount(pedido.amount)
+  if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR, codigo: 'sem_valor' }
+  if (valor > MAX_VALOR) return { ok: false, status: 422, erro: ERRO_LIMITE }
+  const opcoes = ctx.formulario
+  const escolha = <T extends { nome: string }>(lista: T[] | undefined, nome: string | undefined) =>
+    lista ? resolverOpcao(lista, nome?.trim() ? nome : lista[0].nome) : null
+  const categoria = escolha(opcoes?.categorias, pedido.category)
+  const pagamento = escolha(opcoes?.pagamentos, pedido.payment)
+  if (!categoria || !pagamento) return { ok: false, status: 422, erro: ERRO_OPCAO, codigo: 'opcao_invalida' }
+
+  const descricao = pedido.merchant?.trim() || categoria.descricao || DESCRICAO_DO_FORMULARIO
+  const data = dataValida(pedido.date) ?? ctx.hoje
+  return {
+    ok: true,
+    linha: {
+      workspace_id: ctx.carteiraPadrao,
+      user_id: ctx.userId,
+      type: 'expense',
+      amount: valor,
+      description: descricao,
+      date: `${data}T12:00:00.000Z`,
+      payment_method: pagamento.forma,
+      payment_credit_card_id: pagamento.cartaoId,
+      category_id: categoria.id,
+      source: pedido.source ?? 'shortcut',
+      needs_review: false,
+      capture_meta: null,
+    },
+    resumo: resumoDoLancamento(valor, descricao, ctx.cartoes.find((c) => c.id === pagamento.cartaoId)?.name),
+    parcelas: null,
   }
 }

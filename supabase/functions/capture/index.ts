@@ -7,6 +7,11 @@
  * opcionais), é lida pela IA e vira anexo; a frase confusa vai à IA depois do
  * parser; parcelas > 1 viram plano pela RPC `criar_plano_parcelado`.
  *
+ * Atalho v2: o `GET` (sem corpo) devolve o modo da conta (frase ou formulário)
+ * e as listas do formulário da carteira padrão; o `POST` do formulário manda o
+ * valor e os nomes escolhidos (`category`, `payment`). O cabeçalho
+ * `X-Atalho-Versao` vai para `capture_tokens.atalho_versao` (nulo = v1).
+ *
  * Usa a service role, então repete o que a RLS garantiria (Decisão 8): o autor é
  * o dono do token, e a carteira de destino é uma das dele. O aviso aos membros
  * sai do trigger `transactions_notify_created`, não daqui.
@@ -17,6 +22,8 @@ import {
   clientIdDoPedido,
   ERRO_VALOR,
   montarLancamento,
+  opcoesDoFormulario,
+  type OpcoesDoFormulario,
   precisaDeIA,
   resumoDaNotificacao,
   resumoDoErro,
@@ -35,7 +42,7 @@ declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-atalho-versao',
 }
 
 function json(status: number, payload: unknown): Response {
@@ -68,6 +75,12 @@ const ERRO_RECEITA_DO_CONVIDADO = 'Convidado lança só despesa. Peça a um adul
 const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
 type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
 
+/** `X-Atalho-Versao`: inteiro de 1 a 99; ausente ou outra coisa é nulo (o atalho v1). */
+function versaoDoAtalho(req: Request): number | null {
+  const v = req.headers.get('x-atalho-versao')?.trim() ?? ''
+  return /^[1-9]\d?$/.test(v) ? Number(v) : null
+}
+
 type Gravado = {
   id: string
   needs_review: boolean
@@ -81,7 +94,7 @@ const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_c
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
+  if (req.method !== 'POST' && req.method !== 'GET') return json(405, { error: 'Method not allowed' })
 
   // Revogado, desconhecido ou mal formado: a mesma resposta (Foco 2). O formato
   // se confere antes de ler o corpo.
@@ -134,6 +147,34 @@ Deno.serve(async (req: Request) => {
   // Saiu da carteira padrão: o token não vale mais.
   if (!carteirasDaPessoa.includes(carteiraPadrao)) return TOKEN_INVALIDO()
 
+  // As listas do formulário: só da carteira padrão (o formulário lança nela).
+  const lerOpcoes = async (): Promise<OpcoesDoFormulario | Response> => {
+    const [cats, cards] = await Promise.all([
+      admin.from('categories').select('id, name').eq('workspace_id', carteiraPadrao).eq('type', 'expense'),
+      admin.from('credit_cards').select('id, name').eq('workspace_id', carteiraPadrao).eq('is_active', true),
+    ])
+    if (cats.error) return json(500, { error: internalError('capture: categorias', cats.error) })
+    if (cards.error) return json(500, { error: internalError('capture: cartões', cards.error) })
+    return opcoesDoFormulario(cats.data ?? [], cards.data ?? [])
+  }
+
+  if (req.method === 'GET') {
+    // Sem linha em user_settings, o padrão da coluna: a frase.
+    const { data: prefs, error: prefErr } = await admin
+      .from('user_settings')
+      .select('lancamento_inteligente')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (prefErr) return json(500, { error: internalError('capture: preferência', prefErr) })
+    const opcoes = await lerOpcoes()
+    if (opcoes instanceof Response) return opcoes
+    return json(200, {
+      modo: (prefs as { lancamento_inteligente: boolean } | null)?.lancamento_inteligente === false ? 'formulario' : 'frase',
+      categorias: opcoes.categorias.map((c) => c.nome),
+      pagamentos: opcoes.pagamentos.map((p) => p.nome),
+    })
+  }
+
   let bruto = await lerCorpo(req, teto)
   if (bruto == null) return CORPO_GRANDE(multipart)
 
@@ -161,8 +202,14 @@ Deno.serve(async (req: Request) => {
     return json(422, { error: 'Corpo inválido.' })
   }
   const validado = validarPedido(corpo, foto != null)
-  if (!validado.ok) return json(422, { error: validado.erro })
+  if (!validado.ok) return json(422, { error: validado.erro, codigo: validado.codigo })
   const pedido = validado.pedido
+  let formulario: OpcoesDoFormulario | undefined
+  if (pedido.category != null || pedido.payment != null) {
+    const opcoes = await lerOpcoes()
+    if (opcoes instanceof Response) return opcoes
+    formulario = opcoes
+  }
 
   const { data: cartoesLidos, error: cErr } = await admin
     .from('credit_cards')
@@ -269,12 +316,13 @@ Deno.serve(async (req: Request) => {
 
   const montado = montarLancamento(
     { ...pedido, campos },
-    { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, hoje },
+    { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, hoje, formulario },
   )
   if (!montado.ok) {
     // Sem valor e com foto: ou a IA não leu, ou a foto nem foi a ela (acima de 4 MB).
     const erroDaFoto = foto && foto.bytes.byteLength > MAX_FOTO_IA ? ERRO_FOTO_GRANDE : ERRO_FOTO
-    return json(montado.status, { error: foto && montado.erro === ERRO_VALOR ? erroDaFoto : montado.erro })
+    if (foto && montado.erro === ERRO_VALOR) return json(montado.status, { error: erroDaFoto })
+    return json(montado.status, { error: montado.erro, codigo: montado.codigo })
   }
   const { linha } = montado
   // A service role não passa pela RLS: a recusa do convidado se repete aqui.
@@ -400,7 +448,7 @@ Deno.serve(async (req: Request) => {
 
   const { error: usoErr } = await admin
     .from('capture_tokens')
-    .update({ last_used_at: new Date().toISOString() })
+    .update({ last_used_at: new Date().toISOString(), atalho_versao: versaoDoAtalho(req) })
     .eq('id', tokenId)
   if (usoErr) console.error('capture: last_used_at', usoErr)
 

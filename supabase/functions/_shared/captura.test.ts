@@ -2,9 +2,12 @@ import { assert, assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/ass
 import {
   clientIdDoPedido,
   montarLancamento,
+  opcoesDoFormulario,
   precisaDeIA,
+  resolverOpcao,
   resumoDaNotificacao,
   resumoDoErro,
+  resumoDoLancamento,
   tipoDoArquivo,
   validarPedido,
   valoresDoPlano,
@@ -78,6 +81,7 @@ Deno.test('validarPedido: amount negativo, zero ou ilegível é recusado', () =>
     assertEquals(validarPedido({ amount, merchant: 'Mercado' }), {
       ok: false,
       erro: 'Não entendi o valor. Ex.: 42 mercado',
+      codigo: 'sem_valor',
     })
   }
   assert(validarPedido({ amount: 'R$ 42,90', merchant: 'Mercado' }).ok)
@@ -85,7 +89,7 @@ Deno.test('validarPedido: amount negativo, zero ou ilegível é recusado', () =>
 })
 
 Deno.test('validarPedido: sem texto e sem valor, corpo que não é objeto', () => {
-  assertEquals(validarPedido({}), { ok: false, erro: 'Não entendi o valor. Ex.: 42 mercado' })
+  assertEquals(validarPedido({}), { ok: false, erro: 'Não entendi o valor. Ex.: 42 mercado', codigo: 'sem_valor' })
   assertEquals(validarPedido(null).ok, false)
   assertEquals(validarPedido([]).ok, false)
   assertEquals(validarPedido({ text: 42 }).ok, false)
@@ -171,6 +175,7 @@ Deno.test('montarLancamento: sem valor devolve 422 com a mensagem exata', () => 
     ok: false,
     status: 422,
     erro: 'Não entendi o valor. Ex.: 42 mercado',
+    codigo: 'sem_valor',
   })
 })
 
@@ -565,7 +570,7 @@ Deno.test('IA sem data: vale a data dita no texto ("ontem")', () => {
 
 Deno.test('IA sem valor e sem texto com valor: 422 do valor', () => {
   const r = montarLancamento({ campos: ia({ valor: null }) }, ctx())
-  assertEquals(r, { ok: false, status: 422, erro: 'Não entendi o valor. Ex.: 42 mercado' })
+  assertEquals(r, { ok: false, status: 422, erro: 'Não entendi o valor. Ex.: 42 mercado', codigo: 'sem_valor' })
 })
 
 Deno.test('IA com parcelas leva o N ao plano', () => {
@@ -658,4 +663,103 @@ Deno.test('a notificação do iPhone confirma o lançamento e avisa o erro', () 
   assertEquals(resumoDaNotificacao('R$ 3.000,00 · Salário', 'income', false), 'Receita lançada: R$ 3.000,00 · Salário')
   assertEquals(resumoDaNotificacao('R$ 42,00 · Mercado', 'expense', true), 'Gasto lançado: R$ 42,00 · Mercado · a conferir')
   assertEquals(resumoDoErro('Não entendi o valor. Ex.: 42 mercado'), 'Não lançado: Não entendi o valor. Ex.: 42 mercado')
+})
+
+// --- Formulário do atalho (v2) ---------------------------------------------
+
+const OPCOES = opcoesDoFormulario(
+  [
+    { id: 'a', name: 'Mercado' },
+    { id: 'b', name: 'Mercado' },
+    { id: 'c', name: 'Água' },
+  ],
+  [{ id: 'k', name: 'Nubank' }],
+)
+
+Deno.test('opcoesDoFormulario: topo fixo, ordem alfabética e sufixo nos repetidos', () => {
+  assertEquals(OPCOES.categorias.map((c) => c.nome), ['Sem categoria', 'Água', 'Mercado', 'Mercado (2)'])
+  assertEquals(OPCOES.pagamentos.map((p) => p.nome), ['Não informar', 'Nubank', 'Pix', 'Débito', 'Dinheiro'])
+  assertEquals(OPCOES.categorias[0].id, null)
+  assertEquals(OPCOES.categorias.map((c) => c.id), [null, 'c', 'a', 'b'])
+  assertEquals(OPCOES.pagamentos[0], { nome: 'Não informar', forma: null, cartaoId: null })
+})
+
+Deno.test('opcoesDoFormulario: repetido só na caixa ou no acento também ganha sufixo', () => {
+  const o = opcoesDoFormulario([{ id: 'x', name: 'Agua' }, { id: 'y', name: 'água' }], [{ id: 'p', name: 'pix' }])
+  assertEquals(o.categorias.map((c) => c.nome), ['Sem categoria', 'Agua', 'água (2)'])
+  assertEquals(o.pagamentos.map((p) => p.nome), ['Não informar', 'pix', 'Pix (2)', 'Débito', 'Dinheiro'])
+})
+
+Deno.test('resolverOpcao: sem acento, sem caixa e aparando espaços', () => {
+  assertEquals(resolverOpcao(OPCOES.categorias, ' agua ')?.id, 'c')
+  assertEquals(resolverOpcao(OPCOES.categorias, 'MERCADO (2)')?.id, 'b')
+  assertEquals(resolverOpcao(OPCOES.categorias, 'Feira'), null)
+  assertEquals(resolverOpcao(OPCOES.categorias, undefined), null)
+})
+
+Deno.test('validarPedido: category e payment são texto curto', () => {
+  assert(validarPedido({ amount: '42,90', category: 'Mercado', payment: 'Pix' }).ok)
+  assertEquals(validarPedido({ amount: '42,90', category: 5 }), { ok: false, erro: 'Corpo inválido.' })
+  assertEquals(validarPedido({ amount: '42,90', payment: 'x'.repeat(501) }).ok, false)
+})
+
+const formulario = (pedido: Parameters<typeof montarLancamento>[0]) =>
+  montarLancamento(pedido, ctx({ cartoes: [cartao('k', 'Nubank', PADRAO)], formulario: OPCOES }))
+
+Deno.test('montarLancamento (formulário): despesa sem dúvidas, descrição pela categoria', () => {
+  const r = ok(formulario({ amount: '42,90', merchant: '', category: 'Mercado', payment: 'Pix' }))
+  assertEquals(r.linha.description, 'Mercado')
+  assertEquals(r.linha.category_id, 'a')
+  assertEquals(r.linha.payment_method, 'pix')
+  assertEquals(r.linha.payment_credit_card_id, null)
+  assertEquals(r.linha.needs_review, false)
+  assertEquals(r.linha.type, 'expense')
+  assertEquals(r.linha.amount, 42.9)
+  assertEquals(r.linha.workspace_id, PADRAO)
+  assertEquals(r.linha.date, `${HOJE}T12:00:00.000Z`)
+  assertEquals(r.linha.source, 'shortcut')
+  assertEquals(r.linha.capture_meta, null)
+  assertEquals(r.parcelas, null)
+})
+
+Deno.test('montarLancamento (formulário): "Mercado (2)" e descrição dada', () => {
+  const r = ok(formulario({ amount: 10, merchant: ' Feira do bairro ', category: 'mercado (2)', payment: 'Dinheiro', date: '2026-04-02' }))
+  assertEquals(r.linha.category_id, 'b')
+  assertEquals(r.linha.description, 'Feira do bairro')
+  assertEquals(r.linha.payment_method, 'cash')
+  assertEquals(r.linha.date, '2026-04-02T12:00:00.000Z')
+})
+
+Deno.test('montarLancamento (formulário): "Sem categoria" sem descrição vira "Gasto"', () => {
+  const r = ok(formulario({ amount: '5', category: 'Sem categoria', payment: 'Não informar' }))
+  assertEquals(r.linha.description, 'Gasto')
+  assertEquals(r.linha.category_id, null)
+  assertEquals(r.linha.payment_method, null)
+  assertEquals(r.linha.needs_review, false)
+})
+
+Deno.test('montarLancamento (formulário): cartão da lista', () => {
+  const r = ok(formulario({ amount: '42,90', category: 'Água', payment: 'nubank' }))
+  assertEquals(r.linha.payment_method, 'credit_card')
+  assertEquals(r.linha.payment_credit_card_id, 'k')
+  assertEquals(r.resumo, resumoDoLancamento(42.9, 'Água', 'Nubank'))
+})
+
+Deno.test('montarLancamento (formulário): valor zero ou negativo é sem_valor', () => {
+  for (const amount of ['0', '-3', 0]) {
+    assertEquals(formulario({ amount, category: 'Mercado', payment: 'Pix' }), {
+      ok: false,
+      status: 422,
+      erro: 'Não entendi o valor. Ex.: 42 mercado',
+      codigo: 'sem_valor',
+    })
+  }
+})
+
+Deno.test('montarLancamento (formulário): opção fora da lista é opcao_invalida', () => {
+  const invalida = { ok: false, status: 422, erro: 'Escolha uma opção da lista.', codigo: 'opcao_invalida' } as const
+  assertEquals(formulario({ amount: '42,90', category: 'Feira', payment: 'Pix' }), invalida)
+  assertEquals(formulario({ amount: '42,90', category: 'Mercado', payment: 'Itaú' }), invalida)
+  // Sem as opções lidas pela Edge, nada se resolve.
+  assertEquals(montarLancamento({ amount: '1', category: 'Mercado' }, ctx()), invalida)
 })
