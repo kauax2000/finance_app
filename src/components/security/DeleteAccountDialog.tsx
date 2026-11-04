@@ -28,7 +28,7 @@ import {
   DialogSteps,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import {
     CustomForm,
     FormInput,
@@ -36,15 +36,15 @@ import {
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { Separator } from "@/components/ui/separator"
 import { Muted } from "@/components/ui/typography"
-import { TrashIcon } from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
-import { BanknotesIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
+import { BanknotesIcon, UserCircleIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon, TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
 
 const DATA_LOSS_ITEMS = [
-    { label: "Todos os lançamentos", icon: BanknotesIcon },
-    { label: "Carteiras e categorias", icon: WalletIcon },
+    { label: "Lançamentos, carteiras e categorias", icon: BanknotesIcon },
     { label: "Perfil e preferências", icon: UserCircleIcon },
 ] as const
 
@@ -221,93 +221,97 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogFooter>
     )
 
-    // O vermelho fica no poço do ícone e no botão final; o resto é uma lista calma.
+    // Um painel só: o que se apaga, as carteiras que somem para outros e a cópia antes.
+    // O vermelho fica no poço do ícone e no botão final; o âmbar, só nas carteiras.
     const bodyWarning = (
         <DialogBody>
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                    <Muted id="delete-account-loss-title">O que será apagado</Muted>
-                    <Card padding="none">
-                        <ItemGroup
-                            variant="divided"
-                            role="list"
-                            aria-labelledby="delete-account-loss-title"
-                        >
-                            {DATA_LOSS_ITEMS.map(({ label, icon: Icon }) => (
-                                <Item key={label} variant="flush" role="listitem">
-                                    <ItemMedia variant="icon">
-                                        <Icon className="size-5 text-muted-foreground" aria-hidden />
-                                    </ItemMedia>
-                                    <ItemContent>
-                                        <ItemTitle>{label}</ItemTitle>
-                                    </ItemContent>
-                                </Item>
-                            ))}
-                        </ItemGroup>
-                    </Card>
+            <Card variant="muted" padding="none">
+                <div className="flex flex-col pt-3">
+                    <Muted id="delete-account-loss-title" className="px-4 text-xs">
+                        Será apagado
+                    </Muted>
+                    <ItemGroup role="list" aria-labelledby="delete-account-loss-title" className="gap-0">
+                        {DATA_LOSS_ITEMS.map(({ label, icon: Icon }) => (
+                            <Item key={label} variant="flush" role="listitem">
+                                <ItemMedia variant="icon">
+                                    <Icon className="size-5 text-muted-foreground" aria-hidden />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle>{label}</ItemTitle>
+                                </ItemContent>
+                            </Item>
+                        ))}
+                    </ItemGroup>
                 </div>
                 {sharedOwned.length > 0 ? (
-                    <Alert tone="warning">
-                        <AlertTitle>Carteiras compartilhadas criadas por você</AlertTitle>
-                        <AlertDescription>
-                            <ul className="flex list-none flex-col gap-1" role="list">
+                    <>
+                        <Separator />
+                        <div className="flex flex-col pt-3">
+                            <Muted
+                                id="delete-account-shared-title"
+                                className="px-4 text-xs text-warning-muted-foreground"
+                            >
+                                Carteiras compartilhadas que você criou
+                            </Muted>
+                            <ItemGroup
+                                role="list"
+                                aria-labelledby="delete-account-shared-title"
+                                className="gap-0"
+                            >
                                 {sharedOwned.map((w) => {
                                     const i = w.impact
+                                    const meta =
+                                        i === undefined
+                                            ? "Contando…"
+                                            : i
+                                              ? i.other_members > 0
+                                                  ? `${plural(i.other_members, "membro", "membros")} · ${i.transactions} lanç.`
+                                                  : `${i.transactions} lanç.`
+                                              : null
                                     return (
-                                        <li key={w.id}>
-                                            {i === undefined ? (
-                                                <>
-                                                    <strong>{w.name}</strong> · Contando…
-                                                </>
-                                            ) : i ? (
-                                                <>
-                                                    <strong>{w.name}</strong>
-                                                    {i.other_members > 0 ? (
-                                                        <>
-                                                            {" "}some para{" "}
-                                                            {plural(i.other_members, "outro membro", "outros membros")}
-                                                        </>
-                                                    ) : null}
-                                                    {" "}· {plural(i.transactions, "lançamento", "lançamentos")}
-                                                </>
-                                            ) : (
-                                                <strong>{w.name}</strong>
-                                            )}
-                                        </li>
+                                        <Item key={w.id} variant="flush" role="listitem">
+                                            <ItemMedia variant="tile" tone="warning">
+                                                <ExclamationTriangleIcon aria-hidden />
+                                            </ItemMedia>
+                                            <ItemContent>
+                                                <ItemTitle>{w.name}</ItemTitle>
+                                            </ItemContent>
+                                            {meta ? (
+                                                <ItemActions>
+                                                    <Muted className="nums">{meta}</Muted>
+                                                </ItemActions>
+                                            ) : null}
+                                        </Item>
                                     )
                                 })}
-                            </ul>
-                        </AlertDescription>
-                    </Alert>
+                            </ItemGroup>
+                        </div>
+                    </>
                 ) : null}
-                {/* Sozinho no corpo, o botão é `secondary`: a regra do par vale para o rodapé.
-                    No telefone o botão desce para baixo do texto, na largura toda. */}
-                <Card padding="none">
-                    <Item variant="flush" className="max-sm:flex-col max-sm:items-stretch">
-                        <ItemContent>
-                            <ItemTitle>Quer guardar uma cópia antes?</ItemTitle>
-                            {exportError ? (
-                                <ItemDescription role="alert" className="text-destructive">
-                                    {exportError}
-                                </ItemDescription>
-                            ) : null}
-                        </ItemContent>
-                        <ItemActions className="max-sm:w-full">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                className="max-sm:w-full"
-                                disabled={exportando || workspaces.length === 0}
-                                aria-busy={exportando || undefined}
-                                onClick={() => void handleExport()}
-                            >
-                                {exportando ? <Spinner /> : null}
-                                {exportando ? "Exportando meus dados…" : "Exportar meus dados"}
-                            </Button>
-                        </ItemActions>
-                    </Item>
-                </Card>
-            </div>
+                <Separator />
+                <Item variant="flush">
+                    <ItemContent>
+                        <ItemTitle>Guardar uma cópia antes</ItemTitle>
+                        {exportError ? (
+                            <ItemDescription role="alert" className="text-destructive">
+                                {exportError}
+                            </ItemDescription>
+                        ) : null}
+                    </ItemContent>
+                    <ItemActions>
+                        <Button
+                            type="button"
+                            variant="link"
+                            disabled={exportando || workspaces.length === 0}
+                            aria-busy={exportando || undefined}
+                            onClick={() => void handleExport()}
+                        >
+                            {exportando ? <Spinner /> : null}
+                            {exportando ? "Exportando…" : "Exportar"}
+                        </Button>
+                    </ItemActions>
+                </Item>
+            </Card>
         </DialogBody>
     )
 

@@ -492,24 +492,38 @@ describe("Excluir conta: dois passos enxutos", () => {
         for (const m of ["const bodyWarning", "const footerWarning", "const bodyConfirm"])
             expect(f.indexOf(m)).toBeGreaterThan(-1)
     })
-    it("o passo 1 é calmo: uma lista, o aviso amarelo só com carteira compartilhada e a cópia antes", () => {
+    it("o passo 1 é um painel só: o que se apaga, as carteiras compartilhadas e a cópia antes", () => {
         expect(aviso).not.toContain("Atenção")
         expect(aviso).not.toContain('variant="outline"')
+        expect(aviso).not.toContain('<Alert tone="warning"')
+        expect(aviso).not.toContain("max-sm:")
+        expect(aviso.match(/<Card /g)).toHaveLength(1)
+        expect(aviso).toContain('<Card variant="muted" padding="none">')
+        expect(aviso.match(/<Separator \/>/g)).toHaveLength(2)
         for (const t of [
-            ">O que será apagado<",
-            "Quer guardar uma cópia antes?",
-            "Exportar meus dados",
+            "Será apagado",
+            "Carteiras compartilhadas que você criou",
+            "text-warning-muted-foreground",
+            'tone="warning"',
+            "Guardar uma cópia antes",
+            'variant="link"',
+            '"Exportando…" : "Exportar"',
             "aria-busy={exportando",
+            "disabled={exportando || workspaces.length === 0}",
             "<Spinner",
             'aria-labelledby="delete-account-loss-title"',
+            '"Contando…"',
+            '`${plural(i.other_members, "membro", "membros")} · ${i.transactions} lanç.`',
+            "`${i.transactions} lanç.`",
         ]) expect(aviso).toContain(t)
-        for (const t of ["Todos os lançamentos", "Carteiras e categorias", "Perfil e preferências", "BanknotesIcon", "WalletIcon", "UserCircleIcon", "baixarExportacao(", "Não foi possível exportar agora. Tente novamente.", "\"Não dá para desfazer.\""])
+        for (const t of ["Lançamentos, carteiras e categorias", "Perfil e preferências", "BanknotesIcon", "UserCircleIcon", "baixarExportacao(", "Não foi possível exportar agora. Tente novamente.", "\"Não dá para desfazer.\""])
             expect(f).toContain(t)
-        expect(aviso).toMatch(/sharedOwned\.length > 0 \? \(\s*<Alert tone="warning"/)
+        expect(f).not.toContain("WalletIcon")
+        expect(aviso).toMatch(/sharedOwned\.length > 0 \? \(\s*<>\s*<Separator \/>/)
         expect(f).not.toMatch(/<DialogTitle[^>]*text-destructive/)
         expect(f).not.toContain("Passo 1 de 2")
         expect(f).not.toContain("some para todos os membros")
-        expect(f).toContain("i.other_members > 0 ?")
+        expect(f).toContain("i.other_members > 0")
         expect(f).toMatch(/<Button type="button" disabled=\{exportando\} onClick=\{handleContinue\}>/)
     })
     it("o passo 2 pede só a senha", () => {
