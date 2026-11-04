@@ -38,6 +38,15 @@ export function useInstalarApp() {
     }
 }
 
+/** O ícone do app na capa dele. A capa é preta: o ícone entra menor sobre ela, para a capa aparecer em volta do logo. */
+export function CapaDoApp() {
+    return (
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10">
+            <Image src="/icons/apple-touch-icon.png" alt="" width={22} height={22} className="size-5.5" />
+        </span>
+    )
+}
+
 /** O seletor de tema de Configurações e da página Você, na pele do `Tabs`: moldura com anel e marcador cinza, também com anel. */
 export function SeletorDeTema({ labels }: { labels: boolean }) {
     return (
@@ -122,18 +131,7 @@ export function NesteCelularGrupo() {
                                 <SettingsRow
                                     titulo="Instalar o app"
                                     descricao={descricaoDoApp}
-                                    media={
-                                        // A capa do app é preta: o ícone entra menor sobre ela, para a capa aparecer em volta do logo.
-                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10">
-                                            <Image
-                                                src="/icons/apple-touch-icon.png"
-                                                alt=""
-                                                width={22}
-                                                height={22}
-                                                className="size-5.5"
-                                            />
-                                        </span>
-                                    }
+                                    media={<CapaDoApp />}
                                 >
                                     <SyncStatusChip />
                                 </SettingsRow>

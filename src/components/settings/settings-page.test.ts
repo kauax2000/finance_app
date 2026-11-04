@@ -141,10 +141,13 @@ describe("Configurações: o lançamento mora no celular", () => {
         const c = semComentarios(lerFonte("src/components/settings/convite-de-instalar.tsx"))
         expect(c).not.toMatch(/(?<![/\w-])PWA(?![/\w-])|standalone/i)
         expect(c).toContain("Ponha o Finance na tela de início")
-        expect(c).toContain("No menu do navegador, toque em Instalar app.")
+        for (const p of ["Toque em ⋮, no canto do navegador", "Toque em Instalar app", "Abra o Finance pela tela de início"])
+            expect(c).toContain(p)
         expect(c).toContain("InstallPwaSheet")
-        expect(c).toMatch(/iphone \?/)
-        expect(c).toMatch(/iphone \? <JanelaDoAparelho/)
+        // O Android volta antes: a tela do Apple Pay, as vantagens e o "Como instalar" ficam só no ramo do iPhone.
+        const android = c.slice(c.indexOf("if (!iphone)"), c.indexOf("PASSOS_DO_ANDROID.map") + 600)
+        expect(android).not.toMatch(/JanelaDoAparelho|VANTAGENS_DO_IPHONE|Como instalar/)
+        expect(c.indexOf("if (!iphone)")).toBeLessThan(c.indexOf("<JanelaDoAparelho"))
         expect(semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))).toMatch(
             /useAparelhoDeLancar\(\) === "computador"/,
         )
