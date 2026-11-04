@@ -49,7 +49,7 @@ export const TELA_DA_CARTEIRA: Tela = { imagem: carteira, ancora: "topo" }
 const JANELA = {
     padrao: { caixa: "mx-auto h-72 w-60", imagem: "w-60", sizes: "240px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
     compacta: { caixa: "mx-auto h-36 w-48", imagem: "w-48", sizes: "192px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
-    mini: { caixa: "h-32 w-28", imagem: "w-28", sizes: "112px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_2.5rem)]" },
+    mini: { caixa: "h-40 w-36", imagem: "w-36", sizes: "144px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_2.5rem)]" },
 } as const
 
 export function JanelaDoAparelho({
