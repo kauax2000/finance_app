@@ -58,7 +58,9 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
 ]
 
 /** As quatro maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
-const COMO_ABRIR: { valor: string; rotulo: string; texto: string; tela: Tela }[] = [
+type ComoAbrir = "siri" | "acao" | "toque" | "inicio"
+
+const COMO_ABRIR: { valor: ComoAbrir; rotulo: string; texto: string; tela: Tela }[] = [
     { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".', tela: { imagem: siri, ancora: "topo" } },
     {
         valor: "acao",
@@ -68,13 +70,13 @@ const COMO_ABRIR: { valor: string; rotulo: string; texto: string; tela: Tela }[]
     },
     {
         valor: "toque",
-        rotulo: "Toque traseiro",
+        rotulo: "Toque",
         texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
         tela: { imagem: acessibilidade, ponto: { x: 30, y: 41.1 }, ancora: "topo" },
     },
     {
         valor: "inicio",
-        rotulo: "Tela de início",
+        rotulo: "Ícone",
         texto: "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
         tela: { imagem: telaDeInicio, ponto: { x: 32, y: 67 }, ancora: "baixo" },
     },
@@ -109,7 +111,7 @@ export function GuiaDoAtalho({
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
     const [copiado, setCopiado] = useState(false)
-    const [como, setComo] = useState<(typeof COMO_ABRIR)[number]["valor"]>("siri")
+    const [como, setComo] = useState<ComoAbrir>("siri")
     const [criando, setCriando] = useState(false)
 
     const [abertoAntes, setAbertoAntes] = useState(open)

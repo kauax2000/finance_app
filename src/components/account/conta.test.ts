@@ -142,7 +142,7 @@ describe("tokens de captura", () => {
     it("o último passo ensina a abrir o atalho", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toContain("Como abrir o atalho")
-        for (const o of ["Siri", "Botão de Ação", "Toque traseiro", "Tela de início"]) expect(g).toContain(`rotulo: "${o}"`)
+        for (const o of ["Siri", "Botão de Ação", "Toque", "Ícone"]) expect(g).toContain(`rotulo: "${o}"`)
         for (const x of [
             "Diga \"E aí Siri, Lançar gasto\".",
             "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
