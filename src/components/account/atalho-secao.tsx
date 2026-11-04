@@ -68,6 +68,8 @@ export function AtalhoSecao() {
     const lista = useAparelhosDeCaptura()
     const [guiaAberto, setGuiaAberto] = useState(false)
     const [baixarDeNovo, setBaixarDeNovo] = useState(false)
+    // Fica depois de fechar: a folha sai com o texto do aparelho, não o do guia novo.
+    const [substituir, setSubstituir] = useState<CaptureToken>()
     const [alvo, setAlvo] = useState<CaptureToken | null>(null)
     const [revogando, setRevogando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
@@ -170,7 +172,10 @@ export function AtalhoSecao() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     {atalhoAntigo(t) ? (
-                                                        <DropdownMenuItem onSelect={() => setBaixarDeNovo(true)}>
+                                                        <DropdownMenuItem onSelect={() => {
+                                                                setSubstituir(t)
+                                                                setBaixarDeNovo(true)
+                                                            }}>
                                                             <ArrowDownTrayIcon aria-hidden />
                                                             Baixar o atalho de novo
                                                         </DropdownMenuItem>
@@ -194,12 +199,12 @@ export function AtalhoSecao() {
             {!lista.isError && tokens.length > 0 ? <ApplePayConvite /> : null}
 
             <GuiaDoAtalho open={guiaAberto} onOpenChange={setGuiaAberto} aoCriar={() => void lista.refetch()} />
-            {/* O aparelho já tem código: o guia começa no download e não cria outro. */}
+            {/* O código antigo não pode ser mostrado de novo: o guia cria outro e desconecta o antigo. */}
             <GuiaDoAtalho
                 open={baixarDeNovo}
                 onOpenChange={setBaixarDeNovo}
                 aoCriar={() => void lista.refetch()}
-                passoInicial={1}
+                substituir={substituir}
             />
 
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>

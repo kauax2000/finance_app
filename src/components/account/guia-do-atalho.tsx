@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { supabase } from "@/lib/supabase"
+import { supabase, type CaptureToken } from "@/lib/supabase"
 import baixar from "./assets/atalho-1-baixar.webp"
 import arquivos from "./assets/atalho-2-arquivos.webp"
 import configurar from "./assets/atalho-3-configurar.webp"
@@ -75,19 +75,20 @@ const COMO_ABRIR = [
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
  * assinado, ensina a colar o código nele e a falar com a Siri. O código vive só no estado deste guia: fechar por qualquer caminho
- * o descarta.
+ * o descarta. Com `substituir`, o guia troca o código daquele aparelho: o antigo não pode ser mostrado de novo (só o hash é
+ * guardado), então cria um novo com o mesmo nome e carteira e só então desconecta o antigo.
  */
 export function GuiaDoAtalho({
     open,
     onOpenChange,
     aoCriar,
-    passoInicial = 0,
+    substituir,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     aoCriar: () => void
-    /** Onde o guia abre. Acima de 0 o código já existe (o aparelho está criado): o guia começa em baixar o atalho e o passo do código fica fora. */
-    passoInicial?: number
+    /** O aparelho cujo código este guia troca: nome e carteira vêm dele, e ele é desconectado depois que o novo existe. */
+    substituir?: CaptureToken
 }) {
     const { profile, user } = useAuth()
     const { workspaces, currentWorkspaceId } = useWorkspace()
@@ -109,12 +110,12 @@ export function GuiaDoAtalho({
         setCodigo(null)
         setCopiado(false)
         if (open) {
-            setPasso(passoInicial)
+            setPasso(0)
             setComo("siri")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
-            setNome(primeiro ? `iPhone de ${primeiro}` : "iPhone")
-            setCarteira("")
+            setNome(substituir?.name ?? (primeiro ? `iPhone de ${primeiro}` : "iPhone"))
+            setCarteira(substituir?.workspace_id ?? "")
             setErro(null)
         }
     }
@@ -147,8 +148,17 @@ export function GuiaDoAtalho({
         setCriando(true)
         setErro(null)
         let resposta
+        let erroDaTroca: { code?: string; message?: string } | null = null
         try {
             resposta = await supabase.rpc("create_capture_token", { p_workspace_id: carteiraEscolhida, p_name: n })
+            // Só com o código novo criado o antigo sai; se a desconexão falhar, o novo funciona do mesmo jeito.
+            if (!resposta.error && substituir) {
+                try {
+                    erroDaTroca = (await supabase.rpc("revoke_capture_token", { p_id: substituir.id })).error
+                } catch {
+                    erroDaTroca = {}
+                }
+            }
         } finally {
             // Um erro lançado não deixa o diálogo travado em `pending`.
             setCriando(false)
@@ -156,6 +166,9 @@ export function GuiaDoAtalho({
         const { data, error } = resposta
         if (error) return setErro(mensagemDoErroDeToken(error))
         setCodigo(data)
+        // A carteira do código fica fixa: o último passo nomeia a que foi usada.
+        setCarteira(carteiraEscolhida)
+        if (erroDaTroca) setErro(`O código antigo continua valendo. ${mensagemDoErroDeToken(erroDaTroca)}`)
         irPara(1)
         aoCriar()
         // Sem permissão ou sem área de transferência, o código segue à vista para copiar.
@@ -260,6 +273,9 @@ export function GuiaDoAtalho({
                                         disabled={codigo != null}
                                         onChange={(e) => setNome(e.target.value)}
                                     />
+                                    {substituir ? (
+                                        <Muted>O código antigo para de funcionar quando você criar este.</Muted>
+                                    ) : null}
                                     {workspaces.length > 1 ? (
                                         <FormField label="Os gastos caem em">
                                             <Select
@@ -282,6 +298,10 @@ export function GuiaDoAtalho({
                                             </Select>
                                         </FormField>
                                     ) : null}
+                                </PecaDoPasso>
+                            ) : null}
+                            {erro ? (
+                                <PecaDoPasso>
                                     <FormError>{erro}</FormError>
                                 </PecaDoPasso>
                             ) : null}
@@ -297,13 +317,9 @@ export function GuiaDoAtalho({
                             </>
                         ) : (
                             <>
-                                {passo > passoInicial ? (
-                                    <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
-                                        Voltar
-                                    </Button>
-                                ) : (
-                                    <FormCancel onClick={fechar}>Cancelar</FormCancel>
-                                )}
+                                <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
+                                    Voltar
+                                </Button>
                                 <Button
                                     type="button"
                                     variant={passo === 1 ? "secondary" : "primary"}

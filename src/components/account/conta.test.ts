@@ -46,7 +46,29 @@ describe("tokens de captura", () => {
         expect(f).toContain("Baixar o atalho de novo")
         expect(f).toContain("ArrowDownTrayIcon")
         expect(f).toMatch(/t\.last_used_at != null && t\.atalho_versao == null/)
-        expect(f).toMatch(/passoInicial=\{1\}/)
+        expect(f).toMatch(/setSubstituir\(t\)/)
+        expect(f).toMatch(/substituir=\{substituir\}/)
+        expect(f).not.toContain("passoInicial")
+    })
+
+    it("baixar de novo cria um código novo com o nome e a carteira do aparelho, e só depois desconecta o antigo", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).not.toContain("passoInicial")
+        expect(g).toContain("substituir?: CaptureToken")
+        expect(g).toContain("setNome(substituir?.name ??")
+        expect(g).toContain('setCarteira(substituir?.workspace_id ?? "")')
+        expect(g).toContain("O código antigo para de funcionar quando você criar este.")
+        const criar = g.indexOf('rpc("create_capture_token"')
+        const revogar = g.indexOf('rpc("revoke_capture_token"')
+        expect(criar).toBeGreaterThan(0)
+        expect(revogar).toBeGreaterThan(criar)
+        expect(g.slice(criar, revogar)).toContain("if (!resposta.error && substituir)")
+        // Só o antigo, e uma vez só.
+        expect(g.match(/rpc\("revoke_capture_token"/g)).toHaveLength(1)
+        expect(g).toContain('rpc("revoke_capture_token", { p_id: substituir.id })')
+        expect(g).toMatch(/if \(erroDaTroca\) setErro\(`[^`]*\$\{mensagemDoErroDeToken\(erroDaTroca\)\}`\)/)
+        // O último passo nomeia a carteira usada no código.
+        expect(g).toContain("setCarteira(carteiraEscolhida)")
     })
 
     it("cria, revoga e mostra o código uma vez só", () => {
@@ -61,7 +83,7 @@ describe("tokens de captura", () => {
     it("o código vive só no estado do guia, e fechar o descarta", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
         expect(g).toMatch(/setCodigo\(null\)/)
-        expect(g).toMatch(/setPasso\(passoInicial\)/)
+        expect(g).toMatch(/setPasso\(0\)/)
         expect(g).not.toMatch(/localStorage|sessionStorage|console\./)
         expect(fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")).not.toMatch(/setQueryData\(\s*\[\s*["']capture_tokens/)
     })
@@ -117,7 +139,7 @@ describe("tokens de captura", () => {
         expect(pontos).toBeGreaterThan(passos)
         expect(rodape).toBeGreaterThan(pontos)
     })
-    it("o último passo ensina a abrir o atalho, e o guia reabre no passo de baixar", () => {
+    it("o último passo ensina a abrir o atalho", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toContain("Como abrir o atalho")
         for (const o of ["Siri", "Botão de Ação", "Toque traseiro", "Tela de início"]) expect(g).toContain(`rotulo: "${o}"`)
@@ -129,8 +151,6 @@ describe("tokens de captura", () => {
             "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente em Configurações.",
         ])
             expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
-        expect(g).toContain("passoInicial = 0")
-        expect(g).toContain("setPasso(passoInicial)")
         expect(g).not.toContain("Ditar")
     })
     it("a seção não fala em token na tela", () => {
