@@ -11,7 +11,7 @@ import iphone from "./assets/iphone-17-pro-prata.webp"
 /** A lista do que o celular faz; a primeira só existe no iPhone. */
 const VANTAGENS = [
     { icone: MicrophoneIcon, texto: "Lance falando com a Siri ou com um toque", iphone: true },
-    { icone: SparklesIcon, texto: "Lance digitando uma frase, com o app na tela de início", iphone: false },
+    { icone: SparklesIcon, texto: "Lance digitando uma frase", iphone: false },
 ]
 
 /**
