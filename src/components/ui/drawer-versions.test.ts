@@ -92,4 +92,15 @@ describe("toda gaveta do telefone é a flush", () => {
   it("o meio nunca é um título ou descrição sr-only", () => {
     expect(CODIGO).toMatch(/"dialog-title",\s*"dialog-description"/)
   })
+
+  it("sem `fill`, a gaveta cresce até a altura alta antes de o meio rolar (nada de 85%)", () => {
+    expect(CODIGO).toContain('"[--drawer-max-h:var(--drawer-h)]"')
+    expect(CODIGO).not.toContain("85dvh")
+  })
+
+  it("os passo a passo da conta ficam na altura alta no telefone, sem mudar de tamanho a cada passo", () => {
+    for (const f of ["guia-do-atalho", "guia-do-apple-pay", "conectar-ia-dialog"]) {
+      expect(semComentarios(lerFonte(`src/components/account/${f}.tsx`)), f).toContain('<DialogContent layout="fixed">')
+    }
+  })
 })

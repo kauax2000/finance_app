@@ -222,7 +222,10 @@ export function GuiaDoAtalho({
 
     return (
         <Dialog surface="auto" pending={criando} open={open} onOpenChange={handleOpenChange}>
-            <DialogContent>
+            {/* Passo a passo: `fixed` dá à gaveta do telefone a altura alta de saída, e ela
+                não muda de tamanho a cada passo (a troca animada truncava). No desktop o
+                diálogo continua medindo o conteúdo. */}
+            <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Conectar o iPhone</DialogTitle>
                     <DialogDescription>Lance gastos pela Siri, pelo Botão de Ação ou com um toque, sem abrir o app.</DialogDescription>

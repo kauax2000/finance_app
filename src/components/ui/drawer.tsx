@@ -133,7 +133,9 @@ const drawerContentVariants = cva(
     // O contrato que a cromagem do `Dialog` lê, o mesmo do `SheetContent`.
     SURFACE_CONTRACT_CLASS,
     // As alturas saem de variáveis para uma gaveta baixar o teto sem reescrever a fórmula.
-    "[--drawer-max-h:85dvh]",
+    // O teto é a gaveta alta (`--drawer-h`): com espaço em cima ela cresce até lá
+    // antes de o meio rolar; o meio só rola quando o conteúdo passa da tela.
+    "[--drawer-max-h:var(--drawer-h)]",
     // A área segura é da superfície, com a mesma conta da gaveta do `Sheet`:
     // 24px de respiro mais a barra de gestos.
     "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)",
@@ -149,7 +151,7 @@ const drawerContentVariants = cva(
   ],
   {
     variants: {
-      /** Gaveta alta: ocupa quase a tela, com folga na borda oposta; sem ela mede o conteúdo e para em 85%. */
+      /** Gaveta alta: ocupa quase a tela, com folga na borda oposta; sem ela mede o conteúdo e para na mesma altura. */
       fill: {
         true: "h-(--drawer-h)",
         false: "max-h-(--drawer-max-h)",

@@ -268,7 +268,7 @@ export default function DrawerDoc() {
             prop: "fill",
             type: "boolean",
             default: "false",
-            description: "Gaveta alta, quase a tela toda; sem ela, mede o conteúdo até 85dvh.",
+            description: "Gaveta alta, quase a tela toda, sempre; sem ela, mede o conteúdo e cresce até a mesma altura antes de rolar.",
           },
           {
             prop: "variant",

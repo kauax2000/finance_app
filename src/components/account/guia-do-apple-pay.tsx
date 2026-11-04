@@ -119,7 +119,10 @@ export function GuiaDoApplePay({
 
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            {/* Passo a passo: `fixed` dá à gaveta do telefone a altura alta de saída, e ela
+                não muda de tamanho a cada passo (a troca animada truncava). No desktop o
+                diálogo continua medindo o conteúdo. */}
+            <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Lançar ao pagar</DialogTitle>
                     <DialogDescription>Siga os passos no iPhone. Leva um minuto.</DialogDescription>
