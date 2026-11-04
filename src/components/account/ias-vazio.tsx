@@ -18,7 +18,7 @@ const GARANTIAS = [
 /** Uma pergunta de exemplo, com o selo da IA que a recebe. */
 function Sugestao({ marca, children }: { marca: Marca; children: string }) {
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/80 py-1 ps-1 pe-2.5 text-xs text-foreground backdrop-blur-sm">
+        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/80 py-1 ps-1 pe-3 text-sm text-foreground backdrop-blur-sm">
             <Capa marca={marca} tamanho="selo" />
             {children}
         </span>
@@ -52,12 +52,12 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                         <Sugestao marca="chatgpt">Resuma meu mês em 3 pontos</Sugestao>
                     </div>
                 </div>
-                <div className="flex min-w-0 flex-col items-start">
+                <div className="flex min-w-0 flex-col items-center text-center">
                     <p className="text-base font-semibold">Uma IA que entende o seu dinheiro</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.
                     </p>
-                    <ul className="mt-3 flex flex-wrap gap-1.5">
+                    <ul className="mt-3 flex flex-wrap justify-center gap-1.5">
                         {GARANTIAS.map((g) => (
                             <li key={g}>
                                 <Badge variant="outline" tone="neutral" size="md">
