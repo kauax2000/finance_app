@@ -83,8 +83,8 @@ export function IasSecao() {
         <SettingsSection
             titulo="IAs conectadas"
             actions={
-                // Sem IA, quem convida é o vazio: o cabeçalho não repete a ação.
-                grants.length > 0 ? (
+                // Sem IA, quem convida é o vazio: o cabeçalho não repete a ação. Com erro, ela fica.
+                lista.isError || grants.length > 0 ? (
                     <Button type="button" variant="tertiary" onClick={() => setConectarAberto(true)}>
                         <PlusIcon aria-hidden data-icon="inline-start" />
                         Conectar

@@ -390,6 +390,8 @@ describe("IAs conectadas: o vazio", () => {
         expect(s).not.toContain("Nenhuma IA conectada.")
         // Sem IA, o "Conectar" do cabeçalho some: quem convida é o vazio.
         expect(s).toMatch(/actions=\{[^}]*grants\.length/)
+        // Com a lista em erro, o "Conectar" do cabeçalho continua.
+        expect(s).toMatch(/actions=\{[^}]*lista\.isError \|\| grants\.length > 0/)
         const a = lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")
         expect(a.match(/"marcas-de-ia"/g)).toHaveLength(2)
     })
