@@ -4,7 +4,8 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 vi.mock("@/components/providers", () => ({ useAuth: () => ({ user: null }) }))
 
-import { lerLancamentoInteligente, migrarPreferenciaLocal } from "./use-lancamento-inteligente"
+import { QueryClient } from "@tanstack/react-query"
+import { definirOtimista, lerLancamentoInteligente, migrarPreferenciaLocal } from "./use-lancamento-inteligente"
 
 const CHAVE = "finance:preferencia:lancamento-inteligente"
 
@@ -69,6 +70,37 @@ describe("migrarPreferenciaLocal", () => {
             }),
         ).rejects.toThrow()
         expect(s.tem()).toBe(true)
+    })
+})
+
+describe("definirOtimista", () => {
+    const chave = ["lancamento_inteligente", "u"]
+    it("mostra o novo valor e o mantém quando a conta grava", async () => {
+        const qc = new QueryClient()
+        qc.setQueryData(chave, true)
+        const gravar = vi.fn(async () => {})
+        expect(await definirOtimista(qc, chave, false, gravar, true)).toBe(true)
+        expect(gravar).toHaveBeenCalledWith(false)
+        expect(qc.getQueryData(chave)).toBe(false)
+    })
+    it("volta ao valor de antes quando a conta recusa", async () => {
+        const qc = new QueryClient()
+        qc.setQueryData(chave, true)
+        let visto: unknown
+        const gravar = async () => {
+            visto = qc.getQueryData(chave)
+            throw new Error("rede")
+        }
+        expect(await definirOtimista(qc, chave, false, gravar, false)).toBe(false)
+        expect(visto).toBe(false)
+        expect(qc.getQueryData(chave)).toBe(true)
+    })
+    it("sem leitura em cache, volta ao valor que a tela mostrava", async () => {
+        const qc = new QueryClient()
+        await definirOtimista(qc, chave, true, async () => {
+            throw new Error("rede")
+        }, false)
+        expect(qc.getQueryData(chave)).toBe(false)
     })
 })
 

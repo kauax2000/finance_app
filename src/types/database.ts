@@ -1607,6 +1607,8 @@ export type Database = {
           created_at: string
           current_workspace_id: string | null
           jornada_concluida_em: string | null
+          lancamento_inteligente: boolean
+          lancamento_inteligente_em: string | null
           updated_at: string
           user_id: string
         }
@@ -1614,6 +1616,8 @@ export type Database = {
           created_at?: string
           current_workspace_id?: string | null
           jornada_concluida_em?: string | null
+          lancamento_inteligente?: boolean
+          lancamento_inteligente_em?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1621,6 +1625,8 @@ export type Database = {
           created_at?: string
           current_workspace_id?: string | null
           jornada_concluida_em?: string | null
+          lancamento_inteligente?: boolean
+          lancamento_inteligente_em?: string | null
           updated_at?: string
           user_id?: string
         }

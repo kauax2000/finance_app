@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
 import { ensureUserSettingsRow } from "@/lib/settings"
 import { supabase } from "@/lib/supabase"
@@ -53,6 +53,30 @@ export async function migrarPreferenciaLocal(
     return grava
 }
 
+/**
+ * A troca do interruptor: a tela muda na hora e, se a conta recusar, volta ao
+ * valor de antes (não à releitura, que pode falhar junto e deixar o otimista).
+ */
+export async function definirOtimista(
+    queryClient: QueryClient,
+    chave: readonly unknown[],
+    proximo: boolean,
+    gravar: (v: boolean) => Promise<void>,
+    reserva: boolean,
+): Promise<boolean> {
+    await queryClient.cancelQueries({ queryKey: chave })
+    const anterior = queryClient.getQueryData<boolean>(chave)
+    queryClient.setQueryData(chave, proximo)
+    try {
+        await gravar(proximo)
+        return true
+    } catch {
+        // Sem leitura em cache (`undefined` não grava no React Query), volta ao que a tela mostrava.
+        queryClient.setQueryData(chave, anterior ?? reserva)
+        return false
+    }
+}
+
 function armazenamento() {
     return typeof localStorage === "undefined" ? null : localStorage
 }
@@ -102,18 +126,16 @@ export function useLancamentoInteligente() {
         },
     })
 
+    const consultaOuLocal = consulta.data ?? local
     const definir = React.useCallback(
         (proximo: boolean) => {
             if (!userId) return
-            queryClient.setQueryData(chave, proximo)
-            void gravarNaConta(userId, proximo).catch(() => {
-                // Volta ao que a conta tem.
-                void queryClient.invalidateQueries({ queryKey: chave })
-                toastError("Não foi possível salvar o lançamento inteligente.")
+            void definirOtimista(queryClient, chave, proximo, (v) => gravarNaConta(userId, v), consultaOuLocal).then((ok) => {
+                if (!ok) toastError("Não foi possível salvar o lançamento inteligente.")
             })
         },
-        [userId, queryClient, chave],
+        [userId, queryClient, chave, consultaOuLocal],
     )
 
-    return [consulta.data ?? local, definir] as const
+    return [consultaOuLocal, definir] as const
 }
