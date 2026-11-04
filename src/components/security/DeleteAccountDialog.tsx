@@ -3,7 +3,15 @@
 import { useTimeout } from "@/hooks/use-timeout"
 import {
     Item,
+    ItemActions,
+    ItemContent,
+    ItemDescription,
+    ItemGroup,
+    ItemMedia,
+    ItemTitle,
 } from "@/components/ui/item"
+import { Card } from "@/components/ui/card"
+import { baixarExportacao } from "@/lib/cofre/baixar"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
@@ -29,13 +37,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
+import { BanknotesIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
+
 const DATA_LOSS_ITEMS = [
-    "Todas as transações",
-    "Todas as carteiras",
-    "Todas as categorias",
-    "Suas preferências de notificação",
-    "Seu perfil de usuário",
+    { label: "Todos os lançamentos", icon: BanknotesIcon },
+    { label: "Carteiras e categorias", icon: WalletIcon },
+    { label: "Perfil e preferências", icon: UserCircleIcon },
 ] as const
 
 function plural(n: number, one: string, many: string): string {
@@ -52,17 +60,14 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const router = useRouter()
     const later = useTimeout()
     const [step, setStep] = useState<"warning" | "confirm">("warning")
-    const [confirmEmail, setConfirmEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    const userEmail = user?.email || ""
-
     // Carteiras compartilhadas criadas pela pessoa somem para todos os membros.
     // Busca ao abrir: a lista em cache pode não ter uma carteira criada em outro aparelho.
-    const { fetchWorkspaceDeleteImpact } = useWorkspace()
+    const { fetchWorkspaceDeleteImpact, workspaces } = useWorkspace()
     const [sharedOwned, setSharedOwned] = useState<
         { id: string; name: string; impact: WorkspaceDeleteImpact | null | undefined }[]
     >([])
@@ -90,13 +95,29 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             cancelled = true
         }
     }, [open, user, fetchWorkspaceDeleteImpact])
-    const emailsMatch = confirmEmail.toLowerCase() === userEmail.toLowerCase()
+
+    // A cópia antes de apagar: o mesmo `.zip` do Cofre aberto. Só baixa; o diálogo fica aberto.
+    const [exportando, setExportando] = useState(false)
+    const [exportError, setExportError] = useState<string | null>(null)
+    const handleExport = async () => {
+        if (exportando) return
+        setExportando(true)
+        setExportError(null)
+        try {
+            await baixarExportacao(workspaces.map((w) => ({ id: w.id, name: w.name })))
+        } catch (e) {
+            console.error("baixarExportacao:", e)
+            setExportError("Não foi possível exportar agora. Tente novamente.")
+        } finally {
+            setExportando(false)
+        }
+    }
 
     const resetState = () => {
         setStep("warning")
-        setConfirmEmail("")
         setPassword("")
         setError(null)
+        setExportError(null)
         setSuccess(false)
     }
 
@@ -114,11 +135,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     }
 
     const handleDelete = async () => {
-        if (!emailsMatch) {
-            setError("O email não confere")
-            return
-        }
-
         if (!password) {
             setError("Digite sua senha")
             return
@@ -153,13 +169,13 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         ? "Conta excluída"
         : step === "warning"
           ? "Excluir conta"
-          : "Confirmar exclusão"
+          : "Confirme com sua senha"
 
     const description = success
         ? "Sua conta foi excluída com sucesso. Redirecionando..."
         : step === "warning"
-          ? "Esta ação é irreversível."
-          : "Digite seu email e senha para confirmar a exclusão."
+          ? "Passo 1 de 2 · Não dá para desfazer."
+          : "Passo 2 de 2 · Sua conta e os dados acima serão apagados."
 
     // Um cabeçalho só para as duas superfícies: `surface="auto"` faz do mesmo
     // diálogo a gaveta do telefone. Os passos somem na tela de sucesso, que não
@@ -180,9 +196,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             >
                 {success ? <CheckCircleIcon /> : <TrashIcon />}
             </DialogMedia>
-            <DialogTitle className={!success && step === "warning" ? "text-destructive" : undefined}>
-                {title}
-            </DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
@@ -209,54 +223,83 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogFooter>
     )
 
+    // O vermelho fica no poço do ícone e no botão final; o resto é uma lista calma.
     const bodyWarning = (
         <DialogBody>
-            <div className="space-y-3">
-                <Alert tone="destructive" size="sm">
-                    <AlertTitle>Atenção</AlertTitle>
-                    <AlertDescription>
-                        Não será possível recuperar sua conta nem os dados abaixo.
-                    </AlertDescription>
-                </Alert>
-                <p className="text-sm text-muted-foreground">
-                    Ao excluir sua conta, os seguintes dados serão removidos permanentemente:
-                </p>
-                <ul className="flex list-none flex-col gap-2" role="list">
-                    {DATA_LOSS_ITEMS.map((item) => (
-                        <li key={item}>
-                            <Item variant="outline">{item}</Item>
-                        </li>
-                    ))}
-                </ul>
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium text-muted-foreground">O que será apagado</p>
+                    <Card padding="none">
+                        <ItemGroup variant="divided">
+                            {DATA_LOSS_ITEMS.map(({ label, icon: Icon }) => (
+                                <Item key={label} variant="flush">
+                                    <ItemMedia variant="icon">
+                                        <Icon className="size-5 text-muted-foreground" aria-hidden />
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle>{label}</ItemTitle>
+                                    </ItemContent>
+                                </Item>
+                            ))}
+                        </ItemGroup>
+                    </Card>
+                </div>
                 {sharedOwned.length > 0 ? (
-                    <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                            Estas carteiras compartilhadas foram criadas por você e serão apagadas para
-                            todos os membros:
-                        </p>
-                        <ul className="flex list-none flex-col gap-2" role="list">
-                            {sharedOwned.map((w) => {
-                                const i = w.impact
-                                return (
-                                    <li
-                                        key={w.id}
-                                        className="rounded-row border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm"
-                                    >
-                                        <span className="block font-medium text-foreground">{w.name}</span>
-                                        {i === undefined ? (
-                                            <span className="text-xs text-muted-foreground">Contando…</span>
-                                        ) : i ? (
-                                            <span className="text-xs text-muted-foreground">
-                                                {plural(i.other_members, "outro membro", "outros membros")} ·{" "}
-                                                {plural(i.transactions, "lançamento", "lançamentos")}
-                                            </span>
-                                        ) : null}
-                                    </li>
-                                )
-                            })}
-                        </ul>
-                    </div>
+                    <Alert tone="warning">
+                        <AlertTitle>Carteiras compartilhadas criadas por você</AlertTitle>
+                        <AlertDescription>
+                            <ul className="flex list-none flex-col gap-1" role="list">
+                                {sharedOwned.map((w) => {
+                                    const i = w.impact
+                                    return (
+                                        <li key={w.id}>
+                                            {i === undefined ? (
+                                                <>
+                                                    <strong>{w.name}</strong> · Contando…
+                                                </>
+                                            ) : i ? (
+                                                <>
+                                                    <strong>{w.name}</strong> some para{" "}
+                                                    {plural(i.other_members, "outro membro", "outros membros")} ·{" "}
+                                                    {plural(i.transactions, "lançamento", "lançamentos")}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <strong>{w.name}</strong> some para todos os membros
+                                                </>
+                                            )}
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        </AlertDescription>
+                    </Alert>
                 ) : null}
+                {/* Sozinho no corpo, o botão é `secondary`: a regra do par vale para o rodapé.
+                    `FormSubmit type="button"` só pela espera (`pending`): fora de formulário, não envia nada. */}
+                <Card padding="none">
+                    <Item variant="flush">
+                        <ItemContent>
+                            <ItemTitle>Quer guardar uma cópia antes?</ItemTitle>
+                            {exportError ? (
+                                <ItemDescription role="alert" className="text-destructive">
+                                    {exportError}
+                                </ItemDescription>
+                            ) : null}
+                        </ItemContent>
+                        <ItemActions>
+                            <FormSubmit
+                                type="button"
+                                variant="secondary"
+                                pending={exportando}
+                                disabled={workspaces.length === 0}
+                                onClick={() => void handleExport()}
+                            >
+                                Exportar meus dados
+                            </FormSubmit>
+                        </ItemActions>
+                    </Item>
+                </Card>
             </div>
         </DialogBody>
     )
@@ -279,28 +322,14 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         >
             <DialogBody>
                 <div className="space-y-4">
-                    {/* O "não confere" era um `<p>` solto, sem `aria-invalid` e sem
-                        ligação com o campo; como `error` ele marca o campo e é
-                        anunciado. */}
-                    <FormInput
-                        id="confirm-email"
-                        label="Confirme seu email"
-                        type="email"
-                        placeholder={userEmail}
-                        value={confirmEmail}
-                        onChange={(e) => setConfirmEmail(e.target.value)}
-                        className={emailsMatch && confirmEmail ? "border-success/50" : ""}
-                        error={confirmEmail && !emailsMatch ? "O email não confere" : undefined}
-                    />
-
                     <FormInput
                         id="delete-password"
                         label="Sua senha"
                         type="password"
                         placeholder="Digite sua senha"
                         value={password}
+                        autoComplete="current-password"
                         onChange={(e) => setPassword(e.target.value)}
-                        description="Necessário confirmar sua identidade para excluir a conta."
                     />
 
                     {error ? (
@@ -329,7 +358,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 <FormSubmit
                     variant="destructive"
                     pendingLabel="Excluindo…"
-                    disabled={!emailsMatch || !password}
+                    disabled={!password}
                 >
                     <TrashIcon />
                     Excluir conta

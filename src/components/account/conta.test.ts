@@ -483,3 +483,30 @@ describe("Segurança no Editar perfil", () => {
         expect(f).toContain("Sair")
     })
 })
+
+describe("Excluir conta: dois passos enxutos", () => {
+    const f = semComentarios(lerFonte("src/components/security/DeleteAccountDialog.tsx"), "tudo")
+    const aviso = f.slice(f.indexOf("const bodyWarning"), f.indexOf("const footerWarning"))
+    const confirmar = f.slice(f.indexOf("const bodyConfirm"))
+    it("o passo 1 é calmo: uma lista, o aviso amarelo só com carteira compartilhada e a cópia antes", () => {
+        expect(aviso).not.toContain("Atenção")
+        expect(aviso).not.toContain('variant="outline"')
+        for (const t of [
+            ">O que será apagado<",
+            "Quer guardar uma cópia antes?",
+            "Exportar meus dados",
+            "pending={exportando}",
+        ]) expect(aviso).toContain(t)
+        for (const t of ["Todos os lançamentos", "Carteiras e categorias", "Perfil e preferências", "BanknotesIcon", "WalletIcon", "UserCircleIcon", "baixarExportacao(", "Não foi possível exportar agora. Tente novamente.", "Passo 1 de 2 · Não dá para desfazer."])
+            expect(f).toContain(t)
+        expect(aviso).toMatch(/sharedOwned\.length > 0 \? \(\s*<Alert tone="warning"/)
+        expect(f).not.toMatch(/<DialogTitle[^>]*text-destructive/)
+    })
+    it("o passo 2 pede só a senha", () => {
+        expect(f).not.toContain("confirm-email")
+        expect(f).not.toContain("confirmEmail")
+        for (const t of ["Confirme com sua senha", "Passo 2 de 2 · Sua conta e os dados acima serão apagados."]) expect(f).toContain(t)
+        expect(confirmar).toContain('id="delete-password"')
+        expect(confirmar).toContain("disabled={!password}")
+    })
+})
