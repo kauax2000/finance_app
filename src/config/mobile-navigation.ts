@@ -34,6 +34,7 @@ import {
     Cog6ToothIcon as Cog6ToothMicro,
     CreditCardIcon as CreditCardMicro,
     FolderIcon as FolderMicro,
+    ShieldCheckIcon as ShieldCheckMicro,
     SparklesIcon as SparklesMicro,
     Squares2X2Icon as Squares2X2Micro,
     TagIcon as TagMicro,
@@ -120,6 +121,7 @@ const ICONE_MICRO = new Map<HeroIcon, HeroIcon>([
     [Cog6ToothIcon, Cog6ToothMicro],
     [UserCircleIcon, UserCircleMicro],
     [SparklesIcon, SparklesMicro],
+    [ShieldCheckIcon, ShieldCheckMicro],
 ])
 
 /** O par micro, ou `undefined` — quem não tem par continua no de 24. */
