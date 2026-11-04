@@ -71,7 +71,7 @@ export function ThemeSettings() {
                     </div>
                 </Card>
             </SettingsSection>
-            <SettingsSection titulo="No celular" alcance="Lance por frase e instale o app no telefone.">
+            <SettingsSection titulo="No celular" alcance="Instale no celular: é lá que você lança.">
                 <NoCelularCartao value={noTelefone} />
                 {instalarNoIphone ? (
                     <Card padding="none">

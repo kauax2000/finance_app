@@ -105,7 +105,6 @@ describe("Configurações: página única", () => {
             "QrCodeCopy",
             "link={false}",
             "wave={onda}",
-            "Abra o Finance no telefone",
             "@container/no-celular",
             "@max-xl/no-celular:hidden",
             "onCopied",
@@ -145,5 +144,22 @@ describe("Configurações: o lançamento mora no celular", () => {
         expect(c).toContain("No menu do navegador, toque em Instalar app.")
         expect(c).toContain("InstallPwaSheet")
         expect(c).toMatch(/iphone \?/)
+    })
+    it("a propaganda vende o celular com as funcionalidades novas", () => {
+        const n = semComentarios(lerFonte("src/components/settings/no-celular-cartao.tsx"))
+        expect(n).toContain("O dia a dia é no celular")
+        for (const v of [
+            "Lance falando com a Siri ou com um toque",
+            "Um formulário rápido quando não dá para falar",
+            "Pague com Apple Pay e o gasto entra sozinho",
+            "Lance digitando uma frase, com o app na tela de início",
+        ])
+            expect(n).toContain(v)
+        expect(n).toMatch(/no iPhone/)
+        expect(n).not.toContain("Abra o Finance no telefone")
+        expect(n).not.toMatch(/PWA/)
+        expect(semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))).not.toContain(
+            "Lance por frase e instale o app no telefone.",
+        )
     })
 })
