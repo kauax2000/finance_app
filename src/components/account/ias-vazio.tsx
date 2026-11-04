@@ -46,7 +46,7 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                         <Capa marca="finance" tamanho="grande" className="z-10" />
                         <Capa marca="chatgpt" className="-translate-x-3 translate-y-2.5 rotate-12" />
                     </div>
-                    <div className="flex flex-wrap justify-center gap-1.5">
+                    <div className="flex flex-col items-center gap-1.5">
                         <Sugestao marca="claude">Onde dá para cortar este mês?</Sugestao>
                         <Sugestao marca="chatgpt">Resuma meu mês em 3 pontos</Sugestao>
                     </div>
