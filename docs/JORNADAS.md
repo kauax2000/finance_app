@@ -1246,13 +1246,15 @@ flowchart TD
     pwdCheck -->|"não"| pwd
     pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s e volta ao Editar perfil; este aparelho segue aberto e os outros terminam quando o token vence"])
 
-    profile -->|"Segurança: Excluir conta"| warn(["DeleteAccountDialog por cima: aviso das carteiras compartilhadas que você é dona"])
-    warn -->|"Continuar"| confirmDel(["Digitar e-mail e senha"])
-    confirmDel -->|"Excluir"| delUser[("Edge delete-user, confere a senha")]
+    profile -->|"Segurança: Excluir conta"| warn(["DeleteAccountDialog por cima, passo 1 de 2: o que será apagado, as carteiras compartilhadas que você é dona e Exportar meus dados"])
+    warn -.->|"Exportar meus dados, sem fechar"| expZip(["Baixa o mesmo ZIP do Cofre aberto"]) -.-> warn
+    warn -->|"Continuar"| confirmDel(["Passo 2 de 2: só a senha"])
+    confirmDel -->|"Excluir conta"| delUser[("Edge delete-user, confere a senha")]
     delUser -->|"erro"| confirmDel
     delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
     warn -->|"Cancelar ou fechar"| profile
     pwd -->|"Cancelar ou fechar"| profile
+    confirmDel -->|"Voltar"| warn
     confirmDel -->|"Cancelar ou fechar"| profile
 
     account -->|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
@@ -1321,7 +1323,7 @@ flowchart TD
 | Ponto | Regra | Onde |
 |---|---|---|
 | Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser`. A senha troca no `ChangePasswordDialog`, aberto por cima do Editar perfil (Segurança); ao fechar, a pessoa volta ao Editar perfil | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
-| Excluir conta | Dois passos; a senha é conferida na Edge Function. Abre do Editar perfil (Segurança), por cima dele; cancelar volta ao Editar perfil. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Excluir conta | Dois passos (4/nov/2026): o 1 lista o que será apagado, avisa das carteiras compartilhadas criadas pela pessoa (nome, outros membros, lançamentos) e oferece "Exportar meus dados", que baixa o ZIP do Cofre aberto (`baixarExportacao`, `src/lib/cofre/baixar.ts`) sem fechar o diálogo; o 2 pede só a senha (o e-mail saiu), com "Voltar" e o "Excluir conta" destrutivo; a senha é conferida na Edge Function. Abre do Editar perfil (Segurança), por cima dele; cancelar volta ao Editar perfil. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
 | Tela | Uma coluna: identidade (a foto e o Editar perfil abrem o `EditProfileDialog`, que tem a seção Segurança com Alterar senha e Excluir conta; desde 4/nov/2026 as duas saíram da página), Plano (vai a `/plans`, agora também no desktop), Política de privacidade (`/privacidade`) e, no fim, Sair. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
 | Sair | É global: o `signOut()` sem `scope` encerra a conta em todos os aparelhos, e os outros só caem quando o token vence, sem aviso, indo ao login. Sem confirmação nesta tela (o erro vai em toast). Segundo caminho para um aparelho perdido: trocar a senha encerra os outros aparelhos quando o token deles vence, e este segue aberto | `src/components/providers.tsx` |
 | Sem sessões nem atividade | A tela não lista aparelhos, não encerra sessão e não grava log: `createActivity` saiu do perfil e da senha, o `x-app-session-id` saiu das chamadas e o `reason=session-expired` não existe mais; o login só mostra `reason=password-updated`. **Pendência para o 2.0 subir à `main`**: ver a lacuna 108 | `src/components/providers.tsx`, `src/lib/edge-invoke.ts` |
@@ -1503,7 +1505,7 @@ flowchart TD
     cofre -->|"Exportar tudo"| zip[("Leitura paginada de cada tabela, no navegador")]
     zip -->|"sucesso"| file(["finance-app-AAAA-MM-DD.zip: um CSV por tabela e o LEIA-ME"])
     zip -->|"erro"| zipErr(["Não foi possível exportar agora"])
-    cofre -->|"Apagar a conta"| delDlg(["DeleteAccountDialog"])
+    cofre -->|"Apagar a conta"| delDlg(["DeleteAccountDialog: passo 1 (com Exportar meus dados) e passo 2 (senha)"])
     delDlg -->|"senha confere"| delUser[("Edge delete-user")] --> G1(("G1 /login"))
     cofre -->|"Piloto Automático"| piloto["/piloto"]
     piloto --> groups(["Últimos 30 dias: captura, importações em lote, assinaturas e parcelas"])
@@ -1526,7 +1528,7 @@ flowchart TD
 | `/piloto` | Lê as `transactions` da carteira atual com `source` diferente de `app` e `created_at` nos últimos 30 dias, com `range` (todas, sem teto de 1.000). Agrupa: captura (frase rápida, atalho, Apple Pay, compartilhado), importações por `import_batch_id` e `recurring`. "Desfazer" pede `confirm()`; o de um lançamento recorrente avisa que o app não o lança de novo (o cron não recria a parcela). Desfazer uma importação apaga só o lote | `src/components/wireframe/piloto-automatico-wireframe.tsx`, `src/lib/piloto/piloto.ts`, `src/lib/import/importar.ts` |
 | Desfazer em só leitura | Apagar é escrita da pessoa: o `garantir_escrita` a barra em `leitura`, e a tela mostra a mensagem do mapa de erros | `supabase/migrations/20261025120000_planos.sql`, `src/lib/supabase-errors.ts` |
 | `/cofre` | Lista o que o app guarda (dado, onde fica, quem vê, por que pedimos). "Exportar tudo" lê cada tabela de todas as carteiras da pessoa, paginando por `range`, e monta o ZIP no navegador: um CSV por tabela, com `;`, aspas e quebra de linha tratadas, mais um `LEIA-ME.txt`; os anexos saem só como metadados. O ZIP é "store", sem compressão (CRC-32 e cabeçalhos escritos à mão). Só lê, então vale também em só leitura. A região do banco ainda diz "a confirmar" (roteiro, passo 4). Desde o Bloco 8 a tabela tem a linha do plano e da cobrança (o que nós guardamos e o que fica só no Asaas); a exportação não traz a linha do plano (lacuna 80) | `src/components/wireframe/cofre-aberto-wireframe.tsx`, `src/lib/cofre/exportar.ts`, `src/lib/cofre/zip.ts` |
-| Apagar a conta | O mesmo `DeleteAccountDialog` de Minha conta, que confere a senha e chama a Edge `delete-user` (service role, sem `auth.uid()`, então livre em só leitura) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Apagar a conta | O mesmo `DeleteAccountDialog` de Minha conta (passo 1 com "Exportar meus dados", que baixa o mesmo ZIP por `baixarExportacao`, sem fechar; passo 2 só com a senha), que confere a senha e chama a Edge `delete-user` (service role, sem `auth.uid()`, então livre em só leitura) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
 | Entrada no menu | `ROUTES.COFRE` entra em `ACCOUNT_MENU_PROFILE_LINK_ITEMS` como "Cofre aberto": a linha do grupo Conta de `/me` (no telefone, a única entrada) e o item do menu do usuário do desktop, depois de Minha conta e Planos. A aba "Você" fica ativa em `/cofre` (`isVoceTabActive`). `/piloto` e `/comecar` não têm entrada no menu | `src/components/layout/account-menu-links.ts`, `src/config/mobile-navigation.ts`, `src/config/navigation.ts` |
 | Título da tela | `APP_PAGE_TITLES` ganhou `/piloto` ("Piloto Automático"), `/cofre` ("Cofre aberto") e `/comecar` ("Começar") | `src/config/navigation.ts` |
 | Privacidade | `/privacidade` diz que o teste de 14 dias não pede cartão, que o plano é guardado (tipo, situação e fim do período) e liga ao Cofre aberto, onde se exporta tudo e se apaga a conta. Desde o Bloco 8, "A cobrança do plano": o cartão é digitado no Asaas e o CPF passa pela `billing-checkout` sem ser guardado, a caminho do Asaas; guardamos só o token do cartão, os 4 últimos dígitos, a bandeira, o cadastro no Asaas e o IP da compra (para a renovação); a NFS-e é emitida pelo Asaas; e apagar a conta aqui não apaga o que o Asaas guarda por lei (as cobranças e as NFS-e), que se pede ao Asaas (lacuna 91) | `src/components/wireframe/privacidade-wireframe.tsx` |
