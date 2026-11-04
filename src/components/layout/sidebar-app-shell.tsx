@@ -50,7 +50,6 @@ const ROTAS_DO_APP = [
     ROUTES.SETTINGS,
     ROUTES.MEMBERS,
     ROUTES.PLANS,
-    ROUTES.ACCOUNT,
 ]
 
 /**

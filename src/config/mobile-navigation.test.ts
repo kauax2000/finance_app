@@ -6,14 +6,14 @@ import { arquivosTsx, lerFonte } from "@/test/fonte"
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
 
 describe("a página Você", () => {
-    it("dois grupos: a carteira e a conta, sem Planos nem Configurações, com IAs conectadas e Notificações por último", () => {
+    it("dois grupos: a carteira e a conta (Planos e Política de privacidade primeiro), sem Configurações, com IAs conectadas e Notificações por último", () => {
         const [carteira, conta] = getVoceGroups([], "owner")
         expect(carteira.id).toBe("carteira")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS, ROUTES.BILLS, ROUTES.SUBSCRIPTIONS, ROUTES.PROJETOS, ROUTES.MEMBERS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
+        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.SETTINGS_PRIVACIDADE, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
     })
-    it("as três telas de configuração do telefone acendem Você e voltam a ela", () => {
-        for (const r of [ROUTES.SETTINGS_LANCAR, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]) {
+    it("as quatro telas de configuração do telefone acendem Você e voltam a ela", () => {
+        for (const r of [ROUTES.SETTINGS_LANCAR, ROUTES.SETTINGS_PRIVACIDADE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]) {
             expect(isVoceTabActive(r, [])).toBe(true)
             expect(voceBackHref(r)).toBe(ROUTES.ME)
         }
@@ -35,10 +35,11 @@ describe("a página Você", () => {
         expect(isVoceTabActive(`${ROUTES.DASHBOARD_CATEGORIES}/x`, [ROUTES.DASHBOARD_CATEGORIES])).toBe(true)
     })
 
-    it("Planos e pagamentos, aberto de Minha conta, continua debaixo de Você", () => {
+    it("Planos e pagamentos e a Política de privacidade são linhas de Você e voltam a ela", () => {
         expect(isVoceTabActive(ROUTES.PLANS, [])).toBe(true)
-        // Não é linha da página: o voltar de lá é o de Minha conta, não o de Você.
-        expect(voceBackHref(ROUTES.PLANS)).toBeUndefined()
+        expect(isVoceTabActive(ROUTES.SETTINGS_PRIVACIDADE, [])).toBe(true)
+        expect(voceBackHref(ROUTES.PLANS)).toBe(ROUTES.ME)
+        expect(voceBackHref(ROUTES.SETTINGS_PRIVACIDADE)).toBe(ROUTES.ME)
     })
 
     it("o voltar do telefone leva a Você só das telas que ela lista", () => {
@@ -60,7 +61,7 @@ describe("o telefone do convidado (Bloco 7A)", () => {
     it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
         const [carteira, conta] = getVoceGroups([], "guest")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
+        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.SETTINGS_PRIVACIDADE, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
         for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
     })
 
@@ -82,7 +83,7 @@ describe("o filtro do cabeçalho pela rota", () => {
         expect(mobileHeaderFilterFor(`${ROUTES.DASHBOARD_CATEGORIES}/new`)).toBeNull()
         expect(mobileHeaderFilterFor(ROUTES.TRANSACTIONS)).toBe("filter")
         expect(mobileHeaderFilterFor(ROUTES.BILLS)).toBe("filter")
-        expect(mobileHeaderFilterFor(ROUTES.ACCOUNT)).toBeNull()
+        expect(mobileHeaderFilterFor(ROUTES.SETTINGS_PRIVACIDADE)).toBeNull()
     })
 
     it("a tabela concorda com as telas que publicam filtro", () => {

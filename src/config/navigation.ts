@@ -12,6 +12,8 @@ export const ROUTES = {
     SETTINGS_LANCAR: "/settings/lancar-pelo-iphone",
     SETTINGS_IAS: "/settings/ias",
     SETTINGS_NOTIFICACOES: "/settings/notificacoes",
+    /** A política de privacidade dentro do app, para quem entrou (a pública é `PRIVACY`). */
+    SETTINGS_PRIVACIDADE: "/settings/privacidade",
     CREDIT_CARDS: "/credit-cards",
     SUBSCRIPTIONS: "/subscriptions",
     BILLS: "/bills",
@@ -53,16 +55,6 @@ export function creditCardDetailPath(id: string): string {
 /** `/credit-cards/{id}` detail route (not list or settings). */
 export function isCreditCardDetailPath(pathname: string): boolean {
     return /^\/credit-cards\/[^/]+$/.test(pathname)
-}
-
-/** Plans and billing page. */
-export function isPlansPath(pathname: string): boolean {
-    return pathname === ROUTES.PLANS
-}
-
-/** Account hub (profile) only, not other account-adjacent routes. */
-export function isAccountHubPath(pathname: string): boolean {
-    return pathname === ROUTES.ACCOUNT
 }
 
 /** Cog6ToothIcon hub and nested settings routes. */
@@ -141,7 +133,6 @@ export const DASHBOARD_PAGE_TITLES: Record<string, string> = {
 /** Header title for (app) route group (top-level pages) */
 export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.ME]: "Você",
-    [ROUTES.ACCOUNT]: "Minha conta",
     [ROUTES.PLANS]: "Planos e pagamentos",
     [ROUTES.PILOTO]: "Piloto Automático",
     [ROUTES.COFRE]: "Cofre aberto",
@@ -153,6 +144,7 @@ export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.SETTINGS_LANCAR]: "Lançar pelo iPhone",
     [ROUTES.SETTINGS_IAS]: "IAs conectadas",
     [ROUTES.SETTINGS_NOTIFICACOES]: "Notificações",
+    [ROUTES.SETTINGS_PRIVACIDADE]: "Política de privacidade",
     [ROUTES.TRANSACTIONS]: "Transações",
     [ROUTES.SUBSCRIPTIONS]: "Assinaturas",
     [ROUTES.BILLS]: "Contas a pagar",

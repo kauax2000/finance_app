@@ -11,7 +11,7 @@ import { ehAdulto } from "@/lib/papeis/papeis"
 import type { WorkspaceRole } from "@/lib/supabase"
 
 /** Com as subrotas. */
-const COM_SUBROTAS: readonly string[] = [ROUTES.TRANSACTIONS, ROUTES.DASHBOARD_CATEGORIES, ROUTES.SETTINGS, ROUTES.ACCOUNT]
+const COM_SUBROTAS: readonly string[] = [ROUTES.TRANSACTIONS, ROUTES.DASHBOARD_CATEGORIES, ROUTES.SETTINGS]
 /** Só a própria rota: o detalhe do cartão é a fatura e a conferência. */
 const EXATAS: readonly string[] = [ROUTES.DASHBOARD, ROUTES.CREDIT_CARDS, ROUTES.ME, ROUTES.PLANS, ROUTES.COFRE]
 /** Subrotas que escrevem, dentro de uma rota permitida: criar categoria é do adulto. */

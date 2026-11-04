@@ -6,6 +6,8 @@ import {
     Cog6ToothIcon,
     CreditCardIcon,
     FolderIcon,
+    LockClosedIcon,
+    ShieldCheckIcon,
     SparklesIcon,
     Squares2X2Icon,
     TagIcon,
@@ -46,6 +48,7 @@ import {
     Cog6ToothIcon as Cog6ToothMini,
     CreditCardIcon as CreditCardMini,
     FolderIcon as FolderMini,
+    LockClosedIcon as LockClosedMini,
     SparklesIcon as SparklesMini,
     Squares2X2Icon as Squares2X2Mini,
     TagIcon as TagMini,
@@ -57,9 +60,7 @@ import {
     ACCOUNT_MENU_WORKSPACE_LINK_ITEMS,
 } from "@/components/layout/account-menu-links"
 import {
-    isAccountHubPath,
     isExactPath,
-    isPlansPath,
     isSettingsPath,
     MAIN_NAVIGATION,
     ROUTES,
@@ -142,6 +143,7 @@ const ICONE_MINI = new Map<HeroIcon, HeroIcon>([
     [UserCircleIcon, UserCircleMini],
     [SparklesIcon, SparklesMini],
     [BellIcon, BellMini],
+    [LockClosedIcon, LockClosedMini],
 ])
 
 /** O par mini, ou `undefined` — quem não tem par continua no de 24. */
@@ -241,8 +243,6 @@ export function isMobileAccountMenuNavItemActive(
         case ROUTES.SETTINGS_IAS:
         case ROUTES.SETTINGS_NOTIFICACOES:
             return isExactPath(pathname, item.href)
-        case ROUTES.ACCOUNT:
-            return isAccountHubPath(pathname)
         default:
             return isExactPath(pathname, item.href)
     }
@@ -251,6 +251,7 @@ export function isMobileAccountMenuNavItemActive(
 /** As telas de Configurações que o telefone abre por Você (a primeira só tem cartão em /me). */
 export const ROTAS_DE_VOCE_EM_SETTINGS: readonly string[] = [
     ROUTES.SETTINGS_LANCAR,
+    ROUTES.SETTINGS_PRIVACIDADE,
     ROUTES.SETTINGS_IAS,
     ROUTES.SETTINGS_NOTIFICACOES,
 ]
@@ -264,8 +265,8 @@ export type VoceGroup = {
 /**
  * Os dois grupos da página Você (`/me`) — a mesma composição que o menu "Mais"
  * fazia: em cima a carteira (as abas que não couberam na barra, depois as telas
- * fixadas), embaixo a conta e, por último, as configurações. Planos e pagamentos
- * mora em Minha conta, no telefone. `abasFora` são os `href` das abas que a barra
+ * fixadas), embaixo a conta: Planos e pagamentos e a Política de privacidade
+ * primeiro, depois o Cofre e as configurações. `abasFora` são os `href` das abas que a barra
  * não coube; a ordem delas é a da barra. O convidado (Bloco 7A) vê só as telas
  * da lista dele: sem Assinaturas, Contas a pagar nem Membros (e, com o papel a
  * caminho, também só essas, `itensDeNavegacaoPara`).
@@ -294,14 +295,14 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             id: "conta",
             label: "Conta",
             items: [
-                ...ACCOUNT_MENU_PROFILE_LINK_ITEMS.filter((item) => item.href !== ROUTES.PLANS).map(
-                    ({ href, label, icon }) => ({
-                        href,
-                        name: label,
-                        icon,
-                        ...(href === ROUTES.COFRE ? { description: "Seus dados: exportar e apagar" } : {}),
-                    })
-                ),
+                { href: ROUTES.PLANS, name: "Planos e pagamentos", icon: SparklesIcon },
+                { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },
+                {
+                    href: ROUTES.COFRE,
+                    name: "Cofre aberto",
+                    icon: ShieldCheckIcon,
+                    description: "Seus dados: exportar e apagar",
+                },
                 { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
                 { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Notificações", icon: BellIcon },
             ],
@@ -310,13 +311,11 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
 }
 
 /**
- * Você acende na própria página, em qualquer tela que ela abre e em Planos e
- * pagamentos, que no telefone só se alcança por Minha conta.
+ * Você acende na própria página e em qualquer tela que ela abre.
  */
 export function isVoceTabActive(pathname: string, abasFora: readonly string[]): boolean {
     return (
         pathname === ROUTES.ME ||
-        isPlansPath(pathname) ||
         ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname) ||
         todosOsGrupos(abasFora).some((grupo) =>
             grupo.items.some((item) => isMobileAccountMenuNavItemActive(pathname, item))

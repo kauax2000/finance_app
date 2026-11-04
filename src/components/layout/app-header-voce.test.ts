@@ -9,10 +9,10 @@ describe("o voltar do telefone nas telas da página Você", () => {
         expect(corpo.indexOf("resolveAppSubPageMeta")).toBeLessThan(corpo.indexOf("voceBackHref(pathname)"))
     })
 
-    it("Planos volta a Minha conta, só no telefone", () => {
+    it("Planos volta a Você, como linha dela", () => {
         const corpo = HEADER.slice(HEADER.indexOf("function defaultMobileBackHref"))
-        expect(corpo).toContain("if (pathname === ROUTES.PLANS) return ROUTES.ACCOUNT")
-        expect(corpo.indexOf("ROUTES.PLANS")).toBeLessThan(corpo.indexOf("voceBackHref(pathname)"))
+        expect(corpo).toContain("if (pathname === ROUTES.PLANS) return ROUTES.ME")
+        expect(corpo).not.toContain("ROUTES.ACCOUNT")
     })
 
     it("a página Você e as telas dela não têm seletor de carteira", () => {

@@ -33,7 +33,7 @@ describe("canaisPara", () => {
     })
 
     it("cada plataforma traz o seu canal próprio", () => {
-        expect(canaisPara("iphone", []).some((c) => c.href === "/account" && c.titulo.includes("Atalho"))).toBe(true)
+        expect(canaisPara("iphone", []).some((c) => c.href === "/settings/lancar-pelo-iphone" && c.titulo.includes("Atalho"))).toBe(true)
         expect(canaisPara("android", []).some((c) => c.texto.includes("Adicionar à tela inicial") && c.texto.includes("Compartilhar → Finance App"))).toBe(true)
         expect(canaisPara("computador", []).some((c) => c.titulo === "Importar extrato" && c.href === "/transactions?importar=1")).toBe(true)
     })

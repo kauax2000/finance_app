@@ -38,9 +38,9 @@ export function defaultMobileBackHref(pathname: string): string | undefined {
     ) {
         return ROUTES.DASHBOARD_CATEGORIES
     }
-    // Planos e pagamentos só se abre de Minha conta no telefone; no desktop a
-    // migalha não o põe debaixo dela (a migalha só conhece os detalhes de cartão).
-    if (pathname === ROUTES.PLANS) return ROUTES.ACCOUNT
+    // Planos e pagamentos é linha de Você no telefone; no desktop a migalha não o
+    // põe debaixo dela (a migalha só conhece os detalhes de cartão).
+    if (pathname === ROUTES.PLANS) return ROUTES.ME
     // O detalhe de um projeto volta à lista.
     if (/^\/projetos\/[^/]+$/.test(pathname)) return ROUTES.PROJETOS
     // Por último: as telas listadas na página Você voltam a ela (não são
