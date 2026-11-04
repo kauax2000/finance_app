@@ -39,10 +39,23 @@ export function useInstalarApp() {
 }
 
 /** O ícone do app na capa dele. A capa é preta: o ícone entra menor sobre ela, para a capa aparecer em volta do logo. */
-export function CapaDoApp() {
+export function CapaDoApp({ grande = false }: { grande?: boolean }) {
+    // Grande, ela é o centro da cena do vazio de IAs conectadas (`ias-vazio.tsx`).
     return (
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10">
-            <Image src="/icons/apple-touch-icon.png" alt="" width={22} height={22} className="size-5.5" />
+        <span
+            className={
+                grande
+                    ? "flex size-14 shrink-0 items-center justify-center rounded-row-lg bg-black ring-1 ring-foreground/10"
+                    : "flex size-9 shrink-0 items-center justify-center rounded-row bg-black ring-1 ring-foreground/10"
+            }
+        >
+            <Image
+                src="/icons/apple-touch-icon.png"
+                alt=""
+                width={grande ? 34 : 22}
+                height={grande ? 34 : 22}
+                className={grande ? "size-8.5" : "size-5.5"}
+            />
         </span>
     )
 }

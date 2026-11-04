@@ -80,6 +80,9 @@ const RUNTIME_COLOR_FILES = [
   // A capa do ícone do app, que é preta nos dois temas: o ícone instalável é um
   // objeto do mundo, e o fundo dele não segue o tema.
   "neste-celular-grupo",
+  // As capas do Claude e do ChatGPT no vazio de IAs conectadas: o laranja e o
+  // preto são das marcas, e o logo branco não segue o tema.
+  "marcas-de-ia",
   "workspace-appearance-form-fields",
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
@@ -139,6 +142,9 @@ const DRAWN_SVG_FILES = [
   // O anel do `ProgressRing`: a geometria do traço é o valor.
   "components/ui/progress",
   "sidebar-toggle-icon",
+  // Os logos do Claude e do ChatGPT (Simple Icons, CC0): marca de outra
+  // pessoa, sem par no Heroicons.
+  "marcas-de-ia",
   // A seta do `PresenceCursor` (D9 do plano do painel, decisão do dono): o
   // ponteiro de outra pessoa é um primitivo desenhado — a ponta é a posição —,
   // e o `CursorArrowRaysIcon` desenha um clique, não um ponteiro.

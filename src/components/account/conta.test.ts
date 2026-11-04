@@ -369,6 +369,32 @@ describe("Linha do aparelho e da IA", () => {
     })
 })
 
+describe("IAs conectadas: o vazio", () => {
+    it("o vazio convida com as capas das IAs, e o cabeçalho não repete a ação", () => {
+        const v = semComentarios(lerFonte("src/components/account/ias-vazio.tsx"))
+        for (const t of [
+            "Pergunte à sua IA sobre o seu dinheiro",
+            "Conecte o Finance ao Claude ou ao ChatGPT: a IA lê seus gastos e lança o que você pedir, sempre para você conferir.",
+            "Funciona com o Claude, o ChatGPT e outras IAs.",
+            "Quanto gastei com mercado este mês?",
+            "Lance R$ 32 de almoço no Nubank",
+            "Conectar uma IA",
+        ])
+            expect(v).toContain(t)
+        expect(v).toMatch(/<CapaDaIa ia="claude"/)
+        expect(v).toMatch(/<CapaDaIa ia="chatgpt"/)
+        expect(v).toContain("<CapaDoApp")
+        expect(v).not.toMatch(/Grok|Gemini|MCP/)
+        const s = semComentarios(lerFonte("src/components/account/ias-secao.tsx"))
+        expect(s).toContain("<IasVazio")
+        expect(s).not.toContain("Nenhuma IA conectada.")
+        // Sem IA, o "Conectar" do cabeçalho some: quem convida é o vazio.
+        expect(s).toMatch(/actions=\{[^}]*grants\.length/)
+        const a = lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")
+        expect(a.match(/"marcas-de-ia"/g)).toHaveLength(2)
+    })
+})
+
 describe("Lançar ao pagar: o estado do cartão", () => {
     it("novo, aguardando e funcionando", async () => {
         const { estadoDoApplePay } = await import("./lancar-ao-pagar")

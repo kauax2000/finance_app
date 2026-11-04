@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { ConectarIaDialog } from "@/components/account/conectar-ia-dialog"
+import { IasVazio } from "@/components/account/ias-vazio"
 import { useAuth } from "@/components/providers"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
@@ -82,10 +83,13 @@ export function IasSecao() {
         <SettingsSection
             titulo="IAs conectadas"
             actions={
-                <Button type="button" variant="tertiary" onClick={() => setConectarAberto(true)}>
-                    <PlusIcon aria-hidden data-icon="inline-start" />
-                    Conectar
-                </Button>
+                // Sem IA, quem convida é o vazio: o cabeçalho não repete a ação.
+                grants.length > 0 ? (
+                    <Button type="button" variant="tertiary" onClick={() => setConectarAberto(true)}>
+                        <PlusIcon aria-hidden data-icon="inline-start" />
+                        Conectar
+                    </Button>
+                ) : null
             }
         >
             <Card padding="none">
@@ -99,7 +103,7 @@ export function IasSecao() {
                 ) : lista.isError ? (
                     <CardMessage tone="destructive">Não foi possível carregar as conexões.</CardMessage>
                 ) : grants.length === 0 ? (
-                    <CardMessage>Nenhuma IA conectada.</CardMessage>
+                    <IasVazio onConectar={() => setConectarAberto(true)} />
                 ) : (
                     <ItemGroup variant="divided">
                         {grants.map((g) => (
