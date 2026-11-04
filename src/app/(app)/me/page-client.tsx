@@ -114,12 +114,20 @@ export default function MePage() {
 
                 {grupos.map((grupo) => (
                     <Fragment key={grupo.id}>
+                        {/* O convite da IA é seção própria, antes da Conta: dentro dela, o cartão engolia a lista. */}
+                        {grupo.id === "conta" && ia === "cartao" ? (
+                            <PageSection size="sm">
+                                <PageSectionHeader>
+                                    <PageSectionTitle>Inteligência artificial</PageSectionTitle>
+                                </PageSectionHeader>
+                                <CartaoDaIa />
+                            </PageSection>
+                        ) : null}
                         {grupo.items.length === 0 ? null : (
                             <PageSection size="sm">
                                 <PageSectionHeader>
                                     <PageSectionTitle>{grupo.label}</PageSectionTitle>
                                 </PageSectionHeader>
-                                {grupo.id === "conta" && ia === "cartao" ? <CartaoDaIa /> : null}
                                 <Card padding="none">
                                     <ItemGroup variant="divided">
                                         {grupo.items.filter((item) => !(ia === "cartao" && item.href === ROUTES.SETTINGS_IAS)).map((item) => {

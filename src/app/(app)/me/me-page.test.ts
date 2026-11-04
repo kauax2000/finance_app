@@ -76,7 +76,7 @@ describe("a página Você", () => {
 describe("os cartões e as linhas de Você", () => {
     const GRUPO = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))
     it("a IA em Conta: o cartão até a primeira, e então a linha com os nomes", () => {
-        expect(PAGINA).toContain('{grupo.id === "conta" && ia === "cartao" ? <CartaoDaIa /> : null}')
+        expect(PAGINA).toMatch(/grupo\.id === "conta" && ia === "cartao" \?[\s\S]*<PageSectionTitle>Inteligência artificial<\/PageSectionTitle>[\s\S]*<CartaoDaIa \/>/)
         expect(PAGINA).toContain('!(ia === "cartao" && item.href === ROUTES.SETTINGS_IAS)')
         expect(PAGINA).toContain('descricaoDaLista((ias.data ?? []).map((g) => g.client.name), "IAs")')
         // O cartão fica entre o cabeçalho e a lista do grupo.
