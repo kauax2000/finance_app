@@ -291,7 +291,7 @@ describe("Lançar ao pagar", () => {
         expect(a).toMatch(/!lista\.isError && tokens\.length > 0 \? \([\s\S]*<ApplePayConvite \/>[\s\S]*\) : null/)
         const c = conta("apple-pay-convite.tsx")
         expect(c).toContain("Lance ao pagar com Apple Pay")
-        expect(c).toContain('<JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="compacta" />')
+        expect(c).toContain('<JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="mini" />')
         expect(c).toContain("Configurar")
         expect(c).toContain("<GuiaDoApplePay")
         expect(c).not.toContain("SettingsSection")

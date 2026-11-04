@@ -45,10 +45,11 @@ export const TELAS_DO_APPLE_PAY: { atalhos: Tela; adicionar: Tela; descrever: Te
 export const TELA_DA_CARTEIRA: Tela = { imagem: carteira, ancora: "topo" }
 
 /** A janela do passo: o aparelho parado na ponta dele, e o alvo no lugar do toque. */
-/** As janelas por tamanho, por extenso: a do guia e a do vazio e do convite do Apple Pay. */
+/** As janelas por tamanho, por extenso: a do guia, a do vazio e a miniatura do convite do Apple Pay. */
 const JANELA = {
     padrao: { caixa: "mx-auto h-72 w-60", imagem: "w-60", sizes: "240px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
     compacta: { caixa: "mx-auto h-36 w-48", imagem: "w-48", sizes: "192px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
+    mini: { caixa: "h-32 w-28", imagem: "w-28", sizes: "112px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_2.5rem)]" },
 } as const
 
 export function JanelaDoAparelho({
@@ -56,7 +57,7 @@ export function JanelaDoAparelho({
     tamanho = "padrao",
 }: {
     tela: Tela
-    /** `padrao` nos passos, `compacta` no vazio da seção e no convite do Apple Pay. */
+    /** `padrao` nos passos, `compacta` no vazio da seção, `mini` ao lado de um texto. */
     tamanho?: keyof typeof JANELA
 }) {
     const j = JANELA[tamanho]
