@@ -131,35 +131,21 @@ describe("Configurações: o lançamento mora no celular", () => {
         const f = semComentarios(lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx"))
         expect(f).toContain("useAparelhoDeLancar()")
         expect(f).toMatch(/"iphone-instalado"[^]*<AtalhoSecao \/>/)
-        expect(f).toMatch(/"navegador-iphone"[^]*<ConviteDeInstalar iphone \/>/)
-        expect(f).toMatch(/"navegador-android"[^]*<ConviteDeInstalar iphone=\{false\} \/>/)
+        expect(f).toMatch(/"navegador-iphone"[^]*<ConviteDeInstalar \/>/)
+        // O Android já tem o convite fora de Configurações (pedido do dono): aqui não aparece.
+        expect(f).not.toContain("navegador-android")
         const ordem = ["<ThemeSettings", "<IasSecao", "<NotificationPreferences"].map((p) => f.indexOf(p))
         expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
     })
-    it("o convite não diz PWA e só promete o iPhone a quem tem iPhone", () => {
+    it("o convite do iPhone não diz PWA", () => {
         // O import e o nome InstallPwaSheet são código, não texto da tela.
         const c = semComentarios(lerFonte("src/components/settings/convite-de-instalar.tsx"))
         expect(c).not.toMatch(/(?<![/\w-])PWA(?![/\w-])|standalone/i)
         expect(c).toContain("Ponha o Finance na tela de início")
         expect(c).toContain('titulo="Instale o app"')
         expect(c).not.toContain('titulo="Use como app"')
-        for (const t of [
-            "Tenha o Finance como app",
-            "Fica na tela de início do celular e abre direto, em tela cheia, sem procurar no navegador.",
-            "Lance o gasto em segundos, na hora da compra",
-            "Receba os avisos de contas e do orçamento",
-            "Lance sem internet: sincroniza quando voltar",
-            "Toque em ⋮ no canto do Chrome",
-            "Escolha Instalar app ou Adicionar à tela inicial",
-            "Abra o Finance pelo ícone novo",
-        ])
-            expect(c).toContain(t)
         expect(c).toContain("InstallPwaSheet")
-        // O ramo do Android vai até a tela do iPhone: nada do Apple fica nele.
-        const android = c.slice(c.indexOf("if (!iphone)"), c.indexOf("<JanelaDoAparelho"))
-        expect(android).not.toMatch(/Siri|Apple Pay|Atalhos|JanelaDoAparelho|VANTAGENS_DO_IPHONE/)
-        expect(android).toMatch(/<ol|role="list"|aria-label="Como instalar"/)
-        expect(c.indexOf("if (!iphone)")).toBeLessThan(c.indexOf("<JanelaDoAparelho"))
+        expect(c).not.toContain("iphone")
         expect(semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))).toMatch(
             /useAparelhoDeLancar\(\) === "computador"/,
         )

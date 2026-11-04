@@ -34,8 +34,7 @@ export default function SettingsPage() {
             <div className="min-w-0 space-y-5">
                 <ThemeSettings />
                 {aparelho === "iphone-instalado" ? <AtalhoSecao /> : null}
-                {aparelho === "navegador-iphone" ? <ConviteDeInstalar iphone /> : null}
-                {aparelho === "navegador-android" ? <ConviteDeInstalar iphone={false} /> : null}
+                {aparelho === "navegador-iphone" ? <ConviteDeInstalar /> : null}
                 <IasSecao />
                 <NotificationPreferences />
             </div>
