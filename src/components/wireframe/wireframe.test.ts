@@ -223,9 +223,8 @@ describe("Cofre aberto (Bloco 4)", () => {
 
   it("a rota importa o wireframe; a exportação só lê e o apagar reusa o fluxo de hoje", () => {
     expect(semComentarios(lerFonte("src/app/(app)/cofre/page.tsx"), "tudo")).toContain("<CofreAbertoWireframe />")
-    expect(f).toContain("exportarTudo(workspaces.map((w) => ({ id: w.id, name: w.name })))")
-    expect(f).toContain("URL.revokeObjectURL(url), 60_000")
-    expect(f).toContain("finance-app-${localYmdFromDate(new Date())}.zip")
+    expect(f).toContain("baixarExportacao(workspaces.map((w) => ({ id: w.id, name: w.name })))")
+    expect(f).toContain("Não foi possível exportar agora. Tente novamente.")
     expect(f).toContain("<DeleteAccountDialog open={apagando} onOpenChange={setApagando} />")
     expect(f).toContain("ROUTES.PILOTO")
   })

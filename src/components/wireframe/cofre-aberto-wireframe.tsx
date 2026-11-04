@@ -7,8 +7,7 @@ import { DeleteAccountDialog } from "@/components/security/DeleteAccountDialog"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { useWorkspace } from "@/components/workspace-provider"
 import { ROUTES } from "@/config/navigation"
-import { exportarTudo } from "@/lib/cofre/exportar"
-import { localYmdFromDate } from "@/lib/transaction-date"
+import { baixarExportacao } from "@/lib/cofre/baixar"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
 const celula = "border border-muted-foreground/40 px-2 py-1 text-left align-top"
@@ -68,17 +67,7 @@ export function CofreAbertoWireframe() {
         setExportando(true)
         setErro(null)
         try {
-            const blob = await exportarTudo(workspaces.map((w) => ({ id: w.id, name: w.name })))
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement("a")
-            a.href = url
-            a.download = `finance-app-${localYmdFromDate(new Date())}.zip`
-            // Anexada e revogada um minuto depois: o Safari do iOS cancela o download de um
-            // link solto e já cancelou o de uma URL revogada na hora.
-            document.body.appendChild(a)
-            a.click()
-            a.remove()
-            setTimeout(() => URL.revokeObjectURL(url), 60_000)
+            await baixarExportacao(workspaces.map((w) => ({ id: w.id, name: w.name })))
         } catch (e) {
             console.error("exportarTudo:", e)
             setErro("Não foi possível exportar agora. Tente novamente.")
