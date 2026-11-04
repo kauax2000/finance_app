@@ -127,6 +127,12 @@ describe("Configurações: página única", () => {
 })
 
 describe("Configurações: o lançamento mora no celular", () => {
+    it("a seção No celular some enquanto o app instalado está em uso", () => {
+        const t = semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))
+        expect(t).toContain("useAcesso()")
+        expect(t).toMatch(/appRecente\(/)
+        expect(t).toMatch(/carregando/)
+    })
     it("a seção do iPhone só no iPhone instalado, e o convite no navegador do celular", () => {
         const f = semComentarios(lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx"))
         expect(f).toContain("useAparelhoDeLancar()")

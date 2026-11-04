@@ -13,8 +13,10 @@ import { NoCelularCartao } from "@/components/settings/no-celular-cartao"
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section"
 import { ROUTES } from "@/config/navigation"
 import { useBuscaDoCabecalho, type BuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
+import { useAcesso } from "@/hooks/use-acesso"
 import { useAparelhoDeLancar } from "@/hooks/use-aparelho-de-lancar"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { appRecente } from "@/lib/reativacao"
 
 const semAssinatura = () => () => {}
 
@@ -27,6 +29,9 @@ export function ThemeSettings() {
     const [busca, definirBusca] = useBuscaDoCabecalho()
     const isMobile = useIsMobile()
     const noComputador = useAparelhoDeLancar() === "computador"
+    const acesso = useAcesso()
+    // Com o app instalado em uso a seção não vende nada; enquanto a conta carrega, nada pisca.
+    const mostrarNoCelular = noComputador && !acesso.carregando && !appRecente(acesso.appAbertoEm, new Date())
     const { instalarNoIphone, descricaoDoApp } = useInstalarApp()
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
@@ -73,7 +78,7 @@ export function ThemeSettings() {
                     </div>
                 </Card>
             </SettingsSection>
-            {noComputador ? (
+            {mostrarNoCelular ? (
                 <SettingsSection titulo="No celular" alcance="Instale no celular: é lá que você lança.">
                     <NoCelularCartao value={noTelefone} />
                     {instalarNoIphone ? (
