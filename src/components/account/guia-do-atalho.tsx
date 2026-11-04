@@ -84,7 +84,7 @@ const COMO_ABRIR: { valor: ComoAbrir; rotulo: string; texto: string; tela: Tela 
 
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
- * assinado, ensina a colar o código nele e a falar com a Siri. O código vive só no estado deste guia: fechar por qualquer caminho
+ * assinado, ensina a colar o código nele e a abrir o atalho. O código vive só no estado deste guia: fechar por qualquer caminho
  * o descarta. Com `substituir`, o guia troca o código daquele aparelho: o antigo não pode ser mostrado de novo (só o hash é
  * guardado), então cria um novo com o mesmo nome e carteira e só então desconecta o antigo.
  */
@@ -214,7 +214,7 @@ export function GuiaDoAtalho({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Conectar o iPhone</DialogTitle>
-                    <DialogDescription>Lance gastos falando com a Siri, sem abrir o app.</DialogDescription>
+                    <DialogDescription>Lance gastos pela Siri, pelo Botão de Ação ou com um toque, sem abrir o app.</DialogDescription>
                 </DialogHeader>
                 <CustomForm
                     onSubmit={(e) => {
