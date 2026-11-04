@@ -376,14 +376,14 @@ describe("IAs conectadas: o vazio", () => {
             "Pergunte à sua IA sobre o seu dinheiro",
             "Conecte o Finance ao Claude ou ao ChatGPT: a IA lê seus gastos e lança o que você pedir, sempre para você conferir.",
             "Funciona com o Claude, o ChatGPT e outras IAs.",
-            "Quanto gastei com mercado este mês?",
-            "Lance R$ 32 de almoço no Nubank",
+            "Quanto gastei com mercado?",
+            "Lance R$ 32 de almoço",
             "Conectar uma IA",
         ])
             expect(v).toContain(t)
-        expect(v).toMatch(/<CapaDaIa ia="claude"/)
-        expect(v).toMatch(/<CapaDaIa ia="chatgpt"/)
-        expect(v).toContain("<CapaDoApp")
+        expect(v).toMatch(/<Capa marca="claude"/)
+        expect(v).toMatch(/<Capa marca="chatgpt"/)
+        expect(v).toMatch(/<Capa marca="finance" tamanho="grande"/)
         expect(v).not.toMatch(/Grok|Gemini|MCP/)
         const s = semComentarios(lerFonte("src/components/account/ias-secao.tsx"))
         expect(s).toContain("<IasVazio")

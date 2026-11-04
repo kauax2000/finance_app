@@ -1,3 +1,7 @@
+import Image from "next/image"
+
+import { cn } from "@/lib/utils"
+
 /** O logo do Claude (Simple Icons, CC0: simple-icons@13/icons/claude.svg). */
 export function LogoDoClaude({ className }: { className?: string }) {
     return (
@@ -16,18 +20,62 @@ export function LogoDoChatGPT({ className }: { className?: string }) {
     )
 }
 
+export type Marca = "claude" | "chatgpt" | "finance"
+
 /**
- * A capa de app da IA, no degrau da capa do Finance. As cores são da marca e não
- * seguem o tema; o anel separa a capa preta do fundo escuro, como na `CapaDoApp`.
+ * A pintura de cada marca. É da marca e não segue o tema: o fundo, e a sombra
+ * tingida que a solta da página (a do Claude puxa o laranja; as pretas, o preto).
  */
-export function CapaDaIa({ ia }: { ia: "claude" | "chatgpt" }) {
-    return ia === "claude" ? (
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-row-lg bg-[#D97757] text-white ring-1 ring-foreground/10">
-            <LogoDoClaude className="size-7" />
-        </span>
-    ) : (
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-row-lg bg-black text-white ring-1 ring-foreground/10">
-            <LogoDoChatGPT className="size-7" />
+const PINTURA: Record<Marca, { fundo: string; sombra: string }> = {
+    claude: { fundo: "#D97757", sombra: "0 16px 32px -14px rgb(217 119 87 / 0.7)" },
+    chatgpt: { fundo: "#000000", sombra: "0 16px 32px -16px rgb(0 0 0 / 0.9)" },
+    finance: { fundo: "#000000", sombra: "0 22px 44px -16px rgb(0 0 0 / 1)" },
+}
+
+/** O degrau: a capa de app da cena (média e grande) e o selo redondo das sugestões. */
+const DEGRAU = {
+    selo: { caixa: "size-5 rounded-full", logo: "size-3", foto: 12 },
+    media: { caixa: "size-15 rounded-row-lg", logo: "size-8", foto: 36 },
+    grande: { caixa: "size-21 rounded-surface", logo: "size-11", foto: 50 },
+} as const
+
+/**
+ * A capa de app de uma marca. O verniz de cima (o claro que desce até a metade)
+ * e o anel de 10% dão a ela o volume de um ícone de app sem pintar o miolo;
+ * no selo não há sombra, que ele é pequeno e mora dentro de uma pílula.
+ */
+export function Capa({
+    marca,
+    tamanho = "media",
+    className,
+}: {
+    marca: Marca
+    tamanho?: keyof typeof DEGRAU
+    className?: string
+}) {
+    const d = DEGRAU[tamanho]
+    const p = PINTURA[marca]
+    return (
+        <span
+            aria-hidden="true"
+            className={cn(
+                "relative flex shrink-0 items-center justify-center overflow-hidden text-white ring-1 ring-white/12",
+                d.caixa,
+                className,
+            )}
+            style={{ backgroundColor: p.fundo, boxShadow: tamanho === "selo" ? undefined : p.sombra }}
+        >
+            {marca === "claude" ? <LogoDoClaude className={d.logo} /> : null}
+            {marca === "chatgpt" ? <LogoDoChatGPT className={d.logo} /> : null}
+            {marca === "finance" ? (
+                <Image src="/icons/apple-touch-icon.png" alt="" width={d.foto} height={d.foto} className={d.logo} />
+            ) : null}
+            {tamanho === "selo" ? null : (
+                <span
+                    className="pointer-events-none absolute inset-0"
+                    style={{ backgroundImage: "linear-gradient(180deg, rgb(255 255 255 / 0.14), transparent 45%)" }}
+                />
+            )}
         </span>
     )
 }
