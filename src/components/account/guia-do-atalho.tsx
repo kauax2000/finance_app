@@ -36,6 +36,7 @@ import siri from "./assets/atalho-5-siri.webp"
 import botaoDeAcao from "./assets/atalho-11-botao-de-acao.webp"
 import acessibilidade from "./assets/atalho-12-acessibilidade.webp"
 import telaDeInicio from "./assets/atalho-13-tela-de-inicio.webp"
+import telaBloqueada from "./assets/atalho-14-tela-bloqueada.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
@@ -57,14 +58,14 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Como abrir o atalho" },
 ]
 
-/** As quatro maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
-type ComoAbrir = "siri" | "acao" | "toque" | "inicio"
+/** As cinco maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
+type ComoAbrir = "siri" | "acao" | "toque" | "bloqueio" | "inicio"
 
 const COMO_ABRIR: { valor: ComoAbrir; rotulo: string; texto: string; tela: Tela }[] = [
     { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".', tela: { imagem: siri, ancora: "topo" } },
     {
         valor: "acao",
-        rotulo: "Botão de Ação",
+        rotulo: "Botão",
         texto: "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
         tela: { imagem: botaoDeAcao, ponto: { x: 50, y: 71.9 }, ancora: "baixo" },
     },
@@ -73,6 +74,12 @@ const COMO_ABRIR: { valor: ComoAbrir; rotulo: string; texto: string; tela: Tela 
         rotulo: "Toque",
         texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
         tela: { imagem: acessibilidade, ponto: { x: 30, y: 41.1 }, ancora: "topo" },
+    },
+    {
+        valor: "bloqueio",
+        rotulo: "Bloqueio",
+        texto: "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto.",
+        tela: { imagem: telaBloqueada, ponto: { x: 16.7, y: 52.7 }, ancora: "baixo" },
     },
     {
         valor: "inicio",
@@ -256,9 +263,9 @@ export function GuiaDoAtalho({
                             {ultimo ? (
                                 <PecaDoPasso className="flex min-w-0 flex-col gap-4">
                                     <Tabs value={como} onValueChange={(v) => setComo(v as typeof como)}>
-                                        <TabsList aria-label="Como abrir o atalho" scrollable>
+                                        <TabsList aria-label="Como abrir o atalho">
                                             {COMO_ABRIR.map((o) => (
-                                                <TabsTrigger key={o.valor} value={o.valor}>
+                                                <TabsTrigger key={o.valor} value={o.valor} className="flex-auto">
                                                     {o.rotulo}
                                                 </TabsTrigger>
                                             ))}
