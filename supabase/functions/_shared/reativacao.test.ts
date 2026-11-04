@@ -1,5 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
-import { marcoDoDia, textoDoAviso } from './reativacao.ts'
+import { marcoDoDia, podeAvisar, textoDoAviso } from './reativacao.ts'
+import { DEFAULT_NOTIFICATION_PREFS } from './notification-types.ts'
 
 Deno.test('marcoDoDia: 3 de 3 a 6, 7 de 7 a 9, nada fora', () => {
   assertEquals(marcoDoDia(2), null)
@@ -21,4 +22,15 @@ Deno.test('textoDoAviso: o 7º dia', () => {
   const t = textoDoAviso(7, '2026-11-17')
   assertEquals(t.titulo, 'Uma semana sem lançar')
   assertEquals(t.corpo, 'Abra o Finance e ponha o mês em dia.')
+})
+
+Deno.test('podeAvisar: precisa de notify_review e notify_push ligados', () => {
+  assertEquals(podeAvisar({ notify_review: true, notify_push: true }), true)
+  assertEquals(podeAvisar({ notify_review: false, notify_push: true }), false)
+  assertEquals(podeAvisar({ notify_review: true, notify_push: false }), false)
+})
+
+Deno.test('podeAvisar: sem linha de preferências vale o padrão (push desligado)', () => {
+  assertEquals(podeAvisar(undefined), DEFAULT_NOTIFICATION_PREFS.notify_review && DEFAULT_NOTIFICATION_PREFS.notify_push)
+  assertEquals(podeAvisar(undefined), false)
 })

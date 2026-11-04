@@ -5,7 +5,7 @@ import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { appTodayYmd, diffCalendarDays, formatYmd } from '../_shared/credit-card-cycle.ts'
 import { buildPushPayload, sendWebPushToUser } from '../_shared/web-push-send.ts'
-import { marcoDoDia, textoDoAviso } from '../_shared/reativacao.ts'
+import { marcoDoDia, podeAvisar, textoDoAviso } from '../_shared/reativacao.ts'
 
 // Os avisos de reativação do meio-dia (cron `reativacao-daily`): push para
 // quem está há 3 (de 3 a 6) e há 7 (de 7 a 9) dias sem acesso, uma vez por
@@ -47,7 +47,7 @@ async function releaseEnvio(admin: SupabaseAdminClient, row: EnvioRow): Promise<
   }
 }
 
-/** A carteira do aviso, ou null quando `notify_review` está desligado em todas. */
+/** A carteira do aviso, ou null quando nenhuma tem `notify_review` e `notify_push` ligados. */
 async function carteiraDoAviso(admin: SupabaseAdminClient, c: Candidato): Promise<string | null> {
   const { data: membros, error: mErr } = await admin
     .from('workspace_members')
@@ -60,20 +60,18 @@ async function carteiraDoAviso(admin: SupabaseAdminClient, c: Candidato): Promis
 
   const { data: prefs, error: pErr } = await admin
     .from('workspace_member_notification_prefs')
-    .select('workspace_id, notify_review')
+    .select('workspace_id, notify_review, notify_push')
     .eq('user_id', c.user_id)
   if (pErr) throw new Error(pErr.message)
-  const desligadas = new Set(
-    (prefs ?? [])
-      .filter((p: { notify_review: boolean | null }) => p.notify_review === false)
-      .map((p: { workspace_id: string }) => p.workspace_id)
-  )
-  // Sem linha de preferências vale o padrão (`notify_review` ligado).
-  if (carteiras.every((w) => desligadas.has(w))) return null
+  type PrefsRow = { workspace_id: string; notify_review: boolean | null; notify_push: boolean | null }
+  const prefsPorCarteira = new Map(((prefs ?? []) as PrefsRow[]).map((p) => [p.workspace_id, p]))
+  // Só carteira com o aviso e o push ligados; sem linha, o padrão (push desligado).
+  const liberadas = carteiras.filter((w) => podeAvisar(prefsPorCarteira.get(w)))
+  if (liberadas.length === 0) return null
 
-  return c.current_workspace_id && carteiras.includes(c.current_workspace_id)
+  return c.current_workspace_id && liberadas.includes(c.current_workspace_id)
     ? c.current_workspace_id
-    : carteiras[0]
+    : liberadas[0]
 }
 
 Deno.serve(async (req: Request) => {
@@ -120,8 +118,9 @@ Deno.serve(async (req: Request) => {
   let failures = 0
 
   await forEachLimit(candidatos, FAN_OUT_CONCURRENCY, async (c) => {
-    const referente = formatYmd(appTodayYmd(new Date(c.ultimo_acesso_em)))
-    const marco = marcoDoDia(diffCalendarDays(appTodayYmd(new Date(c.ultimo_acesso_em)), today))
+    const ultimoAcesso = appTodayYmd(new Date(c.ultimo_acesso_em))
+    const referente = formatYmd(ultimoAcesso)
+    const marco = marcoDoDia(diffCalendarDays(ultimoAcesso, today))
     if (!marco) return
 
     const envio: EnvioRow = { user_id: c.user_id, marco, referente }

@@ -1,4 +1,5 @@
 // Os avisos de reativação (Edge `reativacao`): o 3º e o 7º dia sem acesso.
+import { DEFAULT_NOTIFICATION_PREFS, type WorkspaceNotificationPrefs } from './notification-types.ts'
 
 const DIAS_DA_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
 
@@ -20,4 +21,13 @@ export function textoDoAviso(marco: 3 | 7, ultimoAcessoYmd: string): { titulo: s
     titulo: 'Seus gastos estão esperando',
     corpo: `Leva 10 segundos lançar o que você gastou desde ${diaDaSemana}.`,
   }
+}
+
+type PrefsDoAviso = { [K in 'notify_review' | 'notify_push']?: WorkspaceNotificationPrefs[K] | null }
+
+/** A carteira deixa avisar: `notify_review` e `notify_push` ligados; sem linha, o padrão (push desligado). */
+export function podeAvisar(prefs: PrefsDoAviso | null | undefined): boolean {
+  const review = prefs?.notify_review ?? DEFAULT_NOTIFICATION_PREFS.notify_review
+  const push = prefs?.notify_push ?? DEFAULT_NOTIFICATION_PREFS.notify_push
+  return review !== false && push === true
 }
