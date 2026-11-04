@@ -373,11 +373,14 @@ describe("IAs conectadas: o vazio", () => {
     it("o vazio convida com as capas das IAs, e o cabeçalho não repete a ação", () => {
         const v = semComentarios(lerFonte("src/components/account/ias-vazio.tsx"))
         for (const t of [
-            "Pergunte à sua IA sobre o seu dinheiro",
-            "Conecte o Finance ao Claude ou ao ChatGPT: a IA lê seus gastos e lança o que você pedir, sempre para você conferir.",
-            "Funciona com o Claude, o ChatGPT e outras IAs.",
-            "Quanto gastei com mercado?",
-            "Lance R$ 32 de almoço",
+            "Uma IA que entende o seu dinheiro",
+            "Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.",
+            "Onde dá para cortar este mês?",
+            "Resuma meu mês em 3 pontos",
+            // As garantias são as que o código impõe ao token da IA.
+            "Não edita nem apaga nada no Finance",
+            "O que ela lança espera você conferir",
+            "Você desconecta quando quiser",
             "Conectar uma IA",
         ])
             expect(v).toContain(t)
