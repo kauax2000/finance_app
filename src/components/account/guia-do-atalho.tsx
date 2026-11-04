@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, FormSubmit } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase } from "@/lib/supabase"
@@ -50,8 +51,26 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
         tela: { imagem: configurar, ponto: { x: 50, y: 92.4 }, ancora: "baixo" },
     },
     { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
-    { titulo: "Fale com a Siri", tela: { imagem: siri, ancora: "topo" } },
+    { titulo: "Como abrir o atalho" },
 ]
+
+const TELA_DA_SIRI: Tela = { imagem: siri, ancora: "topo" }
+
+/** As quatro maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
+const COMO_ABRIR = [
+    { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".' },
+    { valor: "acao", rotulo: "Botão de Ação", texto: "Ajustes › Botão de Ação › Atalho › Lançar gasto." },
+    {
+        valor: "toque",
+        rotulo: "Toque traseiro",
+        texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
+    },
+    {
+        valor: "inicio",
+        rotulo: "Tela de início",
+        texto: "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
+    },
+] as const
 
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
@@ -62,10 +81,13 @@ export function GuiaDoAtalho({
     open,
     onOpenChange,
     aoCriar,
+    passoInicial = 0,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     aoCriar: () => void
+    /** Onde o guia abre. Acima de 0 o código já existe (o aparelho está criado): o guia começa em baixar o atalho e o passo do código fica fora. */
+    passoInicial?: number
 }) {
     const { profile, user } = useAuth()
     const { workspaces, currentWorkspaceId } = useWorkspace()
@@ -78,6 +100,7 @@ export function GuiaDoAtalho({
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
     const [copiado, setCopiado] = useState(false)
+    const [como, setComo] = useState<(typeof COMO_ABRIR)[number]["valor"]>("siri")
     const [criando, setCriando] = useState(false)
 
     const [abertoAntes, setAbertoAntes] = useState(open)
@@ -86,7 +109,8 @@ export function GuiaDoAtalho({
         setCodigo(null)
         setCopiado(false)
         if (open) {
-            setPasso(0)
+            setPasso(passoInicial)
+            setComo("siri")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
             setNome(primeiro ? `iPhone de ${primeiro}` : "iPhone")
@@ -157,9 +181,8 @@ export function GuiaDoAtalho({
             Depois, <strong>Adicionar Atalho</strong>.
         </>,
         <>
-            Diga <strong>E aí Siri, lançar gasto</strong> e responda o gasto, ou toque no atalho (ou no Botão de
-            Ação) e <strong>digite</strong> na caixa que abre no topo: <strong>42 mercado nubank</strong>. Ele cai em{" "}
-            {nomeDaCarteira}; o que ficar em dúvida vai para A conferir.
+            {COMO_ABRIR.find((o) => o.valor === como)?.texto} O atalho pergunta a frase ou um formulário, conforme o
+            Lançamento inteligente em Configurações. Ele cai em {nomeDaCarteira}.
         </>,
     ]
 
@@ -204,6 +227,21 @@ export function GuiaDoAtalho({
                             {passo === 4 ? (
                                 <PecaDoPasso>
                                     <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                                </PecaDoPasso>
+                            ) : null}
+
+                            {ultimo ? (
+                                <PecaDoPasso className="flex flex-col gap-4">
+                                    <Tabs value={como} onValueChange={(v) => setComo(v as typeof como)}>
+                                        <TabsList aria-label="Como abrir o atalho" scrollable>
+                                            {COMO_ABRIR.map((o) => (
+                                                <TabsTrigger key={o.valor} value={o.valor}>
+                                                    {o.rotulo}
+                                                </TabsTrigger>
+                                            ))}
+                                        </TabsList>
+                                    </Tabs>
+                                    {como === "siri" ? <JanelaDoAparelho tela={TELA_DA_SIRI} /> : null}
                                 </PecaDoPasso>
                             ) : null}
 
@@ -259,9 +297,13 @@ export function GuiaDoAtalho({
                             </>
                         ) : (
                             <>
-                                <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
-                                    Voltar
-                                </Button>
+                                {passo > passoInicial ? (
+                                    <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
+                                        Voltar
+                                    </Button>
+                                ) : (
+                                    <FormCancel onClick={fechar}>Cancelar</FormCancel>
+                                )}
                                 <Button
                                     type="button"
                                     variant={passo === 1 ? "secondary" : "primary"}

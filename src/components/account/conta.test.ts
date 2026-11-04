@@ -51,7 +51,7 @@ describe("tokens de captura", () => {
     it("o código vive só no estado do guia, e fechar o descarta", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
         expect(g).toMatch(/setCodigo\(null\)/)
-        expect(g).toMatch(/setPasso\(0\)/)
+        expect(g).toMatch(/setPasso\(passoInicial\)/)
         expect(g).not.toMatch(/localStorage|sessionStorage|console\./)
         expect(fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")).not.toMatch(/setQueryData\(\s*\[\s*["']capture_tokens/)
     })
@@ -107,9 +107,20 @@ describe("tokens de captura", () => {
         expect(pontos).toBeGreaterThan(passos)
         expect(rodape).toBeGreaterThan(pontos)
     })
-    it("o passo da Siri ensina a digitar, sem ditado", () => {
+    it("o último passo ensina a abrir o atalho, e o guia reabre no passo de baixar", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toContain("<strong>digite</strong>")
+        expect(g).toContain("Como abrir o atalho")
+        for (const o of ["Siri", "Botão de Ação", "Toque traseiro", "Tela de início"]) expect(g).toContain(`rotulo: "${o}"`)
+        for (const x of [
+            "Diga \"E aí Siri, Lançar gasto\".",
+            "Ajustes › Botão de Ação › Atalho › Lançar gasto.",
+            "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
+            "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
+            "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente em Configurações.",
+        ])
+            expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
+        expect(g).toContain("passoInicial = 0")
+        expect(g).toContain("setPasso(passoInicial)")
         expect(g).not.toContain("Ditar")
     })
     it("a seção não fala em token na tela", () => {
