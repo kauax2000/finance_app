@@ -28910,3 +28910,21 @@ do canto) e `onEdit` (a foto vira o `button`, com o lápis). Só acrescenta: sem
 `onEdit` o avatar renderiza a raiz de sempre, sem invólucro, e nenhuma tela que já o usa
 muda. O anel do canto é `--avatar-badge-ring`, senão `--background`. O botão de ícone
 "Editar perfil" de Minha conta saiu, e o esqueleto perdeu o círculo dele.
+
+### Rodada 363 — o cabeçalho centrado do Dialog
+
+Decisão do dono em 2026-11-04, no redesenho de Excluir conta: o topo centrado do iOS, com o
+ícone num poço, título e descrição centrados e os passos em pontos embaixo, no lugar da
+barra "Passo 1 de 2" sobre o título alinhado à esquerda. Uma confirmação que pausa pede o
+olho no meio; a barra e o texto da contagem disputavam com o título.
+
+Três peças opcionais no `dialog.tsx`, sem mudar o padrão de ninguém:
+`DialogHeader align="center"` (`data-align`; o recuo do × vale dos dois lados no título e
+na descrição, senão o texto centrado fica no meio da sobra à esquerda do ×),
+`DialogMedia variant="well" tone` (o poço de 56px, `rounded-full`, na superfície `-muted`
+do tom com a tinta `-muted-foreground`, ícone de 24 em `24/outline`, 12px até o título) e
+`DialogSteps variant="dots"` (pílulas de 6px, a ativa com 16 de largura em
+`--duration-fast`, sem barra nem texto à vista; o "Passo N de M · nome" fica no
+`aria-label` de um `role="img"`, e ela vai depois da descrição). Excluir conta é a
+primeira tela a usar; o tique grande do corpo de sucesso saiu, porque o poço do
+cabeçalho já o mostra.

@@ -548,14 +548,36 @@ function DialogHeaderRow({
  * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
  * casco já dá o recuo, então aqui ele é zero.
  */
+/**
+ * `align="center"`: o topo de uma confirmação que pausa (Excluir conta), à moda
+ * do iOS — o poço em cima, título e descrição centrados e os pontos dos passos
+ * embaixo. O recuo do × vale dos dois lados no título e na descrição, para o
+ * texto centrado ficar no meio da placa, e não da sobra à esquerda do ×.
+ */
+const dialogHeaderVariants = cva("", {
+  variants: {
+    align: {
+      start: "",
+      center: [
+        "items-center text-center has-[>[data-slot$=-media]]:flex",
+        "[&>[data-slot$=-title]]:ps-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]",
+        "[&>[data-slot$=-description]]:px-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]",
+      ],
+    },
+  },
+  defaultVariants: { align: "start" },
+})
+
 function DialogHeader({
   className,
   children,
+  align,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & VariantProps<typeof dialogHeaderVariants>) {
   return (
     <div
       data-slot="dialog-header"
+      data-align={align ?? "start"}
       className={cn(
         // Sempre à esquerda, nas duas larguras. Sem `gap`: título sobre
         // descrição é par de identidade, separado pela entrelinha do título.
@@ -574,6 +596,7 @@ function DialogHeader({
         "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pb-4",
+        dialogHeaderVariants({ align }),
         className
       )}
       {...props}
@@ -774,32 +797,63 @@ function DialogDescription({
   )
 }
 
-/** O ícone do título, na linha dele e na cor dele, sem poço. Vai dentro do `DialogHeader`, antes do título. */
+/**
+ * O ícone do cabeçalho. `inline` (o padrão): na linha do título, na cor dele,
+ * sem poço. `well`: o poço de 56px acima do título, com 12px embaixo, para o
+ * cabeçalho centrado; a superfície e a tinta são o par `-muted` do `tone`. No
+ * poço o ícone mede 24: passe o `24/outline`. Vai antes do título.
+ */
+const dialogMediaVariants = cva("col-start-1 flex shrink-0 self-center", {
+  variants: {
+    variant: {
+      inline: "text-foreground [&>svg]:size-4",
+      well: "mb-3 size-14 items-center justify-center rounded-full [&>svg]:size-6",
+    },
+    tone: {
+      default: "",
+      destructive: "",
+      success: "",
+      warning: "",
+    },
+  },
+  compoundVariants: [
+    { variant: "well", tone: "default", className: "bg-muted text-muted-foreground" },
+    { variant: "well", tone: "destructive", className: "bg-destructive-muted text-destructive-muted-foreground" },
+    { variant: "well", tone: "success", className: "bg-success-muted text-success-muted-foreground" },
+    { variant: "well", tone: "warning", className: "bg-warning-muted text-warning-muted-foreground" },
+  ],
+  defaultVariants: { variant: "inline", tone: "default" },
+})
+
 function DialogMedia({
   className,
+  variant,
+  tone,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span"> & VariantProps<typeof dialogMediaVariants>) {
   return (
     <span
       data-slot="dialog-media"
+      data-variant={variant ?? "inline"}
       aria-hidden
-      className={cn(
-        "col-start-1 flex shrink-0 self-center text-foreground [&>svg]:size-4",
-        className
-      )}
+      className={cn(dialogMediaVariants({ variant, tone }), className)}
       {...props}
     />
   )
 }
 
 /**
- * "Passo 2 de 3", com a barra segmentada. Vai dentro do `DialogHeader`, antes
- * do título. Com ela um diálogo `fixed` ocupa o teto, e a janela não pula.
+ * Os passos. `bar` (o padrão): "Passo 2 de 3" com a barra segmentada, antes do
+ * título; com ela um diálogo `fixed` ocupa o teto, e a janela não pula.
+ * `dots`: uma fileira de pílulas centrada, sem barra nem texto à vista (o
+ * "Passo N de M · nome" fica como nome acessível), e vai DEPOIS da descrição
+ * num `DialogHeader align="center"`.
  */
 function DialogSteps({
   current,
   total,
   labels,
+  variant = "bar",
   className,
 }: {
   /** O passo atual, a partir de 0. */
@@ -807,13 +861,36 @@ function DialogSteps({
   total: number
   /** O nome de cada passo, mostrado ao lado da contagem. */
   labels?: string[]
+  variant?: "bar" | "dots"
   className?: string
 }) {
   const nome = labels?.[current]
   const texto = `Passo ${current + 1} de ${total}${nome ? ` · ${nome}` : ""}`
+  if (variant === "dots") {
+    return (
+      <div
+        data-slot="dialog-steps"
+        data-variant="dots"
+        role="img"
+        aria-label={texto}
+        className={cn("flex items-center justify-center gap-1.5 pt-3", className)}
+      >
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1.5 rounded-full transition-[width,background-color] duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
+              i === current ? "w-4 bg-foreground" : "w-1.5 bg-foreground/20"
+            )}
+          />
+        ))}
+      </div>
+    )
+  }
   return (
     <div
       data-slot="dialog-steps"
+      data-variant="bar"
       // Desvia do × como o título: a barra é a primeira linha do cabeçalho.
       className={cn("flex flex-col gap-1.5 pb-3", DIALOG_CLOSE_RESERVE, className)}
     >

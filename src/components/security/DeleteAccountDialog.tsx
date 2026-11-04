@@ -37,10 +37,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Muted } from "@/components/ui/typography"
-import { CheckCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { TrashIcon } from "@heroicons/react/16/solid"
 
 import { BanknotesIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
-import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
+import { CheckCircleIcon, TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
 
 const DATA_LOSS_ITEMS = [
     { label: "Todos os lançamentos", icon: BanknotesIcon },
@@ -180,35 +180,31 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
           : "Sua conta e os dados acima serão apagados."
 
     // Um cabeçalho só para as duas superfícies: `surface="auto"` faz do mesmo
-    // diálogo a gaveta do telefone. Os passos somem na tela de sucesso, que não
-    // é um passo — é o fim do fluxo.
+    // diálogo a gaveta do telefone. O topo é o centrado do iOS: o poço, o
+    // título, a descrição e os pontos. Os passos somem na tela de sucesso, que
+    // não é um passo — é o fim do fluxo.
     const header = (
-        <DialogHeader>
+        <DialogHeader align="center">
+            <DialogMedia variant="well" tone={success ? "success" : "destructive"}>
+                {success ? <CheckCircleIcon /> : <TrashOutlineIcon />}
+            </DialogMedia>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
             {success ? null : (
                 <DialogSteps
+                    variant="dots"
                     current={step === "warning" ? 0 : 1}
                     total={2}
                     labels={["Aviso", "Confirmação"]}
                 />
             )}
-            <DialogMedia
-                className={
-                    success ? "text-success" : step === "warning" ? "text-destructive" : undefined
-                }
-            >
-                {success ? <CheckCircleIcon /> : <TrashIcon />}
-            </DialogMedia>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
 
     const bodySuccess = (
         <DialogBody>
+            {/* O tique mora no poço do cabeçalho: aqui fica só a frase. */}
             <div className="flex flex-col items-center justify-center py-4">
-                <div className="mb-4 rounded-full bg-success-muted p-4">
-                    <CheckCircleOutlineIcon className="size-12 text-success" />
-                </div>
                 <p className="text-center text-sm text-muted-foreground">
                     Todos os seus dados foram removidos permanentemente.
                 </p>

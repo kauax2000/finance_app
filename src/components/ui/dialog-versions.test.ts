@@ -57,6 +57,43 @@ describe("as versões do Dialog", () => {
     expect(CODIGO).toContain("has-[[data-slot=dialog-steps]]:h-(--dialog-max-h)")
   })
 
+  it("o cabeçalho centrado: align, o poço com o tom e os passos em pontos, opcionais", () => {
+    // Os padrões continuam os de antes.
+    expect(renderToStaticMarkup(h(DialogHeader, null, "x"))).toContain('data-align="start"')
+    const inline = renderToStaticMarkup(h(DialogMedia, null, h("svg")))
+    expect(inline).toContain('data-variant="inline"')
+    expect(inline).toContain("[&amp;&gt;svg]:size-4")
+    expect(inline).not.toContain("rounded-full")
+    const barra = renderToStaticMarkup(h(DialogSteps, { current: 0, total: 2 }))
+    expect(barra).toContain('data-variant="bar"')
+    expect(barra).toContain('role="progressbar"')
+
+    const centro = renderToStaticMarkup(h(DialogHeader, { align: "center" }, "x"))
+    expect(centro).toContain('data-align="center"')
+    expect(centro).toContain("text-center")
+    // O recuo do × dos dois lados: o título já desvia à direita, e ganha a esquerda.
+    expect(centro).toContain("[&amp;&gt;[data-slot$=-title]]:ps-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]")
+
+    const poco = renderToStaticMarkup(h(DialogMedia, { variant: "well", tone: "destructive" }, h("svg")))
+    expect(poco).toContain('data-variant="well"')
+    expect(poco).toMatch(/\bsize-14\b/)
+    expect(poco).toContain("bg-destructive-muted text-destructive-muted-foreground")
+    expect(poco).toContain("[&amp;&gt;svg]:size-6")
+    for (const tom of ["success", "warning"] as const) {
+      expect(renderToStaticMarkup(h(DialogMedia, { variant: "well", tone: tom }, h("svg")))).toContain(`bg-${tom}-muted text-${tom}-muted-foreground`)
+    }
+    // O tom não pinta o ícone na linha do título.
+    expect(renderToStaticMarkup(h(DialogMedia, { tone: "destructive" }, h("svg")))).not.toContain("bg-destructive-muted")
+
+    const pontos = renderToStaticMarkup(h(DialogSteps, { variant: "dots", current: 1, total: 2, labels: ["Aviso", "Confirmação"] }))
+    expect(pontos).toContain('role="img"')
+    expect(pontos).toContain('aria-label="Passo 2 de 2 · Confirmação"')
+    expect(pontos).not.toContain("progressbar")
+    expect(pontos.match(/rounded-full/g)?.length).toBe(2)
+    expect(pontos).toContain("w-4 bg-foreground")
+    expect(pontos).toContain("motion-reduce:transition-none")
+  })
+
   it("start encosta uma ação à esquerda, e vem antes no DOM — embaixo no telefone", () => {
     const html = renderToStaticMarkup(h(DialogFooter, { start: h("b", null, "voltar") }, h("i", null, "ok")))
     expect(html.indexOf("dialog-footer-start")).toBeLessThan(html.indexOf("<i>"))

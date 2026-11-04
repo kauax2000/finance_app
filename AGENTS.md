@@ -1189,7 +1189,9 @@ declaração de `background-color` no trilho).
     responde). Nova aba, modificadoras, `download` e outro domínio seguem o
     navegador. Não escreva `onClick` que fecha o diálogo num link.
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. Os formulários usam
-    `FormCancel` e `FormSubmit`.
+    `FormCancel` e `FormSubmit`. `DialogHeader align="center"`, `DialogMedia
+    variant="well" tone` e `DialogSteps variant="dots"` (depois da descrição)
+    são o cabeçalho centrado de uma confirmação que pausa (Excluir conta).
   - O cabeçalho é alinhado à esquerda e sem `gap`; o × não reserva lugar (o
     título desvia dele só quando ele existe). O rodapé sangra por
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem

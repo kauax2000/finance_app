@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { TrashIcon, UserPlusIcon } from "@heroicons/react/16/solid"
+import { TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -216,6 +217,31 @@ export default function DialogDoc() {
       </DocSection>
 
       <DocSection
+        title="Cabeçalho centrado"
+        description={
+          <>
+            O topo de uma confirmação que pausa, como Excluir conta:{" "}
+            <code>DialogHeader align=&quot;center&quot;</code> centra título e
+            descrição (o recuo do × vale dos dois lados),{" "}
+            <code>DialogMedia variant=&quot;well&quot; tone</code> põe o ícone
+            num poço de 56px na superfície <code>-muted</code> do tom — passe o
+            ícone <code>24/outline</code> — e{" "}
+            <code>DialogSteps variant=&quot;dots&quot;</code> troca a barra por
+            pontos, depois da descrição, com o &ldquo;Passo N de M&rdquo; só
+            para o leitor de tela.
+          </>
+        }
+        code={`<DialogHeader align="center">
+  <DialogMedia variant="well" tone="destructive"><TrashIcon /></DialogMedia>
+  <DialogTitle>Excluir conta</DialogTitle>
+  <DialogDescription>Não dá para desfazer.</DialogDescription>
+  <DialogSteps variant="dots" current={passo} total={2} labels={["Aviso", "Confirmação"]} />
+</DialogHeader>`}
+      >
+        <CentradoDemo />
+      </DocSection>
+
+      <DocSection
         title="Ação à esquerda no rodapé"
         description={
           <>
@@ -351,6 +377,27 @@ export default function DialogDoc() {
             type: "current · total · labels",
             description:
               "Passo N de M com a barra segmentada; o fixed passa a ocupar o teto.",
+          },
+          {
+            prop: "DialogHeader align",
+            type: '"start" | "center"',
+            default: '"start"',
+            description:
+              "center: o topo da confirmação que pausa, com título e descrição centrados e o recuo do × dos dois lados.",
+          },
+          {
+            prop: "DialogMedia variant · tone",
+            type: '"inline" | "well" · "default" | "destructive" | "success" | "warning"',
+            default: '"inline" · "default"',
+            description:
+              "well: o poço de 56px com o ícone de 24 (24/outline), na superfície -muted do tom; tone só vale no poço.",
+          },
+          {
+            prop: "DialogSteps variant",
+            type: '"bar" | "dots"',
+            default: '"bar"',
+            description:
+              "dots: pontos centrados, sem barra nem texto à vista; o Passo N de M fica no nome acessível. Vai depois da descrição.",
           },
           {
             prop: "DialogHeaderRow",
@@ -634,5 +681,80 @@ function LarguraDemo() {
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+function CentradoDemo() {
+  const [passo, setPasso] = React.useState(0)
+
+  return (
+    <Dialog surface="auto" onOpenChange={(v) => v && setPasso(0)}>
+      <DialogTrigger asChild>
+        <Button variant="outline">excluir conta</Button>
+      </DialogTrigger>
+      <DialogContent layout="fixed">
+        <DialogHeader align="center">
+          <DialogMedia variant="well" tone="destructive">
+            <TrashOutlineIcon />
+          </DialogMedia>
+          <DialogTitle>
+            {passo === 0 ? "Excluir conta" : "Confirme com sua senha"}
+          </DialogTitle>
+          <DialogDescription>
+            {passo === 0
+              ? "Não dá para desfazer."
+              : "Sua conta e os dados acima serão apagados."}
+          </DialogDescription>
+          <DialogSteps
+            variant="dots"
+            current={passo}
+            total={2}
+            labels={["Aviso", "Confirmação"]}
+          />
+        </DialogHeader>
+        <DialogBody>
+          {passo === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Todos os lançamentos, carteiras, categorias, o perfil e as
+              preferências.
+            </p>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="ds-dialog-senha">Sua senha</FieldLabel>
+              <Input id="ds-dialog-senha" type="password" placeholder="Digite sua senha" />
+            </Field>
+          )}
+        </DialogBody>
+        <DialogFooter
+          start={
+            passo > 0 ? (
+              <Button type="button" variant="tertiary" onClick={() => setPasso(0)}>
+                voltar
+              </Button>
+            ) : null
+          }
+        >
+          {passo === 0 ? (
+            <>
+              <DialogClose asChild>
+                <Button type="button" variant="tertiary">
+                  cancelar
+                </Button>
+              </DialogClose>
+              <Button type="button" onClick={() => setPasso(1)}>
+                continuar
+              </Button>
+            </>
+          ) : (
+            <DialogClose asChild>
+              <Button type="button" variant="destructive">
+                <TrashIcon aria-hidden />
+                excluir conta
+              </Button>
+            </DialogClose>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

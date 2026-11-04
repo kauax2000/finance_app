@@ -661,9 +661,19 @@ function auditFile(absPath, project) {
       // troca o conjunto no ternario (`size === "xl" || size === "2xl"`), que é
       // a regra sendo demonstrada; chutar `size-4` ali acusaria o acerto.
       if (!found && abridorTile && !degrauTile && /\bsize=\{/.test(abridorTile[1])) continue
+      // O poço do `DialogMedia variant="well"` (rodada 363) crava o ícone em
+      // `[&>svg]:size-6`: o conjunto certo ali é o `24`.
+      const antesDoMedia = src.slice(Math.max(0, m.index - 300), m.index)
+      const ultMedia = antesDoMedia.lastIndexOf("<DialogMedia")
+      const noPocoDoDialog =
+        ultMedia !== -1 &&
+        !antesDoMedia.slice(ultMedia).includes("</DialogMedia>") &&
+        /^<DialogMedia\b[^>]*variant="well"/.test(antesDoMedia.slice(ultMedia))
       const n = found
         ? parseFloat(found[1])
-        : dentroDeDrawerAction(m.index)
+        : noPocoDoDialog
+          ? 6
+          : dentroDeDrawerAction(m.index)
           ? 5
           : pocoEmLinha
           ? 4
