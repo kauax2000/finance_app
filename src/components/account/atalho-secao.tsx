@@ -198,7 +198,12 @@ export function AtalhoSecao() {
             {/* Com um aparelho conectado, o passo seguinte: lançar ao pagar com Apple Pay. */}
             {!lista.isError && tokens.length > 0 ? <ApplePayConvite /> : null}
 
-            <GuiaDoAtalho open={guiaAberto} onOpenChange={setGuiaAberto} aoCriar={() => void lista.refetch()} />
+            <GuiaDoAtalho
+                open={guiaAberto}
+                onOpenChange={setGuiaAberto}
+                aoCriar={() => void lista.refetch()}
+                nomesEmUso={tokens.map((t) => t.name)}
+            />
             {/* O código antigo não pode ser mostrado de novo: o guia cria outro e desconecta o antigo. */}
             <GuiaDoAtalho
                 open={baixarDeNovo}

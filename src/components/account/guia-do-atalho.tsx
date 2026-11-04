@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
+import { nomeLivre } from "@/components/account/nome-livre"
 import {
     CaixaDoPasso,
     JanelaDoAparelho,
@@ -100,12 +101,15 @@ export function GuiaDoAtalho({
     onOpenChange,
     aoCriar,
     substituir,
+    nomesEmUso = [],
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     aoCriar: () => void
     /** O aparelho cujo código este guia troca: nome e carteira vêm dele, e ele é desconectado depois que o novo existe. */
     substituir?: CaptureToken
+    /** Os nomes dos aparelhos já conectados: a sugestão de um aparelho novo não repete nenhum. */
+    nomesEmUso?: string[]
 }) {
     const { profile, user } = useAuth()
     const { workspaces, currentWorkspaceId } = useWorkspace()
@@ -131,7 +135,7 @@ export function GuiaDoAtalho({
             setComo("siri")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
-            setNome(substituir?.name ?? (primeiro ? `iPhone de ${primeiro}` : "iPhone"))
+            setNome(substituir?.name ?? nomeLivre(primeiro ? `iPhone de ${primeiro}` : "iPhone", nomesEmUso))
             setCarteira(substituir?.workspace_id ?? "")
             setErro(null)
         }
