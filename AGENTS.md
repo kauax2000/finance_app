@@ -1154,6 +1154,13 @@ declaração de `background-color` no trilho).
   deferrals. `AvatarImage` ou `AvatarFallback` (`tint` `vivid` | `soft`). Sem
   `variant` de superfície, vidro ou anel, e **só o círculo**. A cor vem de
   `identityToneFor`, nunca de classe montada.
+- **`Avatar` com canto** (rodada 362): `badge` põe um ícone no canto de baixo à
+  direita, **fora do recorte** (irmão da raiz num invólucro `relative`, que leva
+  o `className`), com o anel na cor da superfície (`--avatar-badge-ring`, senão
+  `--background`) e o corpo pela escala do avatar. `onEdit` faz da foto inteira
+  o botão de editar (`editLabel`, padrão "Editar foto"), com o lápis no canto,
+  que vai a `--secondary-hover` no cursor e no toque. Minha conta edita o perfil
+  por ele. `avatar-badge-versions.test.ts`.
 - **`AvatarGroup`**: a escada do `Avatar`, o anel na cor da superfície
   (`--avatar-group-ring`, senão `--avatar-group-surface`), uma dica só que
   viaja (`aria-hidden`). Os filhos são `AvatarGroupItem` — **nenhuma tela monta
@@ -1906,6 +1913,22 @@ declaração de `background-color` no trilho).
   falso, congelado em 0 fora do repouso, sem rAF nem `setState` por evento —
   **um `pointermove` em `document` continua exclusivo do brilho da marca**.
   `showcase-versions.test.ts`.
+- **`Seal`** (Átomo, rodada 361): o selo de metal holográfico de um marco da
+  pessoa — o anel gravado (`ring`, uma volta, por `textPath`), os fios
+  concêntricos e um `icon` no miolo, em `currentColor` da tinta `--seal-ink`.
+  **40px na linha** (botão, alvo de 48 pelo `::after` no toque) e **abre
+  grande** num diálogo do Radix sobre o `--scrim`, com o `label` como título:
+  ele é o nome acessível e a única leitura (o anel é textura). `tone` `silver`
+  (padrão) | `gold`. **O metal é físico, não tema**: as paradas moram nas
+  `@utility seal-silver`/`seal-gold`, iguais nos dois temas. **Exceção nomeada
+  ao arco-íris sob texto**: o holográfico (`@utility seal-holo`) usa as paradas
+  da marca, com o volume em `--seal-holo-opacity` e só sob o ponteiro; o selo
+  conta como **a peça de marca da tela**. Inclina até 18° com o cursor
+  (`ehCursor`, variáveis no nó, sem render por evento), balança parado
+  (`seal-sway`), e aberto inclina com o giroscópio (permissão pedida no toque
+  que abre) e dá uma volta por toque. Movimento reduzido: sem balanço nem
+  volta. `SealSkeleton` é o círculo de 40. Minha conta o usa no lugar de
+  "Membro desde". `seal-versions.test.ts`.
 - **`QrCode`** (Molécula, rodada 355): o código que leva de uma tela a outro
   aparelho, desenhado em SVG com tokens (`uqr`, correção `M`, sem borda; os
   módulos escuros são **um `<path>` por diagonal**). **A placa é clara nos dois

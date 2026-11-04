@@ -149,7 +149,7 @@ export const REGISTRY: RegistryEntry[] = [
   // ── Atoms ──────────────────────────────────────────────────────────────
   ...layer("Atoms", [
     /** Um objeto. Imagem e fallback são estados dele, não partes. */
-    entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
+    entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos, com o canto e o editar.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback, AvatarBadge"),
     entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge, BadgeDot"),
     entry("button", "Button", "A ação clicável, em degraus de peso e tamanho.", ui("button"), "Button"),
     entry("checkbox", "Checkbox", "Escolha booleana em formulários e listas.", ui("checkbox"), "Checkbox"),
@@ -178,6 +178,8 @@ export const REGISTRY: RegistryEntry[] = [
     entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
     /** Uma casca rolável, e uma máscara. */
     entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
+    /** O disco, o anel gravado e o selo aberto são anatomia de um objeto só; o único import de `ui/` é o `Skeleton` do esqueleto. */
+    entry("seal", "Seal", "Selo de metal holográfico de um marco da pessoa, que abre grande ao toque.", ui("seal"), "Seal, SealSkeleton"),
     entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
     entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),
     entry("slider", "Slider", "Valor ou intervalo numérico contínuo.", ui("slider"), "Slider"),

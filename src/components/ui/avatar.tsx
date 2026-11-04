@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
+import { PencilIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 
@@ -35,19 +36,105 @@ const avatarVariants = cva(
   }
 )
 
-function Avatar({
+/**
+ * O canto do avatar (rodada 362): um círculo no canto de baixo à direita, com
+ * um anel na cor da superfície onde o avatar pousa (`--avatar-badge-ring`, senão
+ * `--background`), para recortar a foto. O corpo acompanha a escala do avatar e
+ * manda no do ícone (`16/solid`).
+ */
+const avatarBadgeVariants = cva(
+  "pointer-events-none absolute -end-0.5 -bottom-0.5 grid place-items-center rounded-full bg-secondary text-secondary-foreground ring-2 ring-(--avatar-badge-ring,var(--background)) transition-colors duration-(--duration-fast)",
+  {
+    variants: {
+      size: {
+        xs: "size-3 [&>svg]:size-2",
+        sm: "size-3.5 [&>svg]:size-2.5",
+        md: "size-4 [&>svg]:size-2.5",
+        lg: "size-5 [&>svg]:size-3",
+        xl: "size-6 [&>svg]:size-3.5",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  }
+)
+
+function AvatarBadge({
   className,
   size,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> &
-  VariantProps<typeof avatarVariants>) {
+}: React.ComponentProps<"span"> & VariantProps<typeof avatarBadgeVariants>) {
   return (
+    <span
+      data-slot="avatar-badge"
+      aria-hidden="true"
+      className={cn(avatarBadgeVariants({ size }), className)}
+      {...props}
+    />
+  )
+}
+
+type AvatarProps = React.ComponentProps<typeof AvatarPrimitive.Root> &
+  VariantProps<typeof avatarVariants> & {
+    /** O desenho do canto (um ícone): fica fora do recorte do círculo. */
+    badge?: React.ReactNode
+    /**
+     * A foto vira o botão de editar: o avatar inteiro é o alvo, e o canto mostra
+     * o lápis (a menos que `badge` diga outro desenho).
+     */
+    onEdit?: () => void
+    /** O nome do botão de editar. */
+    editLabel?: string
+  }
+
+function Avatar({
+  className,
+  size,
+  badge,
+  onEdit,
+  editLabel = "Editar foto",
+  ...props
+}: AvatarProps) {
+  const raiz = (
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size ?? "md"}
-      className={cn(avatarVariants({ size }), className)}
+      className={cn(avatarVariants({ size }), !(badge || onEdit) && className)}
       {...props}
     />
+  )
+  const canto = badge ?? (onEdit ? <PencilIcon /> : null)
+  if (!canto) return raiz
+
+  const corpo = (
+    <>
+      {raiz}
+      <AvatarBadge size={size}>{canto}</AvatarBadge>
+    </>
+  )
+  if (!onEdit) {
+    return (
+      <span data-slot="avatar-frame" className={cn("relative inline-flex shrink-0 rounded-full", className)}>
+        {corpo}
+      </span>
+    )
+  }
+  return (
+    <button
+      type="button"
+      data-slot="avatar-frame"
+      aria-label={editLabel}
+      onClick={onEdit}
+      className={cn(
+        "group/avatar relative inline-flex shrink-0 cursor-pointer rounded-full outline-none",
+        "focus-visible:ring-3 focus-visible:ring-ring/45",
+        "hover:[&_[data-slot=avatar-badge]]:bg-secondary-hover active:[&_[data-slot=avatar-badge]]:bg-secondary-hover",
+        className
+      )}
+    >
+      {corpo}
+    </button>
   )
 }
 
@@ -111,4 +198,5 @@ const AvatarFallback = React.forwardRef<
 ))
 AvatarFallback.displayName = "AvatarFallback"
 
-export { Avatar, AvatarFallback, AvatarImage, avatarVariants }
+export { Avatar, AvatarBadge, AvatarFallback, AvatarImage, avatarBadgeVariants, avatarVariants }
+export type { AvatarProps }

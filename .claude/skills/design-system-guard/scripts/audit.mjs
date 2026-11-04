@@ -143,6 +143,9 @@ const DRAWN_SVG_FILES = [
   // ponteiro de outra pessoa é um primitivo desenhado — a ponta é a posição —,
   // e o `CursorArrowRaysIcon` desenha um clique, não um ponteiro.
   "components/ui/presence-cursor",
+  // O `Seal` (rodada 361): o anel gravado, os fios e o texto em volta são a
+  // estampa de um selo, uma marca desenhada, não um ícone.
+  "components/ui/seal",
   // O `QrCode`: a matriz é um desenho (um `<path>` de módulos), não um ícone.
   "components/ui/qr-code",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.

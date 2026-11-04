@@ -28863,3 +28863,50 @@ a 1280 com mouse, alerta `sm` de 46, ação inline e × de 24.
 A `AnnouncementBar` importa o `TONE_ICON` e não mudou. A página do catálogo ganhou o
 poço, o `storageKey` (com a chave dita), o "No telefone" no `IphoneFrame` e as duas props
 novas na tabela. Contraste do ícone no poço medido: pior caso 4,94:1 (ícone, `destructive` no claro), e o texto do mesmo alerta a 6,26:1.
+
+### Rodada 361 — o selo holográfico
+
+Pedido do dono, com a foto de um selo físico prateado e holográfico ("Genuine guaranteed ·
+Made in USA"): recriar o selo em 3D, que se mexe, no lugar do texto "Membro desde" de Minha
+conta, ao lado de "Editar perfil". Nada no catálogo fazia isso: o `Badge` é estado, o
+`PresenceCursor` e o `DeviceFrame` são os átomos desenhados mais próximos.
+
+Duas maquetes no navegador antes das perguntas. A primeira (quatro opções: ao lado do
+botão, acima dele, prata sóbria e ouro) foi recusada no material: a prata parecia cinza, o
+desenho pedia melhora e o selo estava grande. A segunda trocou o metal chapado por um
+cônico de alto contraste, que gira com a inclinação (o reflexo de uma moeda), pôs o fio
+concêntrico do estampado e o símbolo do app no miolo, e encolheu o selo a 40px, que abre
+grande ao toque. As escolhas: **Redesenho** prata holográfica; **Peças** ícone no miolo,
+metal por tom e esqueleto; **Comportamento** inclinar com o cursor, giroscópio no telefone e
+o toque que gira; **App** ao lado do botão. Fora: a escada de tamanho e o balanço como
+escolha (ele ficou como o repouso do selo, sem cursor).
+
+A exceção ao arco-íris sob texto foi apresentada como ⚠️ Fora do padrão do DS e aceita: o
+holográfico usa as paradas da marca, com o volume em `--seal-holo-opacity` (0,5) e só num
+círculo em volta do ponteiro, e o selo conta como a peça de marca da tela. O metal não muda
+com o tema, e por isso as paradas moram nas utilities do tom, e não em `:root`/`.dark`.
+
+O selo aberto é um diálogo do Radix direto, e não o `Dialog` do sistema: o átomo não pode
+importar organismo, e o selo não tem a cromagem de um diálogo (nem placa, nem ×). O véu é
+o `--scrim` (0,62), e não o `--overlay` (0,4): a legenda é branca e o `--overlay` claro não a
+segurava. O foco vai ao selo grande ao abrir e volta ao pequeno ao fechar (medido).
+
+Medido no catálogo: o selo de 40×40, o `seal-sway` rodando parado, o holográfico a 0,5, a
+volta de 0 a 360° (243° aos 400ms), o Esc e o clique fora fechando. Um clique sintético no
+fundo deixou o conteúdo preso no estado `closed`; o clique de verdade e o Esc fecham. O
+auditor ganhou `components/ui/seal` em `DRAWN_SVG_FILES`: o anel e os fios são a estampa,
+não um ícone.
+
+### Rodada 362 — o canto do Avatar e a foto que edita
+
+Pedido do dono, depois do selo: o editar à esquerda e só o selo à direita. Quatro layouts
+lado a lado no navegador (o lápis no avatar, o lápis ao lado do nome, o selo no avatar e o
+selo antes do avatar); escolhido o primeiro, o padrão do iOS e do Instagram: a foto é o
+alvo de editar, e o selo fica sozinho à direita.
+
+O `Avatar` não tinha canto, e a raiz recorta (`overflow-hidden`): o canto mora fora dela,
+num invólucro `relative`. Escolhido pelo dono "AvatarBadge + editar": `badge` (o desenho
+do canto) e `onEdit` (a foto vira o `button`, com o lápis). Só acrescenta: sem `badge` nem
+`onEdit` o avatar renderiza a raiz de sempre, sem invólucro, e nenhuma tela que já o usa
+muda. O anel do canto é `--avatar-badge-ring`, senão `--background`. O botão de ícone
+"Editar perfil" de Minha conta saiu, e o esqueleto perdeu o círculo dele.

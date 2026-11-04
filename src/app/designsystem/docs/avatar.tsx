@@ -1,5 +1,7 @@
 "use client"
 
+import { CheckIcon } from "@heroicons/react/16/solid"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Code } from "@/components/ui/code"
 import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
@@ -217,6 +219,36 @@ const tone = identityToneFor(profile.avatar_color, email)
         })}
       </DocSection>
 
+      <DocSection
+        title="Com o canto"
+        description="badge põe um desenho no canto de baixo à direita, fora do recorte do círculo, com um anel na cor da superfície. onEdit faz da foto inteira o botão de editar, com o lápis no canto: é a identidade de Minha conta. O corpo do canto segue a escala do avatar."
+        code={`<Avatar size="xl" onEdit={abrirPerfil} editLabel="Editar perfil">
+  <AvatarImage src={fotoUrl} alt="" />
+  <AvatarFallback className={cn(tone.surface, tone.ink)}>KL</AvatarFallback>
+</Avatar>
+
+<Avatar size="md" badge={<CheckIcon />}>…</Avatar>`}
+        previewClassName="flex-wrap items-center gap-6"
+      >
+        {SIZES.map(({ size }) => {
+          const tone = identityToneFor(null, "Karina Lopes")
+          return (
+            <Avatar key={size} size={size} onEdit={() => {}} editLabel="Editar perfil">
+              <AvatarFallback className={cn(tone.surface, tone.ink)}>KL</AvatarFallback>
+            </Avatar>
+          )
+        })}
+        <Avatar size="lg" badge={<CheckIcon />}>
+          <AvatarFallback className={cn(identityToneFor(null, "Rafael Souza").surface, identityToneFor(null, "Rafael Souza").ink)}>
+            RS
+          </AvatarFallback>
+        </Avatar>
+      </DocSection>
+
+      <DocNote title="O canto mora fora do círculo">
+        A raiz recorta (<code>overflow-hidden</code>), e por isso o canto é irmão dela, num invólucro <code>relative</code>: um <code>span</code> com <code>badge</code>, um <code>button</code> com <code>onEdit</code>. O anel é <code>--avatar-badge-ring</code>, senão <code>--background</code>: sobre um cartão, quem chama declara <code>[--avatar-badge-ring:var(--color-card)]</code>. No cursor e no toque o canto vai a <code>--secondary-hover</code>; o anel de foco é o do sistema, em volta da foto.
+      </DocNote>
+
       <DocNote title="alt é obrigatório, e ao lado do nome ele é vazio">
         <code>AvatarImage</code> exige <code>alt</code> no tipo: um padrão silencioso deixava foto sem nome nenhum. Ao lado do nome, escreva <code>alt=&quot;&quot;</code> — descrever a foto faria o leitor de tela anunciar a mesma pessoa duas vezes. Sozinho, o avatar leva o nome da pessoa no <code>alt</code>.
       </DocNote>
@@ -244,6 +276,22 @@ const tone = identityToneFor(profile.avatar_color, email)
             type: '"xs" | "sm" | "md" | "lg" | "xl"',
             default: '"md"',
             description: "24, 32, 40, 48 e 56, com o corpo das iniciais junto.",
+          },
+          {
+            prop: "Avatar · badge",
+            type: "ReactNode",
+            description: "O desenho do canto (um ícone 16/solid), fora do recorte. O corpo segue o size.",
+          },
+          {
+            prop: "Avatar · onEdit",
+            type: "() => void",
+            description: "A foto vira o botão de editar, com o lápis no canto (a menos que badge diga outro).",
+          },
+          {
+            prop: "Avatar · editLabel",
+            type: "string",
+            default: '"Editar foto"',
+            description: "O nome do botão de editar.",
           },
           {
             prop: "AvatarImage · alt",
