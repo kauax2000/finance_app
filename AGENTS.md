@@ -1707,12 +1707,12 @@ declaração de `background-color` no trilho).
   padding="none"` de `ItemGroup variant="divided"`: **Carteira** (as abas que saíram
   da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e
   convidados), **Neste celular** (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
-  inteligente, instalar o app; no telefone isso não existe em Configurações; no iPhone com o app e sem aparelho ativo, o cartão "Lançar pelo iPhone" abre o grupo, e com aparelho vira a linha; no navegador do iPhone o cartão "Instale o app" toma o lugar da linha "Instalar o app"; `lancarNaVoce`) e **Conta**
-  (Planos e pagamentos, Política de privacidade — `/settings/privacidade`, dentro do app —, Cofre aberto com "Seus dados: exportar e apagar", IAs conectadas — um cartão de conectar acima da lista até a primeira IA, e depois a linha; `iaNaVoce` — e Notificações; **Configurações não existe no telefone**: abaixo de 768px `/settings` faz `replace` para `/me`, e as quatro rotas `/settings/lancar-pelo-iphone`, `/settings/privacidade`, `/settings/ias` e `/settings/notificacoes` mostram cada seção sozinha, com voltar a Você e a aba Você acesa — `ROTAS_DE_VOCE_EM_SETTINGS`). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
+  inteligente, instalar o app; no telefone isso não existe em Configurações; com aparelho vira a linha "Lançar pelo iPhone"; sem aparelho, o cartão "Lançar pelo iPhone" e, no navegador do iPhone, o convite "Instale o app" (no lugar da linha "Instalar o app") formam uma seção própria abaixo, com os subtítulos "Lançar pelo iPhone" e "App no iPhone"; `lancarNaVoce`) e **Conta**
+  (Planos e pagamentos, IAs conectadas — até a primeira IA o cartão de conectar é a seção própria "Inteligência artificial", acima de Conta, e depois vira a linha; `iaNaVoce` —, Preferências de notificação e, por último, Política de privacidade — `/settings/privacidade`, dentro do app; o Cofre aberto saiu, e exportar os dados mora só em Excluir conta; **Configurações não existe no telefone**: abaixo de 768px `/settings` faz `replace` para `/me`, e as quatro rotas `/settings/lancar-pelo-iphone`, `/settings/privacidade`, `/settings/ias` e `/settings/notificacoes` mostram cada seção sozinha, com voltar a Você e a aba Você acesa — `ROTAS_DE_VOCE_EM_SETTINGS`). As linhas dos grupos Carteira e Conta são `Item variant="flush" interactive asChild`
   iguais (ícone de 20, texto 16 no toque, mínimo de 48, `Badge` Beta, `ItemChevron`);
   as de Neste celular não são links: Tema e Sincronização são `Item` sem `asChild`, e
   Lançamento inteligente leva o ícone solto, como o Tema, e só Instalar o app fica com o ícone do app em 36.
-  A última linha de Conta é o **Sair**, com ícone e sem chevron, e o `AlertDialog` "Sair da conta?",
+  O **Sair** fica abaixo do cartão de Conta, sem moldura (não é linha da lista), em vermelho, com o `AlertDialog` "Sair da conta?",
   porque sair limpa a fila offline; o `signOut` só limpa quando o Supabase saiu de
   verdade (sem rede, o diálogo fica aberto com o erro); o Sair do menu do usuário do desktop continua,
   sem confirmação (erro em toast). No desktop nada
