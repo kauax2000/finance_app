@@ -67,12 +67,12 @@ export function ApplePayConvite() {
                     <div className="flex flex-col items-start gap-3 px-4 pb-4">
                         {/* O estado logo acima do botão, um degrau maior que o chip de linha: ao lado do aparelho não cabia. */}
                         {estado === "funcionando" ? (
-                            <Badge tone="success" className="px-3 py-1 text-sm">
+                            <Badge tone="success" className="w-full justify-center px-3 py-1 text-sm">
                                 <BadgeDot />
                                 Funcionando
                             </Badge>
                         ) : estado === "aguardando" ? (
-                            <Badge tone="warning" className="px-3 py-1 text-sm">
+                            <Badge tone="warning" className="w-full justify-center px-3 py-1 text-sm">
                                 Aguardando a 1ª compra
                             </Badge>
                         ) : null}
