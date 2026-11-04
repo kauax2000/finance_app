@@ -51,11 +51,11 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("grupo.items.length === 0")
         expect(PAGINA).toContain('<VoceAvatar size="xl" onEdit={')
     })
-    it("Cofre aberto diz o que é, e Cartões abre a carteira", () => {
+    it("Cofre aberto sem subtexto, e Cartões abre a carteira", () => {
         expect(PAGINA).toContain("item.description")
         const grupos = getVoceGroups([], "owner")
         expect(grupos[0].items.map((i) => i.name)).toEqual(["Cartões", "Contas a pagar", "Assinaturas", "Projetos", "Membros e convidados"])
-        expect(grupos[1].items.find((i) => i.name === "Cofre aberto")?.description).toBe("Seus dados: exportar e apagar")
+        expect(grupos[1].items.find((i) => i.name === "Cofre aberto")?.description).toBeUndefined()
     })
     it("Neste celular: título, e o ladrilho só no ícone do app", () => {
         const grupo = semComentarios(lerFonte("src/components/settings/neste-celular-grupo.tsx"))

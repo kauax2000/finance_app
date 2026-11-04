@@ -7,6 +7,7 @@ import {
     CreditCardIcon,
     FolderIcon,
     LockClosedIcon,
+    ShieldCheckIcon,
     SparklesIcon,
     Squares2X2Icon,
     TagIcon,
@@ -48,6 +49,7 @@ import {
     CreditCardIcon as CreditCardMini,
     FolderIcon as FolderMini,
     LockClosedIcon as LockClosedMini,
+    ShieldCheckIcon as ShieldCheckMini,
     SparklesIcon as SparklesMini,
     Squares2X2Icon as Squares2X2Mini,
     TagIcon as TagMini,
@@ -143,6 +145,7 @@ const ICONE_MINI = new Map<HeroIcon, HeroIcon>([
     [SparklesIcon, SparklesMini],
     [BellIcon, BellMini],
     [LockClosedIcon, LockClosedMini],
+    [ShieldCheckIcon, ShieldCheckMini],
 ])
 
 /** O par mini, ou `undefined` — quem não tem par continua no de 24. */
@@ -301,10 +304,10 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             label: "Conta",
             items: [
                 perfil(ROUTES.PLANS),
-                { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },
-                { ...perfil(ROUTES.COFRE), description: "Seus dados: exportar e apagar" },
+                perfil(ROUTES.COFRE),
                 { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
                 { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Preferências de notificação", icon: BellIcon },
+                { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },
             ],
         },
     ]
