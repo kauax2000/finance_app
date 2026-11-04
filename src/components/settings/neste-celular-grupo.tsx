@@ -97,8 +97,6 @@ export function NesteCelularGrupo() {
                 <PageSectionHeader>
                     <PageSectionTitle>Neste celular</PageSectionTitle>
                 </PageSectionHeader>
-                {lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}
-                {lancar === "convite" ? <ConviteDeInstalarCartao /> : null}
                 <Card padding="none">
                     <ItemGroup variant="divided">
                         <Item variant="flush" className="min-h-12">
@@ -185,6 +183,8 @@ export function NesteCelularGrupo() {
                         </div>
                     ) : null}
                 </Card>
+                {lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}
+                {lancar === "convite" ? <ConviteDeInstalarCartao /> : null}
             </PageSection>
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
             {/* Fora do ramo do cartão, como em `AtalhoSecao`: o primeiro aparelho troca o cartão pela linha, e o guia segue aberto até a pessoa fechar, com o código e os passos do atalho. */}

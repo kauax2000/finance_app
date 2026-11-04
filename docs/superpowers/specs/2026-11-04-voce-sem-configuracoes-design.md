@@ -11,7 +11,7 @@ Configurações no celular era um depósito de três coisas que a pessoa precisa
 ## O que muda (só abaixo de 768px, `useIsMobile`)
 
 ### A aba Você (`/me`)
-- **Grupo "Neste celular"** (o que já existe, `NesteCelularGrupo`, no mesmo lugar: entre Carteira e Conta, com a âncora `#no-celular`). O cartão mora **acima** do cartão de linhas do grupo, solto, abaixo do título do grupo:
+- **Grupo "Neste celular"** (o que já existe, `NesteCelularGrupo`, no mesmo lugar: entre Carteira e Conta, com a âncora `#no-celular`). O cartão mora **abaixo** do cartão de linhas do grupo (Tema, Lançamento inteligente), solto — pedido do dono depois de ver na tela:
   - iPhone com o app instalado (`useAparelhoDeLancar() === "iphone-instalado"`) e **nenhum aparelho conectado** (`useAparelhosDeCaptura` vazio): o **cartão de incentivo de Lançar pelo iPhone** — título e texto falando das formas de lançar, não só da Siri; botão que abre o guia de conectar o aparelho (o mesmo `GuiaDoAtalho` de hoje).
   - iPhone instalado **com** aparelho conectado: uma **linha** "Lançar pelo iPhone" (descrição: o nome do aparelho, ou "N aparelhos"), que abre a página `/settings/lancar-pelo-iphone`.
   - iPhone pelo navegador (`"navegador-iphone"`): o cartão "Instale o app" (`ConviteDeInstalar`, como hoje em Configurações), no mesmo lugar. *(Do construtor: com o cartão à vista, a linha "Instalar o app" do grupo sai, para não repetir.)*
