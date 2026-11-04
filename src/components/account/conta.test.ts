@@ -321,3 +321,25 @@ describe("Linha do aparelho e da IA", () => {
         expect(ias).toContain("SparklesIcon")
     })
 })
+
+describe("Lançar ao pagar: o estado do cartão", () => {
+    it("novo, aguardando e funcionando", async () => {
+        const { estadoDoApplePay } = await import("./lancar-ao-pagar")
+        const compra = { amount: 42.9, description: "Mercado", created_at: "2026-11-03T12:00:00Z" }
+        expect(estadoDoApplePay(null, null)).toBe("novo")
+        expect(estadoDoApplePay("2026-11-03T10:00:00Z", null)).toBe("aguardando")
+        // A compra é a prova: funciona mesmo sem o Pronto do guia.
+        expect(estadoDoApplePay(null, compra)).toBe("funcionando")
+        expect(estadoDoApplePay("2026-11-03T10:00:00Z", compra)).toBe("funcionando")
+    })
+    it("lê a coluna da conta e a última compra pelo Apple Pay, e o Pronto salva", () => {
+        const h = semComentarios(lerFonte("src/components/account/lancar-ao-pagar.ts"))
+        expect(h).toContain('.select("apple_pay_configurado_em")')
+        expect(h).toContain('.eq("source", "apple_pay")')
+        expect(h).toContain("apple_pay_configurado_em: new Date().toISOString()")
+        const g = semComentarios(lerFonte("src/components/account/guia-do-apple-pay.tsx"))
+        expect(g).toMatch(/onConcluir\?\.\(\)\s*onOpenChange\(false\)/)
+        const c = semComentarios(lerFonte("src/components/account/apple-pay-convite.tsx"))
+        for (const t of ["Aguardando a 1ª compra", "Funcionando", "Ver os passos de novo", "onConcluir="]) expect(c).toContain(t)
+    })
+})

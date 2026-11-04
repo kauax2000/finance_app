@@ -85,7 +85,16 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
 ]
 
 /** O guia da automação da Carteira: o Lançar gasto roda sozinho a cada compra com Apple Pay. */
-export function GuiaDoApplePay({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function GuiaDoApplePay({
+    open,
+    onOpenChange,
+    onConcluir,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    /** O Pronto do último passo: quem abre guarda que a pessoa terminou. */
+    onConcluir?: () => void
+}) {
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState(0)
     // O primeiro passo ao abrir não anima: só a troca de passo.
@@ -145,7 +154,14 @@ export function GuiaDoApplePay({ open, onOpenChange }: { open: boolean; onOpenCh
                     <Button
                         type="button"
                         variant="primary"
-                        onClick={ultimo ? () => onOpenChange(false) : () => irPara(passo + 1)}
+                        onClick={
+                            ultimo
+                                ? () => {
+                                      onConcluir?.()
+                                      onOpenChange(false)
+                                  }
+                                : () => irPara(passo + 1)
+                        }
                     >
                         {ultimo ? "Pronto" : "Próximo"}
                     </Button>

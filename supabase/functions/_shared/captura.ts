@@ -179,6 +179,19 @@ export function resumoDoLancamento(valor: number, descricao: string, nomeDoCarta
   return [moneyBRL(valor), descricao, nomeDoCartao].filter(Boolean).join(' · ')
 }
 
+/**
+ * O texto da notificação do iPhone: o atalho mostra o `resumo` da resposta, então
+ * todo lançamento confirma ("Gasto lançado: R$ 42,00 · Mercado · Nubank") e todo
+ * erro também avisa ("Não lançado: <motivo>"), em vez de uma notificação vazia.
+ */
+export function resumoDaNotificacao(resumo: string, tipo: 'expense' | 'income', aConferir: boolean): string {
+  return `${tipo === 'income' ? 'Receita lançada' : 'Gasto lançado'}: ${resumo}${aConferir ? ' · a conferir' : ''}`
+}
+
+export function resumoDoErro(erro: string): string {
+  return `Não lançado: ${erro}`
+}
+
 /** "2026-04-08" de um calendário real, ou null. */
 function dataValida(s: string | undefined): string | null {
   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null

@@ -18,6 +18,8 @@ import {
   ERRO_VALOR,
   montarLancamento,
   precisaDeIA,
+  resumoDaNotificacao,
+  resumoDoErro,
   resumoDoLancamento,
   tipoDoArquivo,
   validarPedido,
@@ -37,6 +39,11 @@ const corsHeaders = {
 }
 
 function json(status: number, payload: unknown): Response {
+  // Todo erro leva `resumo`: é o texto que o atalho põe na notificação do iPhone.
+  const p = payload as { error?: unknown; resumo?: unknown }
+  if (status >= 400 && typeof p?.error === 'string' && p.resumo == null) {
+    payload = { ...p, resumo: resumoDoErro(p.error) }
+  }
   return new Response(JSON.stringify(payload), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -68,8 +75,9 @@ type Gravado = {
   description: string
   payment_credit_card_id: string | null
   capture_meta: { ia?: unknown } | null
+  type: 'expense' | 'income'
 }
-const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_card_id, capture_meta'
+const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_card_id, capture_meta, type'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -171,10 +179,14 @@ Deno.serve(async (req: Request) => {
       ok: true,
       id: g.id,
       needs_review: g.needs_review,
-      resumo: resumoDoLancamento(
-        Number(g.amount),
-        g.description,
-        cartoes.find((c) => c.id === g.payment_credit_card_id)?.name,
+      resumo: resumoDaNotificacao(
+        resumoDoLancamento(
+          Number(g.amount),
+          g.description,
+          cartoes.find((c) => c.id === g.payment_credit_card_id)?.name,
+        ),
+        g.type,
+        g.needs_review,
       ),
       ia: g.capture_meta?.ia != null,
       anexo,
@@ -308,7 +320,7 @@ Deno.serve(async (req: Request) => {
         ok: true,
         id: null,
         needs_review: true,
-        resumo: montado.resumo,
+        resumo: resumoDaNotificacao(montado.resumo, linha.type, true),
         ia: campos != null,
         anexo: foto ? false : null,
       })

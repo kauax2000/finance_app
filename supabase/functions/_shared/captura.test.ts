@@ -3,6 +3,8 @@ import {
   clientIdDoPedido,
   montarLancamento,
   precisaDeIA,
+  resumoDaNotificacao,
+  resumoDoErro,
   tipoDoArquivo,
   validarPedido,
   valoresDoPlano,
@@ -649,4 +651,11 @@ Deno.test('tipoDoArquivo: PDF com lixo antes do %PDF (até 1024 bytes) ainda é 
   const longe = new Uint8Array(1100)
   longe.set([...'%PDF-1.4'].map((c) => c.charCodeAt(0)), 1050)
   assertEquals(tipoDoArquivo(longe), null)
+})
+
+Deno.test('a notificação do iPhone confirma o lançamento e avisa o erro', () => {
+  assertEquals(resumoDaNotificacao('R$ 42,00 · Mercado · Nubank', 'expense', false), 'Gasto lançado: R$ 42,00 · Mercado · Nubank')
+  assertEquals(resumoDaNotificacao('R$ 3.000,00 · Salário', 'income', false), 'Receita lançada: R$ 3.000,00 · Salário')
+  assertEquals(resumoDaNotificacao('R$ 42,00 · Mercado', 'expense', true), 'Gasto lançado: R$ 42,00 · Mercado · a conferir')
+  assertEquals(resumoDoErro('Não entendi o valor. Ex.: 42 mercado'), 'Não lançado: Não entendi o valor. Ex.: 42 mercado')
 })
