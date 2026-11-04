@@ -269,7 +269,7 @@ describe("Linha do aparelho e da IA", () => {
         })
     }
     it("aparelho: ícone, marca da carteira e último gasto", () => {
-        for (const s of ["DevicePhoneMobileIcon", "WorkspaceBrandMark", "formatRelativeTimePtBr", '"ainda não lançou nada"', "último gasto"])
+        for (const s of ["DevicePhoneMobileIcon", "BadgeDot", "formatRelativeTimePtBr", '"ainda não lançou nada"', "último gasto"])
             expect(atalho).toContain(s)
         expect(atalho).not.toContain("formatDateTimeShortPtBr")
         expect(atalho).not.toContain('"nunca usado"')

@@ -1,7 +1,7 @@
 "use client"
 
 import { DevicePhoneMobileIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
@@ -19,6 +19,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
 import {
@@ -36,7 +37,6 @@ import {
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
-import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 import { formatRelativeTimePtBr } from "@/lib/transaction-date"
@@ -128,18 +128,18 @@ export function AtalhoSecao() {
                             tokens.map((t) => {
                                 const carteira = workspaces.find((w) => w.id === t.workspace_id)
                                 return (
-                                    <Item key={t.id} variant="flush" className="px-4">
-                                        <ItemMedia variant="tile">
+                                    <Item key={t.id} variant="flush" size="lg" className="px-4">
+                                        <ItemMedia variant="tile" className="rounded-row">
                                             <DevicePhoneMobileIcon aria-hidden />
                                         </ItemMedia>
                                         <ItemContent className="min-w-0">
-                                            <ItemTitle className="truncate">{t.name}</ItemTitle>
-                                            <Muted className="flex min-w-0 items-center gap-1.5">
+                                            <ItemTitle className="truncate text-base">{t.name}</ItemTitle>
+                                            <Muted asChild>
+                                                <div className="flex min-w-0 items-center gap-1.5">
                                                 {carteira ? (
-                                                    <WorkspaceBrandMark
-                                                        size="xs"
-                                                        iconKey={carteira.icon}
-                                                        backgroundColor={carteira.icon_background_color}
+                                                    <BadgeDot
+                                                        className="size-2"
+                                                        style={{ "--badge-dot": carteira.icon_background_color } as CSSProperties}
                                                     />
                                                 ) : null}
                                                 <span className="truncate">
@@ -148,6 +148,7 @@ export function AtalhoSecao() {
                                                         ? `último gasto ${relativo(t.last_used_at)}`
                                                         : "ainda não lançou nada"}
                                                 </span>
+                                                </div>
                                             </Muted>
                                         </ItemContent>
                                         <ItemActions>

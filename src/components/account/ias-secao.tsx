@@ -103,12 +103,12 @@ export function IasSecao() {
                 ) : (
                     <ItemGroup variant="divided">
                         {grants.map((g) => (
-                            <Item key={g.client.id} variant="flush" className="px-4">
-                                <ItemMedia variant="tile">
+                            <Item key={g.client.id} variant="flush" size="lg" className="px-4">
+                                <ItemMedia variant="tile" className="rounded-row">
                                     <SparklesIcon aria-hidden />
                                 </ItemMedia>
                                 <ItemContent className="min-w-0">
-                                    <ItemTitle className="truncate">{g.client.name}</ItemTitle>
+                                    <ItemTitle className="truncate text-base">{g.client.name}</ItemTitle>
                                     <Muted className="truncate">desde {formatDatePtBr(g.granted_at)}</Muted>
                                 </ItemContent>
                                 <ItemActions>
