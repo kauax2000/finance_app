@@ -47,12 +47,12 @@ export function ApplePayConvite() {
                         <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
                             {estado === "novo" ? (
                                 <div>
-                                    <P className="font-semibold">Lance ao pagar com Apple Pay</P>
+                                    <P className="text-base font-semibold">Lance ao pagar com Apple Pay</P>
                                     <Muted>Cada compra com o iPhone vira um gasto aqui, sem digitar nada.</Muted>
                                 </div>
                             ) : (
                                 <div>
-                                    <P className="font-semibold">Lançar ao pagar</P>
+                                    <P className="text-base font-semibold">Lançar ao pagar</P>
                                     <Muted>
                                         {ultima
                                             ? `Última compra lançada ${minuscula(formatRelativeTimePtBr(ultima.created_at))} · ${ultima.description}, ${currencyBRL(ultima.amount)}`
