@@ -29,7 +29,7 @@ O atalho tem, nesta ordem:
 3. **Obter conteúdo de URL**: `POST` para a Edge `capture`, com o cabeçalho
    `Authorization` = `Bearer ` seguido do Texto da ação 1 (o `Bearer ` fica no
    cabeçalho, fora da pergunta), e o corpo JSON `{ "text", "source" }`.
-4. **Mostrar notificação** com o `resumo` da resposta.
+4. **Mostrar notificação** com o `resumo` da resposta. A Edge sempre manda um: "Gasto lançado: R$ 42,00 · Mercado · Nubank" (ou "Receita lançada", com "· a conferir" quando o gasto vai para A conferir) e, em qualquer erro, "Não lançado: <motivo>". Assim a notificação nunca chega vazia.
 
 As telas do guia são capturas do iOS 27 na moldura do iPhone
 (`scripts/atalho/moldura.py`, sobre o PSD de `docs/design/mockups/`).
