@@ -149,7 +149,7 @@ describe("tokens de captura", () => {
             "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
             "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto.",
             "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
-            "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente em Configurações.",
+            "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular.",
         ])
             expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
         expect(g).not.toContain("Ditar")
@@ -272,7 +272,7 @@ describe("CampoDeCopiar", () => {
     })
 })
 
-describe("Lançar gastos pelo iPhone: o vazio", () => {
+describe("Lançar pelo iPhone: o vazio", () => {
     it("o vazio convida a conectar, e o cabeçalho não repete a ação", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
         const vazio = semComentarios(lerFonte("src/components/account/lancar-pelo-iphone-vazio.tsx"))

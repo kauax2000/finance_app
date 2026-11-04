@@ -77,8 +77,8 @@ describe("os cartões e as linhas de Você", () => {
     })
     it("Lançar pelo iPhone em Neste celular: cartão, convite ou a linha depois do Tema", () => {
         const lista = GRUPO.indexOf('<Card padding="none">')
-        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar /> : null}')).toBeGreaterThan(-1)
-        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar /> : null}')).toBeLessThan(lista)
+        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}')).toBeGreaterThan(-1)
+        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}')).toBeLessThan(lista)
         expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalarCartao /> : null}')).toBeGreaterThan(-1)
         expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalarCartao /> : null}')).toBeLessThan(lista)
         // O convite entra solto, sem a seção "Instale o app" de Configurações dentro do grupo.
@@ -87,6 +87,10 @@ describe("os cartões e as linhas de Você", () => {
         const cartao = convite.slice(convite.indexOf("export function ConviteDeInstalarCartao"), convite.indexOf("export function ConviteDeInstalar()"))
         expect(cartao).not.toContain("SettingsSection")
         expect(convite).toMatch(/<SettingsSection titulo="Instale o app">\s+<ConviteDeInstalarCartao \/>/)
+        // O guia mora fora do ramo do cartão: o primeiro aparelho troca o cartão pela linha, e o guia não pode sumir no meio.
+        expect(GRUPO).toContain("<GuiaDoAtalho")
+        expect(GRUPO).not.toMatch(/lancar === "cartao" \?[^:]*GuiaDoAtalho/)
+        expect(semComentarios(lerFonte("src/components/me/cartao-de-lancar.tsx"))).not.toMatch(/GuiaDoAtalho|refetch/)
         expect(GRUPO).toContain("href={ROUTES.SETTINGS_LANCAR}")
         expect(GRUPO.indexOf(">Tema<")).toBeLessThan(GRUPO.indexOf("href={ROUTES.SETTINGS_LANCAR}"))
         expect(GRUPO).toContain('descricaoDaLista(aparelhos.ativos.map((t) => t.name), "aparelhos")')

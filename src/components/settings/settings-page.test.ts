@@ -53,7 +53,6 @@ describe("Configurações: página única", () => {
         expect(fonte).toContain("rolarAteAncora")
     })
 
-
     it("rolarAteAncora rola até o elemento do hash", () => {
         const scrollIntoView = vi.fn()
         const doc = { getElementById: (id: string) => (id === "x" ? { scrollIntoView } : null) } as unknown as Document

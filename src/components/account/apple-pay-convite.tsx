@@ -18,7 +18,7 @@ const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /**
  * Lançar ao pagar: a automação da Carteira roda o Lançar gasto a cada compra com
- * Apple Pay. Mora em "Lançar gastos pelo iPhone" e só aparece com um aparelho
+ * Apple Pay. Mora em "Lançar pelo iPhone" e só aparece com um aparelho
  * conectado, porque a automação usa o atalho que aquele guia instala. O cartão
  * muda com o estado: Configurar; Aguardando a 1ª compra (o Pronto do guia, salvo
  * na conta); Funcionando (a primeira compra pelo Apple Pay chegou).

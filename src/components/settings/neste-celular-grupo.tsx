@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { DevicePhoneMobileIcon, SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
+import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { CartaoDeLancar } from "@/components/me/cartao-de-lancar"
 import { descricaoDaLista, lancarNaVoce } from "@/components/me/estado-na-voce"
 import { Button } from "@/components/ui/button"
@@ -77,6 +78,7 @@ export function NesteCelularGrupo() {
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
     const aparelhos = useAparelhosDeCaptura()
+    const [guiaAberto, setGuiaAberto] = useState(false)
     // Só no iPhone: instalado, o cartão até o primeiro aparelho e a linha depois; no navegador, o convite de instalar.
     const lancar = lancarNaVoce(useAparelhoDeLancar(), {
         carregando: aparelhos.isPending,
@@ -95,7 +97,7 @@ export function NesteCelularGrupo() {
                 <PageSectionHeader>
                     <PageSectionTitle>Neste celular</PageSectionTitle>
                 </PageSectionHeader>
-                {lancar === "cartao" ? <CartaoDeLancar /> : null}
+                {lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}
                 {lancar === "convite" ? <ConviteDeInstalarCartao /> : null}
                 <Card padding="none">
                     <ItemGroup variant="divided">
@@ -185,6 +187,13 @@ export function NesteCelularGrupo() {
                 </Card>
             </PageSection>
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
+            {/* Fora do ramo do cartão, como em `AtalhoSecao`: o primeiro aparelho troca o cartão pela linha, e o guia segue aberto até a pessoa fechar, com o código e os passos do atalho. */}
+            <GuiaDoAtalho
+                open={guiaAberto}
+                onOpenChange={setGuiaAberto}
+                aoCriar={() => void aparelhos.refetch()}
+                nomesEmUso={aparelhos.ativos.map((t) => t.name)}
+            />
         </>
     )
 }

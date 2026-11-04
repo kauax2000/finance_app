@@ -74,12 +74,12 @@ valor real de nenhum deles.**
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
 | `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Configurações › "Lançar gastos pelo iPhone" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Configurações › "Lançar pelo iPhone" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Configurações**.
-2. Na seção "Lançar gastos pelo iPhone", toque em **Conectar aparelho** (ou em
+2. Na seção "Lançar pelo iPhone", toque em **Conectar aparelho** (ou em
    **Conectar o iPhone**, quando ainda não há nenhum) e escreva o nome do
    aparelho, por exemplo "iPhone da Ana".
 3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
@@ -203,7 +203,7 @@ atalho mostra o motivo do erro.
 
 Esta automação lança cada compra feita com o Apple Pay.
 
-No app, ela aparece em **Configurações** › "Lançar gastos pelo iPhone", no cartão
+No app, ela aparece em **Configurações** › "Lançar pelo iPhone", no cartão
 **Lançar ao pagar com Apple Pay**, que surge depois de conectar um aparelho:
 "Configurar" abre um guia de 5 passos: abrir o app Atalhos; Automação › **+**;
 colar a frase pronta em **Descrever um atalho** (iOS 27), que o guia mostra com o
@@ -287,7 +287,7 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 
 ## 6. Perdeu o aparelho? Revogue o token
 
-Em **Configurações** › "Lançar gastos pelo iPhone", toque em **Desconectar** no
+Em **Configurações** › "Lançar pelo iPhone", toque em **Desconectar** no
 aparelho e confirme em "Desconectar este aparelho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
 O aparelho desconectado sai da lista. Para voltar a lançar, conecte de novo.

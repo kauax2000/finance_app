@@ -54,7 +54,7 @@ export function mensagemDoErroDeToken(erro: { code?: string; message?: string })
 }
 
 /**
- * Lançar gastos pelo iPhone: os tokens de captura da pessoa (Atalho do iPhone,
+ * Lançar pelo iPhone: os tokens de captura da pessoa (Atalho do iPhone,
  * Apple Pay e compartilhar). Só os ativos aparecem; o código novo vive no guia.
  */
 export function AtalhoSecao() {
@@ -89,7 +89,7 @@ export function AtalhoSecao() {
 
     return (
         <SettingsSection
-            titulo="Lançar gastos pelo iPhone"
+            titulo="Lançar pelo iPhone"
             actions={
                 lista.isError || tokens.length > 0 ? (
                     <Button type="button" variant="tertiary" onClick={() => setGuiaAberto(true)}>

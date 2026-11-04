@@ -60,7 +60,7 @@ describe("o telefone do convidado (Bloco 7A)", () => {
     it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
         const [carteira, conta] = getVoceGroups([], "guest")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
-        expect(hrefs(conta)).toEqual(expect.arrayContaining([ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]))
+        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
         for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
     })
 

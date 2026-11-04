@@ -216,7 +216,7 @@ export function GuiaDoAtalho({
         </>,
         <>
             {COMO_ABRIR.find((o) => o.valor === como)?.texto} O atalho pergunta a frase ou um formulário, conforme o
-            Lançamento inteligente em Configurações. Ele cai em {nomeDaCarteira}.
+            Lançamento inteligente, em Você › Neste celular. Ele cai em {nomeDaCarteira}.
         </>,
     ]
 
