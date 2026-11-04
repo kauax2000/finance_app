@@ -152,7 +152,7 @@ flowchart LR
     G18 -.->|"a carteira de projeto não tem previsão: o link do seguro some"| G13
     G15 -->|"o convidado não vê projetos, partes nem saldo; o responsável paga por ele"| G18
 
-    G10 -->|"IAs conectadas: a URL do MCP, a lista e Revogar"| G19(("G19 Conectar uma IA"))
+    G2 -->|"Configurações, IAs conectadas: a URL do MCP, a lista e Revogar"| G19(("G19 Conectar uma IA"))
     G1 -->|"sem sessão no consentimento: /login?next=… e volta"| G19
     G19 -->|"a IA registra um lançamento: source ia_externa, needs_review"| G5
     G19 -->|"a IA lê faturas, contas, assinaturas e orçamentos"| G6
@@ -307,19 +307,31 @@ flowchart TD
     createDlg -->|"Cancelar"| switcher
     createDlg -.->|"a regra da escolha e os modelos de carteira"| G18a(("G18a Criar com um modelo"))
 
-    settings["/settings"] --> owner{"É dona da carteira?"}
-    owner -->|"sim"| edit(["Editar: nome, ícone, cor"])
-    owner -->|"sim"| divisao(["Alterar Divisão: diálogo com modo e pesos"])
-    owner -->|"sim, carteira de projeto"| datas(["Alterar Datas e orçamento: diálogo"])
-    owner -->|"sim, e não é a primeira"| del(["Excluir carteira: digitar o nome"])
+    switcher -->|"lápis da carteira atual"| owner{"É dona da carteira?"}
+    owner -->|"sim"| edit(["Editar carteira: nome, ícone, cor, e as linhas Divisão, Datas e orçamento e Excluir carteira"])
+    edit -->|"Divisão, no próprio Editar"| divisao(["Trilho Pote único ou Dividida e, dividida, os pesos; grava no Salvar do Editar"])
+    edit -->|"Datas e orçamento, carteira de projeto"| datas(["Alterar Datas e orçamento: diálogo, por cima do Editar"])
+    edit -->|"Excluir carteira, e não é a primeira"| del(["Excluir carteira: digitar o nome"])
     del --> impact[("RPC get_workspace_delete_impact")]
     del -->|"Excluir"| delRpc[("RPC delete_workspace")] --> fallback(["Se era a atual, volta para a pessoal"])
-    owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
+    owner -->|"não"| leave(["Ícone Sair da carteira atual: confirmação"]) -->|"Sair"| fallback
     settings -->|"desktop"| qr(["No celular: QR Code ou Copiar link"])
     qr -->|"câmera do telefone"| meTel["/me#no-celular no telefone"]
     meTel --> pwa(["Neste celular: tema, lançamento inteligente e instalar o app"])
     settings --> notif(["Notificações: as chaves à vista"])
     settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
+
+    settings -->|"Conectar aparelho, ou Conectar o iPhone no vazio"| newDev(["GuiaDoAtalho, num Dialog: 6 passos, o primeiro cria o código"])
+    newDev --> tokFlow(("G5c Tokens e Atalho"))
+    settings -->|"Lançar ao pagar: Configurar, com aparelho ativo"| payDev(["GuiaDoApplePay, num Dialog: 5 passos: o app Atalhos, o +, colar a frase em Descrever um atalho, conferir, e a notificação; sem criar código"])
+    payDev --> tokFlow
+    settings -->|"Desconectar, no ⋯ da linha do aparelho"| revDev(["AlertDialog Desconectar este aparelho?: ele para de lançar"])
+    revDev -->|"Desconectar"| tokFlow
+
+    settings -->|"Conectar, em IAs conectadas"| connAi(["Dialog: a URL do MCP e as três instruções"])
+    settings -->|"Desconectar, no ⋯ da linha da IA"| discAi(["AlertDialog: ela perde o acesso na hora"])
+    connAi --> aiFlow(("G19 Conectar uma IA"))
+    discAi --> aiFlow
 ```
 
 ### 2b. Convidar e aceitar convite
@@ -373,6 +385,7 @@ flowchart TD
 | Carteira atual | `user_settings.current_workspace_id`; inválida cai na primeira, com a pessoal ordenada antes | `src/lib/queries/fetch-workspaces-data.ts` |
 | Criar e excluir | RPCs `create_shared_workspace`, `get_workspace_delete_impact`, `delete_workspace` | `src/components/workspace-provider.tsx` |
 | Sair da carteira | Diálogo próprio de confirmação | `src/components/settings/workspace-leave-dialog.tsx` |
+| Ações da carteira (3/nov/2026) | A seção Carteira saiu de Configurações (`/settings` ficou só com o app). As ações moram no seletor de carteira, na lateral e no cabeçalho do telefone: na linha da carteira atual há um botão só com ícone à direita, o lápis "Editar carteira <nome>" para o dono e "Sair da carteira <nome>" para quem não é dono; o ⋯ saiu. Divisão, Datas e orçamento e Excluir carteira moram no diálogo Editar carteira: a Divisão logo abaixo do ícone, num trilho de duas opções ("Dividida" travada com "Ainda não disponível" enquanto as partes não estão no banco) e, dividida, os pesos, tudo gravado no mesmo Salvar (pesos inválidos não gravam nada; depois do nome, os pesos e então o modo); Datas e orçamento abre o diálogo dele por cima; Excluir carteira é a última linha do diálogo, na largura toda | `src/components/workspace/acoes-da-carteira.tsx`, `src/components/layout/workspace-picker-menu-body.tsx`, `src/components/layout/workspace-switcher.tsx`, `src/components/settings/workspace-appearance-edit-dialog.tsx`, `src/components/settings/carteira-divisao.tsx` |
 | Membros | RPC `workspace_member_directory`; só a dona convida, revoga e remove | `src/app/(app)/members/page-client.tsx` |
 | Convite | Edges `workspace-invites-create`, `-resend`, `-accept`; o email é montado no servidor | `supabase/functions/_shared/workspace-invite-email.ts` |
 | Papel do convite (Bloco 7A) | O convite por e-mail escolhe o papel: `member` ou `guest` (`workspace_invites.role`). O corpo sem `role` é `member`, como o front de `main` manda. O link é **sempre de membro**: `guest` no link volta 400 `convidado_requer_email` (sem e-mail e sem ser link, a Edge devolve a recusa antiga `invited_email is required`; a frase em português vem do `montarConvite`, no cliente), e o check `workspace_invites_guest_requer_email` repete a regra no banco. O corpo do convite vem de `montarConvite`, que recusa o que a Edge recusa, na mesma ordem | `supabase/functions/workspace-invites-create/index.ts`, `src/lib/papeis/papeis.ts`, `src/components/wireframe/papeis-wireframe.tsx` |
@@ -383,6 +396,8 @@ flowchart TD
 | Política de privacidade (Bloco 3B) | `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta. A seção "IA e privacidade" saiu de Configurações em 2/nov/2026, e o caminho do app até a política é a linha "Política de privacidade" de Minha conta, em Segurança (ver 10); ela volta a Minha conta pelo link do fim da página | `src/app/(app)/account/page-client.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Notificações: as chaves à vista (2/nov/2026) | As chaves moram na seção Notificações de `/settings`, sob os subtítulos "Canais" (só o push neste aparelho) e "O que receber" (os temas de aviso). O email e a central do app não têm chave própria: desligar um tema desliga os dois. Não há rota própria: as duas telas saíram. Os avisos ficam em cima, sem botão de ação; o de push bloqueado pode ser dispensado, e o aparelho lembra. Cada chave salva ao tocar. "Como instalar" segue na linha do push | `src/components/settings/notification-preferences.tsx`, `src/components/settings/notificacoes-canais.tsx`, `src/components/settings/notificacoes-temas.tsx` |
 | No celular e Neste celular (2/nov/2026) | Do `md` para cima, Configurações tem Aparência e "No celular", e o QR abre `/me#no-celular`. Abaixo do `md`, Configurações não mostra nenhuma das duas: o grupo "Neste celular" (Tema, Lançamento inteligente e Instalar o app, `id="no-celular"`) mora na seção Neste celular da página Você, `NesteCelularGrupo`. Com o app instalado a linha "Instalar o app" some, e no lugar dela, só com pendências na fila, fica a linha "Sincronização". No desktop e no tablet, o QR (`QrCode link={false}`, sem link, porque ele apontaria para a própria tela) e o "Copiar link" levam ao telefone; num iPhone ou iPad não instalado aparece a linha "Instalar o app" com o "Como instalar" (a folha de instalação), e senão, com pendências na fila, a linha "Sincronização". Na página Você, o "Como instalar" do iPhone abre a mesma folha. A folha de instalação tem quatro passos, com o caminho do iOS 27 (menu, Compartilhar, Ver Mais, Adicionar à Tela de Início, Adicionar), e fechar o aviso automático também o dispensa. | `src/components/settings/theme-settings.tsx`, `src/components/settings/neste-celular-grupo.tsx`, `src/components/settings/no-celular-cartao.tsx`, `src/app/(app)/me/page-client.tsx`, `src/components/ui/qr-code.tsx` |
+| Tokens de captura (Bloco 3A) | Seção "Lançar gastos pelo iPhone" de `/settings`, antes de Notificações, a última seção (saiu de Minha conta em 3/nov/2026): uma linha por token ativo (o ladrilho do iPhone, o nome, a carteira com a marca dela · "último gasto" em tempo relativo ou "ainda não lançou nada", e o ⋯ com "Desconectar"; os desconectados somem; a linha mudou em 3/nov/2026). Com aparelhos, ou com a lista em erro, o cabeçalho tem "Conectar aparelho"; sem nenhum, o vazio é um `EmptyState` ("Lance gastos sem abrir o app") com "Conectar o iPhone". Os dois abrem o `GuiaDoAtalho`, um `Dialog` de 6 passos, com as telas reais do iOS na moldura do iPhone: (1) nome (1 a 60 caracteres) e carteira padrão, "Criar código" chama `create_capture_token` e copia o `fac_…` quando o navegador deixa; (2) "Baixar o atalho" baixa `public/atalho/Lançar gasto.shortcut`, assinado por `scripts/atalho/gerar-atalho.py` (sem link do iCloud nem variável de ambiente); (3) abrir o arquivo; (4) Configurar Atalho; (5) colar o código na pergunta de importação; (6) "Como abrir o atalho": a pessoa escolhe Siri, Botão de Ação, Toque traseiro, Tela Bloqueada (o controle Executar Atalho, desde 4/nov/2026) ou Tela de início, e o passo mostra só o caminho da escolhida (desde 3/nov/2026). O código vive só no estado do guia: fechar por qualquer caminho o descarta. A automação da Carteira saiu do guia e mora na seção "Lançar ao pagar" (linha abaixo). "Desconectar" é um `AlertDialog` ("Desconectar este aparelho?") e chama `revoke_capture_token`. **Atalho v2 (3/nov/2026)**: sem entrada, o atalho faz um `GET` na `capture` (o mesmo código, cabeçalho `X-Atalho-Versao: 2`) e recebe `{ modo, categorias, pagamentos }` da carteira padrão; `modo` segue `user_settings.lancamento_inteligente` (o interruptor passou do aparelho para a conta). "frase" pede a frase como antes e, se a resposta vier com `codigo: "sem_valor"`, cai no formulário; "formulario" pede valor (teclado numérico), descrição, categoria e forma de pagamento (listas do `GET`, por nome) e a data (Hoje ou Outro dia), e manda `amount`, `merchant`, `category`, `payment`, `date`. A Edge grava `capture_tokens.atalho_versao` quando o cabeçalho vem; aparelho já usado sem versão mostra "Baixe o atalho de novo para ter o formulário", e o ⋯ ganha "Baixar o atalho de novo", que abre o guia com o nome e a carteira do aparelho, cria um código novo e desliga o antigo. A lista lê só as colunas sem o hash. Até 10 ativos por pessoa | `src/components/account/atalho-secao.tsx`, `src/components/account/guia-do-atalho.tsx`, `src/hooks/use-lancamento-inteligente.ts`, `supabase/functions/capture/index.ts`, `scripts/atalho/gerar-atalho.py`, `docs/captura/atalho-iphone.md` |
+| Lançar ao pagar | Um cartão dentro de "Lançar gastos pelo iPhone", abaixo dos aparelhos (`ApplePayConvite`), que só aparece com aparelho ativo e a lista sem erro: a automação da Carteira que roda o Lançar gasto a cada compra com Apple Pay. "Configurar" abre o `GuiaDoApplePay`, um `Dialog` de 5 passos (desde 3/nov/2026), com a tela real do iPhone e o alvo pulsando onde tocar: (1) o app Atalhos, na tela de início; (2) Automação e o +; (3) colar a frase pronta (`DESCRICAO_DA_AUTOMACAO`, com o botão Copiar) em "Descrever um atalho" do iOS 27, e, para iPhone mais antigo, o caminho à mão numa linha (Transação, cartões, Executar Imediatamente, Lançar gasto); (4) conferir e salvar; (5) a notificação depois de pagar. O "Pronto" do último passo grava `user_settings.apple_pay_configurado_em` (desde 3/nov/2026), e o cartão muda: "Configurar" (sem a data e sem compra), "Aguardando a 1ª compra" (com a data) e "Funcionando", com a última compra lançada (a primeira transação da pessoa com `source` `apple_pay`; vale mesmo sem o Pronto); nos dois últimos, o botão é "Ver os passos de novo". A compra chega pela Edge `capture` com `source` `apple_pay`, publicada em produção em 3/nov/2026 (antes o atalho batia num 404), e toda resposta traz o `resumo` que o atalho põe na notificação do iPhone: "Gasto lançado: …" (ou "Receita lançada", com "a conferir") e, em erro, "Não lançado: <motivo>" | `src/components/account/apple-pay-convite.tsx`, `src/components/account/lancar-ao-pagar.ts`, `src/components/account/guia-do-apple-pay.tsx`, `src/components/account/aparelhos-de-captura.ts` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Modelos de carteira (Bloco 7C) | Criar carteira ganha a regra da escolha e os modelos Casa, Casal, Pessoal, Viagem, Reforma e Evento, que criam pela RPC `criar_carteira_de_modelo` (com as categorias e o modo de cada um); "Sem modelo" segue o `create_shared_workspace`. Ver a jornada 18 | `src/components/workspace/project-form-dialog.tsx`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx` |
 
@@ -664,7 +679,7 @@ flowchart TD
 %%{init: {"theme": "dark"}}%%
 flowchart TD
     open(["Formulário: modal no desktop, folha no mobile"]) --> type{"Tipo"}
-    newTx(["+ Adicionar, Nova transação ou Nova transação de uma categoria"]) --> smartOn{"Lançamento inteligente ligado neste aparelho, ou veio do compartilhar do Android?"}
+    newTx(["+ Adicionar, Nova transação ou Nova transação de uma categoria"]) --> smartOn{"Lançamento inteligente ligado na conta (desde 3/nov/2026; antes, neste aparelho), ou veio do compartilhar do Android?"}
     smartOn -->|"não (Configurações › Lançamento)"| open
     newKind(["⌘K Nova receita ou Nova parcelada, ?new=receita"]) -->|"o tipo pedido escolhe o formulário"| open
     smartOn -->|"sim, o padrão"| pal(["Lançamento inteligente: só a pílula da frase e a pílula redonda do recibo"])
@@ -754,7 +769,7 @@ flowchart TD
 
 ### 5c. Captura sem abrir o app e "A conferir"
 
-O Bloco 3A. A pessoa cria um token em Minha conta e instala o Atalho do iPhone
+O Bloco 3A. A pessoa cria um token em Configurações e instala o Atalho do iPhone
 pelo guia; o Atalho e a automação do Apple Pay lançam pela Edge `capture`, como
 a pessoa. O Android compartilha um texto, que abre o formulário com a frase.
 O que tem dúvida cai em "A conferir", que o Painel conta e o lembrete das 20h
@@ -768,13 +783,14 @@ worker.
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account(("G10 /account")) --> tokens(["Lançar sem abrir o app: a lista de aparelhos e Novo aparelho"])
-    tokens -->|"Novo aparelho: nome e carteira padrão"| createTok[("RPC create_capture_token: guarda o sha256; até 10 ativos")]
-    createTok --> shown(["No mesmo diálogo: o token fac_ aparece uma vez só, com Copiar e Já guardei"])
-    tokens -->|"Revogar, com confirmação num AlertDialog"| revokeTok[("RPC revoke_capture_token: revoked_at")]
-    tokens -->|"Como configurar: o endereço de captura e o guia do Atalho"| guide(["docs/captura/atalho-iphone.md, aberto no GitHub"])
+    account(("G2 /settings")) --> tokens(["Configurações, Lançar gastos pelo iPhone: a lista de aparelhos, ou o vazio com Conectar o iPhone"])
+    tokens -->|"Conectar aparelho, ou Conectar o iPhone: o GuiaDoAtalho, passo 1, nome e carteira padrão"| createTok[("RPC create_capture_token: guarda o sha256; até 10 ativos")]
+    createTok --> shown(["Passo 5 do mesmo guia: o código fac_ à vista, copiado quando o navegador deixa, até fechar o guia"])
+    tokens -->|"Desconectar, no ⋯ da linha, com confirmação num AlertDialog"| revokeTok[("RPC revoke_capture_token: revoked_at")]
+    shown --> guide(["GuiaDoAtalho, 6 passos: nome e carteira; baixar o atalho assinado; abrir o arquivo; Configurar Atalho; colar o código (ou montar à mão); a Siri"])
     guide --> iphone(["Atalho do iPhone: ditar a frase, a foto do recibo redimensionada e em JPEG, ou Extrair texto da imagem"])
-    guide --> wallet(["Automação da Wallet: valor, estabelecimento e cartão do Apple Pay"])
+    tokens -->|"Lançar ao pagar, o cartão que só aparece com aparelho ativo: Configurar"| payGuide(["GuiaDoApplePay, 5 passos: o app Atalhos e o + com a tela do iPhone; colar a frase em Descrever um atalho; conferir, cartões, Executar Imediatamente, Lançar gasto, a notificação"])
+    payGuide --> wallet(["Automação da Wallet: valor, estabelecimento e cartão do Apple Pay"])
     iphone -->|"POST text, ou multipart file, Bearer fac_"| capture[("Edge capture")]
     wallet -->|"POST amount, merchant, card, source apple_pay"| capture
 
@@ -1197,8 +1213,9 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account["/account"] --> card(["Identidade: avatar, nome, e-mail, membro desde"])
-    card -->|"Editar perfil"| profile(["EditProfileDialog: nome, avatar e e-mail"])
+    account["/account"] --> card(["Identidade: avatar, nome, e-mail, selo de membro desde"])
+    card -->|"toque na foto: Editar perfil"| profile(["EditProfileDialog: nome, avatar e e-mail"])
+    card -->|"toque no selo"| seal(["Seal aberto: o selo grande, inclina e gira; Esc ou fora fecha"])
     profile -->|"enviar ou remover avatar, até 5 MB"| storage[("Storage avatars")]
     profile -->|"Salvar nome e avatar"| profileOk(["Perfil atualizado"])
     profile -->|"trocar e-mail"| emailPwd{"Senha atual confere?"}
@@ -1211,17 +1228,6 @@ flowchart TD
     pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s; este aparelho segue aberto e os outros terminam quando o token vence"])
 
     account -->|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
-
-    account -->|"Novo aparelho, em Lançar sem abrir o app"| newDev(["Dialog: nome do aparelho e carteira padrão"])
-    newDev --> tokFlow(("G5c Tokens e Atalho"))
-    account -->|"Revogar, na linha do aparelho"| revDev(["AlertDialog: o aparelho para de lançar"])
-    revDev -->|"Revogar"| tokFlow
-    account -->|"Como configurar"| howTo(["Dialog: endereço de captura e link do guia"])
-
-    account -->|"Conectar, em IAs conectadas"| connAi(["Dialog: a URL do MCP e as três instruções"])
-    account -->|"Desconectar, na linha da IA"| discAi(["AlertDialog: ela perde o acesso na hora"])
-    connAi --> aiFlow(("G19 Conectar uma IA"))
-    discAi --> aiFlow
 
     account -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
 
@@ -1242,10 +1248,9 @@ flowchart TD
 |---|---|---|
 | Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser` | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
 | Excluir conta | Dois passos; a senha é conferida na Edge Function. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
-| Tela | Uma coluna: identidade, Acesso e plano (E-mail e Editar perfil abrem o `EditProfileDialog`, Senha abre o `ChangePasswordDialog`, Plano vai a `/plans`, agora também no desktop), Lançar sem abrir o app, IAs conectadas, Política de privacidade (`/privacidade`) e, no fim, Sair e Excluir conta. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
+| Tela | Uma coluna: identidade, Acesso e plano (E-mail e Editar perfil abrem o `EditProfileDialog`, Senha abre o `ChangePasswordDialog`, Plano vai a `/plans`, agora também no desktop), Política de privacidade (`/privacidade`) e, no fim, Sair e Excluir conta. Sem subpáginas: as subpáginas de sessões e de atividade não existem mais (404) | `src/app/(app)/account/page-client.tsx` |
 | Sair | É global: o `signOut()` sem `scope` encerra a conta em todos os aparelhos, e os outros só caem quando o token vence, sem aviso, indo ao login. Sem confirmação nesta tela (o erro vai em toast). Segundo caminho para um aparelho perdido: trocar a senha encerra os outros aparelhos quando o token deles vence, e este segue aberto | `src/components/providers.tsx` |
 | Sem sessões nem atividade | A tela não lista aparelhos, não encerra sessão e não grava log: `createActivity` saiu do perfil e da senha, o `x-app-session-id` saiu das chamadas e o `reason=session-expired` não existe mais; o login só mostra `reason=password-updated`. **Pendência para o 2.0 subir à `main`**: ver a lacuna 108 | `src/components/providers.tsx`, `src/lib/edge-invoke.ts` |
-| Tokens de captura (Bloco 3A) | Seção "Lançar sem abrir o app": uma linha por token ativo (nome, carteira · último uso, "Revogar"; os revogados somem). "Novo aparelho" abre um `Dialog` com nome (1 a 60 caracteres) e carteira padrão e chama `create_capture_token`; **o mesmo diálogo** passa a "Guarde agora", com o `fac_…` uma vez só, Copiar, o endereço de captura e "Já guardei", e fechar por qualquer caminho descarta o token. "Revogar" é um `AlertDialog` e chama `revoke_capture_token`. "Como configurar" abre o endereço de captura e o link do guia, `docs/captura/atalho-iphone.md` no GitHub. A lista lê só as colunas sem o hash. Até 10 ativos por pessoa | `src/components/account/atalho-secao.tsx`, `src/components/account/novo-aparelho-dialog.tsx`, `src/components/account/como-configurar-dialog.tsx`, `docs/captura/atalho-iphone.md` |
 
 ---
 
@@ -1984,7 +1989,7 @@ flowchart TD
 | O projeto (Bloco 7C) | `projects(workspace_id, name, starts_on, ends_on, budget_total, archived_at, created_by)`. O nome não é vazio, o fim não vem antes do começo e o orçamento é maior que zero ou nulo. RLS: **select de qualquer membro, o convidado incluído** (ele marca a despesa dele); insert, update e delete só do adulto, e o insert exige `created_by = auth.uid()`. O update é por coluna (`name`, `starts_on`, `ends_on`, `budget_total`, `archived_at`): a carteira e o autor não se trocam. A tela de projetos é só do adulto (Ruling 3 do bloco) | `supabase/migrations/20261031120000_projetos.sql`, `src/components/wireframe/projetos-wireframe.tsx` |
 | O lançamento no projeto (Bloco 7C) | `transactions.project_id` (`on delete set null`: apagar o projeto solta os lançamentos). `same_ws_project_id` exige o projeto da mesma carteira. `recusar_projeto_arquivado` recusa só o **vínculo novo** (insert, ou update que muda o `project_id`) com `PROJETO_ARQUIVADO`: editar um lançamento que já era do projeto passa. O seletor também não aparece na receita, na parcelada nem no escopo "plano" | `supabase/migrations/20261031120000_projetos.sql`, `src/components/transactions/transaction-form-fields.tsx` |
 | O resumo (Bloco 7C) | `resumoDoProjeto` soma só as despesas, em centavos: o gasto, o que falta do orçamento (nulo sem orçamento, **negativo** quando o gasto passa dele: "Passou do orçamento em…"), a quebra por categoria e a por pessoa. O detalhe lê o projeto com as transações embutidas; o resumo da carteira de projeto lê as despesas da carteira por páginas (`fetchAllRows`), sem o teto de 1.000 linhas. A pessoa é o autor (`user_id`), e não quem pagou (lacuna 77) | `src/lib/projetos/resumo.ts`, `src/lib/projetos/dados.ts` |
-| A carteira de projeto (Bloco 7C) | `workspaces.purpose` (`everyday`, o padrão, ou `project`), mais `starts_on`, `ends_on` e `budget_total`, que o check `workspaces_project_fields` deixa nulos fora do `project`. Com `project`: `copiar_orcamentos_do_mes` (o cron do dia 1) e `garantir_orcamentos_do_mes` (a abertura do Painel) pulam a carteira, e o Painel do adulto troca o "seguro para gastar" pelo resumo dela, o que tira o único link para a Previsão. As datas e o orçamento total só o dono edita, em Configurações e no passo depois de criar o modelo (`camposDaCarteiraProjeto`) | `supabase/migrations/20261031120000_projetos.sql`, `src/app/(app)/dashboard/page-client.tsx`, `src/lib/projetos/modelos.ts` |
+| A carteira de projeto (Bloco 7C) | `workspaces.purpose` (`everyday`, o padrão, ou `project`), mais `starts_on`, `ends_on` e `budget_total`, que o check `workspaces_project_fields` deixa nulos fora do `project`. Com `project`: `copiar_orcamentos_do_mes` (o cron do dia 1) e `garantir_orcamentos_do_mes` (a abertura do Painel) pulam a carteira, e o Painel do adulto troca o "seguro para gastar" pelo resumo dela, o que tira o único link para a Previsão. As datas e o orçamento total só o dono edita, no Editar carteira (pelo seletor) e no passo depois de criar o modelo (`camposDaCarteiraProjeto`) | `supabase/migrations/20261031120000_projetos.sql`, `src/app/(app)/dashboard/page-client.tsx`, `src/lib/projetos/modelos.ts` |
 | O banco sem a migração (Bloco 7C, Ruling 8 do 7B) | O 2.0 roda contra um banco sem as migrações do 7C: `tabelaTolerante` e `rpcTolerante` devolvem "Ainda não disponível" para a tabela ou a RPC ausente (`PGRST205`, `PGRST204`, `PGRST200`, `42P01`, `42703`; `PGRST202`, `42883`), o corpo de escrita só manda `project_id` e `paid_by` quando mudam algo, e o seletor de projeto some do formulário. Um teste de fonte tranca | `src/lib/projetos/dados.ts`, `src/lib/titular/colunas-tolerantes.test.ts` |
 | Quem pagou (Bloco 7C) | `transactions.paid_by` (`on delete set null`). O `main` não o manda, e um `default` de coluna não lê outra coluna: o padrão vem do gatilho `definir_quem_pagou` (`before insert or update`). É o autor; o **responsável** (`sponsor_user_id`) quando o autor é convidado, ou o dono mais antigo se o responsável saiu. Um pagador que não é adulto: `PAGADOR_INVALIDO`. Uma edição que não mexe em `paid_by` nem na carteira não o toca. A tela só oferece os adultos e só manda `paid_by` quando difere do padrão; a parcelada e o plano seguem o autor | `supabase/migrations/20261031130000_divisao.sql`, `src/components/wireframe/divisao-wireframe.tsx` |
 | O modo e o `split_since` (Bloco 7C) | `workspaces.split_mode` é `pooled` (o padrão) ou `split`; o dono o muda pela política de `update` de `workspaces`. `split_since` é carimbado por `carimbar_split_since` na primeira vez que o modo vira `split` (e no insert dos modelos que já nascem `split`) e **nunca se perde**: a despesa de antes dele não ganha parte, e voltar a `pooled` e depois a `split` mantém o dia | `supabase/migrations/20261031130000_divisao.sql` |
@@ -2012,7 +2017,7 @@ faturas dos cartões, contas a pagar e assinaturas) e tem **uma** escrita,
 login é um OAuth do Supabase Auth (servidor OAuth e registro dinâmico de
 cliente); a única tela do app no meio é o consentimento, `/oauth/consent`,
 em wireframe, que mora dentro de `(app)`. Dois caminhos: conectar (19a) e
-revogar em Minha conta (19b). **Nada foi publicado:** o servidor OAuth está
+revogar em Configurações (19b). **Nada foi publicado:** o servidor OAuth está
 desligado em produção (`feature_disabled`) e é um passo do dono no painel
 (`supabase/MCP_DEPLOYMENT.md`).
 
@@ -2052,19 +2057,19 @@ flowchart TD
     leitura -.-> G6(("G6 Cartões e faturas"))
 ```
 
-### 19b. IAs conectadas, em Minha conta
+### 19b. IAs conectadas, em Configurações
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    account["/account"] --> ias(["IAs conectadas: Conectar e a lista"])
+    account["/settings"] --> ias(["IAs conectadas: Conectar e a lista"])
     ias -->|"Conectar: Copiar a URL, no Dialog com as três instruções"| copiado(["URL na área de transferência"])
     ias --> grants[("listGrants")]
     grants -->|"erro"| erroLista(["Não foi possível carregar as conexões"])
     grants --> lista{"Alguma IA conectada?"}
     lista -->|"não"| vazio(["Nenhuma IA conectada"])
-    lista -->|"sim"| linha(["Cada IA e desde quando, com Desconectar"])
-    linha -->|"Desconectar"| confirma(["AlertDialog: ela perde o acesso na hora"])
+    lista -->|"sim"| linha(["Cada IA e desde quando, com o ⋯ Desconectar"])
+    linha -->|"Desconectar, no ⋯"| confirma(["AlertDialog: ela perde o acesso na hora"])
     confirma -->|"cancelar"| linha
     confirma -->|"confirmar"| revogar[("revokeGrant")]
     revogar -->|"erro"| erroRevoga(["A frase de erro, e a lista fica"])
@@ -2085,7 +2090,7 @@ flowchart TD
 | `registrar_lancamento` | A única escrita, com campos separados (sem frase livre nem Groq). Insere em `transactions` com `source = 'ia_externa'`, `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`. Parcelado chama a RPC `create_workspace_installment_plan`, a mesma do formulário, passando as três marcas (`p_source`, `p_needs_review`, `p_capture_meta`), que ela grava nas parcelas. Depois de uma despesa chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário; a falha deles é engolida (lacuna 101). A carteira em só leitura devolve a frase "sua carteira está só leitura no plano atual". Sem idempotência por `client_id` (lacuna 102) | `supabase/functions/mcp/index.ts`, `supabase/functions/_shared/mcp/lancamento.ts` |
 | O token da IA | O token OAuth é um JWT da pessoa com a claim `client_id` (`public.eh_token_de_ia()`). Políticas `as restrictive` `ia_somente_leitura_insert/update/delete` em toda tabela de `public` com política de escrita e em `storage.objects`: o token lê, insere só em `transactions`, e só marcado (`ia_lancamento_marcado`: `source = 'ia_externa'` e `needs_review`), e não altera nem apaga. A RPC do parcelado força a marca com token de IA. As Edges de usuário recusam o token (`getAuthUserFromJwt` → 401), menos `evaluate-budgets` e `evaluate-credit-card-alerts`. As RPCs `security definer` não passam pelo RLS: o `db_pre_request` `guarda_do_token_de_ia` recusa ao token toda RPC fora `create_workspace_installment_plan`, e todo PATCH, PUT e DELETE. Residual: lacuna 103 | `supabase/migrations/20261103130000_mcp_token_somente_leitura.sql`, `supabase/migrations/20261103140000_mcp_guarda_rpc.sql`, `supabase/functions/_shared/auth-user.ts` |
 | A origem `ia_externa` | A migração acrescenta `ia_externa` ao check de `transactions.source`. É ela e o `needs_review` que levam o lançamento à lista "A conferir" (G5c) e ao Painel, como os da captura | `supabase/migrations/20261103120000_mcp.sql` |
-| IAs conectadas | Seção de `/account`, depois de "Lançar sem abrir o app": "Conectar" abre um `Dialog` com a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) para copiar e três instruções (Claude, ChatGPT e `claude mcp add`); uma linha por IA (nome, desde quando, "Desconectar"), com `listGrants`; "Desconectar" é um `AlertDialog` e chama `revokeGrant` | `src/app/(app)/account/page-client.tsx`, `src/components/account/ias-secao.tsx`, `src/components/account/conectar-ia-dialog.tsx` |
+| IAs conectadas | Seção de `/settings`, depois de "Lançar gastos pelo iPhone" (saiu de Minha conta em 3/nov/2026): "Conectar" abre um `Dialog` com a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) para copiar e três instruções (Claude, ChatGPT e `claude mcp add`); uma linha por IA (o ladrilho, o nome, desde quando, e o ⋯ com "Desconectar"), com `listGrants`; "Desconectar" é um `AlertDialog` e chama `revokeGrant` | `src/app/(app)/settings/(raiz)/page-client.tsx`, `src/components/account/ias-secao.tsx`, `src/components/account/conectar-ia-dialog.tsx` |
 | A ponte com a conferência | O lançamento da IA entra pela marca `needs_review` na conferência do Bloco 9: a pessoa vê o que a IA lançou e confirma ou apaga. Não há aviso nem bloqueio extra por ser da IA | G5c |
 
 ---
@@ -2108,7 +2113,6 @@ continuam aqui para registro.
 | 12 | G5, G6, G7 | O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe. **Banco e funções publicados em 21/10/2026** (migrações, bucket, políticas e cron conferidos); o front novo não foi publicado, então ninguém usa nada disso ainda. Aberta até o front subir e o teste de fumaça passar: `supabase/BLOCO_2_DEPLOYMENT.md`. |
 | 14 | G3, G4, G5, G10 | O Bloco 3A (captura sem abrir o app) está no repositório, com as telas em wireframe, menos os tokens de Minha conta, já no design system, e **nada foi publicado**. O backend pode subir antes do front, porque nada dele aparece no front de `main`: `supabase/BLOCO_3A_DEPLOYMENT.md`. |
 | 18 | G5 | Um item do Apple Pay com casamento parcial gravado antes de a `capture` guardar o `walletCard` nesse caso não tem `capture_meta.walletCard` e não oferece "Lembrar". |
-| 19 | G10 | O link do guia do Atalho aponta para `docs/captura/atalho-iphone.md` em `main` no GitHub e dá 404 até o `finance-app-2.0` ir para `main`. |
 | 20 | G5 | A captura pelo WhatsApp foi adiada pelo dono em 22/10/2026 e ficou fora do Bloco 3B. Só o Atalho do iPhone, o Apple Pay e o compartilhar do Android lançam de fora do app. |
 | 21 | G5, G6 | A foto vai à IA sem redação: não há como tirar dado de uma imagem. Ela vai crua à Groq e, se a Groq falhar, à Cloudflare. Recibo e comprovante costumam mostrar o cartão mascarado, mas um documento fotografado vai inteiro. A política de `/privacidade` diz isso. |
 | 22 | G5 | O modelo de visão da Groq (`qwen/qwen3.8-27b`) é *preview* e pode sair sem aviso. A Cloudflare cobre a foto enquanto isso; a troca é em `_shared/ia-config.ts`. |
@@ -2167,7 +2171,7 @@ continuam aqui para registro.
 | 93 | G3, G11 | Um aviso já entregue por push ou e-mail não se recolhe: se o fato muda depois (o lançamento apagado, o insight resolvido, o estorno desfeito), o texto que saiu continua com a pessoa. O `billing_avisos.pendente` só reenvia o que falhou na entrega. |
 | 98 | G5 | A importação por conta sugere a categoria pelo histórico sem olhar o tipo: um crédito pode ganhar a categoria de despesa de um débito parecido. Já era assim antes do Bloco 9. |
 | 99 | G2, G3, G4, G5, G6, G11, G14 | O Bloco 9 (correções antes do lançamento) e o 9b (as lacunas 94 a 97) estão no repositório e **nada foi publicado**. A Edge `workspace-invites-accept` sobe antes da migração `20261102120000_bloco9.sql`, a `capture` depois dela, e as de cobrança e as demais só com o 2.0 em `main`; a migração `20261102120000_bloco9.sql` (editada no lugar, com `billing_avisos.tentativas`) e as Edges `capture`, `credit-card-calendar-alerts` e `billing-daily` do 9b seguem a mesma ordem; o `bloco9.test.sql` (21 asserções) roda no projeto de teste: `supabase/BLOCO_9_DEPLOYMENT.md`. |
-| 100 | G19 | O MCP (conectar uma IA: a Edge `mcp`, o consentimento `/oauth/consent` em wireframe e as IAs conectadas em Minha conta) está no repositório, e **nada foi publicado**. O servidor OAuth do Auth está desligado em produção (`feature_disabled`) e ligá-lo é passo do dono no painel. O fluxo OAuth nunca rodou de verdade: não há stack local nem banco de teste, e o primeiro teste de ponta a ponta no Claude e no ChatGPT é do roteiro. Também não está conferido que `supabase functions deploy mcp` resolve os imports `npm:` sem um `deno.json` (com falha, `--use-api`) nem que `/functions/v1/mcp/oauth-protected-resource` responde: `supabase/MCP_DEPLOYMENT.md`. |
+| 100 | G19 | O MCP (conectar uma IA: a Edge `mcp`, o consentimento `/oauth/consent` em wireframe e as IAs conectadas em Configurações) está no repositório, e **nada foi publicado**. O servidor OAuth do Auth está desligado em produção (`feature_disabled`) e ligá-lo é passo do dono no painel. O fluxo OAuth nunca rodou de verdade: não há stack local nem banco de teste, e o primeiro teste de ponta a ponta no Claude e no ChatGPT é do roteiro. Também não está conferido que `supabase functions deploy mcp` resolve os imports `npm:` sem um `deno.json` (com falha, `--use-api`) nem que `/functions/v1/mcp/oauth-protected-resource` responde: `supabase/MCP_DEPLOYMENT.md`. |
 | 101 | G19 | O `registrar_lancamento` chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o token OAuth da IA, e a falha é engolida. As duas o aceitam de propósito (`permitirTokenDeIA`), mas isso nunca rodou no ar: se recusarem, o lançamento da IA grava e o aviso de orçamento ou de fatura não sai. |
 | 102 | G19 | O `registrar_lancamento` não tem idempotência por `client_id`: uma IA que repete a chamada cria dois lançamentos. O `needs_review` põe os dois na conferência, onde a pessoa apaga o repetido. |
 | 103 | G19 | O token da IA não altera nem apaga: o RLS fecha as tabelas e a guarda `guarda_do_token_de_ia` (o `db_pre_request` do PostgREST) recusa toda RPC fora a do parcelado e todo PATCH, PUT e DELETE. Falta conferir que o Auth recusa um `PUT /auth/v1/user` (trocar e-mail ou senha) com esse token: é checagem do roteiro, antes de ligar o registro dinâmico (`supabase/MCP_DEPLOYMENT.md` §1a). |
@@ -2181,6 +2185,7 @@ continuam aqui para registro.
 | Era | Lacuna | O que fechou |
 |---|---|---|
 | 107 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas, sem sessão no telefone, o `AuthGuard` montava o `next` do login sem o hash: depois do login a pessoa chegava ao topo de Configurações, não à seção | O `AuthGuard` soma `window.location.hash` ao `next` (codificado com o resto); `getSafeInternalNextPath` já aceita o `#`, e o `router.push` do login rola até a seção |
+| 19 | O link do guia do Atalho apontava para `docs/captura/atalho-iphone.md` em `main` no GitHub e dava 404 até o `finance-app-2.0` ir para `main` | O guia saiu do GitHub: "Conectar aparelho" abre o `GuiaDoAtalho` dentro do app, e `docs/captura/atalho-iphone.md` virou referência de quem monta à mão |
 | 3 | As subpáginas de sessões e de atividade redirecionavam para `/login` sem `next`, então a pessoa não voltava para a página depois de entrar | As duas subpáginas saíram com a tela nova de Minha conta (404), e o front não lista mais sessões nem atividade |
 
 ### Fechadas no Bloco 9b (26/out/2026)
