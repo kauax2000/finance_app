@@ -22,12 +22,14 @@ describe("/account só redireciona", () => {
             (f) =>
                 !/\.test\.tsx?$/.test(f) &&
                 !f.endsWith("src/config/navigation.ts") &&
+                // A lista do convidado deixa o link antigo passar até o redirecionamento.
+                !f.endsWith("src/lib/papeis/rotas-do-convidado.ts") &&
                 !f.includes("src/app/(app)/account/"),
         )
         expect(fontes.length).toBeGreaterThan(100)
         const achados = fontes.filter((f) => {
             const s = semComentarios(lerFonte(f))
-            return s.includes("ROUTES.ACCOUNT") || s.includes('"/account')
+            return s.includes("ROUTES.ACCOUNT") || /['"`]\/account\b/.test(s)
         })
         expect(achados).toEqual([])
     })

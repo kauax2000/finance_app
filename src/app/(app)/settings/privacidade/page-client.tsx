@@ -19,7 +19,7 @@ export default function PrivacidadePage() {
                     </PageHeaderTitle>
                 </PageHeader>
             )}
-            <PrivacidadeWireframe />
+            <PrivacidadeWireframe dentroDoApp />
         </div>
     )
 }

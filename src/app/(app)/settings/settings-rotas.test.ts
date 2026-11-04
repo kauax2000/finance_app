@@ -9,7 +9,7 @@ const ROTAS = [
     ["lancar-pelo-iphone", "<AtalhoSecao />", "Lançar pelo iPhone"],
     ["ias", "<IasSecao />", "IAs conectadas"],
     ["notificacoes", "<NotificationPreferences />", "Notificações"],
-    ["privacidade", "<PrivacidadeWireframe />", "Política de privacidade"],
+    ["privacidade", "<PrivacidadeWireframe dentroDoApp />", "Política de privacidade"],
 ] as const
 
 /** As que são uma seção de Configurações sozinha (a política é o wireframe, sem a seção). */

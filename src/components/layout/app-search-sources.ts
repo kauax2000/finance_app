@@ -27,7 +27,7 @@ const SINONIMOS: Record<string, string[]> = {
 
 /**
  * As telas: as da carteira, da barra lateral, mais Membros. Ficam de fora, por
- * decisão do dono, o Painel, Configurações, as páginas da conta (Minha conta,
+ * decisão do dono, o Painel, Configurações, as páginas da conta (a Você,
  * Planos e pagamentos) e as Notificações. A paleta
  * desenha o ícone a 16px, então cada um vai ao par micro (`16/solid`), como na
  * barra lateral.

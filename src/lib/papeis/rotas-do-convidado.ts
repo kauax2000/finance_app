@@ -13,7 +13,8 @@ import type { WorkspaceRole } from "@/lib/supabase"
 /** Com as subrotas. */
 const COM_SUBROTAS: readonly string[] = [ROUTES.TRANSACTIONS, ROUTES.DASHBOARD_CATEGORIES, ROUTES.SETTINGS]
 /** Só a própria rota: o detalhe do cartão é a fatura e a conferência. */
-const EXATAS: readonly string[] = [ROUTES.DASHBOARD, ROUTES.CREDIT_CARDS, ROUTES.ME, ROUTES.PLANS, ROUTES.COFRE]
+/** `/account` só redireciona (Você ou Painel): o link antigo do convidado chega lá. */
+const EXATAS: readonly string[] = [ROUTES.DASHBOARD, ROUTES.CREDIT_CARDS, ROUTES.ME, ROUTES.PLANS, ROUTES.COFRE, ROUTES.ACCOUNT]
 /** Subrotas que escrevem, dentro de uma rota permitida: criar categoria é do adulto. */
 const DE_FORA: readonly string[] = [`${ROUTES.DASHBOARD_CATEGORIES}/new`]
 

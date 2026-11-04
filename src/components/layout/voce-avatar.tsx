@@ -7,7 +7,7 @@ import { cn, getInitials } from "@/lib/utils"
 
 /**
  * O avatar da pessoa na aba Você (`xs`, o glifo de 24) e no topo da página
- * Você (`xl`). O nome e o tom são os do Minha conta. Enquanto o perfil não
+ * Você (`xl`). O nome e o tom são os da Você. Enquanto o perfil não
  * chegou, o círculo neutro sem letras: nunca um esqueleto — a rodada 278 tirou
  * o avatar da barra justamente pelo esqueleto que piscava a cada carga.
  */

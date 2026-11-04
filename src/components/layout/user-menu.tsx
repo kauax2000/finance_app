@@ -1,6 +1,6 @@
 "use client"
 
-import { createElement, useState } from "react"
+import { createElement, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
 import { toastError } from "@/lib/toast"
 import {
@@ -27,6 +27,13 @@ export function UserMenu({ children }: UserMenuProps) {
     const { signOut } = useAuth()
     const { papel } = useWorkspace()
     const [editarAberto, setEditarAberto] = useState(false)
+    const gatilhoRef = useRef<HTMLButtonElement>(null)
+
+    // O Radix só devolve o foco ao gatilho quando o menu fecha; o diálogo abre depois, então o devolvemos ao fechá-lo.
+    const aoMudarEditar = (aberto: boolean) => {
+        setEditarAberto(aberto)
+        if (!aberto) requestAnimationFrame(() => gatilhoRef.current?.focus())
+    }
 
     // A lista do papel (Bloco 7A): Planos e o Cofre valem para todos.
     const dropdownLinkItems = itensDeNavegacaoPara(papel, ACCOUNT_MENU_LINK_ITEMS).filter(
@@ -37,7 +44,7 @@ export function UserMenu({ children }: UserMenuProps) {
     return (
         <>
             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild ref={gatilhoRef}>
                     {children}
                 </DropdownMenuTrigger>
                 {/* 4px do botão (sem encostar nele) e por cima da borda da placa — o
@@ -76,7 +83,7 @@ export function UserMenu({ children }: UserMenuProps) {
                 </DropdownMenuContent>
             </DropdownMenu>
             {/* Fora do menu: ele fecha ao escolher, e o diálogo fica. */}
-            <EditProfileDialog open={editarAberto} onOpenChange={setEditarAberto} />
+            <EditProfileDialog open={editarAberto} onOpenChange={aoMudarEditar} />
         </>
     )
 }

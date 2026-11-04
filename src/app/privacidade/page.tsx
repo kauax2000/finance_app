@@ -5,5 +5,9 @@ export const metadata: Metadata = { title: "Privacidade - Finance App" }
 
 /** Pública: fora de `(app)`, então sem `AuthGuard` nem a casca do app. */
 export default function PrivacidadePage() {
-    return <PrivacidadeWireframe />
+    return (
+        <main className="mx-auto max-w-2xl px-4 py-8">
+            <PrivacidadeWireframe />
+        </main>
+    )
 }

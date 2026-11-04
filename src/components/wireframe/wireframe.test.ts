@@ -142,7 +142,7 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
 
   it("a política mora dentro do app em /settings/privacidade, e Configurações não a lista", () => {
-    expect(fonte("src/app/(app)/settings/privacidade/page-client.tsx")).toContain("<PrivacidadeWireframe />")
+    expect(fonte("src/app/(app)/settings/privacidade/page-client.tsx")).toContain("<PrivacidadeWireframe dentroDoApp />")
     expect(fonte("src/app/(app)/settings/(raiz)/page-client.tsx")).not.toContain("ROUTES.PRIVACY")
   })
 
@@ -194,7 +194,7 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
 
   it("a política cita os provedores, a transferência, o que sai e como apagar", async () => {
     const { PrivacidadeWireframe } = await import("./privacidade-wireframe")
-    const html = renderToStaticMarkup(PrivacidadeWireframe())
+    const html = renderToStaticMarkup(PrivacidadeWireframe({}))
     for (const trecho of ["Groq", "Cloudflare", "transferência internacional", "tenta tirar automaticamente", "pode falhar em formatos incomuns", "CPF e CNPJ", "Fotos vão como estão", "30 chamadas de IA por dia", "Excluir conta", "Supabase", "O código do link de convite", "&lt;EMAIL_DE_CONTATO&gt;"]) {
       expect(html, trecho).toContain(trecho)
     }
@@ -202,7 +202,7 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
 
   it("a política diz o que vai ao Asaas e o que guardamos da cobrança (Bloco 8)", async () => {
     const { PrivacidadeWireframe } = await import("./privacidade-wireframe")
-    const html = renderToStaticMarkup(PrivacidadeWireframe())
+    const html = renderToStaticMarkup(PrivacidadeWireframe({}))
     for (const trecho of ["Asaas", "nunca passa pelo app", "passa pela função de cobrança do app (billing-checkout)", "O app não guarda o CPF", "token do cartão", "os 4 últimos dígitos, a bandeira", "endereço IP da compra", "NFS-e", "não apaga o que o Asaas precisa guardar"]) {
       expect(html, trecho).toContain(trecho)
     }

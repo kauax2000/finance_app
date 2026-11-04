@@ -82,7 +82,7 @@ export default function MePage() {
         }
     }
 
-    // Como em Minha conta: sem o perfil, o nome e o tom do avatar ainda não são os
+    // Como na Você: sem o perfil, o nome e o tom do avatar ainda não são os
     // da pessoa, e a página inteira espera no esqueleto da rota.
     if (esperando) {
         return <MePageSkeleton />

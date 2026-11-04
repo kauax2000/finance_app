@@ -16,6 +16,9 @@ describe("as rotas do convidado", () => {
         // Ruling 7: exportar e apagar sempre liberados (spec §15.6), e os planos são da pessoa.
         expect(rotaPermitidaAoConvidado("/cofre")).toBe(true)
         expect(rotaPermitidaAoConvidado("/plans")).toBe(true)
+        // O link antigo só redireciona, e a guarda não o manda antes ao Painel.
+        expect(rotaPermitidaAoConvidado("/account")).toBe(true)
+        expect(rotaPermitidaAoConvidado("/account/sessions")).toBe(false)
     })
 
     it("o que é da casa fica de fora", () => {

@@ -7,7 +7,6 @@ import {
     CreditCardIcon,
     FolderIcon,
     LockClosedIcon,
-    ShieldCheckIcon,
     SparklesIcon,
     Squares2X2Icon,
     TagIcon,
@@ -285,6 +284,12 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
         ...fixadas,
     ].filter((item, i, todas) => todas.findIndex((o) => o.href === item.href) === i)
 
+    /** A linha de perfil/cobrança com o nome e o ícone do menu compartilhado. */
+    const perfil = (href: string) => {
+        const { label, icon } = ACCOUNT_MENU_PROFILE_LINK_ITEMS.find((i) => i.href === href)!
+        return { href, name: label, icon }
+    }
+
     return [
         {
             id: "carteira",
@@ -295,14 +300,9 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             id: "conta",
             label: "Conta",
             items: [
-                { href: ROUTES.PLANS, name: "Planos e pagamentos", icon: SparklesIcon },
+                perfil(ROUTES.PLANS),
                 { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },
-                {
-                    href: ROUTES.COFRE,
-                    name: "Cofre aberto",
-                    icon: ShieldCheckIcon,
-                    description: "Seus dados: exportar e apagar",
-                },
+                { ...perfil(ROUTES.COFRE), description: "Seus dados: exportar e apagar" },
                 { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
                 { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Notificações", icon: BellIcon },
             ],

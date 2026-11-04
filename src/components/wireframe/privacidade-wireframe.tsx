@@ -10,11 +10,13 @@ const ATUALIZADA_EM = "02/11/2026"
  * sessão. Diz só o que o código faz hoje — a cadeia de IA mora em
  * `supabase/functions/_shared/ia-config.ts` e a redação em `_shared/redigir.ts`.
  */
-export function PrivacidadeWireframe() {
+export function PrivacidadeWireframe({ dentroDoApp = false }: { dentroDoApp?: boolean }) {
+    // Dentro do app a barra já diz "Política de privacidade": o título vira um nível abaixo.
+    const Titulo = dentroDoApp ? "h2" : "h1"
     return (
-        <main className="mx-auto max-w-2xl px-4 py-8">
+        <div>
             <WireframeBox bloco="3" titulo="Privacidade">
-                <h1 className="text-base font-bold text-foreground">Privacidade</h1>
+                <Titulo className="text-base font-bold text-foreground">Privacidade</Titulo>
                 <p>Atualizada em {ATUALIZADA_EM}.</p>
 
                 <h2 className="font-bold text-foreground">O que o app guarda</h2>
@@ -156,13 +158,13 @@ export function PrivacidadeWireframe() {
 
                 <p className="space-x-4">
                     <Link href={ROUTES.COFRE} className="text-foreground underline">
-                        Abrir o Cofre aberto (precisa entrar)
+                        Abrir o Cofre aberto{dentroDoApp ? null : " (precisa entrar)"}
                     </Link>
                 </p>
 
                 <h2 className="font-bold text-foreground">Contato</h2>
                 <p>Dúvidas sobre os seus dados: &lt;EMAIL_DE_CONTATO&gt;.</p>
             </WireframeBox>
-        </main>
+        </div>
     )
 }
