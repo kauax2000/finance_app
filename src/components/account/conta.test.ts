@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
+import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -230,15 +231,6 @@ describe("Lançar ao pagar", () => {
         expect(c).toContain("<GuiaDoApplePay")
         expect(c).not.toContain("SettingsSection")
     })
-    it("o guia tem 3 passos, recomeça ao abrir e termina na notificação", () => {
-        const g = lerFonte("src/components/account/guia-do-apple-pay.tsx")
-        const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
-        expect(lista.match(/titulo: "/g)).toHaveLength(3)
-        expect(g).toContain("<CaixaDoPasso")
-        expect(g).toMatch(/setPasso\(0\)/)
-        expect(g).toContain("TELA_DA_NOTIFICACAO")
-        expect(g).toContain("shortcut:")
-    })
     it("a página não tem mais uma seção própria para o Apple Pay", () => {
         expect(lerFonte("src/app/(app)/account/page-client.tsx")).not.toContain("ApplePaySecao")
     })
@@ -248,6 +240,48 @@ describe("Lançar ao pagar", () => {
             expect(s).not.toMatch(/>[^<{]*\btokens?\b[^<]*</i)
             expect(s).not.toMatch(/"[^"\n]*\btokens?\b[^"\n]*"/i)
         }
+    })
+})
+
+describe("Guia do Apple Pay", () => {
+    const g = lerFonte("src/components/account/guia-do-apple-pay.tsx")
+    const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
+    it("tem 7 passos na ordem, e só os dois primeiros e o último têm tela", () => {
+        const titulos = [...lista.matchAll(/titulo: "([^"]+)"/g)].map((m) => m[1])
+        expect(titulos).toEqual([
+            "Abra o app Atalhos",
+            "Toque em Automação e no +",
+            "Escolha Transação",
+            "Escolha os cartões",
+            "Marque Executar Imediatamente",
+            "Toque em Lançar gasto",
+            "Pague com o iPhone",
+        ])
+        const corpo = lista.slice(lista.indexOf("= ["))
+        expect(corpo.match(/tela:/g)).toHaveLength(3)
+        const blocos = corpo.split("titulo:").slice(1)
+        for (const i of [2, 3, 4, 5]) expect(blocos[i]).not.toContain("tela:")
+        expect(blocos[0]).toContain("TELAS_DO_APPLE_PAY.atalhos")
+        expect(blocos[1]).toContain("TELAS_DO_APPLE_PAY.adicionar")
+        expect(blocos[6]).toContain("TELA_DA_NOTIFICACAO")
+    })
+    it("o texto nomeia os botões e não fala difícil", () => {
+        const s = semComentarios(g)
+        for (const n of ["Atalhos", "Automação", "Transação", "Escolher", "Executar Imediatamente", "Seguinte", "Lançar gasto"])
+            expect(s).toContain(`<strong>${n}</strong>`)
+        expect(s).not.toMatch(/gatilho|token|Entrada do atalho/i)
+        expect(g).not.toContain("shortcut:")
+    })
+    it("o alvo cai na parte visível da janela", () => {
+        for (const t of Object.values(TELAS_DO_APPLE_PAY)) {
+            expect(t.ponto).toBeDefined()
+            if (t.ancora === "topo") expect(t.ponto!.y).toBeLessThanOrEqual(58)
+            else expect(t.ponto!.y).toBeGreaterThanOrEqual(42)
+        }
+    })
+    it("recomeça ao abrir e não anima sob movimento reduzido", () => {
+        expect(g).toMatch(/setPasso\(0\)/)
+        expect(g).toContain("entrar={!reduzido && mudou}")
     })
 })
 

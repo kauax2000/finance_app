@@ -8,6 +8,7 @@ import {
     PecaDoPasso,
     PontosDoPasso,
     TELA_DA_NOTIFICACAO,
+    TELAS_DO_APPLE_PAY,
     type Tela,
 } from "@/components/account/passo-a-passo"
 import { Button } from "@/components/ui/button"
@@ -23,32 +24,65 @@ import {
 import { Muted, P } from "@/components/ui/typography"
 
 const PASSOS: { titulo: string; texto: ReactNode; tela?: Tela }[] = [
-    // shortcut: sem captura real do iOS 27 (o simulador não tem Apple Pay); trocar pelo print do iPhone quando houver.
     {
-        titulo: "Abra o Lançar gasto",
+        titulo: "Abra o app Atalhos",
         texto: (
             <>
-                No app <strong>Atalhos</strong>, toque e segure o <strong>Lançar gasto</strong> e escolha{" "}
-                <strong>Editar</strong>.
+                Na tela de início, toque no app <strong>Atalhos</strong>. Se não achar, deslize para baixo no meio da
+                tela e busque por Atalhos.
+            </>
+        ),
+        tela: TELAS_DO_APPLE_PAY.atalhos,
+    },
+    {
+        titulo: "Toque em Automação e no +",
+        texto: (
+            <>
+                Na tela <strong>Biblioteca</strong>, toque em <strong>Automação</strong>. Depois toque no{" "}
+                <strong>+</strong>, embaixo.
+            </>
+        ),
+        tela: TELAS_DO_APPLE_PAY.adicionar,
+    },
+    {
+        titulo: "Escolha Transação",
+        texto: (
+            <>
+                Role a lista e toque em <strong>Transação</strong>, a opção com o ícone da Carteira.
             </>
         ),
     },
-    // shortcut: sem captura real do iOS 27 (o simulador não tem Apple Pay); trocar pelo print do iPhone quando houver.
     {
-        titulo: "Crie a automação da Carteira",
+        titulo: "Escolha os cartões",
         texto: (
             <>
-                Toque em <strong>Adicionar automação</strong>, escolha <strong>Carteira</strong> e marque os cartões
-                que você usa no iPhone.
+                Em <strong>Cartão</strong>, toque em <strong>Escolher</strong> e marque os cartões que você usa para
+                pagar com o iPhone.
             </>
         ),
     },
     {
-        titulo: "Marque Executar imediatamente",
+        titulo: "Marque Executar Imediatamente",
         texto: (
             <>
-                Assim ele não pergunta nada a cada compra. Pague com o iPhone e o gasto aparece:{" "}
-                <strong>Gasto lançado: R$ 42,90</strong>.
+                Marque <strong>Executar Imediatamente</strong> e toque em <strong>Seguinte</strong>, no canto de cima.
+            </>
+        ),
+    },
+    {
+        titulo: "Toque em Lançar gasto",
+        texto: (
+            <>
+                Em <strong>Meus Atalhos</strong>, toque em <strong>Lançar gasto</strong>. Pronto: a automação está
+                criada.
+            </>
+        ),
+    },
+    {
+        titulo: "Pague com o iPhone",
+        texto: (
+            <>
+                Na próxima compra com o iPhone, o gasto aparece sozinho: <strong>Gasto lançado: R$ 42,90</strong>.
             </>
         ),
         tela: TELA_DA_NOTIFICACAO,
@@ -84,7 +118,7 @@ export function GuiaDoApplePay({ open, onOpenChange }: { open: boolean; onOpenCh
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Lançar ao pagar</DialogTitle>
-                    <DialogDescription>O Lançar gasto roda sozinho a cada compra com Apple Pay.</DialogDescription>
+                    <DialogDescription>Siga os passos no iPhone. Leva uns dois minutos.</DialogDescription>
                 </DialogHeader>
                 <DialogBody>
                     <span aria-live="polite" className="sr-only">

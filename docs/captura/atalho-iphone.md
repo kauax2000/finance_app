@@ -182,11 +182,13 @@ Esta automação lança cada compra feita com o Apple Pay.
 
 No app, ela aparece em **Configurações** › "Lançar gastos pelo iPhone", no cartão
 **Lançar ao pagar com Apple Pay**, que surge depois de conectar um aparelho:
-"Configurar" abre um guia de 3 passos. Os passos abaixo são a referência de quem monta à mão.
+"Configurar" abre um guia de 7 passos, um toque por passo, com estes nomes na tela do iPhone:
+Atalhos › Automação › + › Transação › Cartão: Escolher › Executar Imediatamente
+› Seguinte › Lançar gasto. Os passos abaixo são a referência de quem monta à mão.
 
-1. No app Atalhos, abra **Automação** › **Nova automação** › **Transação**.
-2. Escolha os cartões da Wallet que devem lançar. Marque **Executar
-   imediatamente**.
+1. No app **Atalhos**, abra **Automação** › **+** › **Transação**.
+2. Em **Cartão**, toque em **Escolher** e marque os cartões da Wallet que devem
+   lançar. Marque **Executar Imediatamente** e toque em **Seguinte**.
 3. Adicione **Obter conteúdo de URL**, com estes ajustes:
    - URL: `<URL>`;
    - Método: `POST`;
