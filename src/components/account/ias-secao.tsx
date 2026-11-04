@@ -1,6 +1,6 @@
 "use client"
 
-import { SparklesIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, PlusIcon, SparklesIcon } from "@heroicons/react/16/solid"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 

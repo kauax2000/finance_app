@@ -273,6 +273,12 @@ describe("Linha do aparelho e da IA", () => {
             expect(atalho).toContain(s)
         expect(atalho).not.toContain("formatDateTimeShortPtBr")
         expect(atalho).not.toContain('"nunca usado"')
+        expect(atalho).toContain('carteira?.name ?? "Carteira"')
+        expect(atalho).toContain("toLowerCase()")
+    })
+    it("o item do ⋯ só escolhe o alvo; o diálogo abre fora do menu", () => {
+        expect(atalho).toMatch(/variant="destructive" onSelect=\{\(\) => setAlvo\(t\)\}/)
+        expect(ias).toMatch(/onSelect=\{\(\) => setAlvo\(\{/)
     })
     it("IA: ícone de brilho", () => {
         expect(ias).toContain("SparklesIcon")
