@@ -8,7 +8,10 @@ import { deveGravar, voltouDeAusencia } from "@/lib/reativacao"
 import { ensureUserSettingsRow } from "@/lib/settings"
 import { supabase } from "@/lib/supabase"
 
-const MARCA = "acesso-registrado"
+const nada = () => () => {}
+
+// Por pessoa: num aparelho com duas contas, a segunda também registra.
+const marcaDe = (userId: string) => `acesso:${userId}`
 
 function hojeLocal(agora: Date) {
     const mes = String(agora.getMonth() + 1).padStart(2, "0")
@@ -18,14 +21,16 @@ function hojeLocal(agora: Date) {
 /** Grava o acesso de hoje uma vez por dia por aparelho. Não desenha nada ainda. */
 export function RegistroDeAcesso() {
     const { user } = useAuth()
-    const { carregando, ultimoAcessoEm } = useAcesso()
+    const { carregando, erro, ultimoAcessoEm } = useAcesso()
     const { isStandalone } = useDisplayMode()
     // Calculado na primeira leitura, antes da gravação; a Task 3 o lê para o diálogo.
     const [, setVoltou] = React.useState<boolean | null>(null)
+    // O isStandalone do servidor é false: só vale depois de montar.
+    const montado = React.useSyncExternalStore(nada, () => true, () => false)
     const feito = React.useRef(false)
 
     React.useEffect(() => {
-        if (carregando || !user || feito.current) return
+        if (!montado || carregando || erro || !user || feito.current) return
         feito.current = true
         const agora = new Date()
         setVoltou(voltouDeAusencia(ultimoAcessoEm, agora))
@@ -33,7 +38,7 @@ export function RegistroDeAcesso() {
         const hoje = hojeLocal(agora)
         let marca: string | null = null
         try {
-            marca = localStorage.getItem(MARCA)
+            marca = localStorage.getItem(marcaDe(user.id))
         } catch {}
         if (!deveGravar(marca, hoje)) return
 
@@ -50,13 +55,13 @@ export function RegistroDeAcesso() {
                     .eq("user_id", user.id)
                 if (error) return
                 try {
-                    localStorage.setItem(MARCA, hoje)
+                    localStorage.setItem(marcaDe(user.id), hoje)
                 } catch {}
             } catch {
                 // sem rede: tenta de novo na próxima carga
             }
         })()
-    }, [carregando, user, ultimoAcessoEm, isStandalone])
+    }, [montado, carregando, erro, user, ultimoAcessoEm, isStandalone])
 
     return null
 }

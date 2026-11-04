@@ -10,9 +10,9 @@ type Acesso = { ultimoAcessoEm: string | null; appAbertoEm: string | null }
  * O acesso como estava ANTES da gravação do dia: por isso `staleTime: Infinity`
  * e ninguém invalida. O diálogo de volta decide por este valor.
  */
-export function useAcesso(): { carregando: boolean } & Acesso {
+export function useAcesso(): { carregando: boolean; erro: boolean } & Acesso {
     const { user } = useAuth()
-    const { data, isPending } = useQuery({
+    const { data, isPending, isError } = useQuery({
         queryKey: ["acesso", user?.id],
         enabled: !!user,
         staleTime: Infinity,
@@ -32,6 +32,7 @@ export function useAcesso(): { carregando: boolean } & Acesso {
     })
     return {
         carregando: !user || isPending,
+        erro: isError,
         ultimoAcessoEm: data?.ultimoAcessoEm ?? null,
         appAbertoEm: data?.appAbertoEm ?? null,
     }
