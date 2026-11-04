@@ -60,6 +60,7 @@ export async function sendWebPushToUser(args: {
   const body = JSON.stringify(args.payload)
   let sent = 0
   let failed = 0
+  let removed = false
 
   for (const row of rows as PushSubscriptionRow[]) {
     try {
@@ -76,12 +77,40 @@ export async function sendWebPushToUser(args: {
       failed += 1
       if (isExpiredSubscriptionError(err)) {
         await args.supabaseAdmin.from('push_subscriptions').delete().eq('id', row.id)
+        removed = true
       }
       console.warn('[web-push] send failed', row.endpoint.slice(0, 60), err)
     }
   }
 
+  if (removed) await clearAppOpenedWhenNoSubscription(args.supabaseAdmin, args.userId)
+
   return { sent, failed }
+}
+
+/**
+ * Sem nenhuma inscrição viva, o app instalado foi apagado ou recusou o push:
+ * `app_aberto_em` nulo devolve a seção "No celular" no computador. Com outra
+ * inscrição viva não mexe, porque ela pode ser o app.
+ */
+async function clearAppOpenedWhenNoSubscription(
+  supabaseAdmin: SupabaseAdminClient,
+  userId: string
+): Promise<void> {
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    if (error || count !== 0) return
+    const { error: uErr } = await supabaseAdmin
+      .from('user_settings')
+      .update({ app_aberto_em: null })
+      .eq('user_id', userId)
+    if (uErr) console.warn('[web-push] clear app_aberto_em failed', uErr.message)
+  } catch (e) {
+    console.warn('[web-push] clear app_aberto_em failed', e)
+  }
 }
 
 export function buildPushPayload(args: {

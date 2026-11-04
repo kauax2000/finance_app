@@ -24,7 +24,7 @@
     "supabase:functions:serve": "supabase functions serve",
     "supabase:functions:serve:sessions": "supabase functions serve sessions",
     "supabase:deploy:sessions": "supabase functions deploy sessions",
-    "supabase:deploy:functions": "supabase functions deploy sessions activity-logs delete-user evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe notify-transaction-created attachments-cleanup capture ia-ler review-reminder mcp",
+    "supabase:deploy:functions": "supabase functions deploy sessions activity-logs delete-user evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe notify-transaction-created attachments-cleanup capture ia-ler review-reminder reativacao mcp",
     "db:types": "supabase gen types typescript --local | (echo '// GERADO POR `npm run db:types` (supabase gen types typescript --local). Não edite à mão.'; cat) > src/types/database.ts"
   },
   "dependencies": {
