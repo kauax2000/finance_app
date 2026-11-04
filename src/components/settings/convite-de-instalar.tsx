@@ -29,7 +29,7 @@ export function ConviteDeInstalar({ iphone }: { iphone: boolean }) {
         <SettingsSection titulo="Use como app">
             <Card padding="none">
                 <EmptyState variant="plain" size="sm">
-                    <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" />
+                    {iphone ? <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" /> : null}
                     <EmptyStateTitle>Ponha o Finance na tela de início</EmptyStateTitle>
                     <EmptyStateDescription>
                         {iphone

@@ -13,6 +13,7 @@ import { NoCelularCartao } from "@/components/settings/no-celular-cartao"
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section"
 import { ROUTES } from "@/config/navigation"
 import { useBuscaDoCabecalho, type BuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
+import { useAparelhoDeLancar } from "@/hooks/use-aparelho-de-lancar"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const semAssinatura = () => () => {}
@@ -25,6 +26,7 @@ const semAssinatura = () => () => {}
 export function ThemeSettings() {
     const [busca, definirBusca] = useBuscaDoCabecalho()
     const isMobile = useIsMobile()
+    const noComputador = useAparelhoDeLancar() === "computador"
     const { instalarNoIphone, descricaoDoApp } = useInstalarApp()
     const shell = usePwaShellOptional()
     const [installOpen, setInstallOpen] = useState(false)
@@ -71,6 +73,7 @@ export function ThemeSettings() {
                     </div>
                 </Card>
             </SettingsSection>
+            {noComputador ? (
             <SettingsSection titulo="No celular" alcance="Instale no celular: é lá que você lança.">
                 <NoCelularCartao value={noTelefone} />
                 {instalarNoIphone ? (
@@ -88,6 +91,7 @@ export function ThemeSettings() {
                     </Card>
                 ) : null}
             </SettingsSection>
+            ) : null}
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
         </>
     )

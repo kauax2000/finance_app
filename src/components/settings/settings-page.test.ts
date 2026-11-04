@@ -144,6 +144,10 @@ describe("Configurações: o lançamento mora no celular", () => {
         expect(c).toContain("No menu do navegador, toque em Instalar app.")
         expect(c).toContain("InstallPwaSheet")
         expect(c).toMatch(/iphone \?/)
+        expect(c).toMatch(/iphone \? <JanelaDoAparelho/)
+        expect(semComentarios(lerFonte("src/components/settings/theme-settings.tsx"))).toMatch(
+            /useAparelhoDeLancar\(\) === "computador"/,
+        )
     })
     it("a propaganda vende o celular com as funcionalidades novas", () => {
         const n = semComentarios(lerFonte("src/components/settings/no-celular-cartao.tsx"))
