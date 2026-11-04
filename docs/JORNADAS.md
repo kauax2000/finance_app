@@ -2066,11 +2066,22 @@ flowchart TD
 %%{init: {"theme": "dark"}}%%
 flowchart TD
     account["/settings"] --> ias(["IAs conectadas: Conectar e a lista"])
-    ias -->|"Conectar: Copiar a URL, no Dialog com as três instruções"| copiado(["URL na área de transferência"])
+    ias -->|"Conectar"| guia["Dialog Conectar minha IA: o guia de cinco passos"]
+    guia --> escolha{"Passo 1: qual IA? O Próximo só com uma escolhida"}
+    escolha -->|"Claude ou ChatGPT"| urlFinance(["Passo 2: copiar o endereço do Finance"])
+    escolha -->|"Claude Code"| comando(["Passo 2: copiar o comando claude mcp add"])
+    urlFinance --> caminho(["Passo 3: o caminho da IA escolhida, numa lista numerada"])
+    comando --> caminho
+    caminho --> autoriza(["Passo 4: autorizar no Finance, com as três garantias"])
+    autoriza -.->|"a IA abre o consentimento"| G19a(("19a Conectar"))
+    autoriza --> primeira(["Passo 5: a primeira pergunta, para copiar"])
+    primeira -->|"Concluir"| ias
+    guia -.->|"fechar descarta o progresso: abre de novo no passo 1"| ias
     ias --> grants[("listGrants")]
     grants -->|"erro"| erroLista(["Não foi possível carregar as conexões"])
     grants --> lista{"Alguma IA conectada?"}
-    lista -->|"não"| vazio(["Nenhuma IA conectada"])
+    lista -->|"não"| vazio(["O vazio: a cena, as garantias e Conectar minha IA"])
+    vazio -->|"Conectar minha IA"| guia
     lista -->|"sim"| linha(["Cada IA e desde quando, com o ⋯ Desconectar"])
     linha -->|"Desconectar, no ⋯"| confirma(["AlertDialog: ela perde o acesso na hora"])
     confirma -->|"cancelar"| linha
@@ -2093,7 +2104,7 @@ flowchart TD
 | `registrar_lancamento` | A única escrita, com campos separados (sem frase livre nem Groq). Insere em `transactions` com `source = 'ia_externa'`, `needs_review = true` e `capture_meta = { via: 'mcp', client_id }`. Parcelado chama a RPC `create_workspace_installment_plan`, a mesma do formulário, passando as três marcas (`p_source`, `p_needs_review`, `p_capture_meta`), que ela grava nas parcelas. Depois de uma despesa chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o JWT da pessoa, como o formulário; a falha deles é engolida (lacuna 101). A carteira em só leitura devolve a frase "sua carteira está só leitura no plano atual". Sem idempotência por `client_id` (lacuna 102) | `supabase/functions/mcp/index.ts`, `supabase/functions/_shared/mcp/lancamento.ts` |
 | O token da IA | O token OAuth é um JWT da pessoa com a claim `client_id` (`public.eh_token_de_ia()`). Políticas `as restrictive` `ia_somente_leitura_insert/update/delete` em toda tabela de `public` com política de escrita e em `storage.objects`: o token lê, insere só em `transactions`, e só marcado (`ia_lancamento_marcado`: `source = 'ia_externa'` e `needs_review`), e não altera nem apaga. A RPC do parcelado força a marca com token de IA. As Edges de usuário recusam o token (`getAuthUserFromJwt` → 401), menos `evaluate-budgets` e `evaluate-credit-card-alerts`. As RPCs `security definer` não passam pelo RLS: o `db_pre_request` `guarda_do_token_de_ia` recusa ao token toda RPC fora `create_workspace_installment_plan`, e todo PATCH, PUT e DELETE. Residual: lacuna 103 | `supabase/migrations/20261103130000_mcp_token_somente_leitura.sql`, `supabase/migrations/20261103140000_mcp_guarda_rpc.sql`, `supabase/functions/_shared/auth-user.ts` |
 | A origem `ia_externa` | A migração acrescenta `ia_externa` ao check de `transactions.source`. É ela e o `needs_review` que levam o lançamento à lista "A conferir" (G5c) e ao Painel, como os da captura | `supabase/migrations/20261103120000_mcp.sql` |
-| IAs conectadas | Seção de `/settings`, depois de "Lançar gastos pelo iPhone" (essa ordem vale no iPhone com o app instalado; nos outros aparelhos as IAs vêm depois de "No celular" ou do convite) (saiu de Minha conta em 3/nov/2026): "Conectar" abre um `Dialog` com a URL do MCP (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) para copiar e três instruções (Claude, ChatGPT e `claude mcp add`); uma linha por IA (o ladrilho, o nome, desde quando, e o ⋯ com "Desconectar"), com `listGrants`; "Desconectar" é um `AlertDialog` e chama `revokeGrant` | `src/app/(app)/settings/(raiz)/page-client.tsx`, `src/components/account/ias-secao.tsx`, `src/components/account/conectar-ia-dialog.tsx` |
+| IAs conectadas | Seção de `/settings`, depois de "Lançar gastos pelo iPhone" (essa ordem vale no iPhone com o app instalado; nos outros aparelhos as IAs vêm depois de "No celular" ou do convite) (saiu de Minha conta em 3/nov/2026): "Conectar" (e o "Conectar minha IA" do vazio) abre o guia `ConectarIaDialog` (4/nov/2026), cinco passos com Voltar e Próximo: escolher a IA (Claude, ChatGPT ou Claude Code, em `RadioGroup variant="card"`; o Próximo só habilita com uma escolhida), copiar o endereço do Finance (`${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/mcp`) ou, no Claude Code, o comando `claude mcp add --transport http finance <url>`, o caminho da IA escolhida, autorizar no Finance (as três garantias, `GARANTIAS` de `marcas-de-ia.tsx`, as mesmas do vazio) e a primeira pergunta para copiar; "Concluir" fecha, e fechar descarta o progresso (abre de novo no passo 1, sem IA); uma linha por IA (o ladrilho, o nome, desde quando, e o ⋯ com "Desconectar"), com `listGrants`; "Desconectar" é um `AlertDialog` e chama `revokeGrant` | `src/app/(app)/settings/(raiz)/page-client.tsx`, `src/components/account/ias-secao.tsx`, `src/components/account/conectar-ia-dialog.tsx`, `src/components/account/ias-vazio.tsx` |
 | A ponte com a conferência | O lançamento da IA entra pela marca `needs_review` na conferência do Bloco 9: a pessoa vê o que a IA lançou e confirma ou apaga. Não há aviso nem bloqueio extra por ser da IA | G5c |
 
 ---

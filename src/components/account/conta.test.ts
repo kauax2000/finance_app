@@ -234,7 +234,33 @@ describe("IAs conectadas", () => {
     })
     it("as três instruções", () => {
         const d = lerFonte("src/components/account/conectar-ia-dialog.tsx")
-        for (const t of ["Claude", "ChatGPT", "claude mcp add --transport http finance-app"]) expect(d).toContain(t)
+        for (const t of ["Claude", "ChatGPT", "claude mcp add --transport http finance "]) expect(d).toContain(t)
+    })
+})
+
+describe("Conectar minha IA: o guia", () => {
+    it("o guia tem os cinco passos e o caminho de cada IA", () => {
+        const g = semComentarios(lerFonte("src/components/account/conectar-ia-dialog.tsx")).replace(/\s+/g, " ")
+        for (const t of [
+            "Conectar minha IA",
+            "Escolha sua IA",
+            "Copie o endereço do Finance",
+            "Copie o comando",
+            "Autorize no Finance",
+            "Faça a primeira pergunta",
+            "Funciona em todos os planos. No gratuito, cabe um conector.",
+            "Precisa de um plano pago e do Modo desenvolvedor.",
+            "Toque em Adicionar conector personalizado.",
+            "Abra Configurações › Conectores › Avançado e ligue o Modo desenvolvedor.",
+            "Depois, digite /mcp e entre com a sua conta do Finance.",
+            "Quanto gastei este mês por categoria?",
+            "Concluir",
+        ])
+            expect(g).toContain(t)
+        expect(g).toContain("PontosDoPasso")
+        expect(g).toMatch(/<Capa marca=/)
+        expect(g).toContain("GARANTIAS")
+        expect(semComentarios(lerFonte("src/components/account/ias-vazio.tsx"))).not.toMatch(/const GARANTIAS = \[/)
     })
 })
 
@@ -377,13 +403,18 @@ describe("IAs conectadas: o vazio", () => {
             "Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.",
             "Onde dá para cortar gastos este mês sem apertar demais?",
             "Resuma meu mês em 3 pontos",
-            // As garantias são as que o código impõe ao token da IA.
-            "Não edita nem apaga nada no Finance",
-            "O que ela lança espera você conferir",
-            "Você desconecta quando quiser",
             "Conectar minha IA",
         ])
             expect(v).toContain(t)
+        // As garantias são as que o código impõe ao token da IA, numa constante só (o guia diz as mesmas).
+        expect(v).toContain("GARANTIAS.map")
+        const m = lerFonte("src/components/account/marcas-de-ia.tsx")
+        for (const t of [
+            "Não edita nem apaga nada no Finance",
+            "O que ela lança espera você conferir",
+            "Você desconecta quando quiser",
+        ])
+            expect(m).toContain(t)
         expect(v).toMatch(/<Capa marca="claude"/)
         expect(v).toMatch(/<Capa marca="chatgpt"/)
         expect(v).toMatch(/<Capa marca="finance" tamanho="grande"/)

@@ -23,6 +23,18 @@ export function LogoDoChatGPT({ className }: { className?: string }) {
 export type Marca = "claude" | "chatgpt" | "finance"
 
 /**
+ * O que protege a conta, do que o código impõe: o token da IA só lê e insere
+ * lançamento marcado (`ia_somente_leitura_*`, a guarda das RPCs), o lançamento
+ * entra com `needs_review`, e a conexão é um consentimento revogável. O vazio
+ * de IAs e o passo de autorizar do guia dizem as mesmas.
+ */
+export const GARANTIAS = [
+    "Não edita nem apaga nada no Finance",
+    "O que ela lança espera você conferir",
+    "Você desconecta quando quiser",
+]
+
+/**
  * A pintura de cada marca. É da marca e não segue o tema: o fundo, e a sombra
  * tingida que a solta da página (a do Claude puxa o laranja; as pretas, o preto).
  */

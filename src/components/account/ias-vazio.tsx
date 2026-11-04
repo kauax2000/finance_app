@@ -1,18 +1,7 @@
 import { PlusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid"
 
-import { Capa, type Marca } from "@/components/account/marcas-de-ia"
+import { Capa, GARANTIAS, type Marca } from "@/components/account/marcas-de-ia"
 import { Button } from "@/components/ui/button"
-
-/**
- * O que protege a conta, do que o código impõe: o token da IA só lê e insere
- * lançamento marcado (`ia_somente_leitura_*`, a guarda das RPCs), o lançamento
- * entra com `needs_review`, e a conexão é um consentimento revogável.
- */
-const GARANTIAS = [
-    "Não edita nem apaga nada no Finance",
-    "O que ela lança espera você conferir",
-    "Você desconecta quando quiser",
-]
 
 /** Uma pergunta de exemplo, com o selo da IA que a recebe. */
 function Sugestao({ marca, children }: { marca: Marca; children: string }) {
