@@ -12,7 +12,9 @@ import {
     TELAS_DO_APPLE_PAY,
     type Tela,
 } from "@/components/account/passo-a-passo"
+import { CheckCircleIcon } from "@heroicons/react/20/solid"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
     Dialog,
     DialogBody,
@@ -22,6 +24,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Muted, P } from "@/components/ui/typography"
 
 /** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
@@ -67,9 +70,35 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
     },
     {
         titulo: "Confira e salve",
-        texto: (
+        texto: <>Antes de salvar, confira os três pontos da automação.</>,
+        // Sem captura desta tela (não se desenha tela de iPhone): o que conferir, em lista.
+        extra: (
             <>
-                Confira se ela roda o <strong>Lançar gasto</strong> e salve.
+                <Card padding="none">
+                    <ItemGroup variant="divided">
+                        {[
+                            <>
+                                Quando: <strong>Transação</strong> na Carteira
+                            </>,
+                            <>
+                                <strong>Executar Imediatamente</strong> ligado
+                            </>,
+                            <>
+                                Ação: <strong>Lançar gasto</strong>
+                            </>,
+                        ].map((linha, i) => (
+                            <Item key={i} variant="flush">
+                                <ItemMedia variant="icon">
+                                    <CheckCircleIcon className="size-5 text-success" aria-hidden />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="font-normal">{linha}</ItemTitle>
+                                </ItemContent>
+                            </Item>
+                        ))}
+                    </ItemGroup>
+                </Card>
+                <Muted>Tudo certo? Salve no canto de cima da tela.</Muted>
             </>
         ),
     },
