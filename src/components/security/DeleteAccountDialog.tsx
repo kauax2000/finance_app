@@ -16,7 +16,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { supabase, type WorkspaceDeleteImpact } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase"
 import {
   Dialog,
   DialogBody,
@@ -67,36 +67,47 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    // Carteiras compartilhadas criadas pela pessoa somem para todos os membros.
-    // Busca ao abrir: a lista em cache pode não ter uma carteira criada em outro aparelho.
-    const { fetchWorkspaceDeleteImpact, workspaces } = useWorkspace()
+    // Carteiras compartilhadas criadas pela pessoa somem com a conta (cascata em
+    // `created_by`), seja ela dona ou não hoje. Busca ao abrir, numa chamada só:
+    // a lista em cache pode não ter uma carteira criada em outro aparelho.
+    const { workspaces } = useWorkspace()
     const [sharedOwned, setSharedOwned] = useState<
-        { id: string; name: string; impact: WorkspaceDeleteImpact | null | undefined }[]
+        { id: string; name: string; impact: { other_members: number; transactions: number } | null | undefined }[]
     >([])
     useEffect(() => {
         if (!open || !user) return
         let cancelled = false
         void (async () => {
-            const { data } = await supabase
-                .from("workspaces")
-                .select("id,name")
-                .eq("type", "shared")
-                .eq("created_by", user.id)
-            const rows = (data ?? []) as { id: string; name: string }[]
+            const { data, error } = await supabase.rpc("get_account_delete_impact")
             if (cancelled) return
-            setSharedOwned(rows.map((w) => ({ ...w, impact: undefined })))
-            const withImpact = await Promise.all(
-                rows.map(async (w) => {
-                    const res = await fetchWorkspaceDeleteImpact(w.id)
-                    return { ...w, impact: res.ok ? res.impact : null }
-                }),
+            if (error) {
+                // Sem a contagem, ainda dá para mostrar os nomes: a lista simples.
+                const { data: rows } = await supabase
+                    .from("workspaces")
+                    .select("id,name")
+                    .eq("type", "shared")
+                    .eq("created_by", user.id)
+                if (!cancelled) setSharedOwned(((rows ?? []) as { id: string; name: string }[]).map((w) => ({ ...w, impact: null })))
+                return
+            }
+            const lista = (Array.isArray(data) ? data : []) as {
+                id: string
+                name: string
+                other_members: number
+                transactions: number
+            }[]
+            setSharedOwned(
+                lista.map((w) => ({
+                    id: w.id,
+                    name: w.name,
+                    impact: { other_members: Number(w.other_members), transactions: Number(w.transactions) },
+                })),
             )
-            if (!cancelled) setSharedOwned(withImpact)
         })()
         return () => {
             cancelled = true
         }
-    }, [open, user, fetchWorkspaceDeleteImpact])
+    }, [open, user])
 
     // A cópia antes de apagar: o mesmo `.zip` do Cofre aberto. Só baixa; o diálogo fica aberto.
     const [exportando, setExportando] = useState(false)
@@ -225,7 +236,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     // O vermelho fica no poço do ícone e no botão final; o âmbar, só nas carteiras.
     const bodyWarning = (
         <DialogBody>
-            <Card variant="muted" padding="none">
+            <Card variant="plain" padding="none">
                 <div className="flex flex-col pt-3">
                     <Muted id="delete-account-loss-title" className="px-4 text-xs">
                         Será apagado

@@ -2254,6 +2254,10 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: number
       }
+      get_account_delete_impact: {
+        Args: never
+        Returns: Json
+      }
       get_device_info_from_user_agent: {
         Args: { user_agent_text: string }
         Returns: Json

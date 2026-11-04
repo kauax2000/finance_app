@@ -498,7 +498,7 @@ describe("Excluir conta: dois passos enxutos", () => {
         expect(aviso).not.toContain('<Alert tone="warning"')
         expect(aviso).not.toContain("max-sm:")
         expect(aviso.match(/<Card /g)).toHaveLength(1)
-        expect(aviso).toContain('<Card variant="muted" padding="none">')
+        expect(aviso).toContain('<Card variant="plain" padding="none">')
         expect(aviso.match(/<Separator \/>/g)).toHaveLength(2)
         for (const t of [
             "Será apagado",
