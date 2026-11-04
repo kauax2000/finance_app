@@ -1785,6 +1785,8 @@ flowchart TD
     delUser --&gt;|"erro"| confirmDel
     delUser --&gt;|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) --&gt;|"2 s"| root["/"] --&gt; login(("G1 /login"))
     warn --&gt;|"Cancelar ou fechar"| profile
+    pwd --&gt;|"Cancelar ou fechar"| profile
+    confirmDel --&gt;|"Cancelar ou fechar"| profile
 
     account --&gt;|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
 

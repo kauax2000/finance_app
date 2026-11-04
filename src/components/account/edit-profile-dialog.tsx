@@ -418,7 +418,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
     // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <>
         <Dialog
             surface="auto"
             pending={saving}
@@ -458,6 +457,5 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 <DeleteAccountDialog open={excluirAberto} onOpenChange={setExcluirAberto} />
             </DialogContent>
         </Dialog>
-        </>
     )
 }

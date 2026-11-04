@@ -142,7 +142,7 @@ export function PrivacidadeWireframe() {
                         sem plano.
                     </li>
                     <li>
-                        Em <strong>Minha conta</strong>, &quot;Excluir conta&quot; apaga a conta, as carteiras que você
+                        Em <strong>Minha conta › Editar perfil</strong> (Segurança), &quot;Excluir conta&quot; apaga a conta, as carteiras que você
                         criou (também para os outros membros), os lançamentos, as categorias, as preferências e o
                         perfil. A exclusão pede a sua senha e não tem volta.
                     </li>

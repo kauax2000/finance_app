@@ -1249,6 +1249,8 @@ flowchart TD
     delUser -->|"erro"| confirmDel
     delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
     warn -->|"Cancelar ou fechar"| profile
+    pwd -->|"Cancelar ou fechar"| profile
+    confirmDel -->|"Cancelar ou fechar"| profile
 
     account -->|"Plano"| plans(("G11 /plans, o plano e a faixa de só leitura"))
 
