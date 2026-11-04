@@ -1,5 +1,7 @@
+"use client"
+
 import Link from "next/link"
-import type { ReactNode } from "react"
+import { createContext, useContext, type ReactNode } from "react"
 import { Item, ItemChevron, ItemContent, ItemTitle } from "@/components/ui/item"
 import { Muted } from "@/components/ui/typography"
 import {
@@ -8,6 +10,16 @@ import {
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
+
+/**
+ * A seção que é a página inteira (`/settings/ias`…): o nome já está na barra e no
+ * cabeçalho, e o título da seção fica só para o leitor de tela.
+ */
+const SecaoSozinhaContext = createContext(false)
+
+export function SecaoSozinha({ children }: { children: ReactNode }) {
+    return <SecaoSozinhaContext.Provider value>{children}</SecaoSozinhaContext.Provider>
+}
 
 /** A seção de Configurações: título, o alcance opcional ("Vale para …") e a ação à direita. */
 export function SettingsSection({
@@ -25,10 +37,11 @@ export function SettingsSection({
     actions?: ReactNode
     children?: ReactNode
 }) {
+    const sozinha = useContext(SecaoSozinhaContext)
     return (
         <PageSection id={id} className={className}>
             <PageSectionHeader actions={actions}>
-                <PageSectionTitle>{titulo}</PageSectionTitle>
+                <PageSectionTitle className={sozinha ? "sr-only" : undefined}>{titulo}</PageSectionTitle>
                 {alcance ? <PageSectionDescription>{alcance}</PageSectionDescription> : null}
             </PageSectionHeader>
             {children}

@@ -18,7 +18,7 @@ describe("o título grande do telefone", () => {
     it("subpágina não tem título grande: o nome só vai à barra depois de rolar", () => {
         expect(CASCA).toContain("subpagina={Boolean(defaultMobileBackHref(pathname))}")
         expect(TITULO).toContain("if (!isMobile || subpagina || pathname === ROUTES.ME) return null")
-        expect(TITULO).toContain("docked: window.scrollY > ROLAGEM_MINIMA")
+        expect(TITULO).toContain("docked: fixo || window.scrollY > ROLAGEM_MINIMA")
         expect(TITULO).toContain('window.addEventListener("scroll", publicar, { passive: true })')
         expect(TITULO).toContain("publishPageTitle(document, null)")
     })

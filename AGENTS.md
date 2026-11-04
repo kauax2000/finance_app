@@ -732,7 +732,7 @@ declaração de `background-color` no trilho).
   **576** · 672 · 1280 · sem teto, e a calha (`gutter`) é **opt-in**, porque
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
-  `PageSectionContent`. **No telefone as telas de aba abrem com o título grande, e quem o escreve é a casca; a página Você não o tem, e a subpágina (toda rota com voltar) também não: o nome dela só aparece no centro da barra depois de rolar**
+  `PageSectionContent`. **No telefone as telas de aba abrem com o título grande, e quem o escreve é a casca; a página Você não o tem, e a subpágina (toda rota com voltar) também não: o nome dela só aparece no centro da barra depois de rolar — menos nas três telas de configuração da Você (`ROTAS_DE_VOCE_EM_SETTINGS`), que já abrem com ele lá e escondem o título da seção (`SecaoSozinha`)**
   (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
   `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. Ela segura a tela velha até a nova ficar pronta, sem esqueleto à vista, com teto de 1,2s. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com

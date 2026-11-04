@@ -1,6 +1,7 @@
 "use client"
 
 import { AtalhoSecao } from "@/components/account/atalho-secao"
+import { SecaoSozinha } from "@/components/settings/settings-section"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -19,7 +20,9 @@ export default function LancarPage() {
                 </PageHeader>
             )}
             <div className="min-w-0 space-y-5">
-                <AtalhoSecao />
+                <SecaoSozinha>
+                    <AtalhoSecao />
+                </SecaoSozinha>
             </div>
         </div>
     )

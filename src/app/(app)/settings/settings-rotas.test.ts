@@ -24,6 +24,18 @@ describe("rotas das seções de Configurações", () => {
         expect(f).toContain(`>${titulo}</p>`)
     })
 
+    it.each(ROTAS)("%s: a seção é a página, sem o título dela à vista", (pasta) => {
+        expect(fonte(`${pasta}/page-client.tsx`)).toContain("<SecaoSozinha>")
+    })
+
+    it("no telefone o nome já nasce na barra", () => {
+        const titulo = semComentarios(lerFonte("src/components/layout/titulo-da-tela.tsx"))
+        expect(titulo).toContain("ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname)")
+        expect(titulo).toContain("docked: fixo ||")
+        const secao = semComentarios(lerFonte("src/components/settings/settings-section.tsx"))
+        expect(secao).toContain('className={sozinha ? "sr-only" : undefined}')
+    })
+
     it("(raiz) manda o celular para /me sem montar as seções", () => {
         const f = fonte("(raiz)/page-client.tsx")
         expect(f).toContain("router.replace(ROUTES.ME)")
