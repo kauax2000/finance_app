@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
@@ -7,9 +6,7 @@ const canais = lerFonte("src/components/settings/notificacoes-canais.tsx")
 const temas = lerFonte("src/components/settings/notificacoes-temas.tsx")
 
 describe("Notificações: as chaves moram na seção de Configurações", () => {
-    it("as chaves moram na seção, sem rota própria", () => {
-        expect(existsSync("src/app/(app)/settings/notificacoes")).toBe(false)
-        expect(lerFonte("src/config/navigation.ts")).not.toContain("SETTINGS_NOTIFICACOES")
+    it("as chaves moram na seção", () => {
         expect(secao).toContain("<NotificacoesCanais")
         expect(secao).toContain("<NotificacoesTemas")
     })

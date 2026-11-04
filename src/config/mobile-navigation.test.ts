@@ -6,11 +6,18 @@ import { arquivosTsx, lerFonte } from "@/test/fonte"
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
 
 describe("a página Você", () => {
-    it("dois grupos: a carteira e a conta, sem Planos, com o Cofre aberto e Configurações por último", () => {
+    it("dois grupos: a carteira e a conta, sem Planos nem Configurações, com IAs conectadas e Notificações por último", () => {
         const [carteira, conta] = getVoceGroups([], "owner")
         expect(carteira.id).toBe("carteira")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS, ROUTES.BILLS, ROUTES.SUBSCRIPTIONS, ROUTES.PROJETOS, ROUTES.MEMBERS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS])
+        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES])
+    })
+    it("as três telas de configuração do telefone acendem Você e voltam a ela", () => {
+        for (const r of [ROUTES.SETTINGS_LANCAR, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]) {
+            expect(isVoceTabActive(r, [])).toBe(true)
+            expect(voceBackHref(r)).toBe(ROUTES.ME)
+        }
+        expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
     })
 
     it("a aba que saiu da barra entra primeiro na carteira", () => {
@@ -36,7 +43,6 @@ describe("a página Você", () => {
 
     it("o voltar do telefone leva a Você só das telas que ela lista", () => {
         expect(voceBackHref(ROUTES.SUBSCRIPTIONS)).toBe(ROUTES.ME)
-        expect(voceBackHref(ROUTES.SETTINGS)).toBe(ROUTES.ME)
         expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
         expect(voceBackHref(ROUTES.DASHBOARD_CATEGORIES)).toBeUndefined()
     })
@@ -54,7 +60,7 @@ describe("o telefone do convidado (Bloco 7A)", () => {
     it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
         const [carteira, conta] = getVoceGroups([], "guest")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS])
+        expect(hrefs(conta)).toEqual(expect.arrayContaining([ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]))
         for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
     })
 

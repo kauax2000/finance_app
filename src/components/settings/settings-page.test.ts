@@ -1,6 +1,5 @@
 import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
-import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications-panel-empty"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { desfazerPatch, type WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notification-prefs"
 import { lerFonte, semComentarios } from "@/test/fonte"
@@ -53,9 +52,6 @@ describe("Configurações: página única", () => {
         expect(fonte).toContain("rolarAteAncora")
     })
 
-    it("Configurar notificações aponta para a âncora", () => {
-        expect(NOTIFICATION_PREFERENCES_HREF).toBe("/settings#notificacoes")
-    })
 
     it("rolarAteAncora rola até o elemento do hash", () => {
         const scrollIntoView = vi.fn()

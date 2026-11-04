@@ -1,5 +1,6 @@
 import {
     ArrowPathRoundedSquareIcon,
+    BellIcon,
     RectangleStackIcon,
     ClipboardDocumentCheckIcon,
     Cog6ToothIcon,
@@ -39,6 +40,7 @@ import {
 } from "@heroicons/react/16/solid"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareMini,
+    BellIcon as BellMini,
     RectangleStackIcon as RectangleStackMini,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckMini,
     Cog6ToothIcon as Cog6ToothMini,
@@ -139,6 +141,7 @@ const ICONE_MINI = new Map<HeroIcon, HeroIcon>([
     [Cog6ToothIcon, Cog6ToothMini],
     [UserCircleIcon, UserCircleMini],
     [SparklesIcon, SparklesMini],
+    [BellIcon, BellMini],
 ])
 
 /** O par mini, ou `undefined` — quem não tem par continua no de 24. */
@@ -235,12 +238,22 @@ export function isMobileAccountMenuNavItemActive(
             )
         case ROUTES.SETTINGS:
             return isSettingsPath(pathname)
+        case ROUTES.SETTINGS_IAS:
+        case ROUTES.SETTINGS_NOTIFICACOES:
+            return isExactPath(pathname, item.href)
         case ROUTES.ACCOUNT:
             return isAccountHubPath(pathname)
         default:
             return isExactPath(pathname, item.href)
     }
 }
+
+/** As telas de Configurações que o telefone abre por Você (a primeira só tem cartão em /me). */
+export const ROTAS_DE_VOCE_EM_SETTINGS: readonly string[] = [
+    ROUTES.SETTINGS_LANCAR,
+    ROUTES.SETTINGS_IAS,
+    ROUTES.SETTINGS_NOTIFICACOES,
+]
 
 export type VoceGroup = {
     id: "carteira" | "conta"
@@ -270,7 +283,6 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             .map(({ name, href, icon }) => ({ name, href, icon })),
         ...fixadas,
     ].filter((item, i, todas) => todas.findIndex((o) => o.href === item.href) === i)
-    const configuracoes = telas.filter((item) => item.href === ROUTES.SETTINGS)
 
     return [
         {
@@ -290,7 +302,8 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
                         ...(href === ROUTES.COFRE ? { description: "Seus dados: exportar e apagar" } : {}),
                     })
                 ),
-                ...configuracoes,
+                { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
+                { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Notificações", icon: BellIcon },
             ],
         },
     ]
@@ -304,6 +317,7 @@ export function isVoceTabActive(pathname: string, abasFora: readonly string[]): 
     return (
         pathname === ROUTES.ME ||
         isPlansPath(pathname) ||
+        ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname) ||
         todosOsGrupos(abasFora).some((grupo) =>
             grupo.items.some((item) => isMobileAccountMenuNavItemActive(pathname, item))
         )
@@ -316,9 +330,9 @@ export function isVoceTabActive(pathname: string, abasFora: readonly string[]): 
  * tem o próprio pai e não passa por aqui.
  */
 export function voceBackHref(pathname: string): string | undefined {
-    const listada = todosOsGrupos([]).some((grupo) =>
-        grupo.items.some((item) => item.href === pathname)
-    )
+    const listada =
+        ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname) ||
+        todosOsGrupos([]).some((grupo) => grupo.items.some((item) => item.href === pathname))
     return listada ? ROUTES.ME : undefined
 }
 

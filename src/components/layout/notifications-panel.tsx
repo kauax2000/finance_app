@@ -37,12 +37,13 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { NotificationRow } from "@/components/layout/notification-row"
 import {
-    NOTIFICATION_PREFERENCES_HREF,
     NotificationsPanelEmpty,
+    preferenciasDeNotificacaoHref,
 } from "@/components/layout/notifications-panel-empty"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import {
@@ -123,6 +124,7 @@ type NotificationsPanelProps = {
 
 export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const { user, loading: authLoading } = useAuth()
+    const isMobile = useIsMobile()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
     const { unreadCount, adjustUnreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce, close } =
         useNotificationsUi()
@@ -338,7 +340,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 </DropdownMenuItem>
                                 {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
                                 <DropdownMenuItem asChild>
-                                    <Link href={NOTIFICATION_PREFERENCES_HREF}>
+                                    <Link href={preferenciasDeNotificacaoHref(isMobile)}>
                                         <Cog6ToothIcon />
                                         Configurar notificações
                                     </Link>

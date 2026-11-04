@@ -3,6 +3,7 @@
 import type * as React from "react"
 import Link from "next/link"
 import { ROUTES } from "@/config/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
     EmptyState,
@@ -16,8 +17,10 @@ import {
     NotificationsWalletsIllustration,
 } from "@/components/layout/notifications-empty-illustration"
 
-/** A seção Notificações das Configurações. */
-export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}#notificacoes`
+/** As preferências de notificação: tela própria no celular, âncora das Configurações no desktop. */
+export function preferenciasDeNotificacaoHref(isMobile: boolean): string {
+    return isMobile ? ROUTES.SETTINGS_NOTIFICACOES : `${ROUTES.SETTINGS}#notificacoes`
+}
 
 export type NotificationsPanelEmptyVariant = "no-auth" | "no-workspace" | "inbox-empty"
 
@@ -52,6 +55,7 @@ const VARIANT_META: Record<
 
 export function NotificationsPanelEmpty({ variant }: NotificationsPanelEmptyProps) {
     const meta = VARIANT_META[variant]
+    const isMobile = useIsMobile()
 
     return (
         // No alto do painel, 64px abaixo do cabeçalho, como o "Tudo lido".
@@ -67,7 +71,7 @@ export function NotificationsPanelEmpty({ variant }: NotificationsPanelEmptyProp
                 <EmptyStateActions>
                     {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
                     <Button asChild variant="tertiary">
-                        <Link href={NOTIFICATION_PREFERENCES_HREF}>Configurar notificações</Link>
+                        <Link href={preferenciasDeNotificacaoHref(isMobile)}>Configurar notificações</Link>
                     </Button>
                 </EmptyStateActions>
             ) : null}
