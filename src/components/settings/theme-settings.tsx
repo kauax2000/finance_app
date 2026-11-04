@@ -74,23 +74,23 @@ export function ThemeSettings() {
                 </Card>
             </SettingsSection>
             {noComputador ? (
-            <SettingsSection titulo="No celular" alcance="Instale no celular: é lá que você lança.">
-                <NoCelularCartao value={noTelefone} />
-                {instalarNoIphone ? (
-                    <Card padding="none">
-                        {linhaDoApp}
-                    </Card>
-                ) : shell && shell.pendingSyncCount > 0 ? (
-                    <Card padding="none">
-                        <SettingsRow
-                            titulo="Sincronização"
-                            descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
-                        >
-                            <SyncStatusChip />
-                        </SettingsRow>
-                    </Card>
-                ) : null}
-            </SettingsSection>
+                <SettingsSection titulo="No celular" alcance="Instale no celular: é lá que você lança.">
+                    <NoCelularCartao value={noTelefone} />
+                    {instalarNoIphone ? (
+                        <Card padding="none">
+                            {linhaDoApp}
+                        </Card>
+                    ) : shell && shell.pendingSyncCount > 0 ? (
+                        <Card padding="none">
+                            <SettingsRow
+                                titulo="Sincronização"
+                                descricao={!shell.isOnline ? SEM_CONEXAO : undefined}
+                            >
+                                <SyncStatusChip />
+                            </SettingsRow>
+                        </Card>
+                    ) : null}
+                </SettingsSection>
             ) : null}
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
         </>
