@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import { NOTIFICATION_PREFERENCES_HREF } from "@/components/layout/notifications-panel-empty"
 import { rolarAteAncora } from "@/components/settings/settings-section"
 import { desfazerPatch, type WorkspaceMemberNotificationPrefs } from "@/lib/workspace-notification-prefs"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -124,5 +124,26 @@ describe("Configurações: página única", () => {
         for (const texto of ['id="notificacoes"', "<NotificacoesCanais", "<NotificacoesTemas", "Este aparelho bloqueou os avisos.", 'storageKey="push-bloqueado"', "NotificationPreferencesSkeleton"]) expect(f).toContain(texto)
         for (const fora of ["subscribeToPush", "CardToolbar", "Ver histórico", "AlertAction", "ROUTES", "next/link"]) expect(f).not.toContain(fora)
         expect(f).toContain('getPushSupportState() === "denied"')
+    })
+})
+
+describe("Configurações: o lançamento mora no celular", () => {
+    it("a seção do iPhone só no iPhone instalado, e o convite no navegador do celular", () => {
+        const f = semComentarios(lerFonte("src/app/(app)/settings/(raiz)/page-client.tsx"))
+        expect(f).toContain("useAparelhoDeLancar()")
+        expect(f).toMatch(/"iphone-instalado"[^]*<AtalhoSecao \/>/)
+        expect(f).toMatch(/"navegador-iphone"[^]*<ConviteDeInstalar iphone \/>/)
+        expect(f).toMatch(/"navegador-android"[^]*<ConviteDeInstalar iphone=\{false\} \/>/)
+        const ordem = ["<ThemeSettings", "<IasSecao", "<NotificationPreferences"].map((p) => f.indexOf(p))
+        expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
+    })
+    it("o convite não diz PWA e só promete o iPhone a quem tem iPhone", () => {
+        // O import e o nome InstallPwaSheet são código, não texto da tela.
+        const c = semComentarios(lerFonte("src/components/settings/convite-de-instalar.tsx"))
+        expect(c).not.toMatch(/(?<![/\w-])PWA(?![/\w-])|standalone/i)
+        expect(c).toContain("Ponha o Finance na tela de início")
+        expect(c).toContain("No menu do navegador, toque em Instalar app.")
+        expect(c).toContain("InstallPwaSheet")
+        expect(c).toMatch(/iphone \?/)
     })
 })
