@@ -210,8 +210,8 @@ describe("a página Minha conta", () => {
         expect(p()).toContain('aria-hidden="true"')
     })
     it("as seções mostram o próprio erro, sem o toast global", () => {
-        for (const f of ["aparelhos-de-captura.ts", "ias-secao.tsx"])
-            expect(lerFonte(`src/components/account/${f}`)).toContain("meta: { errorToast: false }")
+        expect(lerFonte("src/components/account/aparelhos-de-captura.ts")).toContain("meta: { errorToast: false }")
+        expect(lerFonte("src/hooks/use-ias-conectadas.ts")).toContain("meta: { errorToast: false }")
     })
     it("a data de membro é o selo, com a frase inteira como nome", () => {
         expect(p()).toContain("<Seal")
@@ -226,8 +226,8 @@ describe("IAs conectadas", () => {
         expect(urlDoMcp("https://x.supabase.co")).toBe("https://x.supabase.co/functions/v1/mcp")
     })
     it("lista, confirma de verdade e mostra o erro sem derrubar a tela", () => {
+        expect(lerFonte("src/hooks/use-ias-conectadas.ts")).toContain("listGrants")
         const f = lerFonte("src/components/account/ias-secao.tsx")
-        expect(f).toContain("listGrants")
         expect(f).toContain("revokeGrant")
         expect(f).toContain("Não foi possível carregar as conexões.")
         expect(f).not.toContain("window.confirm")

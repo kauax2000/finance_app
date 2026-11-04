@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import * as React from "react"
 import { AtalhoSecao } from "@/components/account/atalho-secao"
 import { IasSecao } from "@/components/account/ias-secao"
@@ -10,27 +11,33 @@ import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { ThemeSettings } from "@/components/settings/theme-settings"
 import { useAparelhoDeLancar } from "@/hooks/use-aparelho-de-lancar"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { ROUTES } from "@/config/navigation"
 
 export default function SettingsPage() {
     const isMobile = useIsMobile()
     const aparelho = useAparelhoDeLancar()
+    const router = useRouter()
+
+    // No telefone as seções moram em Você (`/me`) e em rotas próprias.
+    React.useEffect(() => {
+        if (isMobile) router.replace(ROUTES.ME)
+    }, [isMobile, router])
 
     // O AdiarMontagem monta a página depois do salto do navegador: rola à âncora aqui.
     React.useEffect(() => {
         rolarAteAncora(window.location.hash, document)
     }, [])
 
+    if (isMobile) return null
+
     return (
         <div className="min-w-0 space-y-8">
-            {/* No telefone o título é o da casca (`TituloDaTela`). */}
-            {isMobile ? null : (
-                <PageHeader collapse>
-                    <PageHeaderTitle asChild>
-                        {/* O `<h1>` da página é o da barra do topo. */}
-                        <p aria-hidden="true">Configurações</p>
-                    </PageHeaderTitle>
-                </PageHeader>
-            )}
+            <PageHeader collapse>
+                <PageHeaderTitle asChild>
+                    {/* O `<h1>` da página é o da barra do topo. */}
+                    <p aria-hidden="true">Configurações</p>
+                </PageHeaderTitle>
+            </PageHeader>
             <div className="min-w-0 space-y-5">
                 <ThemeSettings />
                 {aparelho === "iphone-instalado" ? <AtalhoSecao /> : null}

@@ -1,0 +1,26 @@
+"use client"
+
+import { IasSecao } from "@/components/account/ias-secao"
+import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
+import { useIsMobile } from "@/hooks/use-mobile"
+
+export default function IasPage() {
+    const isMobile = useIsMobile()
+
+    return (
+        <div className="min-w-0 space-y-8">
+            {/* No telefone o título é o da casca (`TituloDaTela`). */}
+            {isMobile ? null : (
+                <PageHeader collapse>
+                    <PageHeaderTitle asChild>
+                        {/* O `<h1>` da página é o da barra do topo. */}
+                        <p aria-hidden="true">IAs conectadas</p>
+                    </PageHeaderTitle>
+                </PageHeader>
+            )}
+            <div className="min-w-0 space-y-5">
+                <IasSecao />
+            </div>
+        </div>
+    )
+}

@@ -1,7 +1,7 @@
 "use client"
 
 import { EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon, SparklesIcon } from "@heroicons/react/16/solid"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { ConectarIaDialog } from "@/components/account/conectar-ia-dialog"
@@ -30,6 +30,7 @@ import {
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
+import { chaveDasIas, useIasConectadas } from "@/hooks/use-ias-conectadas"
 import { supabase } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
 
@@ -42,19 +43,7 @@ export function urlDoMcp(supabaseUrl: string): string {
 export function IasSecao() {
     const { user } = useAuth()
     const queryClient = useQueryClient()
-    const chave = ["oauth_grants", user?.id]
-    const lista = useQuery({
-        queryKey: chave,
-        enabled: Boolean(user),
-        retry: false,
-        // A seção mostra o próprio erro: sem o toast global cru, em inglês.
-        meta: { errorToast: false },
-        queryFn: async () => {
-            const { data, error } = await supabase.auth.oauth.listGrants()
-            if (error) throw error
-            return data ?? []
-        },
-    })
+    const lista = useIasConectadas()
     const [conectarAberto, setConectarAberto] = useState(false)
     const [alvo, setAlvo] = useState<{ id: string; nome: string } | null>(null)
     const [pendente, setPendente] = useState(false)
@@ -76,7 +65,7 @@ export function IasSecao() {
         setPendente(false)
         if (error) return setErro("Não foi possível desconectar. Tente de novo.")
         setAlvo(null)
-        await queryClient.invalidateQueries({ queryKey: chave })
+        await queryClient.invalidateQueries({ queryKey: chaveDasIas(user?.id) })
     }
 
     return (
