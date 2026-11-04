@@ -401,7 +401,7 @@ describe("IAs conectadas: o vazio", () => {
         for (const t of [
             "Uma IA que entende o seu dinheiro",
             "Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.",
-            "Onde dá para cortar gastos este mês sem apertar demais?",
+            "Onde dá para cortar gastos este mês?",
             "Resuma meu mês em 3 pontos",
             "Conectar minha IA",
         ])

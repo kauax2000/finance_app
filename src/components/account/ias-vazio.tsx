@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 /** Uma pergunta de exemplo, com o selo da IA que a recebe. */
 function Sugestao({ marca, children }: { marca: Marca; children: string }) {
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/80 py-1 ps-1 pe-2.5 text-xs text-foreground backdrop-blur-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/80 py-1 ps-1 pe-2.5 text-xs whitespace-nowrap text-foreground backdrop-blur-sm">
             <Capa marca={marca} tamanho="selo" />
             {children}
         </span>
@@ -36,7 +36,7 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                         <Capa marca="chatgpt" className="-translate-x-3 translate-y-2.5 rotate-12" />
                     </div>
                     <div className="flex flex-col items-center gap-1.5">
-                        <Sugestao marca="claude">Onde dá para cortar gastos este mês sem apertar demais?</Sugestao>
+                        <Sugestao marca="claude">Onde dá para cortar gastos este mês?</Sugestao>
                         <Sugestao marca="chatgpt">Resuma meu mês em 3 pontos</Sugestao>
                     </div>
                 </div>
