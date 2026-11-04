@@ -49,7 +49,7 @@ export function IasVazio({ onConectar }: { onConectar: () => void }) {
                     </div>
                     <div className="flex flex-col items-center gap-1.5">
                         <Sugestao marca="claude">Onde dá para cortar gastos este mês sem apertar demais?</Sugestao>
-                        <Sugestao marca="chatgpt">Resuma meu mês em 3 pontos e compare com o anterior</Sugestao>
+                        <Sugestao marca="chatgpt">Resuma meu mês em 3 pontos</Sugestao>
                     </div>
                 </div>
                 <div className="flex min-w-0 flex-col items-center text-center">

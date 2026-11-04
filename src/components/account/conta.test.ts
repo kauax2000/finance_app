@@ -376,7 +376,7 @@ describe("IAs conectadas: o vazio", () => {
             "Uma IA que entende o seu dinheiro",
             "Conecte o Claude ou o ChatGPT e peça análises, o resumo do mês e onde cortar. Ela também lê seus lançamentos e lança o que você pedir.",
             "Onde dá para cortar gastos este mês sem apertar demais?",
-            "Resuma meu mês em 3 pontos e compare com o anterior",
+            "Resuma meu mês em 3 pontos",
             // As garantias são as que o código impõe ao token da IA.
             "Não edita nem apaga nada no Finance",
             "O que ela lança espera você conferir",
