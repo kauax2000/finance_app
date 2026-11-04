@@ -93,3 +93,6 @@ verify_jwt = false
 # fails under colima; not needed for db/functions development.
 [analytics]
 enabled = false
+
+[functions.reativacao]
+verify_jwt = false
