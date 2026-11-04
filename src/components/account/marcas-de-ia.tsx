@@ -26,10 +26,12 @@ export type Marca = "claude" | "chatgpt" | "finance"
  * A pintura de cada marca. É da marca e não segue o tema: o fundo, e a sombra
  * tingida que a solta da página (a do Claude puxa o laranja; as pretas, o preto).
  */
-const PINTURA: Record<Marca, { fundo: string; sombra: string }> = {
-    claude: { fundo: "#D97757", sombra: "0 16px 32px -14px rgb(217 119 87 / 0.7)" },
-    chatgpt: { fundo: "#000000", sombra: "0 16px 32px -16px rgb(0 0 0 / 0.9)" },
-    finance: { fundo: "#000000", sombra: "0 22px 44px -16px rgb(0 0 0 / 1)" },
+const PINTURA: Record<Marca, { fundo: string; tinta: string; anel: string; sombra: string; verniz: boolean }> = {
+    claude: { fundo: "#D97757", tinta: "text-white", anel: "ring-white/12", sombra: "0 16px 32px -14px rgb(217 119 87 / 0.7)", verniz: true },
+    // A capa do app do ChatGPT é branca com o logo preto: ao lado da do Finance, que é preta, as duas não brigam.
+    chatgpt: { fundo: "#FFFFFF", tinta: "text-black", anel: "ring-black/10", sombra: "0 16px 32px -16px rgb(0 0 0 / 0.6)", verniz: false },
+    // A do Finance é a do ícone instalado, chapada, sem verniz.
+    finance: { fundo: "#000000", tinta: "text-white", anel: "ring-white/12", sombra: "0 22px 44px -16px rgb(0 0 0 / 1)", verniz: false },
 }
 
 /** O degrau: a capa de app da cena (média e grande) e o selo redondo das sugestões. */
@@ -40,9 +42,9 @@ const DEGRAU = {
 } as const
 
 /**
- * A capa de app de uma marca. O verniz de cima (o claro que desce até a metade)
- * e o anel de 10% dão a ela o volume de um ícone de app sem pintar o miolo;
- * no selo não há sombra, que ele é pequeno e mora dentro de uma pílula.
+ * A capa de app de uma marca, como o ícone dela no celular. Só a do Claude leva
+ * o verniz de cima (o claro que desce até a metade); no selo não há sombra nem
+ * verniz, que ele é pequeno e mora dentro de uma pílula.
  */
 export function Capa({
     marca,
@@ -59,7 +61,9 @@ export function Capa({
         <span
             aria-hidden="true"
             className={cn(
-                "relative flex shrink-0 items-center justify-center overflow-hidden text-white ring-1 ring-white/12",
+                "relative flex shrink-0 items-center justify-center overflow-hidden ring-1",
+                p.tinta,
+                p.anel,
                 d.caixa,
                 className,
             )}
@@ -70,7 +74,7 @@ export function Capa({
             {marca === "finance" ? (
                 <Image src="/icons/apple-touch-icon.png" alt="" width={d.foto} height={d.foto} className={d.logo} />
             ) : null}
-            {tamanho === "selo" ? null : (
+            {tamanho === "selo" || !p.verniz ? null : (
                 <span
                     className="pointer-events-none absolute inset-0"
                     style={{ backgroundImage: "linear-gradient(180deg, rgb(255 255 255 / 0.14), transparent 45%)" }}
