@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useAuth } from "@/components/providers"
+import { DialogoDeVolta } from "@/components/reativacao/dialogo-de-volta"
 import { useAcesso } from "@/hooks/use-acesso"
 import { useDisplayMode } from "@/hooks/use-display-mode"
 import { deveGravar, voltouDeAusencia } from "@/lib/reativacao"
@@ -18,13 +19,17 @@ function hojeLocal(agora: Date) {
     return `${agora.getFullYear()}-${mes}-${String(agora.getDate()).padStart(2, "0")}`
 }
 
-/** Grava o acesso de hoje uma vez por dia por aparelho. Não desenha nada ainda. */
+/**
+ * Grava o acesso de hoje uma vez por dia por aparelho e, depois de 10 dias sem
+ * acesso, abre o diálogo de volta uma vez nesta sessão.
+ */
 export function RegistroDeAcesso() {
     const { user } = useAuth()
     const { carregando, erro, ultimoAcessoEm } = useAcesso()
     const { isStandalone } = useDisplayMode()
-    // Calculado na primeira leitura, antes da gravação; a Task 3 o lê para o diálogo.
-    const [, setVoltou] = React.useState<boolean | null>(null)
+    // Calculado na primeira leitura, antes da gravação: é ele que decide o diálogo.
+    const [voltou, setVoltou] = React.useState<boolean | null>(null)
+    const [aberto, setAberto] = React.useState(false)
     // O isStandalone do servidor é false: só vale depois de montar.
     const montado = React.useSyncExternalStore(nada, () => true, () => false)
     const feito = React.useRef(false)
@@ -63,5 +68,15 @@ export function RegistroDeAcesso() {
         })()
     }, [montado, carregando, erro, user, ultimoAcessoEm, isStandalone])
 
-    return null
+    React.useEffect(() => {
+        if (!voltou) return
+        const espera = window.setTimeout(() => {
+            // Outro diálogo aberto (tour, guia): não cobre, e não tenta de novo nesta sessão.
+            if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return
+            setAberto(true)
+        }, 1500)
+        return () => window.clearTimeout(espera)
+    }, [voltou])
+
+    return <DialogoDeVolta open={aberto} onOpenChange={setAberto} />
 }
