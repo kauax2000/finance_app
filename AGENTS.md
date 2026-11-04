@@ -1699,8 +1699,8 @@ declaração de `background-color` no trilho).
   círculo neutro `bg-muted`, **nunca esqueleto**). Ela fica ativa em `/me` e em
   toda tela que a página lista, subrotas incluídas (`isVoceTabActive`, em
   `config/mobile-navigation.ts`, onde também moram `getVoceGroups` e
-  `voceBackHref`). **A página `/me`** é a identidade centrada (avatar 56, nome,
-  e-mail) e três seções com título (`PageSection`), cada uma num `Card
+  `voceBackHref`). **A página `/me`** é a identidade centrada (avatar 56 com o lápis, que abre o Editar perfil; nome, e-mail
+  e o `SeloDeMembro` com "Membro desde") e três seções com título (`PageSection`), cada uma num `Card
   padding="none"` de `ItemGroup variant="divided"`: **Carteira** (as abas que saíram
   da barra, depois Cartões, Contas a pagar, Assinaturas, Projetos, Membros e
   convidados), **Neste celular** (`NesteCelularGrupo`, `#no-celular`: tema, lançamento
