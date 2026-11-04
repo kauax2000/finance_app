@@ -66,7 +66,7 @@ export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: s
                 >
                     {/* O ícone dá lugar ao tique na mola, e volta depois de 2s. */}
                     <TrocaSuave chave={copiado ? "copiado" : "copiar"} className="flex">
-                        {copiado ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
+                        {copiado ? <CheckIcon aria-hidden className="text-success" /> : <DocumentDuplicateIcon aria-hidden />}
                     </TrocaSuave>
                 </Button>
             </div>
