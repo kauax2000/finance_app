@@ -16,6 +16,10 @@ export function useAcesso(): { carregando: boolean; erro: boolean } & Acesso {
         queryKey: ["acesso", user?.id],
         enabled: !!user,
         staleTime: Infinity,
+        // Sem a coluna (antes da migração) ou sem rede: desiste na hora e sem toast,
+        // e a seção do computador aparece em vez de esperar as novas tentativas.
+        retry: false,
+        meta: { errorToast: false },
         queryFn: async (): Promise<Acesso> => {
             const { data, error } = await supabase
                 .from("user_settings")
