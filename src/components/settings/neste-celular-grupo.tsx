@@ -124,7 +124,7 @@ export function NesteCelularGrupo() {
                                 </Link>
                             </Item>
                         ) : null}
-                        {/* Como as linhas de Cofre aberto: o `Item` põe o ícone na linha do título. O `label` faz a linha inteira ser o alvo da chave. */}
+                        {/* Como as linhas com descrição da Você: o `Item` põe o ícone na linha do título. O `label` faz a linha inteira ser o alvo da chave. */}
                         <Item variant="flush" asChild className="min-h-12">
                             <label>
                                 <ItemMedia variant="icon">

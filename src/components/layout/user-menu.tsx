@@ -35,7 +35,7 @@ export function UserMenu({ children }: UserMenuProps) {
         if (!aberto) requestAnimationFrame(() => gatilhoRef.current?.focus())
     }
 
-    // A lista do papel (Bloco 7A): Planos e o Cofre valem para todos.
+    // A lista do papel (Bloco 7A): Planos vale para todos.
     const dropdownLinkItems = itensDeNavegacaoPara(papel, ACCOUNT_MENU_LINK_ITEMS).filter(
         ({ href }) =>
             href !== ROUTES.SETTINGS && href !== ROUTES.MEMBERS

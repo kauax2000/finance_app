@@ -1,5 +1,3 @@
-import Link from "next/link"
-import { ROUTES } from "@/config/navigation"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
 /** Atualize a data sempre que o texto da política mudar. */
@@ -139,9 +137,8 @@ export function PrivacidadeWireframe({ dentroDoApp = false }: { dentroDoApp?: bo
                 <h2 className="font-bold text-foreground">Exportar e apagar</h2>
                 <ul className="list-disc space-y-1 pl-5">
                     <li>
-                        No <strong>Cofre aberto</strong> você vê tudo o que o app guarda, baixa todos os seus dados
-                        (um arquivo ZIP de planilhas CSV) e apaga a conta. Exportar e apagar seguem liberados mesmo
-                        sem plano.
+                        Antes de apagar a conta, você baixa todos os seus dados (um arquivo ZIP de planilhas CSV)
+                        no próprio &quot;Excluir conta&quot;. Exportar e apagar seguem liberados mesmo sem plano.
                     </li>
                     <li>
                         Em <strong>Editar perfil</strong> (Segurança), pela sua foto na aba Você ou pelo menu do seu nome no computador, &quot;Excluir conta&quot; apaga a conta, as carteiras que você
@@ -156,11 +153,6 @@ export function PrivacidadeWireframe({ dentroDoApp = false }: { dentroDoApp?: bo
                     </li>
                 </ul>
 
-                <p className="space-x-4">
-                    <Link href={ROUTES.COFRE} className="text-foreground underline">
-                        Abrir o Cofre aberto{dentroDoApp ? null : " (precisa entrar)"}
-                    </Link>
-                </p>
 
                 <h2 className="font-bold text-foreground">Contato</h2>
                 <p>Dúvidas sobre os seus dados: &lt;EMAIL_DE_CONTATO&gt;.</p>

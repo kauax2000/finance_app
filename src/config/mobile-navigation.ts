@@ -7,7 +7,6 @@ import {
     CreditCardIcon,
     FolderIcon,
     LockClosedIcon,
-    ShieldCheckIcon,
     SparklesIcon,
     Squares2X2Icon,
     TagIcon,
@@ -34,7 +33,6 @@ import {
     Cog6ToothIcon as Cog6ToothMicro,
     CreditCardIcon as CreditCardMicro,
     FolderIcon as FolderMicro,
-    ShieldCheckIcon as ShieldCheckMicro,
     SparklesIcon as SparklesMicro,
     Squares2X2Icon as Squares2X2Micro,
     TagIcon as TagMicro,
@@ -50,7 +48,6 @@ import {
     CreditCardIcon as CreditCardMini,
     FolderIcon as FolderMini,
     LockClosedIcon as LockClosedMini,
-    ShieldCheckIcon as ShieldCheckMini,
     SparklesIcon as SparklesMini,
     Squares2X2Icon as Squares2X2Mini,
     TagIcon as TagMini,
@@ -121,7 +118,6 @@ const ICONE_MICRO = new Map<HeroIcon, HeroIcon>([
     [Cog6ToothIcon, Cog6ToothMicro],
     [UserCircleIcon, UserCircleMicro],
     [SparklesIcon, SparklesMicro],
-    [ShieldCheckIcon, ShieldCheckMicro],
 ])
 
 /** O par micro, ou `undefined` — quem não tem par continua no de 24. */
@@ -147,7 +143,6 @@ const ICONE_MINI = new Map<HeroIcon, HeroIcon>([
     [SparklesIcon, SparklesMini],
     [BellIcon, BellMini],
     [LockClosedIcon, LockClosedMini],
-    [ShieldCheckIcon, ShieldCheckMini],
 ])
 
 /** O par mini, ou `undefined` — quem não tem par continua no de 24. */
@@ -270,7 +265,7 @@ export type VoceGroup = {
  * Os dois grupos da página Você (`/me`) — a mesma composição que o menu "Mais"
  * fazia: em cima a carteira (as abas que não couberam na barra, depois as telas
  * fixadas), embaixo a conta: Planos e pagamentos e a Política de privacidade
- * primeiro, depois o Cofre e as configurações. `abasFora` são os `href` das abas que a barra
+ * primeiro, depois as configurações. `abasFora` são os `href` das abas que a barra
  * não coube; a ordem delas é a da barra. O convidado (Bloco 7A) vê só as telas
  * da lista dele: sem Assinaturas, Contas a pagar nem Membros (e, com o papel a
  * caminho, também só essas, `itensDeNavegacaoPara`).
@@ -306,7 +301,6 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
             label: "Conta",
             items: [
                 perfil(ROUTES.PLANS),
-                perfil(ROUTES.COFRE),
                 { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
                 { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Preferências de notificação", icon: BellIcon },
                 { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },

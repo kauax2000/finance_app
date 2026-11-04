@@ -10,7 +10,7 @@ describe("a página Você", () => {
         const [carteira, conta] = getVoceGroups([], "owner")
         expect(carteira.id).toBe("carteira")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS, ROUTES.BILLS, ROUTES.SUBSCRIPTIONS, ROUTES.PROJETOS, ROUTES.MEMBERS])
-        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES, ROUTES.SETTINGS_PRIVACIDADE])
+        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES, ROUTES.SETTINGS_PRIVACIDADE])
     })
     it("as quatro telas de configuração do telefone acendem Você e voltam a ela", () => {
         for (const r of [ROUTES.SETTINGS_LANCAR, ROUTES.SETTINGS_PRIVACIDADE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES]) {
@@ -61,7 +61,7 @@ describe("o telefone do convidado (Bloco 7A)", () => {
     it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
         const [carteira, conta] = getVoceGroups([], "guest")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
-        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.COFRE, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES, ROUTES.SETTINGS_PRIVACIDADE])
+        expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES, ROUTES.SETTINGS_PRIVACIDADE])
         for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
     })
 

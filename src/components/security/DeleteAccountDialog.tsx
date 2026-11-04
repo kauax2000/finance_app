@@ -91,7 +91,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         }
     }, [open, user])
 
-    // A cópia antes de apagar: o mesmo `.zip` do Cofre aberto. Só baixa; o diálogo fica aberto.
+    // A cópia antes de apagar: um `.zip` com um CSV por tabela. Só baixa; o diálogo fica aberto.
     const [exportando, setExportando] = useState(false)
     const [exportError, setExportError] = useState<string | null>(null)
     const handleExport = async () => {

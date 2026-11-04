@@ -32,7 +32,6 @@ describe("o que dependia de sessão saiu", () => {
     })
     it("a privacidade não promete o que saiu", () => {
         expect(lerFonte("src/components/wireframe/privacidade-wireframe.tsx")).not.toContain("As sessões e os aparelhos conectados")
-        expect(lerFonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).not.toContain("mostrar onde a conta está aberta")
     })
 })
 

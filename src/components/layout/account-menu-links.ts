@@ -1,4 +1,4 @@
-import { Cog6ToothIcon, ShieldCheckIcon, SparklesIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { Cog6ToothIcon, SparklesIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { HeroIcon } from "@/types/navigation"
 import { ROUTES } from "@/config/navigation"
 
@@ -12,7 +12,6 @@ export type AccountMenuLinkItem = {
 export const ACCOUNT_MENU_PROFILE_LINK_ITEMS: AccountMenuLinkItem[] = [
     // O plano com o brilho, e não o cartão, que é o ícone de "Cartões" na barra.
     { href: ROUTES.PLANS, label: "Planos e pagamentos", icon: SparklesIcon },
-    { href: ROUTES.COFRE, label: "Cofre aberto", icon: ShieldCheckIcon },
 ]
 
 /** Workspace links (sidebar + mobile pinned top section) */

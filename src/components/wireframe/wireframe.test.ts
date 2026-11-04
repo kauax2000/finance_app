@@ -186,9 +186,9 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
     expect(pagina).not.toContain("AuthGuard")
   })
 
-  it("a política leva ao Cofre, e não mais a Minha conta", () => {
+  it("a política não leva mais ao Cofre nem a Minha conta", () => {
     const f = fonte("src/components/wireframe/privacidade-wireframe.tsx")
-    expect(f).toContain("href={ROUTES.COFRE}")
+    expect(f).not.toContain("ROUTES.COFRE")
     expect(f).not.toContain("ROUTES.ACCOUNT")
   })
 
@@ -206,7 +206,6 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
     for (const trecho of ["Asaas", "nunca passa pelo app", "passa pela função de cobrança do app (billing-checkout)", "O app não guarda o CPF", "token do cartão", "os 4 últimos dígitos, a bandeira", "endereço IP da compra", "NFS-e", "não apaga o que o Asaas precisa guardar"]) {
       expect(html, trecho).toContain(trecho)
     }
-    expect(fonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).toContain("O CPF, o cartão e o nome como no cartão ficam só no Asaas; o nome e o e-mail da conta continuam aqui")
   })
 
 })
@@ -221,18 +220,6 @@ describe("Piloto Automático (Bloco 4)", () => {
     expect(f).toContain("Apagar este lançamento? O app não o lança de novo.")
     expect(f).toContain("desfazerImportacao(supabase, ws, g.loteId)")
     expect(f).toContain("desfazerLancamento(ws, i.id)")
-  })
-})
-
-describe("Cofre aberto (Bloco 4)", () => {
-  const f = semComentarios(lerFonte("src/components/wireframe/cofre-aberto-wireframe.tsx"), "tudo")
-
-  it("a rota importa o wireframe; a exportação só lê e o apagar reusa o fluxo de hoje", () => {
-    expect(semComentarios(lerFonte("src/app/(app)/cofre/page.tsx"), "tudo")).toContain("<CofreAbertoWireframe />")
-    expect(f).toContain("baixarExportacao(workspaces.map((w) => ({ id: w.id, name: w.name })))")
-    expect(f).toContain("Não foi possível exportar agora. Tente novamente.")
-    expect(f).toContain("<DeleteAccountDialog open={apagando} onOpenChange={setApagando} />")
-    expect(f).toContain("ROUTES.PILOTO")
   })
 })
 

@@ -1,7 +1,7 @@
 /**
  * As telas do convidado (Bloco 7A, spec §12): o Painel dele, as transações, as
- * categorias e os cartões só para ler, as telas da própria conta, os planos e o
- * Cofre (spec §15.6: exportar e apagar continuam sempre liberados). Orçamento,
+ * categorias e os cartões só para ler, as telas da própria conta e os planos
+ * (spec §15.6: exportar e apagar, pelo Excluir conta, continuam liberados). Orçamento,
  * previsão, contas, assinaturas, membros, o Piloto e as telas de fatura e
  * conferência (o detalhe do cartão, `/credit-cards/{id}`) ficam de fora — a RLS
  * já devolve vazio, e a navegação não as oferece.
@@ -14,7 +14,7 @@ import type { WorkspaceRole } from "@/lib/supabase"
 const COM_SUBROTAS: readonly string[] = [ROUTES.TRANSACTIONS, ROUTES.DASHBOARD_CATEGORIES, ROUTES.SETTINGS]
 /** Só a própria rota: o detalhe do cartão é a fatura e a conferência. */
 /** `/account` só redireciona (Você ou Painel): o link antigo do convidado chega lá. */
-const EXATAS: readonly string[] = [ROUTES.DASHBOARD, ROUTES.CREDIT_CARDS, ROUTES.ME, ROUTES.PLANS, ROUTES.COFRE, ROUTES.ACCOUNT]
+const EXATAS: readonly string[] = [ROUTES.DASHBOARD, ROUTES.CREDIT_CARDS, ROUTES.ME, ROUTES.PLANS, ROUTES.ACCOUNT]
 /** Subrotas que escrevem, dentro de uma rota permitida: criar categoria é do adulto. */
 const DE_FORA: readonly string[] = [`${ROUTES.DASHBOARD_CATEGORIES}/new`]
 
