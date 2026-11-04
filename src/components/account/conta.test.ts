@@ -261,7 +261,7 @@ describe("CampoDeCopiar", () => {
 })
 
 describe("Lançar pelo iPhone: o vazio", () => {
-    it("o vazio convida a conectar, e o cabeçalho não repete a ação", () => {
+    it("o vazio convida a conectar; com aparelho, a última linha da lista adiciona outro", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
         const vazio = semComentarios(lerFonte("src/components/account/lancar-pelo-iphone-vazio.tsx"))
         expect(s).toContain("<LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />")
@@ -269,8 +269,10 @@ describe("Lançar pelo iPhone: o vazio", () => {
         expect(vazio).toContain("Conectar o iPhone")
         expect(vazio).toMatch(/<EmptyState/)
         expect(s).not.toContain("Nenhum aparelho conectado.")
-        expect(s).toMatch(/tokens\.length > 0 \?[\s\S]*Conectar aparelho/)
-        expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?/)
+        expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?[\s\S]*Adicionar iPhone/)
+        expect(s).not.toContain("Conectar aparelho")
+        expect(s).toContain("<PageSectionTitle>iPhones conectados</PageSectionTitle>")
+        expect(s).toContain("<PageSectionTitle>Apple Pay</PageSectionTitle>")
     })
 })
 
@@ -286,7 +288,7 @@ describe("Lançar ao pagar", () => {
     })
     it("o convite mora na seção do iPhone e só aparece com aparelho conectado", () => {
         const a = conta("atalho-secao.tsx")
-        expect(a).toMatch(/!lista\.isError && tokens\.length > 0 \? <ApplePayConvite \/> : null/)
+        expect(a).toMatch(/!lista\.isError && tokens\.length > 0 \? \([\s\S]*<ApplePayConvite \/>[\s\S]*\) : null/)
         const c = conta("apple-pay-convite.tsx")
         expect(c).toContain("Lance ao pagar com Apple Pay")
         expect(c).toContain('<JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="mini" />')

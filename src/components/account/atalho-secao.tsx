@@ -29,6 +29,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -88,98 +89,113 @@ export function AtalhoSecao() {
     }
 
     return (
-        <SettingsSection
-            titulo="Lançar pelo iPhone"
-            actions={
-                lista.isError || tokens.length > 0 ? (
-                    <Button type="button" variant="tertiary" onClick={() => setGuiaAberto(true)}>
-                        <PlusIcon aria-hidden data-icon="inline-start" />
-                        Conectar aparelho
-                    </Button>
-                ) : undefined
-            }
-        >
-            <Card padding="none">
-                {lista.isLoading ? (
-                    <SkeletonGroup label="Carregando aparelhos…" delay>
-                        <div className="flex flex-col gap-1 px-4 py-3">
-                            <Skeleton className="h-4 w-40 max-w-full" />
-                            <Skeleton className="h-3 w-56 max-w-full" />
-                        </div>
-                    </SkeletonGroup>
-                ) : (
-                    <ItemGroup variant="divided">
-                        {lista.isError ? (
-                            <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
-                        ) : tokens.length === 0 ? (
-                            <LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />
-                        ) : (
-                            tokens.map((t) => {
-                                const carteira = workspaces.find((w) => w.id === t.workspace_id)
-                                return (
-                                    <Item key={t.id} variant="flush" size="lg" className="px-4">
-                                        <ItemMedia variant="tile" className="rounded-row">
-                                            <DevicePhoneMobileIcon aria-hidden />
-                                        </ItemMedia>
-                                        <ItemContent className="min-w-0">
-                                            <ItemTitle className="truncate text-base">{t.name}</ItemTitle>
-                                            <Muted asChild>
-                                                <div className="flex min-w-0 items-center gap-1.5">
-                                                {carteira ? (
-                                                    <BadgeDot
-                                                        className="size-2"
-                                                        style={{ "--badge-dot": carteira.icon_background_color } as CSSProperties}
-                                                    />
-                                                ) : null}
-                                                <span className="truncate">
-                                                    {carteira?.name ?? "Carteira"} ·{" "}
-                                                    {t.last_used_at
-                                                        ? `último gasto ${relativo(t.last_used_at)}`
-                                                        : "ainda não lançou nada"}
-                                                </span>
-                                                </div>
-                                            </Muted>
-                                            {atalhoAntigo(t) ? <Muted>Baixe o atalho de novo para ter o formulário</Muted> : null}
-                                        </ItemContent>
-                                        <ItemActions>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        type="button"
-                                                        variant="tertiary"
-                                                        size="icon-md"
-                                                        aria-label={`Mais opções para ${t.name}`}
-                                                    >
-                                                        <EllipsisHorizontalIcon aria-hidden />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    {atalhoAntigo(t) ? (
-                                                        <DropdownMenuItem onSelect={() => {
-                                                                setSubstituir(t)
-                                                                setBaixarDeNovo(true)
-                                                            }}>
-                                                            <ArrowDownTrayIcon aria-hidden />
-                                                            Baixar o atalho de novo
-                                                        </DropdownMenuItem>
+        <SettingsSection titulo="Lançar pelo iPhone">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>iPhones conectados</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
+                    {lista.isLoading ? (
+                        <SkeletonGroup label="Carregando aparelhos…" delay>
+                            <div className="flex flex-col gap-1 px-4 py-3">
+                                <Skeleton className="h-4 w-40 max-w-full" />
+                                <Skeleton className="h-3 w-56 max-w-full" />
+                            </div>
+                        </SkeletonGroup>
+                    ) : (
+                        <ItemGroup variant="divided">
+                            {lista.isError ? (
+                                <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
+                            ) : tokens.length === 0 ? (
+                                <LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />
+                            ) : (
+                                tokens.map((t) => {
+                                    const carteira = workspaces.find((w) => w.id === t.workspace_id)
+                                    return (
+                                        <Item key={t.id} variant="flush" size="lg" className="px-4">
+                                            <ItemMedia variant="tile" className="rounded-row">
+                                                <DevicePhoneMobileIcon aria-hidden />
+                                            </ItemMedia>
+                                            <ItemContent className="min-w-0">
+                                                <ItemTitle className="truncate text-base">{t.name}</ItemTitle>
+                                                <Muted asChild>
+                                                    <div className="flex min-w-0 items-center gap-1.5">
+                                                    {carteira ? (
+                                                        <BadgeDot
+                                                            className="size-2"
+                                                            style={{ "--badge-dot": carteira.icon_background_color } as CSSProperties}
+                                                        />
                                                     ) : null}
-                                                    <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
-                                                        <LinkSlashIcon aria-hidden />
-                                                        Desconectar
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </ItemActions>
-                                    </Item>
-                                )
-                            })
-                        )}
-                    </ItemGroup>
-                )}
-            </Card>
+                                                    <span className="truncate">
+                                                        {carteira?.name ?? "Carteira"} ·{" "}
+                                                        {t.last_used_at
+                                                            ? `último gasto ${relativo(t.last_used_at)}`
+                                                            : "ainda não lançou nada"}
+                                                    </span>
+                                                    </div>
+                                                </Muted>
+                                                {atalhoAntigo(t) ? <Muted>Baixe o atalho de novo para ter o formulário</Muted> : null}
+                                            </ItemContent>
+                                            <ItemActions>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            type="button"
+                                                            variant="tertiary"
+                                                            size="icon-md"
+                                                            aria-label={`Mais opções para ${t.name}`}
+                                                        >
+                                                            <EllipsisHorizontalIcon aria-hidden />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {atalhoAntigo(t) ? (
+                                                            <DropdownMenuItem onSelect={() => {
+                                                                    setSubstituir(t)
+                                                                    setBaixarDeNovo(true)
+                                                                }}>
+                                                                <ArrowDownTrayIcon aria-hidden />
+                                                                Baixar o atalho de novo
+                                                            </DropdownMenuItem>
+                                                        ) : null}
+                                                        <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
+                                                            <LinkSlashIcon aria-hidden />
+                                                            Desconectar
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </ItemActions>
+                                        </Item>
+                                    )
+                                })
+                            )}
+                            {/* A linha inteira é o alvo: o "+" solto do cabeçalho era pequeno e sem nome no telefone. */}
+                            {lista.isError || tokens.length > 0 ? (
+                                <Item variant="flush" size="lg" interactive asChild className="px-4">
+                                    <button type="button" onClick={() => setGuiaAberto(true)}>
+                                        <ItemMedia variant="tile" className="rounded-row">
+                                            <PlusIcon aria-hidden />
+                                        </ItemMedia>
+                                        <ItemContent>
+                                            <ItemTitle className="text-base">Adicionar iPhone</ItemTitle>
+                                        </ItemContent>
+                                    </button>
+                                </Item>
+                            ) : null}
+                        </ItemGroup>
+                    )}
+                </Card>
+            </PageSection>
 
             {/* Com um aparelho conectado, o passo seguinte: lançar ao pagar com Apple Pay. */}
-            {!lista.isError && tokens.length > 0 ? <ApplePayConvite /> : null}
+            {!lista.isError && tokens.length > 0 ? (
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Apple Pay</PageSectionTitle>
+                    </PageSectionHeader>
+                    <ApplePayConvite />
+                </PageSection>
+            ) : null}
 
             <GuiaDoAtalho
                 open={guiaAberto}

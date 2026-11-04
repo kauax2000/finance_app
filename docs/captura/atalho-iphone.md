@@ -74,12 +74,12 @@ valor real de nenhum deles.**
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
 | `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Configurações › "Lançar pelo iPhone" › Conectar aparelho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Configurações › "Lançar pelo iPhone" › Adicionar iPhone (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Configurações**.
-2. Na seção "Lançar pelo iPhone", toque em **Conectar aparelho** (ou em
+2. Na seção "Lançar pelo iPhone", toque em **Adicionar iPhone** (ou em
    **Conectar o iPhone**, quando ainda não há nenhum) e escreva o nome do
    aparelho, por exemplo "iPhone da Ana".
 3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
