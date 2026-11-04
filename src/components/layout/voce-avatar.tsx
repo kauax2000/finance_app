@@ -11,7 +11,7 @@ import { cn, getInitials } from "@/lib/utils"
  * chegou, o círculo neutro sem letras: nunca um esqueleto — a rodada 278 tirou
  * o avatar da barra justamente pelo esqueleto que piscava a cada carga.
  */
-export function VoceAvatar({ size }: { size: "xs" | "xl" }) {
+export function VoceAvatar({ size, onEdit }: { size: "xs" | "xl"; onEdit?: () => void }) {
     const { user, profile, loading, profileReady } = useAuth()
     const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const avatarTone = identityToneFor(profile?.avatar_color, user?.email || userName)
@@ -20,7 +20,13 @@ export function VoceAvatar({ size }: { size: "xs" | "xl" }) {
 
     return (
         // Na aba o nome já é "Você": o avatar é só o desenho.
-        <Avatar size={size} className="shrink-0" aria-hidden={size === "xs" ? true : undefined}>
+        <Avatar
+            size={size}
+            className="shrink-0"
+            aria-hidden={size === "xs" ? true : undefined}
+            onEdit={size === "xl" ? onEdit : undefined}
+            editLabel={size === "xl" ? "Editar perfil" : undefined}
+        >
             {pronto && avatarUrl ? <AvatarImage src={avatarUrl} alt={userName} /> : null}
             {pronto ? (
                 <AvatarFallback className={cn("font-semibold", avatarTone.surface, avatarTone.ink)}>

@@ -11,7 +11,16 @@ describe("a página Você", () => {
     })
     it("os grupos vêm da regra e das abas que saíram", () => {
         expect(PAGINA).toContain("getVoceGroups(useAbasFora(), useWorkspace().papel)")
-        expect(PAGINA).toContain('<VoceAvatar size="xl" />')
+        expect(PAGINA).toContain('<VoceAvatar size="xl" onEdit={')
+    })
+    it("a foto edita o perfil e o selo de membro mora sob o e-mail, só com created_at", () => {
+        expect(PAGINA).toContain("<EditProfileDialog")
+        expect(PAGINA.indexOf("user?.created_at ?")).toBeGreaterThan(-1)
+        expect(PAGINA.indexOf("user?.created_at ?")).toBeLessThan(PAGINA.indexOf("<SeloDeMembro"))
+        expect(PAGINA).toContain("Membro desde {formatTransactionMonthYearPtBr(")
+        const avatar = semComentarios(lerFonte("src/components/layout/voce-avatar.tsx"))
+        expect(avatar).toContain('onEdit={size === "xl" ? onEdit : undefined}')
+        expect(avatar).toContain('editLabel={size === "xl" ? "Editar perfil" : undefined}')
     })
     it("o grupo do telefone fica entre Carteira e Conta, só abaixo do md, e a âncora do QR rola até ele", () => {
         expect(PAGINA).toContain("rolarAteAncora(window.location.hash, document)")
@@ -40,7 +49,7 @@ describe("a página Você", () => {
         expect(PAGINA).toContain("<AlertDialogError>{erro}</AlertDialogError>")
         expect(PAGINA).toContain("const { error } = await signOut()")
         expect(PAGINA).toContain("grupo.items.length === 0")
-        expect(PAGINA).toContain('<VoceAvatar size="xl" />')
+        expect(PAGINA).toContain('<VoceAvatar size="xl" onEdit={')
     })
     it("Cofre aberto diz o que é, e Cartões abre a carteira", () => {
         expect(PAGINA).toContain("item.description")

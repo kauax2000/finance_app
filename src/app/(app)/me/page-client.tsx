@@ -3,6 +3,8 @@
 import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAbasFora } from "@/components/layout/abas-fora"
+import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
+import { SeloDeMembro } from "@/components/account/selo-de-membro"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
 import { CartaoDaIa } from "@/components/me/cartao-da-ia"
 import { descricaoDaLista, iaNaVoce } from "@/components/me/estado-na-voce"
@@ -41,11 +43,13 @@ import { getVoceGroups, miniIconFor } from "@/config/mobile-navigation"
 import { ROUTES } from "@/config/navigation"
 import { useIasConectadas } from "@/hooks/use-ias-conectadas"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { formatTransactionMonthYearPtBr } from "@/lib/transaction-date"
 
 export default function MePage() {
     const { user, loading, profileReady, signOut } = useAuth()
     const [saindo, setSaindo] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
+    const [editarAberto, setEditarAberto] = useState(false)
     const grupos = getVoceGroups(useAbasFora(), useWorkspace().papel)
     const isMobile = useIsMobile()
     const esperando = loading || (user && !profileReady)
@@ -94,12 +98,18 @@ export default function MePage() {
             <div className="min-w-0 max-w-full space-y-5">
                 {/* Não é link: a conta tem a linha dela no grupo Conta. */}
                 <div className="flex flex-col items-center gap-3 text-center">
-                    <VoceAvatar size="xl" />
+                    <VoceAvatar size="xl" onEdit={() => setEditarAberto(true)} />
                     {/* Nome sobre e-mail é par de identidade: sem `gap`. */}
                     <div className="min-w-0 max-w-full">
                         <H2 className="truncate">{userName}</H2>
                         {userEmail ? <Muted className="truncate">{userEmail}</Muted> : null}
                     </div>
+                    {user?.created_at ? (
+                        <div className="flex items-center justify-center gap-2">
+                            <SeloDeMembro desde={user.created_at} />
+                            <Muted>Membro desde {formatTransactionMonthYearPtBr(user.created_at)}</Muted>
+                        </div>
+                    ) : null}
                 </div>
 
                 {grupos.map((grupo) => (
@@ -157,6 +167,8 @@ export default function MePage() {
                         {grupo.id === "carteira" && isMobile ? <NesteCelularGrupo /> : null}
                     </Fragment>
                 ))}
+
+                <EditProfileDialog open={editarAberto} onOpenChange={setEditarAberto} />
 
                 <AlertDialogContent>
                     <AlertDialogHeader>

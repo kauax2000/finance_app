@@ -214,8 +214,10 @@ describe("a página Minha conta", () => {
         expect(lerFonte("src/hooks/use-ias-conectadas.ts")).toContain("meta: { errorToast: false }")
     })
     it("a data de membro é o selo, com a frase inteira como nome", () => {
-        expect(p()).toContain("<Seal")
-        expect(p()).toContain("label={`Membro desde ${formatTransactionMonthYearPtBr(user.created_at)}`}")
+        expect(p()).toContain("<SeloDeMembro desde={user.created_at} />")
+        expect(p()).not.toContain("<Seal")
+        const selo = lerFonte("src/components/account/selo-de-membro.tsx")
+        for (const t of ["MEMBRO DESDE · ", "· FINANCE APP · ", "<AppLogo />", "label={`Membro desde ${formatTransactionMonthYearPtBr(desde)}`}"]) expect(selo).toContain(t)
     })
 })
 

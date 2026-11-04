@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { AppLogo } from "@/components/layout/app-logo"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
+import { SeloDeMembro } from "@/components/account/selo-de-membro"
 import { useAuth } from "@/components/providers"
 import { SettingsLink, SettingsSection } from "@/components/settings/settings-section"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,14 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ItemGroup } from "@/components/ui/item"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
-import { Seal } from "@/components/ui/seal"
 import { Muted } from "@/components/ui/typography"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { identityToneFor } from "@/lib/avatar"
 import { resumoDoPlano, usePlano } from "@/lib/planos/plano"
 import { toastError } from "@/lib/toast"
-import { formatMonthShortPtBr, formatTransactionMonthYearPtBr } from "@/lib/transaction-date"
 import { cn, getInitials } from "@/lib/utils"
 
 export default function AccountPage() {
@@ -78,11 +76,7 @@ export default function AccountPage() {
                         <Muted className="truncate">{userEmail}</Muted>
                     </div>
                     {user?.created_at ? (
-                        <Seal
-                            label={`Membro desde ${formatTransactionMonthYearPtBr(user.created_at)}`}
-                            ring={`MEMBRO DESDE · ${formatMonthShortPtBr(new Date(user.created_at)).toUpperCase()} ${new Date(user.created_at).getFullYear()} · FINANCE APP · `}
-                            icon={<AppLogo />}
-                        />
+                        <SeloDeMembro desde={user.created_at} />
                     ) : null}
                 </div>
 
