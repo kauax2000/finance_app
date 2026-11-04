@@ -77,7 +77,7 @@ export function ApplePayConvite() {
                     <div className="px-4 pb-4">
                         <Button
                             type="button"
-                            variant={estado === "novo" ? "secondary" : "tertiary"}
+                            variant="secondary"
                             className="w-full"
                             onClick={() => setGuiaAberto(true)}
                         >
