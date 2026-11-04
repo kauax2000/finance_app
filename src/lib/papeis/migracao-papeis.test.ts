@@ -98,6 +98,7 @@ const FICAM_COM_MEMBRO: Record<string, string> = {
     is_workspace_owner: "confere dono",
     workspace_has_members: "a guarda do criador na carteira vazia; não devolve dado",
     workspace_members_guard: "o gatilho das chaves imutáveis e do último dono",
+    get_account_delete_impact: "filtra pelo criador (created_by = auth.uid()), não pelo papel: só conta membros das carteiras que somem com a conta de quem chama",
     workspace_member_directory: "nome e foto de quem está na carteira; o convidado vê quem divide a casa com ele",
     handle_new_user: "o cadastro cria a carteira pessoal com o dono",
     accept_workspace_invite: "a entrada pelo convite, só da service role; grava o papel do convite",
