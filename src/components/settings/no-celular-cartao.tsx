@@ -2,17 +2,15 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { CreditCardIcon, MicrophoneIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/16/solid"
+import { MicrophoneIcon, SparklesIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { QrCode, QrCodeCopy } from "@/components/ui/qr-code"
 import iphone from "./assets/iphone-17-pro-prata.webp"
 
-/** A lista do que o celular faz; as três primeiras só existem no iPhone. */
+/** A lista do que o celular faz; a primeira só existe no iPhone. */
 const VANTAGENS = [
     { icone: MicrophoneIcon, texto: "Lance falando com a Siri ou com um toque", iphone: true },
-    { icone: PencilSquareIcon, texto: "Um formulário rápido quando não dá para falar", iphone: true },
-    { icone: CreditCardIcon, texto: "Pague com Apple Pay e o gasto entra sozinho", iphone: true },
     { icone: SparklesIcon, texto: "Lance digitando uma frase, com o app na tela de início", iphone: false },
 ]
 

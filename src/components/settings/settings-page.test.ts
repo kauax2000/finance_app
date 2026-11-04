@@ -148,13 +148,11 @@ describe("Configurações: o lançamento mora no celular", () => {
     it("a propaganda vende o celular com as funcionalidades novas", () => {
         const n = semComentarios(lerFonte("src/components/settings/no-celular-cartao.tsx"))
         expect(n).toContain("O dia a dia é no celular")
-        for (const v of [
-            "Lance falando com a Siri ou com um toque",
-            "Um formulário rápido quando não dá para falar",
-            "Pague com Apple Pay e o gasto entra sozinho",
-            "Lance digitando uma frase, com o app na tela de início",
-        ])
+        for (const v of ["Lance falando com a Siri ou com um toque", "Lance digitando uma frase, com o app na tela de início"])
             expect(n).toContain(v)
+        // Denso demais no cartão (pedido do dono): o formulário e o Apple Pay ficam no convite do iPhone.
+        expect(n).not.toContain("Um formulário rápido")
+        expect(n).not.toContain("Pague com Apple Pay")
         expect(n).toMatch(/no iPhone/)
         expect(n).not.toContain("Abra o Finance no telefone")
         expect(n).not.toMatch(/PWA/)
