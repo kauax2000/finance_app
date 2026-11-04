@@ -47,25 +47,15 @@ export function ApplePayConvite() {
                             {estado === "novo" ? (
                                 <div>
                                     <P className="font-semibold">Lance ao pagar com Apple Pay</P>
-                                    <Muted>Cada compra com o iPhone vira um gasto, sem abrir nada.</Muted>
+                                    <Muted>Cada compra com o iPhone vira um gasto aqui, sem digitar nada.</Muted>
                                 </div>
                             ) : (
                                 <div>
-                                    <P className="flex flex-wrap items-center gap-2 font-semibold">
-                                        Lançar ao pagar
-                                        {estado === "funcionando" ? (
-                                            <Badge tone="success">
-                                                <BadgeDot />
-                                                Funcionando
-                                            </Badge>
-                                        ) : (
-                                            <Badge tone="warning" size="sm" className="whitespace-nowrap">Aguardando a 1ª compra</Badge>
-                                        )}
-                                    </P>
+                                    <P className="font-semibold">Lançar ao pagar</P>
                                     <Muted>
                                         {ultima
                                             ? `Última compra lançada ${minuscula(formatRelativeTimePtBr(ultima.created_at))} · ${ultima.description}, ${currencyBRL(ultima.amount)}`
-                                            : "Pague algo com o iPhone: o gasto entra e o iPhone avisa."}
+                                            : "Pague algo com o iPhone e o gasto aparece aqui sozinho."}
                                     </Muted>
                                 </div>
                             )}
@@ -74,7 +64,18 @@ export function ApplePayConvite() {
                 </div>
                 {/* Embaixo, na largura do cartão: ao lado do aparelho o rótulo não cabia a 375px. */}
                 {carregando ? null : (
-                    <div className="px-4 pb-4">
+                    <div className="flex flex-col items-start gap-3 px-4 pb-4">
+                        {/* O estado logo acima do botão, um degrau maior que o chip de linha: ao lado do aparelho não cabia. */}
+                        {estado === "funcionando" ? (
+                            <Badge tone="success" className="px-3 py-1 text-sm">
+                                <BadgeDot />
+                                Funcionando
+                            </Badge>
+                        ) : estado === "aguardando" ? (
+                            <Badge tone="warning" className="px-3 py-1 text-sm">
+                                Aguardando a 1ª compra
+                            </Badge>
+                        ) : null}
                         <Button
                             type="button"
                             variant="secondary"
