@@ -1,6 +1,6 @@
 "use client"
 
-import { EllipsisHorizontalIcon, PlusIcon, SparklesIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon, SparklesIcon } from "@heroicons/react/16/solid"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -128,7 +128,8 @@ export function IasSecao() {
                                                 variant="destructive"
                                                 onSelect={() => setAlvo({ id: g.client.id, nome: g.client.name })}
                                             >
-                                                Desconectar…
+                                                <LinkSlashIcon aria-hidden />
+                                                Desconectar
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>

@@ -1,6 +1,6 @@
 "use client"
 
-import { DevicePhoneMobileIcon, EllipsisHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { DevicePhoneMobileIcon, EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
@@ -165,7 +165,8 @@ export function AtalhoSecao() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
-                                                        Desconectar…
+                                                        <LinkSlashIcon aria-hidden />
+                                                        Desconectar
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>

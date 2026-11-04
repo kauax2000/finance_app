@@ -255,12 +255,13 @@ describe("Linha do aparelho e da IA", () => {
     const atalho = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
     const ias = semComentarios(lerFonte("src/components/account/ias-secao.tsx"))
     for (const [nome, f] of [["atalho", atalho], ["ias", ias]] as const) {
-        it(`${nome}: ladrilho e ⋯ com Desconectar… destrutivo`, () => {
+        it(`${nome}: ladrilho e ⋯ com Desconectar destrutivo e ícone`, () => {
             expect(f).toContain('ItemMedia variant="tile"')
             expect(f).toContain('size="icon-md"')
             expect(f).toContain("<EllipsisHorizontalIcon aria-hidden />")
             expect(f).toContain('variant="destructive"')
-            expect(f).toContain("Desconectar…")
+            expect(f).toContain("LinkSlashIcon")
+            expect(f).not.toContain("Desconectar…")
             expect(f).not.toMatch(/<ItemActions>\s*<Button[^>]*>\s*Desconectar/)
             expect(f).toContain("aria-label={`Mais opções para ${")
         })
