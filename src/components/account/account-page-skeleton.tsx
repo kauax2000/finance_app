@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { PageHeaderSkeleton } from "@/components/ui/page-header"
+import { SealSkeleton } from "@/components/ui/seal"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /** Uma seção na forma final: o título, a ação opcional e as linhas do cartão. */
@@ -36,13 +37,10 @@ export function AccountPageSkeleton() {
                         <div className="min-w-0 flex-1 space-y-2">
                             <Skeleton className="h-4 w-36 max-w-full" />
                             <Skeleton className="h-3 w-48 max-w-full" />
-                            <Skeleton className="h-3 w-40 max-w-full" />
                         </div>
-                        <Skeleton className="h-9 w-24 shrink-0 rounded-full pointer-coarse:h-11" />
+                        <SealSkeleton />
                     </div>
-                    <SecaoSkeleton linhas={3} />
-                    <SecaoSkeleton linhas={2} acao />
-                    <SecaoSkeleton linhas={1} acao />
+                    <SecaoSkeleton linhas={2} />
                     <SecaoSkeleton linhas={1} />
                 </div>
                 <div className="flex items-center justify-between gap-3">
