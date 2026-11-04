@@ -668,7 +668,7 @@ function auditFile(absPath, project) {
       const noPocoDoDialog =
         ultMedia !== -1 &&
         !antesDoMedia.slice(ultMedia).includes("</DialogMedia>") &&
-        /^<DialogMedia\b[^>]*variant="well"/.test(antesDoMedia.slice(ultMedia))
+        /^<DialogMedia\b[^>]*variant="well"[^>]*(?<!\/)>/.test(antesDoMedia.slice(ultMedia))
       const n = found
         ? parseFloat(found[1])
         : noPocoDoDialog

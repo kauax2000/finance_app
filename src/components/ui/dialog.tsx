@@ -544,11 +544,6 @@ function DialogHeaderRow({
 }
 
 /**
- * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
- * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
- * casco já dá o recuo, então aqui ele é zero.
- */
-/**
  * `align="center"`: o topo de uma confirmação que pausa (Excluir conta), à moda
  * do iOS — o poço em cima, título e descrição centrados e os pontos dos passos
  * embaixo. O recuo do × vale dos dois lados no título e na descrição, para o
@@ -568,6 +563,11 @@ const dialogHeaderVariants = cva("", {
   defaultVariants: { align: "start" },
 })
 
+/**
+ * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
+ * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
+ * casco já dá o recuo, então aqui ele é zero.
+ */
 function DialogHeader({
   className,
   children,
