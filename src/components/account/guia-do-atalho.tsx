@@ -33,6 +33,9 @@ import arquivos from "./assets/atalho-2-arquivos.webp"
 import configurar from "./assets/atalho-3-configurar.webp"
 import colar from "./assets/atalho-4-colar.webp"
 import siri from "./assets/atalho-5-siri.webp"
+import botaoDeAcao from "./assets/atalho-11-botao-de-acao.webp"
+import acessibilidade from "./assets/atalho-12-acessibilidade.webp"
+import telaDeInicio from "./assets/atalho-13-tela-de-inicio.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
@@ -54,23 +57,28 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Como abrir o atalho" },
 ]
 
-const TELA_DA_SIRI: Tela = { imagem: siri, ancora: "topo" }
-
 /** As quatro maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
-const COMO_ABRIR = [
-    { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".' },
-    { valor: "acao", rotulo: "Botão de Ação", texto: "Ajustes › Botão de Ação › Atalho › Lançar gasto." },
+const COMO_ABRIR: { valor: string; rotulo: string; texto: string; tela: Tela }[] = [
+    { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".', tela: { imagem: siri, ancora: "topo" } },
+    {
+        valor: "acao",
+        rotulo: "Botão de Ação",
+        texto: "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
+        tela: { imagem: botaoDeAcao, ponto: { x: 50, y: 71.9 }, ancora: "baixo" },
+    },
     {
         valor: "toque",
         rotulo: "Toque traseiro",
         texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
+        tela: { imagem: acessibilidade, ponto: { x: 30, y: 41.1 }, ancora: "topo" },
     },
     {
         valor: "inicio",
         rotulo: "Tela de início",
         texto: "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
+        tela: { imagem: telaDeInicio, ponto: { x: 32, y: 67 }, ancora: "baixo" },
     },
-] as const
+]
 
 /**
  * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
@@ -212,7 +220,7 @@ export function GuiaDoAtalho({
                         // Só o passo 1 envia: nos outros o Enter num campo de copiar não faz nada.
                         if (passo === 0) return criar()
                     }}
-                    className="flex min-h-0 flex-1 flex-col"
+                    className="flex min-h-0 min-w-0 flex-1 flex-col"
                 >
                     <DialogBody>
                         <span aria-live="polite" className="sr-only">
@@ -244,7 +252,7 @@ export function GuiaDoAtalho({
                             ) : null}
 
                             {ultimo ? (
-                                <PecaDoPasso className="flex flex-col gap-4">
+                                <PecaDoPasso className="flex min-w-0 flex-col gap-4">
                                     <Tabs value={como} onValueChange={(v) => setComo(v as typeof como)}>
                                         <TabsList aria-label="Como abrir o atalho" scrollable>
                                             {COMO_ABRIR.map((o) => (
@@ -254,7 +262,7 @@ export function GuiaDoAtalho({
                                             ))}
                                         </TabsList>
                                     </Tabs>
-                                    {como === "siri" ? <JanelaDoAparelho tela={TELA_DA_SIRI} /> : null}
+                                    <JanelaDoAparelho key={como} tela={COMO_ABRIR.find((o) => o.valor === como)!.tela} />
                                 </PecaDoPasso>
                             ) : null}
 

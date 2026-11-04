@@ -145,13 +145,17 @@ describe("tokens de captura", () => {
         for (const o of ["Siri", "Botão de Ação", "Toque traseiro", "Tela de início"]) expect(g).toContain(`rotulo: "${o}"`)
         for (const x of [
             "Diga \"E aí Siri, Lançar gasto\".",
-            "Ajustes › Botão de Ação › Atalho › Lançar gasto.",
+            "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
             "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
             "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
             "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente em Configurações.",
         ])
             expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
         expect(g).not.toContain("Ditar")
+        for (const a of ["atalho-5-siri", "atalho-11-botao-de-acao", "atalho-12-acessibilidade", "atalho-13-tela-de-inicio"])
+            expect(g).toContain(`from "./assets/${a}.webp"`)
+        expect(g).toMatch(/tela=\{[^}]*COMO_ABRIR[^}]*\.tela\}/)
+        expect(g).not.toContain('como === "siri"')
     })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
