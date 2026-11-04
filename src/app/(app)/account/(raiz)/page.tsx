@@ -1,6 +1,5 @@
 import AccountPageClient from "../page-client"
 import { AdiarMontagem } from "@/components/layout/adiar-montagem"
-import Loading from "./loading"
 
 type RouteParams = Record<string, string | string[] | undefined>
 
@@ -9,8 +8,10 @@ export default async function Page(props: {
     searchParams: Promise<RouteParams>
 }) {
     await Promise.all([props.params, props.searchParams])
+    // Sem esqueleto: a fronteira é a vazia de `(app)/loading.tsx`, e o
+    // redirecionamento roda depois da hidratação.
     return (
-        <AdiarMontagem fallback={<Loading />}>
+        <AdiarMontagem fallback={null}>
             <AccountPageClient />
         </AdiarMontagem>
     )

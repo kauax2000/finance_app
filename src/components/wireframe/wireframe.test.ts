@@ -141,8 +141,8 @@ describe("estorno no formulário (Decisão 6)", () => {
 describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
 
-  it("Minha conta leva à política de privacidade, e Configurações não", () => {
-    expect(fonte("src/app/(app)/account/page-client.tsx")).toContain("href={ROUTES.PRIVACY}")
+  it("a política mora dentro do app em /settings/privacidade, e Configurações não a lista", () => {
+    expect(fonte("src/app/(app)/settings/privacidade/page-client.tsx")).toContain("<PrivacidadeWireframe />")
     expect(fonte("src/app/(app)/settings/(raiz)/page-client.tsx")).not.toContain("ROUTES.PRIVACY")
   })
 
@@ -184,6 +184,12 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
       /import\s*\{\s*PrivacidadeWireframe\s*\}\s*from\s*["']@\/components\/wireframe\/privacidade-wireframe["']/,
     )
     expect(pagina).not.toContain("AuthGuard")
+  })
+
+  it("a política leva ao Cofre, e não mais a Minha conta", () => {
+    const f = fonte("src/components/wireframe/privacidade-wireframe.tsx")
+    expect(f).toContain("href={ROUTES.COFRE}")
+    expect(f).not.toContain("ROUTES.ACCOUNT")
   })
 
   it("a política cita os provedores, a transferência, o que sai e como apagar", async () => {

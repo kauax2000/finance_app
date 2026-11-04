@@ -9,7 +9,11 @@ const ROTAS = [
     ["lancar-pelo-iphone", "<AtalhoSecao />", "Lançar pelo iPhone"],
     ["ias", "<IasSecao />", "IAs conectadas"],
     ["notificacoes", "<NotificationPreferences />", "Notificações"],
+    ["privacidade", "<PrivacidadeWireframe />", "Política de privacidade"],
 ] as const
+
+/** As que são uma seção de Configurações sozinha (a política é o wireframe, sem a seção). */
+const SECOES = ROTAS.filter(([pasta]) => pasta !== "privacidade")
 
 describe("rotas das seções de Configurações", () => {
     it.each(ROTAS)("%s: page adia a montagem", (pasta) => {
@@ -24,7 +28,7 @@ describe("rotas das seções de Configurações", () => {
         expect(f).toContain(`>${titulo}</p>`)
     })
 
-    it.each(ROTAS)("%s: a seção é a página, sem o título dela à vista", (pasta) => {
+    it.each(SECOES)("%s: a seção é a página, sem o título dela à vista", (pasta) => {
         expect(fonte(`${pasta}/page-client.tsx`)).toContain("<SecaoSozinha>")
     })
 
@@ -40,6 +44,10 @@ describe("rotas das seções de Configurações", () => {
         const f = fonte("(raiz)/page-client.tsx")
         expect(f).toContain("router.replace(ROUTES.ME)")
         expect(f).toContain("if (isMobile) return null")
+    })
+
+    it("privacidade tem o esqueleto das Configurações", () => {
+        expect(fonte("privacidade/loading.tsx")).toContain("<SettingsPageSkeleton />")
     })
 
     it("IasSecao lê pelo hook compartilhado", () => {

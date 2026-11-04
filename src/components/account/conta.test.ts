@@ -191,31 +191,15 @@ describe("Configurações", () => {
     })
 })
 
-describe("a página Minha conta", () => {
-    const p = () => lerFonte("src/app/(app)/account/page-client.tsx")
-    it("compõe as seções, nesta ordem, sem wireframe nem menu ⋯", () => {
-        const f = p()
-        const ordem = ['titulo="Plano"', "Privacidade", "Sair"].map((t) => f.indexOf(t))
-        expect(ordem.every((n) => n >= 0)).toBe(true)
-        expect(f).not.toMatch(/AtalhoSecao|IasSecao/)
-        expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
-        expect(f).not.toMatch(/Wireframe|DropdownMenu|md:hidden/)
-    })
-    it("o plano usa o título do resumo e aguenta a espera", () => {
-        expect(p()).toContain("resumoDoPlano(plano, new Date(), null).titulo")
-        expect(p()).toMatch(/plano \?/)
-    })
-    it("mantém o título do desktop como Configurações", () => {
-        expect(p()).toContain("<PageHeader collapse>")
-        expect(p()).toContain('aria-hidden="true"')
-    })
+describe("o que era de Minha conta", () => {
     it("as seções mostram o próprio erro, sem o toast global", () => {
         expect(lerFonte("src/components/account/aparelhos-de-captura.ts")).toContain("meta: { errorToast: false }")
         expect(lerFonte("src/hooks/use-ias-conectadas.ts")).toContain("meta: { errorToast: false }")
     })
-    it("a data de membro é o selo, com a frase inteira como nome", () => {
-        expect(p()).toContain("<SeloDeMembro desde={user.created_at} />")
-        expect(p()).not.toContain("<Seal")
+    it("a data de membro é o selo na Você, com a frase inteira como nome", () => {
+        const p = lerFonte("src/app/(app)/me/page-client.tsx")
+        expect(p).toContain("<SeloDeMembro desde={user.created_at} />")
+        expect(p).not.toContain("<Seal")
         const selo = lerFonte("src/components/account/selo-de-membro.tsx")
         for (const t of ["MEMBRO DESDE · ", "· FINANCE APP · ", "<AppLogo />", "label={`Membro desde ${formatTransactionMonthYearPtBr(desde)}`}"]) expect(selo).toContain(t)
     })
@@ -307,9 +291,6 @@ describe("Lançar ao pagar", () => {
         expect(c).toContain("Configurar")
         expect(c).toContain("<GuiaDoApplePay")
         expect(c).not.toContain("SettingsSection")
-    })
-    it("a página não tem mais uma seção própria para o Apple Pay", () => {
-        expect(lerFonte("src/app/(app)/account/page-client.tsx")).not.toContain("ApplePaySecao")
     })
     it("nenhum texto de tela fala em token", () => {
         for (const f of ["apple-pay-convite.tsx", "guia-do-apple-pay.tsx"]) {
@@ -474,13 +455,6 @@ describe("Segurança no Editar perfil", () => {
         expect(f.indexOf("<ChangePasswordDialog")).toBeGreaterThan(fim)
         expect(f.indexOf("<DeleteAccountDialog")).toBeGreaterThan(fim)
         expect(f.indexOf("<DeleteAccountDialog")).toBeLessThan(f.indexOf("</DialogContent>"))
-    })
-    it("a página não tem mais senha nem excluir conta", () => {
-        const f = semComentarios(lerFonte("src/app/(app)/account/page-client.tsx"))
-        for (const t of ['titulo="Senha"', "ChangePasswordDialog", "DeleteAccountDialog", "Excluir conta"])
-            expect(f).not.toContain(t)
-        expect(f).toContain('titulo="Plano"')
-        expect(f).toContain("Sair")
     })
 })
 

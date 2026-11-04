@@ -158,9 +158,6 @@ export function PrivacidadeWireframe() {
                     <Link href={ROUTES.COFRE} className="text-foreground underline">
                         Abrir o Cofre aberto (precisa entrar)
                     </Link>
-                    <Link href={ROUTES.ACCOUNT} className="text-foreground underline">
-                        Abrir Minha conta (precisa entrar)
-                    </Link>
                 </p>
 
                 <h2 className="font-bold text-foreground">Contato</h2>

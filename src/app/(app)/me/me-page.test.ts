@@ -129,7 +129,7 @@ describe("signOut do provedor", () => {
         expect(fonte).toContain("signOut: () => Promise<{ error: string | null }>")
     })
     it("quem chama mostra o erro", () => {
-        for (const f of ["src/app/(app)/account/page-client.tsx", "src/components/layout/user-menu.tsx"]) {
+        for (const f of ["src/components/layout/user-menu.tsx"]) {
             const fonte = semComentarios(lerFonte(f))
             expect(fonte).toContain("toastError(error)")
         }
