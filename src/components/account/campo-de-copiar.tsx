@@ -2,18 +2,16 @@
 
 import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/16/solid"
 import { useEffect, useRef, useState } from "react"
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
-    InputGroupInput,
-    InputGroupTextarea,
-} from "@/components/ui/input-group"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Muted } from "@/components/ui/typography"
+import { TrocaSuave } from "@/lib/troca-suave"
 
 /**
- * Um valor para copiar: o botão confirma no lugar, e a recusa não some em silêncio.
- * `multilinha` mostra o texto inteiro (uma frase para colar), com o botão embaixo.
+ * Um valor para copiar: o campo de um lado e o botão redondo do outro, que troca
+ * o ícone pelo tique ao copiar; a recusa não some em silêncio. `multilinha`
+ * mostra o texto inteiro (uma frase para colar), com o botão no alto, ao lado.
  */
 export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: string; valor: string; multilinha?: boolean }) {
     const [estado, setEstado] = useState<"copiado" | "recusado" | null>(null)
@@ -33,53 +31,46 @@ export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: s
         }
     }
 
+    const copiado = estado === "copiado"
+
     return (
         <div className="flex min-w-0 flex-col gap-1">
-            <InputGroup>
+            <div className={multilinha ? "flex min-w-0 items-start gap-2" : "flex min-w-0 items-center gap-2"}>
                 {multilinha ? (
-                    <InputGroupTextarea
+                    <Textarea
                         readOnly
                         aria-label={rotulo}
                         value={valor}
                         minRows={2}
+                        className="min-w-0 flex-1"
                         onFocus={(e) => e.currentTarget.select()}
                     />
                 ) : (
-                    <InputGroupInput
+                    <Input
                         readOnly
                         aria-label={rotulo}
                         value={valor}
+                        className="min-w-0 flex-1"
                         onFocus={(e) => e.currentTarget.select()}
                     />
                 )}
-                {multilinha ? (
-                    // A frase longa: o botão de copiar com ícone, à direita, embaixo do texto.
-                    <InputGroupAddon align="block-end" className="justify-end text-foreground">
-                        <InputGroupButton
-                            variant="outline"
-                            aria-label={`Copiar ${rotulo}`}
-                            onClick={() => void copiar()}
-                        >
-                            {estado === "copiado" ? (
-                                <CheckIcon aria-hidden data-icon="inline-start" />
-                            ) : (
-                                <DocumentDuplicateIcon aria-hidden data-icon="inline-start" />
-                            )}
-                            {estado === "copiado" ? "Copiado" : "Copiar texto"}
-                        </InputGroupButton>
-                    </InputGroupAddon>
-                ) : (
-                    <InputGroupAddon align="inline-end">
-                        <InputGroupButton aria-label={`Copiar ${rotulo}`} onClick={() => void copiar()}>
-                            {estado === "copiado" ? "Copiado" : "Copiar"}
-                        </InputGroupButton>
-                    </InputGroupAddon>
-                )}
-            </InputGroup>
+                <Button
+                    variant="secondary"
+                    size="icon-lg"
+                    aria-label={`Copiar ${rotulo}`}
+                    className="relative shrink-0"
+                    onClick={() => void copiar()}
+                >
+                    {/* O ícone dá lugar ao tique na mola, e volta depois de 2s. */}
+                    <TrocaSuave chave={copiado ? "copiado" : "copiar"} className="flex">
+                        {copiado ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
+                    </TrocaSuave>
+                </Button>
+            </div>
             <Muted aria-live="polite" className="break-all">
                 {estado === "recusado" ? "Não foi possível copiar. Selecione o texto e copie." : null}
-                {/* O `aria-label` fixo esconde o "Copiado" do botão: quem confirma ao leitor é aqui. */}
-                {estado === "copiado" ? <span className="sr-only">{rotulo} copiado.</span> : null}
+                {/* O botão só tem ícone: quem confirma ao leitor de tela é aqui. */}
+                {copiado ? <span className="sr-only">{rotulo} copiado.</span> : null}
             </Muted>
         </div>
     )
