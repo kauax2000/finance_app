@@ -304,7 +304,7 @@ function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
                 { href: ROUTES.SETTINGS_PRIVACIDADE, name: "Política de privacidade", icon: LockClosedIcon },
                 { ...perfil(ROUTES.COFRE), description: "Seus dados: exportar e apagar" },
                 { href: ROUTES.SETTINGS_IAS, name: "IAs conectadas", icon: SparklesIcon },
-                { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Notificações", icon: BellIcon },
+                { href: ROUTES.SETTINGS_NOTIFICACOES, name: "Preferências de notificação", icon: BellIcon },
             ],
         },
     ]

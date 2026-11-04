@@ -85,10 +85,10 @@ describe("os cartões e as linhas de Você", () => {
         expect(PAGINA.indexOf("<CartaoDaIa />")).toBeLessThan(PAGINA.indexOf('<Card padding="none">'))
     })
     it("Lançar pelo iPhone em Neste celular: cartão, convite ou a linha depois do Tema", () => {
-        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}')).toBeGreaterThan(-1)
-        expect(GRUPO.indexOf('{lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}')).toBeGreaterThan(GRUPO.indexOf("</Card>"))
-        expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalarCartao /> : null}')).toBeGreaterThan(-1)
-        expect(GRUPO.indexOf('{lancar === "convite" ? <ConviteDeInstalarCartao /> : null}')).toBeGreaterThan(GRUPO.indexOf("</Card>"))
+        // O convite é seção própria, depois da de Neste celular, com subtítulo.
+        expect(GRUPO).toContain('{lancar === "cartao" ? "Lançar pelo iPhone" : "App no iPhone"}')
+        expect(GRUPO.indexOf("<CartaoDeLancar onConectar={() => setGuiaAberto(true)} />")).toBeGreaterThan(GRUPO.lastIndexOf("</Card>"))
+        expect(GRUPO.indexOf("<ConviteDeInstalarCartao />")).toBeGreaterThan(GRUPO.lastIndexOf("</Card>"))
         // O convite entra solto, sem a seção "Instale o app" de Configurações dentro do grupo.
         expect(GRUPO).not.toContain("<ConviteDeInstalar />")
         const convite = semComentarios(lerFonte("src/components/settings/convite-de-instalar.tsx"))

@@ -183,9 +183,20 @@ export function NesteCelularGrupo() {
                         </div>
                     ) : null}
                 </Card>
-                {lancar === "cartao" ? <CartaoDeLancar onConectar={() => setGuiaAberto(true)} /> : null}
-                {lancar === "convite" ? <ConviteDeInstalarCartao /> : null}
             </PageSection>
+            {/* O convite é seção própria, com subtítulo: dentro de Neste celular, o cartão engolia a lista. */}
+            {lancar === "cartao" || lancar === "convite" ? (
+                <PageSection size="sm">
+                    <PageSectionHeader>
+                        <PageSectionTitle>{lancar === "cartao" ? "Lançar pelo iPhone" : "App no iPhone"}</PageSectionTitle>
+                    </PageSectionHeader>
+                    {lancar === "cartao" ? (
+                        <CartaoDeLancar onConectar={() => setGuiaAberto(true)} />
+                    ) : (
+                        <ConviteDeInstalarCartao />
+                    )}
+                </PageSection>
+            ) : null}
             <InstallPwaSheet open={installOpen} onOpenChange={setInstallOpen} />
             {/* Fora do ramo do cartão, como em `AtalhoSecao`: o primeiro aparelho troca o cartão pela linha, e o guia segue aberto até a pessoa fechar, com o código e os passos do atalho. */}
             <GuiaDoAtalho

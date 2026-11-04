@@ -15,7 +15,7 @@ export default function NotificacoesPage() {
                 <PageHeader collapse>
                     <PageHeaderTitle asChild>
                         {/* O `<h1>` da página é o da barra do topo. */}
-                        <p aria-hidden="true">Notificações</p>
+                        <p aria-hidden="true">Preferências de notificação</p>
                     </PageHeaderTitle>
                 </PageHeader>
             )}

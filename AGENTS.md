@@ -740,7 +740,7 @@ declaração de `background-color` no trilho).
   no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
-  Membros, Planos e pagamentos (`/plans`), Política de privacidade, IAs conectadas, Notificações e Lançar pelo iPhone (`/settings/privacidade`, `/settings/ias`, `/settings/notificacoes`, `/settings/lancar-pelo-iphone`) voltam a ela, e uma aba que saiu da barra
+  Membros, Planos e pagamentos (`/plans`), Política de privacidade, IAs conectadas, Preferências de notificação e Lançar pelo iPhone (`/settings/privacidade`, `/settings/ias`, `/settings/notificacoes`, `/settings/lancar-pelo-iphone`) voltam a ela, e uma aba que saiu da barra
   não ganha o voltar (`defaultMobileBackHref`, rodada 346); a tela com filtro
   o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
   334; a **rota declara** o filtro (`mobileHeaderFilterFor`, em

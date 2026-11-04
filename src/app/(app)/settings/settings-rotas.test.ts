@@ -8,7 +8,7 @@ const fonte = (c: string) => semComentarios(lerFonte(`${base}/${c}`))
 const ROTAS = [
     ["lancar-pelo-iphone", "<AtalhoSecao />", "Lançar pelo iPhone"],
     ["ias", "<IasSecao />", "IAs conectadas"],
-    ["notificacoes", "<NotificationPreferences />", "Notificações"],
+    ["notificacoes", "<NotificationPreferences />", "Preferências de notificação"],
     ["privacidade", "<PrivacidadeWireframe dentroDoApp />", "Política de privacidade"],
 ] as const
 

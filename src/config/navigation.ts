@@ -143,7 +143,7 @@ export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.SETTINGS]: "Configurações",
     [ROUTES.SETTINGS_LANCAR]: "Lançar pelo iPhone",
     [ROUTES.SETTINGS_IAS]: "IAs conectadas",
-    [ROUTES.SETTINGS_NOTIFICACOES]: "Notificações",
+    [ROUTES.SETTINGS_NOTIFICACOES]: "Preferências de notificação",
     [ROUTES.SETTINGS_PRIVACIDADE]: "Política de privacidade",
     [ROUTES.TRANSACTIONS]: "Transações",
     [ROUTES.SUBSCRIPTIONS]: "Assinaturas",
