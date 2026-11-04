@@ -38,43 +38,40 @@ export function ApplePayConvite() {
     return (
         <>
             <Card padding="none">
-                <div className="flex items-center gap-3 p-4">
-                    <JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="mini" />
+                {/* O aparelho em cima, inteiro na largura: ao lado do texto, os dois se apertavam a 375px. */}
+                <div className="flex justify-center px-4 pt-4">
+                    <JanelaDoAparelho tela={TELA_DA_CARTEIRA} tamanho="compacta" />
+                </div>
+                <div className="flex flex-col gap-4 p-4 pt-3">
                     {carregando ? (
-                        <SkeletonText lines={2} className="min-w-0 flex-1" />
+                        <SkeletonText lines={2} />
                     ) : (
-                        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
-                            {estado === "novo" ? (
-                                <div>
-                                    <P className="font-semibold">Lance ao pagar com Apple Pay</P>
-                                    <Muted>Cada compra com o iPhone vira um gasto, sem abrir nada.</Muted>
-                                </div>
-                            ) : (
-                                <div>
-                                    <P className="flex flex-wrap items-center gap-2 font-semibold">
-                                        Lançar ao pagar
-                                        {estado === "funcionando" ? (
-                                            <Badge tone="success">
-                                                <BadgeDot />
-                                                Funcionando
-                                            </Badge>
-                                        ) : (
-                                            <Badge tone="warning" size="sm" className="whitespace-nowrap">Aguardando a 1ª compra</Badge>
-                                        )}
-                                    </P>
-                                    <Muted>
-                                        {ultima
-                                            ? `Última compra lançada ${minuscula(formatRelativeTimePtBr(ultima.created_at))} · ${ultima.description}, ${currencyBRL(ultima.amount)}`
-                                            : "Pague algo com o iPhone: o gasto entra e o iPhone avisa."}
-                                    </Muted>
-                                </div>
-                            )}
+                        <div>
+                            <div className="flex items-center justify-between gap-3">
+                                <P className="font-semibold">
+                                    {estado === "novo" ? "Lance ao pagar com Apple Pay" : "Lançar ao pagar"}
+                                </P>
+                                {estado === "funcionando" ? (
+                                    <Badge tone="success" className="shrink-0">
+                                        <BadgeDot />
+                                        Funcionando
+                                    </Badge>
+                                ) : estado === "novo" ? null : (
+                                    <Badge tone="warning" className="shrink-0">
+                                        Aguardando a 1ª compra
+                                    </Badge>
+                                )}
+                            </div>
+                            <Muted>
+                                {estado === "novo"
+                                    ? "Cada compra com o iPhone vira um gasto, sem abrir nada."
+                                    : ultima
+                                      ? `Última compra lançada ${minuscula(formatRelativeTimePtBr(ultima.created_at))} · ${ultima.description}, ${currencyBRL(ultima.amount)}`
+                                      : "Pague algo com o iPhone: o gasto entra e o iPhone avisa."}
+                            </Muted>
                         </div>
                     )}
-                </div>
-                {/* Embaixo, na largura do cartão: ao lado do aparelho o rótulo não cabia a 375px. */}
-                {carregando ? null : (
-                    <div className="px-4 pb-4">
+                    {carregando ? null : (
                         <Button
                             type="button"
                             variant="secondary"
@@ -83,8 +80,8 @@ export function ApplePayConvite() {
                         >
                             {estado === "novo" ? "Configurar" : "Ver os passos de novo"}
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
             </Card>
             <GuiaDoApplePay open={guiaAberto} onOpenChange={setGuiaAberto} onConcluir={() => void concluir()} />
         </>
