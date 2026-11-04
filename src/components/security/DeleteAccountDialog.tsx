@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Muted } from "@/components/ui/typography"
-import { ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { TrashIcon } from "@heroicons/react/16/solid"
 
 import { BanknotesIcon, UserCircleIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon, TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
@@ -269,10 +269,9 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                                                   : `${i.transactions} lanç.`
                                               : null
                                     return (
-                                        <Item key={w.id} variant="flush" role="listitem">
-                                            <ItemMedia variant="tile" tone="warning">
-                                                <ExclamationTriangleIcon aria-hidden />
-                                            </ItemMedia>
+                                        // Linha baixa e sem ícone: o aviso é do rótulo da seção, e cinco
+                                        // triângulos repetidos pesavam mais que os nomes.
+                                        <Item key={w.id} variant="flush" size="sm" role="listitem">
                                             <ItemContent>
                                                 <ItemTitle>{w.name}</ItemTitle>
                                             </ItemContent>

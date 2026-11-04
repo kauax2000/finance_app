@@ -504,7 +504,7 @@ describe("Excluir conta: dois passos enxutos", () => {
             "Será apagado",
             "Carteiras compartilhadas que você criou",
             "text-warning-muted-foreground",
-            'tone="warning"',
+            '<Item key={w.id} variant="flush" size="sm" role="listitem">',
             "Guardar uma cópia antes",
             'variant="link"',
             '"Exportando…" : "Exportar"',
