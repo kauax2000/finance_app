@@ -1261,7 +1261,7 @@ declaração de `background-color` no trilho).
     Sair é a última linha do grupo Conta dela, com confirmação, além do menu do usuário do desktop. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
-  - **Sem `fill`, a gaveta mede o conteúdo e cresce até a altura alta (`--drawer-h`) antes de o meio rolar** (o teto de 85% saiu: com espaço em cima, nada de rolagem no meio). **Passo a passo no telefone é `layout="fixed"`** (o `Dialog surface="auto"` vira gaveta alta, sempre do mesmo tamanho): medir cada passo fazia a gaveta trocar de altura com a animação truncada. No desktop o diálogo segue medindo o conteúdo.
+  - **Sem `fill`, a gaveta mede o conteúdo e cresce até a altura alta (`--drawer-h`) antes de o meio rolar** (o teto de 85% saiu: com espaço em cima, nada de rolagem no meio). **Passo a passo mede o maior passo** (`CaixaDoPasso`, em `components/account/passo-a-passo.tsx`): os outros passos ficam como fantasmas invisíveis e inertes na mesma célula da grade, sem imagem nem animação, e a caixa tem a altura do maior do abrir ao fechar — sem preencher a tela (nada de `layout="fixed"`) e sem mudar de altura a cada passo (a troca animada truncava na gaveta). Só um passo maior que `--drawer-h` faz o meio rolar.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha. `drawer-versions.test.ts`.

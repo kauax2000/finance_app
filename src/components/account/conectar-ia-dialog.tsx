@@ -142,102 +142,128 @@ export function ConectarIaDialog({
         setPasso(n)
     }
 
-    let titulo = "Escolha sua IA"
-    let conteudo: ReactNode = (
-        <PecaDoPasso>
-            <RadioGroup
-                variant="card"
-                aria-label="Sua IA"
-                value={ia ?? ""}
-                onValueChange={(v) => setIa(v as Ia)}
-            >
-                {(Object.keys(IAS) as Ia[]).map((chave) => (
-                    <RadioGroupItem
-                        key={chave}
-                        value={chave}
-                        icon={<Capa marca={IAS[chave].marca} tamanho="media" />}
-                        description={IAS[chave].linha}
-                    >
-                        {IAS[chave].nome}
-                    </RadioGroupItem>
-                ))}
-            </RadioGroup>
-        </PecaDoPasso>
-    )
-    let texto: ReactNode = null
+    /** O passo `n` com a IA `esc`: o atual, e os fantasmas que dão à caixa a altura do maior. */
+    function passoDe(n: number, esc: (typeof IAS)[Ia] | null) {
+        let titulo = "Escolha sua IA"
+        let conteudo: ReactNode = (
+            <PecaDoPasso>
+                <RadioGroup
+                    variant="card"
+                    aria-label="Sua IA"
+                    value={ia ?? ""}
+                    onValueChange={(v) => setIa(v as Ia)}
+                >
+                    {(Object.keys(IAS) as Ia[]).map((chave) => (
+                        <RadioGroupItem
+                            key={chave}
+                            value={chave}
+                            icon={<Capa marca={IAS[chave].marca} tamanho="media" />}
+                            description={IAS[chave].linha}
+                        >
+                            {IAS[chave].nome}
+                        </RadioGroupItem>
+                    ))}
+                </RadioGroup>
+            </PecaDoPasso>
+        )
+        let texto: ReactNode = null
 
-    if (escolhida && passo === 1) {
-        titulo = escolhida.copiar.titulo
-        texto = escolhida.copiar.texto
-        conteudo = (
-            <PecaDoPasso>
-                <CampoDeCopiar rotulo={escolhida.copiar.rotulo} valor={escolhida.copiar.valor(url)} />
-            </PecaDoPasso>
-        )
-    } else if (escolhida && passo === 2) {
-        titulo = escolhida.colar.titulo
-        conteudo = (
-            <PecaDoPasso className="flex flex-col gap-2">
-                <ol className="flex list-decimal flex-col gap-1.5 ps-5 text-sm text-muted-foreground">
-                    {escolhida.colar.itens.map((item) => (
-                        <li key={item}>{item}</li>
-                    ))}
-                </ol>
-                {escolhida.menus ? (
-                    <Muted className="text-xs">Os nomes dos menus podem mudar um pouco conforme a versão do app.</Muted>
-                ) : null}
-            </PecaDoPasso>
-        )
-    } else if (escolhida && passo === 3) {
-        titulo = "Autorize no Finance"
-        texto = "A IA abre uma página do Finance pedindo acesso. Confira o nome dela e toque em Permitir."
-        conteudo = (
-            <PecaDoPasso>
-                <ul className="flex flex-col gap-1.5">
-                    {GARANTIAS.map((g) => (
-                        <li key={g} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <ShieldCheckIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-foreground" />
-                            {g}
-                        </li>
-                    ))}
-                </ul>
-            </PecaDoPasso>
-        )
-    } else if (escolhida && passo === 4) {
-        titulo = "Faça a primeira pergunta"
-        texto = "Abra uma conversa nova e pergunte:"
-        conteudo = (
-            <>
+        if (esc && n === 1) {
+            titulo = esc.copiar.titulo
+            texto = esc.copiar.texto
+            conteudo = (
                 <PecaDoPasso>
-                    <CampoDeCopiar rotulo="Pergunta de exemplo" valor="Faça um raio-x do meu mês e me dê 3 dicas para economizar." />
+                    <CampoDeCopiar rotulo={esc.copiar.rotulo} valor={esc.copiar.valor(url)} />
                 </PecaDoPasso>
+            )
+        } else if (esc && n === 2) {
+            titulo = esc.colar.titulo
+            conteudo = (
+                <PecaDoPasso className="flex flex-col gap-2">
+                    <ol className="flex list-decimal flex-col gap-1.5 ps-5 text-sm text-muted-foreground">
+                        {esc.colar.itens.map((item) => (
+                            <li key={item}>{item}</li>
+                        ))}
+                    </ol>
+                    {esc.menus ? (
+                        <Muted className="text-xs">Os nomes dos menus podem mudar um pouco conforme a versão do app.</Muted>
+                    ) : null}
+                </PecaDoPasso>
+            )
+        } else if (esc && n === 3) {
+            titulo = "Autorize no Finance"
+            texto = "A IA abre uma página do Finance pedindo acesso. Confira o nome dela e toque em Permitir."
+            conteudo = (
                 <PecaDoPasso>
-                    <Muted>Pronto: ela aparece aqui em IAs conectadas, e você desconecta quando quiser.</Muted>
+                    <ul className="flex flex-col gap-1.5">
+                        {GARANTIAS.map((g) => (
+                            <li key={g} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                <ShieldCheckIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-foreground" />
+                                {g}
+                            </li>
+                        ))}
+                    </ul>
                 </PecaDoPasso>
-            </>
-        )
+            )
+        } else if (esc && n === 4) {
+            titulo = "Faça a primeira pergunta"
+            texto = "Abra uma conversa nova e pergunte:"
+            conteudo = (
+                <>
+                    <PecaDoPasso>
+                        <CampoDeCopiar rotulo="Pergunta de exemplo" valor="Faça um raio-x do meu mês e me dê 3 dicas para economizar." />
+                    </PecaDoPasso>
+                    <PecaDoPasso>
+                        <Muted>Pronto: ela aparece aqui em IAs conectadas, e você desconecta quando quiser.</Muted>
+                    </PecaDoPasso>
+                </>
+            )
+        }
+
+        // Do passo 2 em diante, a capa da IA escolhida; no de autorizar, o Finance ligado a ela.
+        const visual =
+            esc && n > 0 ? (
+                <Visual>
+                    {n === 3 ? (
+                        <>
+                            <Capa marca="finance" tamanho="media" />
+                            <LinkIcon aria-hidden="true" className="size-5 text-muted-foreground" />
+                        </>
+                    ) : null}
+                    <Capa marca={esc.marca} tamanho="media" />
+                </Visual>
+            ) : null
+
+        return {
+            titulo,
+            corpo: (
+                <>
+                    {visual}
+                    <PecaDoPasso>
+                        <P className="font-semibold">
+                            {n + 1} · {titulo}
+                            <span className="sr-only"> de {TOTAL}</span>
+                        </P>
+                        {texto ? <Muted>{texto}</Muted> : null}
+                    </PecaDoPasso>
+                    {conteudo}
+                </>
+            ),
+        }
     }
 
-    // Do passo 2 em diante, a capa da IA escolhida; no de autorizar, o Finance ligado a ela.
-    const visual =
-        escolhida && passo > 0 ? (
-            <Visual>
-                {passo === 3 ? (
-                    <>
-                        <Capa marca="finance" tamanho="media" />
-                        <LinkIcon aria-hidden="true" className="size-5 text-muted-foreground" />
-                    </>
-                ) : null}
-                <Capa marca={escolhida.marca} tamanho="media" />
-            </Visual>
-        ) : null
+    const { titulo, corpo } = passoDe(passo, escolhida)
+    // Todo passo de toda IA: a altura não muda ao escolher a IA nem ao trocar de passo.
+    const fantasmas = [
+        passoDe(0, null).corpo,
+        ...Array.from({ length: TOTAL - 1 }, (_, i) =>
+            Object.values(IAS).map((outra) => passoDe(i + 1, outra).corpo)
+        ).flat(),
+    ]
 
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
-            {/* Passo a passo: `fixed` dá à gaveta do telefone a altura alta de saída, e ela
-                não muda de tamanho a cada passo (a troca animada truncava). No desktop o
-                diálogo continua medindo o conteúdo. */}
-            <DialogContent layout="fixed">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Conectar minha IA</DialogTitle>
                     <DialogDescription>Leva uns 2 minutos. No fim, ela já responde sobre o seu dinheiro.</DialogDescription>
@@ -246,25 +272,25 @@ export function ConectarIaDialog({
                     <span aria-live="polite" className="sr-only">
                         Passo {passo + 1} de {TOTAL}: {titulo}
                     </span>
-                    <CaixaDoPasso chave={String(passo)} entrar={!reduzido && mudou}>
-                        {visual}
-                        <PecaDoPasso>
-                            <P className="font-semibold">
-                                {passo + 1} · {titulo}
-                                <span className="sr-only"> de {TOTAL}</span>
-                            </P>
-                            {texto ? <Muted>{texto}</Muted> : null}
-                        </PecaDoPasso>
-                        {conteudo}
+                    <CaixaDoPasso chave={String(passo)} entrar={!reduzido && mudou} fantasmas={fantasmas}>
+                        {corpo}
                     </CaixaDoPasso>
                 </DialogBody>
                 <PontosDoPasso total={TOTAL} atual={passo} />
                 <DialogFooter>
-                    {passo > 0 ? (
-                        <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
-                            Voltar
-                        </Button>
-                    ) : null}
+                    {/* No primeiro passo o Voltar guarda o lugar, invisível: o rodapé tem a mesma
+                        altura em todos os passos, e a gaveta não muda de tamanho. */}
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        disabled={passo === 0}
+                        aria-hidden={passo === 0 || undefined}
+                        tabIndex={passo === 0 ? -1 : undefined}
+                        className={passo === 0 ? "invisible" : undefined}
+                        onClick={() => irPara(passo - 1)}
+                    >
+                        Voltar
+                    </Button>
                     <Button
                         type="button"
                         variant="primary"

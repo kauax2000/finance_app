@@ -110,7 +110,7 @@ describe("tokens de captura", () => {
         )
         expect(g).not.toMatch(/Toque no botão/)
     })
-    it("só o passo ativo ocupa a folha, e a altura anda numa mola só", () => {
+    it("a caixa tem a altura do maior passo: os outros são fantasmas na mesma célula", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         const p = semComentarios(lerFonte("src/components/account/passo-a-passo.tsx"))
         for (const n of ["CaixaDoPasso", "PecaDoPasso", "PontosDoPasso", "JanelaDoAparelho"]) expect(g).toContain(n)
@@ -119,8 +119,10 @@ describe("tokens de captura", () => {
         expect(g).not.toContain("const PECA")
         expect(g).not.toContain("col-start-1 row-start-1")
         expect(g).not.toContain("AnimatePresence")
-        expect(p).toContain('data-altura-em-voo=""')
-        expect(p).toContain("useAlturaAnimada<HTMLDivElement>()")
+        expect(p).not.toContain("useAlturaAnimada")
+        expect(p).toContain("[grid-area:1/1]")
+        expect(p).toContain("aria-hidden inert")
+        expect(g).toContain("fantasmas={fantasmas}")
         expect(p).toContain("staggerChildren: 0.03")
     })
     it("o guia do iPhone tem 6 passos, e o 7 virou outra seção", async () => {

@@ -1,9 +1,8 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { createContext, useContext, type ReactNode } from "react"
 import Image, { type StaticImageData } from "next/image"
 import { motion, type Variants } from "motion/react"
-import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { cn } from "@/lib/utils"
 import applePay from "./assets/atalho-6-apple-pay.webp"
 import carteira from "./assets/atalho-7-carteira.webp"
@@ -32,6 +31,9 @@ export type Tela = {
 /** A notificação depois do Apple Pay: a tela do último passo do guia e a do vazio da seção. */
 export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
 
+/** Dentro de um fantasma da caixa do passo: só a forma conta, nada carrega nem anima. */
+const Fantasma = createContext(false)
+
 /** As telas reais do iPhone no guia do Apple Pay: o ícone do Atalhos, o + da Automação e a caixa de descrever (iOS 27). */
 export const TELAS_DO_APPLE_PAY: { atalhos: Tela; adicionar: Tela; descrever: Tela } = {
     atalhos: { imagem: atalhos, ponto: { x: 18.4, y: 58.6 }, ancora: "baixo" },
@@ -59,6 +61,9 @@ export function JanelaDoAparelho({
     tamanho?: keyof typeof JANELA
 }) {
     const j = JANELA[tamanho]
+    const fantasma = useContext(Fantasma)
+    // O fantasma guarda o tamanho da janela (a caixa é fixa) sem baixar a imagem.
+    if (fantasma) return <div aria-hidden className={cn("shrink-0", j.caixa)} />
     return (
         <div
             aria-hidden
@@ -98,21 +103,39 @@ export function JanelaDoAparelho({
 }
 
 /**
- * A caixa do passo: cada passo tem a altura dele, e a caixa anda de uma altura à
- * outra numa mola só (`data-altura-em-voo` diz ao diálogo que a altura já anda
- * aqui). As peças do passo chegam uma a uma, do desfoque e no lugar: nada anda de
- * lado. `entrar` já embute o movimento reduzido de quem chama.
+ * A caixa do passo tem a altura do maior passo, do abrir ao fechar: o passo atual e
+ * os `fantasmas` (todos os passos, invisíveis e inertes) dividem a mesma célula da
+ * grade, e a maior peça manda. Trocar de passo não muda a altura (a gaveta do telefone
+ * truncava a troca). Os fantasmas não baixam imagem e não animam; quem chama não põe
+ * neles nada que salve. As peças do passo atual chegam uma a uma, do desfoque e no
+ * lugar. `entrar` já embute o movimento reduzido de quem chama.
  */
-export function CaixaDoPasso({ chave, entrar, children }: { chave: string; entrar: boolean; children: ReactNode }) {
-    const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
+export function CaixaDoPasso({
+    chave,
+    entrar,
+    fantasmas,
+    children,
+}: {
+    chave: string
+    entrar: boolean
+    fantasmas: ReactNode[]
+    children: ReactNode
+}) {
     return (
-        <div ref={alturaAnimada} data-altura-em-voo="">
+        <div className="grid">
+            <Fantasma.Provider value>
+                {fantasmas.map((f, i) => (
+                    <div key={i} aria-hidden inert className="invisible flex flex-col gap-4 [grid-area:1/1]">
+                        {f}
+                    </div>
+                ))}
+            </Fantasma.Provider>
             <motion.div
                 key={chave}
                 initial={entrar ? "oculto" : false}
                 animate="visivel"
                 transition={{ staggerChildren: 0.03, delayChildren: 0.04 }}
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-4 [grid-area:1/1]"
             >
                 {children}
             </motion.div>
@@ -120,8 +143,9 @@ export function CaixaDoPasso({ chave, entrar, children }: { chave: string; entra
     )
 }
 
-/** Uma peça do passo, que chega do desfoque na onda da caixa. */
+/** Uma peça do passo, que chega do desfoque na onda da caixa (no fantasma, parada). */
 export function PecaDoPasso({ className, children }: { className?: string; children: ReactNode }) {
+    if (useContext(Fantasma)) return <div className={className}>{children}</div>
     return (
         <motion.div variants={PECA} className={className}>
             {children}

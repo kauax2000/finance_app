@@ -146,12 +146,30 @@ export function GuiaDoApplePay({
         setPasso(n)
     }
 
+    function corpo(i: number) {
+        const p = PASSOS[i]
+        return (
+            <>
+                <PecaDoPasso>
+                    <P className="font-semibold">
+                        {i + 1} · {p.titulo}
+                        <span className="sr-only"> de {PASSOS.length}</span>
+                    </P>
+                    <Muted>{p.texto}</Muted>
+                </PecaDoPasso>
+                {p.extra ? <PecaDoPasso className="flex flex-col gap-2">{p.extra}</PecaDoPasso> : null}
+                {p.tela ? (
+                    <PecaDoPasso>
+                        <JanelaDoAparelho tela={p.tela} />
+                    </PecaDoPasso>
+                ) : null}
+            </>
+        )
+    }
+
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
-            {/* Passo a passo: `fixed` dá à gaveta do telefone a altura alta de saída, e ela
-                não muda de tamanho a cada passo (a troca animada truncava). No desktop o
-                diálogo continua medindo o conteúdo. */}
-            <DialogContent layout="fixed">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Lançar ao pagar</DialogTitle>
                     <DialogDescription>Siga os passos no iPhone. Leva um minuto.</DialogDescription>
@@ -160,29 +178,29 @@ export function GuiaDoApplePay({
                     <span aria-live="polite" className="sr-only">
                         Passo {passo + 1} de {PASSOS.length}: {atual.titulo}
                     </span>
-                    <CaixaDoPasso chave={atual.titulo} entrar={!reduzido && mudou}>
-                        <PecaDoPasso>
-                            <P className="font-semibold">
-                                {passo + 1} · {atual.titulo}
-                                <span className="sr-only"> de {PASSOS.length}</span>
-                            </P>
-                            <Muted>{atual.texto}</Muted>
-                        </PecaDoPasso>
-                        {atual.extra ? <PecaDoPasso className="flex flex-col gap-2">{atual.extra}</PecaDoPasso> : null}
-                        {atual.tela ? (
-                            <PecaDoPasso>
-                                <JanelaDoAparelho tela={atual.tela} />
-                            </PecaDoPasso>
-                        ) : null}
+                    <CaixaDoPasso
+                        chave={atual.titulo}
+                        entrar={!reduzido && mudou}
+                        fantasmas={PASSOS.map((_, i) => corpo(i))}
+                    >
+                        {corpo(passo)}
                     </CaixaDoPasso>
                 </DialogBody>
                 <PontosDoPasso total={PASSOS.length} atual={passo} />
                 <DialogFooter>
-                    {passo > 0 ? (
-                        <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
-                            Voltar
-                        </Button>
-                    ) : null}
+                    {/* No primeiro passo o Voltar guarda o lugar, invisível: o rodapé tem a mesma
+                        altura em todos os passos, e a gaveta não muda de tamanho. */}
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        disabled={passo === 0}
+                        aria-hidden={passo === 0 || undefined}
+                        tabIndex={passo === 0 ? -1 : undefined}
+                        className={passo === 0 ? "invisible" : undefined}
+                        onClick={() => irPara(passo - 1)}
+                    >
+                        Voltar
+                    </Button>
                     <Button
                         type="button"
                         variant="primary"

@@ -98,9 +98,16 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(CODIGO).not.toContain("85dvh")
   })
 
-  it("os passo a passo da conta ficam na altura alta no telefone, sem mudar de tamanho a cada passo", () => {
+  it("os passo a passo da conta têm a altura do maior passo, sem preencher a tela nem mudar de tamanho", () => {
+    const caixa = semComentarios(lerFonte("src/components/account/passo-a-passo.tsx"))
+    // Os fantasmas dividem a célula da grade com o passo atual, invisíveis e inertes.
+    expect(caixa).toMatch(/aria-hidden inert className="invisible [^"]*\[grid-area:1\/1\]"/)
+    expect(caixa).toContain('className="flex flex-col gap-4 [grid-area:1/1]"')
+    expect(caixa).not.toContain("useAlturaAnimada")
     for (const f of ["guia-do-atalho", "guia-do-apple-pay", "conectar-ia-dialog"]) {
-      expect(semComentarios(lerFonte(`src/components/account/${f}.tsx`)), f).toContain('<DialogContent layout="fixed">')
+      const fonte = semComentarios(lerFonte(`src/components/account/${f}.tsx`))
+      expect(fonte, f).not.toContain('layout="fixed"')
+      expect(fonte, f).toMatch(/<CaixaDoPasso[^>]*fantasmas=/)
     }
   })
 })

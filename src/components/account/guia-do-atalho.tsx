@@ -198,7 +198,7 @@ export function GuiaDoAtalho({
             navigator.clipboard.writeText(data).then(() => setCopiado(true)).catch(() => {})
     }
 
-    const textos: ReactNode[] = [
+    const textos = (comoDoPasso: ComoAbrir): ReactNode[] => [
         "O nome ajuda a reconhecer o aparelho na lista.",
         <>
             Toque em <strong>Baixar o atalho</strong> e depois em <strong>Baixar</strong>.
@@ -215,17 +215,112 @@ export function GuiaDoAtalho({
             Depois, <strong>Adicionar Atalho</strong>.
         </>,
         <>
-            {COMO_ABRIR.find((o) => o.valor === como)?.texto} O atalho pergunta a frase ou um formulário, conforme o
+            {COMO_ABRIR.find((o) => o.valor === comoDoPasso)?.texto} O atalho pergunta a frase ou um formulário, conforme o
             Lançamento inteligente, em Você › Neste celular. Ele cai em {nomeDaCarteira}.
         </>,
     ]
 
+    /**
+     * O passo `i`, com a maneira de abrir `comoDoPasso` no último. `fantasma` é a cópia
+     * que só dá altura à caixa: o campo dele nasce desligado, e nada nele envia.
+     */
+    function passoDe(i: number, comoDoPasso: ComoAbrir, fantasma = false) {
+        return (
+            <>
+                <PecaDoPasso>
+                    <P className="font-semibold">
+                        {i + 1} · {PASSOS[i].titulo}
+                        <span className="sr-only"> de {PASSOS.length}</span>
+                    </P>
+                    <Muted>{textos(comoDoPasso)[i]}</Muted>
+                </PecaDoPasso>
+
+                {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
+                {i === 1 ? (
+                    <PecaDoPasso className="flex flex-col">
+                        <Button asChild variant="primary">
+                            <a href={ARQUIVO_DO_ATALHO} download>
+                                Baixar o atalho
+                            </a>
+                        </Button>
+                    </PecaDoPasso>
+                ) : null}
+                {i === 4 ? (
+                    <PecaDoPasso>
+                        <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                    </PecaDoPasso>
+                ) : null}
+
+                {i === PASSOS.length - 1 ? (
+                    <PecaDoPasso className="flex min-w-0 flex-col gap-4">
+                        <Tabs value={comoDoPasso} onValueChange={(v) => setComo(v as typeof como)}>
+                            <TabsList aria-label="Como abrir o atalho">
+                                {COMO_ABRIR.map((o) => (
+                                    <TabsTrigger key={o.valor} value={o.valor} className="flex-auto">
+                                        {o.rotulo}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </Tabs>
+                        <JanelaDoAparelho key={comoDoPasso} tela={COMO_ABRIR.find((o) => o.valor === comoDoPasso)!.tela} />
+                    </PecaDoPasso>
+                ) : null}
+
+                {PASSOS[i].tela ? (
+                    <PecaDoPasso>
+                        <JanelaDoAparelho tela={PASSOS[i].tela} />
+                    </PecaDoPasso>
+                ) : null}
+
+                {i === 0 ? (
+                    <PecaDoPasso className="flex flex-col gap-4">
+                        <FormInput
+                            label="Nome do aparelho"
+                            value={nome}
+                            maxLength={60}
+                            disabled={fantasma || codigo != null}
+                            onChange={(e) => setNome(e.target.value)}
+                        />
+                        {substituir ? (
+                            <Muted>O código antigo para de funcionar quando você criar este.</Muted>
+                        ) : null}
+                        {workspaces.length > 1 ? (
+                            <FormField label="Os gastos caem em">
+                                <Select
+                                    value={carteiraEscolhida}
+                                    onValueChange={setCarteira}
+                                    disabled={fantasma || codigo != null}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione a carteira" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {workspaces.map((w) => (
+                                            <SelectItem key={w.id} value={w.id}>
+                                                {w.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormField>
+                        ) : null}
+                    </PecaDoPasso>
+                ) : null}
+            </>
+        )
+    }
+
+    // Todo passo, e o último em cada maneira de abrir: a caixa tem a altura do maior.
+    const fantasmas = [
+        ...PASSOS.slice(0, -1).map((_, i) => passoDe(i, como, true)),
+        ...COMO_ABRIR.map((o) => passoDe(PASSOS.length - 1, o.valor, true)),
+    ]
+
     return (
         <Dialog surface="auto" pending={criando} open={open} onOpenChange={handleOpenChange}>
-            {/* Passo a passo: `fixed` dá à gaveta do telefone a altura alta de saída, e ela
-                não muda de tamanho a cada passo (a troca animada truncava). No desktop o
-                diálogo continua medindo o conteúdo. */}
-            <DialogContent layout="fixed">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Conectar o iPhone</DialogTitle>
                     <DialogDescription>Lance gastos pela Siri, pelo Botão de Ação ou com um toque, sem abrir o app.</DialogDescription>
@@ -242,88 +337,12 @@ export function GuiaDoAtalho({
                         <span aria-live="polite" className="sr-only">
                             Passo {passo + 1} de {PASSOS.length}: {PASSOS[passo].titulo}
                         </span>
-                        <CaixaDoPasso chave={PASSOS[passo].titulo} entrar={!reduzido && mudou}>
-                            <PecaDoPasso>
-                                <P className="font-semibold">
-                                    {passo + 1} · {PASSOS[passo].titulo}
-                                    <span className="sr-only"> de {PASSOS.length}</span>
-                                </P>
-                                <Muted>{textos[passo]}</Muted>
-                            </PecaDoPasso>
-
-                            {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
-                            {passo === 1 ? (
-                                <PecaDoPasso className="flex flex-col">
-                                    <Button asChild variant="primary">
-                                        <a href={ARQUIVO_DO_ATALHO} download>
-                                            Baixar o atalho
-                                        </a>
-                                    </Button>
-                                </PecaDoPasso>
-                            ) : null}
-                            {passo === 4 ? (
-                                <PecaDoPasso>
-                                    <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
-                                </PecaDoPasso>
-                            ) : null}
-
-                            {ultimo ? (
-                                <PecaDoPasso className="flex min-w-0 flex-col gap-4">
-                                    <Tabs value={como} onValueChange={(v) => setComo(v as typeof como)}>
-                                        <TabsList aria-label="Como abrir o atalho">
-                                            {COMO_ABRIR.map((o) => (
-                                                <TabsTrigger key={o.valor} value={o.valor} className="flex-auto">
-                                                    {o.rotulo}
-                                                </TabsTrigger>
-                                            ))}
-                                        </TabsList>
-                                    </Tabs>
-                                    <JanelaDoAparelho key={como} tela={COMO_ABRIR.find((o) => o.valor === como)!.tela} />
-                                </PecaDoPasso>
-                            ) : null}
-
-                            {PASSOS[passo].tela ? (
-                                <PecaDoPasso>
-                                    <JanelaDoAparelho tela={PASSOS[passo].tela} />
-                                </PecaDoPasso>
-                            ) : null}
-
-                            {passo === 0 ? (
-                                <PecaDoPasso className="flex flex-col gap-4">
-                                    <FormInput
-                                        label="Nome do aparelho"
-                                        value={nome}
-                                        maxLength={60}
-                                        disabled={codigo != null}
-                                        onChange={(e) => setNome(e.target.value)}
-                                    />
-                                    {substituir ? (
-                                        <Muted>O código antigo para de funcionar quando você criar este.</Muted>
-                                    ) : null}
-                                    {workspaces.length > 1 ? (
-                                        <FormField label="Os gastos caem em">
-                                            <Select
-                                                value={carteiraEscolhida}
-                                                onValueChange={setCarteira}
-                                                disabled={codigo != null}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Selecione a carteira" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {workspaces.map((w) => (
-                                                        <SelectItem key={w.id} value={w.id}>
-                                                            {w.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormField>
-                                    ) : null}
-                                </PecaDoPasso>
-                            ) : null}
+                        <CaixaDoPasso
+                            chave={PASSOS[passo].titulo}
+                            entrar={!reduzido && mudou}
+                            fantasmas={fantasmas}
+                        >
+                            {passoDe(passo, como)}
                             {erro ? (
                                 <PecaDoPasso>
                                     <FormError>{erro}</FormError>
