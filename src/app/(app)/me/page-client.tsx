@@ -152,23 +152,23 @@ export default function MePage() {
                                                 </Item>
                                             )
                                         })}
-                                        {/* Sair limpa a fila offline: pede confirmação. Não abre tela, então não tem chevron. */}
-                                        {grupo.id === "conta" ? (
-                                            <Item variant="flush" interactive asChild className="min-h-12">
-                                                <AlertDialogTrigger asChild>
-                                                    <button type="button">
-                                                        <ItemMedia variant="icon" className="text-destructive">
-                                                            <ArrowRightStartOnRectangleIcon className="size-5" aria-hidden />
-                                                        </ItemMedia>
-                                                        <ItemContent>
-                                                            <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
-                                                        </ItemContent>
-                                                    </button>
-                                                </AlertDialogTrigger>
-                                            </Item>
-                                        ) : null}
                                     </ItemGroup>
                                 </Card>
+                                {/* Sair limpa a fila offline: pede confirmação. Não abre tela, então não tem chevron. Fica fora do cartão, sem moldura, embaixo da lista. */}
+                                {grupo.id === "conta" ? (
+                                    <Item variant="flush" interactive asChild className="min-h-12 rounded-row-lg">
+                                        <AlertDialogTrigger asChild>
+                                            <button type="button">
+                                                <ItemMedia variant="icon" className="text-destructive">
+                                                    <ArrowRightStartOnRectangleIcon className="size-5" aria-hidden />
+                                                </ItemMedia>
+                                                <ItemContent>
+                                                    <ItemTitle className="text-destructive pointer-coarse:text-base">Sair</ItemTitle>
+                                                </ItemContent>
+                                            </button>
+                                        </AlertDialogTrigger>
+                                    </Item>
+                                ) : null}
                             </PageSection>
                         )}
                         {/* No meio: entre a carteira e a conta. */}
