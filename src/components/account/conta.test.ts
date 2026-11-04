@@ -467,6 +467,11 @@ describe("Segurança no Editar perfil", () => {
         expect(i).toBeGreaterThan(-1)
         expect(s).toBeGreaterThan(i)
         expect(f.indexOf("{errorMessage &&", s)).toBeGreaterThan(s)
+        // Dentro do DialogContent, depois do form: a gaveta filha empilha (NestedRoot) e não herda o pending.
+        const fim = f.indexOf("</CustomForm>")
+        expect(f.indexOf("<ChangePasswordDialog")).toBeGreaterThan(fim)
+        expect(f.indexOf("<DeleteAccountDialog")).toBeGreaterThan(fim)
+        expect(f.indexOf("<DeleteAccountDialog")).toBeLessThan(f.indexOf("</DialogContent>"))
     })
     it("a página não tem mais senha nem excluir conta", () => {
         const f = semComentarios(lerFonte("src/app/(app)/account/page-client.tsx"))

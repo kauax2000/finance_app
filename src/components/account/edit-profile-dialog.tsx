@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
+import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import {
   Dialog,
   DialogBody,
@@ -14,6 +15,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertTitle } from "@/components/ui/alert"
+import { Card } from "@/components/ui/card"
+import { Item, ItemChevron, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import {
     CustomForm,
     FormCancel,
@@ -21,12 +25,8 @@ import {
     FormSubmit,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
-import { Card } from "@/components/ui/card"
-import { Item, ItemChevron, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
-import { KeyIcon, TrashIcon as TrashIcon20 } from "@heroicons/react/20/solid"
 import { Input } from "@/components/ui/input"
+import { KeyIcon, TrashIcon as TrashIcon20 } from "@heroicons/react/20/solid"
 import { ArrowPathIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
@@ -454,10 +454,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         )}
                     </DialogFooter>
                 </CustomForm>
+                <ChangePasswordDialog open={senhaAberta} onOpenChange={setSenhaAberta} />
+                <DeleteAccountDialog open={excluirAberto} onOpenChange={setExcluirAberto} />
             </DialogContent>
         </Dialog>
-        <ChangePasswordDialog open={senhaAberta} onOpenChange={setSenhaAberta} />
-        <DeleteAccountDialog open={excluirAberto} onOpenChange={setExcluirAberto} />
         </>
     )
 }
