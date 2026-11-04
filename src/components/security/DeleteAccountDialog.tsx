@@ -37,9 +37,8 @@ import {
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { Separator } from "@/components/ui/separator"
 import { Muted } from "@/components/ui/typography"
-import { TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { BanknotesIcon, TagIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon, TrashIcon as TrashOutlineIcon } from "@heroicons/react/24/outline"
@@ -242,20 +241,26 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                         ))}
                     </ItemGroup>
                 </div>
-                <Separator />
-                <Item variant="flush">
+                {/* A cópia é a saída, não mais uma coisa que some: um bloco à parte. */}
+                <Item variant="muted" size="lg" className="mt-3">
+                    <ItemMedia variant="tile" tone="neutral">
+                        <ArrowDownTrayIcon aria-hidden />
+                    </ItemMedia>
                     <ItemContent>
-                        <ItemTitle>Guardar uma cópia antes</ItemTitle>
+                        <ItemTitle>Guarde uma cópia</ItemTitle>
                         {exportError ? (
                             <ItemDescription role="alert" className="text-destructive">
                                 {exportError}
                             </ItemDescription>
-                        ) : null}
+                        ) : (
+                            <ItemDescription>Tudo num .zip</ItemDescription>
+                        )}
                     </ItemContent>
                     <ItemActions>
                         <Button
                             type="button"
-                            variant="link"
+                            variant="secondary"
+                            size="sm"
                             disabled={exportando || workspaces.length === 0}
                             aria-busy={exportando || undefined}
                             onClick={() => void handleExport()}

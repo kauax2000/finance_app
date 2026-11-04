@@ -498,11 +498,14 @@ describe("Excluir conta: dois passos enxutos", () => {
         expect(aviso).not.toContain("Alert")
         expect(aviso.match(/<Card /g)).toHaveLength(1)
         expect(aviso).toContain('<Card variant="plain" padding="none">')
-        expect(aviso.match(/<Separator \/>/g)).toHaveLength(1)
+        expect(aviso).not.toContain("<Separator")
         for (const t of [
             "Será apagado",
-            "Guardar uma cópia antes",
-            'variant="link"',
+            "Guarde uma cópia",
+            "Tudo num .zip",
+            '<Item variant="muted" size="lg" className="mt-3">',
+            "<ArrowDownTrayIcon",
+            'variant="secondary"',
             '"Exportando…" : "Exportar"',
             "aria-busy={exportando",
             "disabled={exportando || workspaces.length === 0}",
