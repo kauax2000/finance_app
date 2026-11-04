@@ -1,5 +1,6 @@
 "use client"
 
+import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/16/solid"
 import { useEffect, useRef, useState } from "react"
 import {
     InputGroup,
@@ -51,11 +52,29 @@ export function CampoDeCopiar({ rotulo, valor, multilinha = false }: { rotulo: s
                         onFocus={(e) => e.currentTarget.select()}
                     />
                 )}
-                <InputGroupAddon align={multilinha ? "block-end" : "inline-end"}>
-                    <InputGroupButton aria-label={`Copiar ${rotulo}`} onClick={() => void copiar()}>
-                        {estado === "copiado" ? "Copiado" : "Copiar"}
-                    </InputGroupButton>
-                </InputGroupAddon>
+                {multilinha ? (
+                    // A frase longa: o botão de copiar com ícone, à direita, embaixo do texto.
+                    <InputGroupAddon align="block-end" className="justify-end text-foreground">
+                        <InputGroupButton
+                            variant="outline"
+                            aria-label={`Copiar ${rotulo}`}
+                            onClick={() => void copiar()}
+                        >
+                            {estado === "copiado" ? (
+                                <CheckIcon aria-hidden data-icon="inline-start" />
+                            ) : (
+                                <DocumentDuplicateIcon aria-hidden data-icon="inline-start" />
+                            )}
+                            {estado === "copiado" ? "Copiado" : "Copiar texto"}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                ) : (
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton aria-label={`Copiar ${rotulo}`} onClick={() => void copiar()}>
+                            {estado === "copiado" ? "Copiado" : "Copiar"}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                )}
             </InputGroup>
             <Muted aria-live="polite" className="break-all">
                 {estado === "recusado" ? "Não foi possível copiar. Selecione o texto e copie." : null}

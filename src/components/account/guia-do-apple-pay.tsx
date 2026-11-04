@@ -26,15 +26,14 @@ import { Muted, P } from "@/components/ui/typography"
 
 /** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
 export const DESCRICAO_DA_AUTOMACAO =
-    "Quando eu pagar com qualquer cartão da Carteira, executar na hora o atalho Lançar gasto com a compra, sem pedir confirmação."
+    "Quando eu pagar com a Carteira, executar o atalho Lançar gasto na hora, sem pedir confirmação."
 
 const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela }[] = [
     {
         titulo: "Abra o app Atalhos",
         texto: (
             <>
-                Na tela de início, toque no app <strong>Atalhos</strong>. Se não achar, deslize para baixo no meio da
-                tela e busque por Atalhos.
+                Toque no app <strong>Atalhos</strong>. Não achou? Deslize a tela para baixo e busque.
             </>
         ),
         tela: TELAS_DO_APPLE_PAY.atalhos,
@@ -43,8 +42,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
         titulo: "Toque em Automação e no +",
         texto: (
             <>
-                Na tela <strong>Biblioteca</strong>, toque em <strong>Automação</strong>. Depois toque no{" "}
-                <strong>+</strong>, embaixo.
+                Toque em <strong>Automação</strong> e depois no <strong>+</strong>, embaixo.
             </>
         ),
         tela: TELAS_DO_APPLE_PAY.adicionar,
@@ -53,17 +51,15 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
         titulo: "Cole a descrição",
         texto: (
             <>
-                Copie o texto abaixo, toque em <strong>Descrever um atalho</strong> e cole. O iPhone monta a automação
-                sozinho.
+                Copie o texto e cole em <strong>Descrever um atalho</strong>.
             </>
         ),
         extra: (
             <>
                 <CampoDeCopiar rotulo="Descrição da automação" valor={DESCRICAO_DA_AUTOMACAO} multilinha />
                 <Muted>
-                    Não aparece essa caixa? Em iPhones mais antigos, escolha <strong>Transação</strong>, marque os
-                    cartões e <strong>Executar Imediatamente</strong>, toque em <strong>Seguinte</strong> e escolha{" "}
-                    <strong>Lançar gasto</strong>.
+                    Sem essa caixa? Toque em <strong>Transação</strong>, marque <strong>Executar Imediatamente</strong>{" "}
+                    e escolha <strong>Lançar gasto</strong>.
                 </Muted>
             </>
         ),
@@ -73,8 +69,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
         titulo: "Confira e salve",
         texto: (
             <>
-                Veja se a automação roda o <strong>Lançar gasto</strong> quando você paga com a Carteira, sem pedir
-                confirmação. Se estiver certo, salve.
+                Confira se ela roda o <strong>Lançar gasto</strong> e salve.
             </>
         ),
     },
@@ -82,7 +77,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
         titulo: "Pague com o iPhone",
         texto: (
             <>
-                Na próxima compra com o iPhone, o gasto aparece sozinho: <strong>Gasto lançado: R$ 42,90</strong>.
+                Na próxima compra, o gasto entra sozinho: <strong>Gasto lançado: R$ 42,90</strong>.
             </>
         ),
         tela: TELA_DA_NOTIFICACAO,
