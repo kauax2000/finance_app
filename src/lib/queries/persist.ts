@@ -13,6 +13,9 @@ const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.transactionsSearch,
     // a frase rápida busca de novo quando precisa: não vale gravar
     queryRoot.fraseHistorico,
+    // lido uma vez por carga (staleTime Infinity): um snapshot restaurado nunca
+    // buscaria de novo e o diálogo de volta se repetiria
+    "acesso",
 ])
 
 export function shouldPersistQuery(query: Query): boolean {

@@ -13,6 +13,23 @@ const nada = () => () => {}
 
 // Por pessoa: num aparelho com duas contas, a segunda também registra.
 const marcaDe = (userId: string) => `acesso:${userId}`
+// No Android o app instalado divide o localStorage com o Chrome: se o Chrome
+// gravar a marca do dia primeiro, a abertura do app ficaria sem registro.
+const marcaDoAppDe = (userId: string) => `acesso-app:${userId}`
+
+function lerMarca(chave: string): string | null {
+    try {
+        return localStorage.getItem(chave)
+    } catch {
+        return null
+    }
+}
+
+function gravarMarca(chave: string, hoje: string) {
+    try {
+        localStorage.setItem(chave, hoje)
+    } catch {}
+}
 
 function hojeLocal(agora: Date) {
     const mes = String(agora.getMonth() + 1).padStart(2, "0")
@@ -41,11 +58,9 @@ export function RegistroDeAcesso() {
         setVoltou(voltouDeAusencia(ultimoAcessoEm, agora))
 
         const hoje = hojeLocal(agora)
-        let marca: string | null = null
-        try {
-            marca = localStorage.getItem(marcaDe(user.id))
-        } catch {}
-        if (!deveGravar(marca, hoje)) return
+        const gravaGeral = deveGravar(lerMarca(marcaDe(user.id)), hoje)
+        const gravaApp = isStandalone && deveGravar(lerMarca(marcaDoAppDe(user.id)), hoje)
+        if (!gravaGeral && !gravaApp) return
 
         const iso = agora.toISOString()
         void (async () => {
@@ -59,9 +74,8 @@ export function RegistroDeAcesso() {
                     })
                     .eq("user_id", user.id)
                 if (error) return
-                try {
-                    localStorage.setItem(marcaDe(user.id), hoje)
-                } catch {}
+                gravarMarca(marcaDe(user.id), hoje)
+                if (isStandalone) gravarMarca(marcaDoAppDe(user.id), hoje)
             } catch {
                 // sem rede: tenta de novo na próxima carga
             }
