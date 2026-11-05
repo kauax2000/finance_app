@@ -386,7 +386,7 @@ describe("a recuperação (8f)", () => {
             return { screen, overlay, chip, current: timeline?.current, form, script }
         }
         expect(passo("recovery.email")).toEqual({ screen: "lock", overlay: "none", chip: "timeline", current: 0, form: "phone", script: null })
-        expect(passo("recovery.code")).toEqual({ screen: "lock", overlay: "notice-code", chip: "timeline", current: 1, form: "phone", script: null })
+        expect(passo("recovery.sent")).toEqual({ screen: "lock", overlay: "notice-code", chip: "timeline", current: 1, form: "phone", script: null })
         expect(passo("recovery.password")).toEqual({
             screen: "new-password",
             overlay: "none",
@@ -408,7 +408,7 @@ describe("a recuperação (8f)", () => {
         expect(email).toMatch(/text-5xl[^"]*">9:41</)
         // O painel continua embaixo do bloqueio.
         expect(email).toContain("R$ 4.182,60")
-        expect(bloqueio(palco("recovery.code"))).toBe("down")
+        expect(bloqueio(palco("recovery.sent"))).toBe("down")
         expect(bloqueio(palco("recovery.link-expired"))).toBe("down")
         for (const id of ["recovery.password", "recovery.link-checking", "recovery.done", "login", "register"] as const) {
             expect(bloqueio(palco(id)), id).toBe("up")
@@ -422,7 +422,7 @@ describe("a recuperação (8f)", () => {
     })
 
     it("o aviso do código vem do Mail, sem dígito de código nenhum", () => {
-        const html = palco("recovery.code")
+        const html = palco("recovery.sent")
         expect(html).toContain(">Mail<")
         expect(html).toContain("Seu código de acesso chegou")
         expect(html).toContain("Use os 6 dígitos para continuar.")

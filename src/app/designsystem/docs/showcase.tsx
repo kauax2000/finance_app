@@ -356,7 +356,7 @@ const CENAS = [
   "register.confirm",
   "register.confirm-invite",
   "recovery.email",
-  "recovery.code",
+  "recovery.sent",
   "recovery.password",
   "recovery.link-checking",
   "recovery.link-expired",

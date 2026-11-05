@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { recoveryLinks } from "./recovery-links"
+import { lerLinkDeRecuperacao, recoveryLinks } from "./recovery-links"
 
 describe("os links da recuperação carregam o next", () => {
   it("sem next, os destinos de sempre", () => {
@@ -23,5 +23,24 @@ describe("os links da recuperação carregam o next", () => {
   it("next de fora é descartado", () => {
     expect(recoveryLinks("//evil.com").login).toBe("/login")
     expect(recoveryLinks("https://evil.com").forgot).toBe("/forgot-password")
+  })
+})
+
+describe("lerLinkDeRecuperacao", () => {
+  it("tokens no hash", () => {
+    expect(lerLinkDeRecuperacao("#access_token=a&refresh_token=r&type=recovery", "")).toEqual({ tipo: "tokens", accessToken: "a", refreshToken: "r" })
+  })
+  it("link vencido no hash vale como erro, mesmo com token junto", () => {
+    expect(lerLinkDeRecuperacao("#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid", "")).toEqual({ tipo: "erro" })
+    expect(lerLinkDeRecuperacao("#access_token=a&error_code=otp_expired", "")).toEqual({ tipo: "erro" })
+  })
+  it("erro na query", () => {
+    expect(lerLinkDeRecuperacao("", "?error=access_denied&error_description=x")).toEqual({ tipo: "erro" })
+  })
+  it("nada no endereço (o cliente já consumiu o hash)", () => {
+    expect(lerLinkDeRecuperacao("", "?next=%2Fdashboard")).toEqual({ tipo: "nada" })
+  })
+  it("token sem refresh vira refresh vazio", () => {
+    expect(lerLinkDeRecuperacao("access_token=a", "")).toEqual({ tipo: "tokens", accessToken: "a", refreshToken: "" })
   })
 })

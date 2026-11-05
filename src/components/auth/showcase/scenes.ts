@@ -152,7 +152,7 @@ export const SCENES: Record<AuthSceneId, SceneSpec> = {
         timeline: { current: 0 },
         dots: { chapter: 2, fill: 0.25 },
     },
-    "recovery.code": {
+    "recovery.sent": {
         ...RECOVERY,
         screen: "lock",
         overlay: "notice-code",

@@ -13,7 +13,7 @@ import * as React from "react"
 export type AuthSceneId =
     | "login" | "login.password-updated"
     | "register" | "register.confirm" | "register.confirm-invite"
-    | "recovery.email" | "recovery.code" | "recovery.password"
+    | "recovery.email" | "recovery.sent" | "recovery.password"
     | "recovery.link-checking" | "recovery.link-expired" | "recovery.done"
     | "invite.loading" | "invite.idle" | "invite.gate" | "invite.accepted" | "invite.error"
 
