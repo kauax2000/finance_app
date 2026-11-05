@@ -364,12 +364,11 @@ export default function MembersPage() {
                 className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
             >
                 <ConvitesPendentesSecao
-                    convites={invites}
+                    convites={invites.filter((i) => i.invited_email != null)}
                     podeGerenciar={canManageMembers}
                     onReenviar={(convite) => void handleResendInvite(convite.id)}
                     onCancelar={(convite) => void handleRevokeInvite(convite.id)}
                     // O link não fica salvo (só o hash do token): gerar outro, no diálogo, revoga o pendente.
-                    onGerarNovoLink={() => setConvidarAberto(true)}
                     ocupadoId={busyInviteId ?? busyResendInviteId}
                 />
             </div>

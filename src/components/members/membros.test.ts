@@ -46,12 +46,14 @@ describe("Membros no layout A", () => {
         for (const s of ["Tornar convidado", "Tornar membro", "Remover da carteira"]) expect(pessoas).toContain(s)
     })
 
-    it("o ⋯ do convite reenvia, gera um novo link e cancela", () => {
-        for (const s of ["Reenviar", "Gerar novo link", "Revogar convite", "Nenhum convite pendente"]) expect(convites).toContain(s)
+    it("o ⋯ do convite reenvia e cancela, e o link não é um convite pendente", () => {
+        for (const s of ["Reenviar", "Revogar convite", "Nenhum convite pendente"]) expect(convites).toContain(s)
         expect(convites).not.toContain("Cancelar convite")
         expect(convites).not.toContain("rounded-row")
         expect(pagina).toContain("Revogar o convite?")
         expect(convites).not.toContain("Copiar link")
+        expect(convites).not.toContain("Gerar novo link")
+        expect(pagina).toContain("invites.filter((i) => i.invited_email != null)")
     })
 
     it("os vazios moram dentro do Card, não soltos", () => {

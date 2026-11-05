@@ -28,7 +28,6 @@ export function destinoDoInsightDeLimite(papel: WorkspaceRole | null | undefined
 
 /** Os 400 da Edge `workspace-invites-create`, na frase da tela. */
 export const ERRO_DO_CONVITE = {
-    convidado_requer_email: "O convidado entra só por e-mail: o link de convite é sempre de membro.",
     consentimento_obrigatorio:
         "Para convidar um menor de idade, confirme que você é o responsável legal e autoriza o uso do app.",
     menor_requer_convidado: "Um menor de idade entra como convidado.",
@@ -45,7 +44,7 @@ export type CorpoDoConvite = {
 
 /**
  * O corpo do convite, com as mesmas recusas da Edge e na mesma ordem. Sem
- * e-mail é o link, e o link é sempre de membro.
+ * e-mail é o link, que leva o mesmo papel.
  */
 export function montarConvite(input: {
     role: string
@@ -56,7 +55,6 @@ export function montarConvite(input: {
     const { role, menor, consentimento } = input
     if (role !== "member" && role !== "guest") return { ok: false, erro: "role inválido" }
     const email = input.email?.trim().toLowerCase() || null
-    if (role === "guest" && !email) return { ok: false, erro: "convidado_requer_email" }
     if (menor && role !== "guest") return { ok: false, erro: "menor_requer_convidado" }
     if (menor && !consentimento) return { ok: false, erro: "consentimento_obrigatorio" }
     const base = { role: role as CorpoDoConvite["role"], menor, consentimento: menor && consentimento }

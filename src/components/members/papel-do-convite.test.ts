@@ -11,18 +11,14 @@ describe("PapelDoConvite", () => {
         expect(fonte).toContain("<RadioGroup")
         expect(fonte).toMatch(/<RadioGroupItem[^>]*value="member"/)
         expect(fonte).toMatch(/<RadioGroupItem[^>]*value="guest"/)
-        for (const t of ["Membro", "Convidado", "Vê e lança tudo da casa", "Lança e vê só o que é dele"]) {
+        for (const t of ["Membro", "Convidado", "Vê e lança tudo da casa", "Lança e vê só o seu"]) {
             expect(fonte).toContain(t)
         }
     })
 
-    it("menor só com convidado, consentimento só com menor, e a troca zera o consentimento", () => {
-        expect(fonte).toMatch(/valor\.role === "guest" \? \(/)
-        expect(fonte).toMatch(/valor\.menor \? \(/)
-        expect(fonte).toContain("É menor de idade")
-        expect(fonte).toContain("Sou o responsável legal e autorizo o uso do app (LGPD, art. 14).")
-        expect(fonte).toMatch(/menor: [^,]+, consentimento: false/)
-        expect(fonte).toContain("O link de convite é sempre de membro.")
+    it("não pergunta de menor de idade", () => {
+        expect(fonte).not.toMatch(/menor de idade|responsável legal|Checkbox/)
+        expect(fonte).not.toContain("sempre de membro")
     })
 
     it("sem wireframe, e o diálogo usa o componente", () => {

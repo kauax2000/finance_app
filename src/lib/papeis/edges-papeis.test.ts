@@ -71,8 +71,8 @@ describe("Edge workspace-invites-create: o convite com papel", () => {
         expect(f).toMatch(/body\.role \?\? 'member'/)
     })
 
-    it("recusa convidado sem e-mail e menor sem consentimento", () => {
-        expect(f).toMatch(/role === 'guest' && isLink\) return json\(400, \{ error: 'convidado_requer_email' \}\)/)
+    it("o link aceita convidado, e o menor sem consentimento é recusado", () => {
+        expect(f).not.toContain("convidado_requer_email")
         expect(f).toMatch(/menor && body\.consentimento !== true\) return json\(400, \{ error: 'consentimento_obrigatorio' \}\)/)
     })
 

@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
-import { sha256Hex } from '../_shared/token-hash.ts'
+import { inviteLinkToken, sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
   renderInviteHtml,
@@ -28,6 +28,8 @@ type CreateInviteBody = {
   role?: 'member' | 'guest'
   menor?: boolean
   consentimento?: boolean
+  /** `get`: devolve o link ativo do dono, sem criar nada. */
+  action?: string
 }
 
 function json(status: number, payload: unknown): Response {
@@ -88,8 +90,7 @@ Deno.serve(async (req: Request) => {
 
   const role = body.role ?? 'member'
   if (role !== 'member' && role !== 'guest') return json(400, { error: 'role inválido' })
-  // O link é sempre de membro; o menor é convidado, com o consentimento do responsável (LGPD, art. 14).
-  if (role === 'guest' && isLink) return json(400, { error: 'convidado_requer_email' })
+  // O menor é convidado, com o consentimento do responsável (LGPD, art. 14).
   const menor = body.menor === true
   if (menor && role !== 'guest') return json(400, { error: 'menor_requer_convidado' })
   if (menor && body.consentimento !== true) return json(400, { error: 'consentimento_obrigatorio' })
@@ -120,6 +121,33 @@ Deno.serve(async (req: Request) => {
     return json(500, { error: 'APP_BASE_URL não configurado.' })
   }
 
+  if (isLink && body.action === 'get') {
+    const { data: ativo, error: ativoErr } = await supabaseAdmin
+      .from('workspace_invites')
+      .select('id,role,expires_at,token_hash')
+      .eq('workspace_id', workspaceId)
+      .eq('status', 'pending')
+      .is('invited_email', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (ativoErr) return json(500, { error: internalError('workspace-invites-create', ativoErr) })
+    if (!ativo) return json(200, { ok: true, invite_url: null })
+    const token = await inviteLinkToken(supabaseServiceKey, ativo.id)
+    // Links criados antes da derivação têm token aleatório: não dá para refazê-los.
+    if ((await sha256Hex(token)) !== ativo.token_hash) {
+      return json(200, { ok: true, invite_id: ativo.id, role: ativo.role, expires_at: ativo.expires_at, invite_url: null })
+    }
+    return json(200, {
+      ok: true,
+      invite_id: ativo.id,
+      role: ativo.role,
+      expires_at: ativo.expires_at,
+      invite_url: buildInviteAcceptUrl(appBase, token),
+    })
+  }
+
   if (!isLink) {
     const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
     if (logsErr) return json(500, { error: internalError('workspace-invites-create', logsErr) })
@@ -138,13 +166,15 @@ Deno.serve(async (req: Request) => {
     if (revokeErr) return json(500, { error: internalError('workspace-invites-create', revokeErr) })
   }
 
-  const tokenRaw = crypto.randomUUID()
+  const inviteId = crypto.randomUUID()
+  const tokenRaw = isLink ? await inviteLinkToken(supabaseServiceKey, inviteId) : crypto.randomUUID()
   const tokenHash = await sha256Hex(tokenRaw)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Só o hash é gravado: o link existe na resposta desta chamada e no e-mail.
+  // Só o hash é gravado. O link do e-mail existe na resposta e no e-mail; o link de convite se refaz do id (`action: 'get'`).
   const insertRow = isLink
     ? {
+        id: inviteId,
         workspace_id: workspaceId,
         invited_email: null as string | null,
         role,

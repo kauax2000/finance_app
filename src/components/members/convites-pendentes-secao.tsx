@@ -1,10 +1,8 @@
 "use client"
 
 import {
-    ArrowPathIcon,
     EllipsisHorizontalIcon,
     EnvelopeIcon,
-    LinkIcon,
     PaperAirplaneIcon,
     XMarkIcon,
 } from "@heroicons/react/16/solid"
@@ -42,14 +40,12 @@ export function ConvitesPendentesSecao({
     podeGerenciar,
     onReenviar,
     onCancelar,
-    onGerarNovoLink,
     ocupadoId,
 }: {
     convites: WorkspaceInvite[]
     podeGerenciar: boolean
     onReenviar: (convite: WorkspaceInvite) => void
     onCancelar: (convite: WorkspaceInvite) => void
-    onGerarNovoLink: (convite: WorkspaceInvite) => void
     ocupadoId: string | null
 }) {
     return (
@@ -69,14 +65,13 @@ export function ConvitesPendentesSecao({
                 <Card padding="none">
                     <ItemGroup variant="divided">
                         {convites.map((convite) => {
-                            const porEmail = convite.invited_email != null
-                            const titulo = convite.invited_email ?? "Link de convite"
+                            const titulo = convite.invited_email ?? ""
                             const expira = formatLinkInviteExpiresAt(convite.expires_at)
                             const ocupado = ocupadoId === convite.id
                             return (
                                 <Item key={convite.id} variant="flush" size="lg" className="px-4">
                                     <ItemMedia variant="tile">
-                                        {porEmail ? <EnvelopeIcon aria-hidden /> : <LinkIcon aria-hidden />}
+                                        <EnvelopeIcon aria-hidden />
                                     </ItemMedia>
                                     <ItemContent className="min-w-0">
                                         <ItemTitle className="truncate pointer-coarse:text-base">{titulo}</ItemTitle>
@@ -100,17 +95,10 @@ export function ConvitesPendentesSecao({
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    {porEmail ? (
-                                                        <DropdownMenuItem onSelect={() => onReenviar(convite)}>
-                                                            <PaperAirplaneIcon aria-hidden />
-                                                            Reenviar
-                                                        </DropdownMenuItem>
-                                                    ) : (
-                                                        <DropdownMenuItem onSelect={() => onGerarNovoLink(convite)}>
-                                                            <ArrowPathIcon aria-hidden />
-                                                            Gerar novo link
-                                                        </DropdownMenuItem>
-                                                    )}
+                                                    <DropdownMenuItem onSelect={() => onReenviar(convite)}>
+                                                        <PaperAirplaneIcon aria-hidden />
+                                                        Reenviar
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem variant="destructive" onSelect={() => onCancelar(convite)}>
                                                         <XMarkIcon aria-hidden />
                                                         Revogar convite

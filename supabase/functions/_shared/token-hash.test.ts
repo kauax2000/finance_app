@@ -1,5 +1,5 @@
 import { assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert@1.0.19'
-import { legacyHashToken, sha256Hex, tokenHashCandidates } from './token-hash.ts'
+import { inviteLinkToken, legacyHashToken, sha256Hex, tokenHashCandidates } from './token-hash.ts'
 
 Deno.test('sha256Hex produces the known SHA-256 of "abc"', async () => {
   assertEquals(
@@ -30,4 +30,12 @@ Deno.test('tokenHashCandidates returns [sha256, legacy] in order', async () => {
   const [current, legacy] = await tokenHashCandidates(token)
   assertEquals(current, await sha256Hex(token))
   assertEquals(legacy, legacyHashToken(token))
+})
+
+Deno.test('inviteLinkToken is stable per invite and differs by id and secret', async () => {
+  const a = await inviteLinkToken('segredo', 'id-1')
+  assertEquals(a, await inviteLinkToken('segredo', 'id-1'))
+  assertMatch(a, /^[0-9a-f]{64}$/)
+  assertNotEquals(a, await inviteLinkToken('segredo', 'id-2'))
+  assertNotEquals(a, await inviteLinkToken('outro', 'id-1'))
 })

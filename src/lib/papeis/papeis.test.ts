@@ -49,8 +49,6 @@ describe("montarConvite", () => {
 
     it("recusa o que a Edge recusa, com o mesmo código", () => {
         expect(montarConvite({ ...base, role: "owner" })).toEqual({ ok: false, erro: "role inválido" })
-        expect(montarConvite({ ...base, role: "guest", email: null })).toEqual({ ok: false, erro: "convidado_requer_email" })
-        expect(montarConvite({ ...base, role: "guest", email: "  " })).toEqual({ ok: false, erro: "convidado_requer_email" })
         expect(montarConvite({ ...base, menor: true, consentimento: true })).toEqual({ ok: false, erro: "menor_requer_convidado" })
         expect(montarConvite({ ...base, role: "guest", menor: true })).toEqual({ ok: false, erro: "consentimento_obrigatorio" })
     })
@@ -74,12 +72,12 @@ describe("montarConvite", () => {
 })
 
 describe("montarConvite: os ramos da ordem da Edge", () => {
-    it("o consentimento sem menor não vai no corpo, e o convidado sem e-mail recusa antes do consentimento", () => {
+    it("o consentimento sem menor não vai no corpo, e o link de convidado vai com o papel", () => {
         const r = montarConvite({ role: "guest", menor: false, consentimento: true, email: "a@b.c" })
         expect(r.ok && r.corpo.consentimento).toBe(false)
-        expect(montarConvite({ role: "guest", menor: true, consentimento: false, email: null })).toEqual({
-            ok: false,
-            erro: "convidado_requer_email",
+        expect(montarConvite({ role: "guest", menor: false, consentimento: false, email: null })).toEqual({
+            ok: true,
+            corpo: { role: "guest", menor: false, consentimento: false, invite_kind: "link" },
         })
     })
 })
@@ -90,10 +88,6 @@ describe("fonte das telas de papéis e limites", () => {
     const dialogo = semComentarios(lerFonte("src/components/members/workspace-invite-dialog.tsx"))
     const limites = semComentarios(lerFonte("src/components/members/limites-secao.tsx"))
 
-    it("o consentimento tem o texto exato da LGPD", () => {
-        expect(semComentarios(lerFonte("src/components/members/papel-do-convite.tsx"))).toContain("Sou o responsável legal e autorizo o uso do app (LGPD, art. 14).")
-    })
-
     it("trocar_papel com os três parâmetros da RPC", () => {
         expect(pagina).toMatch(
             /supabase\.rpc\("trocar_papel", \{\s*p_workspace_id: currentWorkspaceId,\s*p_user_id: userId,\s*p_role: papel,\s*\}\)/,
@@ -101,17 +95,16 @@ describe("fonte das telas de papéis e limites", () => {
     })
 
     it("a troca de papel só para o dono, nunca na linha do dono nem na própria", () => {
-        expect(pessoas).toMatch(/\{podeGerenciar && pessoa\.role !== "owner" && pessoa\.user_id !== meuUserId \? \(\s*<DropdownMenu>/)
-        expect(pessoas.match(/<DropdownMenu>/g)).toHaveLength(1)
+        expect(pessoas).toMatch(/: podeGerenciar && pessoa\.role !== "owner" \? \(\s*<DropdownMenu>/)
+        expect(pessoas.match(/<DropdownMenu>/g)).toHaveLength(2)
         expect(pagina).toContain("podeGerenciar={canManageMembers}")
         expect(pagina).toContain("meuUserId={user.id}")
     })
 
-    it("o link vai sem papel; o convite por e-mail passa por montarConvite", () => {
+    it("o link vai com o papel escolhido; o convite por e-mail passa por montarConvite", () => {
         for (const f of [dialogo]) {
             const link = f.slice(f.indexOf("const handleCreateLinkInvite"), f.indexOf("const copyPersistedLink"))
-            expect(link).toMatch(/body: \{\s*workspace_id: \w+,\s*invite_kind: "link",\s*\}/)
-            expect(link).not.toMatch(/role|montarConvite|papelDoConvite/)
+            expect(link).toMatch(/body: \{\s*workspace_id: \w+,\s*invite_kind: "link",\s*role: papelDoConvite\.role,\s*\}/)
             expect(f).toContain("montarConvite({ ...papelDoConvite, email: inviteEmail })")
             expect(f).toMatch(/body: \{ workspace_id: \w+, \.\.\.convite\.corpo \}/)
         }

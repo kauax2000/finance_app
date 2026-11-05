@@ -11,7 +11,7 @@ import {
     ItemMedia,
 } from "@/components/ui/item"
 import * as React from "react"
-import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon, TrashIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
@@ -77,7 +77,6 @@ export function WorkspaceInviteDialog({
     const [invites, setInvites] = React.useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = React.useState("")
     const [papelDoConvite, setPapelDoConvite] = React.useState(PAPEL_DO_CONVITE_INICIAL)
-    const [loadingInvites, setLoadingInvites] = React.useState(false)
     const [savingInvite, setSavingInvite] = React.useState(false)
     const [savingLink, setSavingLink] = React.useState(false)
     const [busyInviteId, setBusyInviteId] = React.useState<string | null>(null)
@@ -94,20 +93,20 @@ export function WorkspaceInviteDialog({
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
+    const papelDoLink =
+        generatedLinkUrl && pendingLinkInvite ? pendingLinkInvite.role : papelDoConvite.role
     const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
     const fetchInvites = React.useCallback(async () => {
         if (!workspaceId) return
-        setLoadingInvites(true)
         const { data, error } = await supabase
             .from("workspace_invites")
             .select("accepted_at, created_at, created_by, expires_at, id, invited_email, max_uses, role, status, usage_count, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("status", "pending")
             .order("created_at", { ascending: false })
-        setLoadingInvites(false)
         if (error) {
             toastError(
                 formatSupabasePostgrestError(error) ??
@@ -127,6 +126,23 @@ export function WorkspaceInviteDialog({
         setGeneratedLinkUrl(null)
         setGeneratedLinkExpiresAt(null)
         setLinkCopied(false)
+        if (!canManageMembers) return
+        // O link ativo reaparece: o servidor refaz o token a partir do id.
+        let cancelado = false
+        void invokeEdgeJson<{ invite_url?: string | null; expires_at?: string }>("workspace-invites-create", {
+            body: { workspace_id: workspaceId, invite_kind: "link", action: "get" },
+        })
+            .then((res) => {
+                const url = res.invite_url?.trim()
+                if (cancelado || !url) return
+                setGeneratedLinkUrl((atual) => atual ?? url)
+                if (res.expires_at) setGeneratedLinkExpiresAt((atual) => atual ?? res.expires_at ?? null)
+            })
+            .catch((error) => console.error("Error reading active link invite:", error))
+        return () => {
+            cancelado = true
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, workspaceId, fetchInvites])
 
     const handleInvite = async () => {
@@ -198,6 +214,7 @@ export function WorkspaceInviteDialog({
                 body: {
                     workspace_id: workspaceId,
                     invite_kind: "link",
+                    role: papelDoConvite.role,
                 },
             })
             const url = res.invite_url?.trim() || null
@@ -335,26 +352,23 @@ export function WorkspaceInviteDialog({
                                     </FormSubmit>
                                 </Form>
 
-                                <Card variant="muted" padding="sm" className="gap-2 px-3">
+                                <Card variant="outline" padding="sm" className="gap-2 px-3">
                                     <div className="flex items-center gap-2">
                                         <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                                         <p className="text-sm font-medium">Link de convite</p>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
                                         Qualquer pessoa com conta no app pode aceitar enquanto o
-                                        convite estiver pendente.
+                                        convite estiver pendente, e entra como{" "}
+                                        {papelDoLink === "guest" ? "convidado" : "membro"}.
                                     </p>
 {pendingLinkInvite && !effectiveLinkUrl ? (
 <p className="text-xs text-muted-foreground">
-    Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
-    gere um novo para copiar (o anterior deixa de valer).
+    Já existe um link ativo, de antes de o link poder ser mostrado de novo.
+    Gere um novo para copiar (o anterior deixa de valer).
 </p>
 ) : null}
-                                    {loadingInvites ? (
-                                        <p className="text-xs text-muted-foreground">
-                                            Carregando…
-                                        </p>
-                                    ) : effectiveLinkUrl ? (
+                                    {effectiveLinkUrl ? (
                                         <div className="space-y-1.5 pt-1">
                                             <div className="flex min-w-0 flex-row items-center gap-2">
                                                 <Input
@@ -393,32 +407,40 @@ export function WorkspaceInviteDialog({
                                                                 </span>
                                                             </Button>
                                                         </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
+                                                        <TooltipContent side="top">
                                                             Copiar link
                                                         </TooltipContent>
                                                     </Tooltip>
                                                     {pendingLinkInvite && canManageMembers ? (
-                                                        <Button
-                                                            type="button"
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            className="h-8 shrink-0"
-                                                            disabled={
-                                                                busyInviteId === pendingLinkInvite.id
-                                                            }
-                                                            onClick={() =>
-                                                                void handleRevokeInvite(
-                                                                    pendingLinkInvite.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            {busyInviteId ===
-                                                            pendingLinkInvite.id ? (
-                                                                <Spinner />
-                                                            ) : (
-                                                                "Excluir link"
-                                                            )}
-                                                        </Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="destructive"
+                                                                    size="icon-lg"
+                                                                    className="shrink-0"
+                                                                    aria-label="Excluir link"
+                                                                    disabled={
+                                                                        busyInviteId === pendingLinkInvite.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        void handleRevokeInvite(
+                                                                            pendingLinkInvite.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {busyInviteId ===
+                                                                    pendingLinkInvite.id ? (
+                                                                        <Spinner />
+                                                                    ) : (
+                                                                        <TrashIcon />
+                                                                    )}
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="top">
+                                                                Excluir link
+                                                            </TooltipContent>
+                                                        </Tooltip>
                                                     ) : null}
                                                 </div>
                                             </div>

@@ -15,6 +15,25 @@ export async function sha256Hex(input: string): Promise<string> {
     .join('')
 }
 
+/**
+ * O token do link de convite: HMAC-SHA256 do id do convite com a chave do
+ * servidor. O banco guarda só o hash do token, e o servidor refaz o token para
+ * o dono ver o link ativo de novo: quem lê só o banco não monta o link.
+ */
+export async function inviteLinkToken(secret: string, inviteId: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`invite-link:${inviteId}`))
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 /** Legacy 32-bit hash — kept ONLY to match pre-migration rows on read. */
 export function legacyHashToken(token: string): string {
   let hash = 0
