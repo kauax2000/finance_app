@@ -10,7 +10,7 @@ import { useSyncExternalStore } from "react"
  * demoram de propósito. Um armazém do módulo, como `abas-fora.ts`: quem mede é o
  * `fetch` do cliente, que não está na árvore do React.
  */
-export const LIMITE_DE_LENTIDAO_MS = 4000
+export const LIMITE_DE_LENTIDAO_MS = 10_000
 
 const ROTAS_RASTREADAS = ["/rest/v1/", "/auth/v1/"]
 
