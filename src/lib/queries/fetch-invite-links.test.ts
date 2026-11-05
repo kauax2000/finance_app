@@ -28,4 +28,11 @@ describe("fetchInviteLinks", () => {
         invokeEdgeJson.mockResolvedValue({ ok: true })
         await expect(fetchInviteLinks("w1")).resolves.toEqual({ member: null, guest: null })
     })
+    it("a resposta da Edge antiga (um link no topo) vira o link do papel", async () => {
+        invokeEdgeJson.mockResolvedValue({ ok: true, invite_id: "i1", role: "member", expires_at: "2026-11-12T00:00:00Z", invite_url: "https://x/a" })
+        expect(await fetchInviteLinks("w1")).toEqual({
+            member: { invite_id: "i1", expires_at: "2026-11-12T00:00:00Z", invite_url: "https://x/a" },
+            guest: null,
+        })
+    })
 })
