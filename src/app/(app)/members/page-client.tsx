@@ -149,6 +149,11 @@ export default function MembersPage() {
                     .order("created_at", { ascending: false }),
             ])
 
+        // O diretório só precisa da carteira: sai junto, e não numa segunda ida ao servidor.
+        // O builder do Supabase só dispara no `then`, por isso o `.then` já aqui.
+        const dirPromise = supabase
+            .rpc("workspace_member_directory", { p_workspace_id: currentWorkspaceId })
+            .then((res) => res)
         let [membersRes, invitesRes] = await loadPair()
         const transient =
             (membersRes.error && isPostgrestTransientNetworkError(membersRes.error)) ||
@@ -180,9 +185,7 @@ export default function MembersPage() {
         }
 
         if (membersRes.data) {
-            const dirRes = await supabase.rpc("workspace_member_directory", {
-                p_workspace_id: currentWorkspaceId,
-            })
+            const dirRes = await dirPromise
 
             if (dirRes.error) {
                 toastPageFetchError(
