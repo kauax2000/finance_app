@@ -20,5 +20,6 @@ describe("recuperação de senha por link", () => {
   })
   it("vencido pede um link novo", () => {
     expect(FONTE).toContain("Pedir novo link")
+    expect(FONTE).toContain("Este link de recuperação não vale mais. Peça um novo.")
   })
 })

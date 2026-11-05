@@ -310,7 +310,7 @@ export function PasswordRecoveryForm({
                     scene="recovery.link-expired"
                     icon="expired"
                     title="Link expirado"
-                    description="Este link de recuperação não vale mais. Peça um novo link."
+                    description="Este link de recuperação não vale mais. Peça um novo."
                     step="link-expired"
                     footer={
                         <SplitShellFooter>
