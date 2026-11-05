@@ -58,9 +58,9 @@ painel do novo projeto.
 - [ ] **Dono:** desligar os crons do novo, que já estão ativos (9 em 05/11/2026)
   e rodariam sobre uma cópia velha dos dados, mandando avisos e lembretes
   repetidos a quem também recebe os do antigo. No SQL Editor do **novo**:
-  `update cron.job set active = false;` — marca todos os jobs do `pg_cron` como
+  `select cron.alter_job(jobid, active := false) from cron.job where active;` — marca todos os jobs do `pg_cron` como
   inativos; não apaga nenhum, o agendamento continua lá. Conferir:
-  `select count(*) filter (where active) from cron.job;` → `0`.
+  `select count(*) filter (where active) from cron.job;` → `0`. (O `update cron.job` direto dá "permission denied": o `postgres` só muda job pelo `cron.alter_job`. Feito em 05/11/2026: 0 de 9 ativos.)
 - [ ] **Dono:** Auth do novo, em Authentication › URL Configuration: **Site URL**
   = a origem de produção (é para onde vão os links de confirmação e de
   recuperação de senha sem `redirectTo`) e Redirect URLs
@@ -118,10 +118,10 @@ painel do novo projeto.
   termina com `pronto: as contagens batem` e código de saída 0; saída 1 é
   contagem diferente, **não seguir** — rodar de novo (dá o mesmo resultado).
 - [ ] **Dono:** trocar os crons de lado, logo depois do script. No SQL Editor do
-  **novo**: `update cron.job set active = true;` (liga os 9 que o passo 1
+  **novo**: `select cron.alter_job(jobid, active := true) from cron.job;` (liga os 9 que o passo 1
   desligou). No SQL Editor do **antigo**: antes, anotar
   `select jobname from cron.job where active;` (é a lista que a volta atrás
-  religa); depois, `update cron.job set active = false;`. **Esta é uma escrita do
+  religa); depois, `select cron.alter_job(jobid, active := false) from cron.job where active;`. **Esta é uma escrita do
   dono no banco de produção**: só muda o `active` dos jobs, sem apagar nenhum.
   Conferir: `select count(*) filter (where active) from cron.job;` dá `9` no novo
   e `0` no antigo.
@@ -168,8 +168,8 @@ painel do novo projeto.
   `.env.local` e refazer o deploy. Conferir: o app chama `rpgveoalgxrlsfowvixe`.
 - [ ] **Dono:** trocar os crons de volta. No **antigo** (escrita do dono em
   produção): religar os jobs anotados na virada, por exemplo
-  `update cron.job set active = true where jobname in (<os anotados>);`. No
-  **novo**: `update cron.job set active = false;`. Conferir: a contagem de ativos
+  `select cron.alter_job(jobid, active := true) from cron.job where jobname in (<os anotados>);`. No
+  **novo**: `select cron.alter_job(jobid, active := false) from cron.job where active;`. Conferir: a contagem de ativos
   volta à de antes no antigo e dá `0` no novo.
 - [ ] **Dono:** o que foi escrito no novo depois da virada **não volta** sozinho.
   Anotar o que foi feito no novo para refazer no antigo. Atalho do iPhone e IAs
