@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
+import { fetchComAvisoDeLentidao } from '@/lib/servidor-lento'
+
 /** Same placeholders as `.github/workflows/ci.yml` — build/SSG only. */
 const BUILD_PLACEHOLDER_SUPABASE_URL = 'https://placeholder.supabase.co'
 const BUILD_PLACEHOLDER_SUPABASE_ANON_KEY =
@@ -28,7 +30,9 @@ function resolveSupabaseEnv(): { url: string; anonKey: string } {
 
 const { url: supabaseUrl, anonKey: supabaseAnonKey } = resolveSupabaseEnv()
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: fetchComAvisoDeLentidao },
+})
 
 // Types for the database
 export interface Profile {

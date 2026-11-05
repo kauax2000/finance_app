@@ -27,3 +27,15 @@ describe("o aviso de offline", () => {
     expect(CODIGO).toMatch(/<AnnouncementBar[\s\S]*className="hidden md:flex"/)
   })
 })
+
+describe("o aviso de servidor lento", () => {
+  it("usa o mesmo lugar do offline, e offline vence", () => {
+    expect(CODIGO).toContain("useServidorLento()")
+    expect(CODIGO).toContain("offline ? <SignalSlashIcon /> : <ClockIcon />")
+    expect(CODIGO).toContain("Servidor lento")
+  })
+
+  it("o cliente Supabase passa pelo relógio da lentidão", () => {
+    expect(semComentarios(lerFonte("src/lib/supabase.ts"))).toContain("global: { fetch: fetchComAvisoDeLentidao }")
+  })
+})
