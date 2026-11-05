@@ -84,6 +84,15 @@ describe("Edge workspace-invites-create: o convite com papel", () => {
     it("o e-mail leva o menor", () => {
         expect(f).toMatch(/renderInviteHtml\(\{[\s\S]*?menor,[\s\S]*?\}\)/)
     })
+
+    it("o link revoga só os pendentes do mesmo papel", () => {
+        expect(f).toMatch(/update\(\{ status: 'revoked' \}\)[\s\S]*?\.eq\('role', role\)[\s\S]*?\.is\('invited_email', null\)/)
+    })
+
+    it("o get devolve um link por papel", () => {
+        expect(f).toContain("links: { member:")
+        expect(f).toContain("escolherLinksAtivos(")
+    })
 })
 
 describe("Edge workspace-invites-resend e o e-mail", () => {

@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
+import { escolherLinksAtivos, type LinhaDeLink } from '../_shared/invite-links.ts'
 import { inviteLinkToken, sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
@@ -28,7 +29,7 @@ type CreateInviteBody = {
   role?: 'member' | 'guest'
   menor?: boolean
   consentimento?: boolean
-  /** `get`: devolve o link ativo do dono, sem criar nada. */
+  /** `get`: devolve o link ativo de cada papel, sem criar nada. */
   action?: string
 }
 
@@ -122,29 +123,28 @@ Deno.serve(async (req: Request) => {
   }
 
   if (isLink && body.action === 'get') {
-    const { data: ativo, error: ativoErr } = await supabaseAdmin
+    const { data: linhas, error: ativoErr } = await supabaseAdmin
       .from('workspace_invites')
-      .select('id,role,expires_at,token_hash')
+      .select('id,role,expires_at,created_at,token_hash')
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
       .is('invited_email', null)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
     if (ativoErr) return json(500, { error: internalError('workspace-invites-create', ativoErr) })
-    if (!ativo) return json(200, { ok: true, invite_url: null })
-    const token = await inviteLinkToken(supabaseServiceKey, ativo.id)
-    // Links criados antes da derivação têm token aleatório: não dá para refazê-los.
-    if ((await sha256Hex(token)) !== ativo.token_hash) {
-      return json(200, { ok: true, invite_id: ativo.id, role: ativo.role, expires_at: ativo.expires_at, invite_url: null })
+    const escolhidos = escolherLinksAtivos((linhas ?? []) as LinhaDeLink[], new Date())
+    const montar = async (linha: LinhaDeLink | null) => {
+      if (!linha) return null
+      const token = await inviteLinkToken(supabaseServiceKey, linha.id)
+      // Links criados antes da derivação têm token aleatório: não dá para refazê-los.
+      const refeito = (await sha256Hex(token)) === linha.token_hash
+      return {
+        invite_id: linha.id,
+        expires_at: linha.expires_at,
+        invite_url: refeito ? buildInviteAcceptUrl(appBase, token) : null,
+      }
     }
     return json(200, {
       ok: true,
-      invite_id: ativo.id,
-      role: ativo.role,
-      expires_at: ativo.expires_at,
-      invite_url: buildInviteAcceptUrl(appBase, token),
+      links: { member: await montar(escolhidos.member), guest: await montar(escolhidos.guest) },
     })
   }
 
@@ -162,6 +162,7 @@ Deno.serve(async (req: Request) => {
       .update({ status: 'revoked' })
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
+      .eq('role', role)
       .is('invited_email', null)
     if (revokeErr) return json(500, { error: internalError('workspace-invites-create', revokeErr) })
   }
