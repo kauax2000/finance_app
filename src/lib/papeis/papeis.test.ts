@@ -88,7 +88,7 @@ describe("fonte das telas de papéis e limites", () => {
     const wf = semComentarios(lerFonte("src/components/wireframe/papeis-wireframe.tsx"))
     const pagina = semComentarios(lerFonte("src/app/(app)/members/page-client.tsx"))
     const dialogo = semComentarios(lerFonte("src/components/members/workspace-invite-dialog.tsx"))
-    const limites = semComentarios(lerFonte("src/components/wireframe/limites-wireframe.tsx"))
+    const limites = semComentarios(lerFonte("src/components/members/limites-secao.tsx"))
 
     it("o consentimento tem o texto exato da LGPD", () => {
         expect(semComentarios(lerFonte("src/components/members/papel-do-convite.tsx"))).toContain("Sou o responsável legal e autorizo o uso do app (LGPD, art. 14).")
@@ -120,7 +120,7 @@ describe("fonte das telas de papéis e limites", () => {
     it("#limites só para o adulto, e só o dono edita", () => {
         expect(pagina).toMatch(/\{isAdulto \? \(\s*<div\s+id="limites"/)
         expect(pagina).toContain("podeEditar={canManageMembers}")
-        expect(limites).toMatch(/\{podeEditar \? \(\s*<form onSubmit=\{salvar\}/)
+        expect(limites).toContain("<CustomForm pending={salvando} onSubmit={salvar}")
         expect(limites).toContain("lerLimiteDigitado(valor)")
         expect(limites).not.toContain('type="number"')
     })

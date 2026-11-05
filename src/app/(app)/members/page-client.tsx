@@ -34,7 +34,7 @@ import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
-import { LimitesWireframe } from "@/components/wireframe/limites-wireframe"
+import { LimitesSecao } from "@/components/members/limites-secao"
 import { PAPEL_DO_CONVITE_INICIAL, PapelDoConvite } from "@/components/members/papel-do-convite"
 import { TrocarPapelWireframe } from "@/components/wireframe/papeis-wireframe"
 import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
@@ -789,7 +789,7 @@ export default function MembersPage() {
                     id="limites"
                     className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
                 >
-                    <LimitesWireframe
+                    <LimitesSecao
                         workspaceId={currentWorkspaceId}
                         pessoas={members.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) }))}
                         podeEditar={canManageMembers}
