@@ -17,10 +17,14 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain("no mês, sem limite")
         expect(fonte).toContain("currencyBRL(linha.limite)")
         expect(fonte).toContain("bands={[80, 100]}")
+        expect(fonte).toContain("value={pct}")
+        expect(fonte).not.toContain("Math.min(pct")
+        expect(fonte).not.toContain("Deixe sem limite")
     })
 
     it("indisponível tem o texto exato; carregando é Skeleton", () => {
         expect(fonte).toContain("Os limites ainda não estão disponíveis nesta carteira.")
+        expect(fonte).toMatch(/<Card padding="none" role="status">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Os limites ainda/)
         expect(fonte).toContain("<SkeletonGroup")
         expect(fonte).not.toContain("Carregando…</p>")
     })

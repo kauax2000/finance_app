@@ -19,7 +19,6 @@ import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemTitle }
 import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import { Muted } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import {
     gravarLimite,
@@ -52,8 +51,8 @@ export function LimitesSecao({
     podeEditar: boolean
 }) {
     const ym = localYmdFromDate(new Date()).slice(0, 7)
-    const [dados, setDados] = useState<{ limites: LimiteDaPessoa[]; lancs: LancamentoDaPessoa[] } | null>(null)
-    const [indisponivel, setIndisponivel] = useState(false)
+    const [dados, setDados] = useState<{ ws: string; limites: LimiteDaPessoa[]; lancs: LancamentoDaPessoa[] } | null>(null)
+    const [indisponivel, setIndisponivel] = useState<string | false>(false)
 
     const [versao, setVersao] = useState(0)
     const carregar = useCallback(() => setVersao((v) => v + 1), [])
@@ -64,11 +63,11 @@ export function LimitesSecao({
         Promise.all([lerLimites(workspaceId), lerLancamentosDoMes(workspaceId, ym)]).then(
             ([limites, lancs]) => {
                 if (!vivo) return
-                setDados({ limites, lancs })
+                setDados({ ws: workspaceId, limites, lancs })
                 setIndisponivel(false)
             },
             () => {
-                if (vivo) setIndisponivel(true)
+                if (vivo) setIndisponivel(workspaceId)
             },
         )
         return () => {
@@ -84,9 +83,15 @@ export function LimitesSecao({
             <PageSectionDescription>
                 Limite mensal de gasto de cada pessoa. Avisa em 80% e em 100%, à pessoa e ao dono.
             </PageSectionDescription>
-            {indisponivel ? (
-                <Muted role="status">Os limites ainda não estão disponíveis nesta carteira.</Muted>
-            ) : !dados || !workspaceId ? (
+            {indisponivel === workspaceId && workspaceId ? (
+                <Card padding="none" role="status">
+                    <Item variant="flush" className="min-h-12">
+                        <ItemContent>
+                            <ItemDescription>Os limites ainda não estão disponíveis nesta carteira.</ItemDescription>
+                        </ItemContent>
+                    </Item>
+                </Card>
+            ) : !dados || dados.ws !== workspaceId || !workspaceId ? (
                 <SkeletonGroup label="Carregando limites…">
                     <Skeleton shape="block" className="h-24 w-full" />
                 </SkeletonGroup>
@@ -138,7 +143,7 @@ function LinhaDoLimiteItem({
                 </ItemDescription>
                 {linha.limite != null ? (
                     <Progress
-                        value={Math.min(pct, 100)}
+                        value={pct}
                         bands={[80, 100]}
                         size="sm"
                         aria-label={`${linha.nome}: ${Math.round(pct)}% do limite do mês`}
@@ -200,7 +205,7 @@ function LinhaDoLimiteItem({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{`Limite de ${linha.nome}`}</DialogTitle>
-                    <DialogDescription>Quanto esta pessoa pode gastar por mês. Deixe sem limite para não avisar.</DialogDescription>
+                    <DialogDescription>Quanto esta pessoa pode gastar por mês.</DialogDescription>
                 </DialogHeader>
                 <CustomForm pending={salvando} onSubmit={salvar}>
                     <DialogBody className="space-y-3">

@@ -33,7 +33,7 @@ import {
     toastPageFetchError,
     toastSuccess,
 } from "@/lib/toast"
-import { Card, CardContent, CardNote } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -87,34 +87,19 @@ const membersPageSkeleton = (
     <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true" aria-label="Carregando membros">
         <MembersSectionSkeleton />
         <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 items-end justify-between gap-2">
-                <Skeleton className="h-3 w-40" />
-                <Skeleton className="h-3 w-24 shrink-0" />
-            </div>
+            <Skeleton className="h-3 w-40" />
             <Card padding="none">
-                <CardContent className="flex flex-col">
                     <ul className="divide-y divide-border" role="list">
-                        {[1, 2].map((i) => (
-                            <li key={i} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                                    <Skeleton className="size-9 shrink-0 rounded-full" />
-                                    <div className="min-w-0 flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-48 max-w-full" />
-                                        <Skeleton className="h-3 w-36 max-w-full" />
-                                    </div>
-                                </div>
-                                <div className="flex shrink-0 flex-wrap gap-2">
-                                    <Skeleton className="h-8 w-28 rounded-full" />
-                                    <Skeleton className="h-8 w-32 rounded-full" />
+                        {[1, 2, 3].map((i) => (
+                            <li key={i} className="flex items-center gap-3 px-4 py-3">
+                                <Skeleton shape="circle" className="size-9 shrink-0" />
+                                <div className="min-w-0 flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-48 max-w-full" />
+                                    <Skeleton className="h-3 w-36 max-w-full" />
                                 </div>
                             </li>
                         ))}
                     </ul>
-                    <CardNote className="items-center gap-1.5 py-2.5">
-                        <Skeleton className="size-3 shrink-0 rounded" />
-                        <Skeleton className="h-3 w-36" />
-                    </CardNote>
-                </CardContent>
             </Card>
         </div>
     </div>

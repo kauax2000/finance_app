@@ -20,7 +20,6 @@ import {
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Spinner } from "@/components/ui/spinner"
-import { Muted } from "@/components/ui/typography"
 import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import type { WorkspaceInvite } from "@/lib/supabase"
 import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
@@ -59,7 +58,13 @@ export function ConvitesPendentesSecao({
                 <PageSectionTitle count={convites.length}>Convites pendentes</PageSectionTitle>
             </PageSectionHeader>
             {convites.length === 0 ? (
-                <Muted>Nenhum convite pendente</Muted>
+                <Card padding="none">
+                    <Item variant="flush" size="lg" className="px-4">
+                        <ItemContent>
+                            <ItemDescription>Nenhum convite pendente</ItemDescription>
+                        </ItemContent>
+                    </Item>
+                </Card>
             ) : (
                 <Card padding="none">
                     <ItemGroup variant="divided">
@@ -70,7 +75,7 @@ export function ConvitesPendentesSecao({
                             const ocupado = ocupadoId === convite.id
                             return (
                                 <Item key={convite.id} variant="flush" size="lg" className="px-4">
-                                    <ItemMedia variant="tile" className="rounded-row">
+                                    <ItemMedia variant="tile">
                                         {porEmail ? <EnvelopeIcon aria-hidden /> : <LinkIcon aria-hidden />}
                                     </ItemMedia>
                                     <ItemContent className="min-w-0">
@@ -108,7 +113,7 @@ export function ConvitesPendentesSecao({
                                                     )}
                                                     <DropdownMenuItem variant="destructive" onSelect={() => onCancelar(convite)}>
                                                         <XMarkIcon aria-hidden />
-                                                        Cancelar convite
+                                                        Revogar convite
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
