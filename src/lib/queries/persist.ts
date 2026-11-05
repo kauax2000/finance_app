@@ -5,12 +5,13 @@ import { queryRoot } from "@/lib/queries/keys"
 // v2: budgets workspace-scoped, invalidation map, persister namespaced por usuário (Fase 5/6)
 export const PERSIST_BUSTER = "v2"
 
+// O pacote de Membros fica gravado, como Configurações, para a tela abrir pronta
+// (05/11/2026): os nomes e e-mails são só os da própria carteira, o cache é por
+// pessoa e o Sair o apaga (`clearFinanceQueryIdb`).
 const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.profile,
     // PII de outros membros (emails/nomes/avatars) fora do IndexedDB
     queryRoot.memberDirectory,
-    // o pacote de Membros carrega o mesmo diretório
-    queryRoot.membersPageBundle,
     // resultado de busca digitada: efêmero, não vale gravar
     queryRoot.transactionsSearch,
     // a frase rápida busca de novo quando precisa: não vale gravar
