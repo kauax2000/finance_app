@@ -33,7 +33,7 @@ import {
 import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
-import { PAPEL_DO_CONVITE_INICIAL, PapelDoConviteWireframe } from "@/components/wireframe/papeis-wireframe"
+import { PAPEL_DO_CONVITE_INICIAL, PapelDoConvite } from "@/components/members/papel-do-convite"
 import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { TrocaSuave } from "@/lib/troca-suave"
@@ -308,7 +308,7 @@ export function WorkspaceInviteDialog({
                             </p>
                         ) : (
                             <>
-                                <PapelDoConviteWireframe
+                                <PapelDoConvite
                                     valor={papelDoConvite}
                                     onChange={setPapelDoConvite}
                                     disabled={savingInvite}

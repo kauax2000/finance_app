@@ -91,7 +91,7 @@ describe("fonte das telas de papéis e limites", () => {
     const limites = semComentarios(lerFonte("src/components/wireframe/limites-wireframe.tsx"))
 
     it("o consentimento tem o texto exato da LGPD", () => {
-        expect(wf).toContain("Sou o responsável legal e autorizo o uso do app (LGPD, art. 14).")
+        expect(semComentarios(lerFonte("src/components/members/papel-do-convite.tsx"))).toContain("Sou o responsável legal e autorizo o uso do app (LGPD, art. 14).")
     })
 
     it("trocar_papel com os três parâmetros da RPC", () => {

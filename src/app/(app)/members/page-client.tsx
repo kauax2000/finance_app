@@ -35,11 +35,8 @@ import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { LimitesWireframe } from "@/components/wireframe/limites-wireframe"
-import {
-    PAPEL_DO_CONVITE_INICIAL,
-    PapelDoConviteWireframe,
-    TrocarPapelWireframe,
-} from "@/components/wireframe/papeis-wireframe"
+import { PAPEL_DO_CONVITE_INICIAL, PapelDoConvite } from "@/components/members/papel-do-convite"
+import { TrocarPapelWireframe } from "@/components/wireframe/papeis-wireframe"
 import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import { TrocaSuave } from "@/lib/troca-suave"
 import {
@@ -822,7 +819,7 @@ export default function MembersPage() {
                             </CardToolbar>
                             <div className="flex flex-col gap-2 px-4 py-3">
                                 {canManageMembers ? (
-                                    <PapelDoConviteWireframe
+                                    <PapelDoConvite
                                         valor={papelDoConvite}
                                         onChange={setPapelDoConvite}
                                         disabled={savingInvite}
