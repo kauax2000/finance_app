@@ -1,7 +1,9 @@
 "use client"
 
-import { EllipsisHorizontalIcon, TrashIcon, UserIcon } from "@heroicons/react/16/solid"
+import { useState } from "react"
+import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon, UserIcon } from "@heroicons/react/16/solid"
 
+import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,6 +53,8 @@ export function PessoasSecao({
     onRemover: (pessoa: MemberWithProfile) => void
     ocupadoId: string | null
 }) {
+    const [editarAberto, setEditarAberto] = useState(false)
+
     return (
         <PageSection size="sm">
             <PageSectionHeader>
@@ -66,6 +70,7 @@ export function PessoasSecao({
                         const foto = pessoa.profile?.avatar_url?.trim() || null
                         const ocupado = ocupadoId === pessoa.user_id
                         const novoPapel = pessoa.role === "guest" ? "member" : "guest"
+                        const minha = pessoa.user_id === meuUserId
                         return (
                             <Item key={pessoa.user_id} variant="flush" size="lg" className="px-4">
                                 <ItemMedia>
@@ -85,7 +90,26 @@ export function PessoasSecao({
                                 </ItemContent>
                                 <ItemActions>
                                     <Badge>{rotuloDoPapel(pessoa.role)}</Badge>
-                                    {podeGerenciar && pessoa.role !== "owner" && pessoa.user_id !== meuUserId ? (
+                                    {minha ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="tertiary"
+                                                    size="icon-md"
+                                                    aria-label="Mais opções para você"
+                                                >
+                                                    <EllipsisHorizontalIcon aria-hidden />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={() => setEditarAberto(true)}>
+                                                    <PencilSquareIcon aria-hidden />
+                                                    Editar perfil
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : podeGerenciar && pessoa.role !== "owner" ? (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button
@@ -109,13 +133,17 @@ export function PessoasSecao({
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-                                    ) : null}
+                                    ) : (
+                                        // Sem ação: o lugar do ⋯ fica reservado, para o selo do papel não recuar de linha em linha.
+                                        <span aria-hidden className="size-8 shrink-0 pointer-coarse:size-11" />
+                                    )}
                                 </ItemActions>
                             </Item>
                         )
                     })}
                 </ItemGroup>
             </Card>
+            <EditProfileDialog open={editarAberto} onOpenChange={setEditarAberto} />
         </PageSection>
     )
 }

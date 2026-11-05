@@ -37,8 +37,12 @@ describe("Membros no layout A", () => {
         }
     })
 
-    it("o ⋯ da pessoa só para o dono, nunca na linha do dono nem na própria", () => {
-        expect(pessoas).toContain('podeGerenciar && pessoa.role !== "owner" && pessoa.user_id !== meuUserId')
+    it("o ⋯ está em toda linha: na própria edita o perfil, nas outras só o dono gerencia, e sem ação o lugar fica reservado", () => {
+        expect(pessoas).toContain("const minha = pessoa.user_id === meuUserId")
+        expect(pessoas).toContain('podeGerenciar && pessoa.role !== "owner"')
+        expect(pessoas).toContain("Editar perfil")
+        expect(pessoas).toContain("<EditProfileDialog open={editarAberto}")
+        expect(pessoas).toContain('<span aria-hidden className="size-8 shrink-0 pointer-coarse:size-11" />')
         for (const s of ["Tornar convidado", "Tornar membro", "Remover da carteira"]) expect(pessoas).toContain(s)
     })
 
