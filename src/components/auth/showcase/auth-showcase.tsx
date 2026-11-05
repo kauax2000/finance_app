@@ -8,7 +8,6 @@ import {
     ClockIcon,
     ComputerDesktopIcon,
     EnvelopeIcon,
-    KeyIcon,
     LinkSlashIcon,
     UserPlusIcon,
 } from "@heroicons/react/16/solid"
@@ -320,17 +319,17 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
             </AvatarGroup>
         </Aviso>
     ),
-    "notice-code": (
+    "notice-link": (
         <Aviso
-            icon={KeyIcon}
+            icon={EnvelopeIcon}
             color={cor("violeta")}
             app="Mail"
-            title="Seu código de acesso chegou"
-            description="Use os 6 dígitos para continuar."
+            title="Seu link de acesso chegou"
+            description="Toque no link para criar a senha nova."
         />
     ),
     "notice-expired": (
-        <Aviso icon={ClockIcon} color={TILE_EXPENSE_DEFAULT} title="Este link expirou" description="Peça um novo código." />
+        <Aviso icon={ClockIcon} color={TILE_EXPENSE_DEFAULT} title="Este link expirou" description="Peça um novo link." />
     ),
 }
 

@@ -25,7 +25,7 @@ export type SceneScreen =
     | "wallet-loading" | "wallet"
 
 export type SceneOverlay =
-    | "none" | "notice-confirm" | "notice-confirm-invite" | "notice-code"
+    | "none" | "notice-confirm" | "notice-confirm-invite" | "notice-link"
     | "notice-expired" | "invite-error" | "dim"
 
 export type SceneChip =
@@ -155,7 +155,7 @@ export const SCENES: Record<AuthSceneId, SceneSpec> = {
     "recovery.sent": {
         ...RECOVERY,
         screen: "lock",
-        overlay: "notice-code",
+        overlay: "notice-link",
         chip: "timeline",
         timeline: { current: 1 },
         dots: { chapter: 2, fill: 0.5 },

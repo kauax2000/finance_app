@@ -386,7 +386,7 @@ describe("a recuperação (8f)", () => {
             return { screen, overlay, chip, current: timeline?.current, form, script }
         }
         expect(passo("recovery.email")).toEqual({ screen: "lock", overlay: "none", chip: "timeline", current: 0, form: "phone", script: null })
-        expect(passo("recovery.sent")).toEqual({ screen: "lock", overlay: "notice-code", chip: "timeline", current: 1, form: "phone", script: null })
+        expect(passo("recovery.sent")).toEqual({ screen: "lock", overlay: "notice-link", chip: "timeline", current: 1, form: "phone", script: null })
         expect(passo("recovery.password")).toEqual({
             screen: "new-password",
             overlay: "none",
@@ -421,16 +421,18 @@ describe("a recuperação (8f)", () => {
         expect(palco("login")).not.toContain("[&amp;_[data-slot=device-frame-status]]:bg-muted")
     })
 
-    it("o aviso do código vem do Mail, sem dígito de código nenhum", () => {
+    it("o aviso do link vem do Mail, sem código nem dígito", () => {
         const html = palco("recovery.sent")
         expect(html).toContain(">Mail<")
-        expect(html).toContain("Seu código de acesso chegou")
-        expect(html).toContain("Use os 6 dígitos para continuar.")
-        // O texto do aviso: nenhum código (só o "6" da frase, que diz quantos dígitos).
-        const aviso = (html.match(/data-slot="device-frame-notification"[^>]*>([\s\S]*?para continuar\.)/)?.[1] ?? "").replace(/<[^>]+>/g, " ")
-        expect(aviso).toContain("Seu código de acesso chegou")
-        expect(aviso.match(/\d/g)).toEqual(["6"])
+        expect(html).toContain("Seu link de acesso chegou")
+        expect(html).toContain("Toque no link para criar a senha nova.")
+        const aviso = (html.match(/data-slot="device-frame-notification"[^>]*>([\s\S]*?criar a senha nova\.)/)?.[1] ?? "").replace(/<[^>]+>/g, " ")
+        expect(aviso).toContain("Seu link de acesso chegou")
+        expect(aviso.match(/\d/g) ?? []).toEqual([])
         expect(TELAS + FONTE).not.toContain("InputOTP")
+        // O fonte do showcase não fala em código de 6 dígitos nem em "notice-code".
+        expect(FONTE).not.toContain("notice-code")
+        expect(FONTE).not.toContain("6 dígitos")
     })
 
     it("a nova senha é um campo desenhado, digitado pelo roteiro, e a senha cumpre a política", () => {
