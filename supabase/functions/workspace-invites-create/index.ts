@@ -40,6 +40,8 @@ function json(status: number, payload: unknown): Response {
   })
 }
 
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders })
@@ -109,14 +111,6 @@ Deno.serve(async (req: Request) => {
   if (memberErr) return json(500, { error: internalError('workspace-invites-create', memberErr) })
   if (!member || member.role !== 'owner') return json(403, { error: 'Only owner can invite' })
 
-  const { data: workspace, error: workspaceErr } = await supabaseAdmin
-    .from('workspaces')
-    .select('id,name')
-    .eq('id', workspaceId)
-    .maybeSingle()
-  if (workspaceErr) return json(500, { error: internalError('workspace-invites-create', workspaceErr) })
-  if (!workspace) return json(404, { error: 'Workspace not found' })
-
   const appBase = resolvePublicAppBase(req)
   if (!appBase) {
     return json(500, { error: 'APP_BASE_URL não configurado.' })
@@ -148,23 +142,20 @@ Deno.serve(async (req: Request) => {
     })
   }
 
+  // O nome da carteira só serve ao e-mail: o link e o `get` não esperam por ele.
+  let workspaceName = ''
   if (!isLink) {
-    const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
+    const [{ data: logs, error: logsErr }, { data: workspace, error: workspaceErr }] = await Promise.all([
+      recentInviteLogs(supabaseAdmin, caller.id),
+      supabaseAdmin.from('workspaces').select('id,name').eq('id', workspaceId).maybeSingle(),
+    ])
     if (logsErr) return json(500, { error: internalError('workspace-invites-create', logsErr) })
+    if (workspaceErr) return json(500, { error: internalError('workspace-invites-create', workspaceErr) })
+    if (!workspace) return json(404, { error: 'Workspace not found' })
     if (inviteEmailLimitReached(logs ?? [], invitedEmail)) {
       return json(429, { error: 'Too many invites' })
     }
-  }
-
-  if (isLink) {
-    const { error: revokeErr } = await supabaseAdmin
-      .from('workspace_invites')
-      .update({ status: 'revoked' })
-      .eq('workspace_id', workspaceId)
-      .eq('status', 'pending')
-      .eq('role', role)
-      .is('invited_email', null)
-    if (revokeErr) return json(500, { error: internalError('workspace-invites-create', revokeErr) })
+    workspaceName = String(workspace.name)
   }
 
   const inviteId = crypto.randomUUID()
@@ -202,11 +193,23 @@ Deno.serve(async (req: Request) => {
         max_uses: 1,
       }
 
-  const { data: invite, error: inviteErr } = await supabaseAdmin
-    .from('workspace_invites')
-    .insert(insertRow)
-    .select('*')
-    .single()
+  // O link novo revoga o pendente do mesmo papel ao mesmo tempo em que nasce:
+  // a revogação pula o id novo, então a ordem das duas não importa.
+  const [{ data: invite, error: inviteErr }, revoke] = await Promise.all([
+    supabaseAdmin.from('workspace_invites').insert(insertRow).select('*').single(),
+    isLink
+      ? supabaseAdmin
+          .from('workspace_invites')
+          .update({ status: 'revoked' })
+          .eq('workspace_id', workspaceId)
+          .eq('status', 'pending')
+          .eq('role', role)
+          .is('invited_email', null)
+          .neq('id', inviteId)
+          .then((r) => r)
+      : Promise.resolve({ error: null }),
+  ])
+  if (revoke.error) return json(500, { error: internalError('workspace-invites-create', revoke.error) })
 
   if (inviteErr) return json(500, { error: internalError('workspace-invites-create', inviteErr) })
 
@@ -216,10 +219,10 @@ Deno.serve(async (req: Request) => {
     try {
       await sendEmailResend({
         to: invitedEmail,
-        subject: `Convite para o workspace ${String(workspace.name).slice(0, 60)}`,
+        subject: `Convite para o workspace ${workspaceName.slice(0, 60)}`,
         html: renderInviteHtml({
           inviterName: caller.email ?? 'Alguém',
-          workspaceName: workspace.name,
+          workspaceName,
           inviteUrl,
           menor,
         }),
@@ -238,7 +241,8 @@ Deno.serve(async (req: Request) => {
   }
   if (!isLink) metadata.invited_email = invitedEmail
 
-  await supabaseAdmin.from('user_activity_logs').insert({
+  // O registro não segura a resposta: roda depois dela.
+  const registro = supabaseAdmin.from('user_activity_logs').insert({
     user_id: caller.id,
     type: 'family_member_invited',
     description: isLink
@@ -246,7 +250,11 @@ Deno.serve(async (req: Request) => {
       : `Convite enviado para ${invitedEmail}`,
     metadata,
     status: 'success',
+  }).then((r) => {
+    if (r.error) console.error('workspace-invites-create: activity log', r.error)
   })
+  if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(Promise.resolve(registro))
+  else await registro
 
   if (isLink) {
     return json(200, {

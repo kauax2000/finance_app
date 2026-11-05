@@ -219,7 +219,8 @@ export function WorkspaceInviteDialog({
                 id: "convite-link",
                 description: "O link fica aqui enquanto valer.",
             })
-            await fetchInvites()
+            // A lista de convites não segura o botão: o link já está na tela.
+            void fetchInvites()
             dispatchFinanceMembersMutated()
         } catch (error) {
             console.error("Error creating link invite:", error)
