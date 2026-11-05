@@ -21,9 +21,17 @@ describe("migracao-sa-east-1-dados.sh", () => {
   it("só apaga com o projeto novo ligado", () => {
     const novo = fonte.indexOf("link --project-ref gexvgoknthcvdnqtdukq")
     const antigo = fonte.indexOf("link --project-ref rpgveoalgxrlsfowvixe")
-    const truncate = fonte.indexOf("truncate")
+    const apaga = fonte.indexOf("delete from")
     expect(antigo).toBeGreaterThan(-1)
     expect(novo).toBeGreaterThan(antigo)
-    expect(truncate).toBeGreaterThan(novo)
+    expect(apaga).toBeGreaterThan(novo)
+    expect(fonte.toLowerCase()).not.toContain("truncate")
+  })
+  it("tira os meta-comandos do psql do dump antes de mandar à API", () => {
+    expect(fonte).toContain(`grep -v '^\\\\' "$TMP/dump.sql"`)
+  })
+  it("lê as linhas do JSON do CLI pulando os avisos", () => {
+    expect(fonte).toContain('d["rows"] if isinstance(d, dict) else d')
+    expect(fonte).toContain("raw_decode")
   })
 })

@@ -26,14 +26,18 @@ if [ "$RESPOSTA" != "virar" ]; then echo "Nada foi feito."; exit 1; fi
 # A consulta que monta o count(*) de cada tabela de public e de auth.users.
 GERAR_CONTAGEM="select string_agg(format('select %L as tabela, count(*)::bigint as n from %I.%I', table_schema || '.' || table_name, table_schema, table_name), ' union all ' order by table_schema, table_name) as sql from information_schema.tables where table_type = 'BASE TABLE' and (table_schema = 'public' or (table_schema = 'auth' and table_name = 'users'))"
 
-# Lê a saída JSON do db query (lista de linhas, ou um objeto com elas dentro).
+# Lê as linhas da saída JSON do db query ({"boundary", "rows", "warning"}),
+# pulando os avisos que o CLI escreve antes do JSON.
 linhas_json() {
   python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-if isinstance(d, dict):
-    d = next((v for v in d.values() if isinstance(v, list)), [])
-print(json.dumps(d))'
+import json, re, sys
+texto = sys.stdin.read()
+inicio = re.search(r"[{\[]", texto)
+if not inicio:
+    sys.exit("o db query não devolveu JSON")
+d = json.JSONDecoder().raw_decode(texto[inicio.start():])[0]
+rows = d["rows"] if isinstance(d, dict) else d
+print(json.dumps(rows))'
 }
 
 # Escreve em $1 o mapa { "<schema>.<tabela>": n } do projeto ligado.
@@ -59,8 +63,10 @@ contar "$TMP/antigo.json"
 
 echo "== novo: $NOVO (apaga e recarrega)"
 supabase link --project-ref gexvgoknthcvdnqtdukq >/dev/null
-# Apaga todas as tabelas de public e de auth que o dump traz (o dump não traz
-# auth.schema_migrations), para a carga não esbarrar em chave repetida.
+# Esvazia todas as tabelas de public e de auth que o dump traz (o dump não traz
+# auth.schema_migrations), para a carga não esbarrar em chave repetida. É
+# delete: o postgres não tem o privilégio de esvaziar de vez as tabelas do auth, e
+# com session_replication_role = replica as chaves estrangeiras não disparam.
 {
   echo "begin;"
   echo "set session_replication_role = replica;"
@@ -73,11 +79,12 @@ begin
     where table_type = 'BASE TABLE'
       and (table_schema = 'public' or (table_schema = 'auth' and table_name <> 'schema_migrations'))
   loop
-    execute 'truncate table ' || t || ' cascade';
+    execute 'delete from ' || t;
   end loop;
 end $$;
 SQL
-  cat "$TMP/dump.sql"
+  # A API recusa os meta-comandos do psql (\restrict e companhia).
+  grep -v '^\\' "$TMP/dump.sql" || true
   echo
   echo "set session_replication_role = origin;"
   echo "commit;"
