@@ -226,8 +226,8 @@ function useTelaDoCelular(spec: SceneSpec, assentado: boolean): PhoneScreen | nu
 
 /**
  * A tela à vista: sem o bloqueio, a atual; com ele, a última **só enquanto ele desce**. Assentado, nada fica
- * embaixo — senão a roda do "conferindo" giraria escondida no link vencido (e no e-mail e no código que vêm dele,
- * pelo "Pedir novo código"), um laço que nunca deixa a página ociosa.
+ * embaixo — senão a roda do "conferindo" giraria escondida no link vencido (e no e-mail e no link que vêm dele,
+ * pelo "Pedir novo link"), um laço que nunca deixa a página ociosa.
  */
 export function telaSobOBloqueio(
     travado: boolean,
@@ -514,7 +514,7 @@ function conteudoDoChip({ chip, timeline }: SceneSpec): React.ReactNode {
 /**
  * O chip espera a moldura assentar: na troca de forma ele sai com a cena velha **no lugar velho** e entra no
  * lugar novo. Por isso o chip à vista é o da última cena na forma em que ele está (`mostrado`): numa cena da
- * mesma forma ele troca no lugar (a linha do tempo anda sozinha do e-mail ao código); numa forma nova o
+ * mesma forma ele troca no lugar (a linha do tempo anda sozinha do e-mail ao link); numa forma nova o
  * `mostrado` só muda depois que a moldura assenta — sem isso, o quadro em que a cena muda (ainda "em repouso",
  * antes de a moldura sair dele) poria o chip novo na âncora da forma nova medida na caixa velha, e é esse quadro
  * que a saída levaria. Com movimento reduzido a moldura nunca sai do repouso, e o `mostrado` muda no tique

@@ -7,6 +7,7 @@ import {
     EnvelopeIcon,
     KeyIcon,
     LightBulbIcon,
+    LinkIcon,
     LockClosedIcon,
     ShieldCheckIcon,
 } from "@heroicons/react/16/solid"
@@ -28,7 +29,7 @@ import { cn } from "@/lib/utils"
  * # O celular da recuperação: as telas que não são o mundo comum
  *
  * "Esqueci minha senha" acontece no bolso: a tela de bloqueio desce sobre o
- * painel enquanto o código vem por e-mail; no passo da senha ela sobe e mostra a
+ * painel enquanto o link vem por e-mail; no passo da senha ela sobe e mostra a
  * tela "Nova senha", com o campo **desenhado** sendo preenchido pelo roteiro
  * `masked-password`; pelo link do e-mail, a tela confere o link e, vencido, fica
  * apagada sob o aviso. O `AuthShowcase` monta tudo aqui sobre o `AuthMiniApp`,
@@ -64,7 +65,7 @@ const cor = (nome: (typeof TILE_PALETTE)[number]["nome"]) => TILE_PALETTE.find((
  * `Date`) e, no pé, a lanterna e a câmera. O fundo desce do `muted` ao `background`: em cima ele encontra a
  * barra de status (que o `AuthShowcase` pinta de `muted` com o bloqueio), embaixo a faixa das abas, já
  * `background` — o bloqueio cobre o aparelho inteiro sem costura. A hora mora a um quarto da altura, abaixo de
- * onde a ilha se abre no aviso do código (a 1/6 o aviso encostava no cadeado).
+ * onde a ilha se abre no aviso do link (a 1/6 o aviso encostava no cadeado).
  */
 function Bloqueio({ down, rapido }: { down: boolean; rapido: boolean }) {
     return (
@@ -224,13 +225,13 @@ export function AuthPhoneScreens({ tela, bloqueio, rapido }: { tela: PhoneScreen
 /* ── A linha do tempo ──────────────────────────────────────────────────── */
 
 /**
- * Os três passos, cada um pelo que ele toca: o código que vai ao e-mail, o código conferido e a senha nova. Uma
- * palavra por passo: com "Código enviado", "Código conferido" e "Nova senha" os títulos vizinhos se tocavam na
+ * Os três passos, cada um pelo que ele toca: o link que vai ao e-mail, o link aberto e a senha nova. Uma
+ * palavra por passo: com "Link enviado", "Link conferido" e "Nova senha" os títulos vizinhos se tocavam na
  * largura de um cartão (192px no palco S), e em duas linhas o chip crescia sem dizer mais que o ícone já diz.
  */
 const PASSOS_DA_RECUPERACAO = [
     { icon: EnvelopeIcon, titulo: "E-mail" },
-    { icon: KeyIcon, titulo: "Código" },
+    { icon: LinkIcon, titulo: "Link" },
     { icon: LockClosedIcon, titulo: "Senha" },
 ] as const
 

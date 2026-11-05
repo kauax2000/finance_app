@@ -433,6 +433,10 @@ describe("a recuperação (8f)", () => {
         // O fonte do showcase não fala em código de 6 dígitos nem em "notice-code".
         expect(FONTE).not.toContain("notice-code")
         expect(FONTE).not.toContain("6 dígitos")
+        // A linha do tempo da recuperação passa o link, sem o passo de código.
+        const telas = semComentarios(lerFonte("src/components/auth/showcase/phone-screens.tsx"))
+        expect(telas).not.toContain('titulo: "Código"')
+        expect(telas).toContain('titulo: "Link"')
     })
 
     it("a nova senha é um campo desenhado, digitado pelo roteiro, e a senha cumpre a política", () => {
@@ -479,7 +483,7 @@ describe("a recuperação (8f)", () => {
         const html = renderToStaticMarkup(createElement(AuthRecoveryTimeline, { timeline: { current: 1 } }))
         expect(html).toContain('data-orientation="horizontal"')
         expect(html).toContain('data-marker="icon"')
-        for (const passo of ["E-mail", "Código", "Senha"]) expect(html).toContain(`>${passo}<`)
+        for (const passo of ["E-mail", "Link", "Senha"]) expect(html).toContain(`>${passo}<`)
         // A saída leva o quadro em que a recuperação termina, ainda aberto, com o `current` 3 da cena nova.
         expect(FONTE).toContain('const saiFeita = !mesmaForma && spec.celebrate === true && mostrado.chip === "timeline"')
         expect(FONTE).toContain('layoutId={mostrado.chip === "success" ? "auth-success-chip" : undefined}')
