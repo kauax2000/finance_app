@@ -61,3 +61,29 @@ describe("Membros no layout A", () => {
         expect(convites).toMatch(/<Card padding="none">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Nenhum convite pendente/)
     })
 })
+
+const dialogo = semComentarios(lerFonte("src/components/members/workspace-invite-dialog.tsx"))
+
+describe("O diálogo mostra o link do papel escolhido", () => {
+    it("lê a consulta compartilhada dos links", () => {
+        expect(dialogo).toContain("inviteLinksKeys.links(")
+        expect(dialogo).toContain("useQuery(")
+    })
+
+    it("o link é o do papel selecionado, sem estado local", () => {
+        expect(dialogo).toContain("links?.[papelDoConvite.role]")
+        for (const s of ["setGeneratedLinkUrl", "pendingLinkInvite", 'action: "get"']) {
+            expect(dialogo).not.toContain(s)
+        }
+    })
+
+    it("enquanto carrega, o esqueleto vem antes do Gerar", () => {
+        expect(dialogo).toContain("<Skeleton")
+        expect(dialogo.indexOf("<Skeleton")).toBeLessThan(dialogo.indexOf("Gerar link de convite"))
+    })
+
+    it("gerar e excluir escrevem no cache, e excluir revoga o link do papel", () => {
+        expect(dialogo.split("setQueryData(inviteLinksKeys.links(").length - 1).toBeGreaterThanOrEqual(2)
+        expect(dialogo).toContain("handleRevokeInvite(linkDoPapel.invite_id)")
+    })
+})

@@ -11,9 +11,11 @@ import {
     ItemMedia,
 } from "@/components/ui/item"
 import * as React from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon, TrashIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,6 +35,8 @@ import {
 import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { fetchInviteLinks, INVITE_LINKS_STALE_MS, type LinksDeConvite } from "@/lib/queries/fetch-invite-links"
+import { inviteLinksKeys } from "@/lib/queries/keys"
 import { PAPEL_DO_CONVITE_INICIAL, PapelDoConvite } from "@/components/members/papel-do-convite"
 import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import { toastError, toastSuccess } from "@/lib/toast"
@@ -83,21 +87,23 @@ export function WorkspaceInviteDialog({
     const [busyResendInviteId, setBusyResendInviteId] = React.useState<string | null>(
         null,
     )
-    const [generatedLinkUrl, setGeneratedLinkUrl] = React.useState<string | null>(null)
-    const [generatedLinkExpiresAt, setGeneratedLinkExpiresAt] = React.useState<
-        string | null
-    >(null)
     const [linkCopied, setLinkCopied] = React.useState(false)
 
-    const pendingLinkInvite = React.useMemo(
-        () => invites.find((i) => i.invited_email == null),
-        [invites],
-    )
-    const papelDoLink =
-        generatedLinkUrl && pendingLinkInvite ? pendingLinkInvite.role : papelDoConvite.role
-    const effectiveLinkUrl = generatedLinkUrl
-    const linkInviteExpiresAt =
-        pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
+    // Um link por papel, da consulta que a tela de Membros já aquece: o cartão abre pronto.
+    const queryClient = useQueryClient()
+    const linksKey = inviteLinksKeys.links(workspaceId ?? "__none__")
+    const { data: links, isPending: linksPendentes } = useQuery({
+        queryKey: linksKey,
+        queryFn: () => fetchInviteLinks(workspaceId!),
+        enabled: open && Boolean(workspaceId) && canManageMembers,
+        staleTime: INVITE_LINKS_STALE_MS,
+    })
+    const linkDoPapel = links?.[papelDoConvite.role] ?? null
+    const linkUrl = linkDoPapel?.invite_url ?? null
+    const trocarPapel = (v: typeof papelDoConvite) => {
+        setPapelDoConvite(v)
+        setLinkCopied(false)
+    }
 
     const fetchInvites = React.useCallback(async () => {
         if (!workspaceId) return
@@ -123,26 +129,7 @@ export function WorkspaceInviteDialog({
         void fetchInvites()
         setInviteEmail("")
         setPapelDoConvite(PAPEL_DO_CONVITE_INICIAL)
-        setGeneratedLinkUrl(null)
-        setGeneratedLinkExpiresAt(null)
         setLinkCopied(false)
-        if (!canManageMembers) return
-        // O link ativo reaparece: o servidor refaz o token a partir do id.
-        let cancelado = false
-        void invokeEdgeJson<{ invite_url?: string | null; expires_at?: string }>("workspace-invites-create", {
-            body: { workspace_id: workspaceId, invite_kind: "link", action: "get" },
-        })
-            .then((res) => {
-                const url = res.invite_url?.trim()
-                if (cancelado || !url) return
-                setGeneratedLinkUrl((atual) => atual ?? url)
-                if (res.expires_at) setGeneratedLinkExpiresAt((atual) => atual ?? res.expires_at ?? null)
-            })
-            .catch((error) => console.error("Error reading active link invite:", error))
-        return () => {
-            cancelado = true
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, workspaceId, fetchInvites])
 
     const handleInvite = async () => {
@@ -202,12 +189,12 @@ export function WorkspaceInviteDialog({
     const handleCreateLinkInvite = async () => {
         if (!workspaceId || !canManageMembers) return
 
+        const role = papelDoConvite.role
         setSavingLink(true)
-        setGeneratedLinkUrl(null)
-        setGeneratedLinkExpiresAt(null)
         setLinkCopied(false)
         try {
             const res = await invokeEdgeJson<{
+                invite_id?: string
                 invite_url?: string
                 expires_at?: string
             }>("workspace-invites-create", {
@@ -218,10 +205,15 @@ export function WorkspaceInviteDialog({
                 },
             })
             const url = res.invite_url?.trim() || null
-            if (url) setGeneratedLinkUrl(url)
-            const exp =
-                typeof res.expires_at === "string" ? res.expires_at.trim() : ""
-            if (exp) setGeneratedLinkExpiresAt(exp)
+            const exp = res.expires_at?.trim()
+            if (res.invite_id && exp) {
+                const novo = { invite_id: res.invite_id, expires_at: exp, invite_url: url }
+                queryClient.setQueryData(inviteLinksKeys.links(workspaceId), (atual: LinksDeConvite | undefined) => ({
+                    member: atual?.member ?? null,
+                    guest: atual?.guest ?? null,
+                    [role]: novo,
+                }))
+            }
             toastSuccess("Link gerado", {
                 id: "convite-link",
                 description: "Copie agora: por segurança ele não fica salvo.",
@@ -240,9 +232,9 @@ export function WorkspaceInviteDialog({
     }
 
     const copyPersistedLink = async () => {
-        if (!effectiveLinkUrl) return
+        if (!linkUrl) return
         try {
-            await navigator.clipboard.writeText(effectiveLinkUrl)
+            await navigator.clipboard.writeText(linkUrl)
             setLinkCopied(true)
             later(() => setLinkCopied(false), 2000)
         } catch {
@@ -297,8 +289,14 @@ export function WorkspaceInviteDialog({
         } else {
             toastSuccess("Convite revogado", { id: `revogar-convite:${inviteId}` })
             setLinkCopied(false)
-            setGeneratedLinkUrl(null)
-            setGeneratedLinkExpiresAt(null)
+            if (workspaceId) {
+                queryClient.setQueryData(inviteLinksKeys.links(workspaceId), (atual: LinksDeConvite | undefined) =>
+                    atual && {
+                        member: atual.member?.invite_id === inviteId ? null : atual.member,
+                        guest: atual.guest?.invite_id === inviteId ? null : atual.guest,
+                    },
+                )
+            }
         }
         await fetchInvites()
         dispatchFinanceMembersMutated()
@@ -327,7 +325,7 @@ export function WorkspaceInviteDialog({
                             <>
                                 <PapelDoConvite
                                     valor={papelDoConvite}
-                                    onChange={setPapelDoConvite}
+                                    onChange={trocarPapel}
                                     disabled={savingInvite}
                                 />
                                 <Form
@@ -360,20 +358,22 @@ export function WorkspaceInviteDialog({
                                     <p className="text-xs text-muted-foreground">
                                         Qualquer pessoa com conta no app pode aceitar enquanto o
                                         convite estiver pendente, e entra como{" "}
-                                        {papelDoLink === "guest" ? "convidado" : "membro"}.
+                                        {papelDoConvite.role === "guest" ? "convidado" : "membro"}.
                                     </p>
-{pendingLinkInvite && !effectiveLinkUrl ? (
-<p className="text-xs text-muted-foreground">
-    Já existe um link ativo, de antes de o link poder ser mostrado de novo.
-    Gere um novo para copiar (o anterior deixa de valer).
-</p>
-) : null}
-                                    {effectiveLinkUrl ? (
+                                    {linkDoPapel && !linkUrl ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Já existe um link ativo, de antes de o link poder ser mostrado de novo.
+                                            Gere um novo para copiar (o anterior deixa de valer).
+                                        </p>
+                                    ) : null}
+                                    {linksPendentes ? (
+                                        <Skeleton shape="pill" className="h-9 w-full sm:w-48 pointer-coarse:h-11" />
+                                    ) : linkDoPapel && linkUrl ? (
                                         <div className="space-y-1.5 pt-1">
                                             <div className="flex min-w-0 flex-row items-center gap-2">
                                                 <Input
                                                     readOnly
-                                                    value={effectiveLinkUrl}
+                                                    value={linkUrl}
                                                     className="min-w-0 flex-1 font-mono text-xs"
                                                 />
                                                 <div className="flex shrink-0 items-center gap-2">
@@ -411,7 +411,7 @@ export function WorkspaceInviteDialog({
                                                             Copiar link
                                                         </TooltipContent>
                                                     </Tooltip>
-                                                    {pendingLinkInvite && canManageMembers ? (
+                                                    {canManageMembers ? (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
                                                                 <Button
@@ -421,16 +421,14 @@ export function WorkspaceInviteDialog({
                                                                     className="shrink-0"
                                                                     aria-label="Excluir link"
                                                                     disabled={
-                                                                        busyInviteId === pendingLinkInvite.id
+                                                                        busyInviteId === linkDoPapel.invite_id
                                                                     }
                                                                     onClick={() =>
-                                                                        void handleRevokeInvite(
-                                                                            pendingLinkInvite.id,
-                                                                        )
+                                                                        void handleRevokeInvite(linkDoPapel.invite_id)
                                                                     }
                                                                 >
                                                                     {busyInviteId ===
-                                                                    pendingLinkInvite.id ? (
+                                                                    linkDoPapel.invite_id ? (
                                                                         <Spinner />
                                                                     ) : (
                                                                         <TrashIcon />
@@ -444,10 +442,10 @@ export function WorkspaceInviteDialog({
                                                     ) : null}
                                                 </div>
                                             </div>
-                                            {linkInviteExpiresAt ? (
+                                            {linkDoPapel.expires_at ? (
                                                 <p className="text-xs text-muted-foreground">
                                                     {formatLinkInviteExpiresAt(
-                                                        linkInviteExpiresAt,
+                                                        linkDoPapel.expires_at,
                                                     )}
                                                 </p>
                                             ) : null}
