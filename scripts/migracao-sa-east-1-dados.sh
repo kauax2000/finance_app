@@ -26,19 +26,8 @@ if [ "$RESPOSTA" != "virar" ]; then echo "Nada foi feito."; exit 1; fi
 # A consulta que monta o count(*) de cada tabela de public e de auth.users.
 GERAR_CONTAGEM="select string_agg(format('select %L as tabela, count(*)::bigint as n from %I.%I', table_schema || '.' || table_name, table_schema, table_name), ' union all ' order by table_schema, table_name) as sql from information_schema.tables where table_type = 'BASE TABLE' and (table_schema = 'public' or (table_schema = 'auth' and table_name = 'users'))"
 
-# Lê as linhas da saída JSON do db query ({"boundary", "rows", "warning"}),
-# pulando os avisos que o CLI escreve antes do JSON.
-linhas_json() {
-  python3 -c '
-import json, re, sys
-texto = sys.stdin.read()
-inicio = re.search(r"[{\[]", texto)
-if not inicio:
-    sys.exit("o db query não devolveu JSON")
-d = json.JSONDecoder().raw_decode(texto[inicio.start():])[0]
-rows = d["rows"] if isinstance(d, dict) else d
-print(json.dumps(rows))'
-}
+# As linhas da saída JSON do db query, sem os avisos do CLI.
+linhas_json() { python3 scripts/lib/linhas-json.py; }
 
 # Escreve em $1 o mapa { "<schema>.<tabela>": n } do projeto ligado.
 contar() {

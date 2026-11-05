@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
@@ -30,8 +31,11 @@ describe("migracao-sa-east-1-dados.sh", () => {
   it("tira os meta-comandos do psql do dump antes de mandar à API", () => {
     expect(fonte).toContain(`grep -v '^\\\\' "$TMP/dump.sql"`)
   })
-  it("lê as linhas do JSON do CLI pulando os avisos", () => {
-    expect(fonte).toContain('d["rows"] if isinstance(d, dict) else d')
-    expect(fonte).toContain("raw_decode")
+  it("lê as linhas do JSON do CLI pulando os avisos, mesmo com colchete", () => {
+    expect(fonte).toContain("python3 scripts/lib/linhas-json.py")
+    const entrada =
+      'A new version [v2.1] available\nInitialising login role...\n{"boundary":"x","rows":[{"tabela":"public.a","n":1}],"warning":"w"}\n'
+    const saida = execFileSync("python3", ["scripts/lib/linhas-json.py"], { input: entrada, encoding: "utf8" })
+    expect(JSON.parse(saida)).toEqual([{ tabela: "public.a", n: 1 }])
   })
 })
