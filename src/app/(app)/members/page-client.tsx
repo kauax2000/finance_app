@@ -6,9 +6,8 @@ import {
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
 import { useCallback, useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { UserPlusIcon } from "@heroicons/react/16/solid"
 import {
     EnvelopeIcon as EnvelopeOutlineIcon,
@@ -17,14 +16,15 @@ import {
 } from "@heroicons/react/24/outline"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
-import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { supabase } from "@/lib/supabase"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
-import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { ConvitesPendentesSecao } from "@/components/members/convites-pendentes-secao"
 import { LimitesSecao } from "@/components/members/limites-secao"
 import { memberDisplayName, PessoasSecao, type MemberWithProfile } from "@/components/members/pessoas-secao"
+import { fetchMembersPageBundle } from "@/lib/queries/fetch-members-page-bundle"
+import { membersPageBundleKeys } from "@/lib/queries/keys"
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
@@ -35,7 +35,6 @@ import {
 } from "@/lib/toast"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -52,58 +51,7 @@ import {
     dispatchFinanceMembersMutated,
     FINANCE_MEMBERS_MUTATED_EVENT,
 } from "@/lib/workspace-data-events"
-
-/**
- * Fallback when `workspace_member_directory` RPC is unavailable. Fills profile only for the current user (RLS on `profiles`).
- */
-function mergeMemberRowsForDisplay(
-    rows: Pick<WorkspaceMember, "workspace_id" | "user_id" | "role" | "joined_at">[],
-    currentUser: User | null
-): MemberWithProfile[] {
-    return rows.map((m) => {
-        if (currentUser?.id === m.user_id) {
-            const meta = currentUser.user_metadata as Record<string, unknown> | undefined
-            const fullName =
-                (typeof meta?.full_name === "string" && meta.full_name) ||
-                (typeof meta?.name === "string" && meta.name) ||
-                null
-            const avatarUrl =
-                (typeof meta?.avatar_url === "string" && meta.avatar_url) || null
-            return {
-                ...m,
-                profile: {
-                    id: currentUser.id,
-                    email: currentUser.email ?? "",
-                    full_name: fullName,
-                    avatar_url: avatarUrl,
-                },
-            }
-        }
-        return { ...m, profile: null }
-    })
-}
-
-const membersPageSkeleton = (
-    <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true" aria-label="Carregando membros">
-        <MembersSectionSkeleton />
-        <div className="min-w-0 space-y-2">
-            <Skeleton className="h-3 w-40" />
-            <Card padding="none">
-                    <ul className="divide-y divide-border" role="list">
-                        {[1, 2, 3].map((i) => (
-                            <li key={i} className="flex items-center gap-3 px-4 py-3">
-                                <Skeleton shape="circle" className="size-9 shrink-0" />
-                                <div className="min-w-0 flex-1 space-y-2">
-                                    <Skeleton className="h-4 w-48 max-w-full" />
-                                    <Skeleton className="h-3 w-36 max-w-full" />
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-            </Card>
-        </div>
-    </div>
-)
+import Loading from "./loading"
 
 export default function MembersPage() {
     const { user, loading: authLoading } = useAuth()
@@ -114,9 +62,6 @@ export default function MembersPage() {
         loading: workspaceLoading,
     } = useWorkspace()
     const isMobile = useIsMobile()
-    const [members, setMembers] = useState<MemberWithProfile[]>([])
-    const [invites, setInvites] = useState<WorkspaceInvite[]>([])
-    const [loading, setLoading] = useState(true)
     const [convidarAberto, setConvidarAberto] = useState(false)
     const [busyInviteId, setBusyInviteId] = useState<string | null>(null)
     const [busyResendInviteId, setBusyResendInviteId] = useState<string | null>(
@@ -132,128 +77,49 @@ export default function MembersPage() {
 
     const canManageMembers = Boolean(currentWorkspaceId && isWorkspaceOwner(currentWorkspaceId))
 
-    const fetchMembersAndInvites = useCallback(async () => {
-        if (!currentWorkspaceId) return
+    // Tudo numa rodada só e com cache: a volta a Membros não mostra esqueleto.
+    const queryClient = useQueryClient()
+    const bundleQuery = useQuery({
+        queryKey: membersPageBundleKeys.bundle(currentWorkspaceId ?? "__none__"),
+        queryFn: () => fetchMembersPageBundle(currentWorkspaceId!, user),
+        enabled: !authLoading && !workspaceLoading && Boolean(user) && Boolean(currentWorkspaceId),
+        staleTime: 60_000,
+    })
+    const bundle = bundleQuery.data
+    const members: MemberWithProfile[] = bundle?.members ?? []
+    const invites = bundle?.invites ?? []
 
-        const loadPair = () =>
-            Promise.all([
-                supabase
-                    .from("workspace_members")
-                    .select("workspace_id,user_id,role,joined_at")
-                    .eq("workspace_id", currentWorkspaceId),
-                supabase
-                    .from("workspace_invites")
-                    .select("accepted_at, created_at, created_by, expires_at, id, invited_email, max_uses, role, status, usage_count, workspace_id")
-                    .eq("workspace_id", currentWorkspaceId)
-                    .eq("status", "pending")
-                    .order("created_at", { ascending: false }),
-            ])
+    const recarregar = useCallback(
+        () =>
+            queryClient.invalidateQueries({
+                queryKey: membersPageBundleKeys.bundle(currentWorkspaceId ?? "__none__"),
+            }),
+        [queryClient, currentWorkspaceId],
+    )
 
-        // O diretório só precisa da carteira: sai junto, e não numa segunda ida ao servidor.
-        // O builder do Supabase só dispara no `then`, por isso o `.then` já aqui.
-        const dirPromise = supabase
-            .rpc("workspace_member_directory", { p_workspace_id: currentWorkspaceId })
-            .then((res) => res)
-        let [membersRes, invitesRes] = await loadPair()
-        const transient =
-            (membersRes.error && isPostgrestTransientNetworkError(membersRes.error)) ||
-            (invitesRes.error && isPostgrestTransientNetworkError(invitesRes.error))
-        if (transient) {
-            ;[membersRes, invitesRes] = await loadPair()
-        }
-
-        if (membersRes.error) {
-            console.error("Members fetch error:", describeSupabaseErrorForLog(membersRes.error))
-        }
-        if (invitesRes.error) {
-            console.error("Invites fetch error:", describeSupabaseErrorForLog(invitesRes.error))
-        }
-
-        const errParts: string[] = []
-        const membersMsg = membersRes.error
-            ? (formatSupabasePostgrestError(membersRes.error) ?? "não foi possível carregar")
-            : null
-        const invitesMsg = invitesRes.error
-            ? (formatSupabasePostgrestError(invitesRes.error) ?? "não foi possível carregar")
-            : null
-        if (membersMsg) errParts.push(`Membros: ${membersMsg}`)
-        if (invitesMsg) errParts.push(`Convites: ${invitesMsg}`)
-        if (errParts.length > 0) {
-            toastPageFetchError("members", errParts.join(" · "))
-        } else {
-            dismissPageFetchError("members")
-        }
-
-        if (membersRes.data) {
-            const dirRes = await dirPromise
-
-            if (dirRes.error) {
-                toastPageFetchError(
-                    "members-directory",
-                    "Não foi possível carregar nome/e-mail dos membros. Aplique `supabase/workspace-member-directory.sql` (e `profiles-avatar-color.sql`) no Supabase e recarregue o schema.",
-                )
-                // Show at least the current user (metadata) so the screen isn't empty.
-                setMembers(mergeMemberRowsForDisplay(membersRes.data, user))
-            } else if (!Array.isArray(dirRes.data) || dirRes.data.length === 0) {
-                toastPageFetchError(
-                    "members-directory",
-                    "Diretório de membros retornou vazio. Verifique se você executou `workspace-member-directory.sql` e se as políticas/RPC estão ativas.",
-                )
-                setMembers(mergeMemberRowsForDisplay(membersRes.data, user))
-            } else {
-                dismissPageFetchError("members-directory")
-                type DirRow = {
-                    user_id: string
-                    email: string
-                    full_name: string | null
-                    avatar_url?: string | null
-                    avatar_color?: string | null
-                }
-                const rows = dirRes.data as DirRow[]
-                const byUser = new Map(rows.map((row) => [row.user_id, row]))
-                const merged = membersRes.data.map((m) => {
-                    const row = byUser.get(m.user_id)
-                    if (row) {
-                        return {
-                            ...m,
-                            profile: {
-                                id: m.user_id,
-                                email: row.email ?? "",
-                                full_name: row.full_name || null,
-                                avatar_url: row.avatar_url ?? null,
-                                avatar_color: row.avatar_color ?? null,
-                            },
-                        }
-                    }
-                    return mergeMemberRowsForDisplay([m], user)[0]
-                })
-                setMembers(merged)
-            }
-        }
-        if (invitesRes.data) {
-            setInvites(invitesRes.data as WorkspaceInvite[])
-        }
-
-        setLoading(false)
-    }, [currentWorkspaceId, user])
-
+    // Os avisos de cada leitura do pacote, como antes a cada busca.
+    const { dataUpdatedAt, isError: bundleFalhou } = bundleQuery
     useEffect(() => {
-        if (authLoading || workspaceLoading) return
-        if (!currentWorkspaceId) {
-            setLoading(false)
+        if (bundleFalhou) {
+            toastPageFetchError("members", "Não foi possível carregar membros e convites.")
             return
         }
-        void fetchMembersAndInvites()
-    }, [authLoading, workspaceLoading, currentWorkspaceId, fetchMembersAndInvites])
+        if (!bundle) return
+        if (bundle.avisos.carga) toastPageFetchError("members", bundle.avisos.carga)
+        else dismissPageFetchError("members")
+        if (bundle.avisos.diretorio) toastPageFetchError("members-directory", bundle.avisos.diretorio)
+        else if (bundle.avisos.diretorio === null) dismissPageFetchError("members-directory")
+        // `dataUpdatedAt`: o mesmo aviso de novo, numa nova leitura, volta a aparecer.
+    }, [bundle, dataUpdatedAt, bundleFalhou])
 
     useEffect(() => {
         const onMutated = () => {
-            void fetchMembersAndInvites()
+            void recarregar()
         }
         window.addEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
         return () =>
             window.removeEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
-    }, [fetchMembersAndInvites])
+    }, [recarregar])
 
     const handleTrocarPapel = async (pessoa: MemberWithProfile, papel: "member" | "guest") => {
         if (!currentWorkspaceId || !canManageMembers) return
@@ -271,7 +137,7 @@ export default function MembersPage() {
             toastSuccess(`${memberDisplayName(pessoa)} agora é ${rotuloDoPapel(papel).toLowerCase()}.`, { id })
             dispatchFinanceMembersMutated()
         }
-        await fetchMembersAndInvites()
+        await recarregar()
         setBusyMemberId(null)
     }
 
@@ -323,7 +189,7 @@ export default function MembersPage() {
             toastSuccess("Convite revogado", { id: `revogar-convite:${inviteId}` })
             dispatchFinanceMembersMutated()
         }
-        await fetchMembersAndInvites()
+        await recarregar()
         setBusyInviteId(null)
     }
 
@@ -346,7 +212,7 @@ export default function MembersPage() {
         } else {
             toastSuccess("Membro removido", { id: `remover-membro:${memberUserId}` })
         }
-        await fetchMembersAndInvites()
+        await recarregar()
         setBusyMemberId(null)
     }
 
@@ -360,7 +226,7 @@ export default function MembersPage() {
     }
 
     if (authLoading || workspaceLoading) {
-        return membersPageSkeleton
+        return <Loading />
     }
 
     if (!user) {
@@ -391,8 +257,8 @@ export default function MembersPage() {
         )
     }
 
-    if (loading) {
-        return membersPageSkeleton
+    if (bundleQuery.isPending) {
+        return <Loading />
     }
 
     // Convidar é só do dono.
@@ -471,7 +337,7 @@ export default function MembersPage() {
                 open={convidarAberto}
                 onOpenChange={(aberto) => {
                     setConvidarAberto(aberto)
-                    if (!aberto) void fetchMembersAndInvites()
+                    if (!aberto) void recarregar()
                 }}
                 user={user}
                 workspaceId={currentWorkspaceId}
@@ -517,6 +383,11 @@ export default function MembersPage() {
                         workspaceId={currentWorkspaceId}
                         pessoas={members.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) }))}
                         podeEditar={canManageMembers}
+                        ym={bundle?.ym ?? ""}
+                        limites={bundle?.limites ?? []}
+                        lancamentos={bundle?.lancamentos ?? []}
+                        indisponivel={bundle?.limitesIndisponivel ?? true}
+                        onMudou={recarregar}
                     />
                 </div>
             ) : null}

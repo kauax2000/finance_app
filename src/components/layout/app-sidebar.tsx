@@ -23,6 +23,7 @@ import {
     SETTINGS_NAV_ITEM,
     isExactPath,
 } from "@/config/navigation"
+import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { microIconFor } from "@/config/mobile-navigation"
 import { itensDeNavegacaoPara } from "@/lib/papeis/rotas-do-convidado"
@@ -42,6 +43,7 @@ export function AppSidebar() {
     const pathname = usePathname()
     const queryClient = useQueryClient()
     const { currentWorkspaceId, papel } = useWorkspace()
+    const { user } = useAuth()
     // O convidado vê só as telas dele (Bloco 7A): sem Assinaturas, Contas a pagar nem Membros.
     const navegacao = itensDeNavegacaoPara(papel, MAIN_NAVIGATION)
     const comMembros = itensDeNavegacaoPara(papel, [MEMBERS_NAV_ITEM]).length > 0
@@ -115,6 +117,7 @@ export function AppSidebar() {
                                                     queryClient,
                                                     currentWorkspaceId,
                                                     item.href,
+                                                    user,
                                                 )
                                             }
                                         >
@@ -148,7 +151,18 @@ export function AppSidebar() {
                                     isActive={membersActive}
                                     tooltip={MEMBERS_NAV_ITEM.name}
                                 >
-                                    <Link href={MEMBERS_NAV_ITEM.href} onClick={irPara(MEMBERS_NAV_ITEM.href)}>
+                                    <Link
+                                        href={MEMBERS_NAV_ITEM.href}
+                                        onClick={irPara(MEMBERS_NAV_ITEM.href)}
+                                        onMouseEnter={() =>
+                                            prefetchNavRouteHref(
+                                                queryClient,
+                                                currentWorkspaceId,
+                                                MEMBERS_NAV_ITEM.href,
+                                                user,
+                                            )
+                                        }
+                                    >
                                         <NavIcon icon={MEMBERS_NAV_ITEM.icon} />
                                         <span>{MEMBERS_NAV_ITEM.name}</span>
                                     </Link>

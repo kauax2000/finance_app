@@ -1,10 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query"
+import type { User } from "@supabase/supabase-js"
 import { ROUTES } from "@/config/navigation"
 import {
     billsPageBundleKeys,
     creditCardsPageBundleKeys,
+    membersPageBundleKeys,
     subscriptionsPageBundleKeys,
 } from "@/lib/queries/keys"
+import { fetchMembersPageBundle } from "@/lib/queries/fetch-members-page-bundle"
 import { fetchBillsPageBundle } from "@/lib/queries/fetch-bills-page-bundle"
 import { fetchSubscriptionsPageBundle } from "@/lib/queries/fetch-subscriptions-page-bundle"
 import { fetchCreditCardsPageBundle } from "@/lib/queries/fetch-credit-cards-page-bundle"
@@ -21,6 +24,8 @@ export function prefetchNavRouteHref(
     queryClient: QueryClient,
     workspaceId: string | null,
     href: string,
+    /** Membros monta o próprio perfil com ele quando o diretório falha. */
+    user: User | null = null,
 ): void {
     if (!workspaceId) return
 
@@ -46,6 +51,15 @@ export function prefetchNavRouteHref(
         void queryClient.prefetchQuery({
             queryKey: creditCardsPageBundleKeys.bundle(workspaceId),
             queryFn: () => fetchCreditCardsPageBundle(workspaceId),
+            staleTime: PREFETCH_STALE_MS,
+        })
+        return
+    }
+
+    if (href === ROUTES.MEMBERS) {
+        void queryClient.prefetchQuery({
+            queryKey: membersPageBundleKeys.bundle(workspaceId),
+            queryFn: () => fetchMembersPageBundle(workspaceId, user),
             staleTime: PREFETCH_STALE_MS,
         })
     }

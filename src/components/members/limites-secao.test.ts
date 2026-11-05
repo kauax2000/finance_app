@@ -22,11 +22,14 @@ describe("LimitesSecao", () => {
         expect(fonte).not.toContain("Deixe sem limite")
     })
 
-    it("indisponível tem o texto exato; carregando é Skeleton", () => {
+    it("indisponível tem o texto exato; não busca nem espera sozinha (os dados vêm no pacote da tela)", () => {
         expect(fonte).toContain("Os limites ainda não estão disponíveis nesta carteira.")
         expect(fonte).toMatch(/<Card padding="none" role="status">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Os limites ainda/)
-        expect(fonte).toContain("<SkeletonGroup")
+        for (const s of ["<SkeletonGroup", "<Skeleton", "useEffect", "lerLimites(", "lerLancamentosDoMes("]) {
+            expect(fonte).not.toContain(s)
+        }
         expect(fonte).not.toContain("Carregando…</p>")
+        expect(fonte).toContain("await onMudou()")
     })
 
     it("só quem edita abre o diálogo, com formulário, dinheiro, Salvar e Remover limite", () => {

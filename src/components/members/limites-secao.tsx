@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
 import {
@@ -18,13 +18,10 @@ import { Button } from "@/components/ui/button"
 import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
-import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { currencyBRL } from "@/lib/formatters"
 import {
     gravarLimite,
-    lerLancamentosDoMes,
     lerLimiteDigitado,
-    lerLimites,
     linhasDosLimites,
     removerLimite,
     type LancamentoDaPessoa,
@@ -32,49 +29,36 @@ import {
     type LinhaDoLimite,
 } from "@/lib/limites/limites"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
-import { localYmdFromDate } from "@/lib/transaction-date"
 
 type Pessoa = { user_id: string; nome: string }
 
 /**
  * Os limites mensais por pessoa (seção `#limites` de Membros): o gasto do mês
- * de cada uma contra o limite. O dono edita; o membro só vê. Se a leitura
- * falha (a tabela ainda não existe no banco), fica um estado neutro.
+ * de cada uma contra o limite. O dono edita; o membro só vê. Os dados chegam
+ * no pacote da tela (`fetchMembersPageBundle`), junto com o resto. Se a leitura
+ * falhou (a tabela ainda não existe no banco), fica um estado neutro.
  */
 export function LimitesSecao({
     workspaceId,
     pessoas,
     podeEditar,
+    ym,
+    limites,
+    lancamentos,
+    indisponivel,
+    onMudou,
 }: {
-    workspaceId: string | null
+    workspaceId: string
     pessoas: Pessoa[]
     podeEditar: boolean
+    /** O mês (`YYYY-MM`) dos lançamentos. */
+    ym: string
+    limites: LimiteDaPessoa[]
+    lancamentos: LancamentoDaPessoa[]
+    indisponivel: boolean
+    /** Depois de gravar ou remover: relê o pacote. */
+    onMudou: () => Promise<unknown>
 }) {
-    const ym = localYmdFromDate(new Date()).slice(0, 7)
-    const [dados, setDados] = useState<{ ws: string; limites: LimiteDaPessoa[]; lancs: LancamentoDaPessoa[] } | null>(null)
-    const [indisponivel, setIndisponivel] = useState<string | false>(false)
-
-    const [versao, setVersao] = useState(0)
-    const carregar = useCallback(() => setVersao((v) => v + 1), [])
-
-    useEffect(() => {
-        if (!workspaceId) return
-        let vivo = true
-        Promise.all([lerLimites(workspaceId), lerLancamentosDoMes(workspaceId, ym)]).then(
-            ([limites, lancs]) => {
-                if (!vivo) return
-                setDados({ ws: workspaceId, limites, lancs })
-                setIndisponivel(false)
-            },
-            () => {
-                if (vivo) setIndisponivel(workspaceId)
-            },
-        )
-        return () => {
-            vivo = false
-        }
-    }, [workspaceId, ym, versao])
-
     return (
         <PageSection size="sm">
             <PageSectionHeader>
@@ -83,7 +67,7 @@ export function LimitesSecao({
             <PageSectionDescription>
                 Limite mensal de gasto de cada pessoa. Avisa em 80% e em 100%, à pessoa e ao dono.
             </PageSectionDescription>
-            {indisponivel === workspaceId && workspaceId ? (
+            {indisponivel ? (
                 <Card padding="none" role="status">
                     <Item variant="flush" className="min-h-12">
                         <ItemContent>
@@ -91,20 +75,22 @@ export function LimitesSecao({
                         </ItemContent>
                     </Item>
                 </Card>
-            ) : !dados || dados.ws !== workspaceId || !workspaceId ? (
-                <SkeletonGroup label="Carregando limites…">
-                    <Skeleton shape="block" className="h-24 w-full" />
-                </SkeletonGroup>
             ) : (
                 <Card padding="none">
                     <ItemGroup variant="divided">
-                        {linhasDosLimites(pessoas, dados.limites, dados.lancs, ym).map((l) => (
+                        {linhasDosLimites(pessoas, limites, lancamentos, ym).map((l) => (
                             <LinhaDoLimiteItem
                                 key={`${l.user_id}:${l.limite}`}
                                 linha={l}
                                 podeEditar={podeEditar}
-                                onSalvar={(valor) => gravarLimite(workspaceId, l.user_id, valor).then(carregar)}
-                                onRemover={() => removerLimite(workspaceId, l.user_id).then(carregar)}
+                                onSalvar={async (valor) => {
+                                    await gravarLimite(workspaceId, l.user_id, valor)
+                                    await onMudou()
+                                }}
+                                onRemover={async () => {
+                                    await removerLimite(workspaceId, l.user_id)
+                                    await onMudou()
+                                }}
                             />
                         ))}
                     </ItemGroup>

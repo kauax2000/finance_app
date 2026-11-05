@@ -10,7 +10,18 @@ describe("Membros no layout A", () => {
     it("o topo convida pelo diálogo e recarrega ao fechar", () => {
         expect(pagina).toContain("<WorkspaceInviteDialog")
         expect(pagina).toContain("Convidar pessoa")
-        expect(pagina).toMatch(/if \(!aberto\) void fetchMembersAndInvites\(\)/)
+        expect(pagina).toMatch(/if \(!aberto\) void recarregar\(\)/)
+    })
+
+    it("a tela lê um pacote só, com cache, e abre inteira", () => {
+        expect(pagina).toContain("fetchMembersPageBundle(currentWorkspaceId!, user)")
+        expect(pagina).toContain("membersPageBundleKeys.bundle(")
+        expect(pagina).toContain("staleTime: 60_000")
+        expect(pagina).toContain("queryClient.invalidateQueries({")
+        expect(pagina).toMatch(/if \(bundleQuery\.isPending\) \{\s*return <Loading \/>/)
+        expect(pagina).not.toContain("useState<MemberWithProfile[]>")
+        expect(pagina).not.toMatch(/\.from\("workspace_invites"\)\s*\.select/)
+        expect(pagina).toContain("onMudou={recarregar}")
     })
 
     it("as três seções, com as âncoras das outras jornadas", () => {

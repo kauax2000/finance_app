@@ -12,6 +12,8 @@ export const queryRoot = {
     /** Subscriptions app page: rows + categories + cards + billing stats. */
     subscriptionsPageBundle: "subscriptionsPageBundle",
     billsPageBundle: "billsPageBundle",
+    /** Membros: membros + convites + diretório + limites + lançamentos do mês. */
+    membersPageBundle: "membersPageBundle",
     /** Category detail screen bundle (month-scoped). */
     categoryDetailBundle: "categoryDetailBundle",
     /** Transactions list sidebar: has-any-tx + plan/sub pickers. */
@@ -84,6 +86,11 @@ export const subscriptionsPageBundleKeys = {
 export const billsPageBundleKeys = {
     bundle: (workspaceId: string) =>
         [queryRoot.billsPageBundle, workspaceId] as const,
+}
+
+export const membersPageBundleKeys = {
+    bundle: (workspaceId: string) =>
+        [queryRoot.membersPageBundle, workspaceId] as const,
 }
 
 export const transactionsSearchKeys = {

@@ -9,6 +9,8 @@ const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.profile,
     // PII de outros membros (emails/nomes/avatars) fora do IndexedDB
     queryRoot.memberDirectory,
+    // o pacote de Membros carrega o mesmo diretório
+    queryRoot.membersPageBundle,
     // resultado de busca digitada: efêmero, não vale gravar
     queryRoot.transactionsSearch,
     // a frase rápida busca de novo quando precisa: não vale gravar

@@ -7,6 +7,7 @@ import {
     creditCardsKeys,
     installmentPlansKeys,
     memberDirectoryKeys,
+    membersPageBundleKeys,
     queryRoot,
     statementTotalsKeys,
     subscriptionsKeys,
@@ -91,6 +92,8 @@ export async function invalidateWorkspaceData(
             [queryRoot.creditCardsPageBundle, workspaceId],
             billsPageBundleKeys.bundle(workspaceId),
             ["dashboardPendingBills", workspaceId],
+            // o gasto do mês na seção Limites de Membros
+            membersPageBundleKeys.bundle(workspaceId),
         ]) {
             tasks.push(queryClient.invalidateQueries({ queryKey }))
         }
@@ -172,6 +175,11 @@ export async function invalidateWorkspaceData(
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: memberDirectoryKeys.list(workspaceId),
+            }),
+        )
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: membersPageBundleKeys.bundle(workspaceId),
             }),
         )
     }
