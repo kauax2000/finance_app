@@ -23,15 +23,15 @@ export type LinkDeRecuperacao =
     | { tipo: "nada" }
 
 /**
- * O que o endereço de `/reset-password` trouxe. Erro (`error` ou `error_code`,
- * no hash ou na query) vence o token: o Supabase pode mandar os dois juntos
- * num link vencido.
+ * O que o endereço de `/reset-password` trouxe. Erro (`error`, `error_code` ou
+ * `error_description`, no hash ou na query) vence o token: o Supabase pode mandar
+ * os dois juntos num link vencido.
  */
 export function lerLinkDeRecuperacao(hash: string, search: string): LinkDeRecuperacao {
     const h = new URLSearchParams(hash.replace(/^#/, ""))
     const q = new URLSearchParams(search.replace(/^\?/, ""))
     const pega = (k: string) => h.get(k) ?? q.get(k)
-    if (pega("error") || pega("error_code")) return { tipo: "erro" }
+    if (pega("error") || pega("error_code") || pega("error_description")) return { tipo: "erro" }
     const accessToken = pega("access_token")
     if (!accessToken) return { tipo: "nada" }
     return { tipo: "tokens", accessToken, refreshToken: pega("refresh_token") ?? "" }

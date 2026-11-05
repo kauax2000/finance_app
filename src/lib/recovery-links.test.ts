@@ -34,6 +34,9 @@ describe("lerLinkDeRecuperacao", () => {
     expect(lerLinkDeRecuperacao("#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid", "")).toEqual({ tipo: "erro" })
     expect(lerLinkDeRecuperacao("#access_token=a&error_code=otp_expired", "")).toEqual({ tipo: "erro" })
   })
+  it("error_description sozinho também é erro", () => {
+    expect(lerLinkDeRecuperacao("#error_description=x", "")).toEqual({ tipo: "erro" })
+  })
   it("erro na query", () => {
     expect(lerLinkDeRecuperacao("", "?error=access_denied&error_description=x")).toEqual({ tipo: "erro" })
   })

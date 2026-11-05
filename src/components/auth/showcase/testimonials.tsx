@@ -38,7 +38,7 @@ export const TESTIMONIALS = [
     { id: 10, name: "Beatriz N.", quote: "Parcelo menos desde que vi todas as parcelas juntas numa tela só." },
     { id: 11, name: "Gabriel O.", quote: "Uso no computador no trabalho e no celular no mercado. É a mesma conta." },
     { id: 12, name: "Renato C.", quote: "Chamei minha mãe pra carteira da casa. Ela lança a feira pelo celular." },
-    { id: 13, name: "Helena B.", quote: "Esqueci a senha e voltei com um código no e-mail, sem chamar ninguém." },
+    { id: 13, name: "Helena B.", quote: "Esqueci a senha e voltei com um link no e-mail, sem chamar ninguém." },
     { id: 14, name: "Patrícia O.", quote: "Troquei de celular e entrei de novo em segundos. Estava tudo lá." },
 ] as const satisfies readonly Testimonial[]
 

@@ -16,8 +16,8 @@ import { getSafeInternalNextPath } from "@/lib/auth-return-path"
  * lacuna 2 de `docs/JORNADAS.md`.
  *
  * **Duas rotas são isentas, e não é preferência — é o mecanismo.** A
- * recuperação de senha chama `verifyOtp({ type: "recovery" })`, que **cria
- * sessão**, e só depois `updateUser({ password })`. Uma guarda ingênua veria
+ * recuperação de senha chega por link, e o link de recuperação cria sessão
+ * e só depois vem `updateUser({ password })`. Uma guarda ingênua veria
  * essa sessão e jogaria a pessoa para o Painel no meio da redefinição, com a
  * senha antiga ainda valendo. `/invites/accept` é isenta pelo motivo oposto: um
  * convite é aceito por quem **já** entrou tanto quanto por quem acabou de

@@ -75,7 +75,7 @@ export const FAMILY_ORDER: Record<SceneFamily, 0 | 1 | 2 | 3> = { login: 0, invi
 export const FAMILY_CAPTION: Record<SceneFamily, SceneCaption> = {
     login: { title: "Seu mês num relance", description: "A mesma conta no computador e no celular." },
     register: { title: "Comece pela casa", description: "Orçamentos e contas divididas desde o primeiro dia." },
-    recovery: { title: "Acesso de volta em segundos", description: "Um código no seu e-mail e uma senha nova." },
+    recovery: { title: "Acesso de volta em segundos", description: "Um link no seu e-mail e uma senha nova." },
     invite: { title: "Uma carteira para a casa toda", description: "Cada pessoa lança do próprio aparelho." },
 }
 

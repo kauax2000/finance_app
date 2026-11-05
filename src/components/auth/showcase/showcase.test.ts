@@ -38,6 +38,12 @@ describe("depoimentos ilustrativos (8a)", () => {
         }
     })
 
+    it('a recuperação é por link, sem "código" nos textos nem na legenda', () => {
+        for (const f of ["src/components/auth/showcase/scenes.ts", "src/components/auth/showcase/testimonials.tsx"]) {
+            expect(semComentarios(lerFonte(f)).toLowerCase(), f).not.toContain("código")
+        }
+    })
+
     it('o nome é só "Primeiro I."', () => {
         for (const { name } of TESTIMONIALS) expect(name).toMatch(/^\p{Lu}\p{Ll}+ \p{Lu}\.$/u)
     })
