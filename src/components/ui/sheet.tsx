@@ -1,5 +1,6 @@
 "use client"
 
+import { ignorarToqueNoToast } from "@/lib/toast-interact"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Dialog as SheetPrimitive } from "radix-ui"
@@ -490,7 +491,10 @@ function SheetContent({
         fill={fillMobileViewport || undefined}
         className={className}
         style={style}
-        onInteractOutside={onInteractOutside}
+        onInteractOutside={(e) => {
+          ignorarToqueNoToast(e)
+          onInteractOutside?.(e)
+        }}
         onClickCapture={aoClicarLink}
         {...props}
       >
@@ -525,6 +529,7 @@ function SheetContent({
         style={largura !== null && lateral ? { ...style, width: largura } : style}
         // Ao lado, clicar na página não fecha: é para usar as duas.
         onInteractOutside={(e) => {
+          ignorarToqueNoToast(e)
           onInteractOutside?.(e)
           if (aoLado) e.preventDefault()
         }}

@@ -26,6 +26,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { overlayClassName } from "@/components/ui/drawer"
+import { ignorarToqueNoToast } from "@/lib/toast-interact"
 
 /**
  * O recuo que desvia do botão de fechar: `--dialog-close` é o território do × e
@@ -453,6 +454,7 @@ function DialogContent({
   ref,
   onClickCapture,
   onAnimationEnd,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> &
   VariantProps<typeof dialogContentVariants> & {
@@ -476,6 +478,10 @@ function DialogContent({
         onClickCapture={onClickCapture}
         fillMobileViewport={layout === "fixed" || size === "full"}
         onAnimationEnd={onAnimationEnd}
+        onInteractOutside={(e) => {
+          ignorarToqueNoToast(e)
+          onInteractOutside?.(e)
+        }}
         aria-busy={pending || undefined}
         className={cn(
           "has-[[data-slot=dialog-steps]]:h-(--drawer-h)",
@@ -498,6 +504,10 @@ function DialogContent({
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
+        onInteractOutside={(e) => {
+          ignorarToqueNoToast(e)
+          onInteractOutside?.(e)
+        }}
         {...revelacao}
         className={cn(
           dialogContentVariants({ size, layout }),

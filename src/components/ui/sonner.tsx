@@ -103,6 +103,10 @@ export function Toaster({ ...props }: ToasterProps) {
       // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de camada, e a
       // utility perderia calada. O toast já fica acima de tudo.
       className="toaster"
+      // O Radix modal põe `pointer-events: none` no `body`, e o toaster (filho do
+      // `body`) herdava: o clique atravessava o toast e caía no véu do diálogo,
+      // que fechava antes do toast.
+      style={{ pointerEvents: "auto" }}
       // Abaixo da barra do topo, e não por cima dela: o topo da pilha é
       // `--top-bar-bottom` mais 12px. Sem barra (as telas de acesso), 16px do topo; no
       // telefone, abaixo do notch.
