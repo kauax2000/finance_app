@@ -2,7 +2,7 @@
  * As telas do convidado (Bloco 7A, spec §12): o Painel dele, as transações, as
  * categorias e os cartões só para ler, as telas da própria conta e os planos
  * (spec §15.6: exportar e apagar, pelo Excluir conta, continuam liberados). Orçamento,
- * previsão, contas, assinaturas, membros, o Piloto e as telas de fatura e
+ * previsão, contas, assinaturas, membros e as telas de fatura e
  * conferência (o detalhe do cartão, `/credit-cards/{id}`) ficam de fora — a RLS
  * já devolve vazio, e a navegação não as oferece.
  */

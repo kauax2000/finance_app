@@ -21,7 +21,7 @@ describe("as rotas do convidado", () => {
     })
 
     it("o que é da casa fica de fora", () => {
-        for (const rota of ["/bills", "/previsao", "/members", "/subscriptions", "/piloto", "/comecar"]) {
+        for (const rota of ["/bills", "/previsao", "/members", "/subscriptions", "/comecar"]) {
             expect(rotaPermitidaAoConvidado(rota), rota).toBe(false)
         }
     })

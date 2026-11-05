@@ -25,8 +25,6 @@ export const ROUTES = {
     PLANS: "/plans",
     /** Os preços, públicos, fora da casca do app (Bloco 4). */
     PRECOS: "/precos",
-    /** O Piloto Automático: o que o app lançou sozinho, com desfazer (Bloco 4). Sem entrada no menu. */
-    PILOTO: "/piloto",
     /** A previsão: o seguro para gastar e a linha do tempo de 6 meses (Bloco 5). Sem entrada no menu. */
     PREVISAO: "/previsao",
     /** A jornada de 4 passos do que o app faz sozinho (Bloco 4). Sem entrada no menu. */
@@ -132,7 +130,6 @@ export const DASHBOARD_PAGE_TITLES: Record<string, string> = {
 export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.ME]: "Você",
     [ROUTES.PLANS]: "Planos e pagamentos",
-    [ROUTES.PILOTO]: "Piloto Automático",
     [ROUTES.PREVISAO]: "Previsão",
     [ROUTES.COMECAR]: "Começar",
     [ROUTES.PROJETOS]: "Projetos",

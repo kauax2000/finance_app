@@ -210,19 +210,6 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
 
 })
 
-describe("Piloto Automático (Bloco 4)", () => {
-  const f = semComentarios(lerFonte("src/components/wireframe/piloto-automatico-wireframe.tsx"), "tudo")
-
-  it("a rota importa o wireframe, e o desfazer confirma antes de apagar", () => {
-    expect(semComentarios(lerFonte("src/app/(app)/piloto/page.tsx"), "tudo")).toContain("<PilotoAutomaticoWireframe />")
-    expect(f).toContain("window.confirm(texto)")
-    expect(f).toContain("textoDesfazerImportacao(g.total)")
-    expect(f).toContain("Apagar este lançamento? O app não o lança de novo.")
-    expect(f).toContain("desfazerImportacao(supabase, ws, g.loteId)")
-    expect(f).toContain("desfazerLancamento(ws, i.id)")
-  })
-})
-
 describe("Previsão (Bloco 5)", () => {
   const regime = "Caixa: o dinheiro que sai neste mês. A fatura conta no mês em que vence."
 
