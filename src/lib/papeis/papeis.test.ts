@@ -85,7 +85,7 @@ describe("montarConvite: os ramos da ordem da Edge", () => {
 })
 
 describe("fonte das telas de papéis e limites", () => {
-    const wf = semComentarios(lerFonte("src/components/wireframe/papeis-wireframe.tsx"))
+    const pessoas = semComentarios(lerFonte("src/components/members/pessoas-secao.tsx"))
     const pagina = semComentarios(lerFonte("src/app/(app)/members/page-client.tsx"))
     const dialogo = semComentarios(lerFonte("src/components/members/workspace-invite-dialog.tsx"))
     const limites = semComentarios(lerFonte("src/components/members/limites-secao.tsx"))
@@ -95,20 +95,20 @@ describe("fonte das telas de papéis e limites", () => {
     })
 
     it("trocar_papel com os três parâmetros da RPC", () => {
-        expect(wf).toMatch(
-            /supabase\.rpc\("trocar_papel", \{\s*p_workspace_id: workspaceId,\s*p_user_id: userId,\s*p_role: novo,\s*\}\)/,
+        expect(pagina).toMatch(
+            /supabase\.rpc\("trocar_papel", \{\s*p_workspace_id: currentWorkspaceId,\s*p_user_id: userId,\s*p_role: papel,\s*\}\)/,
         )
     })
 
     it("a troca de papel só para o dono, nunca na linha do dono nem na própria", () => {
-        expect(pagina).toMatch(/\{canManageMembers && !isOwner && !isMe \? \(\s*<TrocarPapelWireframe/)
-        expect(pagina.match(/<TrocarPapelWireframe/g)).toHaveLength(1)
-        expect(pagina).toContain('const isOwner = member.role === "owner"')
-        expect(pagina).toContain("const isMe = Boolean(user?.id === member.user_id)")
+        expect(pessoas).toMatch(/\{podeGerenciar && pessoa\.role !== "owner" && pessoa\.user_id !== meuUserId \? \(\s*<DropdownMenu>/)
+        expect(pessoas.match(/<DropdownMenu>/g)).toHaveLength(1)
+        expect(pagina).toContain("podeGerenciar={canManageMembers}")
+        expect(pagina).toContain("meuUserId={user.id}")
     })
 
     it("o link vai sem papel; o convite por e-mail passa por montarConvite", () => {
-        for (const f of [pagina, dialogo]) {
+        for (const f of [dialogo]) {
             const link = f.slice(f.indexOf("const handleCreateLinkInvite"), f.indexOf("const copyPersistedLink"))
             expect(link).toMatch(/body: \{\s*workspace_id: \w+,\s*invite_kind: "link",\s*\}/)
             expect(link).not.toMatch(/role|montarConvite|papelDoConvite/)

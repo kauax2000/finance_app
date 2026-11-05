@@ -7,24 +7,12 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
-import {
-    Alert,
-    AlertDescription,
-} from "@/components/ui/alert"
-import {
-    PageSection,
-    PageSectionHeader,
-    PageSectionTitle,
-} from "@/components/ui/page-section"
-import { useTimeout } from "@/hooks/use-timeout"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { UserPlusIcon } from "@heroicons/react/16/solid"
 import {
-    ClockIcon,
     EnvelopeIcon as EnvelopeOutlineIcon,
     UserGroupIcon,
-    UserPlusIcon,
     WalletIcon,
 } from "@heroicons/react/24/outline"
 import { useAuth } from "@/components/providers"
@@ -34,26 +22,20 @@ import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { ConvitesPendentesSecao } from "@/components/members/convites-pendentes-secao"
 import { LimitesSecao } from "@/components/members/limites-secao"
-import { PAPEL_DO_CONVITE_INICIAL, PapelDoConvite } from "@/components/members/papel-do-convite"
-import { TrocarPapelWireframe } from "@/components/wireframe/papeis-wireframe"
-import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
-import { TrocaSuave } from "@/lib/troca-suave"
+import { memberDisplayName, PessoasSecao, type MemberWithProfile } from "@/components/members/pessoas-secao"
+import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
+import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
     dismissPageFetchError,
     toastError,
     toastPageFetchError,
     toastSuccess,
 } from "@/lib/toast"
-import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
-import { Spinner } from "@/components/ui/spinner"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-    Badge,
-} from "@/components/ui/badge"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -64,49 +46,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Form, FormInput, FormSubmit } from "@/components/ui/form"
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { cn, getInitials } from "@/lib/utils"
-import { identityToneFor } from "@/lib/avatar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { formatDatePtBr, formatDateTimeShortPtBr } from "@/lib/transaction-date"
+import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
     dispatchFinanceMembersMutated,
     FINANCE_MEMBERS_MUTATED_EVENT,
 } from "@/lib/workspace-data-events"
-
-// A lista lê só as quatro colunas de sempre; o responsável do convidado
-// (`sponsor_user_id`) ainda não aparece nesta tela.
-type MemberWithProfile = Omit<WorkspaceMember, "sponsor_user_id"> & {
-    profile?: {
-        id: string
-        email: string
-        full_name: string | null
-        avatar_url?: string | null
-        avatar_color?: string | null
-    } | null
-}
-
-function memberDisplayName(member: MemberWithProfile) {
-    return member.profile?.full_name || member.profile?.email || "Membro"
-}
-
-function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
-    if (!iso) return null
-    const end = new Date(iso).getTime()
-    if (Number.isNaN(end)) return null
-    const ms = end - Date.now()
-    if (ms <= 0) return "Este link já expirou."
-    const days = Math.ceil(ms / 86_400_000)
-    if (days > 1) return `Expira em cerca de ${days} dias (${formatDateTimeShortPtBr(iso)}).`
-    if (days === 1) return `Expira em cerca de 1 dia (${formatDateTimeShortPtBr(iso)}).`
-    const hours = Math.max(1, Math.ceil(ms / 3_600_000))
-    return `Expira em cerca de ${hours} h (${formatDateTimeShortPtBr(iso)}).`
-}
 
 /**
  * Fallback when `workspace_member_directory` RPC is unavailable. Fills profile only for the current user (RLS on `profiles`).
@@ -141,31 +86,6 @@ function mergeMemberRowsForDisplay(
 const membersPageSkeleton = (
     <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true" aria-label="Carregando membros">
         <MembersSectionSkeleton />
-        <div className="min-w-0 space-y-4">
-            <div className="flex h-6 min-w-0 items-center">
-                <Skeleton className="h-4 w-28" />
-            </div>
-            <Card padding="none">
-                <CardContent className="flex flex-col gap-0">
-                    <div className="space-y-2 px-4 py-4">
-                        <Skeleton className="h-4 w-14" />
-                        <Skeleton className="h-10 w-full rounded-full" />
-                    </div>
-                    <div className="border-t border-border px-4 py-4">
-                        <div className="mb-3 flex items-center gap-2">
-                            <Skeleton className="size-4 shrink-0 rounded" />
-                            <Skeleton className="h-4 w-28" />
-                        </div>
-                        <Skeleton className="h-3 w-full max-w-sm" />
-                        <Skeleton className="mt-3 h-9 w-full max-w-56 rounded-full" />
-                    </div>
-                    <CardNote>
-                        <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
-                        <Skeleton className="h-3 w-full max-w-md" />
-                    </CardNote>
-                </CardContent>
-            </Card>
-        </div>
         <div className="min-w-0 space-y-2">
             <div className="flex min-w-0 items-end justify-between gap-2">
                 <Skeleton className="h-3 w-40" />
@@ -208,22 +128,16 @@ export default function MembersPage() {
         isAdulto,
         loading: workspaceLoading,
     } = useWorkspace()
-    const later = useTimeout()
+    const isMobile = useIsMobile()
     const [members, setMembers] = useState<MemberWithProfile[]>([])
     const [invites, setInvites] = useState<WorkspaceInvite[]>([])
-    const [inviteEmail, setInviteEmail] = useState("")
-    const [papelDoConvite, setPapelDoConvite] = useState(PAPEL_DO_CONVITE_INICIAL)
     const [loading, setLoading] = useState(true)
-    const [savingInvite, setSavingInvite] = useState(false)
+    const [convidarAberto, setConvidarAberto] = useState(false)
     const [busyInviteId, setBusyInviteId] = useState<string | null>(null)
     const [busyResendInviteId, setBusyResendInviteId] = useState<string | null>(
         null,
     )
     const [busyMemberId, setBusyMemberId] = useState<string | null>(null)
-    const [savingLink, setSavingLink] = useState(false)
-    const [generatedLinkUrl, setGeneratedLinkUrl] = useState<string | null>(null)
-    const [generatedLinkExpiresAt, setGeneratedLinkExpiresAt] = useState<string | null>(null)
-    const [linkCopied, setLinkCopied] = useState(false)
     const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
     const [removeTarget, setRemoveTarget] = useState<{
         userId: string
@@ -232,19 +146,6 @@ export default function MembersPage() {
     } | null>(null)
 
     const canManageMembers = Boolean(currentWorkspaceId && isWorkspaceOwner(currentWorkspaceId))
-
-    const pendingLinkInvite = useMemo(
-        () => invites.find((i) => i.invited_email == null),
-        [invites],
-    )
-    const effectiveLinkUrl = generatedLinkUrl
-    const linkInviteExpiresAt =
-        pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
-
-    const pendingEmailInvites = useMemo(
-        () => invites.filter((invite) => invite.invited_email != null),
-        [invites],
-    )
 
     const fetchMembersAndInvites = useCallback(async () => {
         if (!currentWorkspaceId) return
@@ -366,115 +267,24 @@ export default function MembersPage() {
             window.removeEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
     }, [fetchMembersAndInvites])
 
-    const handleInvite = async () => {
-        if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return
-
-        const convite = montarConvite({ ...papelDoConvite, email: inviteEmail })
-        if (!convite.ok) {
-            toastError(ERRO_DO_CONVITE[convite.erro], { id: "convite-email" })
-            return
-        }
-        const emailLower = inviteEmail.trim().toLowerCase()
-        setSavingInvite(true)
-        try {
-            const res = await invokeEdgeJson<{
-                invite_id?: string
-                expires_at?: string
-            }>("workspace-invites-create", {
-                body: { workspace_id: currentWorkspaceId, ...convite.corpo },
-            })
-            const resBody = res as { error?: unknown }
-            if (typeof resBody.error === "string" && resBody.error.trim()) {
-                throw new Error(resBody.error.trim())
-            }
-            setInviteEmail("")
-            setPapelDoConvite(PAPEL_DO_CONVITE_INICIAL)
-            if (res.invite_id && user?.id) {
-                const expiresAt =
-                    typeof res.expires_at === "string" && res.expires_at.trim()
-                        ? res.expires_at.trim()
-                        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-                setInvites((prev) => {
-                    if (prev.some((i) => i.id === res.invite_id)) return prev
-                    const row: WorkspaceInvite = {
-                        id: res.invite_id!,
-                        workspace_id: currentWorkspaceId,
-                        invited_email: emailLower,
-                        role: convite.corpo.role,
-                        menor: convite.corpo.menor,
-                        consentimento_em: convite.corpo.menor ? new Date().toISOString() : null,
-                        status: "pending",
-                        expires_at: expiresAt,
-                        created_by: user.id,
-                        created_at: new Date().toISOString(),
-                        accepted_at: null,
-                        usage_count: 0,
-                        max_uses: 1,
-                    }
-                    return [row, ...prev]
-                })
-            }
-            await fetchMembersAndInvites()
-            dispatchFinanceMembersMutated()
-            toastSuccess("Convite enviado", { id: "convite-email", description: emailLower })
-        } catch (error) {
-            console.error("Error creating invite:", error)
-            toastError(
-                error instanceof Error ? error.message : "Não foi possível enviar o convite",
-                { id: "convite-email" },
-            )
-        } finally {
-            setSavingInvite(false)
-        }
-    }
-
-    const handleCreateLinkInvite = async () => {
+    const handleTrocarPapel = async (pessoa: MemberWithProfile, papel: "member" | "guest") => {
         if (!currentWorkspaceId || !canManageMembers) return
-
-        setSavingLink(true)
-        setGeneratedLinkUrl(null)
-        setGeneratedLinkExpiresAt(null)
-        setLinkCopied(false)
-        try {
-            const res = await invokeEdgeJson<{
-                invite_url?: string
-                expires_at?: string
-            }>("workspace-invites-create", {
-                body: {
-                    workspace_id: currentWorkspaceId,
-                    invite_kind: "link",
-                },
-            })
-            const url = res.invite_url?.trim() || null
-            if (url) setGeneratedLinkUrl(url)
-            const exp =
-                typeof res.expires_at === "string" ? res.expires_at.trim() : ""
-            if (exp) setGeneratedLinkExpiresAt(exp)
-            toastSuccess("Link gerado", {
-                id: "convite-link",
-                description: "Copie agora: por segurança ele não fica salvo.",
-            })
-            await fetchMembersAndInvites()
-        } catch (error) {
-            console.error("Error creating link invite:", error)
-            toastError(
-                error instanceof Error ? error.message : "Não foi possível gerar o link de convite",
-                { id: "convite-link" },
-            )
-        } finally {
-            setSavingLink(false)
+        const userId = pessoa.user_id
+        const id = `trocar-papel:${userId}`
+        setBusyMemberId(userId)
+        const { error } = await supabase.rpc("trocar_papel", {
+            p_workspace_id: currentWorkspaceId,
+            p_user_id: userId,
+            p_role: papel,
+        })
+        if (error) {
+            toastError(formatSupabasePostgrestError(error) ?? "Não foi possível trocar o papel.", { id })
+        } else {
+            toastSuccess(`${memberDisplayName(pessoa)} agora é ${rotuloDoPapel(papel).toLowerCase()}.`, { id })
+            dispatchFinanceMembersMutated()
         }
-    }
-
-    const copyPersistedLink = async () => {
-        if (!effectiveLinkUrl) return
-        try {
-            await navigator.clipboard.writeText(effectiveLinkUrl)
-            setLinkCopied(true)
-            later(() => setLinkCopied(false), 2000)
-        } catch {
-            toastError("Não foi possível copiar o link")
-        }
+        await fetchMembersAndInvites()
+        setBusyMemberId(null)
     }
 
     const handleResendInvite = async (inviteId: string) => {
@@ -523,9 +333,6 @@ export default function MembersPage() {
             toastError("Não foi possível revogar o convite", { id: `revogar-convite:${inviteId}` })
         } else {
             toastSuccess("Convite revogado", { id: `revogar-convite:${inviteId}` })
-            setLinkCopied(false)
-            setGeneratedLinkUrl(null)
-            setGeneratedLinkExpiresAt(null)
             dispatchFinanceMembersMutated()
         }
         await fetchMembersAndInvites()
@@ -600,6 +407,15 @@ export default function MembersPage() {
         return membersPageSkeleton
     }
 
+    // Convidar é só do dono.
+    const botaoConvidar = (className?: string) =>
+        canManageMembers ? (
+            <Button type="button" variant="primary" className={className} onClick={() => setConvidarAberto(true)}>
+                <UserPlusIcon aria-hidden />
+                Convidar pessoa
+            </Button>
+        ) : null
+
     return (
         <div className="min-w-0 max-w-full space-y-5">
             {revokeConfirmDialog}
@@ -648,141 +464,61 @@ export default function MembersPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <PageSection>
-                <PageSectionHeader>
-                    <PageSectionTitle>Membros</PageSectionTitle>
-                </PageSectionHeader>
-                <Card padding="none">
-                    <CardContent className="flex flex-col">
-                        <CardToolbar className="justify-end">
-                            <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                {members.length} membro{members.length !== 1 ? "s" : ""}
-                            </p>
-                        </CardToolbar>
-                        <ul
-                            className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
-                            role="list"
-                        >
-                            {members.map((member) => {
-                                const name = memberDisplayName(member)
-                                const email = member.profile?.email || ""
-                                const labelForAvatar =
-                                    name === "Membro" ? (email || "Membro") : name
-                                const avatarTone = identityToneFor(
-                                    member.profile?.avatar_color,
-                                    labelForAvatar
-                                )
-                                const displayAvatarUrl =
-                                    member.profile?.avatar_url?.trim() || null
-                                const isOwner = member.role === "owner"
-                                const isMe = Boolean(user?.id === member.user_id)
-                                return (
-                                    <li key={member.user_id} className="min-w-0">
-                                        {/* "Você" é o realce de escolha do sistema
-                                            (`selected`, rodada 204), com
-                                            `aria-current`: era o casco
-                                            sobrescrito à mão, raio e chão
-                                            incluídos. */}
-                                        <Card
-                                            padding="sm"
-                                            selected={isMe}
-                                            aria-current={isMe ? "true" : undefined}
-                                        >
-                                            <CardContent className="flex items-center gap-3">
-                                                {/* `sm` são 32px contra os 36 que
-                                                    este cartão desenhava à mão.
-                                                    36 não é degrau de nenhuma
-                                                    escala — foi medida escolhida
-                                                    no olho —, e 32 é o mesmo
-                                                    tamanho do avatar da lateral,
-                                                    que é a mesma peça: uma pessoa
-                                                    numa linha. */}
-                                                <Avatar size="sm">
-                                                    {displayAvatarUrl ? (
-                                                        <AvatarImage
-                                                            src={displayAvatarUrl}
-                                                            alt=""
-                                                            loading="lazy"
-                                                        />
-                                                    ) : null}
-                                                    <AvatarFallback
-                                                        className={cn(
-                                                            "font-semibold",
-                                                            avatarTone.surface,
-                                                            avatarTone.ink
-                                                        )}
-                                                    >
-                                                        {getInitials(labelForAvatar)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex flex-wrap items-center gap-1.5">
-                                                        <span className="truncate text-sm font-medium leading-snug">
-                                                            {name}
-                                                        </span>
-                                                        <Badge
-                                                            tone={isOwner ? "info" : "success"}
-                                                            className="shrink-0 px-1.5 py-0 text-2xs"
-                                                        >
-                                                            {rotuloDoPapel(member.role)}
-                                                        </Badge>
-                                                    </div>
-                                                    <p
-                                                        className="mt-0.5 truncate text-xs text-muted-foreground"
-                                                        title={email}
-                                                    >
-                                                        {email || "E-mail indisponível"}
-                                                    </p>
-                                                </div>
-                                                {canManageMembers && !isOwner && !isMe ? (
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon-sm"
-                                                        className="size-8 shrink-0"
-                                                        disabled={busyMemberId === member.user_id}
-                                                        aria-label="Remover membro"
-                                                        title="Remover membro"
-                                                        onClick={() =>
-                                                            openRemoveMemberDialog({
-                                                                userId: member.user_id,
-                                                                name,
-                                                                email,
-                                                            })
-                                                        }
-                                                    >
-                                                        {busyMemberId === member.user_id ? (
-                                                            <Spinner />
-                                                        ) : (
-                                                            <TrashIcon className="size-4" />
-                                                        )}
-                                                    </Button>
-                                                ) : null}
-                                            </CardContent>
-                                        </Card>
-                                        {canManageMembers && !isOwner && !isMe ? (
-                                            <TrocarPapelWireframe
-                                                workspaceId={currentWorkspaceId}
-                                                userId={member.user_id}
-                                                nome={name}
-                                                papel={member.role}
-                                                onTrocado={() => void fetchMembersAndInvites()}
-                                            />
-                                        ) : null}
-                                    </li>
-                                )
-                            })}
-                        </ul>
-                        <CardNote>
-                            <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                            <p className="min-w-0 break-words">
-                                Apenas o owner pode remover membros. Você não pode remover a si mesmo nem o owner do
-                                carteira.
-                            </p>
-                        </CardNote>
-                    </CardContent>
-                </Card>
-            </PageSection>
+            {isMobile ? (
+                // No telefone o título é o da casca (`TituloDaTela`); o convite vem logo abaixo.
+                botaoConvidar("w-full")
+            ) : (
+                <PageHeader collapse>
+                    <PageHeaderTitleRow>
+                        <PageHeaderTitle asChild>
+                            {/* O `<h1>` da página é o da barra do topo. */}
+                            <p aria-hidden="true">Membros e convidados</p>
+                        </PageHeaderTitle>
+                    </PageHeaderTitleRow>
+                    {canManageMembers ? <PageHeaderActions>{botaoConvidar()}</PageHeaderActions> : null}
+                </PageHeader>
+            )}
+
+            <WorkspaceInviteDialog
+                open={convidarAberto}
+                onOpenChange={(aberto) => {
+                    setConvidarAberto(aberto)
+                    if (!aberto) void fetchMembersAndInvites()
+                }}
+                user={user}
+                workspaceId={currentWorkspaceId}
+                canManageMembers={canManageMembers}
+            />
+
+            <PessoasSecao
+                pessoas={members}
+                meuUserId={user.id}
+                podeGerenciar={canManageMembers}
+                onTrocarPapel={(pessoa, papel) => void handleTrocarPapel(pessoa, papel)}
+                onRemover={(pessoa) =>
+                    openRemoveMemberDialog({
+                        userId: pessoa.user_id,
+                        name: memberDisplayName(pessoa),
+                        email: pessoa.profile?.email || "",
+                    })
+                }
+                ocupadoId={busyMemberId}
+            />
+
+            <div
+                id="workspace-invites"
+                className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
+            >
+                <ConvitesPendentesSecao
+                    convites={invites}
+                    podeGerenciar={canManageMembers}
+                    onReenviar={(convite) => void handleResendInvite(convite.id)}
+                    onCancelar={(convite) => void handleRevokeInvite(convite.id)}
+                    // O link não fica salvo (só o hash do token): copiar é gerar outro, no diálogo.
+                    onCopiarLink={() => setConvidarAberto(true)}
+                    ocupadoId={busyInviteId ?? busyResendInviteId}
+                />
+            </div>
 
             {isAdulto ? (
                 <div
@@ -796,308 +532,6 @@ export default function MembersPage() {
                     />
                 </div>
             ) : null}
-
-            <div
-                id="workspace-invites"
-                className="min-w-0 space-y-5 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
-            >
-                <PageSection>
-                    <PageSectionHeader>
-                        <PageSectionTitle>Convidar</PageSectionTitle>
-                    </PageSectionHeader>
-                    {!canManageMembers ? (
-                        <Alert>
-                            <AlertDescription>
-                                Apenas o proprietário da carteira pode enviar convites.
-                            </AlertDescription>
-                        </Alert>
-                    ) : null}
-                    <Card padding="none">
-                        <CardContent className="flex flex-col">
-                            <CardToolbar>
-                                <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
-                            </CardToolbar>
-                            <div className="flex flex-col gap-2 px-4 py-3">
-                                {canManageMembers ? (
-                                    <PapelDoConvite
-                                        valor={papelDoConvite}
-                                        onChange={setPapelDoConvite}
-                                        disabled={savingInvite}
-                                    />
-                                ) : null}
-                                <Form
-                                    layout="inline"
-                                    pending={savingInvite}
-                                    onSubmit={(e) => {
-                                        e.preventDefault()
-                                        void handleInvite()
-                                    }}
-                                >
-                                    <FormInput
-                                        label="E-mail"
-                                        value={inviteEmail}
-                                        onChange={(e) => setInviteEmail(e.target.value)}
-                                        placeholder="email@exemplo.com"
-                                        disabled={!canManageMembers || savingInvite}
-                                    />
-                                    <FormSubmit
-                                        disabled={!canManageMembers || !inviteEmail.trim()}
-                                    >
-                                        Convidar
-                                    </FormSubmit>
-                                </Form>
-                            </div>
-                            <Separator />
-                            <div className="flex flex-col gap-2 px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                    <LinkIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                                    <p className="text-sm font-medium leading-snug text-foreground">
-                                        Link de convite
-                                    </p>
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Qualquer pessoa com conta no app pode aceitar enquanto o convite estiver pendente.
-                                </p>
-{pendingLinkInvite && !effectiveLinkUrl ? (
-    <p className="text-xs text-muted-foreground">
-        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
-        gere um novo para copiar (o anterior deixa de valer).
-    </p>
-) : null}
-                                {effectiveLinkUrl ? (
-                                    <div className="space-y-1.5 pt-0.5">
-                                        <div className="flex min-w-0 flex-row items-center gap-2">
-                                            <Input
-                                                readOnly
-                                                value={effectiveLinkUrl}
-                                                className="min-w-0 flex-1 font-mono text-xs"
-                                            />
-                                            <div className="flex shrink-0 items-center gap-2">
-                                                <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon-lg"
-                                                            className="shrink-0"
-                                                            aria-label={
-                                                                linkCopied ? "Link copiado" : "Copiar link"
-                                                            }
-                                                            onClick={() => void copyPersistedLink()}
-                                                        >
-                                                            <span className="relative size-4 pointer-coarse:size-5">
-                                                                <TrocaSuave
-                                                                    chave={linkCopied ? "tique" : "copiar"}
-                                                                    className="absolute inset-0 flex items-center justify-center"
-                                                                >
-                                                                    {linkCopied ? (
-                                                                        <CheckIcon className="text-success" />
-                                                                    ) : (
-                                                                        <DocumentDuplicateIcon />
-                                                                    )}
-                                                                </TrocaSuave>
-                                                            </span>
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent side="bottom">
-                                                        Copiar link
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                                {pendingLinkInvite && canManageMembers ? (
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="h-8 shrink-0"
-                                                        disabled={busyInviteId === pendingLinkInvite.id}
-                                                        onClick={() =>
-                                                            void handleRevokeInvite(pendingLinkInvite.id)
-                                                        }
-                                                    >
-                                                        {busyInviteId === pendingLinkInvite.id ? (
-                                                            <Spinner />
-                                                        ) : (
-                                                            "Excluir link"
-                                                        )}
-                                                    </Button>
-                                                ) : null}
-                                            </div>
-                                        </div>
-                                        {linkInviteExpiresAt ? (
-                                            <p className="text-xs text-muted-foreground">
-                                                {formatLinkInviteExpiresAt(linkInviteExpiresAt)}
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                ) : (
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        disabled={!canManageMembers || savingLink}
-                                        onClick={() => void handleCreateLinkInvite()}
-                                        className="w-full sm:w-auto"
-                                    >
-                                        {savingLink ? (
-                                            <>
-                                                <Spinner />
-                                                Gerando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <LinkIcon className="mr-2 h-4 w-4" />
-                                                Gerar link de convite
-                                            </>
-                                        )}
-                                    </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </PageSection>
-
-                <PageSection>
-                    <PageSectionHeader>
-                        <PageSectionTitle>Convites pendentes</PageSectionTitle>
-                    </PageSectionHeader>
-                    <Card padding="none">
-                        <CardContent className="flex flex-col">
-                            <CardToolbar className="justify-end">
-                                <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                    {pendingEmailInvites.length} pendente
-                                    {pendingEmailInvites.length !== 1 ? "s" : ""}
-                                </p>
-                            </CardToolbar>
-                            {pendingEmailInvites.length === 0 ? (
-                                <div
-                                    className="px-4 py-12 md:py-14"
-                                    role="status"
-                                    aria-live="polite"
-                                >
-                                    <EmptyState variant="plain" size="lg">
-                                        <EmptyStateIcon variant="stack">
-                                            <UserPlusIcon aria-hidden />
-                                            <EnvelopeOutlineIcon aria-hidden />
-                                            <ClockIcon aria-hidden />
-                                        </EmptyStateIcon>
-                                        <EmptyStateTitle>Nenhum convite pendente</EmptyStateTitle>
-                                        <EmptyStateDescription>
-                                            Os convites enviados aparecem aqui até serem aceitos ou expirarem.
-                                        </EmptyStateDescription>
-                                    </EmptyState>
-                                </div>
-                            ) : (
-                                <ul className="divide-y divide-border" role="list">
-                                    {pendingEmailInvites.map((invite) => (
-                                        <li key={invite.id}>
-                                            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                                                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted/60">
-                                                        <EnvelopeIcon className="size-4 text-muted-foreground" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-medium leading-snug">
-                                                            {invite.invited_email ?? "Link compartilhável"}
-                                                        </p>
-                                                        <p className="mt-0.5 text-xs text-muted-foreground">
-                                                            {invite.invited_email == null ? (
-                                                                <>
-                                                                    {invite.max_uses == null
-                                                                        ? "Aceites ilimitados até revogar ou expirar"
-                                                                        : `${invite.usage_count ?? 0} / ${invite.max_uses} usos`}
-                                                                    {" · "}Expira:{" "}
-                                                                    {formatDatePtBr(
-                                                                        invite.expires_at
-                                                                    )}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    {rotuloDoPapel(invite.role)}
-                                                                    {" · "}Expira:{" "}
-                                                                    {formatDatePtBr(
-                                                                        invite.expires_at
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {canManageMembers ? (
-                                                    <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            disabled={
-                                                                busyResendInviteId === invite.id ||
-                                                                busyInviteId === invite.id
-                                                            }
-                                                            onClick={() => void handleResendInvite(invite.id)}
-                                                            className={cn(
-                                                                "min-w-0 flex-1 sm:flex-none sm:shrink-0",
-                                                                busyResendInviteId === invite.id &&
-                                                                    "sm:w-9 sm:px-0",
-                                                            )}
-                                                            aria-label={
-                                                                busyResendInviteId === invite.id
-                                                                    ? "Reenviando convite"
-                                                                    : "Reenviar convite por e-mail"
-                                                            }
-                                                            title={
-                                                                busyResendInviteId === invite.id
-                                                                    ? "Reenviando convite"
-                                                                    : "Reenviar convite por e-mail"
-                                                            }
-                                                        >
-                                                            {busyResendInviteId === invite.id ? (
-                                                                <Spinner />
-                                                            ) : (
-                                                                "Reenviar"
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            disabled={
-                                                                busyInviteId === invite.id ||
-                                                                busyResendInviteId === invite.id
-                                                            }
-                                                            onClick={() => void handleRevokeInvite(invite.id)}
-                                                            className="min-w-0 flex-1 sm:flex-none sm:shrink-0"
-                                                            aria-label={
-                                                                busyInviteId === invite.id
-                                                                    ? "Revogando convite"
-                                                                    : "Revogar convite"
-                                                            }
-                                                            title={
-                                                                busyInviteId === invite.id
-                                                                    ? "Revogando convite"
-                                                                    : "Revogar convite"
-                                                            }
-                                                        >
-                                                            {busyInviteId === invite.id ? (
-                                                                <>
-                                                                    <Spinner />
-                                                                    Revogando...
-                                                                </>
-                                                            ) : (
-                                                                "Revogar"
-                                                            )}
-                                                        </Button>
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                            <CardNote
-                                aria-hidden
-                            />
-                        </CardContent>
-                    </Card>
-                </PageSection>
-            </div>
         </div>
     )
 }
