@@ -213,10 +213,11 @@ export function WorkspaceInviteDialog({
                     guest: atual?.guest ?? null,
                     [role]: novo,
                 }))
+                void queryClient.invalidateQueries({ queryKey: inviteLinksKeys.links(workspaceId) })
             }
             toastSuccess("Link gerado", {
                 id: "convite-link",
-                description: "Copie agora: por segurança ele não fica salvo.",
+                description: "O link fica aqui enquanto valer.",
             })
             await fetchInvites()
             dispatchFinanceMembersMutated()
