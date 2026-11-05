@@ -84,3 +84,7 @@ docs/design/mockups/
 # graphify: só o grafo é versionado (o resto é cache e estado local)
 graphify-out/*
 !graphify-out/graph.json
+
+# Rascunhos locais: o ledger das skills e os mockups de decisão (não vão ao site)
+.superpowers/
+public/_mockups/

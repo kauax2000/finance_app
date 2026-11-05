@@ -7,6 +7,7 @@
     "npm:@modelcontextprotocol/server@2": "2.4.0",
     "npm:@supabase/middleware@1": "1.0.0",
     "npm:@supabase/server@^1.6.0": "1.9.2_@supabase+supabase-js@2.118.0",
+    "npm:@types/web-push@3": "3.6.4",
     "npm:openai@^4.52.5": "4.104.0_zod@4.6.7",
     "npm:zod@^4.3.6": "4.6.7"
   },
@@ -111,6 +112,12 @@
       "integrity": "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==",
       "dependencies": [
         "undici-types"
+      ]
+    },
+    "@types/web-push@3.6.4": {
+      "integrity": "sha512-GnJmSr40H3RAnj0s34FNTcJi1hmWFV5KXugE0mYWnYhgTAHLJ/dJKAwDmvPJYMke0RplY2XE9LnM4hqSqKIjhQ==",
+      "dependencies": [
+        "@types/node"
       ]
     },
     "abort-controller@3.0.0": {
