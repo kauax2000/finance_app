@@ -239,24 +239,25 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    forgot["/forgot-password?next: passo e-mail"] -->|"Enviar código"| resetMail[("resetPasswordForEmail redirectTo /reset-password?next")]
+    forgot["/forgot-password?next: passo e-mail"] -->|"Enviar link"| resetMail[("resetPasswordForEmail redirectTo /reset-password?next")]
     resetMail -->|"erro"| forgotErr(["Alerta em português"]) --> forgot
-    resetMail -->|"sucesso"| code(["Passo código: 6 dígitos"])
-    code -->|"Usar outro e-mail"| forgot
-    code -->|"Reenviar código, 60 s"| resetMail
-    code -->|"Continuar"| verify[("verifyOtp recovery")]
-    verify -->|"erro"| code
-    verify -->|"sucesso"| newPass(["Passo senha nova"])
+    resetMail -->|"sucesso"| sent(["Confira seu e-mail"])
+    sent -->|"Usar outro e-mail"| forgot
+    sent -->|"Reenviar link, 60 s"| resetMail
+
+    sent -.->|"a pessoa abre o link"| mailLink["Link do e-mail"]
+    mailLink --> reset["/reset-password?next#access_token"]
+    reset --> leitura{"lerLinkDeRecuperacao: error no hash ou na query?"}
+    leitura -->|"sim, antes de qualquer sessão"| expired(["Link expirado"])
+    leitura -->|"access_token"| setSess[("setSession")] --> newPass(["Passo senha nova"])
+    leitura -->|"nada"| getSess{"getSession tem sessão?"}
+    getSess -->|"não"| expired
+    getSess -->|"sim"| newPass
+    expired -->|"Pedir novo link"| forgot
+    expired -->|"Entrar"| loginPlain["/login?next"]
     newPass -->|"Salvar senha"| update[("updateUser; depois signOut")]
     update -->|"erro"| newPass
     update -->|"sucesso"| done(["Senha atualizada"]) -->|"3 s ou Entrar agora"| loginPwd["/login?reason=password-updated&next"]
-
-    mailLink["Link do e-mail"] --> reset["/reset-password?next#access_token"]
-    reset --> token{"Token no hash ou sessão de recuperação?"}
-    token -->|"não"| expired(["Link expirado"])
-    expired -->|"Pedir novo código"| forgot
-    expired -->|"Entrar"| loginPlain["/login?next"]
-    token -->|"sim"| newPass
 
     menus(["Menu do usuário no desktop ou /me"]) -->|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut sem scope, que é global")]
     signout --> guardOut{"AuthGuard sem usuário"}
@@ -271,13 +272,13 @@ flowchart TD
 |---|---|---|
 | Bootstrap | `/` manda para `/dashboard` ou `/login` depois de a sessão carregar; o sinal de carregando só aparece depois de 600 ms | `src/app/page-client.tsx`, `src/components/layout/app-bootstrap-screen.tsx` |
 | Guarda | Toda rota de `(app)` sem usuário vai para `/login?next=` com `replace`; o `next` leva caminho, query e hash (`/me#no-celular`). Sem exceções: `/invites/accept` saiu do grupo | `src/components/layout/auth-guard.tsx` |
-| Guarda invertida | Quem já entrou em `(auth)` vai para o `next` ou o Painel. Isentas: `/forgot-password` e `/reset-password` (o `verifyOtp` cria sessão antes da troca de senha) e `/invites/accept` | `src/components/layout/auth-signed-in-redirect.tsx` |
+| Guarda invertida | Quem já entrou em `(auth)` vai para o `next` ou o Painel. Isentas: `/forgot-password` e `/reset-password` (o link do e-mail traz a sessão de recuperação antes da troca de senha) e `/invites/accept` | `src/components/layout/auth-signed-in-redirect.tsx` |
 | `next` | Só caminho interno começando com `/`; o padrão é `/dashboard` | `src/lib/auth-return-path.ts` |
 | Casca | A casca vive no layout de `(auth)` (`AuthFrame`: `SplitShellRoot` e painel de marca, o mesmo nó entre as rotas); o formulário devolve só a coluna (`AuthShell`, um `SplitShellMain`) e publica o id da cena por `useAuthScene`. Sem publicação, `defaultSceneFor(pathname)`; o frame nunca lê a query. O `AuthStatus` saiu: a tela de status é o `AuthShell` com `icon` e `step` próprio. O painel desenha a cena pela tabela `SCENES`: navegador no login, tablet no convite, celular no cadastro e na recuperação | `src/app/(auth)/layout.tsx`, `src/components/layout/auth-frame.tsx`, `src/components/layout/auth-shell.tsx`, `src/components/auth/showcase/scene-context.tsx`, `src/components/auth/showcase/scenes.ts` |
 | Senha | Uma política só — 8+, minúscula, maiúscula, número e símbolo — aplicada no cadastro e na redefinição | `src/lib/password-policy.ts` |
-| Recuperação | Um formulário, duas portas: `/forgot-password` começa no código de 6 dígitos, `/reset-password` entra no passo da senha lendo o token do hash. O `resetPasswordForEmail` manda `redirectTo` para `/reset-password`, senão o link do e-mail cai na Site URL do projeto, que mora fora deste repositório | `src/components/password-recovery-form.tsx` |
-| `next` na recuperação | `/forgot-password?next` e `/reset-password?next` leem o `next` por `recoveryLinks`, que usa `getSafeInternalNextPath`; o `redirectTo` do e-mail vira `/reset-password?next=…` e "Senha atualizada" leva a `/login?reason=password-updated&next=…`. "Pedir novo código" volta a `/forgot-password?next=…`. Sem `next` a URL não muda. Depende de a allowlist de redirecionamento do Supabase (fora do repositório) aceitar a query string | `src/lib/recovery-links.ts`, `src/components/password-recovery-form.tsx` |
-| Reenviar | "Reenviar e-mail" (cadastro, `auth.resend({type:"signup"})`) e "Reenviar código" (recuperação, novo `resetPasswordForEmail`) esperam 60 s; a falha não zera a espera | `src/components/signup-form.tsx`, `src/components/password-recovery-form.tsx` |
+| Recuperação | Um formulário, duas portas: `/forgot-password` pede o e-mail e mostra "Confira seu e-mail" (prop `entry`: `request` \| `link`); `/reset-password` é a porta do link. O e-mail é o modelo padrão "Reset password" do Supabase (`{{ .ConfirmationURL }}`), configurado no painel, fora do repositório. `lerLinkDeRecuperacao(hash, search)` lê a URL: `error`/`error_code` no hash ou na query dá "Link expirado", **antes de olhar qualquer sessão** (quem já entrou e abre um link morto não vê o campo de senha); `access_token` vira `setSession`; sem nada, `getSession` (o cliente pode ter consumido o hash). Depois `updateUser`, `signOut` e "Senha atualizada". O `redirectTo` aponta para `/reset-password`, senão o link cai na Site URL | `src/components/password-recovery-form.tsx`, `src/lib/recovery-links.ts` |
+| `next` na recuperação | `/forgot-password?next` e `/reset-password?next` leem o `next` por `recoveryLinks`, que usa `getSafeInternalNextPath`; o `redirectTo` do e-mail vira `/reset-password?next=…` e "Senha atualizada" leva a `/login?reason=password-updated&next=…`. "Pedir novo link" volta a `/forgot-password?next=…`. Sem `next` a URL não muda. Depende de a allowlist de redirecionamento do Supabase (fora do repositório) aceitar a query string: `http://localhost:3000/**` no projeto novo | `src/lib/recovery-links.ts`, `src/components/password-recovery-form.tsx` |
+| Reenviar | "Reenviar e-mail" (cadastro, `auth.resend({type:"signup"})`) e "Reenviar link" (recuperação, novo `resetPasswordForEmail`) esperam 60 s; a falha não zera a espera | `src/components/signup-form.tsx`, `src/components/password-recovery-form.tsx` |
 | Convite aceito | Depois do `workspace-invites-accept` a página mostra o status "Convite aceito" com "Abrir a carteira" para `/dashboard`; não há redirecionamento automático. O fallback de carregamento já veste o `AuthShell` | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Erros | Tudo passa por `formatAuthErrorMessagePt`, inclusive esqueci e redefinir senha | `src/lib/supabase-errors.ts` |
 | Primeira conta | Trigger `on_auth_user_created` → `handle_new_user` cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita | `supabase/migrations/00000000000000_baseline.sql` |
@@ -2295,12 +2296,19 @@ continuam aqui para registro.
 | 4 | Erro de esqueci/redefinir senha em inglês | Tudo passa por `formatAuthErrorMessagePt` |
 | 5 | `/invites/accept` cercada pela casca do app para quem não entrou | A rota foi para o grupo `(auth)` |
 
+### Fechadas em 5/nov/2026
+
+| Era | Lacuna | O que fechou |
+|---|---|---|
+| 1 | A recuperação pedia um código de 6 dígitos que o modelo de e-mail do Supabase não trazia | A recuperação usa o link padrão do e-mail; o passo do código e o `verifyOtp` saíram |
+| 2 | Quem já estava logado e abria um link de recuperação expirado via o campo de senha, pela sessão que já existia | `lerLinkDeRecuperacao` checa `error`/`error_code` antes de qualquer sessão e mostra "Link expirado" |
+
 ### Fechadas em 12/out/2026
 
 | Era | Lacuna | O que fechou |
 |---|---|---|
-| 1 | O `next` se perdia na recuperação de senha | `recoveryLinks` o leva do pedido ao `redirectTo`, a "Pedir novo código" e ao login final |
-| 2 | Sem como reenviar o código ou o e-mail de confirmação | "Reenviar código" e "Reenviar e-mail", com espera de 60 s |
+| 1 | O `next` se perdia na recuperação de senha | `recoveryLinks` o leva do pedido ao `redirectTo`, a "Pedir novo link" e ao login final |
+| 2 | Sem como reenviar o código ou o e-mail de confirmação | "Reenviar link" e "Reenviar e-mail", com espera de 60 s |
 | 3 | O fallback de carregamento do convite ficava fora do casco | Passou a vestir o `AuthShell` |
 
 Risco conhecido: o `redirectTo` com `?next=` só funciona se a allowlist de
