@@ -24,7 +24,8 @@ import { ConvitesPendentesSecao } from "@/components/members/convites-pendentes-
 import { LimitesSecao } from "@/components/members/limites-secao"
 import { memberDisplayName, PessoasSecao, type MemberWithProfile } from "@/components/members/pessoas-secao"
 import { fetchMembersPageBundle } from "@/lib/queries/fetch-members-page-bundle"
-import { membersPageBundleKeys } from "@/lib/queries/keys"
+import { fetchInviteLinks, INVITE_LINKS_STALE_MS } from "@/lib/queries/fetch-invite-links"
+import { inviteLinksKeys, membersPageBundleKeys } from "@/lib/queries/keys"
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
@@ -84,6 +85,13 @@ export default function MembersPage() {
         queryFn: () => fetchMembersPageBundle(currentWorkspaceId!, user),
         enabled: !authLoading && !workspaceLoading && Boolean(user) && Boolean(currentWorkspaceId),
         staleTime: 60_000,
+    })
+    // Só aquece o cache: o diálogo de convite lê os links dele ao abrir.
+    useQuery({
+        queryKey: inviteLinksKeys.links(currentWorkspaceId ?? "__none__"),
+        queryFn: () => fetchInviteLinks(currentWorkspaceId!),
+        enabled: canManageMembers,
+        staleTime: INVITE_LINKS_STALE_MS,
     })
     const bundle = bundleQuery.data
     const members: MemberWithProfile[] = bundle?.members ?? []

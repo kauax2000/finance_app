@@ -9,6 +9,9 @@ describe("shouldPersistQuery", () => {
     it("não guarda o acesso: um snapshot restaurado nunca busca de novo", () => {
         expect(shouldPersistQuery(consulta(["acesso", "u1"]))).toBe(false)
     })
+    it("não guarda os links de convite: são segredo ao portador", () => {
+        expect(shouldPersistQuery(consulta(["inviteLinks", "w1"]))).toBe(false)
+    })
     it("guarda o pacote de Membros: a tela abre pronta, como Configurações", () => {
         expect(shouldPersistQuery(consulta(["membersPageBundle", "w1"]))).toBe(true)
     })

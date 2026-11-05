@@ -16,6 +16,8 @@ const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.transactionsSearch,
     // a frase rápida busca de novo quando precisa: não vale gravar
     queryRoot.fraseHistorico,
+    // o link de convite é segredo ao portador: nunca vai ao IndexedDB
+    queryRoot.inviteLinks,
     // lido uma vez por carga (staleTime Infinity): um snapshot restaurado nunca
     // buscaria de novo e o diálogo de volta se repetiria
     "acesso",

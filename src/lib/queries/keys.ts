@@ -14,6 +14,8 @@ export const queryRoot = {
     billsPageBundle: "billsPageBundle",
     /** Membros: membros + convites + diretório + limites + lançamentos do mês. */
     membersPageBundle: "membersPageBundle",
+    /** Links de convite por papel: segredo ao portador, só em memória. */
+    inviteLinks: "inviteLinks",
     /** Category detail screen bundle (month-scoped). */
     categoryDetailBundle: "categoryDetailBundle",
     /** Transactions list sidebar: has-any-tx + plan/sub pickers. */
@@ -91,6 +93,11 @@ export const billsPageBundleKeys = {
 export const membersPageBundleKeys = {
     bundle: (workspaceId: string) =>
         [queryRoot.membersPageBundle, workspaceId] as const,
+}
+
+export const inviteLinksKeys = {
+    links: (workspaceId: string) =>
+        [queryRoot.inviteLinks, workspaceId] as const,
 }
 
 export const transactionsSearchKeys = {
