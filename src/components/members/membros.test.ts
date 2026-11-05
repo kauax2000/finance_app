@@ -31,7 +31,8 @@ describe("Membros no layout A", () => {
         for (const s of ["Tornar convidado", "Tornar membro", "Remover da carteira"]) expect(pessoas).toContain(s)
     })
 
-    it("o ⋯ do convite reenvia, copia o link e cancela", () => {
-        for (const s of ["Reenviar", "Copiar link", "Cancelar convite", "Nenhum convite pendente"]) expect(convites).toContain(s)
+    it("o ⋯ do convite reenvia, gera um novo link e cancela", () => {
+        for (const s of ["Reenviar", "Gerar novo link", "Cancelar convite", "Nenhum convite pendente"]) expect(convites).toContain(s)
+        expect(convites).not.toContain("Copiar link")
     })
 })

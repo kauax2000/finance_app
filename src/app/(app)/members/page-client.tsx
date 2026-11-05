@@ -514,8 +514,8 @@ export default function MembersPage() {
                     podeGerenciar={canManageMembers}
                     onReenviar={(convite) => void handleResendInvite(convite.id)}
                     onCancelar={(convite) => void handleRevokeInvite(convite.id)}
-                    // O link não fica salvo (só o hash do token): copiar é gerar outro, no diálogo.
-                    onCopiarLink={() => setConvidarAberto(true)}
+                    // O link não fica salvo (só o hash do token): gerar outro, no diálogo, revoga o pendente.
+                    onGerarNovoLink={() => setConvidarAberto(true)}
                     ocupadoId={busyInviteId ?? busyResendInviteId}
                 />
             </div>

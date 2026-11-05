@@ -1,7 +1,7 @@
 "use client"
 
 import {
-    DocumentDuplicateIcon,
+    ArrowPathIcon,
     EllipsisHorizontalIcon,
     EnvelopeIcon,
     LinkIcon,
@@ -43,14 +43,14 @@ export function ConvitesPendentesSecao({
     podeGerenciar,
     onReenviar,
     onCancelar,
-    onCopiarLink,
+    onGerarNovoLink,
     ocupadoId,
 }: {
     convites: WorkspaceInvite[]
     podeGerenciar: boolean
     onReenviar: (convite: WorkspaceInvite) => void
     onCancelar: (convite: WorkspaceInvite) => void
-    onCopiarLink: (convite: WorkspaceInvite) => void
+    onGerarNovoLink: (convite: WorkspaceInvite) => void
     ocupadoId: string | null
 }) {
     return (
@@ -101,9 +101,9 @@ export function ConvitesPendentesSecao({
                                                             Reenviar
                                                         </DropdownMenuItem>
                                                     ) : (
-                                                        <DropdownMenuItem onSelect={() => onCopiarLink(convite)}>
-                                                            <DocumentDuplicateIcon aria-hidden />
-                                                            Copiar link
+                                                        <DropdownMenuItem onSelect={() => onGerarNovoLink(convite)}>
+                                                            <ArrowPathIcon aria-hidden />
+                                                            Gerar novo link
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuItem variant="destructive" onSelect={() => onCancelar(convite)}>
