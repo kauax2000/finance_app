@@ -18,8 +18,9 @@ religar() {
 trap religar EXIT
 
 echo "1. Copia os dados de public e auth do projeto antigo ($ANTIGO), só lendo."
-echo "2. APAGA e recarrega public e os usuários (auth) no projeto novo ($NOVO)."
+echo "2. APAGA e recarrega public e todo o auth (menos schema_migrations) no projeto novo ($NOVO)."
 echo "3. Confere a contagem de linhas de cada tabela nos dois lados."
+echo "Pare a escrita no app e no atalho antes de seguir."
 read -r -p "Digite virar para seguir: " RESPOSTA
 if [ "$RESPOSTA" != "virar" ]; then echo "Nada foi feito."; exit 1; fi
 
@@ -78,6 +79,8 @@ SQL
   echo "set session_replication_role = origin;"
   echo "commit;"
 } > "$TMP/carga.sql"
+# Outra sessão pode ter religado o CLI no meio: só apaga com o novo ligado.
+[ "$(cat supabase/.temp/project-ref)" = "$NOVO" ] || { echo "Ligado no projeto errado: nada foi apagado."; exit 1; }
 supabase db query --linked -f "$TMP/carga.sql" >/dev/null
 contar "$TMP/novo.json"
 

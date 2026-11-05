@@ -28,6 +28,13 @@ describe("migracao-sa-east-1-dados.sh", () => {
     expect(apaga).toBeGreaterThan(novo)
     expect(fonte.toLowerCase()).not.toContain("truncate")
   })
+  it("confere o projeto ligado logo antes de mandar a carga", () => {
+    const trava = fonte.indexOf('[ "$(cat supabase/.temp/project-ref)" = "$NOVO" ] || { echo "Ligado no projeto errado: nada foi apagado."; exit 1; }')
+    const carga = fonte.indexOf('supabase db query --linked -f "$TMP/carga.sql"')
+    expect(trava).toBeGreaterThan(fonte.indexOf("link --project-ref gexvgoknthcvdnqtdukq"))
+    expect(carga).toBeGreaterThan(trava)
+    expect(fonte.slice(trava, carga).split("\n").length).toBe(2)
+  })
   it("tira os meta-comandos do psql do dump antes de mandar à API", () => {
     expect(fonte).toContain(`grep -v '^\\\\' "$TMP/dump.sql"`)
   })
