@@ -40,6 +40,7 @@ import {
 import { userFacingFetchError } from "@/lib/supabase-errors"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
+import { janelaDaPrevisao } from "@/lib/previsao/use-previsao"
 import { usePendingBillsDashboardQuery } from "@/lib/queries/fetch-bills-dashboard"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardExpenseRowsQuery } from "@/lib/queries/use-credit-card-expense-rows"
@@ -248,16 +249,19 @@ export function useDashboardData() {
         !authLoading &&
         !workspaceLoading
 
+    // A previsão do Painel já pede uma janela que cobre os dois meses: um pedido só.
+    const janelaPrevisao = useMemo(() => janelaDaPrevisao(todayYmd), [todayYmd])
+
     const txQuery = useTransactionsRangeQuery(
         currentWorkspaceId,
         paddedTxIsoRange,
-        { enabled: queriesEnabled },
+        { enabled: queriesEnabled, cover: janelaPrevisao },
     )
 
     const prevTxQuery = useTransactionsRangeQuery(
         currentWorkspaceId,
         prevPaddedTxIsoRange,
-        { enabled: queriesEnabled },
+        { enabled: queriesEnabled, cover: janelaPrevisao },
     )
 
     const categoriesQuery = useCategoriesQuery(

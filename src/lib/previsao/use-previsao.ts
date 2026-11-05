@@ -11,6 +11,7 @@ import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useInstallmentPlansQuery } from "@/lib/queries/use-installment-plans"
 import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
+import type { TransactionsRangeKey } from "@/lib/queries/keys"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { supabase } from "@/lib/supabase"
@@ -39,6 +40,15 @@ function useContasDaPrevisaoQuery(workspaceId: string | null) {
     })
 }
 
+/** A janela de transações da previsão; o Painel a reusa (`cover`) para não pedir as dele à parte. */
+export function janelaDaPrevisao(hojeYmd: string): TransactionsRangeKey {
+    const mes = hojeYmd.slice(0, 7)
+    return {
+        from: filterRangeStartIso(periodBoundsFromYearMonth(shiftYearMonth(mes, -2)).period_start),
+        to: filterRangeEndIso(periodBoundsFromYearMonth(shiftYearMonth(mes, 6)).period_end),
+    }
+}
+
 /**
  * Tudo o que `fluxoDoMes`, `seguroParaGastar` e `projecaoMensal` leem, pelos mesmos hooks (e
  * `queryKey`) do Painel, mais as contas (`useContasDaPrevisaoQuery`). As transações pedem uma janela própria (outra chave do mesmo helper):
@@ -52,13 +62,7 @@ export function usePrevisao(workspaceId: string | null): {
 } {
     const { workspaces } = useWorkspace()
     const hojeYmd = useMemo(() => localYmdFromDate(new Date()), [])
-    const janela = useMemo(() => {
-        const mes = hojeYmd.slice(0, 7)
-        return {
-            from: filterRangeStartIso(periodBoundsFromYearMonth(shiftYearMonth(mes, -2)).period_start),
-            to: filterRangeEndIso(periodBoundsFromYearMonth(shiftYearMonth(mes, 6)).period_end),
-        }
-    }, [hojeYmd])
+    const janela = useMemo(() => janelaDaPrevisao(hojeYmd), [hojeYmd])
 
     const ligado = Boolean(workspaceId)
     const transacoes = useTransactionsRangeQuery(workspaceId, janela, { enabled: ligado })
