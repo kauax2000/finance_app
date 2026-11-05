@@ -54,7 +54,9 @@ describe("as versões do Dialog", () => {
     expect(passos).toContain("Passo 2 de 3 · B")
     expect(passos).toContain("pe-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]")
     // Com passos, o `fixed` ocupa o teto e não pula de um passo para outro.
-    expect(CODIGO).toContain("has-[[data-slot=dialog-steps]]:h-(--dialog-max-h)")
+    expect(CODIGO).toContain("has-[[data-slot=dialog-steps]]:h-(--dialog-max-h) has-[[data-slot=dialog-steps]]:[--dialog-max-h:min(90dvh,36rem)]")
+    // Sem passos, o teto é a janela: o diálogo só rola com conteúdo maior que a tela.
+    expect(CODIGO).toContain("[--dialog-max-h:calc(100dvh-4rem)]")
   })
 
   it("o cabeçalho centrado: align, o poço com o tom e os passos em pontos, opcionais", () => {

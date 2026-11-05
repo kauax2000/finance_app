@@ -1175,6 +1175,10 @@ declaração de `background-color` no trilho).
   escreva `min-h-0 flex-1 overflow-y-auto` à mão.** A rampa do `DialogBody`
   é `--dialog-body-fade-h` (24px; o painel de notificações declara 48), e a de
   baixo pode ser outra, `--dialog-body-fade-end-h` (por padrão, a mesma).
+  - **O teto de altura é a janela** (`--dialog-max-h: calc(100dvh - 4rem)`):
+    o diálogo mostra tudo o que couber e o corpo só rola com conteúdo maior
+    que a tela. A exceção é o diálogo com `DialogSteps`, de altura fixa em
+    `min(90dvh, 36rem)` para não pular entre passos.
   - **`<Dialog surface="auto">`** é diálogo no desktop e gaveta abaixo de
     768px. **Não escreva `if (isMobile)` trocando `Dialog` por `Sheet`.**
   - `pending` trava Esc, véu, ×, `DialogClose` e arraste; `dirty` +

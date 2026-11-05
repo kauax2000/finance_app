@@ -378,8 +378,10 @@ const dialogContentVariants = cva(
     "dialog-reveal",
     // O recuo do diálogo é um, 24px (o `px-6` que vinte chamadas já escreviam).
     "[--dialog-px:--spacing(6)]",
-    // O teto de altura do `fixed` vai em variável, para uma tela alta subi-lo.
-    "[--dialog-max-h:min(90dvh,36rem)]",
+    // O teto de altura do `fixed` é a janela com 2rem de margem: o diálogo mostra
+    // tudo o que couber e só rola com conteúdo maior que a tela (o teto de 36rem
+    // fazia o Editar perfil rolar numa tela com espaço sobrando).
+    "[--dialog-max-h:calc(100dvh-4rem)]",
     // O território do × a partir da borda direita (12 + 28 + 4). Zero sem ×,
     // como no `AlertDialog`, que herda esta régua.
     "[--dialog-close:0px]",
@@ -400,8 +402,9 @@ const dialogContentVariants = cva(
         auto: "grid gap-4 p-(--dialog-px) [--dialog-bleed:--spacing(6)]",
         fixed: [
           "flex max-h-(--dialog-max-h) flex-col gap-0 overflow-hidden p-0 [--dialog-bleed:0px]",
-          // Com passos a janela ocupa o teto e quem rola é o corpo.
-          "has-[[data-slot=dialog-steps]]:h-(--dialog-max-h)",
+          // Com passos a janela tem altura fixa (não pula de um passo para outro) e
+          // quem rola é o corpo; o teto dela fica nos 36rem, e não na janela inteira.
+          "has-[[data-slot=dialog-steps]]:h-(--dialog-max-h) has-[[data-slot=dialog-steps]]:[--dialog-max-h:min(90dvh,36rem)]",
         ].join(" "),
       },
     },
