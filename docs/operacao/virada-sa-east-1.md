@@ -93,7 +93,7 @@ painel do novo projeto.
   ensaio não estraga nada. Conferir: termina com `pronto: as contagens batem` e
   código de saída 0, e anotar o tempo (é a janela da virada). Isso valida, antes
   do dia, o `session_replication_role = replica` pela API, o filtro do dump e a
-  leitura do JSON do CLI.
+  leitura do JSON do CLI. Feito em 06/11/2026: contagens batem, 3min55s.
 - [ ] **Dono (só para as prévias da 2.0 e o dev):** o atalho do iPhone. O guia
   de Você › Lançar pelo iPhone baixa o arquivo versionado
   `public/atalho/Lançar gasto.shortcut`, com o host do Supabase gravado dentro.
