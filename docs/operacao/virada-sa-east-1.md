@@ -13,8 +13,9 @@ Só duas, na Vercel (Production e Preview) e no `.env.local`:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-Opcionais: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (push; **não muda**, a chave VAPID é a
-mesma) e `NEXT_PUBLIC_PWA_ENABLED`. A chave anônima do novo é outra: pegue no
+Também muda `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (push): o novo usa um par VAPID novo
+(06/11/2026 — a chave privada do antigo não estava guardada). Opcional:
+`NEXT_PUBLIC_PWA_ENABLED`. A chave anônima do novo é outra: pegue no
 painel do novo projeto.
 
 ## 1. Antes (sem pressa)
@@ -22,9 +23,13 @@ painel do novo projeto.
 - [ ] **Dono:** cadastrar no novo os secrets das Edge Functions: `GROQ_API_KEY`,
   `RESEND_API_KEY`, `RESEND_FROM` (domínio verificado no Resend),
   `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `VAPID_PUBLIC_KEY`,
-  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `APP_BASE_URL` e `CRON_SECRET`. Os três
-  VAPID **iguais aos do antigo**, senão as assinaturas de push já salvas deixam de
-  valer e os avisos do celular param. Conferir:
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `APP_BASE_URL` e `CRON_SECRET`. Os VAPID
+  são um **par novo** (gerado com `npx web-push generate-vapid-keys` em
+  06/11/2026; a privada do antigo não estava guardada): as assinaturas de push
+  já salvas deixam de valer, e cada pessoa ativa os avisos de novo depois da
+  virada. Feito em 06/11/2026: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `GROQ_*`,
+  `CLOUDFLARE_*` (testados) e `CRON_SECRET`; faltam `VAPID_SUBJECT` e os do
+  e-mail (`RESEND_*`, `APP_BASE_URL`), que esperam o domínio do app. Conferir:
   `supabase secrets list --project-ref gexvgoknthcvdnqtdukq` mostra pelo menos
   estes nomes (o CLI só lista nomes).
   - `APP_BASE_URL` = a origem de produção (`https://<domínio de produção>`, sem
@@ -125,9 +130,10 @@ painel do novo projeto.
   dono no banco de produção**: só muda o `active` dos jobs, sem apagar nenhum.
   Conferir: `select count(*) filter (where active) from cron.job;` dá `9` no novo
   e `0` no antigo.
-- [ ] **Dono:** trocar `NEXT_PUBLIC_SUPABASE_URL` e
-  `NEXT_PUBLIC_SUPABASE_ANON_KEY` pelos do novo na Vercel (Production e Preview)
-  e no `.env.local`.
+- [ ] **Dono:** trocar `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (a mesma
+  pública do secret `VAPID_PUBLIC_KEY` do novo) pelos do novo na Vercel
+  (Production e Preview) e no `.env.local`.
 - [ ] **Dono:** refazer o deploy na Vercel. `touch` não basta: o Next lê as
   variáveis `NEXT_PUBLIC_*` no build. Conferir: a aba Network do app publicado
   chama `gexvgoknthcvdnqtdukq.supabase.co`.
