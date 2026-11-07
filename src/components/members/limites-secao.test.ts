@@ -5,9 +5,13 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 const fonte = semComentarios(lerFonte("src/components/members/limites-secao.tsx"))
 
 describe("LimitesSecao", () => {
-    it("a lista é PageSection + Card + ItemGroup divided + Item", () => {
-        expect(fonte).toContain("<PageSection size=\"sm\"")
-        expect(fonte).toContain("<Card padding=\"none\"")
+    it("a lista é Collapsible card + CollapsibleRow com o resumo + ItemGroup divided + Item", () => {
+        expect(fonte).toContain("<Collapsible")
+        expect(fonte).toContain('variant="card"')
+        expect(fonte).toMatch(/<CollapsibleRow[^>]*trailing=\{/)
+        expect(fonte).toContain("resumoDosLimites(")
+        expect(fonte).toContain("<CollapsibleContent")
+        expect(fonte.indexOf("<PageSection")).toBeLessThan(fonte.indexOf("<Collapsible"))
         expect(fonte).toContain("<ItemGroup variant=\"divided\"")
         expect(fonte).toContain("<Item ")
         expect(fonte).toContain("Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.")
@@ -38,7 +42,7 @@ describe("LimitesSecao", () => {
     it("indisponível tem o texto exato; não busca nem espera sozinha (os dados vêm no pacote da tela)", () => {
         expect(fonte).toContain("Os limites ainda não estão disponíveis nesta carteira.")
         expect(fonte).toMatch(/<Card padding="none" role="status">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Os limites ainda/)
-        for (const s of ["<SkeletonGroup", "<Skeleton", "useEffect", "lerLimites(", "lerLancamentosDoMes("]) {
+        for (const s of ["<SkeletonGroup", "<Skeleton", "lerLimites(", "lerLancamentosDoMes("]) {
             expect(fonte).not.toContain(s)
         }
         expect(fonte).not.toContain("Carregando…</p>")
@@ -55,6 +59,35 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain("lerLimiteDigitado(valor)")
         expect(fonte).toContain("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
         expect(fonte).not.toContain('type="number"')
+    })
+
+    it("o ramo indisponível não mostra resumo", () => {
+        const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("<Collapsible "))
+        expect(ramo).toContain("Os limites ainda não estão disponíveis nesta carteira.")
+        expect(ramo).not.toContain("resumoDosLimites")
+    })
+
+    it("recolhida por padrão; abre com #limites (no carregar e no hashchange) e rola até a seção", () => {
+        expect(fonte).toContain("useState(false)")
+        expect(fonte).toMatch(/open=\{aberta\}\s*onOpenChange=\{setAberta\}/)
+        expect(fonte).toMatch(/window\.location\.hash !== "#limites"\) return\s*setAberta\(true\)/)
+        expect(fonte).toContain('addEventListener("hashchange"')
+        expect(fonte).toContain('removeEventListener("hashchange"')
+        expect(fonte).toContain('document.getElementById("limites")?.scrollIntoView({ block: "start" })')
+    })
+
+    it("o vazio: só quando ninguém tem limite, com a copy do dono e a de quem não é dono", () => {
+        expect(fonte).toContain("<EmptyState")
+        expect(fonte).toContain('variant="plain"')
+        expect(fonte).toContain('size="sm"')
+        expect(fonte).toContain("<BellAlertIcon")
+        expect(fonte).toContain("@heroicons/react/24/outline")
+        expect(fonte).toContain("limites.length === 0")
+        expect(fonte).toContain("Sem limites por enquanto")
+        expect(fonte).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
+        const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
+        expect(vazio).not.toContain("<Button")
+        expect(vazio).not.toContain("EmptyStateActions")
     })
 
     it("não importa o wireframe", () => {

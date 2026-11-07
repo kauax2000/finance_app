@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
+import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
 import {
     Dialog,
     DialogBody,
@@ -16,17 +17,21 @@ import {
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { AvatarDoMembro, memberDisplayName, type MemberWithProfile } from "@/components/members/pessoas-secao"
 import { PencilIcon } from "@heroicons/react/16/solid"
+import { BellAlertIcon } from "@heroicons/react/24/outline"
 
 import { Button } from "@/components/ui/button"
+import { EmptyState, EmptyStateDescription, EmptyStateIcon, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
+import { Muted } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import {
     gravarLimite,
     lerLimiteDigitado,
     linhasDosLimites,
     removerLimite,
+    resumoDosLimites,
     situacaoDoLimite,
     type LancamentoDaPessoa,
     type LimiteDaPessoa,
@@ -41,6 +46,9 @@ import { formatMoneyBrlInput } from "@/lib/money-brl"
  * de cada uma contra o limite. O dono edita; o membro só vê. Os dados chegam
  * no pacote da tela (`fetchMembersPageBundle`), junto com o resto. Se a leitura
  * falhou (a tabela ainda não existe no banco), fica um estado neutro.
+ *
+ * Não é a função principal da tela: nasce recolhida, com o resumo no cabeçalho,
+ * e abre sozinha quando o endereço traz `#limites` (os "Ver limite" dos avisos).
  */
 export function LimitesSecao({
     workspaceId,
@@ -63,15 +71,26 @@ export function LimitesSecao({
     /** Depois de gravar ou remover: relê o pacote. */
     onMudou: () => Promise<unknown>
 }) {
-    return (
-        <PageSection size="sm">
-            <PageSectionHeader>
-                <PageSectionTitle>Limites</PageSectionTitle>
-            </PageSectionHeader>
-            <PageSectionDescription>
-                Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
-            </PageSectionDescription>
-            {indisponivel ? (
+    const [aberta, setAberta] = useState(false)
+
+    // O servidor desenha fechada; o hash só existe no navegador.
+    useEffect(() => {
+        function abrirPeloHash() {
+            if (window.location.hash !== "#limites") return
+            setAberta(true)
+            requestAnimationFrame(() => document.getElementById("limites")?.scrollIntoView({ block: "start" }))
+        }
+        abrirPeloHash()
+        window.addEventListener("hashchange", abrirPeloHash)
+        return () => window.removeEventListener("hashchange", abrirPeloHash)
+    }, [])
+
+    if (indisponivel) {
+        return (
+            <PageSection size="sm">
+                <PageSectionHeader>
+                    <PageSectionTitle>Limites</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none" role="status">
                     <Item variant="flush" className="min-h-12">
                         <ItemContent>
@@ -79,33 +98,59 @@ export function LimitesSecao({
                         </ItemContent>
                     </Item>
                 </Card>
-            ) : (
-                <Card padding="none">
-                    <ItemGroup variant="divided">
-                        {linhasDosLimites(
-                            pessoas.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) })),
-                            limites, lancamentos,
-                            ym,
-                        ).map((l) => (
-                            <LinhaDoLimiteItem
-                                key={`${l.user_id}:${l.limite}`}
-                                linha={l}
-                                membro={pessoas.find((m) => m.user_id === l.user_id)}
-                                podeEditar={podeEditar}
-                                onSalvar={async (valor) => {
-                                    await gravarLimite(workspaceId, l.user_id, valor)
-                                    await onMudou()
-                                }}
-                                onRemover={async () => {
-                                    await removerLimite(workspaceId, l.user_id)
-                                    await onMudou()
-                                }}
-                            />
-                        ))}
-                    </ItemGroup>
-                </Card>
-            )}
-        </PageSection>
+            </PageSection>
+        )
+    }
+
+    const linhas = linhasDosLimites(
+        pessoas.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) })),
+        limites, lancamentos,
+        ym,
+    )
+
+    return (
+        <Collapsible variant="card" open={aberta} onOpenChange={setAberta}>
+            <CollapsibleRow size="xl" trailing={resumoDosLimites(linhas)}>
+                Limites
+            </CollapsibleRow>
+            <CollapsibleContent>
+                {limites.length === 0 ? (
+                    <EmptyState variant="plain" size="sm">
+                        <EmptyStateIcon>
+                            <BellAlertIcon aria-hidden />
+                        </EmptyStateIcon>
+                        <EmptyStateTitle>Sem limites por enquanto</EmptyStateTitle>
+                        <EmptyStateDescription>
+                            {podeEditar
+                                ? "Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite."
+                                : "O dono da carteira pode definir quanto cada pessoa gasta por mês."}
+                        </EmptyStateDescription>
+                    </EmptyState>
+                ) : (
+                    <Muted>
+                        Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
+                    </Muted>
+                )}
+                <ItemGroup variant="divided" className="-mx-(--collapsible-px)">
+                    {linhas.map((l) => (
+                        <LinhaDoLimiteItem
+                            key={`${l.user_id}:${l.limite}`}
+                            linha={l}
+                            membro={pessoas.find((m) => m.user_id === l.user_id)}
+                            podeEditar={podeEditar}
+                            onSalvar={async (valor) => {
+                                await gravarLimite(workspaceId, l.user_id, valor)
+                                await onMudou()
+                            }}
+                            onRemover={async () => {
+                                await removerLimite(workspaceId, l.user_id)
+                                await onMudou()
+                            }}
+                        />
+                    ))}
+                </ItemGroup>
+            </CollapsibleContent>
+        </Collapsible>
     )
 }
 

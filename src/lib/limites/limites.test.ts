@@ -9,6 +9,7 @@ import {
     lerLimiteDigitado,
     linhasDosLimites,
     nivelDoLimite,
+    resumoDosLimites,
     situacaoDoLimite,
     type LancamentoDaPessoa,
 } from "./limites"
@@ -93,5 +94,23 @@ describe("situacaoDoLimite", () => {
     })
     it("limite com centavos sem erro de ponto flutuante", () => {
         expect(situacaoDoLimite(1000, 10.1)).toEqual({ pct: 99, tipo: "sobra", valorCentavos: 10 })
+    })
+})
+
+describe("resumoDosLimites: o cabeçalho recolhido", () => {
+    const linha = (limite: number | null, gastoCentavos: number) => ({
+        user_id: "x", nome: "X", limite, gastoCentavos,
+        nivel: limite == null ? 0 : nivelDoLimite(gastoCentavos, Math.round(limite * 100)),
+    })
+    it("sem limite nenhum", () => {
+        expect(resumoDosLimites([])).toBe("Nenhum limite definido")
+        expect(resumoDosLimites([linha(null, 5_000), linha(null, 0)])).toBe("Nenhum limite definido")
+    })
+    it("conta quem tem limite; perto é 80–100%, acima é passar do limite", () => {
+        expect(resumoDosLimites([linha(100, 2_900), linha(100, 4_000), linha(null, 1)])).toBe("2 com limite")
+        expect(resumoDosLimites([linha(100, 8_500), linha(100, 2_900)])).toBe("2 com limite · 1 perto")
+        expect(resumoDosLimites([linha(100, 22_100), linha(100, 8_500)])).toBe("2 com limite · 1 acima")
+        expect(resumoDosLimites([linha(100, 10_000)])).toBe("1 com limite · 1 perto")
+        expect(resumoDosLimites([linha(100, 10_001)])).toBe("1 com limite · 1 acima")
     })
 })
