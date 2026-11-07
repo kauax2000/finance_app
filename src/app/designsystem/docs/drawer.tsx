@@ -262,7 +262,7 @@ export default function DrawerDoc() {
             type: "boolean",
             default: "false",
             description:
-              "O reposicionamento do vaul, desligado: com o teclado do iOS aberto a própria gaveta cabe acima dele, com o cabeçalho parado e só o meio rolando até o campo.",
+              "O reposicionamento do vaul, desligado: com o teclado do iOS aberto a gaveta fica parada, o teclado a cobre e só o meio rola o campo para cima, por trás do cabeçalho.",
           },
           {
             prop: "fill",

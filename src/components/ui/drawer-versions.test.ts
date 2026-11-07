@@ -111,24 +111,24 @@ describe("toda gaveta do telefone é a flush", () => {
     }
   })
 
-  it("com o teclado, a gaveta cabe no viewport visual: o cabeçalho fica e só o meio rola", () => {
+  it("com o teclado, a gaveta fica parada e só o meio rola por trás do cabeçalho", () => {
     const fonte = semComentarios(CODIGO)
-    // O vaul segue sem reposicionar; quem cuida é a gaveta, pelo viewport visual da janela dela.
     expect(fonte).toContain("repositionInputs = false")
     expect(fonte).toMatch(/const vv = janela\?\.visualViewport/)
     for (const evento of ["resize", "scroll"]) {
       expect(fonte).toContain(`vv.addEventListener("${evento}", medir)`)
       expect(fonte).toContain(`vv.removeEventListener("${evento}", medir)`)
     }
-    // O teto é a altura que sobra acima do teclado, e a borda encosta nele.
-    expect(fonte).toMatch(/setProperty\("--drawer-h", `calc\(\$\{vv\.height\}px/)
-    expect(fonte).toContain('setProperty("margin-bottom"')
-    // Tudo sai quando o teclado fecha ou a gaveta desmonta, e nada anda em laço.
-    expect(fonte).toMatch(/if \(!teclado\) return soltar\(\)/)
+    // A gaveta não encolhe até o teclado nem sobe: altura presa, e a rolagem do iOS desfeita.
+    expect(fonte).not.toMatch(/setProperty\("--drawer-h"/)
+    expect(fonte).not.toContain('setProperty("margin-bottom"')
+    expect(fonte).toContain("if (janela.scrollY !== rolagem) janela.scrollTo(0, rolagem)")
+    expect(fonte).toMatch(/setProperty\("height", `\$\{altura \|\|/)
+    // O meio ganha a folga do teclado para o campo subir.
+    expect(fonte).toMatch(/paddingBottom = `\$\{folgaBase \+ coberto\}px`/)
     expect(fonte).not.toMatch(/requestAnimationFrame/)
-    // Com degraus o vaul desloca a gaveta pela janela: ali o teclado fica com ele.
-    expect(fonte).toMatch(/if \(el && !degraus\) return prenderAcimaDoTeclado\(el\)/)
-    // A altura que acompanha o conteúdo não anima a troca do teclado.
+    expect(fonte).toMatch(/if \(el && !degraus\) return rolarSobOTeclado\(el\)/)
     expect(fonte).toContain('el.style.getPropertyValue("--drawer-teclado")')
   })
+
 })

@@ -1269,11 +1269,14 @@ declaração de `background-color` no trilho).
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha. **Com o teclado do iOS aberto, a gaveta
-    cabe no viewport visual** (`prenderAcimaDoTeclado`: `visualViewport`
-    `resize`/`scroll`, o teto vira a altura que sobra e a borda encosta no
-    teclado): o cabeçalho fica parado e só o meio rola, trazendo o campo
-    focado; com degraus o teclado fica com o vaul, e o `repositionInputs`
-    dele segue desligado. `drawer-versions.test.ts`.
+    não muda de tamanho nem de lugar** (`rolarSobOTeclado`, por
+    `visualViewport` `resize`/`scroll`): o teclado a cobre como numa folha
+    nativa, o meio ganha folga do tamanho do teclado e rola o campo para cima,
+    por trás do cabeçalho parado; a rolagem que o iOS faz na página é desfeita
+    (`scrollTo`), e a altura fica a de antes do teclado. Encolher a gaveta até o teclado foi recusado (rodada
+    de 07/11: ela subia até a barra de status e era cortada reta no teclado).
+    Com degraus o teclado fica com o vaul, e o `repositionInputs` dele segue
+    desligado. `drawer-versions.test.ts`.
   - **Gaveta no app sem `scaleBackground`**: ele encolhe a página com uma
     transformação, e a `BottomBar` (`fixed` dentro dela) sai da tela e
     reaparece com atraso quando a gaveta desce.
