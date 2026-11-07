@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react"
 
 import { AvatarDoMembro, type MemberWithProfile } from "@/components/members/pessoas-secao"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,15 @@ import {
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { currencyBRL } from "@/lib/formatters"
-import { cn } from "@/lib/utils"
+import {
+    chegarAEscolha,
+    chegarAoValor,
+    sairDaEscolha,
+    sairDoValor,
+    segurarTeclado,
+    semMovimento,
+    type OrigemDaViagem,
+} from "@/components/members/viagem-do-passo"
 import { ERRO_DO_LIMITE, lerLimiteDigitado, passoInicial, type LinhaDoLimite } from "@/lib/limites/limites"
 
 /**
@@ -63,9 +71,28 @@ export function AdicionarLimiteDialog({
         }
     }
 
-    // A troca de passo chega do desfoque, em ondas (cabeçalho, corpo, rodapé);
-    // cada peça remonta pela chave do passo para a entrada rodar de novo.
-    const passoNovo = mudou ? "dialog-step" : undefined
+    // A troca de passo é um gesto (`viagem-do-passo`): o nome tocado vira o título.
+    // Cabeçalho, corpo e rodapé remontam pela chave do passo, e as entradas rodam
+    // no layout do passo novo, antes da pintura.
+    const cabecalhoRef = useRef<HTMLDivElement>(null)
+    const corpoRef = useRef<HTMLDivElement>(null)
+    const rodapeRef = useRef<HTMLDivElement>(null)
+    const origem = useRef<OrigemDaViagem | null>(null)
+    const voltou = useRef(false)
+    const [trocando, setTrocando] = useState(false)
+    const soltarTeclado = useRef<(() => void) | null>(null)
+
+    useLayoutEffect(() => {
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        if (!mudou || !cab || !corpo || !pe || semMovimento()) return
+        // O `autoFocus` do campo já pegou o foco: a ponte do teclado sai.
+        soltarTeclado.current?.()
+        soltarTeclado.current = null
+        if (passo === 2 && origem.current) chegarAoValor(corpo, cab, pe, origem.current)
+        if (passo === 1 && voltou.current) chegarAEscolha(corpo, cab, pe)
+        origem.current = null
+        voltou.current = false
+    }, [passo, mudou])
 
     const titulo = passo === 1 ? "Adicionar limite" : `Limite de ${escolhida?.nome ?? ""}`
 
@@ -73,6 +100,34 @@ export function AdicionarLimiteDialog({
         setMudou(true)
         setErro(null)
         setPasso(n)
+    }
+
+    async function escolher(l: LinhaDoLimite, linha: HTMLElement) {
+        if (trocando) return
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        const nome = linha.querySelector("[data-nome]")
+        if (cab && corpo && pe && nome && !semMovimento()) {
+            origem.current = { nome: nome.getBoundingClientRect(), linha: linha.getBoundingClientRect() }
+            setTrocando(true)
+            soltarTeclado.current = segurarTeclado(corpo)
+            await sairDaEscolha(corpo, cab, pe, linha)
+            setTrocando(false)
+        }
+        setEscolhida(l)
+        setValor("")
+        irPara(2)
+    }
+
+    async function voltar() {
+        if (trocando) return
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        if (cab && corpo && pe && !semMovimento()) {
+            setTrocando(true)
+            await sairDoValor(corpo, cab, pe)
+            setTrocando(false)
+            voltou.current = true
+        }
+        irPara(1)
     }
 
     async function salvar(e: FormEvent<HTMLFormElement>) {
@@ -98,26 +153,21 @@ export function AdicionarLimiteDialog({
     const escolha = (
         <div>
             {/* Linhas de menu: sem fio, cantos de linha alta e o realce no toque. */}
-            <ItemGroup className={cn("-mx-3 w-auto gap-1", passoNovo, "[--stagger-base:60ms]")}>
+            <ItemGroup className="-mx-3 w-auto gap-1">
                 {lista.map((l) => {
                     const membro = pessoas.find((m) => m.user_id === l.user_id)
                     return (
                         <Item key={l.user_id} interactive asChild>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEscolhida(l)
-                                    setValor("")
-                                    irPara(2)
-                                }}
-                            >
+                            <button type="button" data-linha onClick={(e) => void escolher(l, e.currentTarget)}>
                                 {membro ? (
                                     <ItemMedia>
                                         <AvatarDoMembro member={membro} size="sm" />
                                     </ItemMedia>
                                 ) : null}
                                 <ItemContent className="min-w-0">
-                                    <ItemTitle className="truncate pointer-coarse:text-base">{l.nome}</ItemTitle>
+                                    <ItemTitle className="truncate pointer-coarse:text-base">
+                                        <span data-nome>{l.nome}</span>
+                                    </ItemTitle>
                                     <ItemDescription>{`${currencyBRL(l.gastoCentavos / 100)} no mês`}</ItemDescription>
                                 </ItemContent>
                                 <ItemChevron />
@@ -130,7 +180,7 @@ export function AdicionarLimiteDialog({
     )
 
     const campo = (
-        <div className={cn("flex flex-col gap-3", passoNovo, "[--stagger-base:60ms]")}>
+        <div className="flex flex-col gap-3">
             <FormInput
                 money
                 label="Limite mensal em R$"
@@ -146,23 +196,34 @@ export function AdicionarLimiteDialog({
     return (
         <Dialog surface="auto" pending={salvando} open={open} onOpenChange={onOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader key={`cabecalho-${passo}`} className={passoNovo}>
-                    <DialogTitle>{titulo}</DialogTitle>
+                <DialogHeader key={`cabecalho-${passo}`} ref={cabecalhoRef}>
+                    <DialogTitle>
+                        {passo === 1 ? (
+                            titulo
+                        ) : (
+                            <>
+                                <span data-prefixo>Limite de </span>
+                                <span data-nome>{escolhida?.nome ?? ""}</span>
+                            </>
+                        )}
+                    </DialogTitle>
                     <DialogDescription>
                         {passo === 1 ? "Escolha a pessoa." : "Quanto esta pessoa pode gastar por mês."}
                     </DialogDescription>
                 </DialogHeader>
                 <CustomForm pending={salvando} onSubmit={salvar}>
-                    <DialogBody>
+                    <DialogBody ref={corpoRef}>
                         <span aria-live="polite" className="sr-only">
                             {mudou ? titulo : null}
                         </span>
                         {/* Formulário: o diálogo acompanha a altura de cada passo (a altura do maior é só dos tutoriais). */}
-                        <div key={passo}>{passo === 1 ? escolha : campo}</div>
+                        <div key={passo} data-passo>
+                            {passo === 1 ? escolha : campo}
+                        </div>
                     </DialogBody>
-                    <DialogFooter key={`rodape-${passo}`} className={cn(passoNovo, "[--stagger-base:120ms]")}>
+                    <DialogFooter key={`rodape-${passo}`} ref={rodapeRef}>
                         {passo === 2 && pessoas.length > 1 ? (
-                            <Button type="button" variant="tertiary" disabled={salvando} onClick={() => irPara(1)}>
+                            <Button type="button" variant="tertiary" disabled={salvando} onClick={() => void voltar()}>
                                 Voltar
                             </Button>
                         ) : (
