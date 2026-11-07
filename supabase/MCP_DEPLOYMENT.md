@@ -33,7 +33,7 @@ pôs no repositório:
 - a ponte: o lançamento da IA entra na conferência do Bloco 9 por causa do
   `needs_review`.
 
-**Estado em 27/10/2026: nada publicado.** O front do `finance-app-2.0` também
+**Estado em 07/11/2026: o back está publicado no projeto de sa-east-1** (as três migrações do MCP e a Edge `mcp`, por `scripts/publicar-mcp.sh`; a URL responde 401 com `www-authenticate`). **Falta o servidor OAuth no painel (§2)**, e a rota `/oauth/consent` só chega com o 2.0. Em 27/10/2026: nada publicado. O front do `finance-app-2.0` também
 não: ele só vai para `main`, e para produção, quando os blocos planejados
 estiverem prontos (decisão do dono). **O banco de desenvolvimento é o de
 produção:** nada deste roteiro roda sem o pedido explícito do dono.
