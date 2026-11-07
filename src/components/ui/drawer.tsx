@@ -464,18 +464,27 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
   // (956 → 918 no iPhone 18 Pro Max), e a conta perderia a barra de setas e ✓
   // que fica acima do teclado — o rodapé assentaria atrás dela.
   let janelaInteira = janela.innerHeight
+  // O maior pedaço que o teclado já cobriu nesta abertura. O iOS mede primeiro
+  // com a barra de setas e ✓ (956 → 567 no iPhone 18 Pro Max) e, meio segundo
+  // depois, sem ela (635), com a barra ainda na tela: seguir o segundo número
+  // punha o rodapé atrás da barra. Enquanto o teclado está aberto, a área
+  // coberta só cresce; zera quando ele fecha.
+  let cobertoMax = 0
   const soltar = () => {
     // `--drawer-teclado` marca o estado para o `useAlturaQueAcompanha` não animar.
     for (const p of ["--drawer-teclado", "height", "padding-bottom"]) el.style.removeProperty(p)
   }
   const medir = () => {
-    const coberto = Math.max(janelaInteira, janela.innerHeight) - vv.height
-    if (coberto <= TECLADO_MIN || vv.scale >= 1.01) {
+    const medido = Math.max(janelaInteira, janela.innerHeight) - vv.height
+    if (medido <= TECLADO_MIN || vv.scale >= 1.01) {
+      cobertoMax = 0
       soltar()
       janelaInteira = janela.innerHeight
       altura = el.getBoundingClientRect().height
       return
     }
+    cobertoMax = Math.max(cobertoMax, medido)
+    const coberto = cobertoMax
     if (!el.style.getPropertyValue("--drawer-teclado")) {
       el.style.setProperty("--drawer-teclado", "1")
       el.style.setProperty("height", `${altura || el.getBoundingClientRect().height}px`)

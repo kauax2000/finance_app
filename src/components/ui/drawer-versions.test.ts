@@ -134,7 +134,9 @@ describe("toda gaveta do telefone é a flush", () => {
     // A gaveta guarda o lugar do teclado embaixo: o rodapé assenta logo acima dele.
     expect(fonte).toContain('el.style.setProperty("padding-bottom", `${coberto}px`)')
     // O teclado conta a barra de setas e ✓: mede contra a janela de antes dele.
-    expect(fonte).toContain("const coberto = Math.max(janelaInteira, janela.innerHeight) - vv.height")
+    expect(fonte).toContain("const medido = Math.max(janelaInteira, janela.innerHeight) - vv.height")
+    // O iOS volta a medir como se a barra tivesse sumido: com o teclado aberto, a área coberta só cresce.
+    expect(fonte).toContain("cobertoMax = Math.max(cobertoMax, medido)")
     // O foco não deixa o iOS rolar a página: o campo some 2000px por um quadro.
     expect(fonte).toContain('alvo.style.transform = "translateY(-2000px)"')
     expect(fonte).toContain('el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })')

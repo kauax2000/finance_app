@@ -362,15 +362,23 @@ export function LancamentoInteligente({
         // teclado, e ao fechar a página ficava rolada). Aberto, a rolagem fica onde
         // estava; quem acompanha o teclado é a medida do viewport visual.
         const rolagem = window.scrollY
+        // O iOS mede primeiro sem a barra de setas e ✓ do teclado e, meio segundo
+        // depois, às vezes como se ela tivesse sumido (567 → 635 no iPhone 18 Pro
+        // Max), com a barra ainda na tela. Com o teclado aberto, a altura usada é
+        // a menor já medida; zera quando ele fecha (a mesma conta da gaveta).
+        let alturaMin = Infinity
         const medir = () => {
             if (window.scrollY !== rolagem) window.scrollTo(0, rolagem)
-            casca.style.setProperty("--lancamento-placa-vh", `${vv.height}px`)
+            const aberto = window.innerHeight - vv.height > 120
+            alturaMin = aberto ? Math.min(alturaMin, vv.height) : Infinity
+            const altura = aberto ? alturaMin : vv.height
+            casca.style.setProperty("--lancamento-placa-vh", `${altura}px`)
             casca.style.setProperty("--lancamento-placa-vy", `${vv.offsetTop}px`)
             // O painel com o teclado aberto (uma edição): colado na barra de cima dele.
-            casca.toggleAttribute("data-teclado-placa", window.innerHeight - vv.height > 120)
+            casca.toggleAttribute("data-teclado-placa", aberto)
             if (congelada.current) return
-            const teclado = window.innerHeight - vv.height > 120
-            casca.style.setProperty("--lancamento-vh", `${vv.height}px`)
+            const teclado = aberto
+            casca.style.setProperty("--lancamento-vh", `${altura}px`)
             casca.style.setProperty("--lancamento-vy", `${vv.offsetTop}px`)
             casca.toggleAttribute("data-teclado", teclado)
         }
