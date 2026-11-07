@@ -28,7 +28,6 @@ import { fetchInviteLinks, INVITE_LINKS_STALE_MS } from "@/lib/queries/fetch-inv
 import { inviteLinksKeys, membersPageBundleKeys } from "@/lib/queries/keys"
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { CarteiraNoTopo } from "@/components/members/carteira-no-topo"
-import { usePageChromeAction } from "@/components/layout/page-chrome-provider"
 import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
     dismissPageFetchError,
@@ -80,8 +79,6 @@ export default function MembersPage() {
     } | null>(null)
 
     const canManageMembers = Boolean(currentWorkspaceId && isWorkspaceOwner(currentWorkspaceId))
-    // No telefone o convite é o botão da barra do topo (a rota o declara); aqui só o toque.
-    usePageChromeAction(() => setConvidarAberto(true), canManageMembers)
 
     // Tudo numa rodada só e com cache: a volta a Membros não mostra esqueleto.
     const queryClient = useQueryClient()
@@ -334,9 +331,15 @@ export default function MembersPage() {
             </AlertDialog>
 
             {isMobile ? (
-                // No telefone o título é o da casca (`TituloDaTela`) e o convite mora na
-                // barra do topo; a tela abre com a carteira, que a barra lateral não mostra.
-                currentWorkspace ? <CarteiraNoTopo carteira={currentWorkspace} pessoas={members} /> : null
+                // No telefone o título é o da casca (`TituloDaTela`); a tela abre com a
+                // carteira, que a barra lateral não mostra, e o convite mora nela.
+                currentWorkspace ? (
+                    <CarteiraNoTopo
+                        carteira={currentWorkspace}
+                        pessoas={members}
+                        onConvidar={canManageMembers ? () => setConvidarAberto(true) : undefined}
+                    />
+                ) : null
             ) : (
                 <PageHeader collapse>
                     <PageHeaderTitleRow>

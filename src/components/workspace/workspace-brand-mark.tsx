@@ -11,8 +11,8 @@ import { getWorkspaceIconComponent, isWorkspaceIconKey, WORKSPACE_ICON_MAP_MINI 
 type WorkspaceBrandMarkProps = {
     iconKey: string
     backgroundColor: string
-    /** O degrau do `ColorTile`: `xs` 24 dentro de uma linha de menu, `md` 32 na barra lateral, `lg` 36 no resto, `xl` 40 ao lado do campo de nome. */
-    size?: "xs" | "md" | "lg" | "xl"
+    /** O degrau do `ColorTile`: `xs` 24 dentro de uma linha de menu, `md` 32 na barra lateral, `lg` 36 no resto, `xl` 40 ao lado do campo de nome, `2xl` 44 no topo de Membros no telefone. */
+    size?: "xs" | "md" | "lg" | "xl" | "2xl"
     className?: string
     iconClassName?: string
 }
@@ -36,9 +36,9 @@ export function WorkspaceBrandMark({
     className,
     iconClassName,
 }: WorkspaceBrandMarkProps) {
-    // O `xl` desenha o ícone a 20px, e 20px é o mini (`20/solid`).
+    // O `xl` e o `2xl` desenham o ícone a 20px, e 20px é o mini (`20/solid`).
     const Cmp =
-        size === "xl"
+        size === "xl" || size === "2xl"
             ? (isWorkspaceIconKey(iconKey) ? WORKSPACE_ICON_MAP_MINI[iconKey] : UserGroupMiniIcon)
             : (getWorkspaceIconComponent(iconKey) ?? UserGroupIcon)
 
