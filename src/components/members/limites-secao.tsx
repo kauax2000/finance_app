@@ -326,7 +326,7 @@ function LinhaDoLimiteItem({
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                className="text-destructive"
+                                className="text-destructive [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)]"
                                 disabled={salvando}
                                 onClick={async () => {
                                     const ok = await confirmar({
