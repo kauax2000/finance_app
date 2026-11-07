@@ -156,7 +156,7 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toContain("fantasmas={fantasmas}")
     })
     it("o passo 1 escolhe a pessoa em linhas de menu: sem fio, arredondadas, com a seta", () => {
-        expect(dialogo).toContain('<ItemGroup className="gap-1">')
+        expect(dialogo).toContain('<ItemGroup className="-mx-3 w-auto gap-1">')
         expect(dialogo).not.toContain('variant="divided"')
         expect(dialogo).toMatch(/<Item key=\{l\.user_id\} interactive asChild>/)
         expect(dialogo).toContain("<ItemChevron />")

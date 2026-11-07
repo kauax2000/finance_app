@@ -301,7 +301,7 @@ function LinhaDoLimiteItem({
                     </Button>
                 </DialogTrigger>
             </Item>
-            <DialogContent>
+            <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>{`Limite de ${linha.nome}`}</DialogTitle>
                     <DialogDescription>Quanto esta pessoa pode gastar por mês.</DialogDescription>

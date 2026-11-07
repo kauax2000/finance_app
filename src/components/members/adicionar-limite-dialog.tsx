@@ -95,7 +95,7 @@ export function AdicionarLimiteDialog({
     const escolha = (
         <PecaDoPasso>
             {/* Linhas de menu: sem fio, cantos de linha alta e o realce no toque. */}
-            <ItemGroup className="gap-1">
+            <ItemGroup className="-mx-3 w-auto gap-1">
                 {lista.map((l) => {
                     const membro = pessoas.find((m) => m.user_id === l.user_id)
                     return (
@@ -147,7 +147,7 @@ export function AdicionarLimiteDialog({
 
     return (
         <Dialog surface="auto" pending={salvando} open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>{titulo}</DialogTitle>
                     <DialogDescription>
