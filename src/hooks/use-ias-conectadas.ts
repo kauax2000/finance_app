@@ -19,6 +19,9 @@ export function useIasConectadas() {
         meta: { errorToast: false },
         queryFn: async () => {
             const { data, error } = await supabase.auth.oauth.listGrants()
+            // Servidor OAuth desligado no projeto: nenhuma IA pode estar
+            // autorizada, então a lista é vazia, não um erro.
+            if (error && "code" in error && error.code === "feature_disabled") return []
             if (error) throw error
             return data ?? []
         },
