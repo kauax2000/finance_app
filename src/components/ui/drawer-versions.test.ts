@@ -126,7 +126,9 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).toMatch(/setProperty\("height", `\$\{altura \|\|/)
     // O meio ganha a folga do teclado para o campo subir.
     expect(fonte).toMatch(/paddingBottom = `\$\{folgaBase \+ coberto\}px`/)
-    expect(fonte).not.toMatch(/requestAnimationFrame/)
+    // O foco não deixa o iOS rolar a página: o campo some 2000px por um quadro.
+    expect(fonte).toContain('alvo.style.transform = "translateY(-2000px)"')
+    expect(fonte).toContain('el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })')
     expect(fonte).toMatch(/if \(el && !degraus\) return rolarSobOTeclado\(el\)/)
     expect(fonte).toContain('el.style.getPropertyValue("--drawer-teclado")')
   })

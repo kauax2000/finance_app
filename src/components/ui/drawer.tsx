@@ -424,13 +424,23 @@ const TECLADO_MIN = 80
  * Com o teclado do iOS aberto, a gaveta não muda de tamanho nem de lugar: o
  * teclado cobre a parte de baixo dela, como numa folha nativa, e o meio ganha
  * uma folga do tamanho do teclado para o campo focado rolar para cima, por
- * trás do cabeçalho, que fica parado. O iOS rola a página para mostrar o
- * campo, e a gaveta (`fixed`) subiria junto: a página volta para onde estava.
+ * trás do cabeçalho, que fica parado. O iOS rolaria a página para mostrar o
+ * campo, e a gaveta (`fixed`) subiria junto: o foco é feito sem essa rolagem,
+ * e a que escapar volta para onde estava.
  * A altura fica presa na de antes do teclado (o iOS também encolhe a janela, e
  * a gaveta que mede o conteúdo cresceria com a folga). Tudo é estilo inline e
  * sai quando o teclado fecha. Na moldura do catálogo a janela é a do
  * `<iframe>`, onde não há teclado.
  */
+/** Campo que abre o teclado: texto, número, e-mail…, área de texto ou editável. */
+function ehCampoDeTexto(alvo: HTMLElement | null): alvo is HTMLElement {
+  if (!alvo || alvo.nodeType !== 1) return false
+  if (alvo.isContentEditable || alvo.tagName === "TEXTAREA") return true
+  if (alvo.tagName !== "INPUT") return false
+  const semTeclado = ["checkbox", "radio", "range", "color", "file", "image", "button", "submit", "reset"]
+  return !semTeclado.includes((alvo as HTMLInputElement).type)
+}
+
 function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
   const janela = el.ownerDocument.defaultView
   const vv = janela?.visualViewport
@@ -484,16 +494,43 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     if (campo.bottom > visivel) achado.scrollTop += campo.bottom - visivel
     else if (campo.top < caixa.top + respiro) achado.scrollTop -= caixa.top + respiro - campo.top
   }
+  // O iOS centraliza o campo focado rolando a página, e a gaveta inteira pularia
+  // antes de o `scroll` acima desfazer. Com o campo empurrado 2000px para cima
+  // no instante do foco, o iOS o acha à vista e não rola nada; no quadro
+  // seguinte ele volta, e quem o traz para cima do teclado é o `medir` (a mesma
+  // manobra do `usePreventScroll` do vaul, desligado com o `repositionInputs`).
+  const esconder = (alvo: HTMLElement) => {
+    alvo.style.transform = "translateY(-2000px)"
+    janela.requestAnimationFrame(() => {
+      alvo.style.transform = ""
+      medir()
+    })
+  }
+  const aoSoltarDedo = (e: TouchEvent) => {
+    const alvo = e.target as HTMLElement | null
+    if (!ehCampoDeTexto(alvo) || alvo === el.ownerDocument.activeElement) return
+    e.preventDefault()
+    esconder(alvo)
+    alvo.focus({ preventScroll: true })
+  }
+  const aoFocar = (e: FocusEvent) => {
+    const alvo = e.target as HTMLElement | null
+    // Antes do teclado: a altura sem ele fica guardada.
+    medir()
+    if (ehCampoDeTexto(alvo) && !alvo.style.transform) esconder(alvo)
+  }
   medir()
   vv.addEventListener("resize", medir)
   vv.addEventListener("scroll", medir)
-  el.addEventListener("focusin", medir)
+  el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })
+  el.addEventListener("focusin", aoFocar)
   janela.addEventListener("scroll", medir)
   return () => {
     janela.removeEventListener("scroll", medir)
     vv.removeEventListener("resize", medir)
     vv.removeEventListener("scroll", medir)
-    el.removeEventListener("focusin", medir)
+    el.removeEventListener("touchend", aoSoltarDedo, { capture: true })
+    el.removeEventListener("focusin", aoFocar)
     soltar()
   }
 }
