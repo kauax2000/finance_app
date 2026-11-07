@@ -5,6 +5,7 @@ vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
+    ERRO_DO_LIMITE,
     LIMITE_MAXIMO,
     lerLimiteDigitado,
     linhasDosLimites,
@@ -102,5 +103,11 @@ describe("passoInicial: o primeiro passo de Adicionar limite", () => {
         expect(passoInicial(1)).toBe(2)
         expect(passoInicial(2)).toBe(1)
         expect(passoInicial(5)).toBe(1)
+    })
+})
+
+describe("ERRO_DO_LIMITE", () => {
+    it("a frase dos dois diálogos diz o teto de LIMITE_MAXIMO", () => {
+        expect(ERRO_DO_LIMITE).toBe("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
     })
 })

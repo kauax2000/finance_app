@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
 import {
@@ -32,6 +32,7 @@ import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitl
 import { Progress } from "@/components/ui/progress"
 import { currencyBRL } from "@/lib/formatters"
 import {
+    ERRO_DO_LIMITE,
     gravarLimite,
     lerLimiteDigitado,
     linhasDosLimites,
@@ -78,6 +79,15 @@ export function LimitesSecao({
     onMudou: () => Promise<unknown>
 }) {
     const [adicionando, setAdicionando] = useState(false)
+    const rolou = useRef(false)
+
+    // "Ver limite" (`/members#limites`): o contêiner só existe depois dos dados, quando a
+    // rolagem do navegador pelo hash já passou. Rola uma vez, quando o mês chega.
+    useEffect(() => {
+        if (!ym || rolou.current) return
+        rolou.current = true
+        if (window.location.hash === "#limites") document.getElementById("limites")?.scrollIntoView({ block: "start" })
+    }, [ym])
 
     if (indisponivel) {
         return (
@@ -194,12 +204,13 @@ function LinhaDoLimiteItem({
     onRemover: () => Promise<void>
 }) {
     const [aberto, setAberto] = useState(false)
-    const [valor, setValor] = useState(linha.limite == null ? "" : formatMoneyBrlInput(linha.limite))
+    // A lista só tem quem tem limite.
+    const limite = linha.limite!
+    const [valor, setValor] = useState(formatMoneyBrlInput(limite))
     const [salvando, setSalvando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
-    const gasto = currencyBRL(linha.gastoCentavos / 100)
-    const situacao = linha.limite == null ? null : situacaoDoLimite(linha.gastoCentavos, linha.limite)
-    const pct = situacao?.pct ?? 0
+    const situacao = situacaoDoLimite(linha.gastoCentavos, limite)
+    const pct = situacao.pct
     const tomPct = pct >= 100 ? "text-destructive" : pct >= 80 ? "text-warning" : "text-foreground"
 
     const corpo = (
@@ -213,33 +224,25 @@ function LinhaDoLimiteItem({
                 <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
                 <div className="flex min-w-0 items-baseline justify-between gap-3">
                     <ItemDescription>
-                        {situacao == null ? (
-                            `${gasto} no mês · sem limite`
+                        {situacao.tipo === "passou" ? (
+                            <span className="text-destructive">
+                                {"Passou "}
+                                {currencyBRL(situacao.valorCentavos / 100)}
+                            </span>
                         ) : (
-                            <>
-                                {situacao.tipo === "passou" ? (
-                                    <span className="text-destructive">
-                                        {"Passou "}
-                                        {currencyBRL(situacao.valorCentavos / 100)}
-                                    </span>
-                                ) : (
-                                    "Sobram " + currencyBRL(situacao.valorCentavos / 100)
-                                )}
-                                {` · limite ${currencyBRL(linha.limite!)}`}
-                            </>
+                            "Sobram " + currencyBRL(situacao.valorCentavos / 100)
                         )}
+                        {` · limite ${currencyBRL(limite)}`}
                     </ItemDescription>
-                    {situacao != null ? <span className={cn("nums shrink-0 text-sm font-medium", tomPct)}>{pct}%</span> : null}
+                    <span className={cn("nums shrink-0 text-sm font-medium", tomPct)}>{pct}%</span>
                 </div>
-                {situacao != null ? (
-                    <Progress
-                        value={pct}
-                        bands={[80, 100]}
-                        size="sm"
-                        className="mt-2"
-                        aria-label={`${linha.nome}: ${pct}% do limite do mês`}
-                    />
-                ) : null}
+                <Progress
+                    value={pct}
+                    bands={[80, 100]}
+                    size="sm"
+                    className="mt-2"
+                    aria-label={`${linha.nome}: ${pct}% do limite do mês`}
+                />
             </ItemContent>
         </>
     )
@@ -269,7 +272,7 @@ function LinhaDoLimiteItem({
         e.preventDefault()
         const n = lerLimiteDigitado(valor)
         if (n == null) {
-            setErro("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+            setErro(ERRO_DO_LIMITE)
             return
         }
         return rodar(() => onSalvar(n))
@@ -292,7 +295,7 @@ function LinhaDoLimiteItem({
                         type="button"
                         variant="tertiary"
                         size="icon-lg"
-                        aria-label={`${situacao == null ? "Definir" : "Editar"} o limite de ${linha.nome}`}
+                        aria-label={`Editar o limite de ${linha.nome}`}
                     >
                         <PencilIcon aria-hidden />
                     </Button>
@@ -315,21 +318,14 @@ function LinhaDoLimiteItem({
                         <FormError>{erro}</FormError>
                     </DialogBody>
                     <DialogFooter>
-                        {linha.limite != null ? (
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                disabled={salvando}
-                                onClick={() =>
-                                    void rodar(async () => {
-                                        await onRemover()
-                                        setValor("")
-                                    })
-                                }
-                            >
-                                Remover limite
-                            </Button>
-                        ) : null}
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={salvando}
+                            onClick={() => void rodar(onRemover)}
+                        >
+                            Remover limite
+                        </Button>
                         <FormCancel onClick={() => setAberto(false)}>Cancelar</FormCancel>
                         <FormSubmit>Salvar</FormSubmit>
                     </DialogFooter>

@@ -83,6 +83,9 @@ export async function lerLancamentosDoMes(workspaceId: string, ym: string): Prom
 /** O teto de `numeric(12,2)`. */
 export const LIMITE_MAXIMO = 9_999_999_999.99
 
+/** A frase do valor inválido, nos diálogos de adicionar e de editar. */
+export const ERRO_DO_LIMITE = "Informe um valor maior que zero, até R$ 9.999.999.999,99."
+
 /** O limite digitado em reais ("1.234,56"), ou `null` fora de (0, teto]. */
 export function lerLimiteDigitado(raw: string): number | null {
     const n = parseMoneyBrl(raw)

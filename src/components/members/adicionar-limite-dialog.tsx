@@ -18,7 +18,7 @@ import {
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { currencyBRL } from "@/lib/formatters"
-import { lerLimiteDigitado, passoInicial, type LinhaDoLimite } from "@/lib/limites/limites"
+import { ERRO_DO_LIMITE, lerLimiteDigitado, passoInicial, type LinhaDoLimite } from "@/lib/limites/limites"
 
 /**
  * "Adicionar limite" em dois passos: escolher quem (das pessoas sem limite),
@@ -41,7 +41,10 @@ export function AdicionarLimiteDialog({
 }) {
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState<1 | 2>(1)
-    const [escolhido, setEscolhido] = useState<string | null>(null)
+    // Congelados ao abrir e ao escolher: salvar relê o pacote antes de fechar, e a
+    // pessoa salva sai de `semLimite` durante a saída (o título perdia o nome).
+    const [lista, setLista] = useState(semLimite)
+    const [escolhida, setEscolhida] = useState<LinhaDoLimite | null>(null)
     const [valor, setValor] = useState("")
     const [erro, setErro] = useState<string | null>(null)
     const [salvando, setSalvando] = useState(false)
@@ -52,15 +55,15 @@ export function AdicionarLimiteDialog({
     if (open !== abertoAntes) {
         setAbertoAntes(open)
         if (open) {
+            setLista(semLimite)
             setPasso(passoInicial(semLimite.length))
-            setEscolhido(semLimite.length === 1 ? semLimite[0].user_id : null)
+            setEscolhida(semLimite.length === 1 ? semLimite[0] : null)
             setValor("")
             setErro(null)
             setMudou(false)
         }
     }
 
-    const escolhida = semLimite.find((l) => l.user_id === escolhido)
     const titulo = passo === 1 ? "Adicionar limite" : `Limite de ${escolhida?.nome ?? ""}`
 
     function irPara(n: 1 | 2) {
@@ -71,16 +74,16 @@ export function AdicionarLimiteDialog({
 
     async function salvar(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        if (!escolhido) return
+        if (!escolhida) return
         const n = lerLimiteDigitado(valor)
         if (n == null) {
-            setErro("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+            setErro(ERRO_DO_LIMITE)
             return
         }
         setSalvando(true)
         setErro(null)
         try {
-            await onSalvar(escolhido, n)
+            await onSalvar(escolhida.user_id, n)
             onOpenChange(false)
         } catch (err) {
             setErro(err instanceof Error ? err.message : "Não foi possível salvar o limite.")
@@ -92,14 +95,14 @@ export function AdicionarLimiteDialog({
     const escolha = (
         <PecaDoPasso>
             <ItemGroup variant="divided">
-                {semLimite.map((l) => {
+                {lista.map((l) => {
                     const membro = pessoas.find((m) => m.user_id === l.user_id)
                     return (
                         <Item key={l.user_id} variant="flush" size="lg" interactive asChild>
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setEscolhido(l.user_id)
+                                    setEscolhida(l)
                                     setValor("")
                                     irPara(2)
                                 }}
@@ -139,7 +142,7 @@ export function AdicionarLimiteDialog({
     }
 
     // Os dois passos dão à caixa a altura do maior: a gaveta não muda de tamanho na troca.
-    const fantasmas = semLimite.length > 1 ? [escolha, campo(true)] : [campo(true)]
+    const fantasmas = lista.length > 1 ? [escolha, campo(true)] : [campo(true)]
 
     return (
         <Dialog surface="auto" pending={salvando} open={open} onOpenChange={onOpenChange}>
@@ -160,7 +163,7 @@ export function AdicionarLimiteDialog({
                         </CaixaDoPasso>
                     </DialogBody>
                     <DialogFooter>
-                        {passo === 2 && semLimite.length > 1 ? (
+                        {passo === 2 && lista.length > 1 ? (
                             <Button type="button" variant="tertiary" disabled={salvando} onClick={() => irPara(1)}>
                                 Voltar
                             </Button>

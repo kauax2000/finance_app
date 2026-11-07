@@ -17,9 +17,22 @@ describe("LimitesSecao", () => {
     })
 
     it("sem Collapsible, sem resumo e sem ouvintes de #limites", () => {
-        for (const s of ["<Collapsible", "hashchange", "resumoDosLimites(", 'addEventListener("click"', "scrollIntoView"]) {
+        for (const s of ["<Collapsible", "hashchange", "resumoDosLimites(", "addEventListener"]) {
             expect(fonte).not.toContain(s)
         }
+    })
+
+    it("Ver limite: rola uma vez até #limites quando os dados chegam (o hash do navegador passou antes)", () => {
+        expect(fonte).toMatch(/useEffect\(\(\) => \{\s*if \(!ym \|\| rolou\.current\) return\s*rolou\.current = true\s*if \(window\.location\.hash === "#limites"\) document\.getElementById\("limites"\)\?\.scrollIntoView\(\{ block: "start" \}\)\s*\}, \[ym\]\)/)
+        expect(fonte.indexOf("useEffect(")).toBeLessThan(fonte.indexOf("if (indisponivel)"))
+    })
+
+    it("a linha só existe com limite: sem ramo de sem limite nem Definir", () => {
+        const linha = fonte.slice(fonte.indexOf("function LinhaDoLimiteItem"))
+        for (const s of ["sem limite", '"Definir"', "situacao == null", "situacao != null", "linha.limite == null", "linha.limite != null"]) {
+            expect(linha).not.toContain(s)
+        }
+        expect(linha).toContain("aria-label={`Editar o limite de ${linha.nome}`}")
     })
 
     it("a lista é só de quem tem limite, num Card padding none com ItemGroup divided", () => {
@@ -75,7 +88,8 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain("<FormSubmit")
         expect(fonte).toContain("Remover limite")
         expect(fonte).toContain("lerLimiteDigitado(valor)")
-        expect(fonte).toContain("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+        expect(fonte).toContain("setErro(ERRO_DO_LIMITE)")
+        expect(fonte).not.toContain("Informe um valor")
     })
 
     it("indisponível fica como era: texto exato, sem vazio nem botão", () => {
@@ -111,11 +125,24 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toContain("Voltar")
         expect(dialogo).toContain("<FormSubmit>Salvar</FormSubmit>")
         expect(dialogo).toContain("lerLimiteDigitado(valor)")
-        expect(dialogo).toContain("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+        expect(dialogo).toContain("setErro(ERRO_DO_LIMITE)")
+        expect(dialogo).not.toContain("Informe um valor")
+    })
+
+    it("salvar relê o pacote antes de fechar: a pessoa e a lista ficam congeladas no diálogo", () => {
+        expect(dialogo).toMatch(/if \(open\) \{\s*setLista\(semLimite\)/)
+        expect(dialogo).toContain("setEscolhida(semLimite.length === 1 ? semLimite[0] : null)")
+        expect(dialogo).toContain("setEscolhida(l)")
+        expect(dialogo).toContain("`Limite de ${escolhida?.nome")
+        expect(dialogo).toContain("await onSalvar(escolhida.user_id, n)")
+        const render = dialogo.slice(dialogo.indexOf("const titulo"))
+        expect(render).not.toContain("semLimite")
+        expect(render).toContain("lista.map(")
+        expect(render).toContain("lista.length > 1 ?")
     })
 
     it("Voltar só aparece quando há passo 1 (mais de uma pessoa); senão é Cancelar", () => {
-        expect(dialogo).toMatch(/passo === 2 && semLimite\.length > 1 \? \(\s*<Button[^>]*variant="tertiary"[\s\S]*?Voltar/)
+        expect(dialogo).toMatch(/passo === 2 && lista\.length > 1 \? \(\s*<Button[^>]*variant="tertiary"[\s\S]*?Voltar/)
         expect(dialogo).toContain("<FormCancel")
     })
 
