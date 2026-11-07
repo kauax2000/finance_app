@@ -1268,7 +1268,12 @@ declaração de `background-color` no trilho).
   - **Sem `fill`, a gaveta mede o conteúdo e cresce até a altura alta (`--drawer-h`) antes de o meio rolar** (o teto de 85% saiu: com espaço em cima, nada de rolagem no meio). **Passo a passo de tutorial mede o maior passo** (diálogo de formulário com passos, como Adicionar limite, acompanha a altura de cada passo) (`CaixaDoPasso`, em `components/account/passo-a-passo.tsx`): os outros passos ficam como fantasmas invisíveis e inertes na mesma célula da grade, sem imagem nem animação, e a caixa tem a altura do maior do abrir ao fechar — sem preencher a tela (nada de `layout="fixed"`) e sem mudar de altura a cada passo (a troca animada truncava na gaveta). Só um passo maior que `--drawer-h` faz o meio rolar.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
-    gaveta vira `NestedRoot` sozinha. `drawer-versions.test.ts`.
+    gaveta vira `NestedRoot` sozinha. **Com o teclado do iOS aberto, a gaveta
+    cabe no viewport visual** (`prenderAcimaDoTeclado`: `visualViewport`
+    `resize`/`scroll`, o teto vira a altura que sobra e a borda encosta no
+    teclado): o cabeçalho fica parado e só o meio rola, trazendo o campo
+    focado; com degraus o teclado fica com o vaul, e o `repositionInputs`
+    dele segue desligado. `drawer-versions.test.ts`.
   - **Gaveta no app sem `scaleBackground`**: ele encolhe a página com uma
     transformação, e a `BottomBar` (`fixed` dentro dela) sai da tela e
     reaparece com atraso quando a gaveta desce.

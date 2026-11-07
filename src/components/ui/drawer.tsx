@@ -110,7 +110,8 @@ function DragHandle({
  * A gaveta, em qualquer largura de tela. `Sheet` troca de superfície (painel de
  * borda acima de 768px, gaveta abaixo); `Drawer` é gaveta sempre, para quando o
  * gesto é a afordância. Usa `--z-sheet`, `modalSurfaceClassName`, `dvh` + área segura e
- * `repositionInputs` (a gaveta não encolhe quando o teclado do iOS sobe).
+ * o teclado do iOS por conta própria (`prenderAcimaDoTeclado`: o cabeçalho fica
+ * e só o meio sobe; o `repositionInputs` do vaul fica desligado).
  *
  * A cromagem (cabeçalho, título, corpo rolável, rodapé) vem do `Dialog`: o
  * vaul é construído sobre `@radix-ui/react-dialog` e há uma instância só em
@@ -286,7 +287,7 @@ function Drawer({
       <Raiz
         data-slot="drawer"
         direction={direction}
-        // `repositionInputs` impede a superfície de encolher quando o teclado do iOS sobe.
+        // Desligado: quem põe a gaveta acima do teclado é o `prenderAcimaDoTeclado`.
         repositionInputs={repositionInputs}
         shouldScaleBackground={scaleBackground}
         // Dentro da moldura ela deixa de ser modal (senão o `RemoveScroll` do
@@ -394,7 +395,10 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
       // As medidas da própria animação não contam: ela mexe na altura a cada quadro.
       if (animando) return
       const atual = el.getBoundingClientRect().height
-      if (Math.abs(atual - anterior) < 1 || reduzido || anterior === 0) {
+      // Com o teclado a altura segue o viewport visual na hora: animada, o meio
+      // rolaria o campo para um lugar que ainda vai mudar.
+      const teclado = el.style.getPropertyValue("--drawer-teclado") !== ""
+      if (Math.abs(atual - anterior) < 1 || reduzido || anterior === 0 || teclado) {
         anterior = atual
         return
       }
@@ -411,6 +415,68 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
     ro.observe(el)
     return () => ro.disconnect()
   }, [el, ativo])
+}
+
+/** O quanto o viewport visual precisa encolher para contar como teclado (a barra do Safari mexe menos). */
+const TECLADO_MIN = 80
+
+/**
+ * Com o teclado do iOS aberto, a gaveta cabe no viewport visual: a borda dela
+ * encosta no teclado, o teto passa a ser a altura que sobra, e só o meio rola,
+ * levando o campo focado para baixo do cabeçalho, que fica parado. Sem isso o
+ * iOS rola a página inteira para mostrar o campo e o cabeçalho sai pelo topo
+ * (o `repositionInputs` do vaul segue desligado: ele escreve a altura e o
+ * `bottom` da gaveta pela própria conta). Tudo mora em estilo inline e sai quando o
+ * teclado fecha. Dentro da moldura do catálogo a janela é a do `<iframe>`, onde
+ * não há teclado.
+ */
+function prenderAcimaDoTeclado(el: HTMLElement): (() => void) | undefined {
+  const janela = el.ownerDocument.defaultView
+  const vv = janela?.visualViewport
+  if (!janela || !vv) return
+  // `--drawer-teclado` marca o estado para o `useAlturaQueAcompanha` não animar.
+  const props = ["--drawer-teclado", "--drawer-h", "--drawer-safe", "margin-top", "margin-bottom"]
+  const soltar = () => {
+    for (const p of props) el.style.removeProperty(p)
+  }
+  const medir = () => {
+    const embaixo = janela.innerHeight - vv.offsetTop - vv.height
+    const teclado = janela.innerHeight - vv.height > TECLADO_MIN && vv.scale < 1.01
+    if (!teclado) return soltar()
+    el.style.setProperty("--drawer-teclado", "1")
+    const deBaixo = el.getAttribute("data-vaul-drawer-direction") !== "top"
+    // A folga do lado de fora continua a da gaveta alta; o teto é o que sobra.
+    const folga = deBaixo ? "env(safe-area-inset-top,0px)" : "env(safe-area-inset-bottom,0px)"
+    el.style.setProperty("--drawer-h", `calc(${vv.height}px - max(0.5rem, ${folga}))`)
+    // A barra de gestos fica atrás do teclado: sobra só o respiro.
+    el.style.setProperty("--drawer-safe", "calc(var(--spacing) * 4)")
+    // `fixed` mede pelo viewport de layout; a margem empurra a borda até o teclado.
+    if (deBaixo) el.style.setProperty("margin-bottom", `${Math.max(embaixo, 0)}px`)
+    else el.style.setProperty("margin-top", `${Math.max(vv.offsetTop, 0)}px`)
+    // O campo focado volta à vista dentro de quem rola, sem rolar a página.
+    const foco = el.ownerDocument.activeElement
+    if (!(foco instanceof janela.HTMLElement) || !el.contains(foco)) return
+    let rolavel = foco.parentElement
+    while (rolavel && rolavel !== el && rolavel.scrollHeight <= rolavel.clientHeight) {
+      rolavel = rolavel.parentElement
+    }
+    if (!rolavel || rolavel === el) return
+    const caixa = rolavel.getBoundingClientRect()
+    const campo = foco.getBoundingClientRect()
+    const respiro = 16
+    if (campo.bottom > caixa.bottom - respiro) rolavel.scrollTop += campo.bottom - caixa.bottom + respiro
+    else if (campo.top < caixa.top + respiro) rolavel.scrollTop -= caixa.top + respiro - campo.top
+  }
+  medir()
+  vv.addEventListener("resize", medir)
+  vv.addEventListener("scroll", medir)
+  el.addEventListener("focusin", medir)
+  return () => {
+    vv.removeEventListener("resize", medir)
+    vv.removeEventListener("scroll", medir)
+    el.removeEventListener("focusin", medir)
+    soltar()
+  }
 }
 
 function DrawerContent({
@@ -437,6 +503,11 @@ function DrawerContent({
   const [el, setEl] = React.useState<HTMLDivElement | null>(null)
   const conteudo = useComposedRefs<HTMLDivElement>(setEl, ref)
   useAlturaQueAcompanha(el, !alta)
+  // Com degraus, o vaul desloca a gaveta pela altura da janela; ali o teclado fica com ele.
+  const degraus = raiz?.degraus ?? false
+  React.useEffect(() => {
+    if (el && !degraus) return prenderAcimaDoTeclado(el)
+  }, [el, degraus])
   const dissolver = useScrollFade()
   // Marca o meio e repete a busca quando filhos entram ou saem, tirando a marca
   // e a dissolução do antigo.
