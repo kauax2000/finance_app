@@ -48,71 +48,63 @@ export function ConvitesPendentesSecao({
     onCancelar: (convite: WorkspaceInvite) => void
     ocupadoId: string | null
 }) {
+    // Sem convite pendente, a seção não aparece.
+    if (convites.length === 0) return null
     return (
         <PageSection size="sm">
             <PageSectionHeader>
                 <PageSectionTitle count={convites.length}>Convites pendentes</PageSectionTitle>
             </PageSectionHeader>
-            {convites.length === 0 ? (
-                <Card padding="none">
-                    <Item variant="flush" size="lg" className="px-4">
-                        <ItemContent>
-                            <ItemDescription>Nenhum convite pendente</ItemDescription>
-                        </ItemContent>
-                    </Item>
-                </Card>
-            ) : (
-                <Card padding="none">
-                    <ItemGroup variant="divided">
-                        {convites.map((convite) => {
-                            const titulo = convite.invited_email ?? ""
-                            const expira = formatLinkInviteExpiresAt(convite.expires_at)
-                            const ocupado = ocupadoId === convite.id
-                            return (
-                                <Item key={convite.id} variant="flush" size="lg" className="px-4">
-                                    <ItemMedia variant="tile">
-                                        <EnvelopeIcon aria-hidden />
-                                    </ItemMedia>
-                                    <ItemContent className="min-w-0">
-                                        <ItemTitle className="truncate pointer-coarse:text-base">{titulo}</ItemTitle>
-                                        <ItemDescription>
-                                            {rotuloDoPapel(convite.role)}
-                                            {expira ? ` · ${expira}` : null}
-                                        </ItemDescription>
-                                    </ItemContent>
-                                    {podeGerenciar ? (
-                                        <ItemActions>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        type="button"
-                                                        variant="tertiary"
-                                                        size="icon-md"
-                                                        disabled={ocupado}
-                                                        aria-label={`Mais opções para ${titulo}`}
-                                                    >
-                                                        {ocupado ? <Spinner /> : <EllipsisHorizontalIcon aria-hidden />}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onSelect={() => onReenviar(convite)}>
-                                                        <PaperAirplaneIcon aria-hidden />
-                                                        Reenviar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem variant="destructive" onSelect={() => onCancelar(convite)}>
-                                                        <XMarkIcon aria-hidden />
-                                                        Revogar convite
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </ItemActions>
-                                    ) : null}
-                                </Item>
-                            )
-                        })}
-                    </ItemGroup>
-                </Card>
-            )}
+            <Card padding="none">
+                <ItemGroup variant="divided">
+                    {convites.map((convite) => {
+                        const titulo = convite.invited_email ?? ""
+                        const expira = formatLinkInviteExpiresAt(convite.expires_at)
+                        const ocupado = ocupadoId === convite.id
+                        return (
+                            <Item key={convite.id} variant="flush" size="lg" className="px-4">
+                                <ItemMedia variant="tile">
+                                    <EnvelopeIcon aria-hidden />
+                                </ItemMedia>
+                                <ItemContent className="min-w-0">
+                                    <ItemTitle className="truncate pointer-coarse:text-base">{titulo}</ItemTitle>
+                                    <ItemDescription>
+                                        {rotuloDoPapel(convite.role)}
+                                        {expira ? ` · ${expira}` : null}
+                                    </ItemDescription>
+                                </ItemContent>
+                                {podeGerenciar ? (
+                                    <ItemActions>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="tertiary"
+                                                    size="icon-md"
+                                                    disabled={ocupado}
+                                                    aria-label={`Mais opções para ${titulo}`}
+                                                >
+                                                    {ocupado ? <Spinner /> : <EllipsisHorizontalIcon aria-hidden />}
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={() => onReenviar(convite)}>
+                                                    <PaperAirplaneIcon aria-hidden />
+                                                    Reenviar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem variant="destructive" onSelect={() => onCancelar(convite)}>
+                                                    <XMarkIcon aria-hidden />
+                                                    Revogar convite
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </ItemActions>
+                                ) : null}
+                            </Item>
+                        )
+                    })}
+                </ItemGroup>
+            </Card>
         </PageSection>
     )
 }

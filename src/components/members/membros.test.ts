@@ -47,18 +47,19 @@ describe("Membros no layout A", () => {
     })
 
     it("o ⋯ do convite reenvia e cancela, e o link não é um convite pendente", () => {
-        for (const s of ["Reenviar", "Revogar convite", "Nenhum convite pendente"]) expect(convites).toContain(s)
+        for (const s of ["Reenviar", "Revogar convite"]) expect(convites).toContain(s)
         expect(convites).not.toContain("Cancelar convite")
         expect(convites).not.toContain("rounded-row")
         expect(pagina).toContain("Revogar o convite?")
         expect(convites).not.toContain("Copiar link")
         expect(convites).not.toContain("Gerar novo link")
         expect(pagina).toContain("invites.filter((i) => i.invited_email != null)")
+        expect(pagina).toMatch(/convitesPorEmail.length > 0 \? \(/)
     })
 
-    it("os vazios moram dentro do Card, não soltos", () => {
-        expect(convites).not.toContain("<Muted")
-        expect(convites).toMatch(/<Card padding="none">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Nenhum convite pendente/)
+    it("sem convite pendente, a seção some", () => {
+        expect(convites).toMatch(/if \(convites\.length === 0\) return null/)
+        expect(convites).not.toContain("Nenhum convite pendente")
     })
 })
 

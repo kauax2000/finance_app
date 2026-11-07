@@ -96,6 +96,8 @@ export default function MembersPage() {
     const bundle = bundleQuery.data
     const members: MemberWithProfile[] = bundle?.members ?? []
     const invites = bundle?.invites ?? []
+    // O link de convite mora no diálogo: aqui só os convites por e-mail.
+    const convitesPorEmail = invites.filter((i) => i.invited_email != null)
 
     const recarregar = useCallback(
         () =>
@@ -367,19 +369,21 @@ export default function MembersPage() {
                 ocupadoId={busyMemberId}
             />
 
-            <div
-                id="workspace-invites"
-                className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
-            >
-                <ConvitesPendentesSecao
-                    convites={invites.filter((i) => i.invited_email != null)}
-                    podeGerenciar={canManageMembers}
-                    onReenviar={(convite) => void handleResendInvite(convite.id)}
-                    onCancelar={(convite) => void handleRevokeInvite(convite.id)}
-                    // O link não fica salvo (só o hash do token): gerar outro, no diálogo, revoga o pendente.
-                    ocupadoId={busyInviteId ?? busyResendInviteId}
-                />
-            </div>
+            {convitesPorEmail.length > 0 ? (
+                <div
+                    id="workspace-invites"
+                    className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
+                >
+                    <ConvitesPendentesSecao
+                        convites={convitesPorEmail}
+                        podeGerenciar={canManageMembers}
+                        onReenviar={(convite) => void handleResendInvite(convite.id)}
+                        onCancelar={(convite) => void handleRevokeInvite(convite.id)}
+                        // O link não fica salvo (só o hash do token): gerar outro, no diálogo, revoga o pendente.
+                        ocupadoId={busyInviteId ?? busyResendInviteId}
+                    />
+                </div>
+            ) : null}
 
             {isAdulto ? (
                 <div
