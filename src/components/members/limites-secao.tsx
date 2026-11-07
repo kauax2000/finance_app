@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
 import {
     Dialog,
     DialogBody,
@@ -15,8 +14,9 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
+import { AdicionarLimiteDialog } from "@/components/members/adicionar-limite-dialog"
 import { AvatarDoMembro, memberDisplayName, type MemberWithProfile } from "@/components/members/pessoas-secao"
-import { PencilIcon } from "@heroicons/react/16/solid"
+import { PencilIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { BellAlertIcon } from "@heroicons/react/24/outline"
 
 import { Button } from "@/components/ui/button"
@@ -28,16 +28,14 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
+import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
-import { Muted } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import {
     gravarLimite,
     lerLimiteDigitado,
     linhasDosLimites,
     removerLimite,
-    resumoDosLimites,
     situacaoDoLimite,
     type LancamentoDaPessoa,
     type LimiteDaPessoa,
@@ -53,10 +51,10 @@ import { formatMoneyBrlInput } from "@/lib/money-brl"
  * no pacote da tela (`fetchMembersPageBundle`), junto com o resto. Se a leitura
  * falhou (a tabela ainda não existe no banco), fica um estado neutro.
  *
- * Não é a função principal da tela: sem limite nenhum, é um convite (o vazio
- * tracejado com "Definir limites", para o dono); com limite, ou depois do
- * convite, nasce recolhida, com o resumo no cabeçalho, e abre sozinha quando o
- * endereço traz `#limites` (os "Ver limite" dos avisos).
+ * Título e subtítulo ficam soltos, como em Pessoas. Sem limite nenhum, é um
+ * convite (o vazio tracejado, com "Definir limites" para o dono); com limite,
+ * a lista mostra só quem tem, e "Adicionar limite" fica no cabeçalho enquanto
+ * houver alguém sem. Os dois abrem o diálogo de dois passos.
  */
 export function LimitesSecao({
     workspaceId,
@@ -79,39 +77,7 @@ export function LimitesSecao({
     /** Depois de gravar ou remover: relê o pacote. */
     onMudou: () => Promise<unknown>
 }) {
-    const [aberta, setAberta] = useState(false)
-    const [definindo, setDefinindo] = useState(false)
-    const cabecalhoRef = useRef<HTMLButtonElement>(null)
-
-    // O botão do convite some no clique: o foco passa ao cabeçalho que o substitui.
-    useEffect(() => {
-        if (definindo) cabecalhoRef.current?.focus()
-    }, [definindo])
-
-    // O servidor desenha fechada; o hash só existe no navegador. Um link para
-    // `#limites` seguido nesta mesma tela é `pushState` do Next, sem `hashchange`:
-    // por isso também o clique, na captura.
-    useEffect(() => {
-        function abrir() {
-            setAberta(true)
-            requestAnimationFrame(() => document.getElementById("limites")?.scrollIntoView({ block: "start" }))
-        }
-        function abrirPeloHash() {
-            if (window.location.hash === "#limites") abrir()
-        }
-        function abrirPeloLink(e: MouseEvent) {
-            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-            const a = e.target instanceof Element ? e.target.closest("a") : null
-            if (a?.getAttribute("href")?.endsWith("#limites")) abrir()
-        }
-        abrirPeloHash()
-        window.addEventListener("hashchange", abrirPeloHash)
-        document.addEventListener("click", abrirPeloLink, true)
-        return () => {
-            window.removeEventListener("hashchange", abrirPeloHash)
-            document.removeEventListener("click", abrirPeloLink, true)
-        }
-    }, [])
+    const [adicionando, setAdicionando] = useState(false)
 
     if (indisponivel) {
         return (
@@ -135,13 +101,27 @@ export function LimitesSecao({
         limites, lancamentos,
         ym,
     )
+    const comLimite = linhas.filter((l) => l.limite != null)
+    const semLimite = linhas.filter((l) => l.limite == null)
 
-    if (!definindo && linhas.every((l) => l.limite == null)) {
-        return (
-            <PageSection size="sm">
-                <PageSectionHeader>
-                    <PageSectionTitle>Limites</PageSectionTitle>
-                </PageSectionHeader>
+    return (
+        <PageSection size="sm">
+            <PageSectionHeader
+                actions={
+                    podeEditar && comLimite.length > 0 && semLimite.length > 0 ? (
+                        <Button type="button" variant="secondary" onClick={() => setAdicionando(true)}>
+                            <PlusIcon aria-hidden />
+                            Adicionar limite
+                        </Button>
+                    ) : undefined
+                }
+            >
+                <PageSectionTitle>Limites</PageSectionTitle>
+                <PageSectionDescription>
+                    Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
+                </PageSectionDescription>
+            </PageSectionHeader>
+            {comLimite.length === 0 ? (
                 <EmptyState variant="dashed" size="sm">
                     <EmptyStateIcon variant="circle">
                         <BellAlertIcon aria-hidden />
@@ -149,18 +129,9 @@ export function LimitesSecao({
                     <EmptyStateTitle>Controle o gasto de cada pessoa</EmptyStateTitle>
                     {podeEditar ? (
                         <>
-                            <EmptyStateDescription>
-                                Defina um valor por mês e a pessoa e o dono são avisados ao chegar a 80% e a 100%.
-                            </EmptyStateDescription>
+                            <EmptyStateDescription>Escolha uma pessoa e o valor por mês.</EmptyStateDescription>
                             <EmptyStateActions>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setDefinindo(true)
-                                        setAberta(true)
-                                    }}
-                                >
+                                <Button type="button" variant="secondary" onClick={() => setAdicionando(true)}>
                                     Definir limites
                                 </Button>
                             </EmptyStateActions>
@@ -171,40 +142,41 @@ export function LimitesSecao({
                         </EmptyStateDescription>
                     )}
                 </EmptyState>
-            </PageSection>
-        )
-    }
-
-    return (
-        <Collapsible variant="card" open={aberta} onOpenChange={setAberta}>
-            <CollapsibleRow ref={cabecalhoRef} size="xl" trailing={resumoDosLimites(linhas)}>
-                Limites
-            </CollapsibleRow>
-            <CollapsibleContent>
-                <Muted>
-                    Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
-                </Muted>
-                {/* `w-auto`: o `w-full` do grupo prendia a largura, e a margem negativa só o puxava para a esquerda. */}
-                <ItemGroup variant="divided" className="-mx-(--collapsible-px) w-auto">
-                    {linhas.map((l) => (
-                        <LinhaDoLimiteItem
-                            key={`${l.user_id}:${l.limite}`}
-                            linha={l}
-                            membro={pessoas.find((m) => m.user_id === l.user_id)}
-                            podeEditar={podeEditar}
-                            onSalvar={async (valor) => {
-                                await gravarLimite(workspaceId, l.user_id, valor)
-                                await onMudou()
-                            }}
-                            onRemover={async () => {
-                                await removerLimite(workspaceId, l.user_id)
-                                await onMudou()
-                            }}
-                        />
-                    ))}
-                </ItemGroup>
-            </CollapsibleContent>
-        </Collapsible>
+            ) : (
+                <Card padding="none">
+                    <ItemGroup variant="divided">
+                        {comLimite.map((l) => (
+                            <LinhaDoLimiteItem
+                                key={`${l.user_id}:${l.limite}`}
+                                linha={l}
+                                membro={pessoas.find((m) => m.user_id === l.user_id)}
+                                podeEditar={podeEditar}
+                                onSalvar={async (valor) => {
+                                    await gravarLimite(workspaceId, l.user_id, valor)
+                                    await onMudou()
+                                }}
+                                onRemover={async () => {
+                                    await removerLimite(workspaceId, l.user_id)
+                                    await onMudou()
+                                }}
+                            />
+                        ))}
+                    </ItemGroup>
+                </Card>
+            )}
+            {podeEditar ? (
+                <AdicionarLimiteDialog
+                    open={adicionando}
+                    onOpenChange={setAdicionando}
+                    semLimite={semLimite}
+                    pessoas={pessoas}
+                    onSalvar={async (userId, valor) => {
+                        await gravarLimite(workspaceId, userId, valor)
+                        await onMudou()
+                    }}
+                />
+            ) : null}
+        </PageSection>
     )
 }
 

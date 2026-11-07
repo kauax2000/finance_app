@@ -3,135 +3,129 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 const fonte = semComentarios(lerFonte("src/components/members/limites-secao.tsx"))
+const dialogo = semComentarios(lerFonte("src/components/members/adicionar-limite-dialog.tsx"))
 
 describe("LimitesSecao", () => {
-    it("a lista é Collapsible card + CollapsibleRow com o resumo + ItemGroup divided + Item", () => {
-        expect(fonte).toContain("<Collapsible")
-        expect(fonte).toContain('variant="card"')
-        expect(fonte).toMatch(/<CollapsibleRow[^>]*trailing=\{/)
-        expect(fonte).toContain("resumoDosLimites(")
-        expect(fonte).toContain("<CollapsibleContent")
-        const principal = fonte.slice(fonte.indexOf("<Collapsible "), fonte.indexOf("</Collapsible>"))
-        expect(principal).toMatch(/^<Collapsible variant="card"[^>]*>\s*<CollapsibleRow[^>]*trailing=\{resumoDosLimites\(linhas\)\}>\s*Limites\s*<\/CollapsibleRow>\s*<CollapsibleContent>/)
-        expect(principal).toContain('<ItemGroup variant="divided"')
-        expect(principal).toContain("<LinhaDoLimiteItem")
-        expect(principal).not.toContain("<PageSection")
-        expect(fonte).toContain("<ItemGroup variant=\"divided\"")
-        expect(fonte).toContain("<Item ")
-        expect(fonte).toContain("Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.")
+    it("seção com título e subtítulo soltos, fora de qualquer cartão", () => {
+        const principal = fonte.slice(fonte.indexOf("const linhas"))
+        expect(principal).toMatch(/<PageSectionHeader[\s\S]*<PageSectionTitle>Limites<\/PageSectionTitle>\s*<PageSectionDescription>/)
+        expect(principal).toContain(
+            "Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite."
+        )
+        expect(principal.indexOf("<PageSectionDescription>")).toBeLessThan(principal.indexOf("<Card"))
+        expect(principal.indexOf("<PageSectionDescription>")).toBeLessThan(principal.indexOf("<EmptyState"))
     })
 
-    it("a linha diz o gasto e a barra usa as faixas 80/100", () => {
-        expect(fonte).toContain("no mês · sem limite")
-        expect(fonte).toContain("currencyBRL(linha.limite!)")
-        expect(fonte).toContain("bands={[80, 100]}")
-        expect(fonte).toContain("value={pct}")
-        expect(fonte).not.toContain("Math.min(pct")
-        expect(fonte).not.toContain("Deixe sem limite")
+    it("sem Collapsible, sem resumo e sem ouvintes de #limites", () => {
+        for (const s of ["<Collapsible", "hashchange", "resumoDosLimites(", 'addEventListener("click"', "scrollIntoView"]) {
+            expect(fonte).not.toContain(s)
+        }
     })
 
-    it("a linha tem avatar, situação e porcentagem; o botão de ícone (lápis) só para o dono", () => {
-        for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "sem limite", "text-destructive", "text-warning"]) {
+    it("a lista é só de quem tem limite, num Card padding none com ItemGroup divided", () => {
+        expect(fonte).toContain("linhas.filter((l) => l.limite != null)")
+        expect(fonte).toContain("linhas.filter((l) => l.limite == null)")
+        const lista = fonte.slice(fonte.indexOf('<Card padding="none">'))
+        expect(lista).toMatch(/^<Card padding="none">\s*<ItemGroup variant="divided">\s*\{comLimite\.map\(/)
+        expect(lista).toContain("<LinhaDoLimiteItem")
+    })
+
+    it("Adicionar limite: só para o dono, só com alguém com limite e alguém sem, secondary com PlusIcon, sem size", () => {
+        expect(fonte).toMatch(
+            /actions=\{\s*podeEditar && comLimite\.length > 0 && semLimite\.length > 0 \? \(\s*<Button[^>]*variant="secondary"[\s\S]*?<PlusIcon[\s\S]*?Adicionar limite\s*<\/Button>\s*\) : undefined\s*\}/
+        )
+        const botao = fonte.slice(fonte.indexOf("actions={"), fonte.indexOf("Adicionar limite"))
+        expect(botao).not.toContain("size=")
+        expect(fonte).toMatch(/import \{[^}]*PlusIcon[^}]*\} from "@heroicons\/react\/16\/solid"/)
+    })
+
+    it("o vazio fica quando ninguém tem limite; o dono abre o diálogo de adicionar", () => {
+        expect(fonte).toMatch(/comLimite\.length === 0 \? \(\s*<EmptyState variant="dashed"/)
+        const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
+        expect(vazio).toContain("Controle o gasto de cada pessoa")
+        expect(vazio).toContain("Escolha uma pessoa e o valor por mês.")
+        expect(vazio).not.toContain("Defina um valor por mês")
+        const dono = vazio.slice(vazio.indexOf("podeEditar ?"), vazio.indexOf(") : ("))
+        const leitor = vazio.slice(vazio.indexOf(") : ("))
+        expect(dono).toMatch(/<EmptyStateActions>\s*<Button[\s\S]*variant="secondary"[\s\S]*setAdicionando\(true\)[\s\S]*Definir limites/)
+        expect(leitor).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
+        expect(leitor).not.toContain("<Button")
+    })
+
+    it("o diálogo de adicionar só existe para o dono, com as pessoas sem limite", () => {
+        expect(fonte).toMatch(/\{podeEditar \? \(\s*<AdicionarLimiteDialog[\s\S]*semLimite=\{semLimite\}/)
+        expect(fonte).toContain("await gravarLimite(workspaceId, userId, valor)")
+    })
+
+    it("a linha diz o gasto, a barra usa as faixas 80/100 e o lápis é só do dono", () => {
+        for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "text-destructive", "text-warning", "bands={[80, 100]}", "value={pct}"]) {
             expect(fonte).toContain(x)
         }
-        expect(fonte).not.toContain("ItemChevron")
         const dono = fonte.slice(fonte.indexOf("if (!podeEditar)"))
         expect(dono).toMatch(/<DialogTrigger asChild>\s*<Button[\s\S]*variant="tertiary"[\s\S]*<PencilIcon/)
         expect(dono).toContain('size="icon-lg"')
-        expect(dono).toContain('situacao == null ? "Definir" : "Editar"} o limite de')
         const leitor = fonte.slice(fonte.indexOf("if (!podeEditar)"), fonte.indexOf("async function rodar"))
         expect(leitor).not.toContain("DialogTrigger")
     })
 
-    it("indisponível tem o texto exato; não busca nem espera sozinha (os dados vêm no pacote da tela)", () => {
-        expect(fonte).toContain("Os limites ainda não estão disponíveis nesta carteira.")
-        expect(fonte).toMatch(/<Card padding="none" role="status">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Os limites ainda/)
-        for (const s of ["<SkeletonGroup", "<Skeleton", "lerLimites(", "lerLancamentosDoMes("]) {
-            expect(fonte).not.toContain(s)
-        }
-        expect(fonte).not.toContain("Carregando…</p>")
-        expect(fonte).toContain("await onMudou()")
-    })
-
-    it("só quem edita abre o diálogo, com formulário, dinheiro, Salvar e Remover limite", () => {
+    it("editar: formulário com dinheiro, Salvar e Remover limite", () => {
         expect(fonte).toContain('surface="auto"')
         expect(fonte).toContain("Limite de ${")
         expect(fonte).toContain("<FormInput")
-        expect(fonte).toContain("money")
         expect(fonte).toContain("<FormSubmit")
         expect(fonte).toContain("Remover limite")
         expect(fonte).toContain("lerLimiteDigitado(valor)")
         expect(fonte).toContain("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
-        expect(fonte).not.toContain('type="number"')
     })
 
-    it("o ramo indisponível não mostra resumo", () => {
+    it("indisponível fica como era: texto exato, sem vazio nem botão", () => {
         const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("const linhas"))
-        expect(ramo).toContain("Os limites ainda não estão disponíveis nesta carteira.")
-        expect(ramo).not.toContain("resumoDosLimites")
-    })
-
-    it("recolhida por padrão; abre com #limites (no carregar e no hashchange) e rola até a seção", () => {
-        expect(fonte).toContain("useState(false)")
-        expect(fonte).toMatch(/open=\{aberta\}\s*onOpenChange=\{setAberta\}/)
-        expect(fonte).toMatch(/function abrir\(\) \{\s*setAberta\(true\)/)
-        expect(fonte).toContain('if (window.location.hash === "#limites") abrir()')
-        expect(fonte).toContain('addEventListener("hashchange"')
-        expect(fonte).toContain('removeEventListener("hashchange"')
-        expect(fonte).toContain('document.getElementById("limites")?.scrollIntoView({ block: "start" })')
-    })
-
-    it("abre também no link para #limites seguido na própria tela (o Next usa pushState, sem hashchange)", () => {
-        expect(fonte).toMatch(/document\.addEventListener\("click", [^,]+, true\)/)
-        expect(fonte).toMatch(/document\.removeEventListener\("click", [^,]+, true\)/)
-        expect(fonte).toContain('closest("a")')
-        expect(fonte).toContain('endsWith("#limites")')
-    })
-
-    it("o vazio é um convite: seção com título fora do cartão e EmptyState tracejado", () => {
-        expect(fonte).toContain("<EmptyState")
-        expect(fonte).toContain('variant="dashed"')
-        expect(fonte).toContain("<BellAlertIcon")
-        expect(fonte).toContain("@heroicons/react/24/outline")
-        expect(fonte).toContain("linhas.every((l) => l.limite == null)")
-        expect(fonte).not.toContain("limites.length === 0")
-        expect(fonte).not.toContain("Sem limites por enquanto")
-        expect(fonte).toContain("definindo")
-        const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
-        expect(vazio).toContain("Controle o gasto de cada pessoa")
-        expect(vazio).toContain("Defina um valor por mês e a pessoa e o dono são avisados ao chegar a 80% e a 100%.")
-        expect(vazio).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
-        const ramoVazio = fonte.slice(fonte.lastIndexOf("<PageSection", fonte.indexOf("<EmptyState")), fonte.indexOf("</EmptyState>"))
-        expect(ramoVazio).toMatch(/<PageSectionTitle>Limites<\/PageSectionTitle>/)
-        expect(ramoVazio).not.toContain("<Collapsible")
-    })
-
-    it("o botão Definir limites só no ramo de quem edita, secondary, e abre a lista", () => {
-        const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
-        const dono = vazio.slice(vazio.indexOf("podeEditar ?"), vazio.indexOf(") : ("))
-        const leitor = vazio.slice(vazio.indexOf(") : ("))
-        expect(dono).toMatch(/<EmptyStateActions>\s*<Button[\s\S]*variant="secondary"[\s\S]*Definir limites/)
-        expect(dono).toContain("setDefinindo(true)")
-        expect(dono).toContain("setAberta(true)")
-        expect(leitor).toContain("O dono da carteira pode definir")
-        expect(leitor).not.toContain("<Button")
-        expect(leitor).not.toContain("Definir limites")
-        expect(fonte).toMatch(/if \(definindo\) cabecalhoRef\.current\?\.focus\(\)/)
-        expect(fonte).toContain("<CollapsibleRow ref={cabecalhoRef}")
-        expect(fonte).toMatch(/if \(!definindo && linhas\.every\(\(l\) => l\.limite == null\)\)/)
-    })
-
-    it("a lista ocupa a largura do cartão: sangra o recuo do Collapsible sem o w-full prender a largura", () => {
-        expect(fonte).toMatch(/<ItemGroup variant="divided" className="-mx-\(--collapsible-px\) w-auto"/)
-    })
-
-    it("o ramo indisponível não ganha o vazio", () => {
-        const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("const linhas"))
+        expect(ramo).toMatch(/<Card padding="none" role="status">\s*<Item[^>]*>\s*<ItemContent>\s*<ItemDescription>Os limites ainda não estão disponíveis nesta carteira\./)
         expect(ramo).not.toContain("EmptyState")
-        expect(ramo).not.toContain("Definir limites")
+        expect(ramo).not.toContain("Adicionar limite")
     })
 
-    it("não importa o wireframe", () => {
-        expect(fonte).not.toContain("@/components/wireframe")
+    it("não busca dados nem importa o wireframe", () => {
+        for (const s of ["lerLimites(", "lerLancamentosDoMes(", "@/components/wireframe", "<Skeleton"]) {
+            expect(fonte).not.toContain(s)
+        }
+        expect(fonte).toContain("await onMudou()")
+    })
+})
+
+describe("AdicionarLimiteDialog", () => {
+    it("passo 1: Adicionar limite, Escolha a pessoa., uma linha-botão por pessoa sem limite", () => {
+        expect(dialogo).toContain('surface="auto"')
+        expect(dialogo).toContain('"Adicionar limite"')
+        expect(dialogo).toContain('"Escolha a pessoa."')
+        expect(dialogo).toMatch(/<Item[^>]*interactive[^>]*asChild[^>]*>\s*<button\s+type="button"/)
+        expect(dialogo).toContain("no mês")
+        expect(dialogo).toContain("<ItemChevron")
+    })
+
+    it("passo 2: Limite de {nome}, FormInput money com foco, Voltar e Salvar", () => {
+        expect(dialogo).toContain("`Limite de ${")
+        expect(dialogo).toContain('"Quanto esta pessoa pode gastar por mês."')
+        expect(dialogo).toMatch(/<FormInput\s[\s\S]*?money[\s\S]*?label="Limite mensal em R\$"/)
+        expect(dialogo).toContain("autoFocus={!fantasma}")
+        expect(dialogo).toContain("Voltar")
+        expect(dialogo).toContain("<FormSubmit>Salvar</FormSubmit>")
+        expect(dialogo).toContain("lerLimiteDigitado(valor)")
+        expect(dialogo).toContain("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+    })
+
+    it("Voltar só aparece quando há passo 1 (mais de uma pessoa); senão é Cancelar", () => {
+        expect(dialogo).toMatch(/passo === 2 && semLimite\.length > 1 \? \(\s*<Button[^>]*variant="tertiary"[\s\S]*?Voltar/)
+        expect(dialogo).toContain("<FormCancel")
+    })
+
+    it("abrir recomeça: passo pelo passoInicial, pessoa e campo limpos", () => {
+        expect(dialogo).toContain("passoInicial(semLimite.length)")
+        expect(dialogo).toMatch(/if \(open\) \{[\s\S]*?setValor\(""\)[\s\S]*?setErro\(null\)/)
+    })
+
+    it("a caixa mede o maior passo (CaixaDoPasso) e a troca não muda a altura", () => {
+        expect(dialogo).toContain("<CaixaDoPasso")
+        expect(dialogo).toContain("fantasmas={fantasmas}")
     })
 })
