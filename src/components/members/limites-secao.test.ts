@@ -11,7 +11,11 @@ describe("LimitesSecao", () => {
         expect(fonte).toMatch(/<CollapsibleRow[^>]*trailing=\{/)
         expect(fonte).toContain("resumoDosLimites(")
         expect(fonte).toContain("<CollapsibleContent")
-        expect(fonte.indexOf("<PageSection")).toBeLessThan(fonte.indexOf("<Collapsible"))
+        const principal = fonte.slice(fonte.indexOf("<Collapsible "), fonte.indexOf("</Collapsible>"))
+        expect(principal).toMatch(/^<Collapsible variant="card"[^>]*>\s*<CollapsibleRow[^>]*trailing=\{resumoDosLimites\(linhas\)\}>\s*Limites\s*<\/CollapsibleRow>\s*<CollapsibleContent>/)
+        expect(principal).toContain('<ItemGroup variant="divided"')
+        expect(principal).toContain("<LinhaDoLimiteItem")
+        expect(principal).not.toContain("<PageSection")
         expect(fonte).toContain("<ItemGroup variant=\"divided\"")
         expect(fonte).toContain("<Item ")
         expect(fonte).toContain("Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.")
@@ -70,10 +74,18 @@ describe("LimitesSecao", () => {
     it("recolhida por padrão; abre com #limites (no carregar e no hashchange) e rola até a seção", () => {
         expect(fonte).toContain("useState(false)")
         expect(fonte).toMatch(/open=\{aberta\}\s*onOpenChange=\{setAberta\}/)
-        expect(fonte).toMatch(/window\.location\.hash !== "#limites"\) return\s*setAberta\(true\)/)
+        expect(fonte).toMatch(/function abrir\(\) \{\s*setAberta\(true\)/)
+        expect(fonte).toContain('if (window.location.hash === "#limites") abrir()')
         expect(fonte).toContain('addEventListener("hashchange"')
         expect(fonte).toContain('removeEventListener("hashchange"')
         expect(fonte).toContain('document.getElementById("limites")?.scrollIntoView({ block: "start" })')
+    })
+
+    it("abre também no link para #limites seguido na própria tela (o Next usa pushState, sem hashchange)", () => {
+        expect(fonte).toMatch(/document\.addEventListener\("click", [^,]+, true\)/)
+        expect(fonte).toMatch(/document\.removeEventListener\("click", [^,]+, true\)/)
+        expect(fonte).toContain('closest("a")')
+        expect(fonte).toContain('endsWith("#limites")')
     })
 
     it("o vazio: só quando ninguém tem limite, com a copy do dono e a de quem não é dono", () => {
@@ -82,7 +94,8 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain('size="sm"')
         expect(fonte).toContain("<BellAlertIcon")
         expect(fonte).toContain("@heroicons/react/24/outline")
-        expect(fonte).toContain("limites.length === 0")
+        expect(fonte).toContain("linhas.every((l) => l.limite == null)")
+        expect(fonte).not.toContain("limites.length === 0")
         expect(fonte).toContain("Sem limites por enquanto")
         expect(fonte).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
         const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))

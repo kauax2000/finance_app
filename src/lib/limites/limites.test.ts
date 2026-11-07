@@ -112,5 +112,8 @@ describe("resumoDosLimites: o cabeçalho recolhido", () => {
         expect(resumoDosLimites([linha(100, 22_100), linha(100, 8_500)])).toBe("2 com limite · 1 acima")
         expect(resumoDosLimites([linha(100, 10_000)])).toBe("1 com limite · 1 perto")
         expect(resumoDosLimites([linha(100, 10_001)])).toBe("1 com limite · 1 acima")
+        // 79,6% arredonda a 80 na tela, mas o aviso (nivelDoLimite, em centavos) não saiu: não é "perto".
+        expect(resumoDosLimites([linha(100, 7_960)])).toBe("1 com limite")
+        expect(resumoDosLimites([linha(100, 8_000)])).toBe("1 com limite · 1 perto")
     })
 })

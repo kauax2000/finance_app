@@ -73,16 +73,29 @@ export function LimitesSecao({
 }) {
     const [aberta, setAberta] = useState(false)
 
-    // O servidor desenha fechada; o hash só existe no navegador.
+    // O servidor desenha fechada; o hash só existe no navegador. Um link para
+    // `#limites` seguido nesta mesma tela é `pushState` do Next, sem `hashchange`:
+    // por isso também o clique, na captura.
     useEffect(() => {
-        function abrirPeloHash() {
-            if (window.location.hash !== "#limites") return
+        function abrir() {
             setAberta(true)
             requestAnimationFrame(() => document.getElementById("limites")?.scrollIntoView({ block: "start" }))
         }
+        function abrirPeloHash() {
+            if (window.location.hash === "#limites") abrir()
+        }
+        function abrirPeloLink(e: MouseEvent) {
+            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+            const a = e.target instanceof Element ? e.target.closest("a") : null
+            if (a?.getAttribute("href")?.endsWith("#limites")) abrir()
+        }
         abrirPeloHash()
         window.addEventListener("hashchange", abrirPeloHash)
-        return () => window.removeEventListener("hashchange", abrirPeloHash)
+        document.addEventListener("click", abrirPeloLink, true)
+        return () => {
+            window.removeEventListener("hashchange", abrirPeloHash)
+            document.removeEventListener("click", abrirPeloLink, true)
+        }
     }, [])
 
     if (indisponivel) {
@@ -114,7 +127,7 @@ export function LimitesSecao({
                 Limites
             </CollapsibleRow>
             <CollapsibleContent>
-                {limites.length === 0 ? (
+                {linhas.every((l) => l.limite == null) ? (
                     <EmptyState variant="plain" size="sm">
                         <EmptyStateIcon>
                             <BellAlertIcon aria-hidden />

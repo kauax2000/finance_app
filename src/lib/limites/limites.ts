@@ -130,14 +130,15 @@ export function situacaoDoLimite(
 
 /**
  * O resumo do cabeçalho recolhido de Limites. "Acima" é passar do limite (o
- * `passou`); "perto" é de 80% até 100% inclusive, e só aparece sem ninguém acima.
+ * `passou`); "perto" é quem já tem o aviso de 80% ou de 100% (`nivel`, a conta
+ * em centavos da Edge) sem ter passado, e só aparece sem ninguém acima.
  */
 export function resumoDosLimites(linhas: LinhaDoLimite[]): string {
     const com = linhas.filter((l) => l.limite != null)
     if (com.length === 0) return "Nenhum limite definido"
-    const sit = com.map((l) => situacaoDoLimite(l.gastoCentavos, l.limite!))
-    const acima = sit.filter((s) => s.tipo === "passou").length
-    const perto = sit.filter((s) => s.tipo === "sobra" && s.pct >= 80).length
+    const passou = (l: LinhaDoLimite) => situacaoDoLimite(l.gastoCentavos, l.limite!).tipo === "passou"
+    const acima = com.filter(passou).length
+    const perto = com.filter((l) => !passou(l) && l.nivel >= 80).length
     const base = `${com.length} com limite`
     return acima > 0 ? `${base} · ${acima} acima` : perto > 0 ? `${base} · ${perto} perto` : base
 }
