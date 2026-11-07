@@ -67,7 +67,7 @@
 
 ---
 
-### Tarefa 1: Modelo de filtros e tradução da URL
+### Task 1: Modelo de filtros e tradução da URL
 
 **Arquivos:**
 - Criar: `src/lib/transactions/filtros.ts`
@@ -100,7 +100,7 @@
 - [ ] **Passo 4:** rode o teste. Esperado: PASSA.
 - [ ] **Passo 5:** commit `feat(transacoes): filtros em tokens e tradução dos parâmetros antigos`.
 
-### Tarefa 2: Consulta filtrada, resumo, exportação e CSV
+### Task 2: Consulta filtrada, resumo, exportação e CSV
 
 **Arquivos:**
 - Criar: `src/lib/queries/transacoes-filtradas.ts`, `src/lib/transactions/csv.ts`
@@ -156,7 +156,7 @@
 - [ ] **Passo 6:** rode os testes. Esperado: PASSA. Rode também `npx vitest run src/lib/queries` para garantir que a lista antiga não mudou.
 - [ ] **Passo 7:** commit `feat(transacoes): consulta filtrada única, resumo e CSV`.
 
-### Tarefa 3: Hook da página `useTransacoesDaTela`
+### Task 3: Hook da página `useTransacoesDaTela`
 
 **Arquivos:**
 - Criar: `src/components/transactions/use-transacoes-da-tela.ts`
@@ -192,7 +192,7 @@
 - [ ] **Passo 4:** rode os testes e `npx tsc --noEmit`. Esperado: verde.
 - [ ] **Passo 5:** commit `feat(transacoes): hook da página com URL em tokens`.
 
-### Tarefa 4: Campos de filtro, toolbar e filtro do cabeçalho
+### Task 4: Campos de filtro, toolbar e filtro do cabeçalho
 
 **Arquivos:**
 - Criar: `src/components/transactions/use-campos-de-filtro.ts`, `src/components/transactions/transacoes-toolbar.tsx`
@@ -227,7 +227,7 @@
 - [ ] **Passo 4:** rode os testes e o `tsc`. Esperado: verde.
 - [ ] **Passo 5:** commit `feat(transacoes): FilterBar no topo da lista`.
 
-### Tarefa 5: Resumo e aviso "a conferir"
+### Task 5: Resumo e aviso "a conferir"
 
 **Arquivos:**
 - Criar: `src/components/transactions/resumo-das-transacoes.tsx`, `src/components/transactions/aviso-a-conferir.tsx`
@@ -259,7 +259,7 @@
 - [ ] **Passo 4:** testes verdes.
 - [ ] **Passo 5:** commit `feat(transacoes): resumo do recorte e aviso a conferir`.
 
-### Tarefa 6: Tabela nova, ações da linha e lote
+### Task 6: Tabela nova, ações da linha e lote
 
 **Arquivos:**
 - Reescrever: `src/components/transactions/transactions-table.tsx`
@@ -290,7 +290,7 @@
 - [ ] **Passo 4:** testes e `tsc` verdes.
 - [ ] **Passo 5:** commit `feat(transacoes): tabela por dia, confirmar na linha e lote completo`.
 
-### Tarefa 7: `DataTable.selectionSummary` (mudança de `ui/`, pede o ok do dono)
+### Task 7: `DataTable.selectionSummary` (mudança de `ui/`, pede o ok do dono)
 
 **Arquivos:**
 - Modificar: `src/components/ui/data-table.tsx` (a prop e a barra flutuante perto da linha 1964), `src/app/designsystem/docs/data-table.tsx` (um interruptor "Soma da seleção" no "Na tela"), `src/components/ui/table-versions.test.ts`, `AGENTS.md` (o bullet do `DataTable`: "`selectionSummary` põe a soma na barra"), `docs/design/HISTORICO-DESIGN-SYSTEM.md` (uma rodada nova)
@@ -304,7 +304,7 @@
 - [ ] **Passo 4:** rode `npm run ds:docs-map` e os testes. Esperado: verde.
 - [ ] **Passo 5:** commit `feat(ds): DataTable selectionSummary — a soma da seleção`.
 
-### Tarefa 8: Detalhe novo, com o bloco "a conferir" e as setas
+### Task 8: Detalhe novo, com o bloco "a conferir" e as setas
 
 **Arquivos:**
 - Reescrever: `src/components/transactions/transaction-detail-sheet.tsx`
@@ -334,7 +334,7 @@
 - [ ] **Passo 4:** testes e `tsc` verdes.
 - [ ] **Passo 5:** commit `feat(transacoes): detalhe com herói, setas e a conferir no DS`.
 
-### Tarefa 9: Divisão e anexos no DS
+### Task 9: Divisão e anexos no DS
 
 **Arquivos:**
 - Criar: `src/components/transactions/partes-da-despesa.tsx`, `src/components/transactions/anexos-do-lancamento.tsx`
@@ -356,7 +356,7 @@
 - [ ] **Passo 4:** verde, incluindo `npx vitest run src/lib/bills src/components/wireframe`.
 - [ ] **Passo 5:** commit `feat(transacoes): divisão e anexos do detalhe no DS`.
 
-### Tarefa 10: Importar extrato em diálogo de passos
+### Task 10: Importar extrato em diálogo de passos
 
 **Arquivos:**
 - Criar: `src/components/transactions/importar/importar-extrato-dialog.tsx`, `src/components/transactions/importar/use-importar-extrato.ts` (a lógica de `importar-extrato-wireframe.tsx`: preparar, importar com `client_id` estável e desfazer; nenhuma regra muda) e `src/components/transactions/importar/mapear-colunas.tsx` (a versão DS de `mapeamento-csv.tsx`)
@@ -378,7 +378,7 @@
 - [ ] **Passo 4:** verde.
 - [ ] **Passo 5:** commit `feat(transacoes): importar extrato em diálogo de passos`.
 
-### Tarefa 11: Campos de wireframe do formulário no DS
+### Task 11: Campos de wireframe do formulário no DS
 
 **Arquivos:**
 - Modificar: `src/components/transactions/transaction-form-fields.tsx` (linhas 81–82, 702, 985 e 993)
@@ -397,7 +397,7 @@
 - [ ] **Passo 4:** `npx vitest run src/components/transactions src/components/settings` verde.
 - [ ] **Passo 5:** commit `feat(transacoes): projeto, quem pagou e pesos do formulário no DS`.
 
-### Tarefa 12: Montagem da página, cabeçalho, vazios, esqueleto, exportar e limpeza
+### Task 12: Montagem da página, cabeçalho, vazios, esqueleto, exportar e limpeza
 
 **Arquivos:**
 - Reescrever: `src/app/(app)/transactions/page-client.tsx` (só a composição; nenhum componente declarado ali) e `src/components/transactions/transactions-page-skeleton.tsx`
@@ -432,7 +432,7 @@
   - `npx tsc --noEmit && npm run lint && npm run test:unit`
 - [ ] **Passo 5:** commit `feat(transacoes): página nova montada e wireframes da tela apagados`.
 
-### Tarefa 13: Jornadas, Atlas, grafo e verificação no navegador
+### Task 13: Jornadas, Atlas, grafo e verificação no navegador
 
 **Arquivos:**
 - Modificar: `docs/JORNADAS.md`, a seção de Transações e as linhas da tabela citadas (linhas 869, 884, 886, 890, 895, 896, 898 e 899 de hoje, mais as lacunas). O conteúdo está na spec §14.
