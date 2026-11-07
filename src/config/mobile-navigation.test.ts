@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ROUTES } from "@/config/navigation"
-import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderActionFor, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
@@ -109,6 +109,20 @@ describe("o filtro do cabeçalho pela rota", () => {
         expect(achados.length).toBeGreaterThanOrEqual(5)
         for (const [rota, icone] of achados) {
             expect(mobileHeaderFilterFor(rota), rota).toBe(icone)
+        }
+    })
+})
+
+describe("a ação do cabeçalho pela rota", () => {
+    it("em Membros, só o dono troca a lupa pelo convite", () => {
+        expect(mobileHeaderActionFor(ROUTES.MEMBERS, true)).toBe("invite")
+        // Quem não é dono (ou enquanto o papel não chegou) segue com a lupa: nada pisca.
+        expect(mobileHeaderActionFor(ROUTES.MEMBERS, false)).toBeNull()
+    })
+
+    it("nas outras rotas, a lupa de sempre", () => {
+        for (const r of [ROUTES.DASHBOARD, ROUTES.TRANSACTIONS, ROUTES.ME, `${ROUTES.MEMBERS}/abc`]) {
+            expect(mobileHeaderActionFor(r, true)).toBeNull()
         }
     })
 })

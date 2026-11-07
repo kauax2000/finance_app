@@ -362,3 +362,17 @@ export function mobileHeaderFilterFor(pathname: string): MobileHeaderFilterIcon 
     if (pathname === ROUTES.TRANSACTIONS || pathname === ROUTES.BILLS) return "filter"
     return null
 }
+
+/** A ação da tela que o cabeçalho do telefone desenha no lugar da lupa. */
+export type MobileHeaderAction = "invite"
+
+/**
+ * Em Membros, para o dono, o convite toma o lugar da lupa: um botão só à
+ * direita. Como o filtro (`mobileHeaderFilterFor`), a rota declara a forma para
+ * o cabeçalho nascer certo no clique, antes do `AdiarMontagem`; a página só
+ * publica o toque (`usePageChromeAction`). `ehDono` falso — inclusive enquanto
+ * o papel não chegou — fica com a lupa, para o membro nunca ver o convite piscar.
+ */
+export function mobileHeaderActionFor(pathname: string, ehDono: boolean): MobileHeaderAction | null {
+    return pathname === ROUTES.MEMBERS && ehDono ? "invite" : null
+}

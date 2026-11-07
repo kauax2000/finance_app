@@ -42,7 +42,12 @@ type PageChromeContextValue = {
     setSlot: (next: PageChromeSlotPatch | null) => void
     filter: PageChromeFilterEntry | null
     setFilter: (next: PageChromeFilterEntry | null) => void
+    action: PageChromeActionEntry | null
+    setAction: (next: PageChromeActionEntry | null) => void
 }
+
+/** O toque da ação que a rota declara (`mobileHeaderActionFor`) e a rota de quem o publicou. */
+type PageChromeActionEntry = { pathname: string; onOpen: () => void }
 
 /**
  * O filtro publicado e a rota de quem o publicou: a de outra tela não vale. O
@@ -58,9 +63,10 @@ const PageChromeContext = React.createContext<PageChromeContextValue | null>(
 export function PageChromeProvider({ children }: { children: React.ReactNode }) {
     const [slot, setSlot] = React.useState<PageChromeSlotPatch | null>(null)
     const [filter, setFilter] = React.useState<PageChromeFilterEntry | null>(null)
+    const [action, setAction] = React.useState<PageChromeActionEntry | null>(null)
     const value = React.useMemo(
-        () => ({ slot, setSlot, filter, setFilter }),
-        [slot, filter],
+        () => ({ slot, setSlot, filter, setFilter, action, setAction }),
+        [slot, filter, action],
     )
     return (
         <PageChromeContext.Provider value={value}>
@@ -164,4 +170,31 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
         })
         return () => setFilter(null)
     }, [setFilter, pathname, enabled, label, active, disabled, icon, temPopover])
+}
+
+/**
+ * O toque da ação do cabeçalho que a página de `pathname` publicou; `undefined`
+ * enquanto ela não falou. Sem ele, o botão declarado pela rota fica inerte.
+ */
+export function usePageChromeActionFor(pathname: string): (() => void) | undefined {
+    const action = React.useContext(PageChromeContext)?.action
+    return action?.pathname === pathname ? action.onOpen : undefined
+}
+
+/**
+ * Publica o toque da ação que a rota declara no cabeçalho do telefone (o
+ * convite de Membros). O `onOpen` vai por ref; ao desmontar, ou com `enabled`
+ * falso, nada fica publicado. Fora do provider, não faz nada.
+ */
+export function usePageChromeAction(onOpen: () => void, enabled = true) {
+    const setAction = React.useContext(PageChromeContext)?.setAction
+    const pathname = usePathname()
+    const ref = React.useRef(onOpen)
+    ref.current = onOpen
+
+    React.useLayoutEffect(() => {
+        if (!setAction || !enabled) return
+        setAction({ pathname, onOpen: () => ref.current() })
+        return () => setAction(null)
+    }, [setAction, pathname, enabled])
 }

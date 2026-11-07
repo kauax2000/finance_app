@@ -27,6 +27,8 @@ import { fetchMembersPageBundle } from "@/lib/queries/fetch-members-page-bundle"
 import { fetchInviteLinks, INVITE_LINKS_STALE_MS } from "@/lib/queries/fetch-invite-links"
 import { inviteLinksKeys, membersPageBundleKeys } from "@/lib/queries/keys"
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
+import { CarteiraNoTopo } from "@/components/members/carteira-no-topo"
+import { usePageChromeAction } from "@/components/layout/page-chrome-provider"
 import { rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
     dismissPageFetchError,
@@ -57,6 +59,7 @@ import Loading from "./loading"
 export default function MembersPage() {
     const { user, loading: authLoading } = useAuth()
     const {
+        currentWorkspace,
         currentWorkspaceId,
         isWorkspaceOwner,
         isAdulto,
@@ -77,6 +80,8 @@ export default function MembersPage() {
     } | null>(null)
 
     const canManageMembers = Boolean(currentWorkspaceId && isWorkspaceOwner(currentWorkspaceId))
+    // No telefone o convite é o botão da barra do topo (a rota o declara); aqui só o toque.
+    usePageChromeAction(() => setConvidarAberto(true), canManageMembers)
 
     // Tudo numa rodada só e com cache: a volta a Membros não mostra esqueleto.
     const queryClient = useQueryClient()
@@ -272,9 +277,9 @@ export default function MembersPage() {
     }
 
     // Convidar é só do dono.
-    const botaoConvidar = (className?: string) =>
+    const botaoConvidar = () =>
         canManageMembers ? (
-            <Button type="button" variant="primary" className={className} onClick={() => setConvidarAberto(true)}>
+            <Button type="button" variant="primary" onClick={() => setConvidarAberto(true)}>
                 <UserPlusIcon aria-hidden />
                 Convidar pessoa
             </Button>
@@ -329,8 +334,9 @@ export default function MembersPage() {
             </AlertDialog>
 
             {isMobile ? (
-                // No telefone o título é o da casca (`TituloDaTela`); o convite vem logo abaixo.
-                botaoConvidar("w-full")
+                // No telefone o título é o da casca (`TituloDaTela`) e o convite mora na
+                // barra do topo; a tela abre com a carteira, que a barra lateral não mostra.
+                currentWorkspace ? <CarteiraNoTopo carteira={currentWorkspace} pessoas={members} /> : null
             ) : (
                 <PageHeader collapse>
                     <PageHeaderTitleRow>

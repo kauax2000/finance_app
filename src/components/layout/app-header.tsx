@@ -3,7 +3,8 @@
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellButton, useUnreadBellCount } from "@/components/layout/notification-bell-link"
-import { AdjustmentsHorizontalIcon, CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { AdjustmentsHorizontalIcon, CalendarIcon, MagnifyingGlassIcon, UserPlusIcon } from "@heroicons/react/16/solid"
+import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PageHeaderBack } from "@/components/ui/page-header"
 import { ToolbarFilterIndicator } from "@/components/ui/toolbar"
@@ -23,10 +24,16 @@ import {
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { defaultMobileTitle } from "@/components/layout/titulo-da-tela"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
-import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeState } from "@/components/layout/page-chrome-provider"
+import {
+    filtroDoCabecalho,
+    usePageChromeActionFor,
+    usePageChromeFilterFor,
+    usePageChromeState,
+} from "@/components/layout/page-chrome-provider"
+import { useWorkspace } from "@/components/workspace-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import { ROUTES } from "@/config/navigation"
-import { isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { isVoceTabActive, mobileHeaderActionFor, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 
 export function defaultMobileBackHref(pathname: string): string | undefined {
     const sub = resolveAppSubPageMeta(pathname)
@@ -85,6 +92,12 @@ function assinarLg(avisar: () => void) {
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
     const filtro = filtroDoCabecalho(mobileHeaderFilterFor(pathname), usePageChromeFilterFor(pathname))
+    // O papel já vem da carteira, antes de a página montar: o dono de Membros
+    // nasce com o convite, e quem não é dono nunca o vê.
+    const { currentWorkspaceId, isWorkspaceOwner } = useWorkspace()
+    const ehDono = Boolean(currentWorkspaceId && isWorkspaceOwner(currentWorkspaceId))
+    const acao = mobileHeaderActionFor(pathname, ehDono)
+    const abrirAcao = usePageChromeActionFor(pathname)
     // Uma sondagem só: o sino aparece no telefone (esquerda) e no desktop (direita).
     useUnreadBellCount()
     // A busca tem um gatilho (lupa no telefone, pílula no desktop) e uma
@@ -182,6 +195,23 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         ) : (
             botaoDoFiltro
         )
+
+    // O convite de Membros no lugar da lupa: um botão só à direita, preenchido
+    // (a tecla `primary`), 44 no toque. Até a página publicar o toque, inerte.
+    const botaoConvidar =
+        acao === "invite" ? (
+            <Button
+                type="button"
+                variant="primary"
+                size="icon-lg"
+                aria-label="Convidar pessoa"
+                aria-haspopup="dialog"
+                aria-disabled={abrirAcao ? undefined : true}
+                onClick={abrirAcao}
+            >
+                <UserPlusIcon aria-hidden />
+            </Button>
+        ) : null
 
     return (
         <TopBar position="auto" surface="edge">
@@ -281,10 +311,13 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
                     // volta a ela ao sair, e a identidade (`month`, `filter`)
                     // troca o ícone no lugar.
-                    <TopBarActionGroup morph trailingKey={filtro?.icon}>
-                        {lupa(true)}
-                        {filtroNoCabecalho}
-                    </TopBarActionGroup>
+                    // Em Membros, para o dono, o convite toma o lugar da cápsula.
+                    botaoConvidar ?? (
+                        <TopBarActionGroup morph trailingKey={filtro?.icon}>
+                            {lupa(true)}
+                            {filtroNoCabecalho}
+                        </TopBarActionGroup>
+                    )
                 }
             >
                 {/* Do `md` para cima, o sino; a lupa cola nele numa cápsula com a
