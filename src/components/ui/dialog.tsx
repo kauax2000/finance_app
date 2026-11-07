@@ -17,7 +17,7 @@ import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAlturaAnimada } from "@/hooks/use-altura-animada"
-import { Button } from "@/components/ui/button"
+import { Button, TresAcoesContext, contarAcoes } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
   Sheet,
@@ -748,19 +748,25 @@ function DialogFooter({
           data-slot="dialog-footer-start"
           className="flex flex-col-reverse gap-2 sm:me-auto sm:flex-row"
         >
-          {start}
+          <TresAcoesContext.Provider value={false}>{start}</TresAcoesContext.Provider>
         </div>
       ) : null}
-      {/* Cancelar vem antes da ação: à esquerda no desktop e, com o
-          `flex-col-reverse`, embaixo no telefone. */}
-      {showCloseButton && (
-        <DialogClose asChild>
-          <Button type="button" variant="tertiary">
-            Cancelar
-          </Button>
-        </DialogClose>
-      )}
-      {children}
+      {/* Três ações juntas, três pesos: com a da esquerda, o Cancelar
+          (`tertiary`) das outras duas sobe a `secondary`. */}
+      <TresAcoesContext.Provider
+        value={Boolean(start) && contarAcoes(children) + (showCloseButton ? 1 : 0) >= 2}
+      >
+        {/* Cancelar vem antes da ação: à esquerda no desktop e, com o
+            `flex-col-reverse`, embaixo no telefone. */}
+        {showCloseButton && (
+          <DialogClose asChild>
+            <Button type="button" variant="tertiary">
+              Cancelar
+            </Button>
+          </DialogClose>
+        )}
+        {children}
+      </TresAcoesContext.Provider>
     </div>
   )
 }

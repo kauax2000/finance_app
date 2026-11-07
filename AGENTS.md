@@ -358,6 +358,17 @@ o par é de **duas ações do mesmo peso**, sem `primary` nenhum. O nome é
 `tertiary`: `variant="ghost"` saiu do tipo, e o compilador acusa quem o
 escrever.
 
+### Três ações juntas: três pesos, sempre
+
+Decisão do dono (07/11/2026): quando três ações aparecem juntas, cada uma
+tem um peso — `primary` (preenche), **`secondary` (com fundo)** e `tertiary`
+(sem nada). Nunca duas iguais. **Quem garante é o sistema**: o `DialogFooter`
+e o `FormActions` com `start` e mais duas ações ligam o `TresAcoesContext`
+(`button.tsx`), e o `tertiary` da direita (o Cancelar, `FormCancel`,
+`DialogClose`) sobe a `secondary`; a ação do `start` (Remover, Voltar, um
+link) fica sem fundo. A tela não escreve `variant="secondary"` à mão para
+isso. `tres-acoes.test.ts`.
+
 ### Par de identidade: sem gap
 
 Nome sobre e-mail, título sobre legenda, rótulo sobre valor — sempre que dois

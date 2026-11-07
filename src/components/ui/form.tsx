@@ -19,7 +19,7 @@ import {
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
-import { Button } from "@/components/ui/button"
+import { Button, TresAcoesContext, contarAcoes } from "@/components/ui/button"
 import {
   Field,
   FieldContent,
@@ -843,10 +843,13 @@ function FormActions({
           data-slot="form-actions-start"
           className="flex flex-col-reverse gap-2 sm:me-auto sm:flex-row"
         >
-          {start}
+          <TresAcoesContext.Provider value={false}>{start}</TresAcoesContext.Provider>
         </div>
       ) : null}
-      {children}
+      {/* Três ações juntas, três pesos: com a da esquerda, o `tertiary` sobe a `secondary`. */}
+      <TresAcoesContext.Provider value={Boolean(start) && contarAcoes(children) >= 2}>
+        {children}
+      </TresAcoesContext.Provider>
     </div>
   )
 }

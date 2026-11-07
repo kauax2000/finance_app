@@ -144,6 +144,19 @@ type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>["size"]>
 const ButtonSizeContext = React.createContext<ButtonSize | undefined>(undefined)
 
 /**
+ * Três ações juntas, três pesos: `primary`, `secondary`, `tertiary` (regra do
+ * dono, 07/11/2026). O rodapé que tem a ação da esquerda (`start`) e mais duas
+ * liga este contexto nas duas da direita, e o `tertiary` delas (o Cancelar)
+ * sobe a `secondary`; a da esquerda fica sem fundo. Com duas ações, nada muda.
+ */
+const TresAcoesContext = React.createContext(false)
+
+/** Quantas ações um rodapé desenha: os filhos que renderizam algo. */
+function contarAcoes(nos: React.ReactNode): number {
+  return React.Children.toArray(nos).filter((n) => n !== "").length
+}
+
+/**
  * O afundar do clique, como animação de duração fixa: desce 1px e volta. O
  * `:active` sozinho não basta no gatilho de um menu do Radix — ele abre no
  * `pointerdown`, chama `preventDefault`, o menu modal põe `pointer-events: none`
@@ -169,7 +182,7 @@ function afundar(e: React.PointerEvent<HTMLElement>) {
 
 function Button({
   className,
-  variant = "primary",
+  variant: variantProp = "primary",
   size: sizeProp,
   iconMotion,
   asChild = false,
@@ -182,6 +195,8 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const tresAcoes = React.useContext(TresAcoesContext)
+  const variant = tresAcoes && variantProp === "tertiary" ? "secondary" : variantProp
   const groupSize = React.useContext(ButtonSizeContext)
   const size = sizeProp ?? groupSize ?? "lg"
   const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
@@ -227,4 +242,4 @@ function Button({
   )
 }
 
-export { Button, ButtonSizeContext, buttonVariants, type ButtonSize }
+export { Button, ButtonSizeContext, TresAcoesContext, buttonVariants, contarAcoes, type ButtonSize }
