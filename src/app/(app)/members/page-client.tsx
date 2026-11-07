@@ -392,7 +392,7 @@ export default function MembersPage() {
                 >
                     <LimitesSecao
                         workspaceId={currentWorkspaceId}
-                        pessoas={members.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) }))}
+                        pessoas={members}
                         podeEditar={canManageMembers}
                         ym={bundle?.ym ?? ""}
                         limites={bundle?.limites ?? []}

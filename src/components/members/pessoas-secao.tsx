@@ -38,6 +38,19 @@ export function memberDisplayName(member: MemberWithProfile) {
     return member.profile?.full_name || member.profile?.email || "Membro"
 }
 
+export function AvatarDoMembro({ member, size = "sm" }: { member: MemberWithProfile; size?: "sm" }) {
+    const nome = memberDisplayName(member)
+    const semente = nome === "Membro" ? member.profile?.email || "Membro" : nome
+    const tom = identityToneFor(member.profile?.avatar_color, semente)
+    const foto = member.profile?.avatar_url?.trim() || null
+    return (
+        <Avatar size={size}>
+            {foto ? <AvatarImage src={foto} alt="" loading="lazy" /> : null}
+            <AvatarFallback className={cn("font-semibold", tom.surface, tom.ink)}>{getInitials(semente)}</AvatarFallback>
+        </Avatar>
+    )
+}
+
 export function PessoasSecao({
     pessoas,
     meuUserId,
@@ -65,21 +78,13 @@ export function PessoasSecao({
                     {pessoas.map((pessoa) => {
                         const nome = memberDisplayName(pessoa)
                         const email = pessoa.profile?.email || ""
-                        const semente = nome === "Membro" ? email || "Membro" : nome
-                        const tom = identityToneFor(pessoa.profile?.avatar_color, semente)
-                        const foto = pessoa.profile?.avatar_url?.trim() || null
                         const ocupado = ocupadoId === pessoa.user_id
                         const novoPapel = pessoa.role === "guest" ? "member" : "guest"
                         const minha = pessoa.user_id === meuUserId
                         return (
                             <Item key={pessoa.user_id} variant="flush" size="lg" className="px-4">
                                 <ItemMedia>
-                                    <Avatar size="sm">
-                                        {foto ? <AvatarImage src={foto} alt="" loading="lazy" /> : null}
-                                        <AvatarFallback className={cn("font-semibold", tom.surface, tom.ink)}>
-                                            {getInitials(semente)}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                    <AvatarDoMembro member={pessoa} />
                                 </ItemMedia>
                                 <ItemContent className="min-w-0">
                                     <ItemTitle className="truncate pointer-coarse:text-base">

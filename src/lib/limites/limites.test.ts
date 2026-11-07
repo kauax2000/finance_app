@@ -9,6 +9,7 @@ import {
     lerLimiteDigitado,
     linhasDosLimites,
     nivelDoLimite,
+    situacaoDoLimite,
     type LancamentoDaPessoa,
 } from "./limites"
 
@@ -77,5 +78,20 @@ describe("lerLancamentosDoMes: paginado, no mês e no anterior", () => {
         expect(corpo).not.toContain("paddedBoundsForYearMonth")
         expect(fonte).toMatch(/const gastoCentavos = gastoDaPessoaNoMes\(lancs, user_id, ym\)/)
         expect(fonte).toContain('from "../../../supabase/functions/_shared/limite-pessoa"')
+    })
+})
+
+describe("situacaoDoLimite", () => {
+    it("passou: excesso em centavos", () => {
+        expect(situacaoDoLimite(221243, 1000)).toEqual({ pct: 221, tipo: "passou", valorCentavos: 121243 })
+    })
+    it("sobra: resto em centavos", () => {
+        expect(situacaoDoLimite(142866, 5000)).toEqual({ pct: 29, tipo: "sobra", valorCentavos: 357134 })
+    })
+    it("gasto igual ao limite: sobra zero, 100%", () => {
+        expect(situacaoDoLimite(100000, 1000)).toEqual({ pct: 100, tipo: "sobra", valorCentavos: 0 })
+    })
+    it("limite com centavos sem erro de ponto flutuante", () => {
+        expect(situacaoDoLimite(1000, 10.1)).toEqual({ pct: 99, tipo: "sobra", valorCentavos: 10 })
     })
 })

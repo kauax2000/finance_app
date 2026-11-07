@@ -14,12 +14,26 @@ describe("LimitesSecao", () => {
     })
 
     it("a linha diz o gasto e a barra usa as faixas 80/100", () => {
-        expect(fonte).toContain("no mês, sem limite")
-        expect(fonte).toContain("currencyBRL(linha.limite)")
+        expect(fonte).toContain("no mês · sem limite")
+        expect(fonte).toContain("currencyBRL(linha.limite!)")
         expect(fonte).toContain("bands={[80, 100]}")
         expect(fonte).toContain("value={pct}")
         expect(fonte).not.toContain("Math.min(pct")
         expect(fonte).not.toContain("Deixe sem limite")
+    })
+
+    it("a linha tem avatar, situação e porcentagem; Definir e chevron só para o dono", () => {
+        for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "sem limite", "Definir", "text-destructive", "text-warning", "text-muted-foreground"]) {
+            expect(fonte).toContain(x)
+        }
+        const resto = fonte.slice(fonte.indexOf("Definir") - 200)
+        expect(fonte.match(/Definir/g)).toHaveLength(1)
+        expect(fonte.match(/<ItemChevron/g)).toHaveLength(1)
+        expect(resto).toMatch(/podeEditar/)
+        const i = fonte.indexOf("<ItemChevron")
+        expect(fonte.slice(Math.max(0, i - 400), i)).toContain("podeEditar")
+        const d = fonte.indexOf("Definir")
+        expect(fonte.slice(Math.max(0, d - 400), d)).toContain("podeEditar")
     })
 
     it("indisponível tem o texto exato; não busca nem espera sozinha (os dados vêm no pacote da tela)", () => {

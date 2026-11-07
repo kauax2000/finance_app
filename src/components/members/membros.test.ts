@@ -24,6 +24,12 @@ describe("Membros no layout A", () => {
         expect(pagina).toContain("onMudou={recarregar}")
     })
 
+    it("pessoas: AvatarDoMembro é exportado e a lista o usa; Limites recebe os membros", () => {
+        expect(pessoas).toContain("export function AvatarDoMembro")
+        expect(pessoas).toContain("<AvatarDoMembro")
+        expect(pagina).toContain("pessoas={members}")
+    })
+
     it("as três seções, com as âncoras das outras jornadas", () => {
         for (const s of ["<PessoasSecao", "<ConvitesPendentesSecao", "<LimitesSecao", 'id="limites"', 'id="workspace-invites"']) {
             expect(pagina).toContain(s)

@@ -115,3 +115,15 @@ export function linhasDosLimites(
         return { user_id, nome, limite, gastoCentavos, nivel }
     })
 }
+
+/** Onde a pessoa está no limite: porcentagem inteira e o resto ou o excesso, tudo em centavos. */
+export function situacaoDoLimite(
+    gastoCentavos: number,
+    limiteReais: number,
+): { pct: number; tipo: "sobra" | "passou"; valorCentavos: number } {
+    const limite = Math.round(limiteReais * 100)
+    const pct = Math.round((gastoCentavos / limite) * 100)
+    return gastoCentavos > limite
+        ? { pct, tipo: "passou", valorCentavos: gastoCentavos - limite }
+        : { pct, tipo: "sobra", valorCentavos: limite - gastoCentavos }
+}

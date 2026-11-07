@@ -14,8 +14,9 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
+import { AvatarDoMembro, memberDisplayName, type MemberWithProfile } from "@/components/members/pessoas-secao"
 import { Button } from "@/components/ui/button"
-import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
+import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
 import { currencyBRL } from "@/lib/formatters"
@@ -24,13 +25,14 @@ import {
     lerLimiteDigitado,
     linhasDosLimites,
     removerLimite,
+    situacaoDoLimite,
     type LancamentoDaPessoa,
     type LimiteDaPessoa,
     type LinhaDoLimite,
 } from "@/lib/limites/limites"
+import { cn } from "@/lib/utils"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 
-type Pessoa = { user_id: string; nome: string }
 
 /**
  * Os limites mensais por pessoa (seção `#limites` de Membros): o gasto do mês
@@ -49,7 +51,7 @@ export function LimitesSecao({
     onMudou,
 }: {
     workspaceId: string
-    pessoas: Pessoa[]
+    pessoas: MemberWithProfile[]
     podeEditar: boolean
     /** O mês (`YYYY-MM`) dos lançamentos. */
     ym: string
@@ -78,10 +80,15 @@ export function LimitesSecao({
             ) : (
                 <Card padding="none">
                     <ItemGroup variant="divided">
-                        {linhasDosLimites(pessoas, limites, lancamentos, ym).map((l) => (
+                        {linhasDosLimites(
+                            pessoas.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) })),
+                            limites, lancamentos,
+                            ym,
+                        ).map((l) => (
                             <LinhaDoLimiteItem
                                 key={`${l.user_id}:${l.limite}`}
                                 linha={l}
+                                membro={pessoas.find((m) => m.user_id === l.user_id)}
                                 podeEditar={podeEditar}
                                 onSalvar={async (valor) => {
                                     await gravarLimite(workspaceId, l.user_id, valor)
@@ -102,11 +109,13 @@ export function LimitesSecao({
 
 function LinhaDoLimiteItem({
     linha,
+    membro,
     podeEditar,
     onSalvar,
     onRemover,
 }: {
     linha: LinhaDoLimite
+    membro: MemberWithProfile | undefined
     podeEditar: boolean
     onSalvar: (valor: number) => Promise<void>
     onRemover: () => Promise<void>
@@ -116,27 +125,52 @@ function LinhaDoLimiteItem({
     const [salvando, setSalvando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const gasto = currencyBRL(linha.gastoCentavos / 100)
-    const pct = linha.limite ? (linha.gastoCentavos / 100 / linha.limite) * 100 : 0
+    const situacao = linha.limite == null ? null : situacaoDoLimite(linha.gastoCentavos, linha.limite)
+    const pct = situacao?.pct ?? 0
+    const tomPct = pct >= 100 ? "text-destructive" : pct >= 80 ? "text-warning" : "text-foreground"
 
     const corpo = (
         <>
-            <ItemContent>
-                <ItemTitle className="pointer-coarse:text-base">{linha.nome}</ItemTitle>
+            {membro ? (
+                <ItemMedia>
+                    <AvatarDoMembro member={membro} size="sm" />
+                </ItemMedia>
+            ) : null}
+            <ItemContent className="min-w-0">
+                <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
                 <ItemDescription>
-                    {linha.limite == null
-                        ? `${gasto} no mês, sem limite`
-                        : `${gasto} de ${currencyBRL(linha.limite)}`}
+                    {situacao == null ? (
+                        `${gasto} no mês · sem limite`
+                    ) : (
+                        <>
+                            {situacao.tipo === "passou" ? (
+                                <span className="text-destructive">
+                                    {"Passou "}
+                                    {currencyBRL(situacao.valorCentavos / 100)}
+                                </span>
+                            ) : (
+                                "Sobram " + currencyBRL(situacao.valorCentavos / 100)
+                            )}
+                            {` · limite ${currencyBRL(linha.limite!)}`}
+                        </>
+                    )}
                 </ItemDescription>
-                {linha.limite != null ? (
+                {situacao != null ? (
                     <Progress
                         value={pct}
                         bands={[80, 100]}
                         size="sm"
-                        aria-label={`${linha.nome}: ${Math.round(pct)}% do limite do mês`}
+                        aria-label={`${linha.nome}: ${pct}% do limite do mês`}
                     />
                 ) : null}
             </ItemContent>
-            {podeEditar ? <ItemChevron /> : null}
+            {situacao != null ? <span className={cn("nums text-sm font-medium", tomPct)}>{pct}%</span> : null}
+            {podeEditar ? (
+                <>
+                    {situacao == null ? <span className="text-sm text-muted-foreground">Definir</span> : null}
+                    <ItemChevron />
+                </>
+            ) : null}
         </>
     )
 
