@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
 import { ShieldCheckIcon } from "@heroicons/react/16/solid"
 import { LinkIcon } from "@heroicons/react/20/solid"
@@ -20,6 +20,16 @@ import {
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Muted, P } from "@/components/ui/typography"
+import {
+    brotarPasso,
+    chegarAEscolha,
+    chegarAoValor,
+    recolherPasso,
+    sairDaEscolhaPeloNome,
+    sairDoValor,
+    semMovimento,
+    type OrigemDaViagem,
+} from "@/lib/viagem-de-passo"
 
 type Ia = "claude" | "chatgpt" | "claude-code"
 
@@ -137,7 +147,49 @@ export function ConectarIaDialog({
     const escolhida = ia ? IAS[ia] : null
     const ultimo = passo === TOTAL - 1
 
-    function irPara(n: number) {
+    // A troca de passo é um gesto (`viagem-de-passo`): da escolha, o nome da IA viaja
+    // até o título e o guia brota do cartão; entre os passos do guia, o passo recolhe
+    // e o seguinte brota. Cabeçalho e rodapé remontam só entre a escolha e o guia.
+    const cabecalhoRef = useRef<HTMLDivElement>(null)
+    const corpoRef = useRef<HTMLDivElement>(null)
+    const rodapeRef = useRef<HTMLDivElement>(null)
+    // O passo atual, sem os fantasmas: as linhas da escolha se procuram só nele.
+    const atualRef = useRef<HTMLDivElement>(null)
+    const origem = useRef<OrigemDaViagem | null>(null)
+    const gesto = useRef<"escolheu" | "voltou" | "seguiu" | null>(null)
+    const [trocando, setTrocando] = useState(false)
+
+    useLayoutEffect(() => {
+        const [cab, corpo, pe, atual] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current, atualRef.current]
+        const g = gesto.current
+        gesto.current = null
+        if (!mudou || !g || !cab || !corpo || !pe || !atual || semMovimento()) return
+        if (g === "escolheu" && origem.current) chegarAoValor(corpo, cab, pe, origem.current)
+        else if (g === "voltou") chegarAEscolha(atual, cab, pe)
+        else brotarPasso(corpo)
+        origem.current = null
+    }, [passo, mudou])
+
+    async function irPara(n: number) {
+        if (trocando) return
+        const [cab, corpo, pe, atual] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current, atualRef.current]
+        if (cab && corpo && pe && atual && !semMovimento()) {
+            setTrocando(true)
+            const tocada = passo === 0 ? atual.querySelector<HTMLElement>(`[data-linha="${ia}"]`) : null
+            const nome = tocada?.querySelector("[data-nome]")
+            if (tocada && nome) {
+                origem.current = { nome: nome.getBoundingClientRect(), linha: tocada.getBoundingClientRect() }
+                await sairDaEscolhaPeloNome(atual, cab, pe, tocada)
+                gesto.current = "escolheu"
+            } else if (n === 0) {
+                await sairDoValor(corpo, cab, pe)
+                gesto.current = "voltou"
+            } else if (passo > 0) {
+                await recolherPasso(corpo)
+                gesto.current = "seguiu"
+            }
+            setTrocando(false)
+        }
         setMudou(true)
         setPasso(n)
     }
@@ -151,17 +203,21 @@ export function ConectarIaDialog({
                     variant="card"
                     aria-label="Sua IA"
                     value={ia ?? ""}
-                    onValueChange={(v) => setIa(v as Ia)}
+                    onValueChange={(v) => {
+                        if (!trocando) setIa(v as Ia)
+                    }}
                 >
                     {(Object.keys(IAS) as Ia[]).map((chave) => (
-                        <RadioGroupItem
-                            key={chave}
-                            value={chave}
-                            icon={<Capa marca={IAS[chave].marca} tamanho="media" />}
-                            description={IAS[chave].linha}
-                        >
-                            {IAS[chave].nome}
-                        </RadioGroupItem>
+                        // A linha da viagem: o `RadioGroupItem` não repassa atributo ao cartão.
+                        <div key={chave} data-linha={chave}>
+                            <RadioGroupItem
+                                value={chave}
+                                icon={<Capa marca={IAS[chave].marca} tamanho="media" />}
+                                description={IAS[chave].linha}
+                            >
+                                <span data-nome>{IAS[chave].nome}</span>
+                            </RadioGroupItem>
+                        </div>
                     ))}
                 </RadioGroup>
             </PecaDoPasso>
@@ -264,30 +320,42 @@ export function ConectarIaDialog({
     return (
         <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Conectar minha IA</DialogTitle>
+                <DialogHeader key={passo === 0 ? "cabecalho-escolha" : "cabecalho-guia"} ref={cabecalhoRef}>
+                    <DialogTitle>
+                        {passo === 0 || !escolhida ? (
+                            "Conectar minha IA"
+                        ) : (
+                            <>
+                                <span data-prefixo>Conectar o </span>
+                                <span data-nome>{escolhida.nome}</span>
+                            </>
+                        )}
+                    </DialogTitle>
                     <DialogDescription>Leva uns 2 minutos. No fim, ela já responde sobre o seu dinheiro.</DialogDescription>
                 </DialogHeader>
-                <DialogBody>
+                <DialogBody ref={corpoRef}>
                     <span aria-live="polite" className="sr-only">
                         Passo {passo + 1} de {TOTAL}: {titulo}
                     </span>
                     <CaixaDoPasso chave={String(passo)} entrar={!reduzido && mudou} fantasmas={fantasmas}>
-                        {corpo}
+                        {/* Só o passo atual leva `data-passo`: ele recolhe e brota; os fantasmas, não. */}
+                        <div ref={atualRef} data-passo className="flex flex-col gap-4">
+                            {corpo}
+                        </div>
                     </CaixaDoPasso>
                 </DialogBody>
                 <PontosDoPasso total={TOTAL} atual={passo} />
-                <DialogFooter>
+                <DialogFooter key={passo === 0 ? "rodape-escolha" : "rodape-guia"} ref={rodapeRef}>
                     {/* No primeiro passo o Voltar guarda o lugar, invisível: o rodapé tem a mesma
                         altura em todos os passos, e a gaveta não muda de tamanho. */}
                     <Button
                         type="button"
                         variant="tertiary"
-                        disabled={passo === 0}
+                        disabled={passo === 0 || trocando}
                         aria-hidden={passo === 0 || undefined}
                         tabIndex={passo === 0 ? -1 : undefined}
                         className={passo === 0 ? "invisible" : undefined}
-                        onClick={() => irPara(passo - 1)}
+                        onClick={() => void irPara(passo - 1)}
                     >
                         Voltar
                     </Button>
@@ -295,8 +363,8 @@ export function ConectarIaDialog({
                         type="button"
                         variant="primary"
                         // Sem IA escolhida, os passos seguintes não têm caminho.
-                        disabled={!escolhida}
-                        onClick={ultimo ? () => onOpenChange(false) : () => irPara(passo + 1)}
+                        disabled={!escolhida || trocando}
+                        onClick={ultimo ? () => onOpenChange(false) : () => void irPara(passo + 1)}
                     >
                         {ultimo ? "Concluir" : "Próximo"}
                     </Button>

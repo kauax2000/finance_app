@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
 import {
@@ -45,6 +45,7 @@ import {
 } from "@/lib/limites/limites"
 import { cn } from "@/lib/utils"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
+import { viajarParaOTitulo } from "@/lib/viagem-de-passo"
 
 
 /**
@@ -214,6 +215,14 @@ function LinhaDoLimiteItem({
     const situacao = situacaoDoLimite(linha.gastoCentavos, limite)
     const pct = situacao.pct
     const tomPct = pct >= 100 ? "text-destructive" : pct >= 80 ? "text-warning" : "text-foreground"
+    // Abrir pelo lápis: o nome da linha viaja até o título (`viajarParaOTitulo`), com o conteúdo recém-montado.
+    const nomeRef = useRef<HTMLSpanElement>(null)
+    const viajar = useRef(false)
+    const conteudoRef = useCallback((el: HTMLDivElement | null) => {
+        if (!el || !viajar.current || !nomeRef.current) return
+        viajar.current = false
+        viajarParaOTitulo(nomeRef.current, el)
+    }, [])
 
     const corpo = (
         <>
@@ -223,7 +232,9 @@ function LinhaDoLimiteItem({
                     </ItemMedia>
                 ) : null}
                 <ItemContent className="min-w-0">
-                    <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
+                    <ItemTitle className="truncate pointer-coarse:text-base">
+                        <span ref={nomeRef} data-nome>{linha.nome}</span>
+                    </ItemTitle>
                     <div className="flex min-w-0 items-baseline justify-between gap-3">
                         <ItemDescription>
                             {situacao.tipo === "passou" ? (
@@ -299,14 +310,20 @@ function LinhaDoLimiteItem({
                         variant="tertiary"
                         size="icon-lg"
                         aria-label={`Editar o limite de ${linha.nome}`}
+                        onClick={() => {
+                            viajar.current = true
+                        }}
                     >
                         <PencilIcon aria-hidden />
                     </Button>
                 </DialogTrigger>
             </Item>
-            <DialogContent layout="fixed">
+            <DialogContent ref={conteudoRef} layout="fixed">
                 <DialogHeader>
-                    <DialogTitle>{`Limite de ${linha.nome}`}</DialogTitle>
+                    <DialogTitle>
+                        <span data-prefixo>Limite de </span>
+                        <span data-nome>{linha.nome}</span>
+                    </DialogTitle>
                     <DialogDescription>Quanto esta pessoa pode gastar por mês.</DialogDescription>
                 </DialogHeader>
                 <CustomForm pending={salvando} onSubmit={salvar}>

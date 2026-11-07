@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/item"
 import { Card } from "@/components/ui/card"
 import { baixarExportacao } from "@/lib/cofre/baixar"
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { numberBR } from "@/lib/formatters"
 import { supabase } from "@/lib/supabase"
+import { brotarPassoNoLugar, recolherPassoNoLugar, segurarTecladoDe, semMovimento } from "@/lib/viagem-de-passo"
 import {
   Dialog,
   DialogBody,
@@ -108,7 +109,49 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         }
     }
 
+    // A troca de passo é o gesto de `viagem-de-passo`: o corpo e o rodapé recolhem,
+    // o cabeçalho fica (o poço assenta, o título sobe do desfoque) e o passo novo
+    // brota do botão tocado. As entradas rodam no layout do passo novo.
+    const cabecalhoRef = useRef<HTMLDivElement>(null)
+    const corpoRef = useRef<HTMLDivElement>(null)
+    const rodapeRef = useRef<HTMLDivElement>(null)
+    const origem = useRef<DOMRect | null>(null)
+    const troca = useRef(0)
+    const soltarTeclado = useRef<(() => void) | null>(null)
+    const [trocando, setTrocando] = useState(false)
+
+    useLayoutEffect(() => {
+        // O `autoFocus` da senha já pegou o foco: a ponte do teclado sai.
+        soltarTeclado.current?.()
+        soltarTeclado.current = null
+        const [cab, corpo, pe, de] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current, origem.current]
+        origem.current = null
+        if (de && cab && corpo && pe && !semMovimento()) brotarPassoNoLugar(corpo, cab, pe, de)
+    }, [step])
+
+    const irPara = async (next: "warning" | "confirm", botao: HTMLElement) => {
+        if (trocando) return
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        if (cab && corpo && pe && !semMovimento()) {
+            const minha = ++troca.current
+            origem.current = botao.getBoundingClientRect()
+            // O iOS só abre o teclado com o foco dado no toque; a senha monta depois da saída.
+            if (next === "confirm") soltarTeclado.current = segurarTecladoDe(corpo, "text")
+            setTrocando(true)
+            await recolherPassoNoLugar(corpo, cab, pe)
+            setTrocando(false)
+            // Fechado no meio da saída: o diálogo já recomeçou do aviso.
+            if (minha !== troca.current) return
+        }
+        setError(null)
+        setStep(next)
+    }
+
     const resetState = () => {
+        troca.current++
+        origem.current = null
+        soltarTeclado.current?.()
+        soltarTeclado.current = null
         setStep("warning")
         setPassword("")
         setError(null)
@@ -122,11 +165,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             resetState()
         }
         onOpenChange(next)
-    }
-
-    const handleContinue = () => {
-        setError(null)
-        setStep("confirm")
     }
 
     const handleDelete = async () => {
@@ -177,7 +215,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     // título, a descrição e os pontos. Os passos somem na tela de sucesso, que
     // não é um passo — é o fim do fluxo.
     const header = (
-        <DialogHeader align="center">
+        <DialogHeader ref={cabecalhoRef} align="center">
             <DialogMedia variant="well" tone={success ? "success" : "destructive"}>
                 {success ? <CheckCircleIcon /> : <TrashOutlineIcon />}
             </DialogMedia>
@@ -217,69 +255,71 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     // Um painel só: o que se apaga, as carteiras que somem para outros e a cópia antes.
     // O vermelho fica no poço do ícone e no botão final; o âmbar, só nas carteiras.
     const bodyWarning = (
-        <DialogBody>
-            <Card variant="plain" padding="none">
-                <div className="flex flex-col pt-3">
-                    <Muted id="delete-account-loss-title" className="px-4 text-xs">
-                        Será apagado
-                    </Muted>
-                    <ItemGroup role="list" aria-labelledby="delete-account-loss-title" className="gap-0">
-                        {DATA_LOSS_ITEMS.map(({ label, icon: Icon, total }) => (
-                            <Item key={label} variant="flush" role="listitem">
-                                <ItemMedia variant="icon">
-                                    <Icon className="size-5 text-muted-foreground" aria-hidden />
-                                </ItemMedia>
-                                <ItemContent>
-                                    <ItemTitle>{label}</ItemTitle>
-                                </ItemContent>
-                                {total && totais ? (
-                                    <ItemActions>
-                                        <Muted className="nums">{numberBR(totais[total])}</Muted>
-                                    </ItemActions>
-                                ) : null}
-                            </Item>
-                        ))}
-                    </ItemGroup>
-                </div>
-                {/* A cópia é a saída, não mais uma coisa que some: um bloco à parte. */}
-                <Item variant="muted" size="lg" className="mt-3">
-                    <ItemMedia variant="tile" tone="neutral">
-                        <ArrowDownTrayIcon aria-hidden />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle>Guarde uma cópia</ItemTitle>
-                        {exportError ? (
-                            <ItemDescription role="alert" className="text-destructive">
-                                {exportError}
-                            </ItemDescription>
-                        ) : (
-                            <ItemDescription>Tudo num .zip</ItemDescription>
-                        )}
-                    </ItemContent>
-                    <ItemActions>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            disabled={exportando || workspaces.length === 0}
-                            aria-busy={exportando || undefined}
-                            onClick={() => void handleExport()}
-                        >
-                            {exportando ? <Spinner /> : null}
-                            {exportando ? "Exportando…" : "Exportar"}
-                        </Button>
-                    </ItemActions>
-                </Item>
-            </Card>
+        <DialogBody ref={corpoRef}>
+            <div data-passo>
+                <Card variant="plain" padding="none">
+                    <div className="flex flex-col pt-3">
+                        <Muted id="delete-account-loss-title" className="px-4 text-xs">
+                            Será apagado
+                        </Muted>
+                        <ItemGroup role="list" aria-labelledby="delete-account-loss-title" className="gap-0">
+                            {DATA_LOSS_ITEMS.map(({ label, icon: Icon, total }) => (
+                                <Item key={label} variant="flush" role="listitem">
+                                    <ItemMedia variant="icon">
+                                        <Icon className="size-5 text-muted-foreground" aria-hidden />
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle>{label}</ItemTitle>
+                                    </ItemContent>
+                                    {total && totais ? (
+                                        <ItemActions>
+                                            <Muted className="nums">{numberBR(totais[total])}</Muted>
+                                        </ItemActions>
+                                    ) : null}
+                                </Item>
+                            ))}
+                        </ItemGroup>
+                    </div>
+                    {/* A cópia é a saída, não mais uma coisa que some: um bloco à parte. */}
+                    <Item variant="muted" size="lg" className="mt-3">
+                        <ItemMedia variant="tile" tone="neutral">
+                            <ArrowDownTrayIcon aria-hidden />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>Guarde uma cópia</ItemTitle>
+                            {exportError ? (
+                                <ItemDescription role="alert" className="text-destructive">
+                                    {exportError}
+                                </ItemDescription>
+                            ) : (
+                                <ItemDescription>Tudo num .zip</ItemDescription>
+                            )}
+                        </ItemContent>
+                        <ItemActions>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                disabled={exportando || workspaces.length === 0}
+                                aria-busy={exportando || undefined}
+                                onClick={() => void handleExport()}
+                            >
+                                {exportando ? <Spinner /> : null}
+                                {exportando ? "Exportando…" : "Exportar"}
+                            </Button>
+                        </ItemActions>
+                    </Item>
+                </Card>
+            </div>
         </DialogBody>
     )
 
     // Cancelar (`tertiary`, pelo `showCloseButton`) e a ação que o passo propõe.
     // "Continuar" ainda não exclui nada: o `destructive` fica para o último passo.
     const footerWarning = (
-        <DialogFooter showCloseButton>
+        <DialogFooter ref={rodapeRef} showCloseButton>
             {/* Sair para o passo 2 no meio da exportação perderia a cópia. */}
-            <Button type="button" disabled={exportando} onClick={handleContinue}>
+            <Button type="button" disabled={exportando} onClick={(e) => void irPara("confirm", e.currentTarget)}>
                 Continuar
             </Button>
         </DialogFooter>
@@ -291,12 +331,13 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             pending={loading}
             className="flex min-h-0 flex-1 flex-col"
         >
-            <DialogBody>
-                <div className="space-y-4">
+            <DialogBody ref={corpoRef}>
+                <div data-passo className="space-y-4">
                     <FormInput
                         id="delete-password"
                         label="Sua senha"
                         type="password"
+                        autoFocus
                         placeholder="Digite sua senha"
                         value={password}
                         autoComplete="current-password"
@@ -312,15 +353,13 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             </DialogBody>
 
             <DialogFooter
+                ref={rodapeRef}
                 start={
                     <Button
                         type="button"
                         variant="tertiary"
                         disabled={loading}
-                        onClick={() => {
-                            setStep("warning")
-                            setError(null)
-                        }}
+                        onClick={(e) => void irPara("warning", e.currentTarget)}
                     >
                         Voltar
                     </Button>

@@ -24,7 +24,7 @@ import {
     segurarTeclado,
     semMovimento,
     type OrigemDaViagem,
-} from "@/components/members/viagem-do-passo"
+} from "@/lib/viagem-de-passo"
 import { ERRO_DO_LIMITE, lerLimiteDigitado, passoInicial, type LinhaDoLimite } from "@/lib/limites/limites"
 
 /**

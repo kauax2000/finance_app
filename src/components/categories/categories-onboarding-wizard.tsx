@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/field"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
 import { Card, CardMessage, CardNote } from "@/components/ui/card"
@@ -53,6 +53,7 @@ import {
     categoriesOnboardingPanelShellClass,
 } from "@/components/categories/categories-onboarding-panel-styles"
 import { cn } from "@/lib/utils"
+import { chegarAoPasso, sairDoValor, semMovimento } from "@/lib/viagem-de-passo"
 import { currencyBRL } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 type Props = {
@@ -97,6 +98,10 @@ type PanelProps = {
     children: React.ReactNode
     footer: React.ReactNode
     titleId: string
+    /** Os nós da troca de passo (`viagem-de-passo`): título, corpo e rodapé. */
+    cabecalhoRef: React.Ref<HTMLDivElement>
+    corpoRef: React.Ref<HTMLDivElement>
+    rodapeRef: React.Ref<HTMLDivElement>
 }
 
 function OnboardingDialogPanel({
@@ -107,6 +112,9 @@ function OnboardingDialogPanel({
     children,
     footer,
     titleId,
+    cabecalhoRef,
+    corpoRef,
+    rodapeRef,
 }: PanelProps) {
     const bodyClassName =
         stepIndex === 0
@@ -127,18 +135,21 @@ function OnboardingDialogPanel({
                     com os pontos escritos à mão. O painel não é um `Dialog` (mora
                     na página), mas a peça é só marcação e serve igual. */}
                 <DialogSteps current={stepIndex} total={stepCount} labels={STEP_LABELS} />
-                <h2 id={titleId} className="text-base font-semibold leading-snug tracking-tight">
-                    {title}
-                </h2>
-                {description ? (
-                    <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
-                ) : null}
+                {/* Os pontos ficam; só o título e o rodapé remontam pela chave do passo. */}
+                <div key={stepIndex} ref={cabecalhoRef} className="space-y-1">
+                    <h2 id={titleId} className="text-base font-semibold leading-snug tracking-tight">
+                        {title}
+                    </h2>
+                    {description ? (
+                        <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
+                    ) : null}
+                </div>
             </div>
 
-            <div className={bodyClassName}>{children}</div>
+            <div ref={corpoRef} className={bodyClassName}>{children}</div>
 
             <CardNote>
-                <div className="px-4 py-3 sm:px-5">{footer}</div>
+                <div key={stepIndex} ref={rodapeRef} className="px-4 py-3 sm:px-5">{footer}</div>
             </CardNote>
         </div>
     )
@@ -185,6 +196,35 @@ export function CategoriesOnboardingWizard({
     useEffect(() => {
         setLocalCategories([...categories].sort(sortCategories))
     }, [categories])
+
+    // A troca de passo é um gesto (`viagem-de-passo`): o passo de saída recolhe
+    // (`menu-unmorph`) e o novo brota (`menu-morph`), nos dois sentidos. Nenhum
+    // passo escolhe uma coisa que o próximo nomeia, então nenhum nome viaja, e
+    // nenhum campo pega o foco sozinho, então não há ponte do teclado.
+    const cabecalhoRef = useRef<HTMLDivElement>(null)
+    const corpoRef = useRef<HTMLDivElement>(null)
+    const rodapeRef = useRef<HTMLDivElement>(null)
+    const trocando = useRef(false)
+    // O passo ao montar não anima: só a troca.
+    const [mudou, setMudou] = useState(false)
+
+    useLayoutEffect(() => {
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        if (!mudou || !cab || !corpo || !pe || semMovimento()) return
+        chegarAoPasso(corpo, cab, pe)
+    }, [step, mudou])
+
+    const irParaPasso = async (n: number) => {
+        if (trocando.current) return
+        const [cab, corpo, pe] = [cabecalhoRef.current, corpoRef.current, rodapeRef.current]
+        if (cab && corpo && pe && !semMovimento()) {
+            trocando.current = true
+            await sairDoValor(corpo, cab, pe)
+            trocando.current = false
+        }
+        setMudou(true)
+        setStep(n)
+    }
 
     const ym = useMemo(() => formatYearMonth(new Date()), [])
     const { period_start, period_end } = useMemo(() => periodBoundsFromYearMonth(ym), [ym])
@@ -691,6 +731,9 @@ export function CategoriesOnboardingWizard({
                           : `Período ${period_start} — ${period_end}. Você pode editar depois em Categorias.`
                 }
                 titleId="onboarding-step-title"
+                cabecalhoRef={cabecalhoRef}
+                corpoRef={corpoRef}
+                rodapeRef={rodapeRef}
                 footer={
                     <div className="flex flex-col gap-3">
                         <FormError className="text-center text-xs">
@@ -720,7 +763,7 @@ export function CategoriesOnboardingWizard({
                                         size="sm"
                                         className="w-full sm:me-auto sm:w-auto"
                                         disabled={busy || crudBusy}
-                                        onClick={() => setStep(0)}
+                                        onClick={() => void irParaPasso(0)}
                                     >
                                         Voltar
                                     </Button>
@@ -749,7 +792,7 @@ export function CategoriesOnboardingWizard({
                                     size="sm"
                                     className="w-full sm:me-auto sm:w-auto"
                                     disabled={busy}
-                                    onClick={() => setStep(1)}
+                                    onClick={() => void irParaPasso(1)}
                                 >
                                     Voltar
                                 </Button>
@@ -770,10 +813,11 @@ export function CategoriesOnboardingWizard({
                 {step === 0 ? (
                     <CustomForm
                         id={STEP0_FORM_ID}
+                        data-passo
                         onSubmit={(e) => {
                             e.preventDefault()
                             setError(null)
-                            setStep(1)
+                            void irParaPasso(1)
                         }}
                     >
                         <FormInput
@@ -790,6 +834,7 @@ export function CategoriesOnboardingWizard({
                 {step === 1 ? (
                     <CustomForm
                         id={STEP_FORM_ID}
+                        data-passo
                         onSubmit={(e) => {
                             e.preventDefault()
                             if (expenseCategories.length === 0) {
@@ -797,7 +842,7 @@ export function CategoriesOnboardingWizard({
                                 return
                             }
                             setError(null)
-                            setStep(2)
+                            void irParaPasso(2)
                         }}
                         className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
                     >
@@ -876,6 +921,7 @@ export function CategoriesOnboardingWizard({
                     // com o andamento dele; não há campo aqui.
                     <CustomForm
                         id={REVIEW_FORM_ID}
+                        data-passo
                         pending={busy}
                         onSubmit={(e) => {
                             e.preventDefault()

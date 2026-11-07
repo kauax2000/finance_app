@@ -251,6 +251,33 @@ describe("Conectar minha IA: o guia", () => {
     })
 })
 
+describe("Conectar minha IA: a troca de passo orgânica", () => {
+    it("a IA escolhida viaja ao título e o guia brota e recolhe pela viagem de passo", () => {
+        const g = semComentarios(lerFonte("src/components/account/conectar-ia-dialog.tsx")).replace(/\s+/g, " ")
+        for (const t of ["sairDaEscolhaPeloNome(", "chegarAoValor(", "sairDoValor(", "chegarAEscolha(", "recolherPasso(", "brotarPasso(", "semMovimento()"])
+            expect(g).toContain(t)
+        // A linha marcada e o nome que viaja; o título do guia recebe o nome.
+        expect(g).toContain("<div key={chave} data-linha={chave}>")
+        expect(g).toContain("<span data-nome>{IAS[chave].nome}</span>")
+        expect(g).toContain("<span data-prefixo>Conectar o </span>")
+        expect(g).toContain("<span data-nome>{escolhida.nome}</span>")
+        // Só o passo atual leva `data-passo`, dentro da caixa que mede o maior (os fantasmas ficam).
+        expect(g).toMatch(/<CaixaDoPasso[^>]*fantasmas=\{fantasmas\}>[^<]*<div ref=\{atualRef\} data-passo/)
+        expect(g).toContain("if (trocando) return")
+        expect(g).toContain("useLayoutEffect(")
+    })
+    it("as funções novas da viagem só somam: as de antes seguem com a mesma assinatura", () => {
+        const v = lerFonte("src/lib/viagem-de-passo.ts")
+        for (const t of [
+            "export function sairDaEscolha(corpo: HTMLElement, cabecalho: HTMLElement, rodape: HTMLElement, tocada: HTMLElement)",
+            "export function sairDaEscolhaPeloNome(corpo: HTMLElement, cabecalho: HTMLElement, rodape: HTMLElement, tocada: HTMLElement)",
+            "export function recolherPasso(corpo: HTMLElement)",
+            "export function brotarPasso(corpo: HTMLElement)",
+        ])
+            expect(v).toContain(t)
+    })
+})
+
 describe("CampoDeCopiar", () => {
     it("o timer da confirmação não apaga uma recusa posterior", () => {
         const f = lerFonte("src/components/account/campo-de-copiar.tsx")
@@ -505,7 +532,7 @@ describe("Excluir conta: dois passos enxutos", () => {
         for (const t of ["Carteiras compartilhadas que você criou", "sharedOwned", "other_members"]) expect(f).not.toContain(t)
         expect(f).not.toMatch(/<DialogTitle[^>]*text-destructive/)
         expect(f).not.toContain("Passo 1 de 2")
-        expect(f).toMatch(/<Button type="button" disabled=\{exportando\} onClick=\{handleContinue\}>/)
+        expect(f).toMatch(/<Button type="button" disabled=\{exportando\} onClick=\{\(e\) => void irPara\("confirm", e\.currentTarget\)\}>/)
     })
     it("o passo 2 pede só a senha", () => {
         expect(f).not.toContain("confirm-email")

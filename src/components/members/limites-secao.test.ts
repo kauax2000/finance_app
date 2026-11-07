@@ -83,7 +83,7 @@ describe("LimitesSecao", () => {
 
     it("editar: formulário com dinheiro, Salvar e Remover limite", () => {
         expect(fonte).toContain('surface="auto"')
-        expect(fonte).toContain("Limite de ${")
+        expect(fonte).toContain("<span data-prefixo>Limite de </span>")
         expect(fonte).toContain("<FormInput")
         expect(fonte).toContain("<FormSubmit")
         expect(fonte).toContain("Remover limite")
