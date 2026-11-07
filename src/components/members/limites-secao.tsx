@@ -165,6 +165,7 @@ function LinhaDoLimiteItem({
                         value={pct}
                         bands={[80, 100]}
                         size="sm"
+                        className="mt-2"
                         aria-label={`${linha.nome}: ${pct}% do limite do mês`}
                     />
                 ) : null}
@@ -174,7 +175,7 @@ function LinhaDoLimiteItem({
 
     if (!podeEditar) {
         return (
-            <Item variant="flush" className="min-h-12">
+            <Item variant="flush" size="lg" className="px-4">
                 {corpo}
             </Item>
         )
@@ -213,7 +214,7 @@ function LinhaDoLimiteItem({
                 if (v) setErro(null)
             }}
         >
-            <Item variant="flush" className="min-h-12">
+            <Item variant="flush" size="lg" className="px-4">
                 {corpo}
                 <DialogTrigger asChild>
                     <Button
