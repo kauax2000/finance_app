@@ -186,6 +186,8 @@ painel do novo projeto.
 
 ## 5. Depois de uma semana estável
 
+> Feito em 07/11/2026, antes da semana, a pedido do dono: virada e site publicado em sa-east-1, os 3 registros que caíram no antigo depois da recópia (Lentes, o parcelamento dele e Mercado) copiados para o novo, e o antigo **pausado** (vale por até 90 dias). Apagar depois de um mês.
+
 - [ ] **Dono:** pausar o projeto antigo (não apagar).
 - [ ] **Dono:** só apagar depois de mais um mês.
 
