@@ -162,4 +162,10 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toMatch(/<Item key=\{l\.user_id\} interactive asChild>/)
         expect(dialogo).toContain("<ItemChevron />")
     })
+    it("editar: Remover limite à esquerda do rodapé, só texto, com confirmação", () => {
+        expect(fonte).toMatch(/<DialogFooter\s+start=\{[\s\S]*?variant="tertiary"[\s\S]*?text-destructive[\s\S]*?Remover limite/)
+        expect(fonte).toContain("useConfirmDialog()")
+        expect(fonte).toContain("Remover o limite de ${linha.nome}?")
+        expect(fonte).not.toMatch(/variant="destructive"[\s\S]{0,120}Remover limite/)
+    })
 })

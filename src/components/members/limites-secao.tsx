@@ -20,6 +20,7 @@ import { PencilIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { BellAlertIcon } from "@heroicons/react/24/outline"
 
 import { Button } from "@/components/ui/button"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import {
     EmptyState,
     EmptyStateActions,
@@ -204,6 +205,7 @@ function LinhaDoLimiteItem({
     onRemover: () => Promise<void>
 }) {
     const [aberto, setAberto] = useState(false)
+    const { confirm: confirmar, dialog: confirmacao } = useConfirmDialog()
     // A lista só tem quem tem limite.
     const limite = linha.limite!
     const [valor, setValor] = useState(formatMoneyBrlInput(limite))
@@ -215,35 +217,35 @@ function LinhaDoLimiteItem({
 
     const corpo = (
         <>
-            {membro ? (
-                <ItemMedia>
-                    <AvatarDoMembro member={membro} size="sm" />
-                </ItemMedia>
-            ) : null}
-            <ItemContent className="min-w-0">
-                <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
-                <div className="flex min-w-0 items-baseline justify-between gap-3">
-                    <ItemDescription>
-                        {situacao.tipo === "passou" ? (
-                            <span className="text-destructive">
-                                {"Passou "}
-                                {currencyBRL(situacao.valorCentavos / 100)}
-                            </span>
-                        ) : (
-                            "Sobram " + currencyBRL(situacao.valorCentavos / 100)
-                        )}
-                        {` · limite ${currencyBRL(limite)}`}
-                    </ItemDescription>
-                    <span className={cn("nums shrink-0 text-sm font-medium", tomPct)}>{pct}%</span>
-                </div>
-                <Progress
-                    value={pct}
-                    bands={[80, 100]}
-                    size="sm"
-                    className="mt-2"
-                    aria-label={`${linha.nome}: ${pct}% do limite do mês`}
-                />
-            </ItemContent>
+                {membro ? (
+                    <ItemMedia>
+                        <AvatarDoMembro member={membro} size="sm" />
+                    </ItemMedia>
+                ) : null}
+                <ItemContent className="min-w-0">
+                    <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
+                    <div className="flex min-w-0 items-baseline justify-between gap-3">
+                        <ItemDescription>
+                            {situacao.tipo === "passou" ? (
+                                <span className="text-destructive">
+                                    {"Passou "}
+                                    {currencyBRL(situacao.valorCentavos / 100)}
+                                </span>
+                            ) : (
+                                "Sobram " + currencyBRL(situacao.valorCentavos / 100)
+                            )}
+                            {` · limite ${currencyBRL(limite)}`}
+                        </ItemDescription>
+                        <span className={cn("nums shrink-0 text-sm font-medium", tomPct)}>{pct}%</span>
+                    </div>
+                    <Progress
+                        value={pct}
+                        bands={[80, 100]}
+                        size="sm"
+                        className="mt-2"
+                        aria-label={`${linha.nome}: ${pct}% do limite do mês`}
+                    />
+                </ItemContent>
         </>
     )
 
@@ -279,6 +281,7 @@ function LinhaDoLimiteItem({
     }
 
     return (
+        <>
         <Dialog
             surface="auto"
             pending={salvando}
@@ -317,20 +320,34 @@ function LinhaDoLimiteItem({
                         />
                         <FormError>{erro}</FormError>
                     </DialogBody>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={salvando}
-                            onClick={() => void rodar(onRemover)}
-                        >
-                            Remover limite
-                        </Button>
+                    <DialogFooter
+                        start={
+                            // O que não tem volta fica longe do Salvar, só em texto, e pede confirmação.
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                className="text-destructive"
+                                disabled={salvando}
+                                onClick={async () => {
+                                    const ok = await confirmar({
+                                        title: `Remover o limite de ${linha.nome}?`,
+                                        description: "A pessoa deixa de ter um valor por mês e de receber os avisos de 80% e 100%.",
+                                        actionLabel: "Remover",
+                                    })
+                                    if (ok) void rodar(onRemover)
+                                }}
+                            >
+                                Remover limite
+                            </Button>
+                        }
+                    >
                         <FormCancel onClick={() => setAberto(false)}>Cancelar</FormCancel>
                         <FormSubmit>Salvar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>
         </Dialog>
+        {confirmacao}
+        </>
     )
 }
