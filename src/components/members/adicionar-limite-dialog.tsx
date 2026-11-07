@@ -94,11 +94,12 @@ export function AdicionarLimiteDialog({
 
     const escolha = (
         <PecaDoPasso>
-            <ItemGroup variant="divided">
+            {/* Linhas de menu: sem fio, cantos de linha alta e o realce no toque. */}
+            <ItemGroup className="gap-1">
                 {lista.map((l) => {
                     const membro = pessoas.find((m) => m.user_id === l.user_id)
                     return (
-                        <Item key={l.user_id} variant="flush" size="lg" interactive asChild>
+                        <Item key={l.user_id} interactive asChild>
                             <button
                                 type="button"
                                 onClick={() => {
