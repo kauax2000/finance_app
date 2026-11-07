@@ -255,6 +255,12 @@ export const ROTAS_DE_VOCE_EM_SETTINGS: readonly string[] = [
     ROUTES.SETTINGS_NOTIFICACOES,
 ]
 
+/**
+ * Subpáginas do telefone cujo nome já nasce no centro da barra, sem esperar a
+ * rolagem: as telas de configuração da Você e Membros.
+ */
+export const ROTAS_COM_TITULO_NA_BARRA: readonly string[] = [...ROTAS_DE_VOCE_EM_SETTINGS, ROUTES.MEMBERS]
+
 export type VoceGroup = {
     id: "carteira" | "conta"
     label: string

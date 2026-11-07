@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
-import { ROTAS_DE_VOCE_EM_SETTINGS } from "@/config/mobile-navigation"
+import { ROTAS_COM_TITULO_NA_BARRA } from "@/config/mobile-navigation"
 import { APP_PAGE_TITLES, DASHBOARD_PAGE_TITLES, ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { publishPageTitle } from "@/hooks/use-page-title-dock"
@@ -55,8 +55,8 @@ export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaPro
 
     useEffect(() => {
         if (!isMobile || !subpagina) return
-        // As telas de configuração da Você não têm título na página: o nome já nasce na barra.
-        const fixo = ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname)
+        // As telas de configuração da Você e Membros: o nome já nasce no centro da barra.
+        const fixo = ROTAS_COM_TITULO_NA_BARRA.includes(pathname)
         const publicar = () =>
             publishPageTitle(document, { text: titulo, docked: fixo || window.scrollY > ROLAGEM_MINIMA })
         publicar()

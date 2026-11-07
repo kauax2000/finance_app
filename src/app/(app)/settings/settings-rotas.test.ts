@@ -34,7 +34,9 @@ describe("rotas das seções de Configurações", () => {
 
     it("no telefone o nome já nasce na barra", () => {
         const titulo = semComentarios(lerFonte("src/components/layout/titulo-da-tela.tsx"))
-        expect(titulo).toContain("ROTAS_DE_VOCE_EM_SETTINGS.includes(pathname)")
+        expect(titulo).toContain("ROTAS_COM_TITULO_NA_BARRA.includes(pathname)")
+        const nav = semComentarios(lerFonte("src/config/mobile-navigation.ts"))
+        expect(nav).toContain("ROTAS_COM_TITULO_NA_BARRA: readonly string[] = [...ROTAS_DE_VOCE_EM_SETTINGS, ROUTES.MEMBERS]")
         expect(titulo).toContain("docked: fixo ||")
         const secao = semComentarios(lerFonte("src/components/settings/settings-section.tsx"))
         expect(secao).toContain('className={sozinha ? "sr-only" : undefined}')
