@@ -131,23 +131,23 @@ describe("AdicionarLimiteDialog", () => {
 
     it("salvar relê o pacote antes de fechar: a pessoa e a lista ficam congeladas no diálogo", () => {
         expect(dialogo).toMatch(/if \(open\) \{\s*setLista\(semLimite\)/)
-        expect(dialogo).toContain("setEscolhida(semLimite.length === 1 ? semLimite[0] : null)")
+        expect(dialogo).toContain("setEscolhida(inicio === 2 ? (semLimite[0] ?? null) : null)")
         expect(dialogo).toContain("setEscolhida(l)")
         expect(dialogo).toContain("`Limite de ${escolhida?.nome")
         expect(dialogo).toContain("await onSalvar(escolhida.user_id, n)")
         const render = dialogo.slice(dialogo.indexOf("const titulo"))
         expect(render).not.toContain("semLimite")
         expect(render).toContain("lista.map(")
-        expect(render).toContain("lista.length > 1 ?")
+        expect(render).toContain("pessoas.length > 1 ?")
     })
 
     it("Voltar só aparece quando há passo 1 (mais de uma pessoa); senão é Cancelar", () => {
-        expect(dialogo).toMatch(/passo === 2 && lista\.length > 1 \? \(\s*<Button[^>]*variant="tertiary"[\s\S]*?Voltar/)
+        expect(dialogo).toMatch(/passo === 2 && pessoas\.length > 1 \? \(\s*<Button[^>]*variant="tertiary"[\s\S]*?Voltar/)
         expect(dialogo).toContain("<FormCancel")
     })
 
     it("abrir recomeça: passo pelo passoInicial, pessoa e campo limpos", () => {
-        expect(dialogo).toContain("passoInicial(semLimite.length)")
+        expect(dialogo).toContain("passoInicial(pessoas.length)")
         expect(dialogo).toMatch(/if \(open\) \{[\s\S]*?setValor\(""\)[\s\S]*?setErro\(null\)/)
     })
 

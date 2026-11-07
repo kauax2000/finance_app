@@ -99,7 +99,7 @@ describe("situacaoDoLimite", () => {
 })
 
 describe("passoInicial: o primeiro passo de Adicionar limite", () => {
-    it("com uma pessoa só sem limite, abre no valor; com mais, na escolha", () => {
+    it("carteira de uma pessoa abre no valor; com mais gente, na escolha (mesmo faltando uma)", () => {
         expect(passoInicial(1)).toBe(2)
         expect(passoInicial(2)).toBe(1)
         expect(passoInicial(5)).toBe(1)

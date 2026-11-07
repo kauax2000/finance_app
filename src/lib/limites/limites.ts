@@ -131,7 +131,11 @@ export function situacaoDoLimite(
         : { pct, tipo: "sobra", valorCentavos: limite - gastoCentavos }
 }
 
-/** O primeiro passo de "Adicionar limite": com uma pessoa só sem limite, não há o que escolher. */
-export function passoInicial(semLimite: number): 1 | 2 {
-    return semLimite === 1 ? 2 : 1
+/**
+ * O primeiro passo de "Adicionar limite": só pula a escolha quando a carteira tem
+ * uma pessoa só. Com mais gente, a lista aparece mesmo com uma pessoa sem limite,
+ * para ficar claro em quem o limite entra.
+ */
+export function passoInicial(pessoasNaCarteira: number): 1 | 2 {
+    return pessoasNaCarteira === 1 ? 2 : 1
 }

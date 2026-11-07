@@ -53,8 +53,9 @@ export function AdicionarLimiteDialog({
         setAbertoAntes(open)
         if (open) {
             setLista(semLimite)
-            setPasso(passoInicial(semLimite.length))
-            setEscolhida(semLimite.length === 1 ? semLimite[0] : null)
+            const inicio = passoInicial(pessoas.length)
+            setPasso(inicio)
+            setEscolhida(inicio === 2 ? (semLimite[0] ?? null) : null)
             setValor("")
             setErro(null)
             setMudou(false)
@@ -155,7 +156,7 @@ export function AdicionarLimiteDialog({
                         {passo === 1 ? escolha : campo}
                     </DialogBody>
                     <DialogFooter>
-                        {passo === 2 && lista.length > 1 ? (
+                        {passo === 2 && pessoas.length > 1 ? (
                             <Button type="button" variant="tertiary" disabled={salvando} onClick={() => irPara(1)}>
                                 Voltar
                             </Button>
