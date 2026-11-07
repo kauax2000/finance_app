@@ -111,21 +111,30 @@ describe("toda gaveta do telefone é a flush", () => {
     }
   })
 
+  it("o rodapé fica no pé da gaveta, também com o formulário embrulhando corpo e rodapé", () => {
+    expect(CODIGO).toContain('"[&>[data-drawer-meio]]:flex-1"')
+    for (const c of ["flex", "min-h-0", "flex-1", "flex-col"]) {
+      expect(CODIGO).toContain(`"[&>form:has(>[data-slot=dialog-body])]:${c}"`)
+    }
+  })
+
   it("com o teclado, a gaveta fica parada e só o meio rola por trás do cabeçalho", () => {
     const fonte = semComentarios(CODIGO)
     expect(fonte).toContain("repositionInputs = false")
     expect(fonte).toMatch(/const vv = janela\?\.visualViewport/)
-    for (const evento of ["resize", "scroll"]) {
-      expect(fonte).toContain(`vv.addEventListener("${evento}", medir)`)
-      expect(fonte).toContain(`vv.removeEventListener("${evento}", medir)`)
-    }
+    expect(fonte).toContain('vv.addEventListener("resize", assentar)')
+    expect(fonte).toContain('vv.removeEventListener("resize", assentar)')
+    expect(fonte).toContain('vv.addEventListener("scroll", medir)')
+    expect(fonte).toContain('vv.removeEventListener("scroll", medir)')
     // A gaveta não encolhe até o teclado nem sobe: altura presa, e a rolagem do iOS desfeita.
     expect(fonte).not.toMatch(/setProperty\("--drawer-h"/)
     expect(fonte).not.toContain('setProperty("margin-bottom"')
     expect(fonte).toContain("if (janela.scrollY !== rolagem) janela.scrollTo(0, rolagem)")
     expect(fonte).toMatch(/setProperty\("height", `\$\{altura \|\|/)
-    // O meio ganha a folga do teclado para o campo subir.
-    expect(fonte).toMatch(/paddingBottom = `\$\{folgaBase \+ coberto\}px`/)
+    // A gaveta guarda o lugar do teclado embaixo: o rodapé assenta logo acima dele.
+    expect(fonte).toContain('el.style.setProperty("padding-bottom", `${coberto}px`)')
+    // O teclado conta a barra de setas e ✓: mede contra a janela de antes dele.
+    expect(fonte).toContain("const coberto = Math.max(janelaInteira, janela.innerHeight) - vv.height")
     // O foco não deixa o iOS rolar a página: o campo some 2000px por um quadro.
     expect(fonte).toContain('alvo.style.transform = "translateY(-2000px)"')
     expect(fonte).toContain('el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })')

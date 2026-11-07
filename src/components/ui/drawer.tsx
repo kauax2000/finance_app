@@ -352,11 +352,19 @@ function DrawerOverlay({
  * escritas por extenso, uma a uma: um template literal não gera regra.
  */
 const MEIO_CLASSES = [
+  // O meio ocupa a sobra: o rodapé fica no pé da gaveta, e não colado ao conteúdo curto.
+  "[&>[data-drawer-meio]]:flex-1",
   "[&>[data-drawer-meio]]:min-h-0",
   "[&>[data-drawer-meio]]:overflow-y-auto",
   "[&>[data-drawer-meio]]:overscroll-contain",
   "[&>[data-drawer-meio]]:scroll-fade-y",
   "[&>[data-drawer-meio]]:[--scroll-fade-floor:0]",
+  // O formulário que embrulha `DialogBody` e `DialogFooter` só repassa a coluna:
+  // quem rola é o corpo, e o rodapé desce ao pé da gaveta.
+  "[&>form:has(>[data-slot=dialog-body])]:flex",
+  "[&>form:has(>[data-slot=dialog-body])]:min-h-0",
+  "[&>form:has(>[data-slot=dialog-body])]:flex-1",
+  "[&>form:has(>[data-slot=dialog-body])]:flex-col",
 ].join(" ")
 
 function acharMeio(el: HTMLElement): HTMLElement | null {
@@ -372,6 +380,8 @@ function acharMeio(el: HTMLElement): HTMLElement | null {
   ])
   for (const filho of Array.from(el.children)) {
     const slot = (filho as HTMLElement).dataset.slot
+    // O formulário com `DialogBody` dentro não é o meio: o corpo dele é que rola.
+    if (filho.tagName === "FORM" && filho.querySelector(':scope > [data-slot="dialog-body"]')) continue
     if (!slot || !cromagem.has(slot)) return filho as HTMLElement
   }
   return null
@@ -420,11 +430,12 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
 /** O quanto o viewport visual precisa encolher para contar como teclado (a barra do Safari mexe menos). */
 const TECLADO_MIN = 80
 
+
 /**
- * Com o teclado do iOS aberto, a gaveta não muda de tamanho nem de lugar: o
- * teclado cobre a parte de baixo dela, como numa folha nativa, e o meio ganha
- * uma folga do tamanho do teclado para o campo focado rolar para cima, por
- * trás do cabeçalho, que fica parado. O iOS rolaria a página para mostrar o
+ * Com o teclado do iOS aberto, a gaveta não muda de tamanho nem de lugar: ela
+ * guarda embaixo o lugar do teclado, o rodapé assenta logo acima dele e o meio
+ * encolhe e rola o campo focado para cima, por trás do cabeçalho, que fica
+ * parado. O iOS rolaria a página para mostrar o
  * campo, e a gaveta (`fixed`) subiria junto: o foco é feito sem essa rolagem,
  * e a que escapar volta para onde estava.
  * A altura fica presa na de antes do teclado (o iOS também encolhe a janela, e
@@ -445,54 +456,48 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
   const janela = el.ownerDocument.defaultView
   const vv = janela?.visualViewport
   if (!janela || !vv) return
-  let meio: HTMLElement | null = null
-  let folgaOriginal = ""
   // A rolagem da página com a gaveta aberta, antes de o teclado mexer nela.
   const rolagem = janela.scrollY
   // A altura da gaveta sem teclado: medida antes, porque o iOS também encolhe a janela.
   let altura = 0
-  let folgaBase = 0
+  // A janela sem teclado: com ele o iOS às vezes também encolhe o `innerHeight`
+  // (956 → 918 no iPhone 18 Pro Max), e a conta perderia a barra de setas e ✓
+  // que fica acima do teclado — o rodapé assentaria atrás dela.
+  let janelaInteira = janela.innerHeight
   const soltar = () => {
-    if (meio) meio.style.paddingBottom = folgaOriginal
-    meio = null
     // `--drawer-teclado` marca o estado para o `useAlturaQueAcompanha` não animar.
-    for (const p of ["--drawer-teclado", "height"]) el.style.removeProperty(p)
+    for (const p of ["--drawer-teclado", "height", "padding-bottom"]) el.style.removeProperty(p)
   }
   const medir = () => {
-    const coberto = janela.innerHeight - vv.height
+    const coberto = Math.max(janelaInteira, janela.innerHeight) - vv.height
     if (coberto <= TECLADO_MIN || vv.scale >= 1.01) {
       soltar()
+      janelaInteira = janela.innerHeight
       altura = el.getBoundingClientRect().height
       return
     }
-    // Quem rola é o `DialogBody` ou, sem ele, o meio que a gaveta marcou.
-    const achado = el.querySelector<HTMLElement>(
-      ':scope > [data-slot="dialog-body"], :scope > [data-drawer-meio]'
-    )
-    if (!achado) return soltar()
     if (!el.style.getPropertyValue("--drawer-teclado")) {
       el.style.setProperty("--drawer-teclado", "1")
       el.style.setProperty("height", `${altura || el.getBoundingClientRect().height}px`)
     }
-    if (achado !== meio) {
-      if (meio) meio.style.paddingBottom = folgaOriginal
-      meio = achado
-      folgaOriginal = achado.style.paddingBottom
-      folgaBase = parseFloat(janela.getComputedStyle(achado).paddingBottom) || 0
-    }
-    achado.style.paddingBottom = `${folgaBase + coberto}px`
+    // A gaveta guarda embaixo o lugar do teclado: o meio encolhe, o rodapé
+    // assenta logo acima dele, e o cabeçalho não sai do lugar.
+    el.style.setProperty("padding-bottom", `${coberto}px`)
     // O iOS rola a página para mostrar o campo, e a gaveta (`fixed`) sobe junto,
     // levando o cabeçalho para fora da tela: a página volta para onde estava.
     if (janela.scrollY !== rolagem) janela.scrollTo(0, rolagem)
-    // O campo focado vai para cima do teclado rolando só o meio.
+    // O campo focado vai para cima do teclado rolando só quem o contém.
     const foco = el.ownerDocument.activeElement
-    if (!foco || foco.nodeType !== 1 || !achado.contains(foco)) return
+    if (!foco || foco.nodeType !== 1 || !el.contains(foco)) return
+    const rolavel = el.querySelector<HTMLElement>(
+      ':scope > [data-slot="dialog-body"], :scope > form > [data-slot="dialog-body"], :scope > [data-drawer-meio]'
+    )
+    if (!rolavel || !rolavel.contains(foco)) return
     const campo = (foco as HTMLElement).getBoundingClientRect()
-    const caixa = achado.getBoundingClientRect()
+    const caixa = rolavel.getBoundingClientRect()
     const respiro = 16
-    const visivel = Math.min(caixa.bottom, vv.height) - respiro
-    if (campo.bottom > visivel) achado.scrollTop += campo.bottom - visivel
-    else if (campo.top < caixa.top + respiro) achado.scrollTop -= caixa.top + respiro - campo.top
+    if (campo.bottom > caixa.bottom - respiro) rolavel.scrollTop += campo.bottom - caixa.bottom + respiro
+    else if (campo.top < caixa.top + respiro) rolavel.scrollTop -= caixa.top + respiro - campo.top
   }
   // O iOS centraliza o campo focado rolando a página, e a gaveta inteira pularia
   // antes de o `scroll` acima desfazer. Com o campo empurrado 2000px para cima
@@ -519,15 +524,25 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     medir()
     if (ehCampoDeTexto(alvo) && !alvo.style.transform) esconder(alvo)
   }
+  // O iOS mede o viewport visual primeiro sem a barra de setas e ✓ e só a
+  // desconta depois, às vezes sem novo `resize` (a mesma conta do lançamento
+  // inteligente): a cada mudança, mede de novo até o teclado assentar.
+  let reMedidas: number[] = []
+  const assentar = () => {
+    medir()
+    for (const t of reMedidas) janela.clearTimeout(t)
+    reMedidas = [120, 300, 600, 1000].map((ms) => janela.setTimeout(medir, ms))
+  }
   medir()
-  vv.addEventListener("resize", medir)
+  vv.addEventListener("resize", assentar)
   vv.addEventListener("scroll", medir)
   el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })
   el.addEventListener("focusin", aoFocar)
   janela.addEventListener("scroll", medir)
   return () => {
     janela.removeEventListener("scroll", medir)
-    vv.removeEventListener("resize", medir)
+    for (const t of reMedidas) janela.clearTimeout(t)
+    vv.removeEventListener("resize", assentar)
     vv.removeEventListener("scroll", medir)
     el.removeEventListener("touchend", aoSoltarDedo, { capture: true })
     el.removeEventListener("focusin", aoFocar)
