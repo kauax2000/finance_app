@@ -10,7 +10,7 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain("<Card padding=\"none\"")
         expect(fonte).toContain("<ItemGroup variant=\"divided\"")
         expect(fonte).toContain("<Item ")
-        expect(fonte).toContain("Limite mensal de gasto de cada pessoa. Avisa em 80% e em 100%, à pessoa e ao dono.")
+        expect(fonte).toContain("Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.")
     })
 
     it("a linha diz o gasto e a barra usa as faixas 80/100", () => {

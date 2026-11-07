@@ -69,7 +69,7 @@ export function LimitesSecao({
                 <PageSectionTitle>Limites</PageSectionTitle>
             </PageSectionHeader>
             <PageSectionDescription>
-                Limite mensal de gasto de cada pessoa. Avisa em 80% e em 100%, à pessoa e ao dono.
+                Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
             </PageSectionDescription>
             {indisponivel ? (
                 <Card padding="none" role="status">
