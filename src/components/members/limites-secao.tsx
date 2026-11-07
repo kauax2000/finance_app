@@ -140,23 +140,26 @@ function LinhaDoLimiteItem({
             ) : null}
             <ItemContent className="min-w-0">
                 <ItemTitle className="truncate pointer-coarse:text-base">{linha.nome}</ItemTitle>
-                <ItemDescription>
-                    {situacao == null ? (
-                        `${gasto} no mês · sem limite`
-                    ) : (
-                        <>
-                            {situacao.tipo === "passou" ? (
-                                <span className="text-destructive">
-                                    {"Passou "}
-                                    {currencyBRL(situacao.valorCentavos / 100)}
-                                </span>
-                            ) : (
-                                "Sobram " + currencyBRL(situacao.valorCentavos / 100)
-                            )}
-                            {` · limite ${currencyBRL(linha.limite!)}`}
-                        </>
-                    )}
-                </ItemDescription>
+                <div className="flex min-w-0 items-baseline justify-between gap-3">
+                    <ItemDescription>
+                        {situacao == null ? (
+                            `${gasto} no mês · sem limite`
+                        ) : (
+                            <>
+                                {situacao.tipo === "passou" ? (
+                                    <span className="text-destructive">
+                                        {"Passou "}
+                                        {currencyBRL(situacao.valorCentavos / 100)}
+                                    </span>
+                                ) : (
+                                    "Sobram " + currencyBRL(situacao.valorCentavos / 100)
+                                )}
+                                {` · limite ${currencyBRL(linha.limite!)}`}
+                            </>
+                        )}
+                    </ItemDescription>
+                    {situacao != null ? <span className={cn("nums shrink-0 text-sm font-medium", tomPct)}>{pct}%</span> : null}
+                </div>
                 {situacao != null ? (
                     <Progress
                         value={pct}
@@ -166,7 +169,6 @@ function LinhaDoLimiteItem({
                     />
                 ) : null}
             </ItemContent>
-            {situacao != null ? <span className={cn("nums text-sm font-medium", tomPct)}>{pct}%</span> : null}
         </>
     )
 
