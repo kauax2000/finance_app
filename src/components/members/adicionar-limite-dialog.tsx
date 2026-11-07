@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import { useReducedMotion } from "motion/react"
 
-import { CaixaDoPasso, PecaDoPasso } from "@/components/account/passo-a-passo"
 import { AvatarDoMembro, type MemberWithProfile } from "@/components/members/pessoas-secao"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,7 +37,6 @@ export function AdicionarLimiteDialog({
     pessoas: MemberWithProfile[]
     onSalvar: (userId: string, valor: number) => Promise<void>
 }) {
-    const reduzido = useReducedMotion()
     const [passo, setPasso] = useState<1 | 2>(1)
     // Congelados ao abrir e ao escolher: salvar relê o pacote antes de fechar, e a
     // pessoa salva sai de `semLimite` durante a saída (o título perdia o nome).
@@ -93,7 +90,7 @@ export function AdicionarLimiteDialog({
     }
 
     const escolha = (
-        <PecaDoPasso>
+        <div>
             {/* Linhas de menu: sem fio, cantos de linha alta e o realce no toque. */}
             <ItemGroup className="-mx-3 w-auto gap-1">
                 {lista.map((l) => {
@@ -123,27 +120,22 @@ export function AdicionarLimiteDialog({
                     )
                 })}
             </ItemGroup>
-        </PecaDoPasso>
+        </div>
     )
 
-    function campo(fantasma: boolean) {
-        return (
-            <PecaDoPasso className="flex flex-col gap-3">
-                <FormInput
-                    money
-                    label="Limite mensal em R$"
-                    placeholder="1.234,56"
-                    autoFocus={!fantasma}
-                    value={valor}
-                    onValueChange={(v) => setValor(v)}
-                />
-                {fantasma ? null : <FormError>{erro}</FormError>}
-            </PecaDoPasso>
-        )
-    }
-
-    // Os dois passos dão à caixa a altura do maior: a gaveta não muda de tamanho na troca.
-    const fantasmas = lista.length > 1 ? [escolha, campo(true)] : [campo(true)]
+    const campo = (
+        <div className="flex flex-col gap-3">
+            <FormInput
+                money
+                label="Limite mensal em R$"
+                placeholder="1.234,56"
+                autoFocus
+                value={valor}
+                onValueChange={(v) => setValor(v)}
+            />
+            <FormError>{erro}</FormError>
+        </div>
+    )
 
     return (
         <Dialog surface="auto" pending={salvando} open={open} onOpenChange={onOpenChange}>
@@ -159,9 +151,8 @@ export function AdicionarLimiteDialog({
                         <span aria-live="polite" className="sr-only">
                             {mudou ? titulo : null}
                         </span>
-                        <CaixaDoPasso chave={String(passo)} entrar={!reduzido && mudou} fantasmas={fantasmas}>
-                            {passo === 1 ? escolha : campo(false)}
-                        </CaixaDoPasso>
+                        {/* Formulário: o diálogo acompanha a altura de cada passo (a altura do maior é só dos tutoriais). */}
+                        {passo === 1 ? escolha : campo}
                     </DialogBody>
                     <DialogFooter>
                         {passo === 2 && lista.length > 1 ? (

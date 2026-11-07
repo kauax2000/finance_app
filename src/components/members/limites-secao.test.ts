@@ -121,7 +121,7 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toContain("`Limite de ${")
         expect(dialogo).toContain('"Quanto esta pessoa pode gastar por mês."')
         expect(dialogo).toMatch(/<FormInput\s[\s\S]*?money[\s\S]*?label="Limite mensal em R\$"/)
-        expect(dialogo).toContain("autoFocus={!fantasma}")
+        expect(dialogo).toMatch(/autoFocus\b/)
         expect(dialogo).toContain("Voltar")
         expect(dialogo).toContain("<FormSubmit>Salvar</FormSubmit>")
         expect(dialogo).toContain("lerLimiteDigitado(valor)")
@@ -151,9 +151,10 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toMatch(/if \(open\) \{[\s\S]*?setValor\(""\)[\s\S]*?setErro\(null\)/)
     })
 
-    it("a caixa mede o maior passo (CaixaDoPasso) e a troca não muda a altura", () => {
-        expect(dialogo).toContain("<CaixaDoPasso")
-        expect(dialogo).toContain("fantasmas={fantasmas}")
+    it("formulário: sem a caixa do maior passo (só dos tutoriais); o diálogo acompanha cada passo", () => {
+        expect(dialogo).not.toContain("CaixaDoPasso")
+        expect(dialogo).not.toContain("fantasma")
+        expect(dialogo).toContain("{passo === 1 ? escolha : campo}")
     })
     it("o passo 1 escolhe a pessoa em linhas de menu: sem fio, arredondadas, com a seta", () => {
         expect(dialogo).toContain('<ItemGroup className="-mx-3 w-auto gap-1">')
