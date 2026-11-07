@@ -66,7 +66,7 @@ describe("LimitesSecao", () => {
     })
 
     it("o ramo indisponível não mostra resumo", () => {
-        const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("<Collapsible "))
+        const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("const linhas"))
         expect(ramo).toContain("Os limites ainda não estão disponíveis nesta carteira.")
         expect(ramo).not.toContain("resumoDosLimites")
     })
@@ -88,19 +88,47 @@ describe("LimitesSecao", () => {
         expect(fonte).toContain('endsWith("#limites")')
     })
 
-    it("o vazio: só quando ninguém tem limite, com a copy do dono e a de quem não é dono", () => {
+    it("o vazio é um convite: seção com título fora do cartão e EmptyState tracejado", () => {
         expect(fonte).toContain("<EmptyState")
-        expect(fonte).toContain('variant="plain"')
-        expect(fonte).toContain('size="sm"')
+        expect(fonte).toContain('variant="dashed"')
         expect(fonte).toContain("<BellAlertIcon")
         expect(fonte).toContain("@heroicons/react/24/outline")
         expect(fonte).toContain("linhas.every((l) => l.limite == null)")
         expect(fonte).not.toContain("limites.length === 0")
-        expect(fonte).toContain("Sem limites por enquanto")
-        expect(fonte).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
+        expect(fonte).not.toContain("Sem limites por enquanto")
+        expect(fonte).toContain("definindo")
         const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
-        expect(vazio).not.toContain("<Button")
-        expect(vazio).not.toContain("EmptyStateActions")
+        expect(vazio).toContain("Controle o gasto de cada pessoa")
+        expect(vazio).toContain("Defina um valor por mês e a pessoa e o dono são avisados ao chegar a 80% e a 100%.")
+        expect(vazio).toContain("O dono da carteira pode definir quanto cada pessoa gasta por mês.")
+        const ramoVazio = fonte.slice(fonte.lastIndexOf("<PageSection", fonte.indexOf("<EmptyState")), fonte.indexOf("</EmptyState>"))
+        expect(ramoVazio).toMatch(/<PageSectionTitle>Limites<\/PageSectionTitle>/)
+        expect(ramoVazio).not.toContain("<Collapsible")
+    })
+
+    it("o botão Definir limites só no ramo de quem edita, secondary, e abre a lista", () => {
+        const vazio = fonte.slice(fonte.indexOf("<EmptyState"), fonte.indexOf("</EmptyState>"))
+        const dono = vazio.slice(vazio.indexOf("podeEditar ?"), vazio.indexOf(") : ("))
+        const leitor = vazio.slice(vazio.indexOf(") : ("))
+        expect(dono).toMatch(/<EmptyStateActions>\s*<Button[\s\S]*variant="secondary"[\s\S]*Definir limites/)
+        expect(dono).toContain("setDefinindo(true)")
+        expect(dono).toContain("setAberta(true)")
+        expect(leitor).toContain("O dono da carteira pode definir")
+        expect(leitor).not.toContain("<Button")
+        expect(leitor).not.toContain("Definir limites")
+        expect(fonte).toMatch(/if \(definindo\) cabecalhoRef\.current\?\.focus\(\)/)
+        expect(fonte).toContain("<CollapsibleRow ref={cabecalhoRef}")
+        expect(fonte).toMatch(/if \(!definindo && linhas\.every\(\(l\) => l\.limite == null\)\)/)
+    })
+
+    it("a lista ocupa a largura do cartão: sangra o recuo do Collapsible sem o w-full prender a largura", () => {
+        expect(fonte).toMatch(/<ItemGroup variant="divided" className="-mx-\(--collapsible-px\) w-auto"/)
+    })
+
+    it("o ramo indisponível não ganha o vazio", () => {
+        const ramo = fonte.slice(fonte.indexOf("if (indisponivel)"), fonte.indexOf("const linhas"))
+        expect(ramo).not.toContain("EmptyState")
+        expect(ramo).not.toContain("Definir limites")
     })
 
     it("não importa o wireframe", () => {

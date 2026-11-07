@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 
 import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
@@ -20,7 +20,13 @@ import { PencilIcon } from "@heroicons/react/16/solid"
 import { BellAlertIcon } from "@heroicons/react/24/outline"
 
 import { Button } from "@/components/ui/button"
-import { EmptyState, EmptyStateDescription, EmptyStateIcon, EmptyStateTitle } from "@/components/ui/empty-state"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
@@ -47,8 +53,10 @@ import { formatMoneyBrlInput } from "@/lib/money-brl"
  * no pacote da tela (`fetchMembersPageBundle`), junto com o resto. Se a leitura
  * falhou (a tabela ainda não existe no banco), fica um estado neutro.
  *
- * Não é a função principal da tela: nasce recolhida, com o resumo no cabeçalho,
- * e abre sozinha quando o endereço traz `#limites` (os "Ver limite" dos avisos).
+ * Não é a função principal da tela: sem limite nenhum, é um convite (o vazio
+ * tracejado com "Definir limites", para o dono); com limite, ou depois do
+ * convite, nasce recolhida, com o resumo no cabeçalho, e abre sozinha quando o
+ * endereço traz `#limites` (os "Ver limite" dos avisos).
  */
 export function LimitesSecao({
     workspaceId,
@@ -72,6 +80,13 @@ export function LimitesSecao({
     onMudou: () => Promise<unknown>
 }) {
     const [aberta, setAberta] = useState(false)
+    const [definindo, setDefinindo] = useState(false)
+    const cabecalhoRef = useRef<HTMLButtonElement>(null)
+
+    // O botão do convite some no clique: o foco passa ao cabeçalho que o substitui.
+    useEffect(() => {
+        if (definindo) cabecalhoRef.current?.focus()
+    }, [definindo])
 
     // O servidor desenha fechada; o hash só existe no navegador. Um link para
     // `#limites` seguido nesta mesma tela é `pushState` do Next, sem `hashchange`:
@@ -121,30 +136,56 @@ export function LimitesSecao({
         ym,
     )
 
+    if (!definindo && linhas.every((l) => l.limite == null)) {
+        return (
+            <PageSection size="sm">
+                <PageSectionHeader>
+                    <PageSectionTitle>Limites</PageSectionTitle>
+                </PageSectionHeader>
+                <EmptyState variant="dashed" size="sm">
+                    <EmptyStateIcon variant="circle">
+                        <BellAlertIcon aria-hidden />
+                    </EmptyStateIcon>
+                    <EmptyStateTitle>Controle o gasto de cada pessoa</EmptyStateTitle>
+                    {podeEditar ? (
+                        <>
+                            <EmptyStateDescription>
+                                Defina um valor por mês e a pessoa e o dono são avisados ao chegar a 80% e a 100%.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setDefinindo(true)
+                                        setAberta(true)
+                                    }}
+                                >
+                                    Definir limites
+                                </Button>
+                            </EmptyStateActions>
+                        </>
+                    ) : (
+                        <EmptyStateDescription>
+                            O dono da carteira pode definir quanto cada pessoa gasta por mês.
+                        </EmptyStateDescription>
+                    )}
+                </EmptyState>
+            </PageSection>
+        )
+    }
+
     return (
         <Collapsible variant="card" open={aberta} onOpenChange={setAberta}>
-            <CollapsibleRow size="xl" trailing={resumoDosLimites(linhas)}>
+            <CollapsibleRow ref={cabecalhoRef} size="xl" trailing={resumoDosLimites(linhas)}>
                 Limites
             </CollapsibleRow>
             <CollapsibleContent>
-                {linhas.every((l) => l.limite == null) ? (
-                    <EmptyState variant="plain" size="sm">
-                        <EmptyStateIcon>
-                            <BellAlertIcon aria-hidden />
-                        </EmptyStateIcon>
-                        <EmptyStateTitle>Sem limites por enquanto</EmptyStateTitle>
-                        <EmptyStateDescription>
-                            {podeEditar
-                                ? "Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite."
-                                : "O dono da carteira pode definir quanto cada pessoa gasta por mês."}
-                        </EmptyStateDescription>
-                    </EmptyState>
-                ) : (
-                    <Muted>
-                        Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
-                    </Muted>
-                )}
-                <ItemGroup variant="divided" className="-mx-(--collapsible-px)">
+                <Muted>
+                    Defina quanto cada pessoa pode gastar por mês. A pessoa e o dono recebem um aviso ao chegar a 80% e a 100% do limite.
+                </Muted>
+                {/* `w-auto`: o `w-full` do grupo prendia a largura, e a margem negativa só o puxava para a esquerda. */}
+                <ItemGroup variant="divided" className="-mx-(--collapsible-px) w-auto">
                     {linhas.map((l) => (
                         <LinhaDoLimiteItem
                             key={`${l.user_id}:${l.limite}`}
