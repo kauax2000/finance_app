@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { AvatarDoMembro, memberDisplayName, type MemberWithProfile } from "@/components/members/pessoas-secao"
+import { PencilIcon } from "@heroicons/react/16/solid"
+
 import { Button } from "@/components/ui/button"
-import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
 import { currencyBRL } from "@/lib/formatters"
@@ -165,12 +167,6 @@ function LinhaDoLimiteItem({
                 ) : null}
             </ItemContent>
             {situacao != null ? <span className={cn("nums text-sm font-medium", tomPct)}>{pct}%</span> : null}
-            {podeEditar ? (
-                <>
-                    {situacao == null ? <span className="text-sm text-muted-foreground">Definir</span> : null}
-                    <ItemChevron />
-                </>
-            ) : null}
         </>
     )
 
@@ -215,13 +211,20 @@ function LinhaDoLimiteItem({
                 if (v) setErro(null)
             }}
         >
-            <DialogTrigger asChild>
-                <Item variant="flush" interactive asChild className="min-h-12">
-                    <button type="button" className="w-full text-left">
-                        {corpo}
-                    </button>
-                </Item>
-            </DialogTrigger>
+            <Item variant="flush" className="min-h-12">
+                {corpo}
+                <DialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="sm"
+                        aria-label={`${situacao == null ? "Definir" : "Editar"} o limite de ${linha.nome}`}
+                    >
+                        <PencilIcon aria-hidden data-icon="inline-start" />
+                        {situacao == null ? "Definir" : "Editar"}
+                    </Button>
+                </DialogTrigger>
+            </Item>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{`Limite de ${linha.nome}`}</DialogTitle>

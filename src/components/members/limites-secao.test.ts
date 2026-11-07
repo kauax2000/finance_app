@@ -22,18 +22,16 @@ describe("LimitesSecao", () => {
         expect(fonte).not.toContain("Deixe sem limite")
     })
 
-    it("a linha tem avatar, situação e porcentagem; Definir e chevron só para o dono", () => {
-        for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "sem limite", "Definir", "text-destructive", "text-warning", "text-muted-foreground"]) {
+    it("a linha tem avatar, situação e porcentagem; o botão Editar (ou Definir) só para o dono", () => {
+        for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "sem limite", "text-destructive", "text-warning"]) {
             expect(fonte).toContain(x)
         }
-        const resto = fonte.slice(fonte.indexOf("Definir") - 200)
-        expect(fonte.match(/Definir/g)).toHaveLength(1)
-        expect(fonte.match(/<ItemChevron/g)).toHaveLength(1)
-        expect(resto).toMatch(/podeEditar/)
-        const i = fonte.indexOf("<ItemChevron")
-        expect(fonte.slice(Math.max(0, i - 400), i)).toContain("podeEditar")
-        const d = fonte.indexOf("Definir")
-        expect(fonte.slice(Math.max(0, d - 400), d)).toContain("podeEditar")
+        expect(fonte).not.toContain("ItemChevron")
+        const dono = fonte.slice(fonte.indexOf("if (!podeEditar)"))
+        expect(dono).toMatch(/<DialogTrigger asChild>\s*<Button[\s\S]*variant="tertiary"[\s\S]*<PencilIcon/)
+        expect(dono).toContain('situacao == null ? "Definir" : "Editar"')
+        const leitor = fonte.slice(fonte.indexOf("if (!podeEditar)"), fonte.indexOf("async function rodar"))
+        expect(leitor).not.toContain("DialogTrigger")
     })
 
     it("indisponível tem o texto exato; não busca nem espera sozinha (os dados vêm no pacote da tela)", () => {
