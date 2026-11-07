@@ -22,14 +22,15 @@ describe("LimitesSecao", () => {
         expect(fonte).not.toContain("Deixe sem limite")
     })
 
-    it("a linha tem avatar, situação e porcentagem; o botão Editar (ou Definir) só para o dono", () => {
+    it("a linha tem avatar, situação e porcentagem; o botão de ícone (lápis) só para o dono", () => {
         for (const x of ["<AvatarDoMembro", '"Passou "', '"Sobram "', "sem limite", "text-destructive", "text-warning"]) {
             expect(fonte).toContain(x)
         }
         expect(fonte).not.toContain("ItemChevron")
         const dono = fonte.slice(fonte.indexOf("if (!podeEditar)"))
         expect(dono).toMatch(/<DialogTrigger asChild>\s*<Button[\s\S]*variant="tertiary"[\s\S]*<PencilIcon/)
-        expect(dono).toContain('situacao == null ? "Definir" : "Editar"')
+        expect(dono).toContain('size="icon-lg"')
+        expect(dono).toContain('situacao == null ? "Definir" : "Editar"} o limite de')
         const leitor = fonte.slice(fonte.indexOf("if (!podeEditar)"), fonte.indexOf("async function rodar"))
         expect(leitor).not.toContain("DialogTrigger")
     })

@@ -217,11 +217,10 @@ function LinhaDoLimiteItem({
                     <Button
                         type="button"
                         variant="tertiary"
-                        size="sm"
+                        size="icon-lg"
                         aria-label={`${situacao == null ? "Definir" : "Editar"} o limite de ${linha.nome}`}
                     >
-                        <PencilIcon aria-hidden data-icon="inline-start" />
-                        {situacao == null ? "Definir" : "Editar"}
+                        <PencilIcon aria-hidden />
                     </Button>
                 </DialogTrigger>
             </Item>
