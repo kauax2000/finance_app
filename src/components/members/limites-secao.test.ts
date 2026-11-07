@@ -156,8 +156,14 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).not.toContain("fantasma")
         expect(dialogo).toContain("{passo === 1 ? escolha : campo}")
     })
+    it("a troca de passo anima: cabeçalho, corpo e rodapé remontam pelo passo com dialog-step", () => {
+        expect(dialogo).toContain('const passoNovo = mudou ? "dialog-step" : undefined')
+        expect(dialogo).toContain("<DialogHeader key={`cabecalho-${passo}`} className={passoNovo}>")
+        expect(dialogo).toContain("<DialogFooter key={`rodape-${passo}`}")
+    })
+
     it("o passo 1 escolhe a pessoa em linhas de menu: sem fio, arredondadas, com a seta", () => {
-        expect(dialogo).toContain('<ItemGroup className="-mx-3 w-auto gap-1">')
+        expect(dialogo).toContain('<ItemGroup className={cn("-mx-3 w-auto gap-1"')
         expect(dialogo).not.toContain('variant="divided"')
         expect(dialogo).toMatch(/<Item key=\{l\.user_id\} interactive asChild>/)
         expect(dialogo).toContain("<ItemChevron />")

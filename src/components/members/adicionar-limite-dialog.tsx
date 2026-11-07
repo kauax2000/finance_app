@@ -16,6 +16,7 @@ import {
 import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { Item, ItemChevron, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { currencyBRL } from "@/lib/formatters"
+import { cn } from "@/lib/utils"
 import { ERRO_DO_LIMITE, lerLimiteDigitado, passoInicial, type LinhaDoLimite } from "@/lib/limites/limites"
 
 /**
@@ -62,6 +63,10 @@ export function AdicionarLimiteDialog({
         }
     }
 
+    // A troca de passo chega do desfoque, em ondas (cabeçalho, corpo, rodapé);
+    // cada peça remonta pela chave do passo para a entrada rodar de novo.
+    const passoNovo = mudou ? "dialog-step" : undefined
+
     const titulo = passo === 1 ? "Adicionar limite" : `Limite de ${escolhida?.nome ?? ""}`
 
     function irPara(n: 1 | 2) {
@@ -93,7 +98,7 @@ export function AdicionarLimiteDialog({
     const escolha = (
         <div>
             {/* Linhas de menu: sem fio, cantos de linha alta e o realce no toque. */}
-            <ItemGroup className="-mx-3 w-auto gap-1">
+            <ItemGroup className={cn("-mx-3 w-auto gap-1", passoNovo, "[--stagger-base:60ms]")}>
                 {lista.map((l) => {
                     const membro = pessoas.find((m) => m.user_id === l.user_id)
                     return (
@@ -125,7 +130,7 @@ export function AdicionarLimiteDialog({
     )
 
     const campo = (
-        <div className="flex flex-col gap-3">
+        <div className={cn("flex flex-col gap-3", passoNovo, "[--stagger-base:60ms]")}>
             <FormInput
                 money
                 label="Limite mensal em R$"
@@ -141,7 +146,7 @@ export function AdicionarLimiteDialog({
     return (
         <Dialog surface="auto" pending={salvando} open={open} onOpenChange={onOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader>
+                <DialogHeader key={`cabecalho-${passo}`} className={passoNovo}>
                     <DialogTitle>{titulo}</DialogTitle>
                     <DialogDescription>
                         {passo === 1 ? "Escolha a pessoa." : "Quanto esta pessoa pode gastar por mês."}
@@ -153,9 +158,9 @@ export function AdicionarLimiteDialog({
                             {mudou ? titulo : null}
                         </span>
                         {/* Formulário: o diálogo acompanha a altura de cada passo (a altura do maior é só dos tutoriais). */}
-                        {passo === 1 ? escolha : campo}
+                        <div key={passo}>{passo === 1 ? escolha : campo}</div>
                     </DialogBody>
-                    <DialogFooter>
+                    <DialogFooter key={`rodape-${passo}`} className={cn(passoNovo, "[--stagger-base:120ms]")}>
                         {passo === 2 && pessoas.length > 1 ? (
                             <Button type="button" variant="tertiary" disabled={salvando} onClick={() => irPara(1)}>
                                 Voltar

@@ -1192,7 +1192,11 @@ declaração de `background-color` no trilho).
     DOM (`useLinkQueFecha`, `NavegarFechandoContext`; a raiz mais de fora
     responde). Nova aba, modificadoras, `download` e outro domínio seguem o
     navegador. Não escreva `onClick` que fecha o diálogo num link.
-  - `DialogSteps`, `DialogMedia`, `DialogFooter start`. Os formulários usam
+  - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: quem
+    troca o conteúdo do diálogo ou da gaveta (escolher → valor) remonta
+    cabeçalho, corpo e rodapé pela chave do passo com a `@utility dialog-step`
+    (as peças surgem do desfoque, `menu-content-in`, em ondas por
+    `--stagger-base`: 0, 60 e 120ms); o passo ao abrir não a usa. Os formulários usam
     `FormCancel` e `FormSubmit`. `DialogHeader align="center"`, `DialogMedia
     variant="well" tone` e `DialogSteps variant="dots"` (depois da descrição)
     são o cabeçalho centrado de uma confirmação que pausa (Excluir conta).

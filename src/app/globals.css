@@ -3265,6 +3265,27 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   }
 }
 
+/* A troca de passo dentro de um diálogo ou gaveta (escolher → valor): o conteúdo
+   novo chega como na abertura (`dialog-reveal`), cada peça surgindo do desfoque no
+   lugar (`menu-content-in`, nunca deslocada — o corpo rola e tem dissolução), uma
+   atrás da outra. Quem chama remonta a peça pela chave do passo e escolhe a onda
+   por `--stagger-base` (o cabeçalho antes, o corpo e o rodapé depois). O passo ao
+   abrir não usa: ali quem anima é a abertura. */
+@utility dialog-step {
+  & > * {
+    animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
+    animation-delay: var(--stagger-base, 0ms);
+    --stagger-step: 30ms;
+    --stagger-cap: 6;
+    @apply stagger-ladder;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > * {
+      animation: none;
+    }
+  }
+}
+
 /* A troca de mês. O `react-day-picker` faz a mecânica com `animate`: clona o mês
    que sai, sobrepõe os dois dentro da caixa do mês (que recorta) e põe uma classe por
    direção em cada um. O mês que entra vem do lado para onde se andou, 24px e não a
