@@ -170,3 +170,25 @@ describe("o estorno no cartão do formulário", () => {
         expect(campos).not.toContain("Abate a fatura do ciclo")
     })
 })
+
+describe("projeto, quem pagou e pesos da parcelada", () => {
+    const CAMPOS = semComentarios(lerFonte("src/components/transactions/campos-de-projeto-e-divisao.tsx"))
+    const FORM = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"))
+
+    it("o formulário não importa mais os wireframes", () => {
+        expect(FORM).not.toContain("@/components/wireframe/projetos-wireframe")
+        expect(FORM).not.toContain("@/components/wireframe/divisao-wireframe")
+        expect(FORM).toContain("<ProjetoDoLancamento valor={projectId}")
+        expect(FORM).toContain("<QuemPagou valor={paidBy}")
+        expect(FORM).toContain("<PesosDaParcelada valor={pesosDaParcelada}")
+    })
+
+    it("são peças do DS: Combobox com Sem projeto, Select com Avatar, FormInput por adulto", () => {
+        expect(CAMPOS).not.toContain("wireframe")
+        expect(CAMPOS).toMatch(/<ComboboxItem value="" variant="none">\s*Sem projeto/)
+        expect(CAMPOS).toContain('<Avatar size="xs"')
+        expect(CAMPOS).toContain("<FormInput")
+        expect(CAMPOS).toContain("<Caption>Soma dos pesos")
+        expect(CAMPOS).toContain('currentWorkspace?.split_mode === "split" && isAdulto')
+    })
+})

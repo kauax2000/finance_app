@@ -359,7 +359,7 @@ describe("Carteira de projeto, fix 1 (Bloco 7C)", () => {
   })
 
   it("o seletor: só os ativos, mais o atual arquivado", async () => {
-    const { opcoesDoProjeto } = await import("./projetos-wireframe")
+    const { opcoesDoProjeto } = await import("@/lib/projetos/opcoes")
     const p = (id: string, archived_at: string | null) => ({ id, archived_at }) as never
     const lista = [p("a", null), p("b", "2026-10-01"), p("c", "2026-10-02")]
     expect(opcoesDoProjeto(lista, "").map((x: { id: string }) => x.id)).toEqual(["a"])
@@ -428,7 +428,7 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
     const w = fonte(W)
     expect(w).toContain('currentWorkspace?.split_mode === "split" && isAdulto')
     expect(fonte("src/lib/divisao/dados.ts")).toContain('.in("role", ["owner", "member"])')
-    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toContain("<QuemPagouWireframe")
+    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toContain("<QuemPagou ")
   })
 
   it("as partes mostradas vêm de transaction_shares, e o editor confere o fechamento antes do definir_partes", () => {
@@ -468,9 +468,8 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 
   it("a etiqueta de cada peça", () => {
     const w = fonte(W)
-    // "Partes desta despesa" saiu para o DS (PartesDaDespesa, redesenho de Transações).
-    for (const t of ["Quem pagou", "Saldo e acerto", "Pesos desta parcelada"]) {
-      expect(w).toContain(`titulo="${t}"`)
-    }
+    // Partes, Quem pagou e Pesos saíram para o DS (redesenho de Transações, Tarefas 9 e 11).
+    expect(w).toContain('titulo="Saldo e acerto"')
+    for (const t of ["Quem pagou", "Pesos desta parcelada"]) expect(w).not.toContain(`titulo="${t}"`)
   })
 })

@@ -15,7 +15,6 @@ import {
 import {
     acertoEhMeu,
     emCentavos,
-    pesosDigitados,
     pessoasDoAcerto,
     sugestaoDeAcerto,
     textoDoSaldo,
@@ -39,92 +38,6 @@ function mensagem(e: unknown): string {
 function useDivisao(): Workspace | null {
     const { currentWorkspace, isAdulto } = useWorkspace()
     return currentWorkspace?.split_mode === "split" && isAdulto ? currentWorkspace : null
-}
-
-/**
- * "Quem pagou" do formulário de despesa (Decisão 4): só numa carteira
- * dividida, só para o adulto, e só entre os adultos. O padrão é quem lança; o
- * salvar só manda a escolha quando ela muda alguma coisa.
- */
-export function QuemPagouWireframe({ valor, onChange }: { valor: string; onChange: (id: string) => void }) {
-    const ws = useDivisao()
-    if (!ws) return null
-    return <QuemPagou ws={ws.id} valor={valor} onChange={onChange} />
-}
-
-function QuemPagou({ ws, valor, onChange }: { ws: string; valor: string; onChange: (id: string) => void }) {
-    const { lista } = useAdultos(ws)
-    return (
-        <WireframeBox bloco={7} titulo="Quem pagou">
-            <label className="flex flex-col">
-                Quem pagou
-                <select className={campo} value={valor} onChange={(e) => onChange(e.target.value)}>
-                    {lista.some((a) => a.user_id === valor) ? null : <option value={valor}>Você</option>}
-                    {lista.map((a) => (
-                        <option key={a.user_id} value={a.user_id}>
-                            {a.nome}
-                        </option>
-                    ))}
-                </select>
-            </label>
-            <p>A despesa vira partes entre os adultos; quem pagou fica com o crédito no saldo.</p>
-        </WireframeBox>
-    )
-}
-
-/**
- * Os pesos de uma parcelada nova (Ruling 6): `null` usa os da carteira. Com
- * pesos próprios, o formulário os grava no plano logo depois de criá-lo.
- */
-export function PesosDaParceladaWireframe({
-    valor,
-    onChange,
-}: {
-    valor: Record<string, string> | null
-    onChange: (v: Record<string, string> | null) => void
-}) {
-    const ws = useDivisao()
-    if (!ws) return null
-    return <PesosDaParcelada ws={ws.id} valor={valor} onChange={onChange} />
-}
-
-function PesosDaParcelada({
-    ws,
-    valor,
-    onChange,
-}: {
-    ws: string
-    valor: Record<string, string> | null
-    onChange: (v: Record<string, string> | null) => void
-}) {
-    const { lista } = useAdultos(ws)
-    return (
-        <WireframeBox bloco={7} titulo="Pesos desta parcelada">
-            <label className="flex items-center gap-2 text-foreground">
-                <input
-                    type="checkbox"
-                    checked={valor != null}
-                    onChange={(e) => onChange(e.target.checked ? Object.fromEntries(lista.map((a) => [a.user_id, "1"])) : null)}
-                />
-                Pesos próprios nesta compra
-            </label>
-            {valor == null ? <p>Sem marcar, as parcelas dividem pelos pesos da carteira.</p> : null}
-            {valor != null
-                ? lista.map((a) => (
-                      <label key={a.user_id} className="flex items-center gap-2">
-                          {a.nome}
-                          <input
-                              className={campo}
-                              inputMode="decimal"
-                              value={valor[a.user_id] ?? ""}
-                              onChange={(e) => onChange({ ...valor, [a.user_id]: e.target.value })}
-                          />
-                      </label>
-                  ))
-                : null}
-            {valor != null && !pesosDigitados(valor) ? <p role="alert">Cada peso precisa ser maior que zero.</p> : null}
-        </WireframeBox>
-    )
 }
 
 /**

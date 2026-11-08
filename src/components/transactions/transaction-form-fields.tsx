@@ -78,8 +78,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
-import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
-import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
+import { PesosDaParcelada, ProjetoDoLancamento, QuemPagou } from "@/components/transactions/campos-de-projeto-e-divisao"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { equalInstallmentsFromPortion, splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import type { PlanoProposto } from "@/lib/previsao/impacto-parcela"
@@ -699,7 +698,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     </p>
                     {planoProposto ? <ImpactoDaParcela proposto={planoProposto} /> : null}
                     {segmentMode === "create" && setPesosDaParcelada ? (
-                        <PesosDaParceladaWireframe valor={pesosDaParcelada} onChange={setPesosDaParcelada} />
+                        <PesosDaParcelada valor={pesosDaParcelada} onChange={setPesosDaParcelada} />
                     ) : null}
                 </div>
             ) : (
@@ -982,7 +981,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             type === "expense" &&
             formKind !== "installment" &&
             !(hasInstallmentPlan && installmentEditScope === "plan") ? (
-                <ProjetoDoLancamentoWireframe valor={projectId} onChange={setProjectId} />
+                <ProjetoDoLancamento valor={projectId} onChange={setProjectId} />
             ) : null}
 
             {/* Quem pagou (Bloco 7C): a parcelada e o plano seguem quem lança. */}
@@ -990,7 +989,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             type === "expense" &&
             formKind !== "installment" &&
             !(hasInstallmentPlan && installmentEditScope === "plan") ? (
-                <QuemPagouWireframe valor={paidBy} onChange={setPaidBy} />
+                <QuemPagou valor={paidBy} onChange={setPaidBy} />
             ) : null}
         </div>
     )
