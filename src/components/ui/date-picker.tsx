@@ -828,6 +828,8 @@ export function MonthGrid(props: MonthGridProps) {
               className={cn(
                 // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
                 "font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+                // O atual mantém um sinal em todo estado: no meio do intervalo o fundo dele é o da faixa.
+                atual && "font-semibold",
                 // O meio do intervalo é a faixa do `Calendar` (`range_middle`).
                 posicao === "middle" && "bg-muted text-foreground",
                 // Com legenda o mês cresce em altura: as duas linhas já passam dos 28 do degrau; no toque, o piso de 44.

@@ -112,7 +112,8 @@ export default function DatePickerDoc() {
             tocado (em qualquer ordem, o menor é o início), e o toque seguinte
             recomeça. Trocar de ano no meio não perde o primeiro mês.{" "}
             <code>caption</code> põe uma segunda linha sob o nome, como o total
-            do mês.
+            do mês. O mês atual fica em negrito em todo estado, também no meio
+            de um intervalo, onde o fundo dele é o da faixa.
           </>
         }
         code={`<DatePicker mode="month" showToday value={mes} onChange={setMes} />

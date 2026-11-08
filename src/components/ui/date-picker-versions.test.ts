@@ -2,7 +2,7 @@ import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate, proximoIntervaloDeMes } from "./date-picker"
@@ -148,5 +148,23 @@ describe("MonthGrid: a âncora e o ano visível", () => {
 
   it("onYearChange avisa o ano que a pessoa vê", () => {
     expect(GRADE.match(/onYearChange\?\.\(/g)?.length).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe("o mês atual no intervalo (revisão final)", () => {
+  afterEach(() => vi.useRealTimers())
+
+  it("dentro do intervalo o atual ainda se distingue: negrito e aria-current", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 8, 12))
+    const grade = renderToStaticMarkup(
+      h(MonthGrid, { mode: "range", value: { from: new Date(2026, 9, 1), to: new Date(2026, 11, 1) }, onChange: () => {} })
+    )
+    const botao = (rotulo: string) => grade.match(new RegExp(`<button[^>]*aria-label="${rotulo}"[^>]*>`))?.[0] ?? ""
+    const novembro = botao("Novembro de 2026")
+    expect(novembro).toContain('aria-current="date"')
+    expect(novembro).toContain('data-range="middle"')
+    expect(novembro).toContain("font-semibold")
+    expect(botao("Agosto de 2026")).not.toContain("font-semibold")
   })
 })
