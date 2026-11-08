@@ -14,12 +14,12 @@ import {
     ComboboxTrigger,
     ComboboxValue,
 } from "@/components/ui/combobox"
-import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
-import { FormControl, FormInput, FormSwitch } from "@/components/ui/form"
+import { FormControl, FormField, FormInput, FormSwitch } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Caption } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { identityToneFor } from "@/lib/avatar"
+import { numberBR } from "@/lib/formatters"
 import { pesosDigitados } from "@/lib/divisao/partes"
 import { useAdultos } from "@/lib/divisao/use-adultos"
 import { listarProjetos } from "@/lib/projetos/dados"
@@ -59,8 +59,7 @@ export function ProjetoDoLancamento({ valor, onChange }: { valor: string; onChan
     if (opcoes.length === 0) return null
     const escolhido = opcoes.find((p) => p.id === valor)
     return (
-        <Field>
-            <FieldLabel optional>Projeto</FieldLabel>
+        <FormField label="Projeto" optional>
             <Combobox value={valor} onValueChange={onChange}>
                 <ComboboxField>
                     <FormControl>
@@ -85,7 +84,7 @@ export function ProjetoDoLancamento({ valor, onChange }: { valor: string; onChan
                     </ComboboxList>
                 </ComboboxContent>
             </Combobox>
-        </Field>
+        </FormField>
     )
 }
 
@@ -103,16 +102,23 @@ export function QuemPagou({ valor, onChange }: { valor: string; onChange: (id: s
 function QuemPagouDaCarteira({ ws, valor, onChange }: { ws: string; valor: string; onChange: (id: string) => void }) {
     const { lista } = useAdultos(ws)
     return (
-        <Field>
-            <FieldLabel>Quem pagou</FieldLabel>
+        <FormField
+            label="Quem pagou"
+            description="A despesa vira partes entre os adultos; quem pagou fica com o crédito no saldo."
+        >
             <Select value={valor} onValueChange={onChange}>
-                <FieldControl>
+                <FormControl>
                     <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
-                </FieldControl>
+                </FormControl>
                 <SelectContent>
-                    {lista.some((a) => a.user_id === valor) ? null : <SelectItem value={valor}>Você</SelectItem>}
+                    {lista.some((a) => a.user_id === valor) ? null : (
+                        <SelectItem value={valor}>
+                            <AvatarDoAdulto nome="Você" />
+                            Você
+                        </SelectItem>
+                    )}
                     {lista.map((a) => (
                         <SelectItem key={a.user_id} value={a.user_id}>
                             <AvatarDoAdulto nome={a.nome} />
@@ -121,15 +127,14 @@ function QuemPagouDaCarteira({ ws, valor, onChange }: { ws: string; valor: strin
                     ))}
                 </SelectContent>
             </Select>
-            <Caption>A despesa vira partes entre os adultos; quem pagou fica com o crédito no saldo.</Caption>
-        </Field>
+        </FormField>
     )
 }
 
 /** A soma dos pesos digitados, para a `Caption`; vírgula decimal vale. */
 export function somaDosPesos(valor: Record<string, string>): number | null {
     const pesos = pesosDigitados(valor)
-    return pesos ? pesos.reduce((s, p) => s + p.weight, 0) : null
+    return pesos ? Math.round(pesos.reduce((s, p) => s + p.weight, 0) * 1e6) / 1e6 : null
 }
 
 /**
@@ -185,7 +190,7 @@ function PesosDaCarteira({
                             Cada peso precisa ser maior que zero.
                         </Caption>
                     ) : (
-                        <Caption>Soma dos pesos: {soma}</Caption>
+                        <Caption>Soma dos pesos: {numberBR(soma)}</Caption>
                     )}
                 </>
             ) : null}
