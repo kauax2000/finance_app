@@ -296,3 +296,13 @@ export async function deleteTransactionById(
 ): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
     return deletePlainTransactionById(id, workspaceId)
 }
+
+/** Tira a marca de "a conferir" de um lote de lançamentos (Confirmar todos). */
+export async function marcarConferidos(ids: string[]): Promise<void> {
+    if (!ids.length) return
+    const { error } = await supabase.from("transactions").update({ needs_review: false }).in("id", ids)
+    if (error) {
+        throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível confirmar os lançamentos.")
+    }
+    dispatchFinanceTransactionsMutated()
+}
