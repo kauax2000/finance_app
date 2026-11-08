@@ -566,6 +566,8 @@ function FilterBar({
   ...props
 }: FilterBarProps) {
   const faixa = overflow === "scroll"
+  const numero = count == null ? "" : total != null ? `${numberBR(count)} de ${numberBR(total)}` : numberBR(count)
+  const nome = (total ?? count) === 1 ? noun[0] : noun[1]
   // A faixa já é a forma do telefone: a grade empilhada não se aplica nela.
   const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp
   const doGrupo = React.useContext(ButtonSizeContext)
@@ -968,10 +970,21 @@ function FilterBar({
               data-slot="filter-bar-clear"
               disabled={disabled}
               aria-label="Limpar filtros"
-              className="pointer-coarse:h-11"
+              className={cn(
+                "pointer-coarse:h-11",
+                faixa && "@max-md/filter-bar:aspect-square @max-md/filter-bar:px-0"
+              )}
               onClick={limpar}
             >
-              limpar
+              {/* Na faixa estreita o "Limpar" vira só o ×: a faixa precisa da largura. */}
+              {faixa ? (
+                <>
+                  <XMarkIcon aria-hidden className="hidden @max-md/filter-bar:block" />
+                  <span className="@max-md/filter-bar:hidden">Limpar</span>
+                </>
+              ) : (
+                "limpar"
+              )}
             </Button>
           </motion.div>
         ) : null}
@@ -1092,9 +1105,15 @@ function FilterBar({
             transition={SURGIR.transition}
             className="ms-auto shrink-0 text-sm whitespace-nowrap text-muted-foreground nums @max-md/filter-bar:ms-0"
           >
-            {total != null
-              ? `${numberBR(count)} de ${numberBR(total)} ${total === 1 ? noun[0] : noun[1]}`
-              : `${numberBR(count)} ${count === 1 ? noun[0] : noun[1]}`}
+            {/* Na faixa estreita o nome sai da vista, e o leitor de tela ainda ouve "48 lançamentos". */}
+            {faixa ? (
+              <>
+                {numero}
+                <span className="@max-md/filter-bar:sr-only">{` ${nome}`}</span>
+              </>
+            ) : (
+              `${numero} ${nome}`
+            )}
           </motion.span>
         ) : null}
       </div>

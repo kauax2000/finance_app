@@ -536,7 +536,7 @@ export default function FilterBarDoc() {
       </DocNote>
 
       <DocNote title="A faixa: uma linha que nunca muda de altura">
-        Com <code>overflow=&quot;scroll&quot;</code> os filtros rolam numa faixa de uma linha só, em qualquer largura, e o + Filtro, o Limpar e a contagem ficam fixos à direita, fora dela. É para a linha que divide a fileira com vizinhos fixos — abas à esquerda, uma tabela logo abaixo — e não pode crescer quando um filtro entra. A borda que corta dissolve, o filtro novo rola a faixa até ele, e o token não trunca. O padrão continua <code>wrap</code>, que quebra a fileira; na faixa, <code>mobile</code> não vale.
+        Com <code>overflow=&quot;scroll&quot;</code> os filtros rolam numa faixa de uma linha só, em qualquer largura, e o + Filtro, o Limpar e a contagem ficam fixos à direita, fora dela. É para a linha que divide a fileira com vizinhos fixos — abas à esquerda, uma tabela logo abaixo — e não pode crescer quando um filtro entra. A borda que corta dissolve, o filtro novo rola a faixa até ele, e o token não trunca. Abaixo de 28rem da própria barra, o Limpar vira só o × e a contagem guarda o número (o nome fica para o leitor de tela), para a faixa ter largura. O padrão continua <code>wrap</code>, que quebra a fileira; na faixa, <code>mobile</code> não vale.
       </DocNote>
 
       <DocNote title="O stack é uma grade, não uma pilha">

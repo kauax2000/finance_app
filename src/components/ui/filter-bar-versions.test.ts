@@ -571,6 +571,24 @@ describe("overflow scroll", () => {
     expect(divDoSlot(html, "filter-bar-row")).toContain('data-slot="filter-bar-add"')
   })
 
+  it("na faixa estreita a contagem guarda o número e esconde o nome só da vista", () => {
+    const html = barra({ overflow: "scroll", defaultValue: TRES, count: 48, noun: ["lançamento", "lançamentos"] })
+    expect(html).toMatch(/data-slot="filter-bar-count"[^>]*>48<span class="@max-md\/filter-bar:sr-only"> lançamentos<\/span>/)
+    // Fora da faixa, nada muda: o nome continua no mesmo texto.
+    expect(barra({ count: 48, noun: ["lançamento", "lançamentos"] })).toMatch(/>48 lançamentos</)
+  })
+
+  it("na faixa estreita o Limpar vira o × redondo, e o + Filtro guarda o texto", () => {
+    expect(CODIGO).toMatch(/faixa && "@max-md\/filter-bar:aspect-square @max-md\/filter-bar:px-0"/)
+    expect(CODIGO).toMatch(/<XMarkIcon aria-hidden className="hidden @max-md\/filter-bar:block" \/>\s*<span className="@max-md\/filter-bar:hidden">Limpar<\/span>/)
+    const html = barra({ overflow: "scroll", defaultValue: TRES })
+    const limpar = html.match(/<button[^>]*data-slot="filter-bar-clear"[\s\S]*?<\/button>/)?.[0] ?? ""
+    expect(limpar).toContain('aria-label="Limpar filtros"')
+    expect(limpar).toContain('variant="tertiary"'.replace("variant", "data-variant"))
+    expect(limpar).toContain("pointer-coarse:h-11")
+    expect(html.match(/<button[^>]*data-slot="filter-bar-add"[\s\S]*?<\/button>/)?.[0]).toMatch(/filtro/)
+  })
+
   it("um token a mais rola a faixa até o fim", () => {
     expect(CODIGO).toMatch(/scrollTo\(\{ left: [a-z]+\.scrollWidth, behavior: reduzir \? "auto" : "smooth" \}\)/)
     expect(CODIGO).toMatch(/\[tokens\.length, faixa, reduzir\]/)
