@@ -128,8 +128,10 @@ describe("?importar=1", () => {
 
   it("abre o diálogo de importar", () => {
     const f = semComentarios(lerFonte("src/app/(app)/transactions/page-client.tsx"), "tudo")
-    expect(f).toMatch(/consumirParametroImportar\(searchParams\)[\s\S]*?setImportarAberto\(true\)/)
-    expect(f).toMatch(/<ImportarExtratoDialog\s+open=\{importarAberto\}/)
+    // O parâmetro é do controlador da tela; a página só liga o diálogo ao pedido.
+    const tela = semComentarios(lerFonte("src/components/transactions/use-transacoes-da-tela.ts"), "tudo")
+    expect(tela).toMatch(/consumirParametroImportar\(searchParams\)[\s\S]*?setImportar\(true\)/)
+    expect(f).toMatch(/<ImportarExtratoDialog\s+open=\{pedidos\.importar\}\s+onOpenChange=\{pedidos\.setImportar\}/)
   })
 })
 

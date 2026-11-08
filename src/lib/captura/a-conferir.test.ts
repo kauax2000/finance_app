@@ -3,6 +3,8 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { isTypeAllowedForPrefs, type WorkspaceNotificationPrefs } from "@/lib/notification-href"
 import { DEFAULT_WORKSPACE_NOTIFICATION_PREFS } from "@/lib/workspace-notification-prefs"
 import { mergeTransactionsSearchParams } from "@/lib/transactions-list-search-params"
+import { lerFiltrosDaUrl } from "@/lib/transactions/filtros"
+import { existsSync } from "node:fs"
 
 // As preferências importam o cliente do Supabase, que pede as variáveis do .env.
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -97,10 +99,18 @@ describe("telas de a conferir", () => {
         expect(mergeTransactionsSearchParams(atual, proxima).get("conferir")).toBe("1")
     })
 
-    it("a página de transações mostra a lista com ?conferir=1", () => {
+    it("?conferir=1 vira o token conferir da lista (a vista do wireframe saiu)", () => {
+        const lido = lerFiltrosDaUrl(new URLSearchParams("conferir=1"))
+        expect(lido.filtros).toContainEqual({ field: "conferir", operator: "is", values: [] })
+        expect(lido.migrou).toBe(true)
+    })
+
+    it("a página de transações mostra o aviso a conferir, e o Revisar aplica o token", () => {
         const f = fonte("src/app/(app)/transactions/page-client.tsx")
-        expect(f).toMatch(/import\s*\{[^}]*\bAConferirListaWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/a-conferir-lista-wireframe["']/)
-        expect(f).toContain('searchParams?.get("conferir") === "1"')
+        expect(f).toMatch(/import\s*\{[^}]*\bAvisoAConferir\b[^}]*\}\s*from\s*["']@\/components\/transactions\/aviso-a-conferir["']/)
+        expect(f).toContain('field: "conferir"')
+        expect(f).not.toContain("AConferirListaWireframe")
+        expect(existsSync("src/components/wireframe/a-conferir-lista-wireframe.tsx")).toBe(false)
     })
 
     it("o Painel mostra a contagem", () => {
@@ -115,17 +125,10 @@ describe("telas de a conferir", () => {
         expect(f).toContain("/transactions?conferir=1")
     })
 
-    it("a lista: 50 da carteira, do mais recente, e o confirmar exige uma linha", () => {
-        const f = fonte("src/components/wireframe/a-conferir-lista-wireframe.tsx")
-        expect(f).toContain('.eq("workspace_id", workspaceId)')
-        expect(f).toContain('.order("date", { ascending: false })')
-        expect(f).toContain('.order("created_at", { ascending: false })')
-        expect(f).toContain(".limit(LIMITE)")
-        expect(f).toContain('.update({ needs_review: false })')
-        expect(f).toMatch(/data\?\.length !== 1/)
-        expect(f).toContain("signedCurrencyBRL(")
-        expect(f).not.toMatch(/\bcurrencyBRL\(/)
-        expect(f).toContain("Nada a conferir.")
+    it("Confirmar todos tira a marca da carteira inteira, num update só", () => {
+        const f = fonte("src/lib/transactions/mutations.ts")
+        expect(f).toMatch(/marcarTodosConferidos[\s\S]*?\.update\(\{ needs_review: false \}\)\s*\.eq\("workspace_id", workspaceId\)\s*\.eq\("needs_review", true\)/)
+        expect(fonte("src/components/transactions/use-transacoes-da-tela.ts")).toContain("marcarTodosConferidos(currentWorkspaceId)")
     })
 
     it("o domínio de transações invalida a lista e a contagem", () => {

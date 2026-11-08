@@ -9,7 +9,16 @@ import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { supabase, type Transaction } from "@/lib/supabase"
-import { deleteTransactionsByIds } from "@/lib/transaction-detail-sheet-mutations"
+import type {
+    InstallmentPlanUpdatePayload,
+    TransactionFormSavePayload,
+    TransactionSaveResult,
+} from "@/components/transactions/transaction-form-types"
+import {
+    deleteTransactionsByIds,
+    persistInstallmentPlanUpdate,
+    persistTransactionSave,
+} from "@/lib/transaction-detail-sheet-mutations"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import {
     PARAMETROS_DA_FRASE,
@@ -18,6 +27,7 @@ import {
     consumirParametroFrase,
     consumirParametroImportar,
 } from "@/lib/transactions-list-search-params"
+import { marcarTodosConferidos } from "@/lib/transactions/mutations"
 import { escreverFiltrosNaUrl, lerFiltrosDaUrl, type EstadoDaLista } from "@/lib/transactions/filtros"
 import { fetchResumoTransacoes, fetchTransacoesPagina, type Resumo } from "@/lib/queries/transacoes-filtradas"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
@@ -326,6 +336,49 @@ export function useTransacoesDaTela() {
         setFrase(undefined)
     }, [])
 
+    // --- Salvar (a edição no detalhe): o detalhe relê a linha da lista recarregada.
+    const [salvando, setSalvando] = useState(false)
+    const salvar = useCallback(
+        async (payload: TransactionFormSavePayload): Promise<TransactionSaveResult> => {
+            if (!user || !currentWorkspaceId) return false
+            setSalvando(true)
+            try {
+                return await persistTransactionSave({
+                    supabase,
+                    user,
+                    workspaceId: currentWorkspaceId,
+                    payload,
+                    resolveEditingTransaction: (id) =>
+                        transactions.find((t) => t.id === id) ?? (detalheAoVivo?.id === id ? detalheAoVivo : null),
+                    onAfterSuccess: invalidar,
+                })
+            } finally {
+                // Se a persistência lançar, o botão não fica preso em "salvando".
+                setSalvando(false)
+            }
+        },
+        [user, currentWorkspaceId, transactions, detalheAoVivo, invalidar],
+    )
+    const atualizarParcelada = useCallback(
+        async (planId: string, payload: InstallmentPlanUpdatePayload): Promise<boolean> => {
+            if (!currentWorkspaceId) return false
+            setSalvando(true)
+            try {
+                return await persistInstallmentPlanUpdate({ supabase, planId, payload, onAfterSuccess: invalidar })
+            } finally {
+                setSalvando(false)
+            }
+        },
+        [currentWorkspaceId, invalidar],
+    )
+
+    /** O Confirmar todos do aviso: todos os "a conferir" da carteira; o erro sobe ao aviso. */
+    const confirmarTodosAConferir = useCallback(async () => {
+        if (!currentWorkspaceId) return
+        await marcarTodosConferidos(currentWorkspaceId)
+        await invalidar()
+    }, [currentWorkspaceId, invalidar])
+
     // --- Excluir: abre a confirmação; confirmar exclui, volta a página vazia e recarrega.
     const [pendente, setPendente] = useState<{ ids: string[]; linhas: Transaction[] } | null>(null)
     const [excluindo, setExcluindo] = useState(false)
@@ -404,6 +457,10 @@ export function useTransacoesDaTela() {
             dispensarCompartilhado,
             consumirPedido,
         },
+        confirmarTodosAConferir,
+        salvando,
+        salvar,
+        atualizarParcelada,
         excluir,
         exclusao: { pendente, excluindo, confirmar: confirmarExclusao, cancelar: cancelarExclusao },
         invalidar,

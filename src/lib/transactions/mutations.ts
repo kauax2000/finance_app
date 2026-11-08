@@ -307,6 +307,19 @@ export async function marcarConferidos(ids: string[]): Promise<void> {
     dispatchFinanceTransactionsMutated()
 }
 
+/** Tira a marca de todos os "a conferir" da carteira (o Confirmar todos do aviso). */
+export async function marcarTodosConferidos(workspaceId: string): Promise<void> {
+    const { error } = await supabase
+        .from("transactions")
+        .update({ needs_review: false })
+        .eq("workspace_id", workspaceId)
+        .eq("needs_review", true)
+    if (error) {
+        throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível confirmar os lançamentos.")
+    }
+    dispatchFinanceTransactionsMutated()
+}
+
 /** Põe a mesma categoria num lote e tira a marca de "a conferir" (Categorizar). */
 export async function categorizarEmLote(ids: string[], categoryId: string | null): Promise<void> {
     if (!ids.length) return

@@ -286,21 +286,28 @@ describe("fonte: o compartilhar ligado de ponta a ponta", () => {
     })
 
     it("a tela lê o arquivo, abre a criação com a foto e limpa a URL", () => {
-        const tela = semComentarios(lerFonte("src/app/(app)/transactions/page-client.tsx"), "tudo")
+        // A URL sai pelo controlador da tela; a leitura do Cache Storage é do aviso.
+        const tela = semComentarios(lerFonte("src/components/transactions/use-transacoes-da-tela.ts"), "tudo")
         expect(tela).toContain("consumirParametroCompartilhado(searchParams)")
-        expect(tela).toContain("lerArquivoCompartilhado(")
-        expect(tela).toContain('openTransactionCreate("expense", { fotoInicial: arquivo })')
-        expect(tela).toContain("CompartilhadoAvisoWireframe")
+        expect(tela).toContain('searchParams?.has("compartilhado_erro")')
+        expect(tela).toContain("PARAMETROS_DO_COMPARTILHADO")
+        const pagina = semComentarios(lerFonte("src/app/(app)/transactions/page-client.tsx"), "tudo")
+        expect(pagina).toContain("<CompartilhadoAviso pedido={pedidos.compartilhado} onDismiss={pedidos.dispensarCompartilhado} />")
+        expect(pagina).not.toContain("CompartilhadoAvisoWireframe")
+        const aviso = semComentarios(lerFonte("src/components/transactions/compartilhado-aviso.tsx"), "tudo")
+        expect(aviso).toContain("lerArquivoCompartilhado(chave)")
+        expect(aviso).toContain('openTransactionCreate("expense", { fotoInicial: arquivo })')
         // PDF ou foto pelo arquivo lido, não pelo `tipo` da URL.
-        expect(tela).toContain('arquivo.type === "application/pdf"')
-        expect(tela).not.toContain("pedido.tipo")
-        expect(tela).toContain('searchParams.has("compartilhado_erro")')
-        const aviso = lerFonte("src/components/wireframe/compartilhado-aviso-wireframe.tsx")
+        expect(aviso).toContain('arquivo.type === "application/pdf"')
+        expect(aviso).not.toContain("pedido.tipo")
+        // Ler apaga o arquivo: uma leitura por chave.
+        expect(aviso).toContain("lendo.current === chave")
         expect(aviso).toContain("Para conferir a fatura, abra o cartão e use Conferir fatura.")
         expect(aviso).toContain("O arquivo compartilhado não está mais disponível.")
         expect(aviso).toContain("Não foi possível receber o arquivo (até 10 MB, foto ou PDF).")
         expect(aviso).toContain("ROUTES.CREDIT_CARDS")
-        expect(aviso).not.toContain("@/components/ui")
+        expect(aviso).toContain('<Alert tone="warning"')
+        expect(aviso).not.toContain("@/components/wireframe")
     })
 
     it("a foto inicial desce do shell até a Foto do recibo", () => {

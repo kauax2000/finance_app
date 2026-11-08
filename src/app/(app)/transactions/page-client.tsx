@@ -1,33 +1,22 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import {
-    EmptyState,
-    EmptyStateActions,
-    EmptyStateDescription,
-    EmptyStateGhost,
-    EmptyStateIcon,
-    EmptyStateTitle,
-} from "@/components/ui/empty-state"
-import { PlusIcon } from "@heroicons/react/16/solid"
-import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
-import { formatTransactionDayPtBr } from "@/lib/transaction-date"
-import { ROUTES } from "@/config/navigation"
-import {
-    TransactionFormDialog,
-} from "@/components/transactions/transaction-form-dialog"
-import { TransactionNewSplitButton } from "@/components/transactions/transaction-new-split-button"
-import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
+import { useCallback, useEffect, useState } from "react"
+import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/16/solid"
 import { QuickActionResourceLinks } from "@/components/layout/quick-actions"
-import { useWorkspace } from "@/components/workspace-provider"
-import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
-import { TransactionsTable } from "@/components/transactions/transactions-table"
-import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
+import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
+import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
+import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
+import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
+import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
+import { ResumoDasTransacoes } from "@/components/transactions/resumo-das-transacoes"
+import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
+import { TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
-import { Card, CardContent, CardMessage } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { MoneyDisplay } from "@/components/ui/money-display"
+import { TransactionNewSplitButton } from "@/components/transactions/transaction-new-split-button"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
+import { useCamposDeFiltro } from "@/components/transactions/use-campos-de-filtro"
+import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
+import { useWorkspace } from "@/components/workspace-provider"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -39,614 +28,230 @@ import {
     AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-    DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Card, CardMessage } from "@/components/ui/card"
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { ROUTES } from "@/config/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { downloadCsv } from "@/lib/data-table/csv"
 import { numberBR } from "@/lib/formatters"
-import {
-    consumirParametroCompartilhado,
-    consumirParametroFrase,
-    consumirParametroImportar,
-    PARAMETROS_DA_FRASE,
-    PARAMETROS_DO_COMPARTILHADO,
-} from "@/lib/transactions-list-search-params"
-import { lerArquivoCompartilhado } from "@/lib/captura/compartilhado"
-import { CompartilhadoAvisoWireframe } from "@/components/wireframe/compartilhado-aviso-wireframe"
-import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
-import { AConferirListaWireframe } from "@/components/wireframe/a-conferir-lista-wireframe"
-import {
-    hasInstallmentDeleteImpact,
-    INSTALLMENT_DELETE_WARNING,
-} from "@/lib/transactions/delete-transactions"
+import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
+import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
+import { toastError, toastSuccess } from "@/lib/toast"
+import { formatTransactionDayPtBr } from "@/lib/transaction-date"
+import { transacoesParaCsv } from "@/lib/transactions/csv"
+import { hasInstallmentDeleteImpact, INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
+import { mensagemDaExportacao, nomeDoCsv } from "@/lib/transactions/exportar-csv"
 
-const PAGE_SIZE = 100
-
-export default function TransactionsPage() {
-    const c = useTransactionsListController({ mode: "page" })
-
-    /* eslint-disable @typescript-eslint/no-unused-vars -- view-model is split between this page and the shared controller hook */
-    const {
-        user,
-        authLoading,
-        currentWorkspaceId,
-        workspaceLoading,
-        workspaceError,
-        router,
-        pathname,
-        searchParams,
-        transactions,
-        categories,
-        creditCards,
-        workspaceHasTransactions,
-        invoicePaidByCardClose,
-        totalCount,
-        page,
-        setPage,
-        loading,
-        dialogOpen,
-        setDialogOpen,
-        editingTransaction,
-        setEditingTransaction,
-        saving,
-        setSaving,
-        pendingDelete,
-        setPendingDelete,
-        deleting,
-        setDeleting,
-        selectedIds,
-        setSelectedIds,
-        filterType,
-        setFilterType,
-        fullPeriod,
-        setFullPeriod,
-        filterDateFrom,
-        setFilterDateFrom,
-        filterDateTo,
-        setFilterDateTo,
-        datePreset,
-        setDatePreset,
-        filterPaymentMethods,
-        setFilterPaymentMethods,
-            filterCreditCardIds,
-        setFilterCreditCardIds,
-            filterCategoryIds,
-        setFilterCategoryIds,
-            filterUncategorizedOnly,
-        setFilterUncategorizedOnly,
-            filterAmountMin,
-        setFilterAmountMin,
-            filterAmountMax,
-        setFilterAmountMax,
-            filterDescriptionQuery,
-        setFilterDescriptionQuery,
-            filterInstallmentsOnly,
-        setFilterInstallmentsOnly,
-            filterInstallmentPlanId,
-        setFilterInstallmentPlanId,
-            filterSubscriptionId,
-        setFilterSubscriptionId,
-            periodDraftFrom,
-        setPeriodDraftFrom,
-            periodDraftTo,
-        setPeriodDraftTo,
-        periodDraftDirty,
-        setPeriodDraftDirty,
-        suppressPeriodDraftDirtyRef,
-        filtersSheetOpen,
-        setFiltersSheetOpen,
-            installmentPlans,
-            subscriptions,
-        sortKey,
-        setSortKey,
-        sortDir,
-        setSortDir,
-        didAutoOpen,
-        setDidAutoOpen,
-        detailTransaction,
-        setDetailTransaction,
-        detailOpen,
-        setDetailOpen,
-        detailLaunchEdit,
-        setDetailLaunchEdit,
-        skipUrlWriteRef,
-        syncPeriodDraftToApplied,
-            handlePeriodDraftFromChange,
-            handlePeriodDraftToChange,
-        creditCardPaymentSelected,
-        refreshAll,
-        openDialog,
-        openTransactionDetail,
-        handleDetailLaunchEditConsumed,
-        handleDialogOpenChange,
-        handleSave,
-        handleSaveInstallmentPlan,
-        handleUpdateInstallmentPlan,
-        confirmDelete,
-        toggleSort,
-        resetAllFilters,
-        clearPeriodFilter,
-        handleSelectFullPeriod,
-            toggleFilterCategory,
-            clearAllCategoryFilters,
-            handleUncategorizedOnlyChange,
-        advancedFiltersActive,
-        anyFiltersActive,
-        filtersPanelProps,
-        hasNoTransactions,
-        hasNoMatches,
-    } = c
-    /* eslint-enable @typescript-eslint/no-unused-vars */
-
-    // `?importar=1` abre o diálogo de importar e sai da URL, como o `new`.
-    const [importarAberto, setImportarAberto] = useState(false)
-    useEffect(() => {
-        const resto = consumirParametroImportar(searchParams)
-        if (resto == null) return
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- consome o parâmetro da URL uma vez
-        setImportarAberto(true)
-        router.replace(resto ? `${pathname}?${resto}` : pathname)
-    }, [searchParams, pathname, router])
-
-    // `?frase=` (o compartilhar do Android, `share_target`) abre a criação com
-    // a frase já escrita, sem aplicar, e sai da URL.
+export default function TransactionsPageClient() {
+    const tela = useTransacoesDaTela()
+    const { estado, setEstado, pedidosDeAbertura: pedidos, exclusao } = tela
+    const { campos } = useCamposDeFiltro(estado.type)
+    const { currentWorkspaceId, currentWorkspace, papel, loading: workspaceLoading, error: workspaceError } = useWorkspace()
+    const convidado = papel === "guest"
+    const membros = useMemberDirectoryQuery(currentWorkspaceId).data ?? []
     const shell = useGlobalShellDialogsOptional()
-    // A assinatura é da casa: o convidado (Bloco 7A) só lança.
-    const convidado = !useWorkspace().isAdulto
-    useEffect(() => {
-        const frase = consumirParametroFrase(searchParams)
-        if (frase == null || !shell) return
-        shell.openTransactionCreate("expense", { frase })
-        const resto = new URLSearchParams(searchParams?.toString())
-        for (const k of PARAMETROS_DA_FRASE) resto.delete(k)
-        const qs = resto.toString()
-        router.replace(qs ? `${pathname}?${qs}` : pathname)
-    }, [searchParams, pathname, router, shell])
+    const duplicar = useDuplicarComoNova()
+    const isMobile = useIsMobile()
+    const [exportando, setExportando] = useState(false)
 
-    // `?compartilhado=` (a foto ou o PDF do compartilhar, que o service worker
-    // guardou no Cache Storage): a foto abre a criação com a "Foto do recibo"
-    // lendo; o PDF, o arquivo que sumiu e o recusado (`?compartilhado_erro=1`)
-    // viram aviso. Sai da URL em todos os casos.
-    const [avisoCompartilhado, setAvisoCompartilhado] = useState<
-        "pdf" | "indisponivel" | "recusado" | null
-    >(null)
-    const compartilhadoLido = useRef<string | null>(null)
+    // A casca já abriu a criação do `?new=` e do `?frase=`: o pedido só se limpa.
+    const { criar, frase, consumirPedido } = pedidos
     useEffect(() => {
-        if (!searchParams || !shell) return
-        const naUrl = searchParams.get("compartilhado")
-        const recusado = searchParams.has("compartilhado_erro")
-        if (naUrl == null && !recusado) return
-        // Ler apaga o arquivo: o ref segura o segundo efeito do modo estrito.
-        if (naUrl != null && compartilhadoLido.current === naUrl) return
-        compartilhadoLido.current = naUrl
-        const pedido = consumirParametroCompartilhado(searchParams)
-        const resto = new URLSearchParams(searchParams.toString())
-        for (const k of PARAMETROS_DO_COMPARTILHADO) resto.delete(k)
-        const qs = resto.toString()
-        router.replace(qs ? `${pathname}?${qs}` : pathname)
-        if (naUrl == null) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- consome o parâmetro da URL uma vez
-            setAvisoCompartilhado("recusado")
-            return
+        if (criar || frase) consumirPedido()
+    }, [criar, frase, consumirPedido])
+
+    const revisar = useCallback(
+        () => setEstado({ filtros: [{ field: "conferir", operator: "is", values: [] }], sort: { key: "date", dir: "desc" } }),
+        [setEstado],
+    )
+    const conferindo = estado.filtros.some((f) => f.field === "conferir")
+
+    const exportar = async () => {
+        if (!currentWorkspaceId || exportando) return
+        setExportando(true)
+        try {
+            const { transactions, truncado } = await fetchTransacoesParaExportar({
+                workspaceId: currentWorkspaceId,
+                estado,
+                cartoes: tela.creditCards,
+            })
+            const nome = new Map(membros.map((m) => [m.user_id, m.full_name || m.email]))
+            downloadCsv(nomeDoCsv(new Date()), transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
+            toastSuccess(mensagemDaExportacao(transactions.length, truncado))
+        } catch {
+            toastError("Não foi possível exportar os lançamentos.")
+        } finally {
+            setExportando(false)
         }
-        if (!pedido) {
-            setAvisoCompartilhado("indisponivel")
-            return
-        }
-        void lerArquivoCompartilhado(pedido.chave).then((arquivo) => {
-            if (!arquivo) {
-                setAvisoCompartilhado("indisponivel")
-            } else if (arquivo.type === "application/pdf") {
-                setAvisoCompartilhado("pdf")
-            } else {
-                setAvisoCompartilhado(null)
-                shell.openTransactionCreate("expense", { fotoInicial: arquivo })
-            }
-        })
-    }, [searchParams, pathname, router, shell])
+    }
 
     if (workspaceError) {
         return (
             <Card>
-                <CardMessage tone="destructive">
-                    {workspaceError}
-                </CardMessage>
+                <CardMessage tone="destructive">{workspaceError}</CardMessage>
             </Card>
         )
     }
-
-    if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
+    if (!workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
                 <CardMessage>
-                    Nenhum espaço de trabalho selecionado. Escolha um espaço no menu
-                    lateral para continuar.
+                    Nenhum espaço de trabalho selecionado. Escolha um espaço no menu lateral para continuar.
                 </CardMessage>
             </Card>
         )
     }
+    if (tela.carregando) return <TransactionsPageSkeleton />
 
-    if (loading) {
-        return <TransactionsPageSkeleton />
-    }
+    const pendente = exclusao.pendente
+    const umaSo = pendente?.ids.length === 1 ? pendente.linhas[0] : undefined
 
     return (
-        <div className="min-w-0 max-w-full space-y-3">
-            {/* `?conferir=1` é uma vista (o atalho do ícone aponta para ela): fica na URL. */}
-            {searchParams?.get("conferir") === "1" && currentWorkspaceId ? (
-                <AConferirListaWireframe workspaceId={currentWorkspaceId} />
-            ) : null}
-            {avisoCompartilhado ? (
-                <CompartilhadoAvisoWireframe
-                    aviso={avisoCompartilhado}
-                    onFechar={() => setAvisoCompartilhado(null)}
-                />
-            ) : null}
-            {/* Ponte até a Tarefa 12, que leva a entrada ao cabeçalho e o "Revisar" ao filtro `conferir`. */}
-            <div>
-                <Button type="button" variant="tertiary" onClick={() => setImportarAberto(true)}>
-                    Importar extrato ou planilha
-                </Button>
-            </div>
-            <ImportarExtratoDialog
-                open={importarAberto}
-                onOpenChange={setImportarAberto}
-                onRevisar={() => router.push(`${pathname}?conferir=1`)}
-            />
-            <TransactionsToolbar
-                sticky
-                filterType={filterType}
-                onFilterTypeChange={setFilterType}
-                fullPeriod={fullPeriod}
-                filterDateFrom={filterDateFrom}
-                filterDateTo={filterDateTo}
-                datePreset={datePreset}
-                onSelectFullPeriod={handleSelectFullPeriod}
-                onPresetChange={({ preset, from, to }) => {
-                    setDatePreset(preset)
-                    setFilterDateFrom(from)
-                    setFilterDateTo(to)
-                    setFullPeriod(false)
-                }}
-                onDateRangeApply={({ from, to }) => {
-                    setDatePreset(null)
-                    setFilterDateFrom(from)
-                    setFilterDateTo(to)
-                    setFullPeriod(false)
-                }}
-                onClearPeriodFilter={clearPeriodFilter}
-                resetAllFilters={resetAllFilters}
-                advancedFiltersActive={advancedFiltersActive}
-                filtersPanel={filtersPanelProps}
-                activeFiltersChips={
-                    anyFiltersActive ? (
-                        <TransactionsActiveFiltersChips
-                            filterType={filterType}
-                            onClearType={() => setFilterType("all")}
-                            fullPeriod={fullPeriod}
-                            datePreset={datePreset}
-                            filterDateFrom={filterDateFrom}
-                            filterDateTo={filterDateTo}
-                            onClearPeriod={() => clearPeriodFilter()}
-                            filterCreditCardIds={filterCreditCardIds}
-                            onRemoveCreditCardId={(id) =>
-                                setFilterCreditCardIds((prev) =>
-                                    prev.filter((x) => x !== id)
+        <div className="flex min-w-0 max-w-full flex-col gap-4">
+            {/* No telefone o título é o da casca (`TituloDaTela`), e Importar e Exportar moram no ⋯ da barra. */}
+            {isMobile ? null : (
+                <PageHeader collapse>
+                    <PageHeaderTitleRow>
+                        <PageHeaderTitle asChild>
+                            {/* O `<h1>` da página é o da barra do topo. */}
+                            <p aria-hidden="true">Transações</p>
+                        </PageHeaderTitle>
+                    </PageHeaderTitleRow>
+                    <PageHeaderActions>
+                        {convidado ? null : (
+                            <>
+                                <Button type="button" variant="tertiary" disabled={exportando} onClick={() => void exportar()}>
+                                    <ArrowDownTrayIcon aria-hidden />
+                                    Exportar
+                                </Button>
+                                <Button type="button" variant="secondary" onClick={() => pedidos.setImportar(true)}>
+                                    <ArrowUpTrayIcon aria-hidden />
+                                    Importar
+                                </Button>
+                            </>
+                        )}
+                        <TransactionNewSplitButton
+                            semReceita={convidado}
+                            menuAlign="end"
+                            menuSide="bottom"
+                            onNew={(mode) => shell?.openTransactionCreate(mode)}
+                            menuFooter={
+                                convidado ? undefined : (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <QuickActionResourceLinks onCloseMenu={() => {}} />
+                                    </>
                                 )
                             }
-                            creditCards={creditCards}
-                            filterPaymentMethods={filterPaymentMethods}
-                            onRemovePaymentMethod={(method) =>
-                                setFilterPaymentMethods((prev) =>
-                                    prev.filter((x) => x !== method)
-                                )
-                            }
-                            filterInstallmentsOnly={filterInstallmentsOnly}
-                            onClearInstallmentsOnly={() =>
-                                setFilterInstallmentsOnly(false)
-                            }
-                            filterInstallmentPlanId={filterInstallmentPlanId}
-                            onClearInstallmentPlan={() =>
-                                setFilterInstallmentPlanId(null)
-                            }
-                            installmentPlans={installmentPlans}
-                            filterSubscriptionId={filterSubscriptionId}
-                            onClearSubscription={() =>
-                                setFilterSubscriptionId(null)
-                            }
-                            subscriptions={subscriptions}
-                            filterCategoryIds={filterCategoryIds}
-                            onRemoveCategoryId={(id) => toggleFilterCategory(id)}
-                            categories={categories}
-                            filterUncategorizedOnly={filterUncategorizedOnly}
-                            onClearUncategorizedOnly={() =>
-                                setFilterUncategorizedOnly(false)
-                            }
-                            filterAmountMin={filterAmountMin}
-                            filterAmountMax={filterAmountMax}
-                            onClearAmount={() => {
-                                setFilterAmountMin("")
-                                setFilterAmountMax("")
-                            }}
-                            filterDescriptionQuery={filterDescriptionQuery}
-                            onClearDescriptionQuery={() =>
-                                setFilterDescriptionQuery("")
-                            }
-                            onClearAll={resetAllFilters}
                         />
-                    ) : null
-                }
-                onFiltersSheetOpenChange={(open) => {
-                    setFiltersSheetOpen(open)
-                    if (!open) {
-                        syncPeriodDraftToApplied()
-                        return
-                    }
-                    syncPeriodDraftToApplied()
-                }}
-                toolbarTrailing={() => (
-                    <TransactionNewSplitButton
-                        semReceita={convidado}
-                        menuAlign="end"
-                        menuSide="bottom"
-                        onNew={(mode) => {
-                            openDialog(undefined, mode)
-                        }}
-                        menuFooter={
-                            convidado ? undefined : (
-                                <>
-                                    <DropdownMenuSeparator />
-                                    <QuickActionResourceLinks
-                                        onCloseMenu={() => {}}
-                                    />
-                                </>
-                            )
-                        }
-                    />
-                )}
-            />
-
-            <TransactionFormDialog
-                open={dialogOpen && editingTransaction !== null}
-                onOpenChange={handleDialogOpenChange}
-                editingTransaction={editingTransaction}
-                defaultLaunchKind="expense"
-                categories={categories}
-                creditCards={creditCards}
-                categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
-                creditCardsHref={ROUTES.CREDIT_CARDS}
-                saving={saving}
-                onSave={handleSave}
-                onSaveInstallmentPlan={handleSaveInstallmentPlan}
-                onUpdateInstallmentPlan={handleUpdateInstallmentPlan}
-            />
-
-            {detailTransaction ? (
-                <TransactionDetailSheet
-                    transaction={detailTransaction}
-                    open={detailOpen}
-                    onOpenChange={(next) => {
-                        setDetailOpen(next)
-                        if (!next) {
-                            setDetailTransaction(null)
-                            setDetailLaunchEdit(false)
-                        }
-                    }}
-                    creditCards={creditCards}
-                    categories={categories}
-                    categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
-                    creditCardsHref={ROUTES.CREDIT_CARDS}
-                    subscriptionsHref={ROUTES.SUBSCRIPTIONS}
-                    saving={saving}
-                    onSave={handleSave}
-                    onUpdateInstallmentPlan={handleUpdateInstallmentPlan}
-                    launchInEditMode={detailLaunchEdit}
-                    onLaunchEditConsumed={handleDetailLaunchEditConsumed}
-                    onDelete={(tx) => {
-                        setDetailOpen(false)
-                        setDetailTransaction(null)
-                        setPendingDelete({ mode: "single", transaction: tx })
-                    }}
-                />
-            ) : null}
-
-            {!hasNoTransactions && !hasNoMatches ? (
-                <TransactionsTable
-                    transactions={transactions}
-                    selectedIds={selectedIds}
-                    setSelectedIds={setSelectedIds}
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onToggleSort={toggleSort}
-                    openTransactionDetail={openTransactionDetail}
-                    onDeleteSingle={(transaction) =>
-                        setPendingDelete({ mode: "single", transaction })
-                    }
-                    onDeleteBulk={(ids) =>
-                        setPendingDelete({ mode: "bulk", ids })
-                    }
-                    page={page}
-                    setPage={setPage}
-                    pageSize={PAGE_SIZE}
-                    totalCount={totalCount}
-                    pending={c.tableLoading}
-                    invoicePaidByCardClose={invoicePaidByCardClose}
-                />
-            ) : hasNoMatches ? (
-                <Card padding="none">
-                    <CardContent
-                        className="px-4 py-12 md:py-14"
-                        role="status"
-                        aria-live="polite"
-                    >
-                        <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon variant="stack">
-                                <MagnifyingGlassIcon aria-hidden />
-                                <ReceiptPercentIcon aria-hidden />
-                                <FunnelIcon aria-hidden />
-                            </EmptyStateIcon>
-                            <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
-                            <EmptyStateDescription>
-                                Tente outro tipo (receita/despesa), ampliar o período ou usar um
-                                preset como &quot;Mês atual&quot;.
-                            </EmptyStateDescription>
-                            <EmptyStateActions>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        resetAllFilters()
-                                    }}
-                                >
-                                    Limpar filtros
-                                </Button>
-                            </EmptyStateActions>
-                        </EmptyState>
-                    </CardContent>
-                </Card>
-            ) : (
-                <Card padding="none">
-                    <CardContent
-                        role="status"
-                        aria-live="polite"
-                    >
-                        <EmptyState variant="plain" size="lg">
-                            <EmptyStateGhost leading="tile" trailing="amount" />
-                            <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
-                            <EmptyStateDescription>
-                                Lance receitas e despesas para ver o histórico aqui e acompanhar
-                                suas finanças por categoria.
-                            </EmptyStateDescription>
-                            <EmptyStateActions>
-                                <Button
-                                    type="button"
-                                    onClick={() => openDialog()}
-                                >
-                                    <PlusIcon aria-hidden />
-                                    Nova transação
-                                </Button>
-                            </EmptyStateActions>
-                        </EmptyState>
-                    </CardContent>
-                </Card>
+                    </PageHeaderActions>
+                </PageHeader>
             )}
 
+            <CompartilhadoAviso pedido={pedidos.compartilhado} onDismiss={pedidos.dispensarCompartilhado} />
+
+            <AvisoAConferir
+                total={tela.contagemAConferir}
+                ativo={conferindo}
+                onRevisar={revisar}
+                onConfirmarTodos={tela.confirmarTodosAConferir}
+            />
+
+            <ResumoDasTransacoes resumo={tela.resumo.data} pendente={tela.resumo.isFetching} />
+
+            <TransacoesToolbar
+                tela={tela}
+                campos={campos}
+                onImportar={() => pedidos.setImportar(true)}
+                onExportar={() => void exportar()}
+            />
+
+            <TransacoesTabela
+                tela={tela}
+                membros={membros}
+                divide={currentWorkspace?.split_mode === "split"}
+                onEditar={(t) => tela.detalhe.abrir(t, { editar: true })}
+                onDuplicar={duplicar}
+                onExcluir={tela.excluir}
+            />
+
+            <TransactionDetailSheet
+                transaction={tela.detalhe.transacao}
+                open={tela.detalhe.aberto != null}
+                onOpenChange={(aberto) => {
+                    if (!aberto) tela.detalhe.fechar()
+                }}
+                creditCards={tela.creditCards}
+                categories={tela.categories}
+                categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
+                creditCardsHref={ROUTES.CREDIT_CARDS}
+                subscriptionsHref={ROUTES.SUBSCRIPTIONS}
+                saving={tela.salvando}
+                onSave={tela.salvar}
+                onUpdateInstallmentPlan={tela.atualizarParcelada}
+                launchInEditMode={tela.detalhe.editarAoAbrir}
+                onLaunchEditConsumed={tela.detalhe.consumirEditar}
+                onDelete={(t) => tela.excluir([t.id])}
+                anterior={tela.detalhe.vizinhos.anterior}
+                seguinte={tela.detalhe.vizinhos.seguinte}
+                onNavegar={(t) => tela.detalhe.abrir(t)}
+                onDuplicar={duplicar}
+            />
+
+            <ImportarExtratoDialog open={pedidos.importar} onOpenChange={pedidos.setImportar} onRevisar={revisar} />
+
             <AlertDialog
-                pending={deleting}
-                open={pendingDelete !== null}
-                onOpenChange={(open) => {
-                    if (!open && !deleting) setPendingDelete(null)
+                pending={exclusao.excluindo}
+                open={pendente != null}
+                onOpenChange={(aberto) => {
+                    if (!aberto) exclusao.cancelar()
                 }}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            {pendingDelete?.mode === "bulk"
-                                ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
+                            {pendente && pendente.ids.length > 1
+                                ? `Excluir ${numberBR(pendente.ids.length)} transações?`
                                 : "Excluir transação?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             <p>Esta ação não pode ser desfeita.</p>
-                            {pendingDelete &&
-                            hasInstallmentDeleteImpact(
-                                pendingDelete.mode === "single"
-                                    ? [
-                                          {
-                                              installment_plan_id:
-                                                  pendingDelete.transaction
-                                                      .installment_plan_id,
-                                          },
-                                      ]
-                                    : pendingDelete.ids.map((id) => ({
-                                          installment_plan_id:
-                                              transactions.find(
-                                                  (t) => t.id === id
-                                              )?.installment_plan_id ?? null,
-                                      }))
-                            ) ? (
-                                <p className="text-foreground">
-                                    {INSTALLMENT_DELETE_WARNING}
-                                </p>
+                            {pendente && hasInstallmentDeleteImpact(pendente.linhas) ? (
+                                <p className="text-foreground">{INSTALLMENT_DELETE_WARNING}</p>
                             ) : null}
-                            {pendingDelete?.mode === "single" ? (
+                            {umaSo ? (
                                 <>
-                                    <p className="text-foreground">
-                                        Esta transação será removida do
-                                        extrato.
-                                    </p>
+                                    <p className="text-foreground">Esta transação será removida do extrato.</p>
                                     <AlertDialogList>
                                         <li>
-                                            {formatTransactionDayPtBr(
-                                                pendingDelete.transaction
-                                                    .date
-                                            )}{" "}
-                                            —{" "}
-                                            {pendingDelete.transaction.description ||
-                                                pendingDelete.transaction
-                                                    .category?.name ||
-                                                "Sem descrição"}
+                                            {formatTransactionDayPtBr(umaSo.date)} —{" "}
+                                            {umaSo.description || umaSo.category?.name || "Sem descrição"}
                                         </li>
                                         <li className="flex flex-wrap items-center gap-1 font-medium">
-                                            {pendingDelete.transaction
-                                                .type === "income"
-                                                ? "Receita"
-                                                : "Despesa"}{" "}
-                                            de{" "}
-                                            <MoneyDisplay
-                                                value={Number(
-                                                    pendingDelete
-                                                        .transaction
-                                                        .amount
-                                                )}
-                                                size="sm"
-                                                className="inline font-medium"
-                                            />
+                                            {umaSo.type === "income" ? "Receita" : "Despesa"} de{" "}
+                                            <MoneyDisplay value={Number(umaSo.amount)} size="sm" className="inline font-medium" />
                                         </li>
                                     </AlertDialogList>
                                 </>
-                            ) : pendingDelete?.mode === "bulk" ? (
+                            ) : pendente && pendente.ids.length > 1 ? (
                                 <>
                                     <p className="text-foreground">
-                                        As{" "}
-                                        {numberBR(pendingDelete.ids.length)}{" "}
-                                        transações selecionadas serão
-                                        removidas do extrato.
+                                        As {numberBR(pendente.ids.length)} transações selecionadas serão removidas do
+                                        extrato.
                                     </p>
                                     <AlertDialogList className="max-h-40 overflow-y-auto">
-                                        {pendingDelete.ids
-                                            .slice(0, 8)
-                                            .map((id) => {
-                                                const t = transactions.find(
-                                                    (x) => x.id === id
-                                                )
-                                                if (!t) {
-                                                    return (
-                                                        <li key={id}>
-                                                            {id.slice(0, 8)}…
-                                                        </li>
-                                                    )
-                                                }
-                                                const line =
-                                                    t.description ||
-                                                    t.category?.name ||
-                                                    "Sem descrição"
-                                                return (
-                                                    <li key={id}>
-                                                        {formatTransactionDayPtBr(
-                                                            t.date
-                                                        )}{" "}
-                                                        — {line}
-                                                    </li>
-                                                )
-                                            })}
-                                        {pendingDelete.ids.length > 8 ? (
+                                        {pendente.linhas.slice(0, 8).map((t) => (
+                                            <li key={t.id}>
+                                                {formatTransactionDayPtBr(t.date)} —{" "}
+                                                {t.description || t.category?.name || "Sem descrição"}
+                                            </li>
+                                        ))}
+                                        {pendente.ids.length > 8 ? (
                                             <li className="text-muted-foreground">
-                                                e mais{" "}
-                                                {numberBR((
-                                                    pendingDelete.ids.length -
-                                                    8
-                                                ))}{" "}
-                                                …
+                                                e mais {numberBR(pendente.ids.length - 8)} …
                                             </li>
                                         ) : null}
                                     </AlertDialogList>
@@ -655,17 +260,13 @@ export default function TransactionsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel
-                            type="button"
-                        >
-                            Cancelar
-                        </AlertDialogCancel>
+                        <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             pendingLabel="Excluindo…"
                             type="button"
                             onClick={(e) => {
                                 e.preventDefault()
-                                void confirmDelete()
+                                void exclusao.confirmar()
                             }}
                         >
                             Excluir
