@@ -557,6 +557,17 @@ export function tokensQueSaem(
   return quemSai(larguras, cabe, { ponta: "fim", fixos: new Set(fixo == null ? [] : [fixo]), reserva, gap })
 }
 
+/**
+ * O que, mudando, faz a linha `menu` remedir. Com o editor de um token aberto
+ * (`fixo`), só a lista: digitar não muda quem está no "+N" debaixo do editor.
+ */
+export function chaveDaMedida(
+  tokens: Pick<FilterValue, "field" | "operator" | "values">[],
+  fixo?: string
+): string {
+  return tokens.map((t) => (fixo ? t.field : `${t.field}:${t.operator}:${t.values.join(",")}`)).join("|")
+}
+
 function FilterBar({
   fields,
   value: valueProp,
@@ -723,7 +734,6 @@ function FilterBar({
   }
 
   const abrirValor = (field: string) => {
-    if (porId.get(field)?.type === "boolean") return
     if (aberto?.tipo === "valor" && aberto.field === field) return fechar()
     focoDepois.current = field
     clicouFora.current = false
@@ -840,10 +850,13 @@ function FilterBar({
   /* ── Quem sai para o "+N" ─────────────────────────────────────────────── */
 
   const acoesRef = React.useRef<HTMLDivElement | null>(null)
+  // A linha do "+N" abriu o editor: ao fechar o menu, o foco vai ao token (o
+  // "+N" pode ter saído, e o foco cairia no `body`).
+  const doMenu = React.useRef(false)
   const [fora, setFora] = React.useState<string[]>([])
   const fixo = aberto?.tipo === "valor" ? aberto.field : undefined
   // Quem e o que se mede: muda a lista, um valor (a largura do token) ou o aberto.
-  const chaveDaLinha = tokens.map((t) => `${t.field}:${t.operator}:${t.values.join(",")}`).join("|")
+  const chaveDaLinha = chaveDaMedida(tokens, fixo)
   React.useLayoutEffect(() => {
     const linha = linhaRef.current
     const barra = barraRef.current
@@ -876,10 +889,11 @@ function FilterBar({
     }
     medir()
     // A barra (a janela, a contagem) e cada token (o rótulo que chega depois).
+    // Com o editor aberto, o token que cresce digitando não remede: só a barra.
     const ro = new ResizeObserver(medir)
     ro.observe(barra)
     ro.observe(acoesEl)
-    for (const el of lerTokens()) ro.observe(el)
+    if (!fixo) for (const el of lerTokens()) ro.observe(el)
     return () => {
       ro.disconnect()
       limparExcesso(lerTokens())
@@ -891,11 +905,18 @@ function FilterBar({
         const t = tokens.find((x) => x.field === field)
         const campo = porId.get(field)
         if (!t || !campo) return []
-        // O filtro sem valor não tem editor: a linha dele é o × do token.
-        if (campo.type === "boolean")
-          return [{ key: field, label: `Remover ${campo.label}`, onSelect: () => remover(t.field) }]
+        // Lida como o token; o filtro sem valor também abre o editor, que tem o Remover.
         const d = descrever(campo, t, (v) => opcaoDe(campo, v))
-        return [{ key: field, label: `${campo.label} ${d.operador} ${d.falado}`, onSelect: () => abrirValor(t.field) }]
+        return [
+          {
+            key: field,
+            label: campo.type === "boolean" ? campo.label : `${campo.label} ${d.operador} ${d.falado}`,
+            onSelect: () => {
+              doMenu.current = true
+              abrirValor(t.field)
+            },
+          },
+        ]
       })
     : []
 
@@ -1149,6 +1170,14 @@ function FilterBar({
           align="start"
           size={size === "sm" ? "icon-sm" : size === "md" ? "icon-md" : "icon-lg"}
           triggerClassName="shrink-0 nums"
+          onCloseAutoFocus={(e) => {
+            if (!doMenu.current) return
+            doMenu.current = false
+            // O editor pode já ter o foco (o campo de texto): não o roube. Sem dono, vai ao token.
+            e.preventDefault()
+            const doc = linhaRef.current?.ownerDocument
+            if (!doc?.activeElement || doc.activeElement === doc.body) focarDestino()
+          }}
         />
       ) : null}
 
@@ -1603,6 +1632,10 @@ function EditorDeValor(props: EditorProps) {
             ))}
           </ToggleGroup>
         </div>
+      ) : null}
+
+      {campo.type === "boolean" ? (
+        <p className={cn("pt-1 pb-3 text-sm text-muted-foreground", recuo)}>Sem valor a escolher: o filtro está ligado.</p>
       ) : null}
 
       {campo.type === "enum" ? (

@@ -1609,8 +1609,9 @@ declaração de `background-color` no trilho).
   "stack"` abaixo de 28rem da própria barra. `overflow="menu"` é a linha que
   não rola: os tokens numa linha só, em qualquer largura; os que não cabem saem
   do fim (`quemSai`) para o "+N" (`OverflowMenu trigger`), logo depois do último
-  visível, e escolher a linha abre o editor dele (o booleano, sem editor, é
-  "Remover …"); o do editor aberto não sai; "+ Filtro", "Limpar" e a contagem ficam presos fora — é a
+  visível, e escolher a linha abre o editor dele (o booleano também: a linha
+  é lida como o token, e o editor tem o Remover; o menu nunca é lista de
+  remover); o do editor aberto não sai e, aberto, digitar não remede; "+ Filtro", "Limpar" e a contagem ficam presos fora — é a
   de Transações. **O Enter de dentro dela e dos
   portais dela para nela** — a exceção documentada do `Form`.
   `filter-bar-versions.test.ts`.

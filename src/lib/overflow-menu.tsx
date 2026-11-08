@@ -32,6 +32,7 @@ export function OverflowMenu({
   size = "icon-lg",
   trigger,
   triggerClassName,
+  onCloseAutoFocus,
 }: {
   items: ItemNoExcesso[]
   label: string
@@ -41,6 +42,8 @@ export function OverflowMenu({
   /** O que o gatilho mostra no lugar do ⋯ (o "+2" da `FilterBar`); o nome continua o `label`. */
   trigger?: React.ReactNode
   triggerClassName?: string
+  /** Quem dá outro lugar ao foco quando o menu fecha (o gatilho pode ter saído). */
+  onCloseAutoFocus?: (e: Event) => void
 }) {
   return (
     <DropdownMenu>
@@ -49,7 +52,7 @@ export function OverflowMenu({
           {trigger ?? <EllipsisHorizontalIcon aria-hidden />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} size="lg">
+      <DropdownMenuContent align={align} size="lg" onCloseAutoFocus={onCloseAutoFocus}>
         {items.map((f) => (
           <DropdownMenuItem key={f.key} onSelect={f.onSelect}>
             {f.icone ? <IconeCopiado svg={f.icone} /> : null}

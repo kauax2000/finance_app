@@ -29,7 +29,7 @@ describe("transacoes-toolbar (fonte)", () => {
         expect(TOOLBAR).not.toContain("md:hidden")
     })
 
-    it("a FilterBar é a faixa de uma linha, sem mobile=", () => {
+    it("a FilterBar é a linha com o +N (overflow=\"menu\"), sem mobile=", () => {
         expect(TOOLBAR).toContain('overflow="menu"')
         expect(TOOLBAR).not.toMatch(/\bmobile=/)
     })

@@ -16,6 +16,7 @@ import {
   serializeFilters,
   type FilterField,
   tokensQueSaem,
+  chaveDaMedida,
   type FilterValue,
 } from "./filter-bar"
 import { OverflowMenu } from "@/lib/overflow-menu"
@@ -563,6 +564,29 @@ describe("overflow menu", () => {
     expect(tokensQueSaem([100, 100, 100], 400, o)).toEqual([])
   })
 
+  it("com o editor aberto, digitar não remede: a chave ignora os valores e os tokens não são observados", () => {
+    const linha = [
+      { field: "descricao", operator: "contains" as const, values: ["pão"] },
+      { field: "valor", operator: "gte" as const, values: ["10"] },
+    ]
+    const digitado = [linha[0], { ...linha[1], values: ["1000"] }]
+    expect(chaveDaMedida(linha, "valor")).toBe(chaveDaMedida(digitado, "valor"))
+    // Fechado, o valor muda a largura e remede; fechar muda a chave e remede uma vez.
+    expect(chaveDaMedida(linha)).not.toBe(chaveDaMedida(digitado))
+    expect(chaveDaMedida(digitado, "valor")).not.toBe(chaveDaMedida(digitado))
+    // Entra ou sai um token com o editor aberto: remede.
+    expect(chaveDaMedida(linha.slice(0, 1), "valor")).not.toBe(chaveDaMedida(linha, "valor"))
+    expect(CODIGO).toContain("const chaveDaLinha = chaveDaMedida(tokens, fixo)")
+    expect(CODIGO).toMatch(/if \(!fixo\) for \(const el of lerTokens\(\)\) ro\.observe\(el\)/)
+  })
+
+  it("a linha do +N que abre o editor dá ao foco um lugar, mesmo se o +N sair", () => {
+    expect(CODIGO).toMatch(/onSelect: \(\) => \{\s*doMenu\.current = true\s*abrirValor\(t\.field\)/)
+    expect(CODIGO).toMatch(/onCloseAutoFocus=\{\(e\) => \{\s*if \(!doMenu\.current\) return\s*doMenu\.current = false\s*e\.preventDefault\(\)\s*const doc = linhaRef\.current\?\.ownerDocument\s*if \(!doc\?\.activeElement \|\| doc\.activeElement === doc\.body\) focarDestino\(\)/)
+    const menuFonte = semComentarios(lerFonte("src/lib/overflow-menu.tsx"), "linha-inteira")
+    expect(menuFonte).toContain("<DropdownMenuContent align={align} size=\"lg\" onCloseAutoFocus={onCloseAutoFocus}>")
+  })
+
   it("uma linha só que não rola, e as ações e a contagem ficam fora dela", () => {
     const html = barra({ overflow: "menu", defaultValue: TRES, count: 3 })
     expect(html).toContain('data-overflow="menu"')
@@ -585,11 +609,15 @@ describe("overflow menu", () => {
   it("o +N diz quantos saíram, e as linhas do menu são o token por extenso", () => {
     expect(CODIGO).toContain('`Mais ${fora.length} ${fora.length === 1 ? "filtro" : "filtros"}`')
     expect(CODIGO).toContain("trigger={`+${fora.length}`}")
-    expect(CODIGO).toMatch(/label: `\$\{campo\.label\} \$\{d\.operador\} \$\{d\.falado\}`/)
+    expect(CODIGO).toMatch(/campo\.label : `\$\{campo\.label\} \$\{d\.operador\} \$\{d\.falado\}`/)
     // Escolher uma linha abre o editor do mesmo jeito que o token.
-    expect(CODIGO).toContain("onSelect: () => abrirValor(t.field)")
-    // O booleano não tem editor: a linha dele remove, e diz isso.
-    expect(CODIGO).toContain("label: `Remover ${campo.label}`, onSelect: () => remover(t.field)")
+    expect(CODIGO).toMatch(/onSelect: \(\) => \{\s*doMenu\.current = true\s*abrirValor\(t\.field\)/)
+    // O menu nunca é uma lista de remover: o booleano é lido como o token e abre o editor dele.
+    expect(CODIGO).not.toContain("label: `Remover ${campo.label}`")
+    expect(CODIGO).toMatch(/label: campo\.type === "boolean" \? campo\.label :/)
+    expect(CODIGO).not.toMatch(/const abrirValor = \(field: string\) => \{\s*if \(porId\.get\(field\)\?\.type === "boolean"\) return/)
+    // O editor do booleano: o título, o Remover e a frase de que não há valor a escolher.
+    expect(CODIGO).toMatch(/campo\.type === "boolean" \? \(\s*<p[^>]*>Sem valor a escolher/)
   })
 
   it("sem overflow, igual a hoje: o \"+ Filtro\" mora na fileira", () => {
