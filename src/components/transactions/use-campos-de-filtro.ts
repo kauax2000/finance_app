@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createElement, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ColorTile } from "@/components/ui/color-tile"
-import type { FilterField, FilterOption } from "@/components/ui/filter-bar"
+import type { FilterField, FilterOption, FilterValue } from "@/components/ui/filter-bar"
 import { useWorkspace } from "@/components/workspace-provider"
 import { identityToneFor } from "@/lib/avatar"
 import type { Adulto } from "@/lib/divisao/dados"
@@ -91,6 +91,21 @@ export function montarCampos(d: DadosDosCampos): FilterField[] {
         if (!(id in opcoes)) return [campo]
         const lista = opcoes[id]
         return lista && campo.type === "enum" ? [{ ...campo, options: lista }] : []
+    })
+}
+
+/** Ao trocar de aba, a categoria guarda só as do tipo novo (e "Sem categoria"); sem nenhuma, o token sai. */
+export function podarCategoriasDoTipo(
+    filtros: FilterValue[],
+    type: EstadoDaLista["type"],
+    categorias: Pick<Category, "id" | "type">[],
+): FilterValue[] {
+    if (type === "all") return filtros
+    const doTipo = new Set([SEM_CATEGORIA, ...categorias.filter((c) => c.type === type).map((c) => c.id)])
+    return filtros.flatMap((f) => {
+        if (f.field !== "categoria") return [f]
+        const values = f.values.filter((v) => doTipo.has(v))
+        return values.length ? [{ ...f, values }] : []
     })
 }
 
