@@ -181,7 +181,10 @@ export async function fetchTransacoesParaExportar({
     return { transactions: attachPaymentCards(rows, cartoes), truncado }
 }
 
-/** Despesa por mês (jan..dez) do ano; doze `null` se passar do teto, porque soma cortada engana. */
+/**
+ * Despesa por mês (jan..dez) do ano; doze `null` se passar do teto, porque soma
+ * cortada engana. Mês depois do atual (local) é `null`: ainda não tem total.
+ */
 export async function fetchDespesasPorMes({
     workspaceId,
     year,
@@ -191,6 +194,10 @@ export async function fetchDespesasPorMes({
     year: number
     signal?: AbortSignal
 }): Promise<(number | null)[]> {
+    const hoje = new Date()
+    // Quantos meses do ano já começaram: 12 no passado, 0 num ano futuro.
+    const conhecidos = year < hoje.getFullYear() ? 12 : year > hoje.getFullYear() ? 0 : hoje.getMonth() + 1
+    if (conhecidos === 0) return Array(12).fill(null)
     const { rows, truncado } = await lerAteOLimite<{ date: string; amount: number | string }>(async (from, to) => {
         let q = supabase
             .from("transactions")
@@ -209,5 +216,5 @@ export async function fetchDespesasPorMes({
         const p = transactionCalendarParts(date)
         if (p && p.y === year) meses[p.mo - 1] += Number(amount)
     }
-    return meses
+    return meses.map((v, i) => (i < conhecidos ? v : null))
 }

@@ -141,7 +141,10 @@ describe("fetchDespesasPorMes", () => {
         h.linhas = []
         h.selects = []
         h.ranges = []
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2026, 10, 8, 12))
     })
+    afterEach(() => vi.useRealTimers())
     it("soma por mês local e devolve doze posições", async () => {
         h.linhas = [
             { date: "2026-01-15T12:00:00Z", amount: 100 },
@@ -149,8 +152,20 @@ describe("fetchDespesasPorMes", () => {
             { date: "2026-03-02T12:00:00Z", amount: 10 },
         ]
         const r = await fetchDespesasPorMes({ workspaceId: "w", year: 2026 })
-        expect(r).toEqual([150, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        expect(r).toEqual([150, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, null])
         expect(h.selects).toEqual(["date, amount"])
+    })
+    it("mês depois do atual não tem total: o ano corrente para em novembro", async () => {
+        const r = await fetchDespesasPorMes({ workspaceId: "w", year: 2026 })
+        expect(r.slice(0, 11).every((v) => typeof v === "number")).toBe(true)
+        expect(r[11]).toBeNull()
+    })
+    it("ano futuro: doze null, sem consulta", async () => {
+        expect(await fetchDespesasPorMes({ workspaceId: "w", year: 2027 })).toEqual(Array(12).fill(null))
+        expect(h.selects).toEqual([])
+    })
+    it("ano passado: os doze meses", async () => {
+        expect(await fetchDespesasPorMes({ workspaceId: "w", year: 2025 })).toEqual(Array(12).fill(0))
     })
     it("passou do limite: doze null", async () => {
         h.linhas = Array.from({ length: LIMITE_DE_SOMA + 1 }, () => ({ date: "2026-01-15T12:00:00Z", amount: 1 }))
