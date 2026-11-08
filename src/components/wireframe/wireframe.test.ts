@@ -64,9 +64,11 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
   const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
 
   it("cada tela importa o seu wireframe", () => {
+    // O importar saiu do wireframe (redesenho de Transações, Tarefa 10).
     expect(fonte("src/app/(app)/transactions/page-client.tsx")).toMatch(
-      /import\s*\{[^}]*\bImportarExtratoWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/importar-extrato-wireframe["']/,
+      /import\s*\{[^}]*\bImportarExtratoDialog\b[^}]*\}\s*from\s*["']@\/components\/transactions\/importar\/importar-extrato-dialog["']/,
     )
+    expect(existsSync("src/components/wireframe/importar-extrato-wireframe.tsx")).toBe(false)
     // O a conferir do detalhe saiu do wireframe (redesenho de Transações, Tarefa 8).
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
       /import\s*\{[^}]*\bAConferirNoDetalhe\b[^}]*\}\s*from\s*["']@\/components\/transactions\/a-conferir-no-detalhe["']/,
@@ -75,8 +77,9 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
   })
 
   it("importar: prepara uma vez no estado, importa e desfaz (Foco 3)", () => {
-    const f = fonte("src/components/wireframe/importar-extrato-wireframe.tsx")
-    expect(f).toMatch(/set\w+\(\s*prepararItens\(/)
+    const f = fonte("src/components/transactions/importar/use-importar-extrato.ts")
+    expect(f).toMatch(/prepararItens\(/)
+    expect(f).toMatch(/setLote\(\s*r\.lote\s*\)/)
     expect(f).toContain("importarLancamentos(")
     expect(f).toContain("desfazerImportacao(")
     expect(f).toContain('"import_sheet"')
@@ -121,6 +124,12 @@ describe("?importar=1", () => {
     expect(consumirParametroImportar(new URLSearchParams("importar=1"))).toBe("")
     expect(consumirParametroImportar(new URLSearchParams("type=expense"))).toBeNull()
     expect(consumirParametroImportar(null)).toBeNull()
+  })
+
+  it("abre o diálogo de importar", () => {
+    const f = semComentarios(lerFonte("src/app/(app)/transactions/page-client.tsx"), "tudo")
+    expect(f).toMatch(/consumirParametroImportar\(searchParams\)[\s\S]*?setImportarAberto\(true\)/)
+    expect(f).toMatch(/<ImportarExtratoDialog\s+open=\{importarAberto\}/)
   })
 })
 

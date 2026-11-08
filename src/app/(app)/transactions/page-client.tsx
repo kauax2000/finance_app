@@ -53,10 +53,7 @@ import {
 import { lerArquivoCompartilhado } from "@/lib/captura/compartilhado"
 import { CompartilhadoAvisoWireframe } from "@/components/wireframe/compartilhado-aviso-wireframe"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import {
-    ImportarExtratoLink,
-    ImportarExtratoWireframe,
-} from "@/components/wireframe/importar-extrato-wireframe"
+import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
 import { AConferirListaWireframe } from "@/components/wireframe/a-conferir-lista-wireframe"
 import {
     hasInstallmentDeleteImpact,
@@ -181,7 +178,7 @@ export default function TransactionsPage() {
     } = c
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
-    // `?importar=1` abre o wireframe de importar e sai da URL, como o `new`.
+    // `?importar=1` abre o diálogo de importar e sai da URL, como o `new`.
     const [importarAberto, setImportarAberto] = useState(false)
     useEffect(() => {
         const resto = consumirParametroImportar(searchParams)
@@ -285,18 +282,17 @@ export default function TransactionsPage() {
                     onFechar={() => setAvisoCompartilhado(null)}
                 />
             ) : null}
-            {importarAberto && user && currentWorkspaceId ? (
-                <ImportarExtratoWireframe
-                    workspaceId={currentWorkspaceId}
-                    userId={user.id}
-                    cards={creditCards}
-                    onClose={() => setImportarAberto(false)}
-                />
-            ) : (
-                <ImportarExtratoLink
-                    href={`${pathname}?${new URLSearchParams([...(searchParams?.entries() ?? []), ["importar", "1"]])}`}
-                />
-            )}
+            {/* Ponte até a Tarefa 12, que leva a entrada ao cabeçalho e o "Revisar" ao filtro `conferir`. */}
+            <div>
+                <Button type="button" variant="tertiary" onClick={() => setImportarAberto(true)}>
+                    Importar extrato ou planilha
+                </Button>
+            </div>
+            <ImportarExtratoDialog
+                open={importarAberto}
+                onOpenChange={setImportarAberto}
+                onRevisar={() => router.push(`${pathname}?conferir=1`)}
+            />
             <TransactionsToolbar
                 sticky
                 filterType={filterType}
