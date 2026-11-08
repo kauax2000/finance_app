@@ -16,6 +16,7 @@ import {
     importarLancamentos,
     type ItemImportavel,
     prepararItens,
+    tipoDoItem,
 } from "@/lib/import/importar"
 import { normalizarDescricao } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
@@ -93,6 +94,17 @@ export const categoriaEfetiva = (i: ItemImportavel, escolhidas: CategoriasEscolh
 /** Sem escolha, o nome da planilha sem categoria na carteira vira a categoria nova ao gravar. */
 const ganhaCategoriaNova = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
     !escolhidas.has(i.clientId) && i.categoryId == null && !!i.categoria && !!normalizarDescricao(i.categoria)
+
+/** O nome da planilha que vira categoria nova ao gravar; `null` nos outros (e depois de uma escolha). */
+export const categoriaNovaDe = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
+    ganhaCategoriaNova(i, escolhidas) ? (i.categoria ?? "").trim() : null
+
+/** Os de fora: os que já estavam na carteira e os que a pessoa desmarcou à mão. */
+export function quemFicouDeFora(itens: ItemImportavel[], marcadas: Set<string>, existentes: Map<string, Existente>) {
+    const fora = itens.filter((i) => !marcadas.has(i.clientId))
+    const jaExistiam = fora.filter((i) => existentes.has(i.clientId)).length
+    return { jaExistiam, deixadas: fora.length - jaExistiam }
+}
 
 const semCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
     categoriaEfetiva(i, escolhidas) == null && !ganhaCategoriaNova(i, escolhidas)
@@ -295,7 +307,12 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     const [escolhidas, setEscolhidas] = useState<CategoriasEscolhidas>(() => new Map())
     const [filtro, setFiltro] = useState<FiltroConferencia>("todos")
     const [expandido, setExpandido] = useState(false)
-    const [feito, setFeito] = useState<{ importados: number; deFora: number; semCategoria: number } | null>(null)
+    const [feito, setFeito] = useState<{
+        importados: number
+        jaExistiam: number
+        deixadas: number
+        semCategoria: number
+    } | null>(null)
     const [pendente, setPendente] = useState<"lendo" | "importar" | "desfazer" | null>(null)
     const [erro, setErro] = useState<string | null>(null)
     const vez = useRef(criarVez()).current
@@ -465,7 +482,11 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
                 setErro(r.erro)
                 return null
             }
-            setFeito({ importados: r.quantidade, deFora: resumo.total - resumo.entram, semCategoria: resumo.semCategoria })
+            setFeito({
+                importados: r.quantidade,
+                ...quemFicouDeFora(lote.itens, marcadas, existentes),
+                semCategoria: resumo.semCategoria,
+            })
             setPasso("feito")
             await invalidateWorkspaceData(queryClient, workspaceId, {
                 domains: ["transactions", "categories", "credit_card_expense_rows"],
@@ -533,7 +554,10 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         ? {
               itens: lote.itens,
               ignoradas: lote.ignoradas,
-              categoriasNovas: lote.novas,
+              /** Só as que vão nascer: as das marcadas, sem escolha por cima. */
+              categoriasNovas: loteParaGravar(lote, marcadas, escolhidas).novas,
+              /** As categorias da carteira do tipo do item (despesa ou receita, pelo destino). */
+              categoriasDo: (i: ItemImportavel) => lote.categorias.filter((c) => c.type === tipoDoItem(i, lote.destino)),
               /** O nome da categoria sugerida pelo histórico, pela id. */
               nomeDaCategoria: new Map(lote.categorias.map((c) => [c.id, c.name])),
               ...resumoDoLote(lote.itens),
@@ -562,6 +586,11 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         categoriaDe: (id: string) => {
             const i = porId.get(id)
             return i ? categoriaEfetiva(i, escolhidas) : null
+        },
+        /** O nome da planilha que nasce ao gravar (aí `categoriaDe` é `null`). */
+        categoriaNovaDe: (id: string) => {
+            const i = porId.get(id)
+            return i ? categoriaNovaDe(i, escolhidas) : null
         },
         setCategoria: (ids: string[], categoryId: string | null) =>
             setEscolhidas((e) => aplicarCategoria(e, ids, categoryId)),

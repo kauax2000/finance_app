@@ -44,7 +44,7 @@ type CategoriaPorNome = { id: string; name: string; type: "income" | "expense" }
  * O tipo da categoria do item: na conta o crédito é receita; na fatura do cartão
  * o estorno escolhe a categoria de despesa da compra, que ele abate.
  */
-const tipoDoItem = (i: ItemBanco, destino: DestinoImportacao): "income" | "expense" =>
+export const tipoDoItem = (i: ItemBanco, destino: DestinoImportacao): "income" | "expense" =>
     tipoDaCategoria(i.estorno ? "income" : "expense", destino.tipo === "cartao" ? destino.cardId : null)
 const chave = (nome: string, tipo: "income" | "expense") => `${tipo}:${normalizarDescricao(nome)}`
 

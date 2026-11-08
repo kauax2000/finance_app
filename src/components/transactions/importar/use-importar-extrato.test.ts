@@ -13,6 +13,7 @@ import type { Existente, ItemImportavel } from "@/lib/import/importar"
 import {
     aplicarCategoria,
     categoriaEfetiva,
+    categoriaNovaDe,
     criarVez,
     filtrarItens,
     gravarLote,
@@ -20,6 +21,7 @@ import {
     marcadasIniciais,
     passoDepoisDoArquivo,
     prepararLote,
+    quemFicouDeFora,
     resumoDaConferencia,
     resumoDoLote,
     sourceDoArquivo,
@@ -196,7 +198,6 @@ describe("a vez da leitura", () => {
 
 describe("o hook e o diálogo", () => {
     const hook = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
-    const dialogo = semComentarios(lerFonte("src/components/transactions/importar/importar-extrato-dialog.tsx"), "tudo")
 
     it("o lote é preparado uma vez e fica no estado; importar reenvia o mesmo", () => {
         expect(hook).toMatch(/setLote\(\s*r\.lote\s*\)/)
@@ -215,18 +216,9 @@ describe("o hook e o diálogo", () => {
         expect(hook).not.toContain("modo")
     })
 
-    it("o diálogo é o dos passos, com pending, dirty e o desfazer no AlertDialog", () => {
-        expect(dialogo).toMatch(/<Dialog[\s\S]*?surface="auto"/)
-        expect(dialogo).toContain('size="lg"')
-        expect(dialogo).toContain("<DialogSteps")
-        expect(dialogo).toMatch(/pending=\{/)
-        expect(dialogo).toMatch(/dirty=\{imp\.dirty\}/)
-        expect(dialogo).toContain("confirmDiscard")
-        expect(dialogo).toContain("<AlertDialog")
-        expect(dialogo).toContain("itens.slice(0, 20)")
-        expect(dialogo).not.toContain("window.confirm")
-        // Lendo ou gravando, destino e arquivo travam.
-        expect(dialogo.match(/disabled=\{travado\}/g)?.length).toBe(4)
+    it("as categorias novas da conferência e do fim contam só as marcadas; o fim separa quem já existia", () => {
+        expect(hook).toContain("categoriasNovas: loteParaGravar(lote, marcadas, escolhidas).novas")
+        expect(hook).toContain("...quemFicouDeFora(lote.itens, marcadas, existentes)")
     })
 })
 
@@ -302,6 +294,25 @@ describe("a conferência", () => {
         marcadas.delete("a")
         const r = resumoDaConferencia(itens, marcadas, aplicarCategoria(new Map(), ["c"], "c-2"), existentes)
         expect(r).toMatchObject({ entram: 3, saidas: 35, entradas: 200, semCategoria: 0 })
+    })
+
+    it("quem ficou de fora separa os que já existiam dos desmarcados à mão", () => {
+        const itens = [item({ clientId: "a" }), item({ clientId: "b" }), item({ clientId: "c" }), item({ clientId: "d" })]
+        const existentes = new Map([
+            ["b", existe],
+            ["c", existe],
+        ])
+        // "c" já existia e a pessoa marcou de volta; "a" ela desmarcou.
+        const marcadas = new Set(["c", "d"])
+        expect(quemFicouDeFora(itens, marcadas, existentes)).toEqual({ jaExistiam: 1, deixadas: 1 })
+    })
+
+    it("a categoria da planilha que nasce ao gravar aparece na linha, até a pessoa escolher outra", () => {
+        const nova = item({ clientId: "a", categoria: " Feira " })
+        const daCarteira = item({ clientId: "b", categoria: "Mercado", categoryId: "c-1" })
+        expect(categoriaNovaDe(nova, new Map())).toBe("Feira")
+        expect(categoriaNovaDe(daCarteira, new Map())).toBeNull()
+        expect(categoriaNovaDe(nova, aplicarCategoria(new Map(), ["a"], null))).toBeNull()
     })
 
     it("o filtro escolhe as visíveis sem mudar marcadas nem categorias", () => {

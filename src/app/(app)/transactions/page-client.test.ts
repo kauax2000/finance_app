@@ -68,9 +68,9 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(aviso).toMatch(/\{ativo && !podeConfirmarTodos \? null : \(\s*<AlertActions/)
     })
 
-    it("Revisar aplica o token conferir, por data, sem os outros tokens", () => {
+    it("Revisar aplica o token conferir, por data, sem os outros tokens (e Sem categoria só quando o fim da importação pede)", () => {
         expect(f).toMatch(
-            /setEstado\(\{\s*filtros:\s*\[\{\s*field:\s*"conferir",\s*operator:\s*"is",\s*values:\s*\[\]\s*\}\],\s*sort:\s*\{\s*key:\s*"date",\s*dir:\s*"desc"\s*\}/,
+            /setEstado\(\{\s*filtros:\s*\[\s*\{\s*field:\s*"conferir",\s*operator:\s*"is",\s*values:\s*\[\]\s*\},\s*\.\.\.\(o\?\.semCategoria === true \? \[\{ field: "categoria", operator: "is" as const, values: \[SEM_CATEGORIA\] \}\] : \[\]\),\s*\],\s*sort:\s*\{\s*key:\s*"date",\s*dir:\s*"desc"\s*\}/,
         )
         expect(f).toMatch(/<AvisoAConferir[\s\S]*?onRevisar=\{revisar\}/)
         expect(f).toMatch(/<ImportarExtratoDialog[\s\S]*?onRevisar=\{revisar\}/)

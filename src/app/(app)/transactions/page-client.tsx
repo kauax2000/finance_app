@@ -35,6 +35,7 @@ import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { toastError, toastWarning } from "@/lib/toast"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { transacoesParaCsv } from "@/lib/transactions/csv"
+import { SEM_CATEGORIA } from "@/lib/transactions/filtros"
 import { hasInstallmentDeleteImpact, INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { mensagemDaExportacao, nomeDoCsv } from "@/lib/transactions/exportar-csv"
 
@@ -56,8 +57,16 @@ export default function TransactionsPageClient() {
         if (criar || frase) consumirPedido()
     }, [criar, frase, consumirPedido])
 
+    // `semCategoria`: o fim da importação leva aos que entraram sem categoria (o clique do aviso não o passa).
     const revisar = useCallback(
-        () => setEstado({ filtros: [{ field: "conferir", operator: "is", values: [] }], sort: { key: "date", dir: "desc" } }),
+        (o?: { semCategoria?: boolean }) =>
+            setEstado({
+                filtros: [
+                    { field: "conferir", operator: "is", values: [] },
+                    ...(o?.semCategoria === true ? [{ field: "categoria", operator: "is" as const, values: [SEM_CATEGORIA] }] : []),
+                ],
+                sort: { key: "date", dir: "desc" },
+            }),
         [setEstado],
     )
     const conferindo = estado.filtros.some((f) => f.field === "conferir")

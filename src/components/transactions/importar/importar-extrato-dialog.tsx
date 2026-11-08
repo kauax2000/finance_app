@@ -1,7 +1,7 @@
 "use client"
 
-import { DocumentTextIcon } from "@heroicons/react/16/solid"
 import { useRef, useState } from "react"
+import { CheckIcon, DocumentTextIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { useWorkspace } from "@/components/workspace-provider"
 import {
@@ -16,14 +16,8 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-    DescriptionDetails,
-    DescriptionList,
-    DescriptionListItem,
-    DescriptionTerm,
-} from "@/components/ui/description-list"
+import { Card } from "@/components/ui/card"
 import {
     Dialog,
     DialogBody,
@@ -44,16 +38,23 @@ import {
 } from "@/components/ui/empty-state"
 import { Form, FormCancel, FormControl, FormError, FormField, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { MoneyDisplay } from "@/components/ui/money-display"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
+import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 
+import { ConferirImportacao } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { useImportarExtrato } from "./use-importar-extrato"
 
@@ -66,10 +67,22 @@ const CONTAS = [
 const lancamentos = (n: number) => `${numberBR(n)} ${n === 1 ? "lançamento" : "lançamentos"}`
 const tamanho = (bytes: number) => `${numberBR(Math.max(1, Math.round(bytes / 1024)))} KB`
 
+/** O destino como o valor do `Select`: `cartao:<id>` ou `conta:<forma>`. */
+const valorDoDestino = (d: DestinoImportacao | null) =>
+    !d ? "" : d.tipo === "cartao" ? `cartao:${d.cardId}` : `conta:${d.paymentMethod}`
+
+function destinoDoValor(v: string): DestinoImportacao | null {
+    const [tipo, id] = v.split(":")
+    if (tipo === "cartao" && id) return { tipo: "cartao", cardId: id }
+    const conta = CONTAS.find((c) => c.forma === id)
+    return tipo === "conta" && conta ? { tipo: "conta", paymentMethod: conta.forma } : null
+}
+
 /**
- * Importar extrato do banco ou planilha em passos (spec §9.2): arquivo e
- * destino, colunas (só CSV), conferir e o fim. O lote é preparado uma vez no
- * `useImportarExtrato`: repetir "Importar" não duplica.
+ * Importar extrato (versão C): Arquivo → Conferir, com Colunas no meio só quando
+ * a dedução do CSV falha. O lote é preparado uma vez no `useImportarExtrato`:
+ * repetir "Importar" não duplica. A lista grande não estica o diálogo: o compacto
+ * mostra 6 linhas, e expandir leva o mesmo diálogo à tela cheia.
  */
 export function ImportarExtratoDialog({
     open,
@@ -78,20 +91,18 @@ export function ImportarExtratoDialog({
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
-    /** "Revisar agora": quem chama aplica o filtro `conferir`; o diálogo fecha sozinho. */
-    onRevisar: () => void
+    /** Quem chama aplica o filtro A conferir (e Sem categoria, quando pedido); o diálogo fecha sozinho. */
+    onRevisar: (o?: { semCategoria?: boolean }) => void
 }) {
     const { currentWorkspaceId } = useWorkspace()
     const cartoes = useCreditCardsQuery(currentWorkspaceId).data ?? []
     const imp = useImportarExtrato({ workspaceId: currentWorkspaceId })
-    const [tipoDestino, setTipoDestino] = useState<"cartao" | "conta" | "">("")
     const [perguntando, setPerguntando] = useState(false)
     const entrada = useRef<HTMLInputElement>(null)
 
     function mudarAberto(aberto: boolean) {
         if (!aberto) {
             imp.reiniciar()
-            setTipoDestino("")
             setPerguntando(false)
         }
         onOpenChange(aberto)
@@ -100,16 +111,28 @@ export function ImportarExtratoDialog({
     // Colunas só aparece quando a dedução do CSV falha ou a pessoa pede Ajustar.
     const passos = imp.passo === "colunas" ? ["Arquivo", "Colunas", "Conferir"] : ["Arquivo", "Conferir"]
     const atual = Math.max(0, passos.indexOf({ arquivo: "Arquivo", colunas: "Colunas", conferir: "Conferir", feito: "" }[imp.passo]))
-    const previa = imp.previa
+    const expandido = imp.passo === "conferir" && imp.expandido
     const gravando = imp.pendente === "importar" || imp.pendente === "desfazer"
     // Lendo ou gravando, nada do passo muda: a resposta cairia num estado trocado.
     const travado = imp.pendente != null
+    const feito = imp.feito
+    const d = imp.destino
+    const cartao = d?.tipo === "cartao" ? cartoes.find((c) => c.id === d.cardId) : undefined
+    const nomeDoDestino = cartao ? `o ${cartao.name}` : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.rotulo ?? "")
+    const periodo = imp.resumo.periodo
 
     function enviar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         if (imp.passo === "arquivo") return imp.continuar()
         if (imp.passo === "colunas") return imp.lerColunas()
         if (imp.passo === "conferir") return imp.importar()
+    }
+
+    function soltar(e: React.DragEvent) {
+        e.preventDefault()
+        if (travado) return
+        const f = e.dataTransfer.files?.[0]
+        if (f) imp.escolherArquivo(f)
     }
 
     return (
@@ -121,224 +144,167 @@ export function ImportarExtratoDialog({
             dirty={imp.dirty}
             confirmDiscard
         >
-            <DialogContent size="lg">
-                <Form layout="none" onSubmit={enviar}>
+            <DialogContent size={expandido ? "full" : "lg"} layout={expandido ? "fixed" : "auto"}>
+                <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
-                        <DialogTitle>Importar extrato</DialogTitle>
+                        <DialogTitle>
+                            {imp.passo === "conferir" && nomeDoDestino
+                                ? `${lancamentos(imp.resumo.total)} para ${nomeDoDestino}`
+                                : "Importar extrato"}
+                        </DialogTitle>
                         <DialogDescription>
                             {imp.passo === "feito"
                                 ? "Os lançamentos já estão na lista."
-                                : "Do banco ou da sua planilha, para um cartão ou uma conta."}
+                                : imp.passo === "conferir"
+                                  ? `${periodo ? `De ${formatYmdPtBr(periodo.de)} a ${formatYmdPtBr(periodo.ate)}. ` : ""}Desmarque o que não quer trazer.`
+                                  : imp.passo === "colunas"
+                                    ? "Diga o que é cada coluna do arquivo."
+                                    : "CSV ou OFX do seu banco, ou uma planilha sua."}
                         </DialogDescription>
-                        {imp.passo === "feito" ? null : (
+                        {imp.passo === "feito" || expandido ? null : (
                             <DialogSteps current={atual} total={passos.length} labels={passos} />
                         )}
                     </DialogHeader>
                     <DialogBody>
                         {imp.passo === "arquivo" ? (
                             <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <Input
-                                        ref={entrada}
-                                        type="file"
-                                        className="hidden"
-                                        aria-label="Arquivo do extrato ou da planilha"
-                                        accept=".csv,.ofx"
-                                        onChange={(e) => {
-                                            const f = e.target.files?.[0] ?? null
-                                            // Limpo, o mesmo arquivo pode ser escolhido de novo.
-                                            e.target.value = ""
-                                            imp.escolherArquivo(f)
-                                        }}
-                                    />
-                                    {imp.arquivo ? (
+                                <Input
+                                    ref={entrada}
+                                    type="file"
+                                    className="hidden"
+                                    aria-label="Arquivo do extrato ou da planilha"
+                                    accept=".csv,.ofx"
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0] ?? null
+                                        // Limpo, o mesmo arquivo pode ser escolhido de novo.
+                                        e.target.value = ""
+                                        imp.escolherArquivo(f)
+                                    }}
+                                />
+                                {imp.arquivo ? (
+                                    <div className="flex flex-col gap-2">
                                         <Item variant="outline">
                                             <ItemMedia>
                                                 <DocumentTextIcon />
                                             </ItemMedia>
                                             <ItemContent>
                                                 <ItemTitle>{imp.arquivo.name}</ItemTitle>
-                                                <ItemDescription>{tamanho(imp.arquivo.size)}</ItemDescription>
+                                                <ItemDescription>
+                                                    {tamanho(imp.arquivo.size)}
+                                                    {imp.csv
+                                                        ? ` · ${lancamentos(Math.max(0, imp.csv.length - (imp.mapeamento.temCabecalho ? 1 : 0)))}`
+                                                        : ""}
+                                                </ItemDescription>
                                             </ItemContent>
+                                            <ItemActions>
+                                                <Button
+                                                    type="button"
+                                                    variant="tertiary"
+                                                    size="icon-sm"
+                                                    aria-label="Trocar arquivo"
+                                                    disabled={travado}
+                                                    onClick={() => imp.escolherArquivo(null)}
+                                                >
+                                                    <XMarkIcon />
+                                                </Button>
+                                            </ItemActions>
                                         </Item>
-                                    ) : null}
-                                    <div>
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            disabled={travado}
-                                            onClick={() => entrada.current?.click()}
-                                        >
-                                            {imp.arquivo ? "Trocar arquivo" : "Escolher arquivo"}
-                                        </Button>
+                                        {imp.deducao?.certa ? (
+                                            <Caption className="flex items-center gap-1">
+                                                <CheckIcon className="size-4 shrink-0 text-success" />
+                                                Colunas reconhecidas: Data, Descrição, Valor
+                                                {imp.deducao.mapa.categoria != null ? ", Categoria" : ""}. Gasto é{" "}
+                                                {imp.deducao.negativoEhDespesa ? "negativo" : "positivo"}.
+                                            </Caption>
+                                        ) : null}
                                     </div>
-                                </div>
-                                <RadioGroup
-                                    aria-label="Destino"
-                                    variant="card"
-                                    orientation="horizontal"
-                                    disabled={travado}
-                                    value={tipoDestino}
-                                    onValueChange={(v) => {
-                                        setTipoDestino(v as "cartao" | "conta")
-                                        imp.setDestino(null)
-                                    }}
-                                >
-                                    <RadioGroupItem value="cartao">Cartão de crédito</RadioGroupItem>
-                                    <RadioGroupItem value="conta">Conta</RadioGroupItem>
-                                </RadioGroup>
-                                {tipoDestino === "cartao" ? (
-                                    <FormField label="Cartão">
-                                        <Select
-                                            disabled={travado}
-                                            value={imp.destino?.tipo === "cartao" ? imp.destino.cardId : ""}
-                                            onValueChange={(cardId) => imp.setDestino({ tipo: "cartao", cardId })}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Escolha o cartão" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {cartoes.map((c) => (
-                                                    <SelectItem key={c.id} value={c.id}>
-                                                        {c.name} · •••• {c.last_four}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormField>
-                                ) : tipoDestino === "conta" ? (
-                                    <FormField label="Forma">
-                                        <Select
-                                            disabled={travado}
-                                            value={imp.destino?.tipo === "conta" ? imp.destino.paymentMethod : ""}
-                                            onValueChange={(v) =>
-                                                imp.setDestino({
-                                                    tipo: "conta",
-                                                    paymentMethod: v as (typeof CONTAS)[number]["forma"],
-                                                })
-                                            }
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Escolha a forma" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
+                                ) : (
+                                    <Card
+                                        variant="dashed"
+                                        className="items-center text-center"
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={soltar}
+                                    >
+                                        <p className="font-medium text-foreground">Arraste o arquivo aqui</p>
+                                        <p>
+                                            ou{" "}
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                disabled={travado}
+                                                onClick={() => entrada.current?.click()}
+                                            >
+                                                <span>escolha no computador</span>
+                                            </Button>{" "}
+                                            · CSV ou OFX
+                                        </p>
+                                    </Card>
+                                )}
+                                <FormField label="Para onde vão">
+                                    <Select
+                                        disabled={travado}
+                                        value={valorDoDestino(imp.destino)}
+                                        onValueChange={(v) => imp.setDestino(destinoDoValor(v))}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Escolha o cartão ou a conta" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {cartoes.length > 0 ? (
+                                                <SelectGroup>
+                                                    <SelectLabel>Cartões</SelectLabel>
+                                                    {cartoes.map((c) => (
+                                                        <SelectItem key={c.id} value={`cartao:${c.id}`}>
+                                                            {c.name} · •••• {c.last_four}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            ) : null}
+                                            <SelectGroup>
+                                                <SelectLabel>Contas</SelectLabel>
                                                 {CONTAS.map((c) => (
-                                                    <SelectItem key={c.forma} value={c.forma}>
+                                                    <SelectItem key={c.forma} value={`conta:${c.forma}`}>
                                                         {c.rotulo}
                                                     </SelectItem>
                                                 ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormField>
-                                ) : null}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
                             </div>
                         ) : imp.passo === "colunas" && imp.csv ? (
                             <MapearColunas
                                 linhas={imp.csv}
                                 valor={imp.mapeamento}
                                 onChange={imp.setMapeamento}
-                                disabled={imp.pendente != null}
+                                disabled={travado}
                             />
-                        ) : imp.passo === "conferir" && previa ? (
-                            <div className="flex flex-col gap-4">
-                                <DescriptionList columns={3}>
-                                    <DescriptionListItem>
-                                        <DescriptionTerm>Lançamentos</DescriptionTerm>
-                                        <DescriptionDetails>{numberBR(previa.total)}</DescriptionDetails>
-                                    </DescriptionListItem>
-                                    <DescriptionListItem>
-                                        <DescriptionTerm>Período</DescriptionTerm>
-                                        <DescriptionDetails>
-                                            {previa.periodo
-                                                ? `${formatYmdPtBr(previa.periodo.de)} a ${formatYmdPtBr(previa.periodo.ate)}`
-                                                : "—"}
-                                        </DescriptionDetails>
-                                    </DescriptionListItem>
-                                    <DescriptionListItem>
-                                        <DescriptionTerm>Soma</DescriptionTerm>
-                                        <DescriptionDetails>
-                                            <MoneyDisplay value={previa.soma} signed />
-                                        </DescriptionDetails>
-                                    </DescriptionListItem>
-                                </DescriptionList>
-                                {previa.ignoradas > 0 ? (
-                                    <Caption>
-                                        {previa.ignoradas === 1
-                                            ? "1 linha sem data ou valor ficou de fora."
-                                            : `${numberBR(previa.ignoradas)} linhas sem data ou valor ficaram de fora.`}
-                                    </Caption>
-                                ) : null}
-                                {previa.categoriasNovas.length > 0 ? (
-                                    <div className="flex flex-col gap-2">
-                                        <Caption>Categorias novas, criadas ao importar:</Caption>
-                                        <div className="flex flex-wrap gap-2">
-                                            {previa.categoriasNovas.map((c) => (
-                                                <Badge key={c.clientId} tone={c.tipo === "income" ? "income" : "expense"}>
-                                                    {c.nome}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : null}
-                                <Table size="sm">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Data</TableHead>
-                                            <TableHead>Descrição</TableHead>
-                                            <TableHead>Categoria</TableHead>
-                                            <TableHead className="text-right">Valor</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {previa.itens.slice(0, 20).map((i) => (
-                                            <TableRow key={i.clientId}>
-                                                <TableCell>{formatYmdPtBr(i.data)}</TableCell>
-                                                <TableCell>
-                                                    {i.descricao}
-                                                    {i.parcela ? ` (${i.parcela.k}/${i.parcela.n})` : ""}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {i.categoria ??
-                                                        (i.categoryId && previa.nomeDaCategoria.get(i.categoryId)) ??
-                                                        "Sem categoria"}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <MoneyDisplay value={i.estorno ? i.valor : -i.valor} signed />
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {previa.itens.length > 20 ? (
-                                    <Caption>E mais {lancamentos(previa.itens.length - 20)}.</Caption>
-                                ) : null}
-                            </div>
-                        ) : imp.passo === "feito" && previa ? (
+                        ) : imp.passo === "conferir" ? (
+                            <ConferirImportacao imp={imp} />
+                        ) : imp.passo === "feito" && feito ? (
                             <EmptyState variant="plain">
                                 <EmptyStateIcon variant="done" />
                                 <EmptyStateTitle>
-                                    {(imp.feito?.importados ?? previa.total) === 1
-                                        ? "1 lançamento importado, a conferir"
-                                        : `${lancamentos(imp.feito?.importados ?? previa.total)} importados, todos a conferir`}
+                                    {feito.importados === 1
+                                        ? "1 lançamento importado"
+                                        : `${lancamentos(feito.importados)} importados`}
                                 </EmptyStateTitle>
                                 <EmptyStateDescription>
-                                    Confira a categoria de cada um na lista.
+                                    {[
+                                        feito.jaExistiam > 0 &&
+                                            `${numberBR(feito.jaExistiam)} ${feito.jaExistiam === 1 ? "ficou de fora porque já existia" : "ficaram de fora porque já existiam"}.`,
+                                        feito.deixadas > 0 &&
+                                            `${numberBR(feito.deixadas)} ${feito.deixadas === 1 ? "ficou de fora" : "ficaram de fora"}.`,
+                                        feito.semCategoria > 0
+                                            ? `${numberBR(feito.semCategoria)} sem categoria, marcados a conferir.`
+                                            : "Todos estão marcados a conferir.",
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" ")}
                                 </EmptyStateDescription>
                                 <EmptyStateActions>
-                                    <Button
-                                        type="button"
-                                        variant="primary"
-                                        onClick={() => {
-                                            onRevisar()
-                                            mudarAberto(false)
-                                        }}
-                                    >
-                                        Revisar agora
-                                    </Button>
                                     <AlertDialog
                                         open={perguntando}
                                         onOpenChange={setPerguntando}
@@ -353,9 +319,9 @@ export function ImportarExtratoDialog({
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Desfazer a importação?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    {previa.total === 1
+                                                    {feito.importados === 1
                                                         ? "O lançamento que entrou é apagado."
-                                                        : `Os ${lancamentos(previa.total)} que entraram são apagados.`}{" "}
+                                                        : `Os ${lancamentos(feito.importados)} que entraram são apagados.`}{" "}
                                                     Não dá para desfazer.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
@@ -373,6 +339,18 @@ export function ImportarExtratoDialog({
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        onClick={() => {
+                                            onRevisar({ semCategoria: feito.semCategoria > 0 })
+                                            mudarAberto(false)
+                                        }}
+                                    >
+                                        {feito.semCategoria > 0
+                                            ? `Ver os ${numberBR(feito.semCategoria)} sem categoria`
+                                            : "Revisar agora"}
+                                    </Button>
                                 </EmptyStateActions>
                             </EmptyState>
                         ) : null}
@@ -385,7 +363,7 @@ export function ImportarExtratoDialog({
                                     <FormCancel>Cancelar</FormCancel>
                                 </DialogClose>
                             ) : (
-                                <FormCancel onClick={imp.voltar} disabled={imp.pendente != null}>
+                                <FormCancel onClick={imp.voltar} disabled={travado}>
                                     Voltar
                                 </FormCancel>
                             )}
@@ -396,9 +374,7 @@ export function ImportarExtratoDialog({
                                         : imp.passo === "conferir" && !imp.resumo.entram
                                 }
                             >
-                                {imp.passo === "conferir" && previa
-                                    ? `Importar ${lancamentos(imp.resumo.entram)}`
-                                    : "Continuar"}
+                                {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : "Continuar"}
                             </FormSubmit>
                         </DialogFooter>
                     )}
