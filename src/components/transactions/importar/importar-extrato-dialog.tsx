@@ -49,14 +49,13 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 
 import { MapearColunas } from "./mapear-colunas"
-import { tipoDoArquivo, useImportarExtrato, type ModoImportacao } from "./use-importar-extrato"
+import { useImportarExtrato } from "./use-importar-extrato"
 
 const CONTAS = [
     { forma: "pix", rotulo: "Pix" },
@@ -98,8 +97,8 @@ export function ImportarExtratoDialog({
         onOpenChange(aberto)
     }
 
-    const ehOfx = imp.arquivo ? tipoDoArquivo(imp.arquivo.name, imp.modo) === "ofx" : false
-    const passos = ehOfx ? ["Arquivo", "Conferir"] : ["Arquivo", "Colunas", "Conferir"]
+    // Colunas só aparece quando a dedução do CSV falha ou a pessoa pede Ajustar.
+    const passos = imp.passo === "colunas" ? ["Arquivo", "Colunas", "Conferir"] : ["Arquivo", "Conferir"]
     const atual = Math.max(0, passos.indexOf({ arquivo: "Arquivo", colunas: "Colunas", conferir: "Conferir", feito: "" }[imp.passo]))
     const previa = imp.previa
     const gravando = imp.pendente === "importar" || imp.pendente === "desfazer"
@@ -138,19 +137,13 @@ export function ImportarExtratoDialog({
                     <DialogBody>
                         {imp.passo === "arquivo" ? (
                             <div className="flex flex-col gap-4">
-                                <Tabs value={imp.modo} onValueChange={(m) => imp.setModo(m as ModoImportacao)}>
-                                    <TabsList aria-label="O que é o arquivo">
-                                        <TabsTrigger value="extrato" disabled={travado}>Extrato do banco (CSV ou OFX)</TabsTrigger>
-                                        <TabsTrigger value="planilha" disabled={travado}>Planilha (CSV)</TabsTrigger>
-                                    </TabsList>
-                                </Tabs>
                                 <div className="flex flex-col gap-2">
                                     <Input
                                         ref={entrada}
                                         type="file"
                                         className="hidden"
                                         aria-label="Arquivo do extrato ou da planilha"
-                                        accept={imp.modo === "planilha" ? ".csv" : ".csv,.ofx"}
+                                        accept=".csv,.ofx"
                                         onChange={(e) => {
                                             const f = e.target.files?.[0] ?? null
                                             // Limpo, o mesmo arquivo pode ser escolhido de novo.
@@ -328,9 +321,9 @@ export function ImportarExtratoDialog({
                             <EmptyState variant="plain">
                                 <EmptyStateIcon variant="done" />
                                 <EmptyStateTitle>
-                                    {previa.total === 1
+                                    {(imp.feito?.importados ?? previa.total) === 1
                                         ? "1 lançamento importado, a conferir"
-                                        : `${lancamentos(previa.total)} importados, todos a conferir`}
+                                        : `${lancamentos(imp.feito?.importados ?? previa.total)} importados, todos a conferir`}
                                 </EmptyStateTitle>
                                 <EmptyStateDescription>
                                     Confira a categoria de cada um na lista.
@@ -400,11 +393,11 @@ export function ImportarExtratoDialog({
                                 disabled={
                                     imp.passo === "arquivo"
                                         ? !imp.arquivo || !imp.destino
-                                        : imp.passo === "conferir" && !previa?.total
+                                        : imp.passo === "conferir" && !imp.resumo.entram
                                 }
                             >
                                 {imp.passo === "conferir" && previa
-                                    ? `Importar ${lancamentos(previa.total)}`
+                                    ? `Importar ${lancamentos(imp.resumo.entram)}`
                                     : "Continuar"}
                             </FormSubmit>
                         </DialogFooter>

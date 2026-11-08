@@ -5,27 +5,32 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 
 import { useAuth } from "@/components/providers"
-import { lerCsv, mapearCsv } from "@/lib/import/csv"
+import { type Deducao, deduzirMapeamento, lerCsv, mapearCsv } from "@/lib/import/csv"
 import {
+    buscarJaExistentes,
     categoriasQueFaltam,
     comCategoriaDaPlanilha,
     desfazerImportacao,
     type DestinoImportacao,
+    type Existente,
     importarLancamentos,
     type ItemImportavel,
-    negativoEhDespesaPadrao,
     prepararItens,
 } from "@/lib/import/importar"
+import { normalizarDescricao } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
 import type { ItemBanco } from "@/lib/import/tipos"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { supabase } from "@/lib/supabase"
 import { toastSuccess } from "@/lib/toast"
 
-export type ModoImportacao = "extrato" | "planilha"
 export type PassoImportacao = "arquivo" | "colunas" | "conferir" | "feito"
 
 type Categoria = { id: string; name: string; type: "income" | "expense" }
+export type SourceImportacao = "import_statement" | "import_sheet"
+export type FiltroConferencia = "todos" | "saidas" | "entradas" | "existem" | "sem-categoria"
+/** A categoria que a pessoa escolheu por item (`null`: sem categoria, de propósito). */
+export type CategoriasEscolhidas = Map<string, string | null>
 export type CategoriaNova = { nome: string; tipo: "income" | "expense"; clientId: string }
 
 /** A coluna de cada papel do CSV (`categoria` null: o arquivo não traz). */
@@ -45,18 +50,113 @@ export type LoteImportacao = {
     novas: CategoriaNova[]
     ignoradas: number
     destino: DestinoImportacao
-    source: "import_statement" | "import_sheet"
+    source: SourceImportacao
     batchId: string
 }
 
-export const sourceDoModo = (modo: ModoImportacao) => (modo === "planilha" ? "import_sheet" : "import_statement")
+/** OFX é extrato; o CSV é a planilha da pessoa só quando traz a coluna de categoria. */
+export const sourceDoArquivo = (tipo: "csv" | "ofx", categoria: number | null): SourceImportacao =>
+    tipo === "csv" && categoria != null ? "import_sheet" : "import_statement"
 
-/** A extensão que o modo aceita; `null` recusa o arquivo. */
-export function tipoDoArquivo(nome: string, modo: ModoImportacao): "csv" | "ofx" | null {
+/** `null` recusa o arquivo. */
+export function tipoDoArquivo(nome: string): "csv" | "ofx" | null {
     const ext = nome.toLowerCase().split(".").pop()
-    if (ext === "csv") return "csv"
-    if (ext === "ofx" && modo === "extrato") return "ofx"
-    return null
+    return ext === "csv" || ext === "ofx" ? ext : null
+}
+
+/** O passo Colunas só aparece quando a dedução do CSV não achou os papéis. */
+export const passoDepoisDoArquivo = (tipo: "csv" | "ofx", deducao: Deducao | null): "colunas" | "conferir" =>
+    tipo === "ofx" || deducao?.certa ? "conferir" : "colunas"
+
+export const mapeamentoDa = (d: Deducao): MapeamentoColunas => ({
+    ...d.mapa,
+    temCabecalho: d.temCabecalho,
+    negativoEhDespesa: d.negativoEhDespesa,
+})
+
+const mesmoMapeamento = (a: MapeamentoColunas, b: MapeamentoColunas) =>
+    (Object.keys(a) as (keyof MapeamentoColunas)[]).every((k) => a[k] === b[k])
+
+/** Entram todos, menos os que já estão na carteira. */
+export const marcadasIniciais = (itens: ItemImportavel[], existentes: Map<string, Existente>) =>
+    new Set(itens.filter((i) => !existentes.has(i.clientId)).map((i) => i.clientId))
+
+export function aplicarCategoria(escolhidas: CategoriasEscolhidas, ids: string[], categoryId: string | null) {
+    const nova = new Map(escolhidas)
+    for (const id of ids) nova.set(id, categoryId)
+    return nova
+}
+
+export const categoriaEfetiva = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
+    escolhidas.has(i.clientId) ? (escolhidas.get(i.clientId) ?? null) : i.categoryId
+
+/** Sem escolha, o nome da planilha sem categoria na carteira vira a categoria nova ao gravar. */
+const ganhaCategoriaNova = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
+    !escolhidas.has(i.clientId) && i.categoryId == null && !!i.categoria && !!normalizarDescricao(i.categoria)
+
+const semCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
+    categoriaEfetiva(i, escolhidas) == null && !ganhaCategoriaNova(i, escolhidas)
+
+/** Saídas e entradas são valores positivos, só das marcadas; o período é o do arquivo. */
+export function resumoDaConferencia(
+    itens: ItemImportavel[],
+    marcadas: Set<string>,
+    escolhidas: CategoriasEscolhidas,
+    existentes: Map<string, Existente>,
+) {
+    const entram = itens.filter((i) => marcadas.has(i.clientId))
+    const soma = (lista: ItemImportavel[]) => lista.reduce((s, i) => s + i.valor, 0)
+    return {
+        total: itens.length,
+        entram: entram.length,
+        saidas: soma(entram.filter((i) => !i.estorno)),
+        entradas: soma(entram.filter((i) => i.estorno)),
+        existem: existentes.size,
+        semCategoria: entram.filter((i) => semCategoria(i, escolhidas)).length,
+        periodo: resumoDoLote(itens).periodo,
+    }
+}
+
+export function filtrarItens(
+    itens: ItemImportavel[],
+    filtro: FiltroConferencia,
+    existentes: Map<string, Existente>,
+    escolhidas: CategoriasEscolhidas,
+) {
+    if (filtro === "todos") return itens
+    return itens.filter((i) =>
+        filtro === "saidas"
+            ? !i.estorno
+            : filtro === "entradas"
+              ? i.estorno
+              : filtro === "existem"
+                ? existentes.has(i.clientId)
+                : semCategoria(i, escolhidas),
+    )
+}
+
+/**
+ * O lote que vai ao banco: só as marcadas, com a categoria escolhida (sem o nome da
+ * planilha, que a trocaria), e só as categorias novas que alguém ainda usa. Os
+ * `client_id` e o `batchId` são os do lote: repetir não duplica.
+ */
+export function loteParaGravar(
+    lote: LoteImportacao,
+    marcadas: Set<string>,
+    escolhidas: CategoriasEscolhidas,
+): LoteImportacao {
+    const itens = lote.itens
+        .filter((i) => marcadas.has(i.clientId))
+        .map((i) => {
+            if (!escolhidas.has(i.clientId)) return i
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { categoria, ...resto } = i
+            return { ...resto, categoryId: escolhidas.get(i.clientId) ?? null }
+        })
+    const usadas = new Set(
+        categoriasQueFaltam(itens, lote.categorias, lote.destino).map((c) => `${c.tipo}:${normalizarDescricao(c.nome)}`),
+    )
+    return { ...lote, itens, novas: lote.novas.filter((c) => usadas.has(`${c.tipo}:${normalizarDescricao(c.nome)}`)) }
 }
 
 /**
@@ -68,7 +168,7 @@ export async function prepararLote(
     workspaceId: string,
     leitura: { itens: ItemBanco[]; ignoradas: number },
     destino: DestinoImportacao,
-    modo: ModoImportacao,
+    source: SourceImportacao,
 ): Promise<{ ok: true; lote: LoteImportacao } | { ok: false; erro: string }> {
     const [historico, cats] = await Promise.all([
         db
@@ -82,10 +182,14 @@ export async function prepararLote(
     ])
     if (historico.error || cats.error) return { ok: false, erro: "Não foi possível ler as categorias. Tente de novo." }
     const categorias = (cats.data ?? []) as Categoria[]
+    // A categoria da planilha já aparece na conferência; a que ainda não existe fica vazia até nascer ao gravar.
+    const itens = comCategoriaDaPlanilha(prepararItens(leitura.itens, historico.data ?? []), categorias, destino).map(
+        (i) => (categoriasQueFaltam([i], categorias, destino).length > 0 ? { ...i, categoryId: null } : i),
+    )
     return {
         ok: true,
         lote: {
-            itens: prepararItens(leitura.itens, historico.data ?? []),
+            itens,
             categorias,
             novas: categoriasQueFaltam(leitura.itens, categorias, destino).map((c) => ({
                 ...c,
@@ -93,7 +197,7 @@ export async function prepararLote(
             })),
             ignoradas: leitura.ignoradas,
             destino,
-            source: sourceDoModo(modo),
+            source,
             batchId: crypto.randomUUID(),
         },
     }
@@ -147,7 +251,7 @@ export function resumoDoLote(itens: ItemImportavel[]) {
 
 /**
  * A vez de cada leitura: `nova()` marca um pedido, `invalidar()` (reiniciar,
- * trocar modo ou destino) descarta os que estão no ar, e `vale(n)` diz se a
+ * trocar arquivo ou destino) descarta os que estão no ar, e `vale(n)` diz se a
  * resposta do pedido `n` ainda é a mais recente.
  */
 export function criarVez() {
@@ -171,63 +275,105 @@ const MAPEAMENTO_INICIAL: MapeamentoColunas = {
 }
 
 /**
- * Extrato do banco (CSV ou OFX, `import_statement`) ou a planilha da pessoa (CSV,
- * `import_sheet`) num cartão ou numa conta, em passos: arquivo, colunas (só CSV),
- * conferir e feito. O lote é preparado uma vez e fica no estado.
+ * Extrato do banco (CSV ou OFX) ou a planilha da pessoa (CSV com categoria) num
+ * cartão ou numa conta, em passos: arquivo, colunas (só quando a dedução do CSV
+ * falha, ou a pessoa pede Ajustar), conferir e feito. O lote é preparado uma vez
+ * e fica no estado; a conferência decide o que entra e com que categoria.
  */
 export function useImportarExtrato({ workspaceId }: { workspaceId: string | null }) {
     const queryClient = useQueryClient()
     const userId = useAuth().user?.id ?? null
     const [passo, setPasso] = useState<PassoImportacao>("arquivo")
-    const [modo, setModoEstado] = useState<ModoImportacao>("extrato")
     const [destino, setDestinoEstado] = useState<DestinoImportacao | null>(null)
     const [arquivo, setArquivo] = useState<File | null>(null)
     const [csv, setCsv] = useState<string[][] | null>(null)
+    const [deducao, setDeducao] = useState<Deducao | null>(null)
     const [mapeamento, setMapeamento] = useState<MapeamentoColunas>(MAPEAMENTO_INICIAL)
     const [lote, setLote] = useState<LoteImportacao | null>(null)
+    const [existentes, setExistentes] = useState<Map<string, Existente>>(() => new Map())
+    const [marcadas, setMarcadas] = useState<Set<string>>(() => new Set())
+    const [escolhidas, setEscolhidas] = useState<CategoriasEscolhidas>(() => new Map())
+    const [filtro, setFiltro] = useState<FiltroConferencia>("todos")
+    const [expandido, setExpandido] = useState(false)
+    const [feito, setFeito] = useState<{ importados: number; deFora: number; semCategoria: number } | null>(null)
     const [pendente, setPendente] = useState<"lendo" | "importar" | "desfazer" | null>(null)
     const [erro, setErro] = useState<string | null>(null)
     const vez = useRef(criarVez()).current
+    // O mapeamento ao pedir Ajustar: confirmar sem mudar volta à mesma conferência.
+    const ajustando = useRef<MapeamentoColunas | null>(null)
 
     function limparLeitura() {
         // A leitura no ar não aterrissa num estado que mudou.
         vez.invalidar()
+        ajustando.current = null
         setCsv(null)
+        setDeducao(null)
         setLote(null)
+        setExistentes(new Map())
+        setMarcadas(new Set())
+        setEscolhidas(new Map())
+        setFiltro("todos")
+        setExpandido(false)
+        setFeito(null)
         setErro(null)
     }
 
-    function setModo(m: ModoImportacao) {
-        setModoEstado(m)
-        setArquivo(null)
-        limparLeitura()
+    function aplicarDeducao(linhas: string[][], d: DestinoImportacao) {
+        const ded = deduzirMapeamento(linhas, d.tipo)
+        const m = mapeamentoDa(ded)
+        setCsv(linhas)
+        setDeducao(ded)
+        setMapeamento(m)
+        return { ded, m }
+    }
+
+    /** Com arquivo CSV e destino, a dedução já aparece no passo Arquivo; o sinal depende do destino. */
+    async function deduzir(f: File | null, d: DestinoImportacao | null) {
+        if (!f || !d || tipoDoArquivo(f.name) !== "csv") return
+        const n = vez.nova()
+        try {
+            const linhas = lerCsv(await f.text())
+            if (vez.vale(n)) aplicarDeducao(linhas, d)
+        } catch {
+            // Só a prévia da dedução: o Continuar relê o arquivo e mostra o erro.
+        }
     }
 
     function setDestino(d: DestinoImportacao | null) {
-        setDestinoEstado(d)
         limparLeitura()
+        setDestinoEstado(d)
+        void deduzir(arquivo, d)
     }
 
     function escolherArquivo(f: File | null) {
         limparLeitura()
-        if (f && !tipoDoArquivo(f.name, modo)) {
+        if (f && !tipoDoArquivo(f.name)) {
             setArquivo(null)
-            setErro(modo === "planilha" ? "Use um arquivo .csv." : "Use um arquivo .csv ou .ofx.")
+            setErro("Use um arquivo .csv ou .ofx.")
             return
         }
         setArquivo(f)
+        void deduzir(f, destino)
     }
 
     /** `n`: a vez do pedido; a resposta de um pedido velho é descartada. */
-    async function preparar(n: number, leitura: { itens: ItemBanco[]; ignoradas: number }) {
+    async function preparar(n: number, leitura: { itens: ItemBanco[]; ignoradas: number }, source: SourceImportacao) {
         if (!workspaceId || !destino) return
-        const r = await prepararLote(supabase, workspaceId, leitura, destino, modo)
+        const r = await prepararLote(supabase, workspaceId, leitura, destino, source)
         if (!vez.vale(n)) return
         if (!r.ok) {
             setErro(r.erro)
             return
         }
+        const achados = await buscarJaExistentes(supabase, workspaceId, destino, r.lote.itens)
+        if (!vez.vale(n)) return
+        ajustando.current = null
         setLote(r.lote)
+        setExistentes(achados)
+        setMarcadas(marcadasIniciais(r.lote.itens, achados))
+        setEscolhidas(new Map())
+        setFiltro("todos")
+        setExpandido(false)
         setPasso("conferir")
     }
 
@@ -245,49 +391,68 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         }
     }
 
-    /** Do arquivo: o CSV vai às colunas; o OFX vai direto à conferência. */
+    const lerComMapeamento = (linhas: string[][], m: MapeamentoColunas) =>
+        mapearCsv(
+            linhas,
+            { data: m.data, descricao: m.descricao, valor: m.valor, categoria: m.categoria ?? undefined },
+            { temCabecalho: m.temCabecalho, negativoEhDespesa: m.negativoEhDespesa },
+        )
+
+    /** Do arquivo: OFX e CSV deduzido vão direto à conferência; CSV incerto vai às colunas. */
     function continuar() {
         const f = arquivo
         const d = destino
         if (!f || !d) return Promise.resolve()
         return lendo(async (n) => {
-            const tipo = tipoDoArquivo(f.name, modo)
+            const tipo = tipoDoArquivo(f.name)
             const texto = await f.text()
             if (!vez.vale(n)) return
             if (tipo === "csv") {
-                setCsv(lerCsv(texto))
-                setMapeamento({ ...MAPEAMENTO_INICIAL, negativoEhDespesa: negativoEhDespesaPadrao(d) })
-                setPasso("colunas")
+                const linhas = lerCsv(texto)
+                const { ded, m } = aplicarDeducao(linhas, d)
+                if (passoDepoisDoArquivo("csv", ded) === "colunas") setPasso("colunas")
+                else await preparar(n, lerComMapeamento(linhas, m), sourceDoArquivo("csv", m.categoria))
             } else if (tipo === "ofx") {
-                await preparar(n, lerOfx(texto, d.tipo))
+                await preparar(n, lerOfx(texto, d.tipo), "import_statement")
             }
         })
+    }
+
+    /** Da conferência às colunas, com o mesmo arquivo. */
+    function ajustarColunas() {
+        if (!csv) return
+        ajustando.current = mapeamento
+        setErro(null)
+        setPasso("colunas")
     }
 
     function lerColunas() {
         const linhas = csv
         if (!linhas) return Promise.resolve()
         const m = mapeamento
-        return lendo((n) =>
-            preparar(
-                n,
-                mapearCsv(
-                    linhas,
-                    { data: m.data, descricao: m.descricao, valor: m.valor, categoria: m.categoria ?? undefined },
-                    { temCabecalho: m.temCabecalho, negativoEhDespesa: m.negativoEhDespesa },
-                ),
-            ),
-        )
+        if (lote && ajustando.current && mesmoMapeamento(ajustando.current, m)) {
+            setPasso("conferir")
+            return Promise.resolve()
+        }
+        if (m.data < 0 || m.descricao < 0 || m.valor < 0) {
+            setErro("Escolha a coluna da data, da descrição e do valor.")
+            return Promise.resolve()
+        }
+        return lendo((n) => preparar(n, lerComMapeamento(linhas, m), sourceDoArquivo("csv", m.categoria)))
     }
 
     function voltar() {
         setErro(null)
-        if (passo === "conferir") setPasso(csv ? "colunas" : "arquivo")
-        else if (passo === "colunas") setPasso("arquivo")
+        if (passo === "conferir") setPasso(csv && !deducao?.certa ? "colunas" : "arquivo")
+        else if (passo === "colunas") setPasso(lote && ajustando.current ? "conferir" : "arquivo")
     }
 
+    const resumo = lote
+        ? resumoDaConferencia(lote.itens, marcadas, escolhidas, existentes)
+        : { total: 0, entram: 0, saidas: 0, entradas: 0, existem: 0, semCategoria: 0, periodo: null }
+
     async function importar(): Promise<{ quantidade: number; loteId: string } | null> {
-        if (!lote || !workspaceId || lote.itens.length === 0) return null
+        if (!lote || !workspaceId || resumo.entram === 0) return null
         if (!userId) {
             setErro("Sua sessão não carregou. Recarregue a página e tente de novo.")
             return null
@@ -295,11 +460,12 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setPendente("importar")
         setErro(null)
         try {
-            const r = await gravarLote(supabase, { userId, workspaceId }, lote)
+            const r = await gravarLote(supabase, { userId, workspaceId }, loteParaGravar(lote, marcadas, escolhidas))
             if (!r.ok) {
                 setErro(r.erro)
                 return null
             }
+            setFeito({ importados: r.quantidade, deFora: resumo.total - resumo.entram, semCategoria: resumo.semCategoria })
             setPasso("feito")
             await invalidateWorkspaceData(queryClient, workspaceId, {
                 domains: ["transactions", "categories", "credit_card_expense_rows"],
@@ -343,13 +509,25 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     function reiniciar() {
         vez.invalidar()
         setPasso("arquivo")
-        setModoEstado("extrato")
         setDestinoEstado(null)
         setArquivo(null)
         setMapeamento(MAPEAMENTO_INICIAL)
         setPendente(null)
         limparLeitura()
     }
+
+    function marcarVarias(ids: string[], on: boolean) {
+        setMarcadas((atual) => {
+            const nova = new Set(atual)
+            for (const id of ids) {
+                if (on) nova.add(id)
+                else nova.delete(id)
+            }
+            return nova
+        })
+    }
+
+    const porId = new Map((lote?.itens ?? []).map((i) => [i.clientId, i]))
 
     const previa = lote
         ? {
@@ -364,22 +542,39 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
 
     return {
         passo,
-        modo,
-        setModo,
         destino,
         setDestino,
         arquivo,
         escolherArquivo,
         csv,
+        deducao,
         mapeamento,
         setMapeamento,
         continuar,
         lerColunas,
+        ajustarColunas,
         voltar,
         previa,
+        existentes,
+        marcadas,
+        setMarcada: (id: string, on: boolean) => marcarVarias([id], on),
+        marcarVarias,
+        categoriaDe: (id: string) => {
+            const i = porId.get(id)
+            return i ? categoriaEfetiva(i, escolhidas) : null
+        },
+        setCategoria: (ids: string[], categoryId: string | null) =>
+            setEscolhidas((e) => aplicarCategoria(e, ids, categoryId)),
+        filtro,
+        setFiltro,
+        visiveis: lote ? filtrarItens(lote.itens, filtro, existentes, escolhidas) : [],
+        expandido,
+        setExpandido,
+        resumo,
         importar,
         desfazer,
         reiniciar,
+        feito,
         pendente,
         erro,
         /** Depois do arquivo, fechar pergunta; feito, não há o que perder. */
