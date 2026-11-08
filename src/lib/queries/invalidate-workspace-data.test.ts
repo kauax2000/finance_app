@@ -32,6 +32,7 @@ const SEEDED_KEYS: ReadonlyArray<readonly unknown[]> = [
     [queryRoot.transactionsSearch, WS, { texto: "a" }, [], []],
     [queryRoot.billsList, "list", WS],
     [queryRoot.membersPageBundle, WS],
+    [queryRoot.transacoes, "pagina", WS, { page: 1 }],
 ]
 
 type Case = {
@@ -58,6 +59,8 @@ const CASES: Case[] = [
             queryRoot.membersPageBundle,
             // a busca da paleta (⌘K)
             queryRoot.transactionsSearch,
+            // a página de Transações: lista, resumo e contagem a conferir
+            queryRoot.transacoes,
         ],
     },
     {

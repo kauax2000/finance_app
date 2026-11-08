@@ -36,6 +36,8 @@ export const queryRoot = {
     /** Os lançamentos `needs_review` da carteira: a lista e a contagem do Painel. */
     aConferir: "aConferir",
     notificationPrefs: "notificationPrefs",
+    /** A página de Transações: a página da lista, o resumo e a contagem a conferir. */
+    transacoes: "transacoes",
 } as const
 
 export const fraseHistoricoKeys = {
@@ -50,6 +52,15 @@ export const notificationPrefsKeys = {
 export const aConferirKeys = {
     list: (workspaceId: string) => [queryRoot.aConferir, workspaceId, "list"] as const,
     count: (workspaceId: string) => [queryRoot.aConferir, workspaceId, "count"] as const,
+}
+
+/** O prefixo `["transacoes"]` é o que as mutações invalidam. */
+export const transacoesKeys = {
+    pagina: (workspaceId: string, estado: unknown) =>
+        [queryRoot.transacoes, "pagina", workspaceId, estado] as const,
+    resumo: (workspaceId: string, estado: unknown) =>
+        [queryRoot.transacoes, "resumo", workspaceId, estado] as const,
+    aConferir: (workspaceId: string) => [queryRoot.transacoes, "a-conferir", workspaceId] as const,
 }
 
 export const workspaceKeys = {

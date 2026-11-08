@@ -78,6 +78,9 @@ export async function invalidateWorkspaceData(
                 queryKey: [queryRoot.transactionsWorkspaceAux, workspaceId],
             }),
         )
+        // a página de Transações (lista, resumo e contagem a conferir); a carteira
+        // não é o 2º elemento da chave, então vai o prefixo inteiro
+        tasks.push(queryClient.invalidateQueries({ queryKey: [queryRoot.transacoes] }))
         // billingStats do bundle de assinaturas deriva de transactions
         tasks.push(
             queryClient.invalidateQueries({
