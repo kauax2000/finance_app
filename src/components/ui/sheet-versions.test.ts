@@ -101,11 +101,21 @@ describe("as versões do Sheet", () => {
     expect(CODIGO).toContain("fill={fillMobileViewport || undefined}")
   })
 
-  it("as folhas do app ficam encostadas por enquanto", () => {
-    // As notificações saíram da lista: o painel é a placa flutuante (2026-10-17, pedido do dono).
+  it("as folhas que abrem de Transações flutuam, como a das notificações", () => {
+    // Pedido do dono (2026-11-08): soltas das bordas, no `floating` padrão.
     for (const arquivo of [
       "src/components/transactions/transaction-detail-sheet.tsx",
       "src/components/transactions/transactions-toolbar.tsx",
+    ]) {
+      const f = lerFonte(arquivo)
+      expect(f, arquivo).not.toContain('variant="flush"')
+      expect(f, arquivo).not.toContain("border-l sm:max-w-sm")
+    }
+  })
+
+  it("as outras folhas do app ficam encostadas por enquanto", () => {
+    // As notificações saíram da lista: o painel é a placa flutuante (2026-10-17, pedido do dono).
+    for (const arquivo of [
       "src/components/bills/bill-detail-sheet.tsx",
       "src/components/bills/bills-toolbar.tsx",
       "src/components/subscriptions/subscription-detail-sheet.tsx",

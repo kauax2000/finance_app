@@ -501,8 +501,8 @@ export function TransactionDetailSheet({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
+                // A folha flutuante, solta das bordas, como a das notificações (pedido do dono, 08/11/2026).
                 side="right"
-                variant="flush"
                 size="md"
                 fillMobileViewport={isMobile}
                 onOpenAutoFocus={(e) => {

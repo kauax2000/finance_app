@@ -261,15 +261,11 @@ export function TransactionsToolbar({
                 onOpenChange={setFiltersSheetOpen}
             >
                 <SheetContent
+                    // A folha flutuante, solta das bordas, como a das notificações (pedido do dono, 08/11/2026).
                     side="right"
-                    variant="flush"
+                    size="sm"
                     fillMobileViewport={isMobile}
-                    className={cn(
-                        "flex w-full flex-col gap-0 overflow-hidden p-0",
-                        isMobile
-                            ? "min-h-0 rounded-t-modal"
-                            : "h-full max-h-dvh border-l sm:max-w-sm"
-                    )}
+                    className={cn("flex flex-col gap-0 overflow-hidden p-0", isMobile && "min-h-0 rounded-t-modal")}
                 >
                     <div className="flex h-full flex-col">
                         <DialogTitle className="sr-only">Filtros</DialogTitle>
