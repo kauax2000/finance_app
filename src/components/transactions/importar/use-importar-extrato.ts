@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useMemo, useRef, useState } from "react"
 
 import { useAuth } from "@/components/providers"
+import { numberBR } from "@/lib/formatters"
 import { type Deducao, deduzirMapeamento, lerCsv, mapearCsv } from "@/lib/import/csv"
 import {
     buscarJaExistentes,
@@ -128,6 +129,24 @@ export function resumoDaConferencia(
         periodo: resumoDoLote(itens).periodo,
     }
 }
+
+/** Os rótulos das ações em massa: valem para as linhas à vista (filtro e busca), e dizem quantas. */
+export function rotulosDasVisiveis(n: number) {
+    const um = n === 1
+    const q = numberBR(n)
+    return {
+        categoria: um ? "Pôr categoria no 1 visível" : `Pôr categoria nos ${q} visíveis`,
+        fora: um ? "Deixar de fora o 1 visível" : `Deixar de fora os ${q} visíveis`,
+        trazer: um ? "Trazer o 1 visível" : `Trazer os ${q} visíveis`,
+    }
+}
+
+/** A categoria escolhida vale para as do tipo dela (o estorno do cartão é despesa); `null` (sem categoria), para todas. */
+export const idsParaCategoria = (
+    itens: ItemImportavel[],
+    tipo: "income" | "expense" | null,
+    destino: DestinoImportacao,
+) => itens.filter((i) => tipo == null || tipoDoItem(i, destino) === tipo).map((i) => i.clientId)
 
 export function filtrarItens(
     itens: ItemImportavel[],
@@ -590,6 +609,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
               categoriasNovas: loteParaGravar(lote, marcadas, escolhidas).novas,
               /** As categorias da carteira do tipo do item (despesa ou receita, pelo destino). */
               categoriasDo: (i: ItemImportavel) => lote.categorias.filter((c) => c.type === tipoDoItem(i, lote.destino)),
+              categorias: lote.categorias,
               /** O nome da categoria sugerida pelo histórico, pela id. */
               nomeDaCategoria: new Map(lote.categorias.map((c) => [c.id, c.name])),
               ...resumoDoLote(lote.itens),

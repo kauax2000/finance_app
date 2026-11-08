@@ -16,6 +16,7 @@ import {
     categoriaNovaDe,
     criarVez,
     filtrarItens,
+    idsParaCategoria,
     gravarLote,
     loteParaGravar,
     marcadasIniciais,
@@ -25,6 +26,7 @@ import {
     quemFicouDeFora,
     resumoDaConferencia,
     resumoDoLote,
+    rotulosDasVisiveis,
     sourceDoArquivo,
     tipoDoArquivo,
 } from "./use-importar-extrato"
@@ -316,6 +318,32 @@ describe("a conferência", () => {
         expect(categoriaNovaDe(nova, new Map())).toBe("Feira")
         expect(categoriaNovaDe(daCarteira, new Map())).toBeNull()
         expect(categoriaNovaDe(nova, aplicarCategoria(new Map(), ["a"], null))).toBeNull()
+    })
+
+    it("as ações das visíveis dizem quantas, no singular e no plural", () => {
+        expect(rotulosDasVisiveis(5)).toEqual({
+            categoria: "Pôr categoria nos 5 visíveis",
+            fora: "Deixar de fora os 5 visíveis",
+            trazer: "Trazer os 5 visíveis",
+        })
+        expect(rotulosDasVisiveis(1)).toEqual({
+            categoria: "Pôr categoria no 1 visível",
+            fora: "Deixar de fora o 1 visível",
+            trazer: "Trazer o 1 visível",
+        })
+        expect(rotulosDasVisiveis(1048).categoria).toBe("Pôr categoria nos 1.048 visíveis")
+    })
+
+    it("a categoria das visíveis vale só para as do tipo dela; sem categoria vale para todas", () => {
+        const itens = [
+            item({ clientId: "a" }),
+            item({ clientId: "b", estorno: true }),
+            item({ clientId: "c" }),
+        ]
+        const conta = { tipo: "conta" as const, paymentMethod: "pix" as const }
+        expect(idsParaCategoria(itens, "expense", conta)).toEqual(["a", "c"])
+        expect(idsParaCategoria(itens, "income", conta)).toEqual(["b"])
+        expect(idsParaCategoria(itens, null, conta)).toEqual(["a", "b", "c"])
     })
 
     it("o período em português: mesmo mês, meses e anos diferentes", () => {

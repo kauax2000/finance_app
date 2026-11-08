@@ -89,7 +89,11 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/<span className="md:hidden">\s*\{formatYmdPtBr\(item\.data\)\.slice\(0, 5\)\} · \{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}/)
         expect(conferir).not.toContain("order-last basis-full")
         // Trocar a de uma linha no telefone: marcar e usar o Pôr categoria, que o aviso diz.
-        expect(conferir).toContain("Marque e use Pôr categoria para trocar")
+        // A categoria de uma linha no telefone: tocar no corpo da linha (a caixa só diz se entra).
+        expect(conferir).toContain("Toque numa linha para trocar a categoria")
+        expect(conferir).toContain("aria-label={`Trocar a categoria de ${rotuloDe(item)}`}")
+        expect(conferir).toMatch(/onRowClick=\{celular \? \(i\) => setPorCategoria\(\[i\]\) : undefined\}/)
+        expect(conferir).not.toContain("Marque e use")
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
@@ -107,23 +111,30 @@ describe("a conferência", () => {
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
     })
 
-    it("Pôr categoria compara o tipo da categoria (estorno do cartão é despesa), e a folha dele vira gaveta no telefone", () => {
-        expect(conferir).toContain("new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1")
-        expect(conferir.match(/disabled=\{porCategoriaDesligado\}/g)?.length).toBe(2)
+    it("as ações em massa valem para as visíveis (filtro e busca), nunca para as marcadas; a folha vira gaveta no telefone", () => {
+        // O que se vê é o que o DataTable filtrou (o filtro da conferência mais a busca).
+        expect(conferir).toContain("useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)")
+        expect(conferir).toContain("<AcoesDasVisiveis imp={imp} itens={imp.visiveis}")
+        expect(conferir).toContain("rotulosDasVisiveis(itens.length)")
+        expect(conferir).not.toContain("marcadasVistas")
+        expect(conferir).not.toContain("porCategoriaDesligado")
+        // Cada categoria vale para as visíveis do tipo dela (o estorno do cartão é despesa).
+        expect(conferir).toContain("idsParaCategoria(itens, tipo, destino)")
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
+        expect(conferir).toContain("`Vale para os ${numberBR(itens.length)} visíveis.`")
     })
 
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {
         expect(conferir).toContain("<DataTable")
-        expect(conferir).toMatch(/toolbar=\{\{ search: "Buscar descrição", end: acoes \}\}/)
+        expect(conferir).toMatch(/toolbar=\{\{ search: "Buscar descrição", end: <AcoesDaTabela/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.
         expect(conferir).not.toContain("bulkActions=")
-        expect(conferir).toMatch(/marcadasVistas\.reduce\(\(s, i\) => s \+ valorDe\(i\), 0\)/)
         expect(conferir).toMatch(/mobile: "title"[\s\S]*?mobile: "description"/)
-        expect(conferir).toContain("Deixar de fora")
-        expect(conferir).toContain("Pôr categoria")
+        expect(conferir).toContain("rotulos.fora")
+        expect(conferir).toContain("rotulos.trazer")
+        expect(conferir).toContain("rotulos.categoria")
     })
 
     it("o filtro é um ToggleGroup, a categoria é Combobox, o já existe é um Badge, o dinheiro é MoneyDisplay", () => {

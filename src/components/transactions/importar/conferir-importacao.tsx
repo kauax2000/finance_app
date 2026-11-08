@@ -1,7 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon, NoSymbolIcon, TagIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowsPointingInIcon,
+    ArrowsPointingOutIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    NoSymbolIcon,
+    TagIcon,
+} from "@heroicons/react/16/solid"
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +30,7 @@ import {
     DataTable,
     dataTableColumns,
     type DataTableColumnDef,
+    useDataTable,
 } from "@/components/ui/data-table"
 import {
     Dialog,
@@ -34,17 +42,38 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { EmptyState, EmptyStateIcon, EmptyStateTitle } from "@/components/ui/empty-state"
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemDescription,
+    ItemGroup,
+    ItemLink,
+    ItemMedia,
+    ItemTitle,
+} from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 
-import type { FiltroConferencia, ImportarExtrato } from "./use-importar-extrato"
+import {
+    type FiltroConferencia,
+    idsParaCategoria,
+    type ImportarExtrato,
+    rotulosDasVisiveis,
+} from "./use-importar-extrato"
 
 /** O compacto mostra no máximo isto; acima, o "Ver os N" e o expandir. */
 const LIMITE = 6
@@ -131,7 +160,15 @@ function JaExiste({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel })
 }
 
 /** A linha do compacto: caixa (entra ou não), descrição e data, categoria, valor. */
-function Linha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
+function Linha({
+    imp,
+    item,
+    onTrocarCategoria,
+}: {
+    imp: ImportarExtrato
+    item: ItemImportavel
+    onTrocarCategoria: (item: ItemImportavel) => void
+}) {
     const marcada = imp.marcadas.has(item.clientId)
     return (
         // A de fora esmaece pela tinta, e não por opacidade: o texto fica no contraste AA.
@@ -143,8 +180,14 @@ function Linha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
                     aria-label={`Trazer ${rotuloDe(item)}`}
                 />
             </ItemMedia>
-            {/* Uma linha no desktop (descrição · categoria · valor). No telefone a categoria é texto na segunda linha, e trocar é o Pôr categoria. */}
-            <div className="flex min-w-0 flex-1 items-center gap-x-3">
+            {/* Uma linha no desktop (descrição · categoria · valor). No telefone a categoria é texto na segunda linha, e tocar no corpo da linha (fora da caixa) a troca. */}
+            <div className="relative flex min-w-0 flex-1 items-center gap-x-3">
+                {/* A película do `ItemLink` cobre só este bloco (o `relative`): a caixa fica fora dela. */}
+                <ItemLink
+                    aria-label={`Trocar a categoria de ${rotuloDe(item)}`}
+                    className="md:hidden"
+                    onClick={() => onTrocarCategoria(item)}
+                />
                 <ItemContent className="min-w-0 flex-1">
                     <ItemTitle className="w-full">
                         <span className="truncate">{descricaoDe(item)}</span>
@@ -197,9 +240,24 @@ function useTetoDasLinhas(ativo: boolean) {
 
 const col = dataTableColumns<ItemImportavel>()
 
-/** "Pôr categoria" das marcadas: escolher aplica e fecha (sem formulário: o de fora é o do Importar). */
+/**
+ * "Pôr categoria" das linhas à vista (ou de uma, tocada no telefone): escolher
+ * aplica e fecha. Sem formulário: o de fora é o do Importar. Com despesas e
+ * receitas à vista, cada categoria vale para as do tipo dela.
+ */
 function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: ItemImportavel[]; onClose: () => void }) {
-    const primeiro = itens[0]
+    const destino = imp.destino
+    const tipos = destino ? (["expense", "income"] as const).filter((t) => itens.some((i) => tipoDoItem(i, destino) === t)) : []
+    const misturadas = tipos.length > 1
+    const categorias = imp.previa?.categorias ?? []
+
+    function escolher(v: string) {
+        if (!destino) return
+        const tipo = v === SEM ? null : (categorias.find((c) => c.id === v)?.type ?? null)
+        imp.setCategoria(idsParaCategoria(itens, tipo, destino), v === SEM ? null : v)
+        onClose()
+    }
+
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : onClose())}>
             <DialogContent size="sm">
@@ -208,44 +266,43 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                     <DialogDescription>
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
-                            : `Vale para os ${numberBR(itens.length)} marcados.`}
+                            : `Vale para os ${numberBR(itens.length)} visíveis.`}
+                        {misturadas ? " Cada categoria vale para as do tipo dela." : null}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogBody>
-                    {primeiro ? (
-                        <Combobox
-                            value=""
-                            onValueChange={(v) => {
-                                imp.setCategoria(
-                                    itens.map((i) => i.clientId),
-                                    v === SEM ? null : v,
-                                )
-                                onClose()
-                            }}
-                        >
-                            <ComboboxField>
-                                <ComboboxTrigger placeholder="Escolha uma categoria" aria-label="Categoria">
-                                    <ComboboxValue placeholder="Escolha uma categoria" />
-                                </ComboboxTrigger>
-                            </ComboboxField>
-                            <ComboboxContent>
-                                <ComboboxInput placeholder="Buscar categoria…" />
-                                <ComboboxList>
-                                    <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
-                                    <ComboboxGroup>
-                                        {(imp.previa?.categoriasDo(primeiro) ?? []).map((c) => (
-                                            <ComboboxItem key={c.id} value={c.id}>
-                                                {c.name}
-                                            </ComboboxItem>
-                                        ))}
-                                        <ComboboxItem value={SEM} variant="none">
-                                            Sem categoria
-                                        </ComboboxItem>
+                    <Combobox value="" onValueChange={escolher}>
+                        <ComboboxField>
+                            <ComboboxTrigger placeholder="Escolha uma categoria" aria-label="Categoria">
+                                <ComboboxValue placeholder="Escolha uma categoria" />
+                            </ComboboxTrigger>
+                        </ComboboxField>
+                        <ComboboxContent>
+                            <ComboboxInput placeholder="Buscar categoria…" />
+                            <ComboboxList>
+                                <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
+                                {tipos.map((t) => (
+                                    <ComboboxGroup
+                                        key={t}
+                                        heading={misturadas ? (t === "expense" ? "Despesas" : "Receitas") : undefined}
+                                    >
+                                        {categorias
+                                            .filter((c) => c.type === t)
+                                            .map((c) => (
+                                                <ComboboxItem key={c.id} value={c.id}>
+                                                    {c.name}
+                                                </ComboboxItem>
+                                            ))}
                                     </ComboboxGroup>
-                                </ComboboxList>
-                            </ComboboxContent>
-                        </Combobox>
-                    ) : null}
+                                ))}
+                                <ComboboxGroup>
+                                    <ComboboxItem value={SEM} variant="none">
+                                        Sem categoria
+                                    </ComboboxItem>
+                                </ComboboxGroup>
+                            </ComboboxList>
+                        </ComboboxContent>
+                    </Combobox>
                 </DialogBody>
                 <DialogFooter>
                     <DialogClose asChild>
@@ -260,6 +317,61 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 }
 
 /**
+ * As ações em massa valem para as linhas à vista (o filtro e a busca), nunca
+ * para as marcadas: a caixa só diz se a linha entra. Cada item diz quantas.
+ */
+function AcoesDasVisiveis({
+    imp,
+    itens,
+    onPorCategoria,
+    size,
+}: {
+    imp: ImportarExtrato
+    itens: ItemImportavel[]
+    onPorCategoria: (itens: ItemImportavel[]) => void
+    size?: "xs"
+}) {
+    const rotulos = rotulosDasVisiveis(itens.length)
+    const ids = itens.map((i) => i.clientId)
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button type="button" variant="secondary" size={size} disabled={itens.length === 0}>
+                    <span>{`${numberBR(itens.length)} ${itens.length === 1 ? "visível" : "visíveis"}`}</span>
+                    <ChevronDownIcon data-icon="inline-end" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => onPorCategoria(itens)}>
+                    <TagIcon />
+                    {rotulos.categoria}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    disabled={!itens.some((i) => imp.marcadas.has(i.clientId))}
+                    onSelect={() => imp.marcarVarias(ids, false)}
+                >
+                    <NoSymbolIcon />
+                    {rotulos.fora}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    disabled={itens.every((i) => imp.marcadas.has(i.clientId))}
+                    onSelect={() => imp.marcarVarias(ids, true)}
+                >
+                    <CheckIcon />
+                    {rotulos.trazer}
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
+/** Na barra do `DataTable`: as visíveis são as que ele filtrou (o filtro da conferência mais a busca). */
+function AcoesDaTabela(props: { imp: ImportarExtrato; onPorCategoria: (itens: ItemImportavel[]) => void }) {
+    const itens = useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)
+    return <AcoesDasVisiveis {...props} itens={itens} />
+}
+
+/**
  * A conferência: o resumo em chips, o filtro e a lista. Compacta, no máximo 6
  * linhas (a última dissolve) e "Ver os N"; expandida, o mesmo diálogo em tela
  * cheia com o `DataTable` (busca, ordenação, seleção = o que entra, soma).
@@ -268,7 +380,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
     const { resumo } = imp
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     const grande = imp.visiveis.length > LIMITE
-    const destino = imp.destino
+    const celular = useIsMobile()
     const [listaRef, teto] = useTetoDasLinhas(grande && !imp.expandido)
     const podeExpandir = resumo.total > LIMITE
 
@@ -288,7 +400,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
             cell: ({ row }) => <CategoriaDaLinha imp={imp} item={row.original} />,
             meta: { label: "Categoria", csv: false },
         },
-        // No gêmeo do telefone a categoria é texto (a legenda é um `<p>`); trocar é o "Pôr categoria" das marcadas.
+        // No gêmeo do telefone a categoria é texto (a legenda é um `<p>`); tocar na linha a troca.
         {
             id: "categoria-nome",
             header: "Categoria",
@@ -298,40 +410,6 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
         },
         col.money({ id: "valor", header: "Valor", accessor: valorDe }),
     ]
-
-    // As ações em massa moram na barra da tabela: a pílula flutuante do `DataTable` fica sob o véu do diálogo.
-    const marcadasVistas = imp.visiveis.filter((i) => imp.marcadas.has(i.clientId))
-    // Despesa e receita têm categorias diferentes: misturadas, filtre Saídas ou Entradas (o estorno do cartão é despesa).
-    const porCategoriaDesligado =
-        marcadasVistas.length === 0 ||
-        !destino ||
-        new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1
-    const acoes = (
-        <div className="flex items-center gap-2">
-            <span className="hidden text-sm whitespace-nowrap text-muted-foreground sm:inline">
-                {numberBR(marcadasVistas.length)} {marcadasVistas.length === 1 ? "marcada" : "marcadas"} ·{" "}
-                <MoneyDisplay value={marcadasVistas.reduce((s, i) => s + valorDe(i), 0)} signed />
-            </span>
-            <Button
-                type="button"
-                variant="secondary"
-                disabled={porCategoriaDesligado}
-                onClick={() => setPorCategoria(marcadasVistas)}
-            >
-                <TagIcon data-icon="inline-start" />
-                Pôr categoria
-            </Button>
-            <Button
-                type="button"
-                variant="tertiary"
-                disabled={marcadasVistas.length === 0}
-                onClick={() => imp.marcarVarias(marcadasVistas.map((i) => i.clientId), false)}
-            >
-                <NoSymbolIcon data-icon="inline-start" />
-                Deixar de fora
-            </Button>
-        </div>
-    )
 
     // A seleção do DataTable é o que entra; só as linhas à vista mudam (limpar não tira as filtradas).
     const selecao = Object.fromEntries([...imp.marcadas].map((id) => [id, true as const]))
@@ -412,20 +490,8 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         ))}
                     </ToggleGroup>
                 </div>
-                {/* No telefone a linha não tem campo de categoria: trocar é marcar e usar este botão. */}
                 {imp.expandido ? null : (
-                    <div className="md:hidden">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="xs"
-                            disabled={porCategoriaDesligado}
-                            onClick={() => setPorCategoria(marcadasVistas)}
-                        >
-                            <TagIcon data-icon="inline-start" />
-                            Pôr categoria
-                        </Button>
-                    </div>
+                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" />
                 )}
                 {podeExpandir ? (
                     <Button
@@ -448,7 +514,8 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     getRowId={(i) => i.clientId}
                     getRowLabel={rotuloDe}
                     pageSize={false}
-                    toolbar={{ search: "Buscar descrição", end: acoes }}
+                    toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} /> }}
+                    onRowClick={celular ? (i) => setPorCategoria([i]) : undefined}
                     enableSelection
                     rowSelection={selecao}
                     onRowSelectionChange={mudarSelecao}
@@ -458,7 +525,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                 vazio
             ) : (
                 <>
-                    <Caption className="md:hidden">Marque e use Pôr categoria para trocar</Caption>
+                    <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ScrollArea
                         variant="fade"
                         sides="end"
@@ -467,7 +534,12 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     >
                         <ItemGroup ref={listaRef} variant="divided">
                             {imp.visiveis.slice(0, grande ? LIMITE + 1 : LIMITE).map((i) => (
-                                <Linha key={i.clientId} imp={imp} item={i} />
+                                <Linha
+                                    key={i.clientId}
+                                    imp={imp}
+                                    item={i}
+                                    onTrocarCategoria={(item) => setPorCategoria([item])}
+                                />
                             ))}
                         </ItemGroup>
                     </ScrollArea>
