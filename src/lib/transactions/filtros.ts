@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/filter-bar"
 import { parseSort, parsePage, serializePage, serializeSort } from "@/lib/data-table/url-state"
 import { PAYMENT_METHOD_VALUES } from "@/lib/payment-methods"
-import { parseAmountFilter } from "@/lib/queries/fetch-transactions-list-page"
+import { parseAmountFilter } from "./valor"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 export type CampoId =
@@ -58,7 +58,7 @@ const uuidUnico = (v: string | null) => (v && UUID_RE.test(v) ? [v] : [])
 
 function periodoAntigo(p: URLSearchParams, hoje: Date): string[] {
     const preset = p.get("preset")
-    if (preset && PRESETS_ANTIGOS[preset]) return [PRESETS_ANTIGOS[preset]]
+    if (preset && Object.hasOwn(PRESETS_ANTIGOS, preset)) return [PRESETS_ANTIGOS[preset]]
     if (preset === "last15") {
         const ini = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 14)
         return [localYmdFromDate(ini), localYmdFromDate(hoje)]
@@ -114,7 +114,7 @@ export function lerFiltrosDaUrl(
     const [s] = parseSort(p.get("sort"), SORT_KEYS)
     return {
         type: type === "income" || type === "expense" ? type : "all",
-        q: p.get("q") ?? "",
+        q: (p.get("q") ?? "").trim(),
         filtros,
         sort: s ? { key: s.id as "date" | "amount", dir: s.desc ? "desc" : "asc" } : { key: "date", dir: "desc" },
         page: parsePage(p.get("page")) + 1,
@@ -127,8 +127,8 @@ export function escreverFiltrosNaUrl(estado: EstadoDaLista, base: URLSearchParam
     for (const k of ["type", "q", "f", "sort", "page", ...PARAMS_ANTIGOS]) out.delete(k)
     if (estado.type !== "all") out.set("type", estado.type)
     if (estado.q.trim()) out.set("q", estado.q.trim())
-    const f = serializeFilters(estado.filtros)
-    if (f) out.set("f", f)
+    // `f=` vazio é "sem filtro de propósito": a leitura não põe o período padrão.
+    out.set("f", serializeFilters(estado.filtros) ?? "")
     if (!(estado.sort.key === "date" && estado.sort.dir === "desc")) {
         out.set("sort", serializeSort([{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]))
     }

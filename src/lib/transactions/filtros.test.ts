@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 import {
     CAMPOS_BASE,
     escreverFiltrosNaUrl,
@@ -6,8 +6,6 @@ import {
     SEM_CATEGORIA,
     type EstadoDaLista,
 } from "./filtros"
-
-vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 const HOJE = new Date(2026, 10, 7)
 const ler = (qs: string) => lerFiltrosDaUrl(new URLSearchParams(qs), HOJE)
@@ -88,6 +86,32 @@ describe("lerFiltrosDaUrl", () => {
         expect(r.migrou).toBe(false)
     })
 
+    it("f= vazio é explícito: sem filtro, sem padrão, sem migrar", () => {
+        const r = ler("f=")
+        expect(r.filtros).toEqual([])
+        expect(r.migrou).toBe(false)
+    })
+
+    it("preset desconhecido: sem filtro, sem padrão, migra", () => {
+        for (const q of ["preset=bogus", "preset=constructor"]) {
+            const r = ler(q)
+            expect(r.filtros).toEqual([])
+            expect(r.migrou).toBe(true)
+        }
+    })
+
+    it("f vence o parâmetro antigo do mesmo campo", () => {
+        const r = ler(`f=categoria:is-not:${A}&cats=${B}&min=5`)
+        expect(r.filtros).toEqual([
+            { field: "categoria", operator: "is-not", values: [A] },
+            { field: "valor", operator: "gte", values: ["5"] },
+        ])
+    })
+
+    it("q é aparado", () => {
+        expect(ler("q=%20uber%20").q).toBe("uber")
+    })
+
     it("type, q, sort e page", () => {
         const r = ler("type=expense&q=uber&sort=amount.asc&page=3&f=conferir:is")
         expect(r).toMatchObject({ type: "expense", q: "uber", sort: { key: "amount", dir: "asc" }, page: 3 })
@@ -117,11 +141,12 @@ describe("escreverFiltrosNaUrl", () => {
         expect(migrou).toBe(false)
     })
 
-    it("não escreve padrões", () => {
-        const p = escreverFiltrosNaUrl(
-            { type: "all", q: "", sort: { key: "date", dir: "desc" }, page: 1, filtros: [] },
-            new URLSearchParams("type=income&page=2")
-        )
-        expect(p.toString()).toBe("")
+    it("não escreve padrões; lista vazia grava f= e volta vazia, sem padrão", () => {
+        const e: EstadoDaLista = { type: "all", q: "", sort: { key: "date", dir: "desc" }, page: 1, filtros: [] }
+        const p = escreverFiltrosNaUrl(e, new URLSearchParams("type=income&page=2"))
+        expect(p.toString()).toBe("f=")
+        const { migrou, ...volta } = lerFiltrosDaUrl(p, HOJE)
+        expect(volta).toEqual(e)
+        expect(migrou).toBe(false)
     })
 })

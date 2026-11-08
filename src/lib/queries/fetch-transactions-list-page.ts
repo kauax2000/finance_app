@@ -1,4 +1,5 @@
 import { supabase, type Transaction } from "@/lib/supabase"
+import { parseAmountFilter } from "@/lib/transactions/valor"
 import {
     filterRangeEndIso,
     filterRangeStartIso,
@@ -26,14 +27,6 @@ const TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED =
     "*, category:categories(*), subscription:workspace_subscriptions!subscription_id(id,name)"
 
 const TRANSACTION_LIST_SELECT_MINIMAL = "*, category:categories(*)"
-
-export function parseAmountFilter(raw: string): number | null {
-    const t = raw.trim().replace(/\s/g, "")
-    if (!t) return null
-    const normalized = t.replace(/\./g, "").replace(",", ".")
-    const n = Number(normalized)
-    return Number.isFinite(n) ? n : null
-}
 
 export type FetchTransactionsListPageArgs = {
     workspaceId: string
