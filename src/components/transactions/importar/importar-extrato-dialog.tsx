@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline"
 import { CheckIcon, DocumentTextIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { useWorkspace } from "@/components/workspace-provider"
@@ -17,7 +18,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
     Dialog,
     DialogBody,
@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/select"
 import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
+import { TrocaSuave } from "@/lib/troca-suave"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
@@ -209,7 +210,11 @@ export function ImportarExtratoDialog({
                                         imp.escolherArquivo(f)
                                     }}
                                 />
-                                {imp.arquivo ? (
+                                {/* A área e o arquivo escolhido trocam de lugar no desfoque e na mola
+                                    (a troca do sistema); o diálogo acompanha a altura. */}
+                                <div className="relative">
+                                    <TrocaSuave chave={imp.arquivo ? "arquivo" : "vazio"} className="block">
+                                        {imp.arquivo ? (
                                     <div className="flex flex-col gap-2">
                                         <Item
                                             variant="outline"
@@ -251,27 +256,47 @@ export function ImportarExtratoDialog({
                                             </Caption>
                                         ) : null}
                                     </div>
-                                ) : (
-                                    <Card
-                                        variant="dashed"
-                                        data-dragging={sobre || undefined}
-                                        className="items-center text-center data-dragging:border-ring data-dragging:ring-3 data-dragging:ring-ring/45"
-                                    >
-                                        <p className="font-medium text-foreground">Arraste o arquivo aqui</p>
-                                        <p>
-                                            ou{" "}
-                                            <Button
-                                                type="button"
-                                                variant="link"
-                                                disabled={travado}
-                                                onClick={() => entrada.current?.click()}
+                                        ) : (
+                                            <EmptyState
+                                                variant="dashed"
+                                                size="sm"
+                                                data-dragging={sobre || undefined}
+                                                className="group/soltar transition-[border-color,background-color,box-shadow] duration-(--duration-base) ease-(--ease-out) data-dragging:border-solid data-dragging:border-ring data-dragging:bg-muted/40 data-dragging:ring-3 data-dragging:ring-ring/45"
                                             >
-                                                <span>escolha no computador</span>
-                                            </Button>{" "}
-                                            · CSV ou OFX
-                                        </p>
-                                    </Card>
-                                )}
+                                                {/* Arrastando, o ícone sobe um passo na mola e o título troca. */}
+                                                <EmptyStateIcon className="transition-transform duration-(--duration-spring) ease-(--ease-spring) group-data-dragging/soltar:-translate-y-1">
+                                                    <ArrowUpTrayIcon aria-hidden />
+                                                </EmptyStateIcon>
+                                                <EmptyStateTitle className="relative">
+                                                    <TrocaSuave chave={sobre ? "soltar" : "arrastar"} className="block">
+                                                        {sobre ? (
+                                                            "Solte para ler o extrato"
+                                                        ) : (
+                                                            <>
+                                                                <span className="pointer-coarse:hidden">Arraste o extrato para cá</span>
+                                                                <span className="hidden pointer-coarse:inline">Escolha o extrato</span>
+                                                            </>
+                                                        )}
+                                                    </TrocaSuave>
+                                                </EmptyStateTitle>
+                                                <EmptyStateDescription>
+                                                    CSV ou OFX, exportado do app ou do site do banco
+                                                </EmptyStateDescription>
+                                                {/* Arrastando, o botão esmaece mas guarda o lugar: a área não muda de altura. */}
+                                                <EmptyStateActions className="transition-opacity duration-(--duration-fast) group-data-dragging/soltar:opacity-0">
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        disabled={travado}
+                                                        onClick={() => entrada.current?.click()}
+                                                    >
+                                                        escolher arquivo
+                                                    </Button>
+                                                </EmptyStateActions>
+                                            </EmptyState>
+                                        )}
+                                    </TrocaSuave>
+                                </div>
                                 {variosArquivos ? <Caption>Só um arquivo por vez; usamos o primeiro.</Caption> : null}
                                 <FormField label="Para onde vão">
                                     <Select

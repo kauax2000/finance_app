@@ -27,11 +27,25 @@ describe("o diálogo de importar, versão C", () => {
         expect(dialogo).toMatch(/<DialogBody[\s\S]*?onDragOver=\{[\s\S]*?onDrop=\{soltar\}/)
         // dragover impedido sempre: o navegador nunca abre o arquivo no lugar da página.
         expect(dialogo).toMatch(/function arrastando\(e: React\.DragEvent\) \{\s*e\.preventDefault\(\)/)
-        expect(dialogo).toMatch(/<Card[\s\S]*?variant="dashed"[\s\S]*?data-dragging=\{sobre \|\| undefined\}/)
+        // A área é o EmptyState tracejado: ícone, título, descrição e o botão (nada de botão no meio da frase).
+        expect(dialogo).toMatch(/<EmptyState[\s\S]*?variant="dashed"[\s\S]*?data-dragging=\{sobre \|\| undefined\}/)
+        expect(dialogo).toContain("<ArrowUpTrayIcon aria-hidden />")
+        expect(dialogo).toMatch(/<EmptyStateActions[\s\S]*?escolher arquivo/)
+        expect(dialogo).not.toMatch(/variant="link"[\s\S]{0,200}escolha no computador/)
         expect(dialogo).toContain("ring-ring")
         expect(dialogo).toContain("Só um arquivo por vez; usamos o primeiro.")
-        expect(dialogo).toContain("Arraste o arquivo aqui")
+        expect(dialogo).toContain("Arraste o extrato para cá")
+        // No toque não se arrasta: o título vira "Escolha o extrato".
+        expect(dialogo).toContain('<span className="hidden pointer-coarse:inline">Escolha o extrato</span>')
         expect(dialogo).toMatch(/type="file"[\s\S]*?accept="\.csv,\.ofx"/)
+    })
+
+    it("as trocas animam: área ↔ arquivo e o título ao arrastar, pela TrocaSuave; o ícone sobe na mola", () => {
+        expect(dialogo).toContain('<TrocaSuave chave={imp.arquivo ? "arquivo" : "vazio"}')
+        expect(dialogo).toContain('<TrocaSuave chave={sobre ? "soltar" : "arrastar"}')
+        expect(dialogo).toContain("Solte para ler o extrato")
+        expect(dialogo).toContain("group-data-dragging/soltar:-translate-y-1")
+        expect(dialogo).toContain("ease-(--ease-spring)")
     })
 
     it("o título da conta lê natural, e o arquivo diz o período quando a leitura o tem", () => {
