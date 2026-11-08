@@ -29,6 +29,24 @@ describe("transacoes-toolbar (fonte)", () => {
         expect(TOOLBAR).not.toContain("md:hidden")
     })
 
+    it("a FilterBar é a faixa de uma linha, sem mobile=", () => {
+        expect(TOOLBAR).toContain('overflow="scroll"')
+        expect(TOOLBAR).not.toMatch(/\bmobile=/)
+    })
+
+    it("a quebra é da própria linha (container), não da janela, e sem flex-wrap na raiz", () => {
+        const raiz = TOOLBAR.match(/return \(\s*<div className="([^"]*)"/)?.[1] ?? ""
+        expect(raiz).toMatch(/@container\/[\w-]+/)
+        expect(raiz).not.toContain("flex-wrap")
+        expect(TOOLBAR).toMatch(/@max-2xl\/[\w-]+:flex-wrap/)
+        expect(TOOLBAR).toMatch(/@max-2xl\/[\w-]+:basis-full/)
+        expect(TOOLBAR).not.toMatch(/\border-/)
+    })
+
+    it("o ⋯ segue o cabeçalho da página (que some abaixo do md), não a largura da linha", () => {
+        expect(TOOLBAR).toContain('className="hidden shrink-0 max-md:flex"')
+    })
+
     it("os campos partem de CAMPOS_BASE", () => {
         expect(CAMPOS).toContain("CAMPOS_BASE")
     })

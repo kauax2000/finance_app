@@ -52,31 +52,36 @@ export function TransacoesToolbar({
     })
 
     return (
-        // Uma linha só sobre a tabela: abas, filtros e, na ponta (do DataTable), a contagem e o Exibir.
-        // No telefone o FilterBar desce para a linha de baixo.
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        // Com sobra, uma linha: abas na largura delas e a faixa de filtros (com "+ Filtro" e a contagem
+        // presos na ponta) no resto. Estreita, a própria linha (não a janela) parte em duas fixas:
+        // abas esticadas (com o ⋯ no telefone) em cima, a FilterBar inteira embaixo.
+        // 42rem (@max-2xl) é o degrau de container mais perto dos 40rem do spec.
+        <div className="@container/transacoes min-w-0 flex-1">
+            <div className="flex items-center gap-2 @max-2xl/transacoes:flex-wrap">
                 <TransactionTypeSegment
                     value={estado.type}
                     onChange={(type) => setEstado({ type, filtros: podarCategoriasDoTipo(estado.filtros, type, categories) })}
-                    className="min-w-0 flex-1 shrink md:max-w-fit md:flex-none md:shrink-0"
+                    className="shrink-0 @max-2xl/transacoes:min-w-0 @max-2xl/transacoes:flex-1"
                 />
-                {/* Só no telefone: no desktop Importar e Exportar moram no cabeçalho da página. */}
+                {/* Só abaixo do md, onde a página não tem cabeçalho (isMobile): acima, Importar e Exportar moram nele.
+                    Pela janela, e não pela linha: pela linha, a 768–1000px ele duplicaria o do cabeçalho. */}
                 {onImportar || onExportar ? (
                     <div className="hidden shrink-0 max-md:flex">
                         <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} />
                     </div>
                 ) : null}
-            <div ref={raizDosFiltros} className="min-w-0 flex-1 max-md:order-last max-md:basis-full">
-                <FilterBar
-                    fields={campos}
-                    value={estado.filtros}
-                    onValueChange={(filtros) => setEstado({ filtros })}
-                    // Sem `total`: a tela não tem a contagem da carteira inteira, e "N de N" mentiria.
-                    count={pagina.isLoading ? undefined : pagina.totalCount}
-                    noun={["lançamento", "lançamentos"]}
-                    mobile="scroll"
-                    disabled={desligado}
-                />
+                <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-2xl/transacoes:basis-full">
+                    <FilterBar
+                        fields={campos}
+                        value={estado.filtros}
+                        onValueChange={(filtros) => setEstado({ filtros })}
+                        // Sem `total`: a tela não tem a contagem da carteira inteira, e "N de N" mentiria.
+                        count={pagina.isLoading ? undefined : pagina.totalCount}
+                        noun={["lançamento", "lançamentos"]}
+                        overflow="scroll"
+                        disabled={desligado}
+                    />
+                </div>
             </div>
         </div>
     )

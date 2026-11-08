@@ -1606,7 +1606,10 @@ declaração de `background-color` no trilho).
   por campo** e **tudo grava ao vivo** (o incompleto nunca é emitido);
   `serializeFilters`/`parseFilters`, `filterPeriodRange`, `FilterBarSkeleton`;
   `match`, `urlParam` (`history.pushState(null, …)`), `mobile="scroll" |
-  "stack"` abaixo de 28rem da própria barra. **O Enter de dentro dela e dos
+  "stack"` abaixo de 28rem da própria barra. `overflow="scroll"` é a faixa:
+  os tokens numa linha só, em qualquer largura, rolando de lado; "+ Filtro",
+  "Limpar" e a contagem ficam presos fora dela, e o token novo rola à vista —
+  é a de Transações. **O Enter de dentro dela e dos
   portais dela para nela** — a exceção documentada do `Form`.
   `filter-bar-versions.test.ts`.
 - **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão e a do
