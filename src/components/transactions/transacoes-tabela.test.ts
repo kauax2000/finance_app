@@ -47,10 +47,11 @@ describe("fonte da tabela", () => {
         expect(fonte).toContain("toolbar={{ view: !isMobile }}")
         expect(fonte).toContain("Selecione só despesas ou só receitas")
     })
-    it("a cor da categoria passa pelo ColorTile, sem cor crua em style", () => {
+    it("a Categoria é só o nome; a cor fica no ladrilho da Descrição", () => {
         expect(fonte).not.toContain("tileColorFor")
         expect(fonte).not.toContain("--badge-dot")
-        expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(2)
+        expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(1)
+        expect(fonte).toContain('<span className="block truncate">{c.name}</span>')
     })
     it("os vazios da §6.5", () => {
         expect(fonte).toContain("Seu primeiro lançamento")

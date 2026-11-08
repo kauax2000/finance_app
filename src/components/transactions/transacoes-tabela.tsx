@@ -199,12 +199,8 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             cell: ({ row }) => {
                 const c = row.original.category
                 if (!c) return <span className="text-muted-foreground">Sem categoria</span>
-                return (
-                    <span className="inline-flex max-w-full items-center gap-1.5">
-                        <ColorTile size="xs" color={c.color} />
-                        <span className="truncate">{c.name}</span>
-                    </span>
-                )
+                // Só o nome: a cor já mora no ladrilho da Descrição (e um <div> no gêmeo cairia num <p>).
+                return <span className="block truncate">{c.name}</span>
             },
             meta: { label: "Categoria", mobile: "description", cellClassName: "max-w-40" },
         },
