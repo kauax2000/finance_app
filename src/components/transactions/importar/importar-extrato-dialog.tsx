@@ -221,8 +221,9 @@ export function ImportarExtratoDialog({
                                             data-dragging={sobre || undefined}
                                             className="data-dragging:ring-3 data-dragging:ring-ring/45"
                                         >
-                                            <ItemMedia>
-                                                <DocumentTextIcon />
+                                            {/* O ladrilho redondo, o mesmo poço do ícone da área de soltar. */}
+                                            <ItemMedia variant="tile" tone="neutral">
+                                                <DocumentTextIcon aria-hidden />
                                             </ItemMedia>
                                             <ItemContent>
                                                 <ItemTitle>{imp.arquivo.name}</ItemTitle>

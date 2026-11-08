@@ -44,6 +44,8 @@ describe("o diálogo de importar, versão C", () => {
         expect(dialogo).toContain('<TrocaSuave chave={imp.arquivo ? "arquivo" : "vazio"}')
         expect(dialogo).toContain('<TrocaSuave chave={sobre ? "soltar" : "arrastar"}')
         expect(dialogo).toContain("Solte para ler o extrato")
+        // O arquivo escolhido tem o ícone num ladrilho à esquerda.
+        expect(dialogo).toMatch(/<ItemMedia variant="tile" tone="neutral">\s*<DocumentTextIcon aria-hidden \/>/)
         expect(dialogo).toContain("group-data-dragging/soltar:-translate-y-1")
         expect(dialogo).toContain("ease-(--ease-spring)")
     })
