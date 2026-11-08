@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate } from "./date-picker"
+import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate, proximoIntervaloDeMes } from "./date-picker"
 
 /** As versões do `DatePicker`. */
 
@@ -85,5 +85,54 @@ describe("as versões do DatePicker", () => {
       expect(lerFonte(arquivo), arquivo).toContain('displayStyle="relative"')
     }
     expect(lerFonte("src/components/bills/bill-form-fields.tsx")).toMatch(/placeholder="Sem data final"\s*clearable/)
+  })
+})
+
+describe("MonthGrid em intervalo", () => {
+  const botao = (html: string, rotulo: string) =>
+    html.match(new RegExp(`<button[^>]*aria-label="${rotulo}"[^>]*>[\\s\\S]*?</button>`))?.[0] ?? ""
+
+  it("as pontas são a tecla, o meio é a faixa, e fora do intervalo não há marca", () => {
+    const html = renderToStaticMarkup(
+      h(MonthGrid, {
+        mode: "range",
+        value: { from: new Date(2026, 7, 1), to: new Date(2026, 9, 1) },
+        onChange: () => {},
+      })
+    )
+    const ago = botao(html, "Agosto de 2026")
+    const set = botao(html, "Setembro de 2026")
+    const out = botao(html, "Outubro de 2026")
+    const jul = botao(html, "Julho de 2026")
+    expect(ago).toContain('aria-pressed="true"')
+    expect(ago).toContain('data-range="start"')
+    expect(out).toContain('aria-pressed="true"')
+    expect(out).toContain('data-range="end"')
+    expect(set).toContain('data-range="middle"')
+    expect(jul).not.toContain("data-range")
+  })
+
+  it("a legenda mora dentro do botão de cada mês", () => {
+    const html = renderToStaticMarkup(
+      h(MonthGrid, {
+        value: new Date(2026, 2, 1),
+        onChange: () => {},
+        caption: (m: Date) => `T${m.getMonth()}`,
+      })
+    )
+    const nomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+    nomes.forEach((nome, m) => {
+      expect(botao(html, `${nome} de 2026`)).toMatch(new RegExp(`data-slot="month-grid-caption"[^>]*>T${m}<`))
+    })
+  })
+
+  it("o primeiro toque é um mês e vira âncora; o segundo vai até ele, em qualquer ordem", () => {
+    const out = new Date(2026, 9, 1)
+    const ago = new Date(2026, 7, 1)
+    expect(proximoIntervaloDeMes(null, out)).toEqual({ range: { from: out, to: out }, ancora: out })
+    expect(proximoIntervaloDeMes(out, ago)).toEqual({ range: { from: ago, to: out }, ancora: null })
+    const nov = new Date(2025, 10, 1)
+    const fev = new Date(2026, 1, 1)
+    expect(proximoIntervaloDeMes(nov, fev)).toEqual({ range: { from: nov, to: fev }, ancora: null })
   })
 })

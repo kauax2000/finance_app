@@ -683,32 +683,74 @@ function CampoDigitavel({
   )
 }
 
-/**
- * Os doze meses de um ano, com o ano entre as setas: o painel do `mode="month"`,
- * exportado para quem tem gatilho próprio (a navegação de mês das categorias).
- */
-export function MonthGrid({
-  value,
-  onChange,
-  min,
-  max,
-  showToday = false,
-  className,
-}: {
-  value?: Date
-  onChange: (month: Date) => void
+type MonthRange = { from: Date; to: Date }
+
+type MonthGridProps = {
   min?: Date
   max?: Date
   showToday?: boolean
   className?: string
-}) {
+  /** Uma segunda linha sob o nome do mês (um total, por exemplo). */
+  caption?: (month: Date) => React.ReactNode
+} & (
+  | { mode?: "single"; value?: Date; onChange: (month: Date) => void }
+  | { mode: "range"; value?: MonthRange; onChange: (range: MonthRange) => void }
+)
+
+/**
+ * O toque no intervalo de meses: sem âncora, o mês tocado é o intervalo e vira
+ * a âncora; com âncora, o intervalo vai dela ao tocado (o menor é o início) e
+ * a âncora some. `from` e `to` são o dia 1 de cada mês.
+ */
+export function proximoIntervaloDeMes(
+  ancora: Date | null,
+  tocado: Date
+): { range: MonthRange; ancora: Date | null } {
+  if (!ancora) return { range: { from: tocado, to: tocado }, ancora: tocado }
+  const [from, to] = ancora <= tocado ? [ancora, tocado] : [tocado, ancora]
+  return { range: { from, to }, ancora: null }
+}
+
+/**
+ * Os doze meses de um ano, com o ano entre as setas: o painel do `mode="month"`,
+ * exportado para quem tem gatilho próprio (a navegação de mês das categorias).
+ * `mode="range"` escolhe de um mês a outro: o primeiro toque grava um mês só e o
+ * guarda como âncora (que sobrevive à troca de ano), o segundo grava até ele.
+ */
+export function MonthGrid(props: MonthGridProps) {
+  const { min, max, showToday = false, className, caption } = props
   const agora = hoje()
-  const [ano, setAno] = React.useState(() => (value ?? agora).getFullYear())
+  const intervalo = props.mode === "range" ? props.value : undefined
+  const unico = props.mode === "range" ? undefined : props.value
+  const [ano, setAno] = React.useState(() => (unico ?? intervalo?.from ?? agora).getFullYear())
+  const [ancora, setAncora] = React.useState<Date | null>(null)
   const { startMonth, endMonth } = limitesNavegacao(min, max)
   const anoMin = startMonth.getFullYear()
   const anoMax = endMonth.getFullYear()
   const foraDoLimite = (a: number, m: number) =>
     new Date(a, m + 1, 0) < startMonth || new Date(a, m, 1) > endMonth
+  const indice = (d: Date) => d.getFullYear() * 12 + d.getMonth()
+
+  const escolher = (mes: Date) => {
+    if (props.mode === "range") {
+      const proximo = proximoIntervaloDeMes(ancora, mes)
+      setAncora(proximo.ancora)
+      props.onChange(proximo.range)
+    } else {
+      props.onChange(mes)
+    }
+  }
+
+  /** A posição do mês no intervalo: a ponta, o meio ou fora (`undefined`). */
+  const noIntervalo = (i: number) => {
+    if (!intervalo) return undefined
+    const de = indice(intervalo.from)
+    const ate = indice(intervalo.to)
+    if (i === de && i === ate) return "single"
+    if (i === de) return "start"
+    if (i === ate) return "end"
+    return i > de && i < ate ? "middle" : undefined
+  }
 
   return (
     <div
@@ -745,24 +787,49 @@ export function MonthGrid({
       </div>
       <div role="group" aria-label={`Meses de ${ano}`} className="grid grid-cols-3 gap-1">
         {Array.from({ length: 12 }, (_, m) => {
-          const escolhido = value?.getFullYear() === ano && value.getMonth() === m
+          const mes = new Date(ano, m, 1)
+          const posicao = noIntervalo(indice(mes))
+          const ponta = posicao !== undefined && posicao !== "middle"
+          const escolhido = intervalo
+            ? ponta
+            : unico?.getFullYear() === ano && unico.getMonth() === m
           const atual = agora.getFullYear() === ano && agora.getMonth() === m
-          const nome = labelYearMonthPt(formatYearMonth(new Date(ano, m, 1)))
+          const nome = labelYearMonthPt(formatYearMonth(mes))
+          const legenda = caption?.(mes)
           return (
             <Button
               key={m}
               type="button"
               size="sm"
-              variant={escolhido ? "primary" : atual ? "secondary" : "tertiary"}
+              variant={escolhido ? "primary" : atual && !posicao ? "secondary" : "tertiary"}
               aria-pressed={escolhido}
               aria-current={atual ? "date" : undefined}
               aria-label={nome}
+              data-range={posicao}
               disabled={foraDoLimite(ano, m)}
-              // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
-              className="font-normal pointer-coarse:h-11 pointer-coarse:text-base"
-              onClick={() => onChange(new Date(ano, m, 1))}
+              className={cn(
+                // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
+                "font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+                // O meio do intervalo é a faixa do `Calendar` (`range_middle`).
+                posicao === "middle" && "bg-muted text-foreground",
+                // Com legenda o mês cresce em altura: a caixa mede as duas linhas, com o piso do degrau.
+                legenda != null &&
+                  "h-auto min-h-7 flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11"
+              )}
+              onClick={() => escolher(mes)}
             >
-              <span className="capitalize">{formatMonthShortPtBr(new Date(ano, m, 1))}</span>
+              <span className="capitalize">{formatMonthShortPtBr(mes)}</span>
+              {legenda != null ? (
+                <span
+                  data-slot="month-grid-caption"
+                  className={cn(
+                    "text-2xs leading-tight nums",
+                    escolhido ? "text-primary-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  {legenda}
+                </span>
+              ) : null}
             </Button>
           )
         })}
@@ -774,8 +841,9 @@ export function MonthGrid({
           size="xs"
           className="self-center pointer-coarse:h-11 pointer-coarse:text-base"
           onClick={() => {
+            const mes = new Date(agora.getFullYear(), agora.getMonth(), 1)
             setAno(agora.getFullYear())
-            onChange(new Date(agora.getFullYear(), agora.getMonth(), 1))
+            escolher(mes)
           }}
         >
           este mês

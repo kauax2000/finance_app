@@ -106,12 +106,20 @@ export default function DatePickerDoc() {
             <code>mode=&quot;month&quot;</code> é a grade de doze meses, para o
             que é mensal; o valor é o primeiro dia do mês. A grade sozinha é o{" "}
             <code>MonthGrid</code>, para quem já tem gatilho próprio — a
-            navegação de mês das categorias.
+            navegação de mês das categorias. Com{" "}
+            <code>mode=&quot;range&quot;</code> ela escolhe de um mês a outro: o
+            primeiro toque grava aquele mês sozinho, o segundo grava até o mês
+            tocado (em qualquer ordem, o menor é o início), e o toque seguinte
+            recomeça. Trocar de ano no meio não perde o primeiro mês.{" "}
+            <code>caption</code> põe uma segunda linha sob o nome, como o total
+            do mês.
           </>
         }
         code={`<DatePicker mode="month" showToday value={mes} onChange={setMes} />
 
-<MonthGrid value={mes} onChange={setMes} showToday />`}
+<MonthGrid value={mes} onChange={setMes} showToday />
+
+<MonthGrid mode="range" value={meses} onChange={setMeses} caption={(m) => totalDoMes(m)} />`}
         previewClassName="flex-col items-stretch gap-3"
       >
         <MesDemo />
@@ -255,6 +263,18 @@ export default function DatePickerDoc() {
             type: "string",
             description: "O texto do campo enquanto nada foi escolhido.",
           },
+          {
+            prop: "MonthGrid mode",
+            type: '"single" | "range"',
+            default: '"single"',
+            description:
+              "range: value e onChange viram { from, to }, o dia 1 de cada mês; quem chama converte o fim para o último dia.",
+          },
+          {
+            prop: "MonthGrid caption",
+            type: "(month: Date) => ReactNode",
+            description: "Uma segunda linha sob o nome do mês; null deixa o mês sem legenda.",
+          },
         ]}
       />
     </>
@@ -376,8 +396,18 @@ function DigitarDemo() {
   )
 }
 
+/** O total de despesas de cada mês, a legenda da grade em intervalo. */
+const GASTO_DO_MES = [
+  "R$ 3,8 mil", "R$ 3,2 mil", "R$ 4,6 mil", "R$ 3,9 mil", "R$ 4,4 mil", "R$ 5,2 mil",
+  "R$ 4,0 mil", "R$ 3,7 mil", "R$ 4,1 mil", "R$ 4,8 mil", "R$ 4,1 mil", "R$ 6,3 mil",
+]
+
 function MesDemo() {
-  const [forma, setForma] = React.useState<"campo" | "grade">("campo")
+  const [forma, setForma] = React.useState<"campo" | "grade" | "intervalo">("campo")
+  const [meses, setMeses] = React.useState<{ from: Date; to: Date } | undefined>(() => {
+    const h = new Date()
+    return { from: new Date(h.getFullYear(), h.getMonth() - 2, 1), to: new Date(h.getFullYear(), h.getMonth(), 1) }
+  })
   const [mes, setMes] = React.useState<Date | undefined>(() => {
     const h = new Date()
     return new Date(h.getFullYear(), h.getMonth(), 1)
@@ -389,10 +419,10 @@ function MesDemo() {
         fim={
           <Eixo
             rotulo="forma"
-            valores={["campo", "grade"] as const}
+            valores={["campo", "grade", "intervalo"] as const}
             valor={forma}
             onChange={setForma}
-            rotulos={{ campo: "Campo", grade: "MonthGrid" }}
+            rotulos={{ campo: "Campo", grade: "MonthGrid", intervalo: "Intervalo" }}
           />
         }
       />
@@ -406,6 +436,22 @@ function MesDemo() {
             value={mes}
             onChange={setMes}
           />
+        </div>
+      ) : forma === "intervalo" ? (
+        <div className="flex flex-col items-start gap-2">
+          <div className="rounded-surface border border-border">
+            <MonthGrid
+              mode="range"
+              value={meses}
+              onChange={setMeses}
+              caption={(m) => (m <= new Date() ? GASTO_DO_MES[m.getMonth()] : null)}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {meses
+              ? `${labelYearMonthPt(formatYearMonth(meses.from))} – ${labelYearMonthPt(formatYearMonth(meses.to))}`
+              : "Nenhum período"}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col items-start gap-2">
