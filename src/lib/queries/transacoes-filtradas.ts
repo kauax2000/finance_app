@@ -1,6 +1,6 @@
 import { supabase, type CreditCard, type Transaction } from "@/lib/supabase"
 import { filterPeriodRange } from "@/components/ui/filter-bar"
-import { filterRangeEndIso, filterRangeStartIso } from "@/lib/transaction-date"
+import { filterRangeEndIso, filterRangeStartIso, transactionCalendarParts } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { SEM_CATEGORIA, type EstadoDaLista } from "@/lib/transactions/filtros"
 import { POSTGREST_MAX_ROWS } from "./fetch-all-rows"
@@ -179,4 +179,35 @@ export async function fetchTransacoesParaExportar({
         return { data, error }
     })
     return { transactions: attachPaymentCards(rows, cartoes), truncado }
+}
+
+/** Despesa por mês (jan..dez) do ano; doze `null` se passar do teto, porque soma cortada engana. */
+export async function fetchDespesasPorMes({
+    workspaceId,
+    year,
+    signal,
+}: {
+    workspaceId: string
+    year: number
+    signal?: AbortSignal
+}): Promise<(number | null)[]> {
+    const { rows, truncado } = await lerAteOLimite<{ date: string; amount: number | string }>(async (from, to) => {
+        let q = supabase
+            .from("transactions")
+            .select("date, amount")
+            .eq("workspace_id", workspaceId)
+            .eq("type", "expense")
+            .gte("date", filterRangeStartIso(`${year}-01-01`))
+            .lte("date", filterRangeEndIso(`${year}-12-31`))
+            .order("id")
+        if (signal) q = q.abortSignal(signal)
+        return q.range(from, to)
+    })
+    if (truncado) return Array(12).fill(null)
+    const meses = Array<number>(12).fill(0)
+    for (const { date, amount } of rows) {
+        const p = transactionCalendarParts(date)
+        if (p && p.y === year) meses[p.mo - 1] += Number(amount)
+    }
+    return meses
 }

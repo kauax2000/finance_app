@@ -11,6 +11,7 @@ import type { Adulto } from "@/lib/divisao/dados"
 import { useAdultos } from "@/lib/divisao/use-adultos"
 import { PAYMENT_METHOD_VALUES, paymentMethodLabel } from "@/lib/payment-methods"
 import { listarProjetos } from "@/lib/projetos/dados"
+import { fetchDespesasPorMes } from "@/lib/queries/transacoes-filtradas"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useMemberDirectoryQuery, type MemberDirectoryRow } from "@/lib/queries/use-member-directory"
@@ -43,6 +44,8 @@ export type DadosDosCampos = {
     projetos: Pick<Project, "id" | "name" | "archived_at">[]
     planos: { id: string; description: string | null }[]
     assinaturas: { id: string; name: string }[]
+    /** Com a carteira, o período mostra o total de despesas por mês. */
+    workspaceId?: string | null
 }
 
 function avatarDe(m: MemberDirectoryRow) {
@@ -88,6 +91,10 @@ export function montarCampos(d: DadosDosCampos): FilterField[] {
     }
     return CAMPOS_BASE.flatMap((campo) => {
         const id = campo.id as CampoId
+        if (id === "periodo" && campo.type === "period" && d.workspaceId) {
+            const workspaceId = d.workspaceId
+            return [{ ...campo, totals: (year, signal) => fetchDespesasPorMes({ workspaceId, year, signal }) }]
+        }
         if (!(id in opcoes)) return [campo]
         const lista = opcoes[id]
         return lista && campo.type === "enum" ? [{ ...campo, options: lista }] : []
@@ -153,8 +160,9 @@ export function useCamposDeFiltro(type: EstadoDaLista["type"]): {
                 projetos: projetos.data?.disponivel ? projetos.data.dados : [],
                 planos: aux.data?.installmentPlans ?? [],
                 assinaturas: aux.data?.subscriptions ?? [],
+                workspaceId: ws,
             }),
-        [type, categorias.data, cartoes.data, membros.data, papel, adultos.lista, divide, projetos.data, aux.data],
+        [type, ws, categorias.data, cartoes.data, membros.data, papel, adultos.lista, divide, projetos.data, aux.data],
     )
     const carregando = categorias.isPending || cartoes.isPending || aux.isPending || membros.isPending
     const prontos = Boolean(ws) && !carregando && !projetos.isPending && !adultos.carregando

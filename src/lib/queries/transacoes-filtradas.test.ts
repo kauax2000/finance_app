@@ -7,7 +7,7 @@ vi.mock("@/lib/supabase", () => ({
     supabase: {
         from: () => {
             const q: Record<string, unknown> = {}
-            for (const m of ["eq", "in", "not", "is", "or", "gte", "lte", "ilike", "order"]) q[m] = () => q
+            for (const m of ["eq", "in", "not", "is", "or", "gte", "lte", "ilike", "order", "abortSignal"]) q[m] = () => q
             q.select = (s: string) => {
                 h.selects.push(s)
                 return q
@@ -23,6 +23,7 @@ vi.mock("@/lib/supabase", () => ({
 
 import {
     aplicarFiltros,
+    fetchDespesasPorMes,
     fetchTransacoesParaExportar,
     fetchTransacoesPagina,
     LIMITE_DE_SOMA,
@@ -132,5 +133,27 @@ describe("fetchTransacoesParaExportar e página", () => {
         expect(h.ranges[1]).toEqual([200, 299])
         expect(r.totalCount).toBe(1)
         expect((r.transactions[0] as unknown as { payment_card: { name: string } }).payment_card.name).toBe("Nubank")
+    })
+})
+
+describe("fetchDespesasPorMes", () => {
+    beforeEach(() => {
+        h.linhas = []
+        h.selects = []
+        h.ranges = []
+    })
+    it("soma por mês local e devolve doze posições", async () => {
+        h.linhas = [
+            { date: "2026-01-15T12:00:00Z", amount: 100 },
+            { date: "2026-01-20T12:00:00Z", amount: 50 },
+            { date: "2026-03-02T12:00:00Z", amount: 10 },
+        ]
+        const r = await fetchDespesasPorMes({ workspaceId: "w", year: 2026 })
+        expect(r).toEqual([150, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        expect(h.selects).toEqual(["date, amount"])
+    })
+    it("passou do limite: doze null", async () => {
+        h.linhas = Array.from({ length: LIMITE_DE_SOMA + 1 }, () => ({ date: "2026-01-15T12:00:00Z", amount: 1 }))
+        expect(await fetchDespesasPorMes({ workspaceId: "w", year: 2026 })).toEqual(Array(12).fill(null))
     })
 })
