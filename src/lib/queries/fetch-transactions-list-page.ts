@@ -16,17 +16,70 @@ import {
 import { type PaymentMethod } from "@/lib/payment-methods"
 import { type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
 
-const PAGE_SIZE = 100
+export const PAGE_SIZE = 100
 
-const TRANSACTION_LIST_SELECT = TRANSACTION_DETAIL_SHEET_SELECT
+export const TRANSACTION_LIST_SELECT = TRANSACTION_DETAIL_SHEET_SELECT
 
-const TRANSACTION_LIST_SELECT_NO_SUBSCRIPTION_EMBED =
+export const TRANSACTION_LIST_SELECT_NO_SUBSCRIPTION_EMBED =
     "*, category:categories(*), " + INSTALLMENT_PLAN_LIST_EMBED
 
-const TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED =
+export const TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED =
     "*, category:categories(*), subscription:workspace_subscriptions!subscription_id(id,name)"
 
-const TRANSACTION_LIST_SELECT_MINIMAL = "*, category:categories(*)"
+export const TRANSACTION_LIST_SELECT_MINIMAL = "*, category:categories(*)"
+
+type ResultadoDaConsulta = {
+    data: unknown[] | null
+    error: Parameters<typeof formatSupabasePostgrestError>[0]
+    count?: number | null
+}
+
+/**
+ * Roda a consulta com o select completo e, se o banco não conhece um embed
+ * (migração atrasada), repete com o select menor. Lança o erro final.
+ */
+export async function executarComFallbackDeEmbed(
+    construir: (select: string) => PromiseLike<ResultadoDaConsulta>,
+): Promise<{ data: unknown[] | null; count: number | null }> {
+    let selectStr = TRANSACTION_LIST_SELECT
+    let { data, error, count } = await construir(selectStr)
+
+    if (error && isTransactionsSubscriptionEmbedUnsupportedError(error)) {
+        selectStr = TRANSACTION_LIST_SELECT_NO_SUBSCRIPTION_EMBED
+        const retry = await construir(selectStr)
+        data = retry.data
+        error = retry.error
+        count = retry.count
+    }
+
+    if (error && isTransactionsInstallmentPlanEmbedUnsupportedError(error)) {
+        selectStr =
+            selectStr === TRANSACTION_LIST_SELECT
+                ? TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED
+                : TRANSACTION_LIST_SELECT_MINIMAL
+        const retry = await construir(selectStr)
+        data = retry.data
+        error = retry.error
+        count = retry.count
+    }
+
+    if (error && isTransactionsSubscriptionEmbedUnsupportedError(error)) {
+        const retry = await construir(TRANSACTION_LIST_SELECT_MINIMAL)
+        data = retry.data
+        error = retry.error
+        count = retry.count
+    }
+
+    if (error) {
+        // Quem avisa é o QueryCache.onError: avisar aqui também dava dois toasts.
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível carregar as transações.",
+        )
+    }
+
+    return { data, count: count ?? null }
+}
 
 export type FetchTransactionsListPageArgs = {
     workspaceId: string
@@ -165,42 +218,7 @@ export async function fetchTransactionsListPage(
         return qb.range(from, to)
     }
 
-    let selectStr = TRANSACTION_LIST_SELECT
-    let { data, error, count } = await buildListQuery(selectStr)
-
-    if (error && isTransactionsSubscriptionEmbedUnsupportedError(error)) {
-        selectStr = TRANSACTION_LIST_SELECT_NO_SUBSCRIPTION_EMBED
-        const retry = await buildListQuery(selectStr)
-        data = retry.data
-        error = retry.error
-        count = retry.count
-    }
-
-    if (error && isTransactionsInstallmentPlanEmbedUnsupportedError(error)) {
-        selectStr =
-            selectStr === TRANSACTION_LIST_SELECT
-                ? TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED
-                : TRANSACTION_LIST_SELECT_MINIMAL
-        const retry = await buildListQuery(selectStr)
-        data = retry.data
-        error = retry.error
-        count = retry.count
-    }
-
-    if (error && isTransactionsSubscriptionEmbedUnsupportedError(error)) {
-        const retry = await buildListQuery(TRANSACTION_LIST_SELECT_MINIMAL)
-        data = retry.data
-        error = retry.error
-        count = retry.count
-    }
-
-    if (error) {
-        // Quem avisa é o QueryCache.onError: avisar aqui também dava dois toasts.
-        throw new Error(
-            formatSupabasePostgrestError(error) ??
-                "Não foi possível carregar as transações.",
-        )
-    }
+    const { data, count } = await executarComFallbackDeEmbed(buildListQuery)
 
     return {
         transactions: (data ?? []) as unknown as Transaction[],
