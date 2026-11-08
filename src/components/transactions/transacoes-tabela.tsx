@@ -139,7 +139,11 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                 return (
                     <span className="flex min-w-0 items-center gap-2">
                         <LadrilhoDaCategoria t={t} />
-                        <span className="min-w-0 truncate" title={descricaoDe(t)}>
+                        {/* O sublinhado do hover mora só no nome: na célula `primary` ele descia aos badges (itens flex herdam o traço). */}
+                        <span
+                            className="min-w-0 truncate underline-offset-4 decoration-from-font group-hover/table-row:underline group-active/table-row:underline"
+                            title={descricaoDe(t)}
+                        >
                             {descricaoDe(t)}
                         </span>
                         <span className="flex shrink-0 items-center gap-1">
@@ -174,7 +178,6 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             },
             meta: {
                 label: "Descrição",
-                primary: true,
                 mobile: "title",
                 cellClassName: "max-w-80",
                 // No telefone o ladrilho vai para a mídia e o "A conferir" fica no título.
