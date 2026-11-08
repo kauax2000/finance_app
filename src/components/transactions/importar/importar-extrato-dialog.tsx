@@ -252,8 +252,9 @@ export function ImportarExtratoDialog({
                                             <Caption className="flex items-center gap-1">
                                                 <CheckIcon className="size-4 shrink-0 text-success" />
                                                 Colunas reconhecidas: Data, Descrição, Valor
-                                                {imp.deducao.mapa.categoria != null ? ", Categoria" : ""}. Gasto é{" "}
-                                                {imp.deducao.negativoEhDespesa ? "negativo" : "positivo"}.
+                                                {imp.deducao.mapa.categoria != null ? ", Categoria" : ""}.
+                                                {/* O sinal depende do destino: só aparece com ele, na mesma linha (a altura não muda). */}
+                                                {imp.destino ? ` Gasto é ${imp.deducao.negativoEhDespesa ? "negativo" : "positivo"}.` : null}
                                             </Caption>
                                         ) : null}
                                     </div>

@@ -377,12 +377,14 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     // O mapeamento ao pedir Ajustar: confirmar sem mudar volta à mesma conferência.
     const ajustando = useRef<MapeamentoColunas | null>(null)
 
-    function limparLeitura() {
+    function limparLeitura({ manterCsv = false }: { manterCsv?: boolean } = {}) {
         // A leitura no ar não aterrissa num estado que mudou.
         vez.invalidar()
         ajustando.current = null
-        setCsv(null)
-        setDeducao(null)
+        if (!manterCsv) {
+            setCsv(null)
+            setDeducao(null)
+        }
         setLote(null)
         setExistentes(new Map())
         setExistentesConferidos(true)
@@ -394,8 +396,9 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setErro(null)
     }
 
-    function aplicarDeducao(linhas: string[][], d: DestinoImportacao) {
-        const ded = deduzirMapeamento(linhas, d.tipo)
+    // Sem destino ainda, as colunas já se deduzem (o sinal pela conta) e o sinal se refaz quando ele chega.
+    function aplicarDeducao(linhas: string[][], d: DestinoImportacao | null) {
+        const ded = deduzirMapeamento(linhas, d?.tipo ?? "conta")
         const m = mapeamentoDa(ded)
         setCsv(linhas)
         setDeducao(ded)
@@ -405,7 +408,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
 
     /** Com arquivo CSV e destino, a dedução já aparece no passo Arquivo; o sinal depende do destino. */
     async function deduzir(f: File | null, d: DestinoImportacao | null) {
-        if (!f || !d || tipoDoArquivo(f.name) !== "csv") return
+        if (!f || tipoDoArquivo(f.name) !== "csv") return
         const n = vez.nova()
         try {
             const linhas = lerCsv(await f.text())
@@ -416,9 +419,13 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     }
 
     function setDestino(d: DestinoImportacao | null) {
-        limparLeitura()
+        // Com o CSV já lido, a dedução se refaz na hora, sem apagar a linha "Colunas reconhecidas"
+        // entre uma e outra: apagar e reler fazia o diálogo encolher e crescer (o quique).
+        const lido = csv
+        limparLeitura({ manterCsv: Boolean(lido) })
         setDestinoEstado(d)
-        void deduzir(arquivo, d)
+        if (lido) aplicarDeducao(lido, d)
+        else void deduzir(arquivo, d)
     }
 
     function escolherArquivo(f: File | null) {

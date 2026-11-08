@@ -349,6 +349,13 @@ describe("a conferência", () => {
         expect(categoriaNovaDe(nova, aplicarCategoria(new Map(), ["a"], null))).toBeNull()
     })
 
+    it("trocar o destino com o CSV lido refaz a dedução na hora, sem apagar a leitura (o diálogo não quica)", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
+        expect(fonte).toMatch(/function setDestino\(d: DestinoImportacao \| null\) \{[\s\S]*?limparLeitura\(\{ manterCsv: Boolean\(lido\) \}\)[\s\S]*?if \(lido\) aplicarDeducao\(lido, d\)/)
+        // As colunas se deduzem já com o arquivo, antes do destino: a linha de colunas não nasce ao escolher o destino.
+        expect(fonte).toMatch(/async function deduzir\(f: File \| null, d: DestinoImportacao \| null\) \{\s*if \(!f \|\| tipoDoArquivo\(f\.name\) !== "csv"\) return/)
+    })
+
     it("inverter o sinal refaz a leitura do mesmo arquivo com o sinal ao contrário", () => {
         const fonte = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
         expect(fonte).toMatch(/function inverterSinal\(\) \{[\s\S]*?negativoEhDespesa: !mapeamento\.negativoEhDespesa[\s\S]*?lerComMapeamento\(linhas, m\)/)
