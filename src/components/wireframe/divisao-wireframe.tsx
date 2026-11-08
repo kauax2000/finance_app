@@ -9,15 +9,12 @@ import { useWorkspace } from "@/components/workspace-provider"
 import {
     apagarAcerto,
     criarAcerto,
-    definirPartes,
-    lerPartes,
     lerSaldos,
     listarAcertos,
 } from "@/lib/divisao/dados"
 import {
     acertoEhMeu,
     emCentavos,
-    partesFecham,
     pesosDigitados,
     pessoasDoAcerto,
     sugestaoDeAcerto,
@@ -27,14 +24,12 @@ import { chaves, useAdultos } from "@/lib/divisao/use-adultos"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
-import type { Transaction, Workspace } from "@/lib/supabase"
+import type { Workspace } from "@/lib/supabase"
 import { NADA_MUDOU } from "@/lib/supabase-errors"
 import { formatDatePtBr, localYmdFromDate } from "@/lib/transaction-date"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
 const campo = "border border-muted-foreground/60 bg-transparent px-2 py-1 font-mono text-foreground"
-
-const PARTES_NAO_FECHAM = "As partes precisam somar o valor da despesa."
 
 function mensagem(e: unknown): string {
     return e instanceof Error ? e.message : "Não foi possível salvar."
@@ -128,139 +123,6 @@ function PesosDaParcelada({
                   ))
                 : null}
             {valor != null && !pesosDigitados(valor) ? <p role="alert">Cada peso precisa ser maior que zero.</p> : null}
-        </WireframeBox>
-    )
-}
-
-/**
- * As partes de uma despesa na folha de detalhe: sempre as de
- * `transaction_shares`. O adulto as edita à mão (o editor só confere que
- * fecham antes do `definir_partes`) e volta ao automático.
- */
-export function PartesDaDespesaWireframe({ transaction }: { transaction: Transaction }) {
-    const ws = useDivisao()
-    if (!ws || transaction.workspace_id !== ws.id || transaction.type !== "expense") return null
-    return <Partes key={transaction.id} t={transaction} ws={ws.id} />
-}
-
-function Partes({ t, ws }: { t: Transaction; ws: string }) {
-    const queryClient = useQueryClient()
-    const { lista, nome } = useAdultos(ws)
-    const partes = useQuery({ queryKey: [...chaves.partes(t.id), t.amount, t.updated_at], queryFn: () => lerPartes(t.id) })
-    const [editando, setEditando] = useState<Record<string, string> | null>(null)
-    const [pendente, setPendente] = useState(false)
-    const [aviso, setAviso] = useState<string | null>(null)
-    const total = emCentavos(t.amount)
-
-    async function gravar(valores: { user_id: string; amount: number }[] | null) {
-        setPendente(true)
-        setAviso(null)
-        try {
-            const r = await definirPartes(t.id, valores)
-            if (!r.disponivel) return setAviso(AINDA_NAO_DISPONIVEL)
-            setEditando(null)
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: chaves.partes(t.id) }),
-                queryClient.invalidateQueries({ queryKey: chaves.saldos(ws) }),
-            ])
-        } catch (e) {
-            setAviso(mensagem(e))
-        } finally {
-            setPendente(false)
-        }
-    }
-
-    const digitadas = editando
-        ? lista.map((a) => ({ user_id: a.user_id, centavos: emCentavos(parseMoneyBrl(editando[a.user_id] || "0") ?? Number.NaN) }))
-        : []
-    const fecha = editando != null && partesFecham(digitadas, total)
-    const soma = digitadas.reduce((s, p) => s + (Number.isFinite(p.centavos) ? p.centavos : 0), 0)
-
-    function onSubmit(e: FormEvent) {
-        e.preventDefault()
-        if (!fecha) return setAviso(PARTES_NAO_FECHAM)
-        void gravar(digitadas.map((p) => ({ user_id: p.user_id, amount: p.centavos / 100 })))
-    }
-
-    const dados = partes.data?.disponivel ? partes.data.dados : null
-    return (
-        <WireframeBox bloco={7} titulo="Partes desta despesa">
-            {partes.isLoading ? <p>Carregando…</p> : null}
-            {partes.error ? <p role="alert">{mensagem(partes.error)}</p> : null}
-            {partes.data && !partes.data.disponivel ? <p>{AINDA_NAO_DISPONIVEL}</p> : null}
-            {dados ? (
-                <>
-                    <p className="text-foreground">Pagou: {nome(dados.pagou)}</p>
-                    {dados.partes.length === 0 ? (
-                        <p>Fora da divisão: a despesa é de antes de a carteira passar a dividir.</p>
-                    ) : (
-                        <>
-                            <ul>
-                                {dados.partes.map((p) => (
-                                    <li key={p.user_id}>
-                                        {nome(p.user_id)}: {currencyBRL(Number(p.amount))}
-                                    </li>
-                                ))}
-                            </ul>
-                            <p>{dados.manual ? "Partes escritas à mão." : "Partes automáticas, pelos pesos; o centavo que sobra fica com quem pagou."}</p>
-                        </>
-                    )}
-                    {dados.partes.length > 0 && !editando ? (
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                className={botao}
-                                disabled={pendente}
-                                onClick={() =>
-                                    setEditando(
-                                        Object.fromEntries(
-                                            lista.map((a) => {
-                                                const p = dados.partes.find((x) => x.user_id === a.user_id)
-                                                return [a.user_id, formatMoneyBrlInput(p ? Number(p.amount) : 0)]
-                                            }),
-                                        ),
-                                    )
-                                }
-                            >
-                                Editar à mão
-                            </button>
-                            {dados.manual ? (
-                                <button type="button" className={botao} disabled={pendente} onClick={() => void gravar(null)}>
-                                    {pendente ? "Voltando…" : "Voltar ao automático"}
-                                </button>
-                            ) : null}
-                        </div>
-                    ) : null}
-                    {editando ? (
-                        <form onSubmit={onSubmit} className="flex flex-col gap-2">
-                            {lista.map((a) => (
-                                <label key={a.user_id} className="flex items-center gap-2">
-                                    {a.nome} (R$)
-                                    <input
-                                        className={campo}
-                                        inputMode="decimal"
-                                        value={editando[a.user_id] ?? ""}
-                                        onChange={(e) => setEditando({ ...editando, [a.user_id]: e.target.value })}
-                                    />
-                                </label>
-                            ))}
-                            <p>
-                                Soma: {currencyBRL(soma / 100)} de {currencyBRL(total / 100)}
-                            </p>
-                            {!fecha ? <p role="alert">{PARTES_NAO_FECHAM}</p> : null}
-                            <div className="flex flex-wrap gap-2">
-                                <button type="submit" className={botao} disabled={pendente || !fecha}>
-                                    {pendente ? "Salvando…" : "Salvar partes"}
-                                </button>
-                                <button type="button" className={botao} disabled={pendente} onClick={() => setEditando(null)}>
-                                    Cancelar
-                                </button>
-                            </div>
-                        </form>
-                    ) : null}
-                </>
-            ) : null}
-            {aviso ? <p role="status">{aviso}</p> : null}
         </WireframeBox>
     )
 }

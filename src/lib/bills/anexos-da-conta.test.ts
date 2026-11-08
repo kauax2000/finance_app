@@ -67,8 +67,10 @@ describe("fonte", () => {
     })
 
     it("o detalhe do lançamento lista pelo anexosDoLancamento", () => {
-        const f = semComentarios(lerFonte("src/components/transactions/transaction-detail-sheet.tsx"), "tudo")
-        expect(f).toContain("anexosDoLancamento(supabase, t.id)")
+        expect(lerFonte("src/components/transactions/anexos-do-lancamento.tsx")).toContain("anexosDoLancamento(supabase, t.id)")
+        expect(semComentarios(lerFonte("src/components/transactions/transaction-detail-sheet.tsx"), "tudo")).toContain(
+            "<AnexosDoLancamento key={t.id} transaction={t} />",
+        )
     })
 })
 
@@ -85,5 +87,12 @@ describe("podeApagarAnexo", () => {
     it("o bloco de anexos usa a regra no botão Apagar", () => {
         const f = semComentarios(lerFonte("src/components/wireframe/anexos-wireframe.tsx"), "tudo")
         expect(f).toContain("somenteLeitura || !podeApagarAnexo(a, vinculo)")
+        // No detalhe do lançamento, o boleto da conta fica sem o ⋯ de apagar.
+        // Sem semComentarios: o "image/*" do accept abriria um comentário de bloco.
+        const d = lerFonte("src/components/transactions/anexos-do-lancamento.tsx")
+        expect(d).toContain("const boleto = !podeApagarAnexo(a, vinculo)")
+        expect(d).toMatch(/\{boleto \? null : \(\s*<DropdownMenu>/)
+        expect(d).toContain("<AlertDialog")
+        expect(d).not.toContain("window.confirm")
     })
 })

@@ -4,17 +4,18 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
-import { apagarAnexo, enviarAnexo, listarAnexos, podeApagarAnexo, urlAssinada, type VinculoAnexo } from "@/lib/anexos"
+import {
+    abrirAnexo,
+    apagarAnexo,
+    descricaoDoAnexo as descricao,
+    enviarAnexo,
+    listarAnexos,
+    podeApagarAnexo,
+    type VinculoAnexo,
+} from "@/lib/anexos"
 import { supabase, type Attachment } from "@/lib/supabase"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
-
-const tamanho = (bytes: number) =>
-    bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
-
-/** O anexo não guarda nome: o tipo, o tamanho e o dia o distinguem na lista e no link. */
-const descricao = (a: Pick<Attachment, "mime" | "size_bytes" | "created_at">) =>
-    `${a.mime === "application/pdf" ? "PDF" : "Foto"} · ${tamanho(a.size_bytes)} · ${new Date(a.created_at).toLocaleDateString("pt-BR")}`
 
 /**
  * Nota, recibo, boleto ou fatura: privados, abertos por URL assinada (Bloco 2).
@@ -59,21 +60,9 @@ export function AnexosWireframe({
     async function abrir(anexo: Attachment) {
         setErro(null)
         setLink(null)
-        // A aba nasce no clique: depois do `await`, o Safari a bloquearia.
-        const aba = window.open("about:blank", "_blank")
-        const url = await urlAssinada(supabase, anexo.path)
-        if (!url) {
-            aba?.close()
-            setErro("Não foi possível abrir o anexo.")
-            return
-        }
-        if (aba) {
-            aba.opener = null
-            aba.location.href = url
-        } else {
-            // Popup bloqueado: abrir na mesma janela tiraria a pessoa do app.
-            setLink({ url, rotulo: descricao(anexo) })
-        }
+        const r = await abrirAnexo(supabase, anexo.path)
+        if (r.estado === "erro") setErro("Não foi possível abrir o anexo.")
+        if (r.estado === "bloqueada") setLink({ url: r.url, rotulo: descricao(anexo) })
     }
 
     async function apagar(id: string, path: string) {

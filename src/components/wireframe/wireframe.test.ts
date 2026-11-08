@@ -424,10 +424,13 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 
   it("as partes mostradas vêm de transaction_shares, e o editor confere o fechamento antes do definir_partes", () => {
     expect(fonte("src/lib/divisao/dados.ts")).toMatch(/from\("transaction_shares"\)\.select\("\*"\)\.eq\("transaction_id", transactionId\)/)
-    const w = fonte(W)
-    expect(w).toMatch(/if \(!fecha\) return setAviso\(PARTES_NAO_FECHAM\)\s*void gravar\(/)
-    expect(w).toContain("gravar(null)")
-    expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<PartesDaDespesaWireframe transaction={t} />")
+    // As partes saíram do wireframe para o DS (redesenho de Transações, Tarefa 9).
+    const p = fonte("src/components/transactions/partes-da-despesa.tsx")
+    expect(p).toMatch(/if \(!fecha\) return setErro\(PARTES_NAO_FECHAM\)\s*if \(await gravar\(/)
+    expect(p).toContain("gravar(null)")
+    expect(p).toContain('currentWorkspace?.split_mode === "split" && isAdulto')
+    expect(fonte(W)).not.toContain("PartesDaDespesaWireframe")
+    expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<PartesDaDespesa transaction={t} />")
   })
 
   it("o modo e os pesos são do dono; o saldo é do adulto, no Painel, com quem saiu marcado", () => {
@@ -456,7 +459,8 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 
   it("a etiqueta de cada peça", () => {
     const w = fonte(W)
-    for (const t of ["Quem pagou", "Partes desta despesa", "Saldo e acerto", "Pesos desta parcelada"]) {
+    // "Partes desta despesa" saiu para o DS (PartesDaDespesa, redesenho de Transações).
+    for (const t of ["Quem pagou", "Saldo e acerto", "Pesos desta parcelada"]) {
       expect(w).toContain(`titulo="${t}"`)
     }
   })

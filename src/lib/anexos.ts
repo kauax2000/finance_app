@@ -157,6 +157,34 @@ export async function urlAssinada(supabase: SupabaseClient, path: string): Promi
     return data?.signedUrl ?? null
 }
 
+export const tamanhoDoAnexo = (bytes: number) =>
+    bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
+
+/** O anexo não guarda nome: o tipo, o tamanho e o dia o distinguem na lista e no link. */
+export const descricaoDoAnexo = (a: Pick<Attachment, "mime" | "size_bytes" | "created_at">) =>
+    `${a.mime === "application/pdf" ? "PDF" : "Foto"} · ${tamanhoDoAnexo(a.size_bytes)} · ${new Date(a.created_at).toLocaleDateString("pt-BR")}`
+
+export type AberturaDoAnexo = { estado: "aberta" } | { estado: "erro" } | { estado: "bloqueada"; url: string }
+
+/**
+ * Abre o anexo numa aba nascida no clique: chame direto do handler, porque o
+ * `window.open` roda antes do primeiro `await` (depois dele, o Safari o
+ * bloquearia). Com o popup bloqueado, devolve a URL para virar um link: abrir na
+ * mesma janela tiraria a pessoa do app.
+ */
+export async function abrirAnexo(supabase: SupabaseClient, path: string): Promise<AberturaDoAnexo> {
+    const aba = window.open("about:blank", "_blank")
+    const url = await urlAssinada(supabase, path)
+    if (!url) {
+        aba?.close()
+        return { estado: "erro" }
+    }
+    if (!aba) return { estado: "bloqueada", url }
+    aba.opener = null
+    aba.location.href = url
+    return { estado: "aberta" }
+}
+
 /**
  * O boleto é da instância da conta: quem olha o lançamento pago (vínculo sem
  * `billInstanceId`) o abre, mas não o apaga.

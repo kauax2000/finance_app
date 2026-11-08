@@ -21,6 +21,21 @@ export function partesFecham(partes: { user_id: string; centavos: number }[], to
     return partes.reduce((s, p) => s + p.centavos, 0) === totalCentavos
 }
 
+/**
+ * O que falta (positivo) ou passa (negativo) para as partes, em reais, fecharem
+ * o total. A conta é em centavos inteiros: 33,33 + 33,33 + 33,34 dá 0.
+ */
+export function faltaParaFechar(partes: Record<string, number>, total: number): number {
+    const soma = Object.values(partes).reduce((s, v) => s + emCentavos(v), 0)
+    return (emCentavos(total) - soma) / 100
+}
+
+/** "Faltam R$ 12,00" ou "Passam R$ 3,00"; `null` quando fecha. */
+export function textoDaFalta(falta: number): string | null {
+    if (falta === 0) return null
+    return `${falta > 0 ? "Faltam" : "Passam"} ${currencyBRL(Math.abs(falta))}`
+}
+
 /** Positivo: os outros devem à pessoa. "Você…" quando é quem lê. */
 export function textoDoSaldo(saldoCentavos: number, nome: string, meuId: string, userId: string): string {
     const quem = userId === meuId ? "Você" : nome

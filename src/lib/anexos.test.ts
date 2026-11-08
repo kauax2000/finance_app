@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-import { dimensoesAlvo, validarArquivo } from "./anexos"
+import { abrirAnexo, descricaoDoAnexo, dimensoesAlvo, validarArquivo } from "./anexos"
 
 const MB = 1024 * 1024
 const COTA = 26214400
@@ -94,9 +94,43 @@ describe("fonte", () => {
         expect(apagar.indexOf(".delete()")).toBeLessThan(apagar.indexOf("removerObjetos("))
     })
 
-    it("o detalhe do lançamento, o da conta e a conferência usam o wireframe de anexos", () => {
-        expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<AnexosWireframe")
+    it("o detalhe do lançamento usa o AnexosDoLancamento; o da conta e a conferência, o wireframe", () => {
+        expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<AnexosDoLancamento")
         expect(lerFonte("src/components/bills/bill-detail-sheet.tsx")).toMatch(/billInstanceId:\s*nextInst\.id/)
         expect(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx")).toMatch(/statementTotalId/)
+    })
+})
+
+describe("abrirAnexo", () => {
+    const supabase = (url: string | null) =>
+        ({
+            storage: { from: () => ({ createSignedUrl: async () => ({ data: url ? { signedUrl: url } : null }) }) },
+        }) as unknown as Parameters<typeof abrirAnexo>[0]
+
+    it("abre a aba no clique e põe a URL nela", async () => {
+        const aba = { opener: {} as unknown, location: { href: "" }, close: () => {} }
+        const open = vi.fn(() => aba)
+        vi.stubGlobal("window", { open })
+        expect(await abrirAnexo(supabase("https://x/a"), "w/a.pdf")).toEqual({ estado: "aberta" })
+        expect(open).toHaveBeenCalledWith("about:blank", "_blank")
+        expect(aba.location.href).toBe("https://x/a")
+        expect(aba.opener).toBeNull()
+        vi.unstubAllGlobals()
+    })
+
+    it("popup bloqueado devolve a URL para o link; sem URL, fecha a aba e dá erro", async () => {
+        vi.stubGlobal("window", { open: () => null })
+        expect(await abrirAnexo(supabase("https://x/a"), "w/a.pdf")).toEqual({ estado: "bloqueada", url: "https://x/a" })
+        const close = vi.fn()
+        vi.stubGlobal("window", { open: () => ({ close }) })
+        expect(await abrirAnexo(supabase(null), "w/a.pdf")).toEqual({ estado: "erro" })
+        expect(close).toHaveBeenCalled()
+        vi.unstubAllGlobals()
+    })
+
+    it("descreve tipo, tamanho e dia", () => {
+        expect(descricaoDoAnexo({ mime: "application/pdf", size_bytes: 2 * MB, created_at: "2026-11-07T12:00:00Z" })).toBe(
+            `PDF · 2.0 MB · ${new Date("2026-11-07T12:00:00Z").toLocaleDateString("pt-BR")}`,
+        )
     })
 })

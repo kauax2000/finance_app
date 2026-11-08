@@ -3,11 +3,13 @@ import { currencyBRL } from "@/lib/formatters"
 import {
     acertoEhMeu,
     emCentavos,
+    faltaParaFechar,
     lerPeso,
     partesFecham,
     pesosDigitados,
     pessoasDoAcerto,
     sugestaoDeAcerto,
+    textoDaFalta,
     textoDoSaldo,
 } from "@/lib/divisao/partes"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
@@ -130,5 +132,31 @@ describe("Ruling 8: o acerto com quem saiu", () => {
         expect(acertoEhMeu("eu", "eu", "ana")).toBe(true)
         expect(acertoEhMeu("eu", "ana", "eu")).toBe(true)
         expect(acertoEhMeu("eu", "ana", "bia")).toBe(false)
+    })
+})
+
+describe("faltaParaFechar", () => {
+    it("o que falta, o zero e os centavos sem erro de ponto flutuante", () => {
+        expect(faltaParaFechar({ a: 50, b: 40 }, 100)).toBe(10)
+        expect(faltaParaFechar({ a: 60, b: 40 }, 100)).toBe(0)
+        expect(faltaParaFechar({ a: 33.33, b: 33.33, c: 33.34 }, 100)).toBe(0)
+        expect(faltaParaFechar({ a: 70, b: 40 }, 100)).toBe(-10)
+    })
+
+    it("o texto diz faltam ou passam", () => {
+        expect(textoDaFalta(12)).toBe(`Faltam ${currencyBRL(12)}`)
+        expect(textoDaFalta(-3)).toBe(`Passam ${currencyBRL(3)}`)
+        expect(textoDaFalta(0)).toBeNull()
+    })
+})
+
+describe("fonte do detalhe", () => {
+    it("o detalhe usa as peças do DS, e não os wireframes de divisão e anexos", async () => {
+        const { lerFonte, semComentarios } = await import("@/test/fonte")
+        const f = semComentarios(lerFonte("src/components/transactions/transaction-detail-sheet.tsx"), "tudo")
+        expect(f).not.toContain("PartesDaDespesaWireframe")
+        expect(f).not.toContain("AnexosWireframe")
+        expect(f).toContain("<PartesDaDespesa transaction={t} />")
+        expect(f).toContain("<AnexosDoLancamento")
     })
 })

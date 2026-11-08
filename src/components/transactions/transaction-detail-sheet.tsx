@@ -13,6 +13,7 @@ import {
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { AConferirNoDetalhe, temAConferir } from "@/components/transactions/a-conferir-no-detalhe"
+import { AnexosDoLancamento } from "@/components/transactions/anexos-do-lancamento"
 import {
     direcaoDaTecla,
     ehCampoDeTexto,
@@ -24,6 +25,7 @@ import {
 } from "@/components/transactions/detalhe-regras"
 import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
+import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
 import {
     InstallmentPurchaseSection,
     summarizeInstallmentPlan,
@@ -66,12 +68,9 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Muted } from "@/components/ui/typography"
-import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
-import { PartesDaDespesaWireframe } from "@/components/wireframe/divisao-wireframe"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { tertiaryDestructiveClassName } from "@/lib/button-destructive-classes"
-import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
 import { creditCardInvoiceHintForPurchase, creditCardInvoiceSlotLabelPt } from "@/lib/credit-card-billing"
 import { currencyBRL } from "@/lib/formatters"
 import { paymentMethodLabel } from "@/lib/payment-methods"
@@ -468,17 +467,10 @@ export function TransactionDetailSheet({
                 ) : null}
 
                 {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
-                <PartesDaDespesaWireframe transaction={t} />
+                <PartesDaDespesa transaction={t} />
 
-                {t.workspace_id ? (
-                    <AnexosWireframe
-                        key={t.id}
-                        workspaceId={t.workspace_id}
-                        vinculo={{ transactionId: t.id }}
-                        // Com a conta paga por este lançamento, o boleto da instância aparece junto.
-                        listar={() => anexosDoLancamento(supabase, t.id)}
-                    />
-                ) : null}
+                {/* Com a conta paga por este lançamento, o boleto da instância aparece junto. */}
+                <AnexosDoLancamento key={t.id} transaction={t} />
             </DialogBody>
 
             {/* Três ações: o `TresAcoesContext` sobe o Duplicar a `secondary`. */}
