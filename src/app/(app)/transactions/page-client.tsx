@@ -31,6 +31,7 @@ import { pedirDestinoDoCsv, salvarCsv } from "@/lib/data-table/csv"
 import { numberBR } from "@/lib/formatters"
 import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
+import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { transacoesParaCsv } from "@/lib/transactions/csv"
@@ -47,6 +48,7 @@ export default function TransactionsPageClient() {
     const duplicar = useDuplicarComoNova()
     const isMobile = useIsMobile()
     const [exportando, setExportando] = useState(false)
+    const [marcadas, setMarcadas] = useState<Set<string>>(() => new Set())
 
     // A casca já abriu a criação do `?new=` e do `?frase=`: o pedido só se limpa.
     const { criar, frase, consumirPedido } = pedidos
@@ -68,11 +70,16 @@ export default function TransactionsPageClient() {
         if (!destino) return
         setExportando(true)
         try {
-            const { transactions, truncado } = await fetchTransacoesParaExportar({
-                workspaceId: currentWorkspaceId,
-                estado,
-                cartoes: tela.creditCards,
-            })
+            // Com linhas marcadas, exporta só elas (as da tela, como o lote); sem, tudo o que o filtro acha.
+            const selecionadas = tela.pagina.transactions.filter((t) => marcadas.has(t.id) && !isProjectedTransactionRow(t))
+            const { transactions, truncado } =
+                selecionadas.length > 0
+                    ? { transactions: selecionadas, truncado: false }
+                    : await fetchTransacoesParaExportar({
+                          workspaceId: currentWorkspaceId,
+                          estado,
+                          cartoes: tela.creditCards,
+                      })
             const nome = new Map(membros.map((m) => [m.user_id, m.full_name || m.email]))
             await salvarCsv(destino, arquivo, transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
             // Só depois de gravado (no "Salvar como") ou do download começar.
@@ -157,6 +164,8 @@ export default function TransactionsPageClient() {
                 onEditar={(t) => tela.detalhe.abrir(t, { editar: true })}
                 onDuplicar={duplicar}
                 onExcluir={tela.excluir}
+                marcadas={marcadas}
+                onMarcadasChange={setMarcadas}
             />
 
             <TransactionDetailSheet

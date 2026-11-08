@@ -82,6 +82,9 @@ export type TransacoesTabelaProps = {
     onExcluir: (ids: string[]) => void
     /** A barra da tela (abas e filtros), na mesma linha da contagem e do Exibir. */
     barra?: React.ReactNode
+    /** A seleção, quando a tela precisa dela (o Exportar leva só as marcadas). */
+    marcadas?: Set<string>
+    onMarcadasChange?: React.Dispatch<React.SetStateAction<Set<string>>>
 }
 
 const col = dataTableColumns<Transaction>()
@@ -359,13 +362,25 @@ function MenuDaLinha({
 }
 
 /** A tabela da página de Transações (spec §6): por dia, com as ações da linha e do lote. */
-export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir, barra }: TransacoesTabelaProps) {
+export function TransacoesTabela({
+    tela,
+    membros,
+    divide = false,
+    onEditar,
+    onDuplicar,
+    onExcluir,
+    barra,
+    marcadas: marcadasDeFora,
+    onMarcadasChange,
+}: TransacoesTabelaProps) {
     const shell = useGlobalShellDialogsOptional()
     const { papel, currentWorkspaceId } = useWorkspace()
     const convidado = papel === "guest"
     const { estado, setEstado, pagina } = tela
     const transacoes = pagina.transactions
-    const [marcadas, setMarcadas] = React.useState<Set<string>>(() => new Set())
+    const [marcadasProprias, setMarcadasProprias] = React.useState<Set<string>>(() => new Set())
+    const marcadas = marcadasDeFora ?? marcadasProprias
+    const setMarcadas = onMarcadasChange ?? setMarcadasProprias
     const [categorizar, setCategorizar] = React.useState<{ ids: string[]; tipo: "expense" | "income" } | null>(null)
 
     const faturasPagas = React.useMemo(
