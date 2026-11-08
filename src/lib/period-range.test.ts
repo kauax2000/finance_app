@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 import {
   classifyPeriod,
   monthRangeYmd,
@@ -9,12 +9,6 @@ import {
 import { formatDateLongPtBr, formatTransactionCompactPtBr } from "./transaction-date"
 
 describe("period-range", () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 10, 8, 12))
-  })
-  afterEach(() => vi.useRealTimers())
-
   it("classifyPeriod", () => {
     expect(classifyPeriod("2025-01-01", "2025-12-31")).toEqual({ kind: "year", year: 2025 })
     expect(classifyPeriod("2026-11-01", "2026-11-30")).toEqual({
@@ -49,10 +43,12 @@ describe("period-range", () => {
     expect(periodLabel("2026-08-01", "2026-10-31")).toMatchObject({
       rotulo: "ago – out 2026",
       falado: "agosto a outubro de 2026",
+      operador: "é",
     })
     expect(periodLabel("2025-11-01", "2026-02-28")).toMatchObject({
       rotulo: "nov 2025 – fev 2026",
       falado: "novembro de 2025 a fevereiro de 2026",
+      operador: "é",
     })
     expect(periodLabel("2025-01-01", "2025-12-31")).toMatchObject({ rotulo: "2025", falado: "2025" })
     expect(periodLabel("2026-11-08", "2026-11-08")).toEqual({

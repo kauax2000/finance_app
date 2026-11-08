@@ -63,13 +63,13 @@ export function periodLabel(
       return {
         rotulo: `${curto(a)} – ${curto(b)} ${a.year}`,
         falado: `${longo(a)} a ${longo(b)} de ${a.year}`,
-        operador: "entre",
+        operador: "é",
       }
     }
     return {
       rotulo: `${curto(a)} ${a.year} – ${curto(b)} ${b.year}`,
       falado: `${longo(a)} de ${a.year} a ${longo(b)} de ${b.year}`,
-      operador: "entre",
+      operador: "é",
     }
   }
   if (from === to) {
