@@ -17,7 +17,7 @@ import {
   CommandList,
   CommandLoading,
 } from "@/components/ui/command"
-import { DATE_RANGE_PRESETS } from "@/components/ui/date-picker"
+import { DATE_RANGE_PRESETS, type DatePickerRangePreset } from "@/components/ui/date-picker"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,16 +47,12 @@ import { commandFilter } from "@/lib/command-filter"
 import { mergeParams } from "@/lib/data-table/url-state"
 import { fieldControlHeightClassName, fieldSurfaceClassName } from "@/lib/field-classes"
 import { currencyBRL, numberBR } from "@/lib/formatters"
+import { periodLabel } from "@/lib/period-range"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import { MOLA } from "@/lib/spring"
-import {
-  formatDateLongPtBr,
-  formatTransactionCompactPtBr,
-  localYmdFromDate,
-  parseYmdLocal,
-} from "@/lib/transaction-date"
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 
 /**
@@ -147,8 +143,28 @@ function rotuloOperador(op: FilterOperator, n: number): string {
 const YMD = /^\d{4}-\d{2}-\d{2}$/
 const ymdValido = (s: string) => YMD.test(s) && parseYmdLocal(s) != null
 
+const hojeLocal = () => {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+}
+const diasAtras = (n: number) => {
+  const d = hojeLocal()
+  d.setDate(d.getDate() - n)
+  return d
+}
+
+/** Os atalhos do filtro de período: os do `DatePicker` mais Hoje e Últimos 90 dias (que o `DatePicker` não tem). */
+export const FILTER_PERIOD_PRESETS: (DatePickerRangePreset & { id: string })[] = [
+  ...DATE_RANGE_PRESETS,
+  { id: "hoje", label: "Hoje", range: () => ({ from: hojeLocal(), to: hojeLocal() }) },
+  { id: "ultimos-90", label: "Últimos 90 dias", range: () => ({ from: diasAtras(89), to: hojeLocal() }) },
+]
+
+/** Os botões da aba Dias, nessa ordem. */
+export const FILTER_PERIOD_DAY_PRESET_IDS = ["hoje", "ultimos-7", "ultimos-30", "ultimos-90"] as const
+
 function intervaloDoAtalho(id: string) {
-  const atalho = DATE_RANGE_PRESETS.find((p) => p.id === id)
+  const atalho = FILTER_PERIOD_PRESETS.find((p) => p.id === id)
   if (!atalho) return null
   const r = typeof atalho.range === "function" ? atalho.range() : atalho.range
   return r.from && r.to ? { from: localYmdFromDate(r.from), to: localYmdFromDate(r.to) } : null
@@ -263,24 +279,11 @@ function descrever(
     }
     case "period": {
       const atalho =
-        f.values.length === 1 ? DATE_RANGE_PRESETS.find((p) => p.id === f.values[0]) : undefined
+        f.values.length === 1 ? FILTER_PERIOD_PRESETS.find((p) => p.id === f.values[0]) : undefined
       if (atalho) return { operador: "é", rotulo: atalho.label, falado: atalho.label, resto: 0 }
       const [de, ate] = f.values
       if (!de) return { operador: "é", rotulo: "", falado: "", resto: 0 }
-      if (de === ate) {
-        return {
-          operador: "é",
-          rotulo: formatTransactionCompactPtBr(de),
-          falado: formatDateLongPtBr(de),
-          resto: 0,
-        }
-      }
-      return {
-        operador: "entre",
-        rotulo: `${formatTransactionCompactPtBr(de)} e ${formatTransactionCompactPtBr(ate)}`,
-        falado: `${formatDateLongPtBr(de)} e ${formatDateLongPtBr(ate)}`,
-        resto: 0,
-      }
+      return { ...periodLabel(de, ate), resto: 0 }
     }
     case "money": {
       const [a, b] = f.values.map(Number)
@@ -1440,7 +1443,7 @@ function EditorDeValor(props: EditorProps) {
         <div className={naGaveta ? "pt-1 pb-2" : undefined}>
           <Calendar
             mode="range"
-            presets={DATE_RANGE_PRESETS}
+            presets={FILTER_PERIOD_PRESETS}
             // Na gaveta as células sobem ao `lg` e esticam, como no `DatePicker`.
             size={naGaveta ? "lg" : "md"}
             stretch={naGaveta}
@@ -1457,7 +1460,7 @@ function EditorDeValor(props: EditorProps) {
               const fim = localYmdFromDate(r.to ?? r.from)
               // Um intervalo igual ao de um atalho é o atalho — e ele continua
               // valendo amanhã ("Este mês" anda com o mês).
-              const atalho = DATE_RANGE_PRESETS.find((p) => {
+              const atalho = FILTER_PERIOD_PRESETS.find((p) => {
                 const i = intervaloDoAtalho(p.id)
                 return i?.from === inicio && i.to === fim
               })

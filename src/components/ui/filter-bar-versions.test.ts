@@ -5,6 +5,8 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   FilterBar,
+  FILTER_PERIOD_DAY_PRESET_IDS,
+  FILTER_PERIOD_PRESETS,
   FilterBarSkeleton,
   filterPeriodRange,
   parseFilters,
@@ -358,5 +360,44 @@ describe("as proibições", () => {
     expect(CODIGO).not.toContain("child.type ===")
     expect(CODIGO).not.toMatch(/className=\{`/)
     expect(CODIGO).not.toMatch(/`\[\$\{/)
+  })
+})
+
+describe("atalhos e rótulo do período", () => {
+  afterEach(() => vi.useRealTimers())
+  const periodo = (values: string[]) =>
+    barra({ defaultValue: [{ field: "periodo", operator: "is", values }] })
+
+  it("Hoje e 90 dias entram, e os antigos seguem", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 8, 12))
+    expect(filterPeriodRange(["hoje"])).toEqual({ from: "2026-11-08", to: "2026-11-08" })
+    expect(filterPeriodRange(["ultimos-90"])).toEqual({ from: "2026-08-11", to: "2026-11-08" })
+    expect(filterPeriodRange(["este-mes"])).toEqual({ from: "2026-11-01", to: "2026-11-08" })
+    expect(filterPeriodRange(["mes-passado"])).toEqual({ from: "2026-10-01", to: "2026-10-31" })
+    expect(FILTER_PERIOD_DAY_PRESET_IDS).toEqual(["hoje", "ultimos-7", "ultimos-30", "ultimos-90"])
+    expect(FILTER_PERIOD_PRESETS.map((p) => p.id)).toEqual(
+      expect.arrayContaining([...FILTER_PERIOD_DAY_PRESET_IDS, "este-mes", "mes-passado"])
+    )
+  })
+
+  it("a URL guarda o atalho novo e recusa o desconhecido", () => {
+    expect(parseFilters("periodo:is:ultimos-90", CAMPOS)[0].values).toEqual(["ultimos-90"])
+    expect(parseFilters("periodo:is:amanha", CAMPOS)).toEqual([])
+  })
+
+  it("o rótulo do token segue a unidade", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 8, 12))
+    const meses = periodo(["2026-08-01", "2026-10-31"])
+    expect(meses).toContain("ago – out 2026")
+    expect(meses).toContain(">é<")
+    expect(periodo(["2025-01-01", "2025-12-31"])).toContain("2025")
+    expect(periodo(["ultimos-90"])).toContain("Últimos 90 dias")
+    expect(periodo(["2026-08-01", "2026-08-15"])).toContain(">entre<")
+  })
+
+  it("o DatePicker não mudou", () => {
+    expect(lerFonte("src/components/ui/date-picker.tsx")).not.toContain("ultimos-90")
   })
 })
