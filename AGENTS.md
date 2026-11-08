@@ -1560,7 +1560,8 @@ declaração de `background-color` no trilho).
   `TableSkeleton`, `TableError`, `TableCellIdentity`, `TableCellMoney`.
 - **`DataTable`** (TanStack Table v9, por baixo do `TablePanel`, que se importa
   de `@/components/ui/data-table`) faz ordenação, busca, facetas (`arrHas`),
-  seleção e barra flutuante, grupo, detalhe, ações, menu de contexto, **o gêmeo
+  seleção e barra flutuante (`selectionSummary` põe a soma na barra, depois de
+  "N selecionadas ·", e no anúncio), grupo, detalhe, ações, menu de contexto, **o gêmeo
   do telefone** (`meta.mobile`), teclado, URL, virtualização, CSV e edição
   (`role="grid"`); dados do servidor, `manual`. A barra e o rodapé ficam **fora**
   da moldura (`toolbar`, `footer`). Peça de lugar certo entra por prop, nunca

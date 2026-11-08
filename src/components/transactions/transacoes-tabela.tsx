@@ -559,6 +559,7 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                 rowSelection={rowSelection}
                 onRowSelectionChange={(next) => setMarcadas(new Set(Object.keys(next).filter((id) => next[id])))}
                 bulkActions={bulkActions}
+                selectionSummary={(rows) => <MoneyDisplay value={totalDoDia(rows)} signed />}
                 rowActions={rowActions}
                 // As projetadas são cobranças previstas: não abrem, não têm menu e aparecem apagadas.
                 onRowClick={(t) => tela.detalhe.abrir(t)}

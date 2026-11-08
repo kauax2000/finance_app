@@ -522,6 +522,8 @@ export type DataTableProps<T extends RowData> = {
 
   enableSelection?: boolean | ((row: T) => boolean)
   bulkActions?: DataTableBulkAction<T>[]
+  /** A soma da seleção: o que vai depois de "N selecionadas · " na barra e no anúncio. Recebe só as linhas carregadas e marcadas. */
+  selectionSummary?: (rows: T[]) => React.ReactNode
   /** "Marcar todos os N" quando a seleção pede o que não está carregado. */
   onSelectAllMatching?: () => void
   rowActions?: DataTableAction<T>[]
@@ -591,6 +593,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     groupCollapsible = false,
     enableSelection = false,
     bulkActions,
+    selectionSummary,
     onSelectAllMatching,
     rowActions,
     rowContextMenu = false,
@@ -1385,12 +1388,14 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         <div aria-live="polite" className="sr-only">
           {marcadas.length
             ? `${numberBR(marcadas.length)} ${marcadas.length === 1 ? "selecionada" : "selecionadas"}`
-            : ""}{" "}
+            : ""}
+          {marcadas.length && selectionSummary ? <> · {selectionSummary(table.getSelectedRowModel().rows.map((r) => r.original))}</> : null}{" "}
           {aviso}
         </div>
         {enableSelection ? (
           <DataTableSelectionBar
             count={marcadas.length}
+            summary={selectionSummary?.(table.getSelectedRowModel().rows.map((r) => r.original))}
             total={total}
             pageAllSelected={table.getIsAllPageRowsSelected()}
             onSelectAll={
@@ -1922,6 +1927,7 @@ export function DataTableExport() {
  */
 export function DataTableSelectionBar({
   count,
+  summary,
   total,
   pageAllSelected,
   onSelectAll,
@@ -1929,6 +1935,7 @@ export function DataTableSelectionBar({
   actions,
 }: {
   count: number
+  summary?: React.ReactNode
   total: number
   pageAllSelected: boolean
   onSelectAll?: () => void
@@ -1962,6 +1969,7 @@ export function DataTableSelectionBar({
         >
           <span className="me-1 text-sm font-medium nums whitespace-nowrap">
             {numberBR(count)} {count === 1 ? "selecionada" : "selecionadas"}
+            {summary ? <> · {summary}</> : null}
           </span>
           {onSelectAll && pageAllSelected && total > count ? (
             <Button type="button" variant="link" size="sm" onClick={onSelectAll} className="whitespace-nowrap">

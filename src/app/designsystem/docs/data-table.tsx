@@ -160,6 +160,7 @@ function DemoNaTela() {
   const [cabecalho, setCabecalho] = React.useState<"muted" | "plain">("muted")
   const [striped, setStriped] = React.useState(false)
   const [agrupar, setAgrupar] = React.useState(true)
+  const [somaDaSelecao, setSomaDaSelecao] = React.useState(true)
   const [ultima, setUltima] = React.useState("Clique numa linha, marque, ordene, filtre.")
 
   return (
@@ -175,6 +176,7 @@ function DemoNaTela() {
           <Interruptores>
             <Interruptor id="ds-dt-striped" rotulo="striped" valor={striped} onChange={setStriped} />
             <Interruptor id="ds-dt-grupo" rotulo="groupBy" valor={agrupar} onChange={setAgrupar} />
+            <Interruptor id="ds-dt-soma" rotulo="Soma da seleção" valor={somaDaSelecao} onChange={setSomaDaSelecao} />
           </Interruptores>
         }
       />
@@ -192,6 +194,9 @@ function DemoNaTela() {
         striped={striped}
         toolbar={{ search: "Buscar lançamento…", facets: ["categoria", "conta"], view: true, export: "lancamentos" }}
         enableSelection
+        selectionSummary={
+          somaDaSelecao ? (rows) => <MoneyDisplay value={rows.reduce((s, l) => s + l.valor, 0)} signed /> : undefined
+        }
         bulkActions={[
           { label: "Recategorizar", icon: <TagIcon aria-hidden />, onSelect: (rows) => setUltima(`Recategorizar ${rows.length}`) },
           {

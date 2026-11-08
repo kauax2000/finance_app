@@ -170,6 +170,14 @@ const COLUNAS: DataTableColumnDef<L>[] = [
 const base = { columns: COLUNAS, data: LINHAS, getRowId: (l: L) => l.id, getRowLabel: (l: L) => l.nome, pageSize: false as const }
 
 describe("o DataTable", () => {
+  it("`selectionSummary` põe a soma na barra, depois da contagem, e na região viva", () => {
+    const fonte = semComentarios(lerFonte("src/components/ui/data-table.tsx"))
+    expect(fonte).toContain("selectionSummary?: (rows: T[]) => React.ReactNode")
+    expect(fonte).toMatch(/selecionadas"}\s*\{summary \? <>/)
+    expect(fonte).toContain("summary={selectionSummary?.(")
+    expect(fonte).toMatch(/aria-live="polite"[\s\S]{0,400}selectionSummary/)
+  })
+
   it("marca com o nome da linha, o indeterminado no cabeçalho, e a tabela de leitura não é grade", () => {
     const html = renderToStaticMarkup(h(DataTable<L>, { ...base, enableSelection: true, rowSelection: { a: true } }))
     expect(html).toContain('aria-label="Selecionar Mercado"')

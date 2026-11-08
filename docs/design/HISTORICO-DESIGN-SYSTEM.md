@@ -28928,3 +28928,14 @@ do tom com a tinta `-muted-foreground`, ícone de 24 em `24/outline`, 12px até 
 `aria-label` de um `role="img"`, e ela vai depois da descrição). Excluir conta é a
 primeira tela a usar; o tique grande do corpo de sucesso saiu, porque o poço do
 cabeçalho já o mostra.
+
+### Rodada 363 — `DataTable selectionSummary`
+
+Decisão do dono em 2026-11-07, no redesenho de Transações: a barra flutuante da seleção
+diz quantas linhas estão marcadas, mas não quanto elas somam. A prop opcional
+`selectionSummary?: (rows: T[]) => ReactNode` recebe as linhas marcadas e carregadas e
+escreve o resultado depois de "N selecionadas · " na pílula (`DataTableSelectionBar
+summary`) e na região viva do anúncio. Sem a prop nada muda. Transações passa o líquido
+(receitas menos despesas, `totalDoDia`) num `MoneyDisplay signed`; a página do catálogo
+ganha o interruptor "Soma da seleção" no "Na tela". Em tabela de servidor a soma cobre só
+o que está carregado, como as ações em lote.
