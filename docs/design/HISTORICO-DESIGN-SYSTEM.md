@@ -28976,3 +28976,10 @@ o fundo das folhas (`--background`), o `--secondary` dava 1,18 e o `--muted` 1,1
   dentro do `dashed`, tingido de `muted`, muted sobre muted sumia.
 - O anel de foco a 45% no claro cai de 2,96 para 2,83–2,85 sobre as superfícies novas (já
   estava abaixo de 3:1, decisão consciente da 1.4.11); no escuro, 4,17–4,70.
+
+### Rodada 367 — o realce dos botões sem cor é a tinta do texto
+
+Pedido do dono em 2026-11-08: o hover do × e do ⋯ das folhas não aparecia no claro. Os pesos
+`tertiary`, `outline` e `floating` realçavam com o `--accent` a 50%, que separava só 1,10–1,15
+do fundo nos dois temas. Passam a usar a tinta do texto, como os menus: `--foreground` a 12%
+no claro e a 10% no escuro (1,22–1,28 no claro, 1,29–1,36 no escuro).
