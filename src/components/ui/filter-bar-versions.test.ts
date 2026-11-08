@@ -416,7 +416,7 @@ describe("o período em abas", () => {
   it("a aba inicial segue o valor", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 10, 8, 12))
-    expect(abaInicialDoPeriodo([])).toBe("meses")
+    expect(abaInicialDoPeriodo([])).toBe("dias")
     expect(abaInicialDoPeriodo(["2025-01-01", "2025-12-31"])).toBe("ano")
     expect(abaInicialDoPeriodo(["2025-11-01", "2026-02-28"])).toBe("meses")
     expect(abaInicialDoPeriodo(["este-mes"])).toBe("dias")

@@ -56,7 +56,7 @@ A aba que abre depende do valor atual:
 | ano inteiro (1/jan a 31/dez do mesmo ano) | Ano |
 | meses inteiros (dia 1 de um mês ao último dia de outro, ou do mesmo) | Meses |
 | qualquer outro, ou um atalho de dias | Dias |
-| vazio (filtro novo) | **Meses** (decisão do Claude: é a razão da opção C) |
+| vazio (filtro novo) | **Dias** (pedido do dono, 08/11; era Meses) |
 
 Trocar de aba não muda o valor; só troca o painel.
 

@@ -562,7 +562,7 @@ export default function FilterBarDoc() {
       </DocSection>
 
       <DocNote title="A aba que abre é a do valor">
-        Um ano inteiro (1º de janeiro a 31 de dezembro) abre em Ano; meses inteiros (do dia 1 de um mês ao último de outro, ou do mesmo), em Meses; qualquer outro intervalo, ou um atalho de dias, em Dias; o filtro novo, sem valor, em Meses (<code>abaInicialDoPeriodo</code>). Trocar de aba não muda o valor. No desktop o editor tem a largura de Dias nas três abas (o painel de Dias fica montado, sem altura e inerte), e a grade e os anos esticam; o mês que ainda não começou fica sem total. Na gaveta a árvore é a mesma: as abas esticam, os meses e as setas sobem a 44 e os anos são linhas de 44.
+        Um ano inteiro (1º de janeiro a 31 de dezembro) abre em Ano; meses inteiros (do dia 1 de um mês ao último de outro, ou do mesmo), em Meses; qualquer outro intervalo, ou um atalho de dias, em Dias; o filtro novo, sem valor, em Dias (<code>abaInicialDoPeriodo</code>). Trocar de aba não muda o valor. No desktop o editor tem a largura de Dias nas três abas (o painel de Dias fica montado, sem altura e inerte), e a grade e os anos esticam; o mês que ainda não começou fica sem total. Na gaveta a árvore é a mesma: as abas esticam, os meses e as setas sobem a 44 e os anos são linhas de 44.
       </DocNote>
 
       <DocNote title="Os atalhos e o rótulo falam a unidade">

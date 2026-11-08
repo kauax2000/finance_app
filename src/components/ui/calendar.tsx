@@ -481,15 +481,16 @@ function Calendar({
             : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
           defaultClassNames.day
         ),
-        // A ponte entre a ponta e o miolo é metade da célula (cobre o raio da
-        // ponta em qualquer degrau; `after:w-4` fixo não acompanhava a variável).
+        // As pontas são a bolinha inteira: a faixa só passa por trás da metade
+        // de dentro (a ponte é metade da célula, e acompanha `--cell-size`).
+        // Intervalo de um dia só (ponta e fim no mesmo dia) não tem ponte.
         range_start: cn(
-          "relative isolate z-0 rounded-l-(--cell-radius) bg-muted after:absolute after:inset-y-0 after:right-0 after:w-[calc(var(--cell-size)/2)] after:bg-muted",
+          "relative isolate z-0 after:absolute after:inset-y-0 after:right-0 after:-z-10 after:w-[calc(var(--cell-size)/2)] after:bg-muted has-data-[range-end=true]:after:hidden",
           defaultClassNames.range_start
         ),
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn(
-          "relative isolate z-0 rounded-r-(--cell-radius) bg-muted after:absolute after:inset-y-0 after:left-0 after:w-[calc(var(--cell-size)/2)] after:bg-muted",
+          "relative isolate z-0 after:absolute after:inset-y-0 after:left-0 after:-z-10 after:w-[calc(var(--cell-size)/2)] after:bg-muted has-data-[range-start=true]:after:hidden",
           defaultClassNames.range_end
         ),
         today: cn(
@@ -956,7 +957,7 @@ function CalendarDayButton({
         // `p-0` é estrutural: a raiz é `w-fit` e, com o `px-3` do `Button
         // md`, esse recuo dimensionaria a coluna (39px em todos os degraus) e
         // o `size` do `Calendar` não valeria nada.
-        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:rounded-l-none data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-r-none data-[range-start=true]:data-[range-end=true]:rounded-full data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
+        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         // As pontas do intervalo são meia-lua voltada para fora: a de início é
         // redonda à esquerda e reta do lado da faixa, a de fim o contrário

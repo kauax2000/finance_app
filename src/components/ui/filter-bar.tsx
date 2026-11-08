@@ -181,7 +181,7 @@ type AbaDoPeriodo = "dias" | "meses" | "ano"
 /** A aba que o editor de período abre: a unidade do valor; sem valor, Meses. */
 export function abaInicialDoPeriodo(valores: string[]): AbaDoPeriodo {
   const r = filterPeriodRange(valores)
-  if (!r) return "meses"
+  if (!r) return "dias"
   const tipo = classifyPeriod(r.from, r.to).kind
   return tipo === "year" ? "ano" : tipo === "months" ? "meses" : "dias"
 }
