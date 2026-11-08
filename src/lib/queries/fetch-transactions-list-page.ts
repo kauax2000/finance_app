@@ -27,7 +27,7 @@ const TRANSACTION_LIST_SELECT_NO_INSTALLMENT_EMBED =
 
 const TRANSACTION_LIST_SELECT_MINIMAL = "*, category:categories(*)"
 
-function parseAmountFilter(raw: string): number | null {
+export function parseAmountFilter(raw: string): number | null {
     const t = raw.trim().replace(/\s/g, "")
     if (!t) return null
     const normalized = t.replace(/\./g, "").replace(",", ".")
