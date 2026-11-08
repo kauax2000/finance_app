@@ -77,7 +77,8 @@ export default function TransactionsPageClient() {
             await salvarCsv(destino, arquivo, transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
             // Só depois de gravado (no "Salvar como") ou do download começar.
             toastSuccess(mensagemDaExportacao(transactions.length, truncado))
-        } catch {
+        } catch (e) {
+            console.error("Falha ao exportar os lançamentos.", e)
             toastError("Não foi possível exportar os lançamentos.")
         } finally {
             setExportando(false)

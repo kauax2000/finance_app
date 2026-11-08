@@ -28983,3 +28983,11 @@ Pedido do dono em 2026-11-08: o hover do × e do ⋯ das folhas não aparecia no
 `tertiary`, `outline` e `floating` realçavam com o `--accent` a 50%, que separava só 1,10–1,15
 do fundo nos dois temas. Passam a usar a tinta do texto, como os menus: `--foreground` a 12%
 no claro e a 10% no escuro (1,22–1,28 no claro, 1,29–1,36 no escuro).
+
+### Rodada 368 — o texto do toast quebra entre o ícone e o ×
+
+Pedido do dono em 2026-11-08: uma frase longa num toast descia inteira para baixo do poço
+do ícone. O toast é um flex que quebra linha, e o `[data-content]` pedia a largura natural
+do texto (`flex: 9999 1 auto`). Ele ganha `max-width: calc(100% - 40px)`, a faixa ao lado do
+poço (28 + 12 de vão; o × já mora no recuo da direita), e quebra dentro dela; só os botões
+de ação descem. O poço passa a `align-self: flex-start`, na primeira linha como o ×.

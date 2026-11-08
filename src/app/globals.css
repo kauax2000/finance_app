@@ -928,6 +928,8 @@
   width: 28px;
   height: 28px;
   margin: 0;
+  /* Na primeira linha, como o ×: com o texto em várias linhas o poço não desce ao meio. */
+  align-self: flex-start;
   justify-content: center;
   border-radius: 9999px;
   background: var(--toast-well);
@@ -956,6 +958,10 @@
   /* A base é a largura natural do texto, e não um mínimo cravado: com 12rem o
      Desfazer descia mesmo cabendo ao lado de "Transação excluída". */
   flex: 9999 1 auto;
+  /* Nunca mais largo que a faixa ao lado do poço do ícone (28 + 12 de vão; o × já está
+     no recuo da direita): uma frase longa quebra ali, entre o ícone e o ×, em vez de
+     descer inteira para baixo do ícone (pedido do dono, 2026-11-08). */
+  max-width: calc(100% - 40px);
 }
 /* Com duas ações, as duas vão para baixo, juntas: pela regra acima a quebra
    dependia da largura que sobrava, e a segunda descia sozinha. Com `cancel` o

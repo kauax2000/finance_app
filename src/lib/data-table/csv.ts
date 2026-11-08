@@ -75,7 +75,14 @@ export async function pedirDestinoDoCsv(filename: string): Promise<FileSystemFil
 /** Grava o CSV no destino; resolve só quando o arquivo está salvo (ou o download começou). */
 export async function salvarCsv(destino: FileSystemFileHandle | "download", filename: string, csv: string) {
   if (destino === "download") return downloadCsv(filename, csv)
-  const escrita = await destino.createWritable()
-  await escrita.write(new Blob([csv], { type: "text/csv;charset=utf-8" }))
-  await escrita.close()
+  try {
+    const escrita = await destino.createWritable()
+    await escrita.write(new Blob([csv], { type: "text/csv;charset=utf-8" }))
+    await escrita.close()
+  } catch (e) {
+    // Há navegador que oferece o seletor e recusa a escrita (o painel do app, em Electron):
+    // o download de sempre assume, e o arquivo sai do mesmo jeito.
+    console.error("Falha ao gravar no destino escolhido; baixando pelo link.", e)
+    downloadCsv(filename, csv)
+  }
 }

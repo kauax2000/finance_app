@@ -64,4 +64,17 @@ describe("pedirDestinoDoCsv e salvarCsv", () => {
         await salvarCsv(d as FileSystemFileHandle, "x.csv", "a;b")
         expect(passos).toEqual(["write", "close"])
     })
+
+    it("se gravar no destino falhar, o download de sempre assume", async () => {
+        const passos: string[] = []
+        vi.stubGlobal("document", {
+            createElement: () => ({ click: () => passos.push("click"), remove: () => {} }),
+            body: { appendChild: () => passos.push("append") },
+        })
+        vi.stubGlobal("URL", { createObjectURL: () => "blob:x", revokeObjectURL: () => {} })
+        vi.spyOn(console, "error").mockImplementation(() => {})
+        const destino = { createWritable: () => Promise.reject(new Error("NotAllowed")) } as unknown as FileSystemFileHandle
+        await salvarCsv(destino, "x.csv", "a;b")
+        expect(passos).toEqual(["append", "click"])
+    })
 })
