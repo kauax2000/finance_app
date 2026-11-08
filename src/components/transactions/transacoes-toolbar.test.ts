@@ -1,0 +1,85 @@
+import { describe, expect, it, vi } from "vitest"
+import type { Category, CreditCard, Project } from "@/lib/supabase"
+import { CAMPOS_BASE, SEM_CATEGORIA } from "@/lib/transactions/filtros"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { montarCampos, type DadosDosCampos } from "./use-campos-de-filtro"
+
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
+
+const TOOLBAR = semComentarios(lerFonte("src/components/transactions/transacoes-toolbar.tsx"), "tudo")
+const CAMPOS = lerFonte("src/components/transactions/use-campos-de-filtro.ts")
+
+describe("transacoes-toolbar (fonte)", () => {
+    it("usa o FilterBar do sistema, sem E/OU e sem URL própria", () => {
+        expect(TOOLBAR).toContain('from "@/components/ui/filter-bar"')
+        expect(TOOLBAR).not.toContain("onMatchChange")
+        expect(TOOLBAR).not.toContain("urlParam")
+    })
+
+    it("publica o filtro do cabeçalho e clica no + Filtro pelo data-slot", () => {
+        expect(TOOLBAR).toContain("usePageChromeFilter")
+        expect(TOOLBAR).toContain("[data-slot=filter-bar-add]")
+        expect(lerFonte("src/components/transactions/transacoes-toolbar.tsx")).toContain(
+            '// shortcut: clica no "+ Filtro" pelo data-slot; trocar por uma prop open quando o FilterBar ganhar uma',
+        )
+    })
+
+    it("é uma árvore só", () => {
+        expect(TOOLBAR).not.toContain("md:hidden")
+    })
+
+    it("os campos partem de CAMPOS_BASE", () => {
+        expect(CAMPOS).toContain("CAMPOS_BASE")
+    })
+})
+
+const cat = (id: string, type: "income" | "expense") => ({ id, name: id, type, color: null }) as Category
+const base: DadosDosCampos = {
+    type: "all",
+    categorias: [cat("mercado", "expense"), cat("salario", "income")],
+    cartoes: [{ id: "nu", name: "Nubank", last_four: "1234" } as CreditCard],
+    membros: [
+        { user_id: "a", email: "a@x", full_name: "Ana" },
+        { user_id: "b", email: "b@x", full_name: null },
+    ],
+    convidado: false,
+    adultos: [{ user_id: "a", nome: "Ana" }],
+    divide: true,
+    projetos: [{ id: "p1", name: "Reforma", archived_at: null } as Project, { id: "p2", name: "Velho", archived_at: "2026-01-01" } as Project],
+    planos: [{ id: "pl", description: null }],
+    assinaturas: [{ id: "s", name: "Netflix" }],
+}
+const ids = (d: DadosDosCampos) => montarCampos(d).map((c) => c.id)
+const opcoes = (d: DadosDosCampos, id: string) => {
+    const c = montarCampos(d).find((x) => x.id === id)
+    return c && c.type === "enum" ? (c.options ?? []).map((o) => o.value) : null
+}
+
+describe("montarCampos", () => {
+    it("com tudo à mão, mantém os ids e a ordem de CAMPOS_BASE", () => {
+        expect(ids(base)).toEqual(CAMPOS_BASE.map((c) => c.id))
+    })
+
+    it("as categorias seguem a aba, com Sem categoria no fim", () => {
+        expect(opcoes(base, "categoria")).toEqual(["mercado", "salario", SEM_CATEGORIA])
+        expect(opcoes({ ...base, type: "expense" }, "categoria")).toEqual(["mercado", SEM_CATEGORIA])
+        expect(opcoes({ ...base, type: "income" }, "categoria")).toEqual(["salario", SEM_CATEGORIA])
+    })
+
+    it("Lançado por some para o convidado e com menos de 2 membros", () => {
+        expect(ids({ ...base, convidado: true })).not.toContain("pessoa")
+        expect(ids({ ...base, membros: base.membros.slice(0, 1) })).not.toContain("pessoa")
+    })
+
+    it("Quem pagou só em carteira split; Projeto só com projeto ativo", () => {
+        expect(ids({ ...base, divide: false })).not.toContain("pagou")
+        expect(opcoes(base, "projeto")).toEqual(["p1"])
+        expect(ids({ ...base, projetos: [base.projetos[1]] })).not.toContain("projeto")
+    })
+
+    it("Entrou por junta as importações num id só", () => {
+        expect(opcoes(base, "captura")).toEqual([
+            "app", "quick_text", "shortcut", "apple_pay", "ia_externa", "share", "importacao", "recurring",
+        ])
+    })
+})

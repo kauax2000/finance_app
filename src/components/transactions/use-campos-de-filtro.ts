@@ -1,0 +1,131 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { createElement, useMemo } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ColorTile } from "@/components/ui/color-tile"
+import type { FilterField, FilterOption } from "@/components/ui/filter-bar"
+import { useWorkspace } from "@/components/workspace-provider"
+import { identityToneFor } from "@/lib/avatar"
+import type { Adulto } from "@/lib/divisao/dados"
+import { useAdultos } from "@/lib/divisao/use-adultos"
+import { PAYMENT_METHOD_VALUES, paymentMethodLabel } from "@/lib/payment-methods"
+import { listarProjetos } from "@/lib/projetos/dados"
+import { useCategoriesQuery } from "@/lib/queries/use-categories"
+import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
+import { useMemberDirectoryQuery, type MemberDirectoryRow } from "@/lib/queries/use-member-directory"
+import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
+import type { Category, CreditCard, Project } from "@/lib/supabase"
+import { CAMPOS_BASE, SEM_CATEGORIA, type CampoId, type EstadoDaLista } from "@/lib/transactions/filtros"
+import { cn, getInitials } from "@/lib/utils"
+
+/** "Entrou por": os ids que a consulta entende (`importacao` cobre as três importações). */
+const CAPTURA: FilterOption[] = [
+    { value: "app", label: "App" },
+    { value: "quick_text", label: "Frase" },
+    { value: "shortcut", label: "Atalho" },
+    { value: "apple_pay", label: "Apple Pay" },
+    { value: "ia_externa", label: "IA conectada" },
+    { value: "share", label: "Compartilhar" },
+    { value: "importacao", label: "Importação" },
+    { value: "recurring", label: "Recorrente" },
+]
+
+export type DadosDosCampos = {
+    type: EstadoDaLista["type"]
+    categorias: Pick<Category, "id" | "name" | "type" | "color">[]
+    cartoes: Pick<CreditCard, "id" | "name" | "last_four">[]
+    membros: MemberDirectoryRow[]
+    convidado: boolean
+    adultos: Adulto[]
+    /** A carteira é `split`. */
+    divide: boolean
+    projetos: Pick<Project, "id" | "name" | "archived_at">[]
+    planos: { id: string; description: string | null }[]
+    assinaturas: { id: string; name: string }[]
+}
+
+function avatarDe(m: MemberDirectoryRow) {
+    const nome = m.full_name || m.email
+    const tom = identityToneFor(m.avatar_color, m.email || nome)
+    return createElement(
+        Avatar,
+        { size: "xs", "aria-hidden": true },
+        m.avatar_url ? createElement(AvatarImage, { src: m.avatar_url, alt: "" }) : null,
+        createElement(AvatarFallback, { className: cn("font-semibold", tom.surface, tom.ink) }, getInitials(nome)),
+    )
+}
+
+/** Os campos com as opções; um campo sem o que escolher (ou que não vale para quem lê) sai. */
+export function montarCampos(d: DadosDosCampos): FilterField[] {
+    const opcoes: Partial<Record<CampoId, FilterOption[] | null>> = {
+        categoria: [
+            ...d.categorias
+                .filter((c) => d.type === "all" || c.type === d.type)
+                .map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    media: createElement(ColorTile, { size: "xs", color: c.color }),
+                })),
+            { value: SEM_CATEGORIA, label: "Sem categoria" },
+        ],
+        pagamento: PAYMENT_METHOD_VALUES.map((v) => ({ value: v, label: paymentMethodLabel(v) })),
+        cartao: d.cartoes.length
+            ? d.cartoes.map((c) => ({ value: c.id, label: c.last_four ? `${c.name} · ${c.last_four}` : c.name }))
+            : null,
+        captura: CAPTURA,
+        pessoa:
+            !d.convidado && d.membros.length >= 2
+                ? d.membros.map((m) => ({ value: m.user_id, label: m.full_name || m.email, media: avatarDe(m) }))
+                : null,
+        pagou: d.divide && d.adultos.length ? d.adultos.map((a) => ({ value: a.user_id, label: a.nome })) : null,
+        projeto: (() => {
+            const ativos = d.projetos.filter((p) => !p.archived_at)
+            return ativos.length ? ativos.map((p) => ({ value: p.id, label: p.name })) : null
+        })(),
+        plano: d.planos.map((p) => ({ value: p.id, label: p.description?.trim() || "Sem descrição" })),
+        assinatura: d.assinaturas.map((s) => ({ value: s.id, label: s.name })),
+    }
+    return CAMPOS_BASE.flatMap((campo) => {
+        const id = campo.id as CampoId
+        if (!(id in opcoes)) return [campo]
+        const lista = opcoes[id]
+        return lista && campo.type === "enum" ? [{ ...campo, options: lista }] : []
+    })
+}
+
+/** Os campos do `FilterBar` de Transações, das mesmas consultas (em cache) que a tela já faz. */
+export function useCamposDeFiltro(type: EstadoDaLista["type"]): { campos: FilterField[]; carregando: boolean } {
+    const { currentWorkspaceId: ws, currentWorkspace, papel } = useWorkspace()
+    const divide = currentWorkspace?.split_mode === "split"
+    const categorias = useCategoriesQuery(ws)
+    const cartoes = useCreditCardsQuery(ws)
+    const aux = useTransactionsWorkspaceAuxQuery(ws, Boolean(ws))
+    const membros = useMemberDirectoryQuery(ws)
+    const adultos = useAdultos(divide && ws ? ws : "")
+    // A mesma chave do wireframe de projetos: um cache só.
+    const projetos = useQuery({
+        queryKey: ["projetos", ws] as const,
+        enabled: Boolean(ws),
+        queryFn: () => listarProjetos(ws as string),
+    })
+
+    const campos = useMemo(
+        () =>
+            montarCampos({
+                type,
+                categorias: categorias.data ?? [],
+                cartoes: cartoes.data ?? [],
+                membros: membros.data ?? [],
+                convidado: papel === "guest",
+                adultos: adultos.lista,
+                divide,
+                projetos: projetos.data?.disponivel ? projetos.data.dados : [],
+                planos: aux.data?.installmentPlans ?? [],
+                assinaturas: aux.data?.subscriptions ?? [],
+            }),
+        [type, categorias.data, cartoes.data, membros.data, papel, adultos.lista, divide, projetos.data, aux.data],
+    )
+    const carregando = categorias.isPending || cartoes.isPending || aux.isPending || membros.isPending
+    return { campos, carregando }
+}
