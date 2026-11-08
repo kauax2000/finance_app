@@ -16,6 +16,7 @@ import {
   serializeFilters,
   type FilterField,
   tokensQueSaem,
+  excessoDaLinha,
   chaveDaMedida,
   type FilterValue,
 } from "./filter-bar"
@@ -562,6 +563,26 @@ describe("overflow menu", () => {
     expect(tokensQueSaem([100, 100, 100], 250, o)).toEqual([1, 2])
     expect(tokensQueSaem([100, 100, 100], 250, { ...o, fixo: 2 })).toEqual([0, 1])
     expect(tokensQueSaem([100, 100, 100], 400, o)).toEqual([])
+  })
+
+  it("excessoDaLinha: mostra o máximo que cabe, encolhendo o primeiro que sairia", () => {
+    const o = { reserva: 36, gap: 6, pisos: [112, 112] }
+    // O caso medido a 1165px: o Período encolhe na sobra, só o A conferir vai ao +1.
+    expect(excessoDaLinha([277, 129], 303, o)).toEqual({ saem: [1], encolhe: { indice: 0, largura: 261 } })
+    // Tudo cabe: nada sai, nada encolhe.
+    expect(excessoDaLinha([100, 100], 300, o)).toEqual({ saem: [] })
+    // Sozinho, o primeiro não chega ao piso: sai.
+    expect(excessoDaLinha([300], 100, o)).toEqual({ saem: [0] })
+    // O booleano não tem valor para encolher: o piso dele é a largura inteira.
+    expect(excessoDaLinha([277, 129], 400, { ...o, pisos: [112, 129] })).toEqual({ saem: [], encolhe: { indice: 0, largura: 265 } })
+    expect(excessoDaLinha([60, 129], 180, { ...o, pisos: [60, 129] })).toEqual({ saem: [1] })
+    // Só um sairia: encolher o último por 16px vence o +1.
+    expect(excessoDaLinha([150, 150], 290, o)).toEqual({ saem: [], encolhe: { indice: 1, largura: 134 } })
+    // O último ficaria abaixo do piso: encolhe o mais largo.
+    expect(excessoDaLinha([300, 80], 370, o)).toEqual({ saem: [], encolhe: { indice: 0, largura: 284 } })
+    // O do editor aberto nunca encolhe nem sai.
+    expect(excessoDaLinha([300, 80], 370, { ...o, fixo: 0 })).toEqual({ saem: [1] })
+    expect(CODIGO).toContain("for (const el of els) el.style.maxWidth = \"\"")
   })
 
   it("com o editor aberto, digitar não remede: a chave ignora os valores e os tokens não são observados", () => {

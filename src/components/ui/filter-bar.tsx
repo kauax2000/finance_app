@@ -459,6 +459,11 @@ const ACOES_TELEFONE: Record<FilterBarMobile, string> = {
 }
 
 /** O flash do segmento que acabou de mudar — a `@utility table-flash` da casa. */
+/** O menor token encolhido na linha `menu`, em rem. */
+const PISO_ENCOLHIDO_REM = 7
+/** O menor pedaço do valor que fica à vista num token encolhido, em rem. */
+const PISO_VALOR_REM = 3
+
 const FLASH = "pointer-events-none absolute inset-0 rounded-[inherit]"
 
 /**
@@ -555,6 +560,37 @@ export function tokensQueSaem(
   { fixo, reserva, gap }: { fixo?: number; reserva: number; gap: number }
 ): number[] {
   return quemSai(larguras, cabe, { ponta: "fim", fixos: new Set(fixo == null ? [] : [fixo]), reserva, gap })
+}
+
+/**
+ * A linha `menu` mostra o máximo que cabe: depois de `tokensQueSaem`, o primeiro
+ * que saiu volta encolhido (o valor em reticências) se a sobra chega ao piso
+ * dele (`pisos[i]`: o menor que o token `i` fica; sem valor, a largura inteira).
+ * Se só um sairia, encolher um token (ele, ou o mais largo) para tudo caber
+ * vence o "+1".
+ */
+export function excessoDaLinha(
+  larguras: number[],
+  cabe: number,
+  { fixo, reserva, gap, pisos }: { fixo?: number; reserva: number; gap: number; pisos: number[] }
+): { saem: number[]; encolhe?: { indice: number; largura: number } } {
+  const saem = tokensQueSaem(larguras, cabe, { fixo, reserva, gap })
+  if (saem.length === 0) return { saem }
+  const soma = (idx: number[]) =>
+    idx.reduce((s, i) => s + larguras[i], 0) + gap * Math.max(0, idx.length - 1)
+  const todos = larguras.map((_, i) => i)
+  if (saem.length === 1) {
+    const excesso = soma(todos) - cabe
+    const candidatos = [saem[0], ...todos.filter((i) => i !== fixo).sort((a, b) => larguras[b] - larguras[a])]
+    const k = candidatos.find((i) => larguras[i] - excesso >= pisos[i])
+    if (k != null) return { saem: [], encolhe: { indice: k, largura: larguras[k] - excesso } }
+  }
+  const j = Math.min(...saem)
+  const ficam = todos.filter((i) => !saem.includes(i))
+  const restam = saem.length - 1
+  const sobra = cabe - soma(ficam) - (ficam.length ? gap : 0) - (restam ? gap + reserva : 0)
+  if (sobra < pisos[j]) return { saem }
+  return { saem: saem.filter((i) => i !== j), encolhe: { indice: j, largura: sobra } }
 }
 
 /**
@@ -865,9 +901,14 @@ function FilterBar({
     // O que está saindo (`inert`, do `AnimatePresence`) já não ocupa lugar.
     const lerTokens = () =>
       [...linha.querySelectorAll<HTMLElement>(":scope > [data-slot=filter-bar-token]:not([inert])")]
+    // Antes de medir, cada token volta à largura natural: sem `hidden` e sem teto.
+    const soltar = (els: HTMLElement[]) => {
+      limparExcesso(els)
+      for (const el of els) el.style.maxWidth = ""
+    }
     const medir = () => {
       const els = lerTokens()
-      limparExcesso(els)
+      soltar(els)
       const gap = parseFloat(getComputedStyle(linha).columnGap) || 0
       const gapBarra = parseFloat(getComputedStyle(barra).columnGap) || 0
       // O E/OU mora na linha e nunca sai: o espaço dos tokens é o que sobra dele.
@@ -877,11 +918,21 @@ function FilterBar({
       const reserva =
         linha.querySelector<HTMLElement>("[data-overflow-more]")?.offsetWidth ?? els[0]?.offsetHeight ?? 0
       const i = els.findIndex((el) => el.dataset.field === fixo)
-      const saem = tokensQueSaem(
+      // O menor que um token fica: campo, operador e × inteiros e um pedaço do
+      // valor, nunca abaixo de 7rem. Sem valor (o booleano), não encolhe.
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      const pisos = els.map((el) => {
+        const valor = el.querySelector<HTMLElement>(":scope > [data-slot=filter-bar-value]")
+        if (!valor) return el.offsetWidth
+        return Math.max(PISO_ENCOLHIDO_REM * rem, el.offsetWidth - valor.offsetWidth + PISO_VALOR_REM * rem)
+      })
+      const { saem: idx, encolhe } = excessoDaLinha(
         els.map((el) => el.offsetWidth),
         cabe,
-        { fixo: i >= 0 ? i : undefined, reserva, gap }
-      ).map((k) => {
+        { fixo: i >= 0 ? i : undefined, reserva, gap, pisos }
+      )
+      if (encolhe) els[encolhe.indice].style.maxWidth = `${Math.floor(encolhe.largura)}px`
+      const saem = idx.map((k) => {
         els[k].setAttribute("hidden", "")
         return els[k].dataset.field ?? ""
       })
@@ -896,7 +947,7 @@ function FilterBar({
     if (!fixo) for (const el of lerTokens()) ro.observe(el)
     return () => {
       ro.disconnect()
-      limparExcesso(lerTokens())
+      soltar(lerTokens())
     }
   }, [menu, fixo, chaveDaLinha])
 
@@ -1379,7 +1430,8 @@ function FilterToken({
         CAPSULA_TOM[tone],
         CAPSULA_TAMANHO[size],
         fieldControlHeightClassName[size],
-        menu ? "shrink-0 max-w-none" : TOKEN_TELEFONE[mobile]
+        // Encolhido pela linha `menu` (teto inline), só o valor cede: campo, operador e × ficam inteiros.
+        menu ? "shrink-0 max-w-none [&>*]:shrink-0 [&>[data-slot=filter-bar-value]]:shrink" : TOKEN_TELEFONE[mobile]
       )}
     >
       <span
