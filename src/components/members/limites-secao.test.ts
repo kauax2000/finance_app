@@ -174,7 +174,9 @@ describe("AdicionarLimiteDialog", () => {
         expect(dialogo).toContain("<ItemChevron />")
     })
     it("editar: Remover limite à esquerda do rodapé, só texto, com confirmação", () => {
-        expect(fonte).toMatch(/<DialogFooter\s+start=\{[\s\S]*?variant="tertiary"[\s\S]*?text-destructive[\s\S]*?Remover limite/)
+        expect(fonte).toMatch(/<DialogFooter\s+start=\{[\s\S]*?variant="tertiary"[\s\S]*?className=\{tertiaryDestructiveClassName\}[\s\S]*?Remover limite/)
+        // A tinta destrutiva do tertiary mora num lugar só.
+        expect(lerFonte("src/lib/button-destructive-classes.ts")).toContain("text-destructive")
         expect(fonte).toContain("useConfirmDialog()")
         expect(fonte).toContain("Remover o limite de ${linha.nome}?")
         expect(fonte).not.toMatch(/variant="destructive"[\s\S]{0,120}Remover limite/)

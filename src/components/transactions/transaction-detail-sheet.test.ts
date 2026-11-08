@@ -116,4 +116,25 @@ describe("fonte do detalhe", () => {
         }
         expect(f).toContain("useDuplicarComoNova()")
     })
+
+    it("as ações do a conferir chegam a 44 no dedo e empilham", () => {
+        const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+        expect(f).toContain('<Button type="button" variant="primary" size="md"')
+        expect(f).toContain('<Button type="button" variant="secondary" size="md"')
+        expect(f).not.toMatch(/<Button[^>]*size="sm"/)
+        expect(f).toContain('<AlertActions className="pointer-coarse:flex-col pointer-coarse:items-stretch">')
+    })
+
+    it("a recarga das listas não vira erro da ação", () => {
+        const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+        expect(f).toMatch(/try \{\s*await invalidateWorkspaceData\([^)]*\)\s*\} catch \{/)
+    })
+
+    it("o Excluir do rodapé e o Remover limite dividem a tinta destrutiva", () => {
+        for (const arquivo of [SHEET, "src/components/members/limites-secao.tsx"]) {
+            const f = fonte(arquivo)
+            expect(f, arquivo).toContain("className={tertiaryDestructiveClassName}")
+            expect(f, arquivo).not.toContain("destructive)_22%")
+        }
+    })
 })

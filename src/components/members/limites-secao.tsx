@@ -31,6 +31,7 @@ import {
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
+import { tertiaryDestructiveClassName } from "@/lib/button-destructive-classes"
 import { currencyBRL } from "@/lib/formatters"
 import {
     ERRO_DO_LIMITE,
@@ -343,7 +344,7 @@ function LinhaDoLimiteItem({
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                className="text-destructive [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)]"
+                                className={tertiaryDestructiveClassName}
                                 disabled={salvando}
                                 onClick={async () => {
                                     const ok = await confirmar({

@@ -70,6 +70,7 @@ import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
 import { PartesDaDespesaWireframe } from "@/components/wireframe/divisao-wireframe"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { tertiaryDestructiveClassName } from "@/lib/button-destructive-classes"
 import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
 import { creditCardInvoiceHintForPurchase, creditCardInvoiceSlotLabelPt } from "@/lib/credit-card-billing"
 import { currencyBRL } from "@/lib/formatters"
@@ -486,7 +487,7 @@ export function TransactionDetailSheet({
                     <Button
                         type="button"
                         variant="tertiary"
-                        className="text-destructive [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)]"
+                        className={tertiaryDestructiveClassName}
                         onClick={excluir}
                     >
                         Excluir

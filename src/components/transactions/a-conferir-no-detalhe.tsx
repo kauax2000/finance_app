@@ -86,8 +86,14 @@ export function AConferirNoDetalhe({ transaction: t, onFeito }: Props) {
     })
     const jaNoBanco = walletCard != null && jaLembrado(aliasAtual.data, walletCard)
 
+    // A gravação já deu certo: uma falha ao recarregar as listas não vira erro da ação.
     const atualizarListas = async (domains: WorkspaceDataDomain[]) => {
-        if (workspaceId) await invalidateWorkspaceData(queryClient, workspaceId, { domains })
+        if (!workspaceId) return
+        try {
+            await invalidateWorkspaceData(queryClient, workspaceId, { domains })
+        } catch {
+            // As listas se atualizam na próxima leitura.
+        }
     }
 
     const rodar = async (acao: () => Promise<void>, padrao: string) => {
@@ -173,14 +179,14 @@ export function AConferirNoDetalhe({ transaction: t, onFeito }: Props) {
             ) : null}
             {erro ? <AlertDescription role="alert">{erro}</AlertDescription> : null}
             {mostraConfirmar || mostraLembrar || mostraDesfazer ? (
-                <AlertActions>
+                <AlertActions className="pointer-coarse:flex-col pointer-coarse:items-stretch">
                     {mostraConfirmar ? (
-                        <Button type="button" variant="primary" size="sm" disabled={pendente} onClick={() => void confirmar()}>
+                        <Button type="button" variant="primary" size="md" disabled={pendente} onClick={() => void confirmar()}>
                             Confirmar
                         </Button>
                     ) : null}
                     {mostraLembrar ? (
-                        <Button type="button" variant="secondary" size="sm" disabled={pendente} onClick={() => void lembrar()}>
+                        <Button type="button" variant="secondary" size="md" disabled={pendente} onClick={() => void lembrar()}>
                             {aliasAtual.data
                                 ? `Trocar "${aliasAtual.data}" por "${walletCard}"`
                                 : `Lembrar "${walletCard}" como este cartão`}
