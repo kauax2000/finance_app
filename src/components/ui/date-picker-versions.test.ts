@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate, proximoIntervaloDeMes } from "./date-picker"
 
@@ -134,5 +134,19 @@ describe("MonthGrid em intervalo", () => {
     const nov = new Date(2025, 10, 1)
     const fev = new Date(2026, 1, 1)
     expect(proximoIntervaloDeMes(nov, fev)).toEqual({ range: { from: nov, to: fev }, ancora: null })
+  })
+})
+
+describe("MonthGrid: a âncora e o ano visível", () => {
+  const FONTE_DP = semComentarios(lerFonte("src/components/ui/date-picker.tsx"), "linha-inteira")
+  const GRADE = FONTE_DP.slice(FONTE_DP.indexOf("export function MonthGrid"))
+
+  it("um valor que muda por fora (atalho, ano, Remover) apaga a âncora; o próprio toque não", () => {
+    expect(GRADE).toMatch(/if \(chaveDoValor !== visto\) \{[\s\S]*?if \(chaveDoValor !== emitido\) setAncora\(null\)/)
+    expect(GRADE).toContain("setEmitido(chaveDe(proximo.range))")
+  })
+
+  it("onYearChange avisa o ano que a pessoa vê", () => {
+    expect(GRADE.match(/onYearChange\?\.\(/g)?.length).toBeGreaterThanOrEqual(1)
   })
 })

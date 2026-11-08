@@ -17,7 +17,7 @@ import {
   CommandList,
   CommandLoading,
 } from "@/components/ui/command"
-import { DATE_RANGE_PRESETS, type DatePickerRangePreset } from "@/components/ui/date-picker"
+import { DATE_RANGE_PRESETS, MonthGrid, type DatePickerRangePreset } from "@/components/ui/date-picker"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,8 +36,10 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useCommandSearch } from "@/hooks/use-command-search"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -46,8 +48,8 @@ import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
 import { commandFilter } from "@/lib/command-filter"
 import { mergeParams } from "@/lib/data-table/url-state"
 import { fieldControlHeightClassName, fieldSurfaceClassName } from "@/lib/field-classes"
-import { currencyBRL, numberBR } from "@/lib/formatters"
-import { periodLabel } from "@/lib/period-range"
+import { currencyBRL, currencyCompactBRL, numberBR } from "@/lib/formatters"
+import { classifyPeriod, monthRangeYmd, periodLabel, periodSummary, yearRangeYmd } from "@/lib/period-range"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
@@ -107,7 +109,12 @@ export type FilterField =
       /** Várias escolhas (o padrão). `false`: uma só, e o editor fecha ao escolher. */
       multiple?: boolean
     })
-  | (FieldBase & { type: "period" | "money" | "text" | "boolean" })
+  | (FieldBase & {
+      type: "period"
+      /** A despesa de cada mês do ano (12 posições; `null` = sem total): a legenda da grade de meses e o total de cada ano. */
+      totals?: (year: number, signal: AbortSignal) => Promise<(number | null)[]>
+    })
+  | (FieldBase & { type: "money" | "text" | "boolean" })
 
 /**
  * Um filtro sempre completo — o rascunho nunca sai do componente.
@@ -162,6 +169,20 @@ export const FILTER_PERIOD_PRESETS: (DatePickerRangePreset & { id: string })[] =
 
 /** Os botões da aba Dias, nessa ordem. */
 export const FILTER_PERIOD_DAY_PRESET_IDS = ["hoje", "ultimos-7", "ultimos-30", "ultimos-90"] as const
+
+const ATALHOS_DE_DIAS = FILTER_PERIOD_DAY_PRESET_IDS.map(
+  (id) => FILTER_PERIOD_PRESETS.find((p) => p.id === id)!
+)
+
+type AbaDoPeriodo = "dias" | "meses" | "ano"
+
+/** A aba que o editor de período abre: a unidade do valor; sem valor, Meses. */
+export function abaInicialDoPeriodo(valores: string[]): AbaDoPeriodo {
+  const r = filterPeriodRange(valores)
+  if (!r) return "meses"
+  const tipo = classifyPeriod(r.from, r.to).kind
+  return tipo === "year" ? "ano" : tipo === "months" ? "meses" : "dias"
+}
 
 function intervaloDoAtalho(id: string) {
   const atalho = FILTER_PERIOD_PRESETS.find((p) => p.id === id)
@@ -1364,7 +1385,6 @@ function EditorDeValor(props: EditorProps) {
   // Na gaveta as faixas recuam 8 e não 12: a gaveta já recua 16, e com 12 o
   // título e o operador ficavam 4px para dentro da busca, dos atalhos e da grade.
   const recuo = naGaveta ? "px-2" : "px-3"
-  const periodo = campo.type === "period" ? filterPeriodRange(valores) : null
 
   // Dinheiro e texto guardam o que se digita: o "entre" com uma ponta só é
   // rascunho, e o campo não pode se apagar por isso.
@@ -1437,37 +1457,14 @@ function EditorDeValor(props: EditorProps) {
       ) : null}
 
       {campo.type === "period" ? (
-        // A gaveta já recua 16px dos lados; somados a 12, as sete células de 44
-        // não cabiam a 375px. No popover o recuo é só o do calendário (8): as
-        // linhas ficam como as do `Command`, caixa a 8 e texto a 16.
-        <div className={naGaveta ? "pt-1 pb-2" : undefined}>
-          <Calendar
-            mode="range"
-            presets={FILTER_PERIOD_PRESETS}
-            // Na gaveta as células sobem ao `lg` e esticam, como no `DatePicker`.
-            size={naGaveta ? "lg" : "md"}
-            stretch={naGaveta}
-            autoFocus={!dedo}
-            defaultMonth={periodo ? parseYmdLocal(periodo.from) : undefined}
-            selected={
-              periodo
-                ? { from: parseYmdLocal(periodo.from), to: parseYmdLocal(periodo.to) }
-                : undefined
-            }
-            onSelect={(r) => {
-              if (!r?.from) return onGravar("is", [])
-              const inicio = localYmdFromDate(r.from)
-              const fim = localYmdFromDate(r.to ?? r.from)
-              // Um intervalo igual ao de um atalho é o atalho — e ele continua
-              // valendo amanhã ("Este mês" anda com o mês).
-              const atalho = FILTER_PERIOD_PRESETS.find((p) => {
-                const i = intervaloDoAtalho(p.id)
-                return i?.from === inicio && i.to === fim
-              })
-              onGravar("is", atalho ? [atalho.id] : [inicio, fim])
-            }}
-          />
-        </div>
+        <EditorDePeriodo
+          totals={campo.totals}
+          valores={valores}
+          onGravar={(v) => onGravar("is", v)}
+          recuo={recuo}
+          naGaveta={naGaveta}
+          dedo={dedo}
+        />
       ) : null}
 
       {campo.type === "money" ? (
@@ -1522,6 +1519,207 @@ function EditorDeValor(props: EditorProps) {
         </div>
       ) : null}
     </>
+  )
+}
+
+/** Os totais de despesa por mês dos anos pedidos, carregados uma vez por ano; só busca com `totals`. */
+function useTotaisPorAno(
+  totals: ((year: number, signal: AbortSignal) => Promise<(number | null)[]>) | undefined,
+  anos: number[]
+) {
+  const [porAno, setPorAno] = React.useState<Record<number, (number | null)[]>>({})
+  // Já pedido ou chegado: não pede de novo. Um pedido cancelado sai daqui e volta a ser pedido.
+  const pedidos = React.useRef(new Set<number>())
+  const buscar = React.useEffectEvent((ano: number, signal: AbortSignal) => totals!(ano, signal))
+  const temTotais = totals != null
+  const chave = anos.join(",")
+  React.useEffect(() => {
+    if (!temTotais || !chave) return
+    const ctrl = new AbortController()
+    for (const ano of chave.split(",").map(Number)) {
+      if (pedidos.current.has(ano)) continue
+      pedidos.current.add(ano)
+      buscar(ano, ctrl.signal).then(
+        (v) => setPorAno((atual) => ({ ...atual, [ano]: v })),
+        () => pedidos.current.delete(ano)
+      )
+    }
+    return () => ctrl.abort()
+  }, [temTotais, chave])
+  return porAno
+}
+
+/** O ano inteiro só tem total com os 12 meses conhecidos — nunca um total errado. */
+const totalDoAno = (meses: (number | null)[] | undefined) =>
+  meses?.length === 12 && meses.every((v) => v != null)
+    ? (meses as number[]).reduce((a, b) => a + b, 0)
+    : null
+
+const primeiroDoMes = (ymd: string) => {
+  const d = parseYmdLocal(ymd)!
+  return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+/**
+ * O período em três unidades: Dias (os atalhos de dias e o calendário),
+ * Meses (a grade em intervalo) e Ano (os seis últimos). Trocar de aba não muda
+ * o valor; a aba que abre é a do valor (`abaInicialDoPeriodo`). Na gaveta a
+ * árvore é a mesma: os alvos de 44 vêm dos componentes.
+ */
+function EditorDePeriodo({
+  totals,
+  valores,
+  onGravar,
+  recuo,
+  naGaveta,
+  dedo,
+}: {
+  totals: Extract<FilterField, { type: "period" }>["totals"]
+  valores: string[]
+  onGravar: (valores: string[]) => void
+  recuo: string
+  naGaveta: boolean
+  dedo: boolean
+}) {
+  const periodo = filterPeriodRange(valores)
+  const tipo = periodo ? classifyPeriod(periodo.from, periodo.to) : null
+  const [abaInicial] = React.useState(() => abaInicialDoPeriodo(valores))
+  const [aba, setAba] = React.useState<AbaDoPeriodo>(abaInicial)
+  const anoDoValor = periodo ? primeiroDoMes(periodo.from).getFullYear() : new Date().getFullYear()
+  const [anoVisivel, setAnoVisivel] = React.useState(anoDoValor)
+  const anoAtual = new Date().getFullYear()
+  const anos = Array.from({ length: 6 }, (_, i) => anoAtual - i)
+  const totais = useTotaisPorAno(totals, aba === "meses" ? [anoVisivel] : aba === "ano" ? anos : [])
+  const agora = new Date()
+
+  return (
+    <Tabs
+      // O piso da grade de meses: sem ele, a aba Ano encolhia o editor ao rótulo dos anos.
+      className="min-w-64"
+      value={aba}
+      onValueChange={(v) => {
+        // A grade remonta no ano do valor; os totais pedidos acompanham.
+        if (v === "meses") setAnoVisivel(anoDoValor)
+        setAba(v as AbaDoPeriodo)
+      }}
+    >
+      <div className={cn("pt-2 pb-1", recuo)}>
+        <TabsList stretch aria-label="Unidade do período">
+          <TabsTrigger value="dias">Dias</TabsTrigger>
+          <TabsTrigger value="meses">Meses</TabsTrigger>
+          <TabsTrigger value="ano">Ano</TabsTrigger>
+        </TabsList>
+      </div>
+
+      <TabsContent value="dias">
+        {/* A gaveta já recua 16px dos lados; somados a 12, as sete células de 44
+            não cabiam a 375px. No popover o recuo é só o do calendário (8): as
+            linhas ficam como as do `Command`, caixa a 8 e texto a 16. */}
+        <div className={naGaveta ? "pt-1 pb-2" : undefined}>
+          <Calendar
+            mode="range"
+            presets={ATALHOS_DE_DIAS}
+            // Na gaveta as células sobem ao `lg` e esticam, como no `DatePicker`.
+            size={naGaveta ? "lg" : "md"}
+            stretch={naGaveta}
+            autoFocus={!dedo && abaInicial === "dias"}
+            // Sem valor, os dois meses do desktop terminam no atual (quem filtra olha para trás).
+            defaultMonth={
+              periodo
+                ? parseYmdLocal(periodo.from)
+                : naGaveta
+                  ? undefined
+                  : new Date(agora.getFullYear(), agora.getMonth() - 1, 1)
+            }
+            selected={
+              periodo
+                ? { from: parseYmdLocal(periodo.from), to: parseYmdLocal(periodo.to) }
+                : undefined
+            }
+            onSelect={(r) => {
+              if (!r?.from) return onGravar([])
+              const inicio = localYmdFromDate(r.from)
+              const fim = localYmdFromDate(r.to ?? r.from)
+              // Um intervalo igual ao de um atalho de dias é o atalho — e ele
+              // continua valendo amanhã. Só os quatro à vista: "Este mês"
+              // escolhido à mão fica em datas.
+              const atalho = ATALHOS_DE_DIAS.find((p) => {
+                const i = intervaloDoAtalho(p.id)
+                return i?.from === inicio && i.to === fim
+              })
+              onGravar(atalho ? [atalho.id] : [inicio, fim])
+            }}
+          />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="meses">
+        <MonthGrid
+          mode="range"
+          className="w-full pointer-coarse:w-full"
+          value={
+            tipo?.kind === "months"
+              ? {
+                  from: new Date(tipo.from.year, tipo.from.month, 1),
+                  to: new Date(tipo.to.year, tipo.to.month, 1),
+                }
+              : undefined
+          }
+          onChange={(r) => {
+            const m = monthRangeYmd(
+              { year: r.from.getFullYear(), month: r.from.getMonth() },
+              { year: r.to.getFullYear(), month: r.to.getMonth() }
+            )
+            onGravar([m.from, m.to])
+          }}
+          onYearChange={setAnoVisivel}
+          caption={
+            totals
+              ? (mes) => {
+                  const v = totais[mes.getFullYear()]?.[mes.getMonth()]
+                  return v == null ? null : currencyCompactBRL(v)
+                }
+              : undefined
+          }
+        />
+      </TabsContent>
+
+      <TabsContent value="ano">
+        <div className={cn("pt-2 pb-2", recuo)}>
+          <RadioGroup
+            aria-label="Ano"
+            value={tipo?.kind === "year" ? String(tipo.year) : ""}
+            onValueChange={(v) => {
+              const r = yearRangeYmd(Number(v))
+              onGravar([r.from, r.to])
+            }}
+          >
+            {anos.map((ano) => {
+              const total = totals ? totalDoAno(totais[ano]) : null
+              return (
+                <RadioGroupItem
+                  key={ano}
+                  value={String(ano)}
+                  trailing={total == null ? undefined : currencyCompactBRL(total)}
+                >
+                  <span className="nums">{ano}</span>
+                </RadioGroupItem>
+              )
+            })}
+          </RadioGroup>
+        </div>
+      </TabsContent>
+
+      {periodo ? (
+        <p
+          data-slot="filter-bar-period-summary"
+          aria-live="polite"
+          className={cn("pt-1 pb-3 text-xs text-muted-foreground nums", recuo)}
+        >
+          {periodSummary(periodo.from, periodo.to)}
+        </p>
+      ) : null}
+    </Tabs>
   )
 }
 

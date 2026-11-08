@@ -434,6 +434,25 @@ const CAMPO_REMOTO: FilterField[] = [
   CAMPOS[1],
 ]
 
+/** Os totais da demonstração: um gasto por mês até hoje; os meses que não vieram são null. */
+const totaisDaDemo = async (ano: number) => {
+  const hoje = new Date()
+  return Array.from({ length: 12 }, (_, m) =>
+    new Date(ano, m, 1) > hoje ? null : 3200 + ((ano * 7 + m * 13) % 9) * 180
+  )
+}
+
+const CAMPO_PERIODO: FilterField[] = [
+  { id: "periodo", label: "Período", icon: <CalendarDaysIcon aria-hidden />, type: "period", totals: totaisDaDemo },
+]
+
+function DemoPeriodo() {
+  const [filtros, setFiltros] = React.useState<FilterValue[]>([
+    { field: "periodo", operator: "is", values: ["2026-08-01", "2026-10-31"] },
+  ])
+  return <FilterBar fields={CAMPO_PERIODO} value={filtros} onValueChange={setFiltros} shortcut={false} className="w-full" />
+}
+
 function DemoServidor() {
   return <FilterBar fields={CAMPO_REMOTO} shortcut={false} className="w-full" />
 }
@@ -505,6 +524,24 @@ export default function FilterBarDoc() {
 
       <DocNote title="Um popover para a barra inteira">
         O + Filtro e o editor de valor são o mesmo <code>Popover</code>, ancorado no que está aberto. Escolher um campo troca o conteúdo e a âncora juntos: com dois popovers, o que fecha devolveria o foco ao + Filtro e esse foco fecharia o outro. O Enter de dentro dele — e do menu do operador, que é portal — não sobe até um <code>Form</code> em volta.
+      </DocNote>
+
+      <DocSection
+        title="O período em abas"
+        description="Dias, Meses e Ano: a pessoa escolhe na unidade em que pensa, em um ou dois toques. Dias são os atalhos (Hoje, Últimos 7, 30 e 90 dias) e o calendário de intervalo, com os dois meses terminando no atual; Meses é o MonthGrid em intervalo (o primeiro toque grava o mês, o segundo vai até o outro); Ano são os seis últimos, numa escolha única. Embaixo, o resumo: o intervalo por extenso e a duração. Com totals, cada mês e cada ano mostra a despesa."
+        code={`{ id: "periodo", label: "Período", type: "period",
+  totals: (ano, signal) => despesasPorMes(ano, { signal }) } // 12 posições, null = sem total`}
+        previewClassName="bg-background"
+      >
+        <DemoPeriodo />
+      </DocSection>
+
+      <DocNote title="A aba que abre é a do valor">
+        Um ano inteiro (1º de janeiro a 31 de dezembro) abre em Ano; meses inteiros (do dia 1 de um mês ao último de outro, ou do mesmo), em Meses; qualquer outro intervalo, ou um atalho de dias, em Dias; o filtro novo, sem valor, em Meses (<code>abaInicialDoPeriodo</code>). Trocar de aba não muda o valor. Na gaveta a árvore é a mesma: as abas esticam, os meses e as setas sobem a 44 e os anos são linhas de 44.
+      </DocNote>
+
+      <DocNote title="Os atalhos e o rótulo falam a unidade">
+        O filtro tem os atalhos do <code>DatePicker</code> mais Hoje e Últimos 90 dias (<code>FILTER_PERIOD_PRESETS</code>), e a aba Dias mostra só os quatro de dias (<code>FILTER_PERIOD_DAY_PRESET_IDS</code>); &ldquo;Este mês&rdquo; e &ldquo;Mês passado&rdquo; continuam valendo numa URL antiga. O token diz a unidade: um atalho pelo nome (&ldquo;Últimos 90 dias&rdquo;), um mês &ldquo;nov 2026&rdquo;, meses &ldquo;ago – out 2026&rdquo; (ou &ldquo;nov 2025 – fev 2026&rdquo;), um ano &ldquo;2025&rdquo;, todos com &ldquo;é&rdquo;; um dia &ldquo;8 nov&rdquo;; o resto, &ldquo;entre 1 ago e 15 ago&rdquo;. Os totais só aparecem com os 12 meses conhecidos: nunca um total errado.
       </DocNote>
 
       <DocSection
@@ -591,10 +628,11 @@ export default function FilterBarDoc() {
         title="FilterField"
         rows={[
           { prop: "id · label · icon", type: "string · string · ReactNode", description: "id vai na URL; icon é 16/solid." },
-          { prop: "type", type: '"enum" | "period" | "money" | "text" | "boolean"', description: "Decide os operadores e o editor: a lista, o calendário com atalhos, os campos de dinheiro, o texto, ou nenhum (o filtro sem valor)." },
+          { prop: "type", type: '"enum" | "period" | "money" | "text" | "boolean"', description: "Decide os operadores e o editor: a lista, o período em abas (Dias · Meses · Ano), os campos de dinheiro, o texto, ou nenhum (o filtro sem valor)." },
           { prop: "options", type: "{ value, label, media?, count?, keywords? }[]", description: "enum: as opções, com o ladrilho e a contagem à direita." },
           { prop: "loadOptions", type: "(busca, signal) => Promise<FilterOption[]>", description: "enum: a busca no servidor." },
           { prop: "multiple", type: "boolean", default: "true", description: "enum: false é uma escolha só, e o editor fecha ao escolher." },
+          { prop: "totals", type: "(year, signal) => Promise<(number | null)[]>", description: "period: a despesa de cada mês do ano (12 posições; null = sem total), carregada por ano e cancelada ao sair. A legenda da grade de meses e o total de cada ano." },
           { prop: "pending", type: "boolean", description: "Os rótulos chegando: a roda no token e aria-busy." },
         ]}
       />
@@ -603,7 +641,7 @@ export default function FilterBarDoc() {
         title="FilterValue"
         rows={[
           { prop: "enum", type: '"is" | "is-not"', description: "values: os valores das opções." },
-          { prop: "period", type: '"is"', description: 'values: ["este-mes"] (um atalho de DATE_RANGE_PRESETS) ou ["2026-10-01", "2026-10-15"]. filterPeriodRange resolve os dois.' },
+          { prop: "period", type: '"is"', description: 'values: ["ultimos-90"] (um atalho de FILTER_PERIOD_PRESETS) ou ["2026-10-01", "2026-10-15"]. filterPeriodRange resolve os dois.' },
           { prop: "money", type: '"between" | "gte" | "lte"', description: 'values: ["50", "200"] no between, ["50"] nos outros — decimal com ponto.' },
           { prop: "text", type: '"contains"', description: "values: [texto]." },
           { prop: "boolean", type: '"is"', description: "values: []." },
@@ -616,6 +654,8 @@ export default function FilterBarDoc() {
           { prop: "FilterBarSkeleton", type: "{ size?, tokens?, count?, label?, group? }", description: "A barra esperando. group={false} dentro de um esqueleto de página." },
           { prop: "serializeFilters · parseFilters", type: "(value) => string | null · (texto, fields) => FilterValue[]", description: "O formato da URL, para montar um link fora da barra." },
           { prop: "filterPeriodRange", type: "(values) => { from, to } | null", description: "O intervalo de um filtro de período, com o atalho resolvido hoje — o que vai à consulta." },
+          { prop: "FILTER_PERIOD_PRESETS · FILTER_PERIOD_DAY_PRESET_IDS", type: "preset[] · string[]", description: "Os atalhos do filtro (os do DatePicker, Hoje e Últimos 90 dias) e os quatro que a aba Dias mostra." },
+          { prop: "abaInicialDoPeriodo", type: '(values) => "dias" | "meses" | "ano"', description: "A aba em que o editor de período abre." },
         ]}
       />
     </>

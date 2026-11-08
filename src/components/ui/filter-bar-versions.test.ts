@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
+  abaInicialDoPeriodo,
   FilterBar,
   FILTER_PERIOD_DAY_PRESET_IDS,
   FILTER_PERIOD_PRESETS,
@@ -399,5 +400,51 @@ describe("atalhos e rótulo do período", () => {
 
   it("o DatePicker não mudou", () => {
     expect(lerFonte("src/components/ui/date-picker.tsx")).not.toContain("ultimos-90")
+  })
+})
+
+describe("o período em abas", () => {
+  afterEach(() => vi.useRealTimers())
+  const BLOCO = CODIGO.slice(CODIGO.indexOf("function EditorDePeriodo"), CODIGO.indexOf("type ListaProps"))
+
+  it("a aba inicial segue o valor", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 8, 12))
+    expect(abaInicialDoPeriodo([])).toBe("meses")
+    expect(abaInicialDoPeriodo(["2025-01-01", "2025-12-31"])).toBe("ano")
+    expect(abaInicialDoPeriodo(["2025-11-01", "2026-02-28"])).toBe("meses")
+    expect(abaInicialDoPeriodo(["este-mes"])).toBe("dias")
+    expect(abaInicialDoPeriodo(["ultimos-7"])).toBe("dias")
+    expect(abaInicialDoPeriodo(["2026-08-01", "2026-08-15"])).toBe("dias")
+  })
+
+  it("Dias · Meses · Ano no Tabs, a grade em intervalo, e só os atalhos de dias", () => {
+    expect(BLOCO).toContain("<Tabs")
+    for (const v of ["dias", "meses", "ano"]) expect(BLOCO).toContain(`<TabsTrigger value="${v}"`)
+    expect(BLOCO).toMatch(/<MonthGrid[\s\S]*?mode="range"/)
+    expect(BLOCO).toMatch(/presets=\{ATALHOS_DE_DIAS\}/)
+    expect(CODIGO).toMatch(/const ATALHOS_DE_DIAS = FILTER_PERIOD_DAY_PRESET_IDS\.map/)
+    expect(BLOCO).not.toMatch(/isMobile \?/)
+    // A lista de anos é escolha única do catálogo, não botões de alternar.
+    expect(BLOCO).toContain("<RadioGroup")
+    expect(BLOCO).not.toContain("aria-pressed")
+  })
+
+  it("sem valor, os dois meses do desktop terminam no atual", () => {
+    expect(BLOCO).toContain("getMonth() - 1")
+  })
+
+  it("o resumo diz o intervalo e a duração", () => {
+    expect(BLOCO).toContain("periodSummary(")
+    expect(BLOCO).toContain('data-slot="filter-bar-period-summary"')
+  })
+
+  it("os totais carregam por ano, cancelando, sem React Query", () => {
+    expect(CODIGO).not.toContain("useQuery")
+    expect(CODIGO).toContain("new AbortController()")
+    expect(CODIGO).toContain("currencyCompactBRL(")
+    // Tipo: o campo de período aceita `totals`.
+    const comTotais: FilterField = { id: "p", label: "P", type: "period", totals: async () => Array(12).fill(null) }
+    expect(comTotais.type).toBe("period")
   })
 })

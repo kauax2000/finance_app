@@ -692,6 +692,8 @@ type MonthGridProps = {
   className?: string
   /** Uma segunda linha sob o nome do mês (um total, por exemplo). */
   caption?: (month: Date) => React.ReactNode
+  /** O ano entre as setas mudou (para quem carrega a `caption` por ano). */
+  onYearChange?: (year: number) => void
 } & (
   | { mode?: "single"; value?: Date; onChange: (month: Date) => void }
   | { mode: "range"; value?: MonthRange; onChange: (range: MonthRange) => void }
@@ -718,11 +720,15 @@ export function proximoIntervaloDeMes(
  * guarda como âncora (que sobrevive à troca de ano), o segundo grava até ele.
  */
 export function MonthGrid(props: MonthGridProps) {
-  const { min, max, showToday = false, className, caption } = props
+  const { min, max, showToday = false, className, caption, onYearChange } = props
   const agora = hoje()
   const intervalo = props.mode === "range" ? props.value : undefined
   const unico = props.mode === "range" ? undefined : props.value
-  const [ano, setAno] = React.useState(() => (unico ?? intervalo?.from ?? agora).getFullYear())
+  const [ano, setAnoInterno] = React.useState(() => (unico ?? intervalo?.from ?? agora).getFullYear())
+  const setAno = (a: number) => {
+    setAnoInterno(a)
+    if (a !== ano) onYearChange?.(a)
+  }
   const [ancora, setAncora] = React.useState<Date | null>(null)
   const { startMonth, endMonth } = limitesNavegacao(min, max)
   const anoMin = startMonth.getFullYear()
@@ -730,11 +736,23 @@ export function MonthGrid(props: MonthGridProps) {
   const foraDoLimite = (a: number, m: number) =>
     new Date(a, m + 1, 0) < startMonth || new Date(a, m, 1) > endMonth
   const indice = (d: Date) => d.getFullYear() * 12 + d.getMonth()
+  const chaveDe = (r: MonthRange | undefined) => (r ? `${indice(r.from)}:${indice(r.to)}` : "")
+
+  // Um valor que muda por fora (um atalho, outro ano, Remover) apaga a âncora:
+  // o próximo toque recomeça. O que este grid acabou de gravar não conta.
+  const chaveDoValor = chaveDe(intervalo)
+  const [visto, setVisto] = React.useState(chaveDoValor)
+  const [emitido, setEmitido] = React.useState<string | null>(null)
+  if (chaveDoValor !== visto) {
+    setVisto(chaveDoValor)
+    if (chaveDoValor !== emitido) setAncora(null)
+  }
 
   const escolher = (mes: Date) => {
     if (props.mode === "range") {
       const proximo = proximoIntervaloDeMes(ancora, mes)
       setAncora(proximo.ancora)
+      setEmitido(chaveDe(proximo.range))
       props.onChange(proximo.range)
     } else {
       props.onChange(mes)
@@ -766,7 +784,7 @@ export function MonthGrid(props: MonthGridProps) {
           // No toque as setas sobem a 44 (o `icon-sm` não cresce), com o ícone de 20.
           className="pointer-coarse:size-11 pointer-coarse:[&_svg]:size-5"
           disabled={ano <= anoMin}
-          onClick={() => setAno((a) => a - 1)}
+          onClick={() => setAno(ano - 1)}
         >
           <ChevronLeftIcon aria-hidden />
         </Button>
@@ -780,7 +798,7 @@ export function MonthGrid(props: MonthGridProps) {
           aria-label="Próximo ano"
           className="pointer-coarse:size-11 pointer-coarse:[&_svg]:size-5"
           disabled={ano >= anoMax}
-          onClick={() => setAno((a) => a + 1)}
+          onClick={() => setAno(ano + 1)}
         >
           <ChevronRightIcon aria-hidden />
         </Button>
@@ -812,9 +830,9 @@ export function MonthGrid(props: MonthGridProps) {
                 "font-normal pointer-coarse:h-11 pointer-coarse:text-base",
                 // O meio do intervalo é a faixa do `Calendar` (`range_middle`).
                 posicao === "middle" && "bg-muted text-foreground",
-                // Com legenda o mês cresce em altura: a caixa mede as duas linhas, com o piso do degrau.
+                // Com legenda o mês cresce em altura: as duas linhas já passam dos 28 do degrau; no toque, o piso de 44.
                 legenda != null &&
-                  "h-auto min-h-7 flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11"
+                  "h-auto flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11"
               )}
               onClick={() => escolher(mes)}
             >

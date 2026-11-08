@@ -275,6 +275,12 @@ export default function DatePickerDoc() {
             type: "(month: Date) => ReactNode",
             description: "Uma segunda linha sob o nome do mês; null deixa o mês sem legenda.",
           },
+          {
+            prop: "MonthGrid onYearChange",
+            type: "(year: number) => void",
+            description:
+              "O ano entre as setas mudou: quem carrega a caption por ano (os totais do FilterBar) pede o ano que a pessoa vê. Um value que muda por fora apaga a âncora do intervalo; o próximo toque recomeça.",
+          },
         ]}
       />
     </>
