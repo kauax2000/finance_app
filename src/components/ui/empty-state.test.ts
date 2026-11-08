@@ -44,11 +44,11 @@ describe("EmptyState", () => {
     expect(leque.match(/data-slot="empty-state-icon-tile"/g)?.length).toBe(3)
     // A superfície tonal é só do círculo: no leque quem tem superfície são os
     // ladrilhos.
-    expect(leque).not.toMatch(/data-slot="empty-state-icon"[^>]*bg-muted/)
+    expect(leque).not.toMatch(/data-slot="empty-state-icon"[^>]*bg-(muted|secondary)/)
 
     const circulo = renderToStaticMarkup(h(EmptyStateIcon, null, h("svg")))
     expect(circulo).toContain('data-variant="circle"')
-    expect(circulo).toContain("bg-muted")
+    expect(circulo).toContain("bg-secondary")
     expect(circulo).not.toContain("empty-state-icon-tile")
   })
 

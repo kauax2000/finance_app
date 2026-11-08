@@ -138,11 +138,13 @@ const emptyStateIconVariants = cva(
         destructive: "text-destructive-muted-foreground",
       },
     },
-    // A superfície tonal é só do círculo; no leque o tom fica na tinta.
+    // A superfície tonal é só do círculo; no leque o tom fica na tinta. O neutro é o
+    // `--secondary`, um degrau abaixo do `--muted`: o poço mora muitas vezes numa caixa
+    // tingida de `muted` (o `dashed`), e muted sobre muted sumia no claro (2026-11-08).
     compoundVariants: [
-      { variant: "done", tone: "default", className: "bg-muted" },
+      { variant: "done", tone: "default", className: "bg-secondary" },
       { variant: "done", tone: "success", className: "bg-success-muted" },
-      { variant: "circle", tone: "default", className: "bg-muted" },
+      { variant: "circle", tone: "default", className: "bg-secondary" },
       { variant: "circle", tone: "info", className: "bg-info-muted" },
       { variant: "circle", tone: "success", className: "bg-success-muted" },
       { variant: "circle", tone: "warning", className: "bg-warning-muted" },

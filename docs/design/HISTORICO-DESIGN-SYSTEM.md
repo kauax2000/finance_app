@@ -28957,3 +28957,22 @@ Pedido do dono em 2026-11-08: no escuro a barra flutuante da seleção sumia sob
 porque o `--popover` (L 7,8) é o mesmo do `--card`. Ela passa a vestir a pílula da
 `BottomBar`: `bottomBarTintClassName` (o `--bottom-bar-surface`, L 14,2 no escuro, um degrau
 fora do cartão, com o vidro) e o anel a 15%. Vale para toda tela com `DataTable` e seleção.
+
+### Rodada 366 — os neutros do claro com a separação do escuro
+
+Pedido do dono em 2026-11-08: no claro, poços, botões secundários e campos quase sumiam
+(o ícone do anexo vazio, o "Adicionar" na folha). Medido em razão de contraste, compondo
+em sRGB: o fio (`--border`) empatava (1,35 × 1,37), mas as superfícies ficavam atrás. Contra
+o fundo das folhas (`--background`), o `--secondary` dava 1,18 e o `--muted` 1,14, contra
+1,31 no escuro. O `--input-fill` a 50% dava 1,16, contra 1,25.
+
+- Claro: `--secondary` 0,93 → 0,905, `--secondary-hover` 0,855 → 0,84, `--muted` 0,94 → 0,92,
+  `--accent` 0,93 → 0,91, `--border` 0,9 → 0,88, `--input-fill` 0,9 → 0,84. Separação: o
+  secundário a 1,27 do fundo e 1,31 do cartão; o campo a 50% a 1,26.
+- Escuro: `--secondary`, `--muted` e `--accent` 0,269 → 0,29 (1,27 do cartão, 1,40 do fundo).
+- Textos: `--muted-foreground` sobre o `--muted` novo dá 4,74 no claro e 5,44 no escuro;
+  `tone-contrast`, `identity-contrast` e `tile-contrast` seguem acima de 4,5.
+- O poço neutro do `EmptyState` (`circle` e `done`) passa de `bg-muted` para `bg-secondary`:
+  dentro do `dashed`, tingido de `muted`, muted sobre muted sumia.
+- O anel de foco a 45% no claro cai de 2,96 para 2,83–2,85 sobre as superfícies novas (já
+  estava abaixo de 3:1, decisão consciente da 1.4.11); no escuro, 4,17–4,70.
