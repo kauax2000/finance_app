@@ -80,12 +80,13 @@ import {
 const LIMITE = 6
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
-    { valor: "existem", rotulo: "Já existem" },
-    { valor: "sem-categoria", rotulo: "Sem categoria" },
+    // As duas pendências só aparecem quando há linha, e acendem em aviso.
+    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
+    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
 ]
 
 const papeisDe = (m: ImportarExtrato["mapeamento"]) =>
@@ -350,7 +351,7 @@ function AcoesDasVisiveis({
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button type="button" variant="secondary" size={size} disabled={travado || itens.length === 0}>
-                    <span>{`${numberBR(itens.length)} ${itens.length === 1 ? "visível" : "visíveis"}`}</span>
+                    <span>Ações</span>
                     <ChevronDownIcon data-icon="inline-end" />
                 </Button>
             </DropdownMenuTrigger>
@@ -454,48 +455,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault()
             }}
         >
-            {/* No telefone os chips são uma fileira que rola de lado: a gaveta guarda a altura para as 6 linhas. */}
-            <div className="no-scrollbar flex items-center gap-2 overflow-x-auto *:shrink-0 md:flex-wrap md:overflow-visible">
-                <Badge size="md" tone="neutral" role="status">
-                    Vão entrar {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                </Badge>
-                {resumo.saidas > 0 ? (
-                    <Badge size="md" tone="expense">
-                        Saídas {signedCurrencyBRL(-resumo.saidas)}
-                    </Badge>
-                ) : null}
-                {resumo.entradas > 0 ? (
-                    <Badge size="md" tone="income">
-                        Entradas {signedCurrencyBRL(resumo.entradas)}
-                    </Badge>
-                ) : null}
-                {resumo.existem > 0 ? (
-                    <Badge size="md" tone="warning">
-                        {resumo.existem === 1 ? "1 já existe" : `${numberBR(resumo.existem)} já existem`}
-                    </Badge>
-                ) : null}
-                {!imp.existentesConferidos ? (
-                    <Badge size="md" tone="warning">
-                        Não deu para conferir o que já existe
-                    </Badge>
-                ) : null}
-                {imp.previa && imp.previa.ignoradas > 0 ? (
-                    <Badge size="md" tone="neutral">
-                        {rotuloDasIgnoradas(imp.previa.ignoradas)}
-                    </Badge>
-                ) : null}
-                {resumo.semCategoria > 0 ? (
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="xs"
-                        disabled={travado}
-                        onClick={() => imp.setFiltro("sem-categoria")}
-                    >
-                        <span>{`${numberBR(resumo.semCategoria)} sem categoria`}</span>
-                    </Button>
-                ) : null}
-            </div>
             {imp.previa && imp.previa.categoriasNovas.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-muted-foreground">Categorias novas, criadas ao importar:</span>
@@ -506,24 +465,26 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ))}
                 </div>
             ) : null}
-            <div className="flex items-center gap-2">
-                {/* No telefone os cinco filtros não cabem: a fileira rola de lado. */}
-                <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
-                    <ToggleGroup
-                        type="single"
-                        aria-label="Filtro"
-                        className="w-max"
-                        disabled={travado}
-                        value={imp.filtro}
-                        onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}
-                    >
-                        {FILTROS.map((f) => (
-                            <ToggleGroupItem key={f.valor} value={f.valor}>
-                                {f.rotulo}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                </div>
+            {/* O resumo é uma linha só, falada pelo leitor de tela a cada marcação; as ações da lista moram na ponta dela. */}
+            <div className="flex items-start gap-2">
+                <p role="status" className="min-w-0 flex-1 text-sm text-muted-foreground">
+                    {resumo.saidas > 0 ? (
+                        <>
+                            <span className="text-expense nums">Saídas {signedCurrencyBRL(-resumo.saidas)}</span>
+                            {" · "}
+                        </>
+                    ) : null}
+                    {resumo.entradas > 0 ? (
+                        <>
+                            <span className="text-income nums">Entradas {signedCurrencyBRL(resumo.entradas)}</span>
+                            {" · "}
+                        </>
+                    ) : null}
+                    Vão entrar{" "}
+                    <span className="font-medium text-foreground nums">
+                        {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                    </span>
+                </p>
                 {imp.expandido ? null : (
                     <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 )}
@@ -540,6 +501,37 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
                     </Button>
                 ) : null}
+            </div>
+            {!imp.existentesConferidos ? (
+                <Caption>Não deu para conferir o que já existe.</Caption>
+            ) : null}
+            {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
+            <div className="flex items-center gap-2">
+                {/* O filtro é o resumo: cada opção traz a contagem, e a que pede atenção acende em aviso.
+                    No telefone a fileira rola de lado. */}
+                <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
+                    <ToggleGroup
+                        type="single"
+                        aria-label="Filtro"
+                        className="w-max"
+                        disabled={travado}
+                        value={imp.filtro}
+                        onValueChange={(v) => v && imp.setFiltro(v as FiltroConferencia)}
+                    >
+                        {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
+                            <ToggleGroupItem key={f.valor} value={f.valor}>
+                                {f.rotulo}
+                                {f.aviso && imp.contagens[f.valor] > 0 ? (
+                                    <Badge size="xs" tone="warning" className="nums">
+                                        {numberBR(imp.contagens[f.valor])}
+                                    </Badge>
+                                ) : (
+                                    <span className="text-muted-foreground nums">{numberBR(imp.contagens[f.valor])}</span>
+                                )}
+                            </ToggleGroupItem>
+                        ))}
+                    </ToggleGroup>
+                </div>
             </div>
             {imp.expandido ? (
                 <DataTable
@@ -603,6 +595,10 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         </ItemDescription>
                     </ItemContent>
                     <ItemActions>
+                        {/* O sinal ao contrário do destino é o engano mais comum: um toque refaz a leitura. */}
+                        <Button type="button" variant="tertiary" size="sm" disabled={travado} onClick={() => void imp.inverterSinal()}>
+                            Inverter
+                        </Button>
                         <Button
                             type="button"
                             variant="tertiary"

@@ -170,6 +170,22 @@ export function filtrarItens(
     )
 }
 
+/** Quantas linhas cada opção do filtro mostra: o número que o filtro traz no rótulo. */
+export function contagemDosFiltros(
+    itens: ItemImportavel[],
+    existentes: Map<string, Existente>,
+    escolhidas: CategoriasEscolhidas,
+): Record<FiltroConferencia, number> {
+    const n = (f: FiltroConferencia) => filtrarItens(itens, f, existentes, escolhidas).length
+    return {
+        todos: itens.length,
+        saidas: n("saidas"),
+        entradas: n("entradas"),
+        existem: n("existem"),
+        "sem-categoria": n("sem-categoria"),
+    }
+}
+
 /**
  * O lote que vai ao banco: só as marcadas, com a categoria escolhida (sem o nome da
  * planilha, que a trocaria), e só as categorias novas que alguém ainda usa. Os
@@ -495,6 +511,15 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setPasso("colunas")
     }
 
+    /** Um toque na conferência: o arquivo vem com o sinal ao contrário do destino, e a leitura se refaz. */
+    function inverterSinal() {
+        const linhas = csv
+        if (!linhas) return Promise.resolve()
+        const m = { ...mapeamento, negativoEhDespesa: !mapeamento.negativoEhDespesa }
+        setMapeamento(m)
+        return lendo((n) => preparar(n, lerComMapeamento(linhas, m), sourceDoArquivo("csv", m.categoria)))
+    }
+
     function lerColunas() {
         const linhas = csv
         if (!linhas) return Promise.resolve()
@@ -653,6 +678,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         continuar,
         lerColunas,
         ajustarColunas,
+        inverterSinal,
         voltar,
         previa,
         existentes,
@@ -674,6 +700,9 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         filtro,
         setFiltro,
         visiveis: lote ? filtrarItens(lote.itens, filtro, existentes, escolhidas) : [],
+        contagens: lote
+            ? contagemDosFiltros(lote.itens, existentes, escolhidas)
+            : { todos: 0, saidas: 0, entradas: 0, existem: 0, "sem-categoria": 0 },
         expandido,
         setExpandido,
         resumo,

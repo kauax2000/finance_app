@@ -15,6 +15,7 @@ import {
     categoriaEfetiva,
     categoriaNovaDe,
     criarVez,
+    contagemDosFiltros,
     filtrarItens,
     idsParaCategoria,
     gravarLote,
@@ -348,6 +349,12 @@ describe("a conferência", () => {
         expect(categoriaNovaDe(nova, aplicarCategoria(new Map(), ["a"], null))).toBeNull()
     })
 
+    it("inverter o sinal refaz a leitura do mesmo arquivo com o sinal ao contrário", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
+        expect(fonte).toMatch(/function inverterSinal\(\) \{[\s\S]*?negativoEhDespesa: !mapeamento\.negativoEhDespesa[\s\S]*?lerComMapeamento\(linhas, m\)/)
+        expect(fonte).toContain("inverterSinal,")
+    })
+
     it("as ações das visíveis dizem quantas, no singular e no plural", () => {
         expect(rotulosDasVisiveis(5)).toEqual({
             categoria: "Pôr categoria nos 5 visíveis",
@@ -379,6 +386,25 @@ describe("a conferência", () => {
         expect(periodoPtBr({ de: "2026-10-05", ate: "2026-10-05" })).toBe("5 de outubro")
         expect(periodoPtBr({ de: "2026-09-28", ate: "2026-10-03" })).toBe("28 de setembro a 3 de outubro")
         expect(periodoPtBr({ de: "2025-12-30", ate: "2026-01-02" })).toBe("30 de dezembro de 2025 a 2 de janeiro de 2026")
+    })
+
+    it("a contagem de cada opção do filtro é o tamanho do que ela mostra", () => {
+        const itens = [
+            item({ clientId: "a" }),
+            item({ clientId: "b", estorno: true, categoryId: "c-1" }),
+            item({ clientId: "c", categoryId: "c-1" }),
+        ]
+        const existentes = new Map([["c", existe]])
+        const escolhidas = aplicarCategoria(new Map(), ["a"], "c-9")
+        expect(contagemDosFiltros(itens, existentes, escolhidas)).toEqual({
+            todos: 3,
+            saidas: 2,
+            entradas: 1,
+            existem: 1,
+            "sem-categoria": 0,
+        })
+        // Sem categoria escolhida, a "a" volta a ser sem categoria.
+        expect(contagemDosFiltros(itens, existentes, new Map())["sem-categoria"]).toBe(1)
     })
 
     it("o filtro escolhe as visíveis sem mudar marcadas nem categorias", () => {

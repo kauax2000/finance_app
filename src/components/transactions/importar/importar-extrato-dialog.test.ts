@@ -128,7 +128,7 @@ describe("a conferência", () => {
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
-        expect(conferir).toMatch(/<Badge[^>]*role="status"[^>]*>\s*Vão entrar/)
+        expect(conferir).toMatch(/<p role="status"[^>]*>[\s\S]*?Vão entrar/)
         expect(conferir).not.toContain("opacity-60")
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
     })
@@ -170,8 +170,25 @@ describe("a conferência", () => {
     })
 
     it("o resumo diz as linhas que ficaram de fora e quando não deu para conferir o que já existe", () => {
-        expect(conferir).toMatch(/imp\.previa && imp\.previa\.ignoradas > 0 \? \([\s\S]*?rotuloDasIgnoradas\(imp\.previa\.ignoradas\)/)
-        expect(conferir).toMatch(/!imp\.existentesConferidos \? \(\s*<Badge size="md" tone="warning">\s*Não deu para conferir o que já existe/)
+        expect(conferir).toMatch(/imp\.previa && imp\.previa\.ignoradas > 0 \? <Caption>\{rotuloDasIgnoradas\(imp\.previa\.ignoradas\)\}<\/Caption>/)
+        expect(conferir).toMatch(/!imp\.existentesConferidos \? \(\s*<Caption>Não deu para conferir o que já existe/)
+    })
+
+    it("o topo é o filtro com a contagem e uma linha de resumo, sem a fileira de chips", () => {
+        // Cada opção traz a contagem; as duas pendências só aparecem com linhas e acendem em aviso.
+        expect(conferir).toContain("imp.contagens[f.valor]")
+        expect(conferir).toMatch(/Já existem", aviso: true, so_com_linhas: true/)
+        expect(conferir).toMatch(/Sem categoria", aviso: true, so_com_linhas: true/)
+        expect(conferir).toMatch(/<Badge size="xs" tone="warning"/)
+        // O resumo é uma linha de texto com os tons de dinheiro; os chips saíram.
+        expect(conferir).toContain("text-expense")
+        expect(conferir).toContain("text-income")
+        expect(conferir).not.toContain('<Badge size="md" tone="expense">')
+        expect(conferir).not.toContain('<Badge size="md" tone="income">')
+        // O menu das ações em massa se chama Ações (o N já está em cada item).
+        expect(conferir).toMatch(/<span>Ações<\/span>/)
+        // O sinal ao contrário se desfaz num toque, ao lado do Ajustar.
+        expect(conferir).toMatch(/onClick=\{\(\) => void imp\.inverterSinal\(\)\}>\s*Inverter/)
     })
 
     it("travado, nenhum controle da conferência muda o lote", () => {
