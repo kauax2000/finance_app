@@ -26,6 +26,7 @@ import {
     quemFicouDeFora,
     resumoDaConferencia,
     resumoDoLote,
+    rotuloDasIgnoradas,
     rotulosDasVisiveis,
     sourceDoArquivo,
     tipoDoArquivo,
@@ -224,6 +225,33 @@ describe("o hook e o diálogo", () => {
         expect(hook).toContain("...quemFicouDeFora(lote.itens, marcadas, existentes)")
         // Antes do Continuar, a leitura do CSV deduzido já dá o total e o período do arquivo.
         expect(hook).toMatch(/arquivoLido = useMemo\(/)
+    })
+
+    it("as linhas sem data ou valor chegam ao fim; o rótulo diz quantas", () => {
+        expect(hook).toContain("ignoradas: lote.ignoradas")
+        expect(rotuloDasIgnoradas(1)).toBe("1 linha sem data ou valor ficou de fora")
+        expect(rotuloDasIgnoradas(1048)).toBe("1.048 linhas sem data ou valor ficaram de fora")
+    })
+
+    it("o já existe que não deu para conferir fica marcado no estado, e o lote segue", () => {
+        expect(hook).toContain("setExistentes(achados ?? new Map())")
+        expect(hook).toContain("setExistentesConferidos(achados !== null)")
+        expect(hook).toMatch(/existentesConferidos,/)
+    })
+
+    it("lote sem nenhuma linha legível não chega à conferência nem consulta o banco", () => {
+        expect(hook).toMatch(
+            /if \(leitura\.itens\.length === 0\) \{[\s\S]*?"Nenhuma linha com data e valor legíveis\. Ajuste as colunas\."[\s\S]*?return\s*\}[\s\S]*?prepararLote\(/,
+        )
+    })
+
+    it("importar: só o gravar cai no 'não terminou'; um erro ao atualizar a tela depois não", () => {
+        const corpo = hook.slice(hook.indexOf("async function importar("), hook.indexOf("async function desfazer("))
+        expect(corpo).toMatch(/try \{\s*r = await gravarLote\(/)
+        const naoTerminou = corpo.indexOf("A importação não terminou")
+        expect(naoTerminou).toBeGreaterThan(-1)
+        expect(naoTerminou).toBeLessThan(corpo.indexOf("setFeito("))
+        expect(corpo).toMatch(/try \{\s*await invalidateWorkspaceData\([\s\S]*?\} catch \{/)
     })
 })
 

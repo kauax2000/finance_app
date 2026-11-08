@@ -73,6 +73,12 @@ describe("o diálogo de importar, versão C", () => {
         expect(dialogo).toContain('"Ver o 1 sem categoria"')
         expect(dialogo).toContain("onRevisar({ semCategoria: feito.semCategoria > 0 })")
         expect(dialogo).toContain("Revisar agora")
+        // As linhas que a leitura deixou de fora (sem data ou valor) também.
+        expect(dialogo).toMatch(/feito\.ignoradas > 0 && `\$\{rotuloDasIgnoradas\(feito\.ignoradas\)\}\.`/)
+    })
+
+    it("importando, a conferência trava", () => {
+        expect(dialogo).toContain('<ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />')
     })
 })
 
@@ -92,7 +98,7 @@ describe("a conferência", () => {
         // A categoria de uma linha no telefone: tocar no corpo da linha (a caixa só diz se entra).
         expect(conferir).toContain("Toque numa linha para trocar a categoria")
         expect(conferir).toContain("aria-label={`Trocar a categoria de ${rotuloDe(item)}`}")
-        expect(conferir).toMatch(/onRowClick=\{celular \? \(i\) => setPorCategoria\(\[i\]\) : undefined\}/)
+        expect(conferir).toMatch(/onRowClick=\{celular && !travado \? \(i\) => setPorCategoria\(\[i\]\) : undefined\}/)
         expect(conferir).not.toContain("Marque e use")
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
@@ -145,6 +151,23 @@ describe("a conferência", () => {
         expect(conferir).toContain("<MoneyDisplay")
         expect(conferir).toContain("imp.categoriaNovaDe(")
         expect(conferir).toContain("<Item")
+    })
+
+    it("o resumo diz as linhas que ficaram de fora e quando não deu para conferir o que já existe", () => {
+        expect(conferir).toMatch(/imp\.previa && imp\.previa\.ignoradas > 0 \? \([\s\S]*?rotuloDasIgnoradas\(imp\.previa\.ignoradas\)/)
+        expect(conferir).toMatch(/!imp\.existentesConferidos \? \(\s*<Badge size="md" tone="warning">\s*Não deu para conferir o que já existe/)
+    })
+
+    it("travado, nenhum controle da conferência muda o lote", () => {
+        expect(conferir).toContain("export function ConferirImportacao({ imp, travado = false }")
+        expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Trazer/)
+        expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Categoria de/)
+        expect(conferir).toMatch(/<ToggleGroup[\s\S]*?disabled=\{travado\}/)
+        expect(conferir).toMatch(/disabled=\{travado \|\| itens\.length === 0\}/)
+        expect(conferir).toMatch(/aria-expanded=\{imp\.expandido\}\s*disabled=\{travado\}/)
+        expect(conferir).toContain("enableSelection={travado ? () => false : true}")
+        expect(conferir).toContain("pending={travado}")
+        expect(conferir).toMatch(/onRowClick=\{celular && !travado/)
     })
 
     it("as colunas mostram a prévia com o papel no topo e perguntam o sinal", () => {

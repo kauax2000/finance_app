@@ -162,32 +162,48 @@ export async function desfazerImportacao(
 
 export type Existente = { id: string; description: string; date: string }
 
+const PAGINA = 1000
+const TETO_DE_PAGINAS = 5
+
 /**
  * Os itens do lote que já estão na carteira: mesmo dia local, valor, tipo e destino,
- * 1 para 1. Falha na consulta não bloqueia a importação: devolve o mapa vazio.
+ * 1 para 1. `null`: não deu para conferir (a consulta falhou, ou a janela passou do
+ * teto de páginas). A importação segue, e a conferência avisa.
  */
 export async function buscarJaExistentes(
     db: SupabaseClient,
     workspaceId: string,
     destino: DestinoImportacao,
     itens: ItemImportavel[],
-): Promise<Map<string, Existente>> {
+): Promise<Map<string, Existente> | null> {
     const achados = new Map<string, Existente>()
     if (itens.length === 0) return achados
     const dias = itens.map((i) => i.data).sort()
-    // um dia de folga de cada lado: o dia é conferido localmente depois
-    let q = db
-        .from("transactions")
-        .select("id, description, date, amount, type, payment_method, payment_credit_card_id")
-        .eq("workspace_id", workspaceId)
-        .gte("date", filterRangeStartIso(addDaysYmd(dias[0], -1)))
-        .lte("date", filterRangeEndIso(addDaysYmd(dias[dias.length - 1], 1)))
-    q =
-        destino.tipo === "cartao"
-            ? q.eq("payment_credit_card_id", destino.cardId)
-            : q.eq("payment_method", destino.paymentMethod).is("payment_credit_card_id", null)
-    const { data, error } = await q
-    if (error || !data) return achados
+    // Uma consulta nova por página: o construtor do PostgREST não se reaproveita.
+    const pagina = (n: number) => {
+        // um dia de folga de cada lado: o dia é conferido localmente depois
+        const q = db
+            .from("transactions")
+            .select("id, description, date, amount, type, payment_method, payment_credit_card_id")
+            .eq("workspace_id", workspaceId)
+            .gte("date", filterRangeStartIso(addDaysYmd(dias[0], -1)))
+            .lte("date", filterRangeEndIso(addDaysYmd(dias[dias.length - 1], 1)))
+        return (
+            destino.tipo === "cartao"
+                ? q.eq("payment_credit_card_id", destino.cardId)
+                : q.eq("payment_method", destino.paymentMethod).is("payment_credit_card_id", null)
+        )
+            .order("id")
+            .range(n * PAGINA, (n + 1) * PAGINA - 1)
+    }
+    const data: Array<{ id: string; description: string; date: string; amount: number; type: string }> = []
+    for (let n = 0; ; n++) {
+        const r = await pagina(n)
+        if (r.error || !r.data) return null
+        data.push(...r.data)
+        if (r.data.length < PAGINA) break
+        if (n + 1 >= TETO_DE_PAGINAS) return null
+    }
 
     const livres = new Map<string, Existente[]>()
     for (const t of data) {

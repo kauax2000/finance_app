@@ -257,14 +257,21 @@ describe("buscarJaExistentes", () => {
         id: "t1", description: "Padaria", date: "2026-10-10T12:00:00.000Z", amount: 30,
         type: "expense", payment_method: "pix", payment_credit_card_id: null, ...p,
     })
-    function mock(resultado: { data: Linha[] | null; error: { message: string } | null }) {
+    type Resultado = { data: Linha[] | null; error: { message: string } | null }
+    /** Uma resposta por página (a última se repete). */
+    function mock(...paginas: Resultado[]) {
         const chamadas: Array<[string, unknown[]]> = []
-        const q: Record<string, unknown> = {}
-        for (const m of ["select", "eq", "is", "gte", "lte"]) {
-            q[m] = (...args: unknown[]) => { chamadas.push([m, args]); return q }
+        let pagina = 0
+        const from = (t: string) => {
+            chamadas.push(["from", [t]])
+            const q: Record<string, unknown> = {}
+            for (const m of ["select", "eq", "is", "gte", "lte", "order", "range"]) {
+                q[m] = (...args: unknown[]) => { chamadas.push([m, args]); return q }
+            }
+            const r = paginas[Math.min(pagina++, paginas.length - 1)]
+            q.then = (ok: (r: unknown) => unknown) => Promise.resolve(r).then(ok)
+            return q
         }
-        q.then = (ok: (r: unknown) => unknown) => Promise.resolve(resultado).then(ok)
-        const from = (t: string) => { chamadas.push(["from", [t]]); return q }
         return { db: { from } as unknown as SupabaseClient, chamadas }
     }
     const conta = { tipo: "conta", paymentMethod: "pix" } as const
@@ -272,7 +279,7 @@ describe("buscarJaExistentes", () => {
 
     it("sem lote não consulta", async () => {
         const { db, chamadas } = mock({ data: [], error: null })
-        expect((await buscarJaExistentes(db, "w1", conta, [])).size).toBe(0)
+        expect((await buscarJaExistentes(db, "w1", conta, []))?.size).toBe(0)
         expect(chamadas).toEqual([])
     })
 
@@ -296,23 +303,46 @@ describe("buscarJaExistentes", () => {
             linha({ id: "b", amount: 31, date: "2026-10-11T12:00:00.000Z" }),
             linha({ id: "c", type: "income", date: "2026-10-12T12:00:00.000Z" }),
         ], error: null })
-        const r = await buscarJaExistentes(db, "w1", conta, [
+        const r = (await buscarJaExistentes(db, "w1", conta, [
             item({ clientId: "x" }),
             item({ clientId: "y", data: "2026-10-11" }),
             item({ clientId: "z", data: "2026-10-12" }),
-        ])
+        ]))!
         expect([...r.keys()]).toEqual(["x"])
         expect(r.get("x")).toEqual({ id: "a", description: "Padaria", date: "2026-10-10T12:00:00.000Z" })
     })
 
     it("1 para 1: dois iguais e um existente casa só um", async () => {
         const { db } = mock({ data: [linha()], error: null })
-        const r = await buscarJaExistentes(db, "w1", conta, [item({ clientId: "a" }), item({ clientId: "b" })])
+        const r = (await buscarJaExistentes(db, "w1", conta, [item({ clientId: "a" }), item({ clientId: "b" })]))!
         expect([...r.keys()]).toEqual(["a"])
     })
 
-    it("erro da consulta devolve mapa vazio", async () => {
+    it("erro da consulta devolve null: não deu para conferir", async () => {
         const { db } = mock({ data: null, error: { message: "boom" } })
-        expect((await buscarJaExistentes(db, "w1", conta, [item()])).size).toBe(0)
+        expect(await buscarJaExistentes(db, "w1", conta, [item()])).toBeNull()
+    })
+
+    it("pagina de 1000 em 1000, em ordem estável, e casa o que veio da segunda página", async () => {
+        const cheia = Array.from({ length: 1000 }, (_, n) => linha({ id: `p${n}`, amount: 1000 + n }))
+        const { db, chamadas } = mock({ data: cheia, error: null }, { data: [linha({ id: "fim" })], error: null })
+        const r = await buscarJaExistentes(db, "w1", conta, [item({ clientId: "x" })])
+        expect(chamadas).toContainEqual(["range", [0, 999]])
+        expect(chamadas).toContainEqual(["range", [1000, 1999]])
+        expect(chamadas).toContainEqual(["order", ["id"]])
+        expect(r?.get("x")?.id).toBe("fim")
+    })
+
+    it("no teto de páginas, devolve null: o resto ficou sem conferir", async () => {
+        const cheia = Array.from({ length: 1000 }, (_, n) => linha({ id: `p${n}` }))
+        const { db, chamadas } = mock({ data: cheia, error: null })
+        expect(await buscarJaExistentes(db, "w1", conta, [item()])).toBeNull()
+        expect(chamadas.filter(([m]) => m === "range")).toHaveLength(5)
+    })
+
+    it("erro numa página seguinte também devolve null", async () => {
+        const cheia = Array.from({ length: 1000 }, (_, n) => linha({ id: `p${n}` }))
+        const { db } = mock({ data: cheia, error: null }, { data: null, error: { message: "boom" } })
+        expect(await buscarJaExistentes(db, "w1", conta, [item()])).toBeNull()
     })
 })

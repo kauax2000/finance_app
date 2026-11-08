@@ -141,6 +141,10 @@ export function rotulosDasVisiveis(n: number) {
     }
 }
 
+/** As linhas que a leitura deixou de fora (sem data ou valor legíveis). */
+export const rotuloDasIgnoradas = (n: number) =>
+    n === 1 ? "1 linha sem data ou valor ficou de fora" : `${numberBR(n)} linhas sem data ou valor ficaram de fora`
+
 /** A categoria escolhida vale para as do tipo dela (o estorno do cartão é despesa); `null` (sem categoria), para todas. */
 export const idsParaCategoria = (
     itens: ItemImportavel[],
@@ -338,6 +342,8 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     const [mapeamento, setMapeamento] = useState<MapeamentoColunas>(MAPEAMENTO_INICIAL)
     const [lote, setLote] = useState<LoteImportacao | null>(null)
     const [existentes, setExistentes] = useState<Map<string, Existente>>(() => new Map())
+    // `false`: a consulta do "já existe" falhou ou passou do teto; a conferência avisa.
+    const [existentesConferidos, setExistentesConferidos] = useState(true)
     const [marcadas, setMarcadas] = useState<Set<string>>(() => new Set())
     const [escolhidas, setEscolhidas] = useState<CategoriasEscolhidas>(() => new Map())
     const [filtro, setFiltro] = useState<FiltroConferencia>("todos")
@@ -347,6 +353,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         jaExistiam: number
         deixadas: number
         semCategoria: number
+        ignoradas: number
     } | null>(null)
     const [pendente, setPendente] = useState<"lendo" | "importar" | "desfazer" | null>(null)
     const [erro, setErro] = useState<string | null>(null)
@@ -362,6 +369,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setDeducao(null)
         setLote(null)
         setExistentes(new Map())
+        setExistentesConferidos(true)
         setMarcadas(new Set())
         setEscolhidas(new Map())
         setFiltro("todos")
@@ -411,6 +419,14 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     /** `n`: a vez do pedido; a resposta de um pedido velho é descartada. */
     async function preparar(n: number, leitura: { itens: ItemBanco[]; ignoradas: number }, source: SourceImportacao) {
         if (!workspaceId || !destino) return
+        // Mapeamento errado ou arquivo só com cabeçalho: nada a conferir.
+        if (leitura.itens.length === 0) {
+            const deCsv = tipoDoArquivo(arquivo?.name ?? "") === "csv"
+            // O OFX não tem colunas a ajustar: fica no Arquivo.
+            setErro(deCsv ? "Nenhuma linha com data e valor legíveis. Ajuste as colunas." : "Nenhum lançamento legível neste arquivo.")
+            if (deCsv) setPasso("colunas")
+            return
+        }
         const r = await prepararLote(supabase, workspaceId, leitura, destino, source)
         if (!vez.vale(n)) return
         if (!r.ok) {
@@ -421,8 +437,9 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         if (!vez.vale(n)) return
         ajustando.current = null
         setLote(r.lote)
-        setExistentes(achados)
-        setMarcadas(marcadasIniciais(r.lote.itens, achados))
+        setExistentes(achados ?? new Map())
+        setExistentesConferidos(achados !== null)
+        setMarcadas(marcadasIniciais(r.lote.itens, achados ?? new Map()))
         setEscolhidas(new Map())
         setFiltro("todos")
         setExpandido(false)
@@ -527,28 +544,34 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         }
         setPendente("importar")
         setErro(null)
+        let r: Awaited<ReturnType<typeof gravarLote>>
         try {
-            const r = await gravarLote(supabase, { userId, workspaceId }, loteParaGravar(lote, marcadas, escolhidas))
-            if (!r.ok) {
-                setErro(r.erro)
-                return null
-            }
-            setFeito({
-                importados: r.quantidade,
-                ...quemFicouDeFora(lote.itens, marcadas, existentes),
-                semCategoria: resumo.semCategoria,
-            })
-            setPasso("feito")
-            await invalidateWorkspaceData(queryClient, workspaceId, {
-                domains: ["transactions", "categories", "credit_card_expense_rows"],
-            })
-            return { quantidade: r.quantidade, loteId: lote.batchId }
+            r = await gravarLote(supabase, { userId, workspaceId }, loteParaGravar(lote, marcadas, escolhidas))
         } catch {
             setErro("A importação não terminou. Tente de novo: nada se duplica.")
             return null
         } finally {
             setPendente(null)
         }
+        if (!r.ok) {
+            setErro(r.erro)
+            return null
+        }
+        setFeito({
+            importados: r.quantidade,
+            ...quemFicouDeFora(lote.itens, marcadas, existentes),
+            semCategoria: resumo.semCategoria,
+            ignoradas: lote.ignoradas,
+        })
+        setPasso("feito")
+        try {
+            await invalidateWorkspaceData(queryClient, workspaceId, {
+                domains: ["transactions", "categories", "credit_card_expense_rows"],
+            })
+        } catch {
+            // Gravou: uma falha ao atualizar as listas não desdiz o lote gravado.
+        }
+        return { quantidade: r.quantidade, loteId: lote.batchId }
     }
 
     /** Apaga o lote por `import_batch_id` e volta ao primeiro passo. `false`: deu erro. */
@@ -633,6 +656,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         voltar,
         previa,
         existentes,
+        existentesConferidos,
         marcadas,
         setMarcada: (id: string, on: boolean) => marcarVarias([id], on),
         marcarVarias,

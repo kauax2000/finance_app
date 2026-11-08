@@ -72,6 +72,7 @@ import {
     type FiltroConferencia,
     idsParaCategoria,
     type ImportarExtrato,
+    rotuloDasIgnoradas,
     rotulosDasVisiveis,
 } from "./use-importar-extrato"
 
@@ -110,7 +111,7 @@ function nomeDaCategoria(imp: ImportarExtrato, item: ItemImportavel) {
 }
 
 /** A categoria de uma linha: a sugerida ou a da planilha já vem escolhida. */
-function CategoriaDaLinha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
+function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: ItemImportavel; travado: boolean }) {
     const id = imp.categoriaDe(item.clientId)
     const nome = nomeDaCategoria(imp, item)
     return (
@@ -119,7 +120,12 @@ function CategoriaDaLinha({ imp, item }: { imp: ImportarExtrato; item: ItemImpor
             onValueChange={(v) => imp.setCategoria([item.clientId], v === SEM ? null : v)}
         >
             <ComboboxField>
-                <ComboboxTrigger size="sm" placeholder="Sem categoria" aria-label={`Categoria de ${item.descricao}`}>
+                <ComboboxTrigger
+                    size="sm"
+                    placeholder="Sem categoria"
+                    disabled={travado}
+                    aria-label={`Categoria de ${item.descricao}`}
+                >
                     <ComboboxValue placeholder="Sem categoria">{nome}</ComboboxValue>
                 </ComboboxTrigger>
             </ComboboxField>
@@ -163,10 +169,12 @@ function JaExiste({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel })
 function Linha({
     imp,
     item,
+    travado,
     onTrocarCategoria,
 }: {
     imp: ImportarExtrato
     item: ItemImportavel
+    travado: boolean
     onTrocarCategoria: (item: ItemImportavel) => void
 }) {
     const marcada = imp.marcadas.has(item.clientId)
@@ -177,17 +185,20 @@ function Linha({
                 <Checkbox
                     checked={marcada}
                     onCheckedChange={(v) => imp.setMarcada(item.clientId, v === true)}
+                    disabled={travado}
                     aria-label={`Trazer ${rotuloDe(item)}`}
                 />
             </ItemMedia>
             {/* Uma linha no desktop (descrição · categoria · valor). No telefone a categoria é texto na segunda linha, e tocar no corpo da linha (fora da caixa) a troca. */}
             <div className="relative flex min-w-0 flex-1 items-center gap-x-3">
                 {/* A película do `ItemLink` cobre só este bloco (o `relative`): a caixa fica fora dela. */}
-                <ItemLink
-                    aria-label={`Trocar a categoria de ${rotuloDe(item)}`}
-                    className="md:hidden"
-                    onClick={() => onTrocarCategoria(item)}
-                />
+                {travado ? null : (
+                    <ItemLink
+                        aria-label={`Trocar a categoria de ${rotuloDe(item)}`}
+                        className="md:hidden"
+                        onClick={() => onTrocarCategoria(item)}
+                    />
+                )}
                 <ItemContent className="min-w-0 flex-1">
                     <ItemTitle className="w-full">
                         <span className="truncate">{descricaoDe(item)}</span>
@@ -202,7 +213,7 @@ function Linha({
                     </ItemDescription>
                 </ItemContent>
                 <div className="hidden md:block md:w-40">
-                    <CategoriaDaLinha imp={imp} item={item} />
+                    <CategoriaDaLinha imp={imp} item={item} travado={travado} />
                 </div>
                 <MoneyDisplay
                     // Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor.
@@ -325,18 +336,20 @@ function AcoesDasVisiveis({
     itens,
     onPorCategoria,
     size,
+    travado,
 }: {
     imp: ImportarExtrato
     itens: ItemImportavel[]
     onPorCategoria: (itens: ItemImportavel[]) => void
     size?: "xs"
+    travado: boolean
 }) {
     const rotulos = rotulosDasVisiveis(itens.length)
     const ids = itens.map((i) => i.clientId)
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="secondary" size={size} disabled={itens.length === 0}>
+                <Button type="button" variant="secondary" size={size} disabled={travado || itens.length === 0}>
                     <span>{`${numberBR(itens.length)} ${itens.length === 1 ? "visível" : "visíveis"}`}</span>
                     <ChevronDownIcon data-icon="inline-end" />
                 </Button>
@@ -366,7 +379,11 @@ function AcoesDasVisiveis({
 }
 
 /** Na barra do `DataTable`: as visíveis são as que ele filtrou (o filtro da conferência mais a busca). */
-function AcoesDaTabela(props: { imp: ImportarExtrato; onPorCategoria: (itens: ItemImportavel[]) => void }) {
+function AcoesDaTabela(props: {
+    imp: ImportarExtrato
+    onPorCategoria: (itens: ItemImportavel[]) => void
+    travado: boolean
+}) {
     const itens = useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)
     return <AcoesDasVisiveis {...props} itens={itens} />
 }
@@ -376,7 +393,7 @@ function AcoesDaTabela(props: { imp: ImportarExtrato; onPorCategoria: (itens: It
  * linhas (a última dissolve) e "Ver os N"; expandida, o mesmo diálogo em tela
  * cheia com o `DataTable` (busca, ordenação, seleção = o que entra, soma).
  */
-export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
+export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
     const { resumo } = imp
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     const grande = imp.visiveis.length > LIMITE
@@ -397,7 +414,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
             id: "categoria",
             header: "Categoria",
             enableSorting: false,
-            cell: ({ row }) => <CategoriaDaLinha imp={imp} item={row.original} />,
+            cell: ({ row }) => <CategoriaDaLinha imp={imp} item={row.original} travado={travado} />,
             meta: { label: "Categoria", csv: false },
         },
         // No gêmeo do telefone a categoria é texto (a legenda é um `<p>`); tocar na linha a troca.
@@ -457,8 +474,24 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         {resumo.existem === 1 ? "1 já existe" : `${numberBR(resumo.existem)} já existem`}
                     </Badge>
                 ) : null}
+                {!imp.existentesConferidos ? (
+                    <Badge size="md" tone="warning">
+                        Não deu para conferir o que já existe
+                    </Badge>
+                ) : null}
+                {imp.previa && imp.previa.ignoradas > 0 ? (
+                    <Badge size="md" tone="neutral">
+                        {rotuloDasIgnoradas(imp.previa.ignoradas)}
+                    </Badge>
+                ) : null}
                 {resumo.semCategoria > 0 ? (
-                    <Button type="button" variant="secondary" size="xs" onClick={() => imp.setFiltro("sem-categoria")}>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="xs"
+                        disabled={travado}
+                        onClick={() => imp.setFiltro("sem-categoria")}
+                    >
                         <span>{`${numberBR(resumo.semCategoria)} sem categoria`}</span>
                     </Button>
                 ) : null}
@@ -480,6 +513,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         type="single"
                         aria-label="Filtro"
                         className="w-max"
+                        disabled={travado}
                         value={imp.filtro}
                         onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}
                     >
@@ -491,7 +525,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     </ToggleGroup>
                 </div>
                 {imp.expandido ? null : (
-                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" />
+                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 )}
                 {podeExpandir ? (
                     <Button
@@ -500,6 +534,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         size="icon-md"
                         aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
                         aria-expanded={imp.expandido}
+                        disabled={travado}
                         onClick={() => imp.setExpandido(!imp.expandido)}
                     >
                         {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
@@ -514,9 +549,10 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     getRowId={(i) => i.clientId}
                     getRowLabel={rotuloDe}
                     pageSize={false}
-                    toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} /> }}
-                    onRowClick={celular ? (i) => setPorCategoria([i]) : undefined}
-                    enableSelection
+                    toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} travado={travado} /> }}
+                    onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
+                    enableSelection={travado ? () => false : true}
+                    pending={travado}
                     rowSelection={selecao}
                     onRowSelectionChange={mudarSelecao}
                     empty={vazio}
@@ -538,6 +574,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                                     key={i.clientId}
                                     imp={imp}
                                     item={i}
+                                    travado={travado}
                                     onTrocarCategoria={(item) => setPorCategoria([item])}
                                 />
                             ))}
@@ -545,7 +582,12 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     </ScrollArea>
                     {grande ? (
                         <div className="flex justify-center">
-                            <Button type="button" variant="secondary" onClick={() => imp.setExpandido(true)}>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                disabled={travado}
+                                onClick={() => imp.setExpandido(true)}
+                            >
                                 {`Ver os ${numberBR(imp.visiveis.length)} lançamentos`}
                             </Button>
                         </div>
@@ -561,7 +603,13 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         </ItemDescription>
                     </ItemContent>
                     <ItemActions>
-                        <Button type="button" variant="tertiary" size="sm" onClick={imp.ajustarColunas}>
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            size="sm"
+                            disabled={travado}
+                            onClick={imp.ajustarColunas}
+                        >
                             Ajustar
                         </Button>
                     </ItemActions>

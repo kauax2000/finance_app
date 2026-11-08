@@ -55,7 +55,7 @@ import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
 import { ConferirImportacao } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
-import { periodoPtBr, useImportarExtrato } from "./use-importar-extrato"
+import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
 const CONTAS = [
     { forma: "pix", rotulo: "Pix", em: "no Pix" },
@@ -315,7 +315,7 @@ export function ImportarExtratoDialog({
                                 disabled={travado}
                             />
                         ) : imp.passo === "conferir" ? (
-                            <ConferirImportacao imp={imp} />
+                            <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
                         ) : imp.passo === "feito" && feito ? (
                             <EmptyState variant="plain">
                                 <EmptyStateIcon variant="done" />
@@ -330,6 +330,7 @@ export function ImportarExtratoDialog({
                                             `${numberBR(feito.jaExistiam)} ${feito.jaExistiam === 1 ? "ficou de fora porque já existia" : "ficaram de fora porque já existiam"}.`,
                                         feito.deixadas > 0 &&
                                             `${numberBR(feito.deixadas)} ${feito.deixadas === 1 ? "ficou de fora" : "ficaram de fora"}.`,
+                                        feito.ignoradas > 0 && `${rotuloDasIgnoradas(feito.ignoradas)}.`,
                                         feito.semCategoria > 0
                                             ? `${numberBR(feito.semCategoria)} sem categoria, marcados a conferir.`
                                             : "Todos estão marcados a conferir.",
