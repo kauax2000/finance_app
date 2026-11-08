@@ -30,18 +30,23 @@ export function OverflowMenu({
   label,
   align = "end",
   size = "icon-lg",
+  trigger,
+  triggerClassName,
 }: {
   items: ItemNoExcesso[]
   label: string
   align?: "start" | "end"
   /** O degrau do ⋯ na escada de ícone do `Button` — o `Tabs` passa o da aba. */
   size?: "icon-xs" | "icon-sm" | "icon-md" | "icon-lg"
+  /** O que o gatilho mostra no lugar do ⋯ (o "+2" da `FilterBar`); o nome continua o `label`. */
+  trigger?: React.ReactNode
+  triggerClassName?: string
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size={size} data-overflow-more="" aria-label={label}>
-          <EllipsisHorizontalIcon aria-hidden />
+        <Button type="button" variant="outline" size={size} data-overflow-more="" aria-label={label} className={triggerClassName}>
+          {trigger ?? <EllipsisHorizontalIcon aria-hidden />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} size="lg">

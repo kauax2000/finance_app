@@ -30,7 +30,7 @@ describe("transacoes-toolbar (fonte)", () => {
     })
 
     it("a FilterBar é a faixa de uma linha, sem mobile=", () => {
-        expect(TOOLBAR).toContain('overflow="scroll"')
+        expect(TOOLBAR).toContain('overflow="menu"')
         expect(TOOLBAR).not.toMatch(/\bmobile=/)
     })
 

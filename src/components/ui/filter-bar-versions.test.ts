@@ -15,8 +15,10 @@ import {
   parseFilters,
   serializeFilters,
   type FilterField,
+  tokensQueSaem,
   type FilterValue,
 } from "./filter-bar"
+import { OverflowMenu } from "@/lib/overflow-menu"
 
 /** O FilterBar: o token partido, o editor, a URL e o teclado. */
 
@@ -287,10 +289,10 @@ describe("o comportamento", () => {
 
   it("um popover para a barra, ancorado no que está aberto", () => {
     expect(CODIGO).toContain("<PopoverAnchor virtualRef={ancoraRef} />")
-    // Só um token ou o "+ Filtro" seguram o editor (eles o trocam); o vão da
-    // linha, que é larga, fecha como o resto da página.
+    // Só um token, o "+ Filtro" ou o "+N" seguram o editor (eles o trocam); o
+    // vão da linha, que é larga, fecha como o resto da página.
     expect(CODIGO).toContain(
-      'alvo?.closest("[data-slot=filter-bar-token], [data-slot=filter-bar-add]")'
+      'alvo?.closest("[data-slot=filter-bar-token], [data-slot=filter-bar-add], [data-overflow-more]")'
     )
     expect(CODIGO.match(/<Popover\b/g)).toHaveLength(1)
   })
@@ -530,41 +532,64 @@ const divDoSlot = (html: string, slot: string) => {
   return html.slice(ini)
 }
 
-describe("overflow scroll", () => {
+describe("overflow menu", () => {
   const TRES: FilterValue[] = [
     { field: "categoria", operator: "is", values: ["mercado"] },
     { field: "descricao", operator: "contains", values: ["pão"] },
     { field: "parcelado", operator: "is", values: [] },
   ]
 
-  it("as ações e a contagem são irmãs da faixa, fora dela", () => {
-    const html = barra({ overflow: "scroll", defaultValue: TRES, count: 3 })
-    expect(html).toContain('data-overflow="scroll"')
-    const faixa = divDoSlot(html, "filter-bar-row")
-    expect(faixa).toContain('data-slot="filter-bar-token"')
-    expect(faixa).not.toContain('data-slot="filter-bar-add"')
-    expect(faixa).not.toContain('data-slot="filter-bar-clear"')
-    expect(faixa).not.toContain('data-slot="filter-bar-count"')
+  it("o valor scroll saiu: a linha é wrap ou menu", () => {
+    expect(CODIGO).toContain('overflow?: "wrap" | "menu"')
+    expect(CODIGO).not.toMatch(/overflow\?: [^\n]*"scroll"/)
+    expect(CODIGO).not.toContain('overflow === "scroll"')
+    // O auto-rolar até o token novo e a faixa que rola saíram junto.
+    expect(CODIGO).not.toMatch(/scrollTo\(\{ left: [a-z]+\.scrollWidth/)
+    expect(CODIGO).not.toContain("flex-initial flex-nowrap overflow-x-auto")
+  })
+
+  it("quem sai é o mecanismo do sistema, medido por ResizeObserver, e sai por hidden", () => {
+    expect(CODIGO).toMatch(/import \{[^}]*quemSai[^}]*\} from "@\/lib\/overflow"/)
+    expect(CODIGO).toMatch(/import \{[^}]*OverflowMenu[^}]*\} from "@\/lib\/overflow-menu"/)
+    expect(CODIGO).toContain("new ResizeObserver(")
+    expect(CODIGO).toContain('setAttribute("hidden", "")')
+    expect(CODIGO).toContain('ponta: "fim"')
+  })
+
+  it("tokensQueSaem: do fim, pulando o fixo, até caber com o +N", () => {
+    const o = { reserva: 40, gap: 6 }
+    expect(tokensQueSaem([100, 100, 100], 250, o)).toEqual([1, 2])
+    expect(tokensQueSaem([100, 100, 100], 250, { ...o, fixo: 2 })).toEqual([0, 1])
+    expect(tokensQueSaem([100, 100, 100], 400, o)).toEqual([])
+  })
+
+  it("uma linha só que não rola, e as ações e a contagem ficam fora dela", () => {
+    const html = barra({ overflow: "menu", defaultValue: TRES, count: 3 })
+    expect(html).toContain('data-overflow="menu"')
+    const linha = divDoSlot(html, "filter-bar-row")
+    const abre = linha.slice(0, linha.indexOf(">"))
+    expect(abre).toContain("flex-nowrap")
+    expect(abre).toContain("overflow-hidden")
+    expect(abre).not.toContain("overflow-x-auto")
+    expect(linha).toContain('data-slot="filter-bar-token"')
+    expect(linha).not.toContain('data-slot="filter-bar-add"')
+    expect(linha).not.toContain('data-slot="filter-bar-clear"')
+    expect(linha).not.toContain('data-slot="filter-bar-count"')
     expect(html).toContain('data-slot="filter-bar-add"')
     expect(html).toContain('data-slot="filter-bar-count"')
-    // O teclado de setas atravessa a faixa e as ações: o `toolbar` é o invólucro.
-    expect(faixa).not.toContain('role="toolbar"')
+    // O teclado de setas atravessa os tokens, o +N e as ações: o `toolbar` é o invólucro.
+    expect(linha).not.toContain('role="toolbar"')
     expect(html.match(/role="toolbar"/g)).toHaveLength(1)
   })
 
-  it("a faixa é uma linha só que rola em qualquer largura, e os tokens não truncam", () => {
-    expect(CODIGO).toMatch(/faixa\s*\?\s*"flex-initial flex-nowrap overflow-x-auto[^"]*"/)
-    // A faixa só encolhe (não estica): o "+ Filtro" segue o último token, à esquerda; vazia, ela some.
-    expect(CODIGO).toMatch(/faixa\s*\?\s*"[^"]*empty:hidden"\s*:\s*"flex-1 flex-wrap"/)
-    // A dissolução X é a da faixa do telefone, sem prefixo; a faixa força `mobile` nela.
-    expect(CODIGO).toContain('const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp')
-    expect(CODIGO).toContain('mobile === "scroll" && scrollFadeViewportXClassName')
-    expect(CODIGO).toContain('faixa ? "shrink-0 max-w-none"')
-  })
-
-  it("a linha de fora só empilha na forma wrap", () => {
-    expect(CODIGO).toMatch(/!faixa && "@max-md\/filter-bar:flex-col/)
-    expect(CODIGO).not.toMatch(/className="flex items-center gap-3 @max-md\/filter-bar:flex-col/)
+  it("o +N diz quantos saíram, e as linhas do menu são o token por extenso", () => {
+    expect(CODIGO).toContain('`Mais ${fora.length} ${fora.length === 1 ? "filtro" : "filtros"}`')
+    expect(CODIGO).toContain("trigger={`+${fora.length}`}")
+    expect(CODIGO).toMatch(/label: `\$\{campo\.label\} \$\{d\.operador\} \$\{d\.falado\}`/)
+    // Escolher uma linha abre o editor do mesmo jeito que o token.
+    expect(CODIGO).toContain("onSelect: () => abrirValor(t.field)")
+    // O booleano não tem editor: a linha dele remove, e diz isso.
+    expect(CODIGO).toContain("label: `Remover ${campo.label}`, onSelect: () => remover(t.field)")
   })
 
   it("sem overflow, igual a hoje: o \"+ Filtro\" mora na fileira", () => {
@@ -573,26 +598,44 @@ describe("overflow scroll", () => {
     expect(divDoSlot(html, "filter-bar-row")).toContain('data-slot="filter-bar-add"')
   })
 
-  it("na faixa estreita a contagem guarda o número e esconde o nome só da vista", () => {
-    const html = barra({ overflow: "scroll", defaultValue: TRES, count: 48, noun: ["lançamento", "lançamentos"] })
+  it("na barra estreita a contagem guarda o número e esconde o nome só da vista", () => {
+    const html = barra({ overflow: "menu", defaultValue: TRES, count: 48, noun: ["lançamento", "lançamentos"] })
     expect(html).toMatch(/data-slot="filter-bar-count"[^>]*>48<span class="@max-md\/filter-bar:sr-only"> lançamentos<\/span>/)
-    // Fora da faixa, nada muda: o nome continua no mesmo texto.
     expect(barra({ count: 48, noun: ["lançamento", "lançamentos"] })).toMatch(/>48 lançamentos</)
   })
 
-  it("na faixa estreita o Limpar vira o × redondo, e o + Filtro guarda o texto", () => {
-    expect(CODIGO).toMatch(/faixa && "@max-md\/filter-bar:aspect-square @max-md\/filter-bar:px-0"/)
+  it("na barra estreita o Limpar vira o × redondo, e o + Filtro guarda o texto", () => {
+    expect(CODIGO).toMatch(/menu && "@max-md\/filter-bar:aspect-square @max-md\/filter-bar:px-0"/)
     expect(CODIGO).toMatch(/<XMarkIcon aria-hidden className="hidden @max-md\/filter-bar:block" \/>\s*<span className="@max-md\/filter-bar:hidden">Limpar<\/span>/)
-    const html = barra({ overflow: "scroll", defaultValue: TRES })
+    const html = barra({ overflow: "menu", defaultValue: TRES })
     const limpar = html.match(/<button[^>]*data-slot="filter-bar-clear"[\s\S]*?<\/button>/)?.[0] ?? ""
     expect(limpar).toContain('aria-label="Limpar filtros"')
-    expect(limpar).toContain('variant="tertiary"'.replace("variant", "data-variant"))
+    expect(limpar).toContain('data-variant="tertiary"')
     expect(limpar).toContain("pointer-coarse:h-11")
     expect(html.match(/<button[^>]*data-slot="filter-bar-add"[\s\S]*?<\/button>/)?.[0]).toMatch(/filtro/)
   })
 
-  it("um token a mais rola a faixa até o fim", () => {
-    expect(CODIGO).toMatch(/scrollTo\(\{ left: [a-z]+\.scrollWidth, behavior: reduzir \? "auto" : "smooth" \}\)/)
-    expect(CODIGO).toMatch(/\[tokens\.length, faixa, reduzir\]/)
+  it("a linha de fora só empilha na forma wrap", () => {
+    expect(CODIGO).toMatch(/!menu && "@max-md\/filter-bar:flex-col/)
+  })
+})
+
+describe("OverflowMenu", () => {
+  const menu = (props: Partial<React.ComponentProps<typeof OverflowMenu>> = {}) =>
+    renderToStaticMarkup(h(OverflowMenu, { items: [], label: "Mais 2 filtros", ...props }))
+
+  it("com trigger, o gatilho mostra o texto e guarda o nome e a marca da medição", () => {
+    const html = menu({ trigger: "+2" })
+    expect(html).toContain(">+2<")
+    expect(html).toContain('aria-label="Mais 2 filtros"')
+    expect(html).toContain("data-overflow-more")
+    expect(html).not.toContain("<svg")
+  })
+
+  it("sem trigger, continua o ⋯ do Tabs e da Toolbar", () => {
+    const html = menu({ label: "Mais ações" })
+    expect(html).toContain("<svg")
+    expect(html).toContain('aria-label="Mais ações"')
+    expect(html).toContain("data-overflow-more")
   })
 })

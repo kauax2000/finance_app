@@ -78,7 +78,7 @@ export function TransacoesToolbar({
                         // Sem `total`: a tela não tem a contagem da carteira inteira, e "N de N" mentiria.
                         count={pagina.isLoading ? undefined : pagina.totalCount}
                         noun={["lançamento", "lançamentos"]}
-                        overflow="scroll"
+                        overflow="menu"
                         disabled={desligado}
                     />
                 </div>

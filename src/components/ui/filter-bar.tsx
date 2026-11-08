@@ -51,6 +51,8 @@ import { fieldControlHeightClassName, fieldSurfaceClassName } from "@/lib/field-
 import { currencyBRL, currencyCompactBRL, numberBR } from "@/lib/formatters"
 import { classifyPeriod, monthRangeYmd, periodLabel, periodSummary, yearRangeYmd } from "@/lib/period-range"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
+import { limparExcesso, quemSai } from "@/lib/overflow"
+import { OverflowMenu, type ItemNoExcesso } from "@/lib/overflow-menu"
 import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import { MOLA } from "@/lib/spring"
@@ -530,17 +532,29 @@ type FilterBarProps = Omit<React.ComponentProps<"div">, "defaultValue" | "onChan
   /** Abaixo de 28rem da própria barra: uma faixa que rola, ou um token por linha. */
   mobile?: FilterBarMobile
   /**
-   * `wrap` (o padrão) quebra a fileira; `scroll` é a faixa de uma linha só, em
-   * qualquer largura: os tokens rolam no meio, e "+ Filtro", "Limpar" e a
-   * contagem ficam fixos à direita. Para a linha com vizinhos fixos, cuja altura
-   * não pode mudar. Com `scroll`, `mobile` não vale.
+   * `wrap` (o padrão) quebra a fileira; `menu` é uma linha só, em qualquer
+   * largura, que não rola: os tokens que não cabem saem do fim para o "+N", e
+   * "+ Filtro", "Limpar" e a contagem ficam fixos. Para a linha com vizinhos
+   * fixos, cuja altura não pode mudar. Com `menu`, `mobile` não vale.
    */
-  overflow?: "wrap" | "scroll"
+  overflow?: "wrap" | "menu"
   /** Grava os filtros na URL (`?f=…`), e o voltar desfaz o último. */
   urlParam?: string
   /** A tecla que abre o "+ Filtro". `false` desliga. */
   shortcut?: string | false
   disabled?: boolean
+}
+
+/**
+ * Quais tokens saem para o "+N" na linha `menu`: do fim, pulando o `fixo` (o
+ * do editor aberto), até caber com a `reserva` do "+N".
+ */
+export function tokensQueSaem(
+  larguras: number[],
+  cabe: number,
+  { fixo, reserva, gap }: { fixo?: number; reserva: number; gap: number }
+): number[] {
+  return quemSai(larguras, cabe, { ponta: "fim", fixos: new Set(fixo == null ? [] : [fixo]), reserva, gap })
 }
 
 function FilterBar({
@@ -565,11 +579,11 @@ function FilterBar({
   "aria-label": ariaLabel = "Filtros",
   ...props
 }: FilterBarProps) {
-  const faixa = overflow === "scroll"
+  const menu = overflow === "menu"
   const numero = count == null ? "" : total != null ? `${numberBR(count)} de ${numberBR(total)}` : numberBR(count)
   const nome = (total ?? count) === 1 ? noun[0] : noun[1]
-  // A faixa já é a forma do telefone: a grade empilhada não se aplica nela.
-  const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp
+  // A linha do menu já é a forma do telefone: a grade empilhada não se aplica nela.
+  const mobile: FilterBarMobile = menu ? "scroll" : mobileProp
   const doGrupo = React.useContext(ButtonSizeContext)
   const size: FilterBarSize = sizeProp ?? (doGrupo === "sm" || doGrupo === "md" ? doGrupo : "lg")
 
@@ -622,7 +636,7 @@ function FilterBar({
 
   const conteudoId = React.useId()
   const linhaRef = React.useRef<HTMLDivElement | null>(null)
-  // O `role="toolbar"`: a fileira no `wrap`; na faixa, o invólucro dela com as ações.
+  // O `role="toolbar"`: a fileira no `wrap`; no menu, o invólucro dela com as ações.
   const barraRef = React.useRef<HTMLDivElement | null>(null)
   const addRef = React.useRef<HTMLButtonElement | null>(null)
   const dissolver = useScrollFade({ axis: "x" })
@@ -633,11 +647,12 @@ function FilterBar({
   const refLinha = React.useCallback(
     (el: HTMLDivElement | null) => {
       linhaRef.current = el
-      if (!faixa) barraRef.current = el
+      if (!menu) barraRef.current = el
       if (el) setCabeca(el.ownerDocument.head)
-      return dissolver(el)
+      // No menu nada rola: não há borda a dissolver.
+      return menu ? undefined : dissolver(el)
     },
-    [dissolver, faixa]
+    [dissolver, menu]
   )
   const reduzir = useReducedMotion()
   const surgir = reduzir ? SURGIR_REDUZIDO : SURGIR
@@ -680,12 +695,16 @@ function FilterBar({
 
   const focarDestino = () => {
     const destino = focoDepois.current
-    const el =
+    const token =
       destino !== "add"
         ? linhaRef.current?.querySelector<HTMLElement>(
-            `[data-slot=filter-bar-token][data-field="${CSS.escape(destino)}"]:not([inert]) :is([data-slot=filter-bar-value],[data-slot=filter-bar-remove])`
+            `[data-slot=filter-bar-token][data-field="${CSS.escape(destino)}"]:not([inert])`
           )
         : null
+    // O token que saiu para o "+N" devolve o foco ao "+N".
+    const el = token?.hasAttribute("hidden")
+      ? linhaRef.current?.querySelector<HTMLElement>("[data-overflow-more]")
+      : token?.querySelector<HTMLElement>("[data-slot=filter-bar-value],[data-slot=filter-bar-remove]")
     focar(el ?? addRef.current)
   }
 
@@ -818,6 +837,68 @@ function FilterBar({
     if (el) ancoraRef.current = { getBoundingClientRect: () => el.getBoundingClientRect(), contextElement: el }
   }, [aberto])
 
+  /* ── Quem sai para o "+N" ─────────────────────────────────────────────── */
+
+  const acoesRef = React.useRef<HTMLDivElement | null>(null)
+  const [fora, setFora] = React.useState<string[]>([])
+  const fixo = aberto?.tipo === "valor" ? aberto.field : undefined
+  // Quem e o que se mede: muda a lista, um valor (a largura do token) ou o aberto.
+  const chaveDaLinha = tokens.map((t) => `${t.field}:${t.operator}:${t.values.join(",")}`).join("|")
+  React.useLayoutEffect(() => {
+    const linha = linhaRef.current
+    const barra = barraRef.current
+    const acoesEl = acoesRef.current
+    if (!menu || !linha || !barra || !acoesEl) return
+    // O que está saindo (`inert`, do `AnimatePresence`) já não ocupa lugar.
+    const lerTokens = () =>
+      [...linha.querySelectorAll<HTMLElement>(":scope > [data-slot=filter-bar-token]:not([inert])")]
+    const medir = () => {
+      const els = lerTokens()
+      limparExcesso(els)
+      const gap = parseFloat(getComputedStyle(linha).columnGap) || 0
+      const gapBarra = parseFloat(getComputedStyle(barra).columnGap) || 0
+      // O E/OU mora na linha e nunca sai: o espaço dos tokens é o que sobra dele.
+      const match = linha.querySelector<HTMLElement>(":scope > :not([data-slot=filter-bar-token]):not([data-overflow-more]):not([data-motion-pop-id])")
+      const cabe = barra.clientWidth - acoesEl.offsetWidth - gapBarra - (match ? match.offsetWidth + gap : 0)
+      // O "+N" é redondo: a largura dele é a altura de um controle.
+      const reserva =
+        linha.querySelector<HTMLElement>("[data-overflow-more]")?.offsetWidth ?? els[0]?.offsetHeight ?? 0
+      const i = els.findIndex((el) => el.dataset.field === fixo)
+      const saem = tokensQueSaem(
+        els.map((el) => el.offsetWidth),
+        cabe,
+        { fixo: i >= 0 ? i : undefined, reserva, gap }
+      ).map((k) => {
+        els[k].setAttribute("hidden", "")
+        return els[k].dataset.field ?? ""
+      })
+      setFora((v) => (v.length === saem.length && v.every((f, k) => f === saem[k]) ? v : saem))
+    }
+    medir()
+    // A barra (a janela, a contagem) e cada token (o rótulo que chega depois).
+    const ro = new ResizeObserver(medir)
+    ro.observe(barra)
+    ro.observe(acoesEl)
+    for (const el of lerTokens()) ro.observe(el)
+    return () => {
+      ro.disconnect()
+      limparExcesso(lerTokens())
+    }
+  }, [menu, fixo, chaveDaLinha])
+
+  const noMenu: ItemNoExcesso[] = menu
+    ? fora.flatMap((field) => {
+        const t = tokens.find((x) => x.field === field)
+        const campo = porId.get(field)
+        if (!t || !campo) return []
+        // O filtro sem valor não tem editor: a linha dele é o × do token.
+        if (campo.type === "boolean")
+          return [{ key: field, label: `Remover ${campo.label}`, onSelect: () => remover(t.field) }]
+        const d = descrever(campo, t, (v) => opcaoDe(campo, v))
+        return [{ key: field, label: `${campo.label} ${d.operador} ${d.falado}`, onSelect: () => abrirValor(t.field) }]
+      })
+    : []
+
   /* ── A tecla F ────────────────────────────────────────────────────────── */
 
   const abrirCamposRef = React.useRef(abrirCampos)
@@ -919,16 +1000,6 @@ function FilterBar({
   const tokenAberto =
     aberto?.tipo === "valor" ? tokens.find((t) => t.field === aberto.field) : undefined
 
-  // Na faixa, o token que chega (também o rascunho do "+ Filtro") entra à vista.
-  const qtdAntes = React.useRef(tokens.length)
-  React.useEffect(() => {
-    const antes = qtdAntes.current
-    qtdAntes.current = tokens.length
-    const el = linhaRef.current
-    if (!faixa || !el || tokens.length <= antes) return
-    el.scrollTo({ left: el.scrollWidth, behavior: reduzir ? "auto" : "smooth" })
-  }, [tokens.length, faixa, reduzir])
-
   const barraProps = {
     role: "toolbar",
     "aria-label": ariaLabel,
@@ -940,6 +1011,7 @@ function FilterBar({
   // mesmo tempo — contra a linha, a transformação do grupo o deslocaria.
   const acoes = (
     <motion.div
+      ref={acoesRef}
       layout={deslizar}
       transition={SURGIR.transition}
       className={cn("relative flex shrink-0 items-center gap-1.5", ACOES_TELEFONE[mobile])}
@@ -972,12 +1044,12 @@ function FilterBar({
               aria-label="Limpar filtros"
               className={cn(
                 "pointer-coarse:h-11",
-                faixa && "@max-md/filter-bar:aspect-square @max-md/filter-bar:px-0"
+                menu && "@max-md/filter-bar:aspect-square @max-md/filter-bar:px-0"
               )}
               onClick={limpar}
             >
-              {/* Na faixa estreita o "Limpar" vira só o ×: a faixa precisa da largura. */}
-              {faixa ? (
+              {/* Na barra estreita o "Limpar" vira só o ×: os tokens precisam da largura. */}
+              {menu ? (
                 <>
                   <XMarkIcon aria-hidden className="hidden @max-md/filter-bar:block" />
                   <span className="@max-md/filter-bar:hidden">Limpar</span>
@@ -992,21 +1064,23 @@ function FilterBar({
     </motion.div>
   )
 
-  // `relative`: o que sai é posicionado contra a linha, e na faixa que rola
-  // precisa continuar dentro do recorte. `layoutScroll`: na faixa ela é o
-  // contêiner que rola, e o deslize descontaria o `scrollLeft`.
+  // `relative`: o que sai é posicionado contra a linha, e no recorte dela.
+  // `layoutScroll`: na faixa do telefone (`mobile="scroll"`) ela é o contêiner
+  // que rola, e o deslize descontaria o `scrollLeft`.
   const linha = (
     <motion.div
       ref={refLinha}
       layoutScroll
-      {...(faixa ? {} : barraProps)}
+      {...(menu ? {} : barraProps)}
       data-slot="filter-bar-row"
       className={cn(
         "relative flex min-w-0 items-center gap-1.5 no-scrollbar",
-        // Na faixa ela só encolhe: o "+ Filtro" segue o último token, à esquerda, e a contagem fica na ponta.
-        faixa ? "flex-initial flex-nowrap overflow-x-auto -mx-1 px-1 -my-1 py-1 empty:hidden" : "flex-1 flex-wrap",
-        mobile === "scroll" && scrollFadeViewportXClassName,
-        !faixa && LINHA_TELEFONE[mobile]
+        // No menu ela só encolhe e não rola: o "+ Filtro" segue o último token
+        // (ou o "+N"), à esquerda, e a contagem fica na ponta. O recuo de 4 guarda
+        // o anel de foco dentro do recorte.
+        menu ? "flex-initial flex-nowrap overflow-hidden -mx-1 px-1 -my-1 py-1 empty:hidden" : "flex-1 flex-wrap",
+        mobile === "scroll" && !menu && scrollFadeViewportXClassName,
+        !menu && LINHA_TELEFONE[mobile]
       )}
     >
       {/* O E/OU e o "Limpar" animam num invólucro e não por
@@ -1052,7 +1126,7 @@ function FilterBar({
               size={size}
               tone={tone}
               mobile={mobile}
-              faixa={faixa}
+              menu={menu}
               disabled={disabled}
               aberto={aberto?.tipo === "valor" && aberto.field === t.field}
               conteudoId={conteudoId}
@@ -1067,7 +1141,18 @@ function FilterBar({
         })}
       </AnimatePresence>
 
-      {!faixa && acoes}
+      {noMenu.length ? (
+        <OverflowMenu
+          items={noMenu}
+          label={`Mais ${fora.length} ${fora.length === 1 ? "filtro" : "filtros"}`}
+          trigger={`+${fora.length}`}
+          align="start"
+          size={size === "sm" ? "icon-sm" : size === "md" ? "icon-md" : "icon-lg"}
+          triggerClassName="shrink-0 nums"
+        />
+      ) : null}
+
+      {!menu && acoes}
     </motion.div>
   )
 
@@ -1077,18 +1162,18 @@ function FilterBar({
       data-size={size}
       data-tone={tone}
       data-mobile={mobile}
-      data-overflow={faixa ? "scroll" : undefined}
+      data-overflow={menu ? "menu" : undefined}
       className={cn("@container/filter-bar min-w-0", className)}
       {...props}
     >
       <div
         className={cn(
           "flex items-center gap-3",
-          !faixa && "@max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2"
+          !menu && "@max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2"
         )}
       >
         <ButtonSizeContext.Provider value={size}>
-          {faixa ? (
+          {menu ? (
             <div ref={barraRef} {...barraProps} className="flex min-w-0 flex-1 items-center gap-1.5">
               {linha}
               {acoes}
@@ -1106,8 +1191,8 @@ function FilterBar({
             transition={SURGIR.transition}
             className="ms-auto shrink-0 text-sm whitespace-nowrap text-muted-foreground nums @max-md/filter-bar:ms-0"
           >
-            {/* Na faixa estreita o nome sai da vista, e o leitor de tela ainda ouve "48 lançamentos". */}
-            {faixa ? (
+            {/* Na barra estreita o nome sai da vista, e o leitor de tela ainda ouve "48 lançamentos". */}
+            {menu ? (
               <>
                 {numero}
                 <span className="@max-md/filter-bar:sr-only">{` ${nome}`}</span>
@@ -1150,7 +1235,7 @@ function FilterBar({
             const alvo = e.target as Element | null
             if (
               barraRef.current?.contains(alvo) &&
-              alvo?.closest("[data-slot=filter-bar-token], [data-slot=filter-bar-add]")
+              alvo?.closest("[data-slot=filter-bar-token], [data-slot=filter-bar-add], [data-overflow-more]")
             ) {
               e.preventDefault()
             } else clicouFora.current = true
@@ -1194,7 +1279,7 @@ function FilterToken({
   size,
   tone,
   mobile,
-  faixa,
+  menu,
   disabled,
   aberto,
   conteudoId,
@@ -1212,7 +1297,7 @@ function FilterToken({
   size: FilterBarSize
   tone: FilterBarTone
   mobile: FilterBarMobile
-  faixa: boolean
+  menu: boolean
   disabled: boolean
   aberto: boolean
   conteudoId: string
@@ -1265,7 +1350,7 @@ function FilterToken({
         CAPSULA_TOM[tone],
         CAPSULA_TAMANHO[size],
         fieldControlHeightClassName[size],
-        faixa ? "shrink-0 max-w-none" : TOKEN_TELEFONE[mobile]
+        menu ? "shrink-0 max-w-none" : TOKEN_TELEFONE[mobile]
       )}
     >
       <span
