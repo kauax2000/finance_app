@@ -38,8 +38,8 @@ describe("transacoes-toolbar (fonte)", () => {
         const raiz = TOOLBAR.match(/return \(\s*<div className="([^"]*)"/)?.[1] ?? ""
         expect(raiz).toMatch(/@container\/[\w-]+/)
         expect(raiz).not.toContain("flex-wrap")
-        expect(TOOLBAR).toMatch(/@max-2xl\/[\w-]+:flex-wrap/)
-        expect(TOOLBAR).toMatch(/@max-2xl\/[\w-]+:basis-full/)
+        expect(TOOLBAR).toMatch(/@max-3xl\/[\w-]+:flex-wrap/)
+        expect(TOOLBAR).toMatch(/@max-3xl\/[\w-]+:basis-full/)
         expect(TOOLBAR).not.toMatch(/\border-/)
     })
 

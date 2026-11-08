@@ -55,13 +55,13 @@ export function TransacoesToolbar({
         // Com sobra, uma linha: abas na largura delas e a faixa de filtros (com "+ Filtro" e a contagem
         // presos na ponta) no resto. Estreita, a própria linha (não a janela) parte em duas fixas:
         // abas esticadas (com o ⋯ no telefone) em cima, a FilterBar inteira embaixo.
-        // 42rem (@max-2xl) é o degrau de container mais perto dos 40rem do spec.
+        // 48rem (@max-3xl): abaixo disso, ao lado das abas, a barra ficaria sob os 28rem do degrau estreito dela.
         <div className="@container/transacoes min-w-0 flex-1">
-            <div className="flex items-center gap-2 @max-2xl/transacoes:flex-wrap">
+            <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
                 <TransactionTypeSegment
                     value={estado.type}
                     onChange={(type) => setEstado({ type, filtros: podarCategoriasDoTipo(estado.filtros, type, categories) })}
-                    className="shrink-0 @max-2xl/transacoes:min-w-0 @max-2xl/transacoes:flex-1"
+                    className="shrink-0 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1"
                 />
                 {/* Só abaixo do md, onde a página não tem cabeçalho (isMobile): acima, Importar e Exportar moram nele.
                     Pela janela, e não pela linha: pela linha, a 768–1000px ele duplicaria o do cabeçalho. */}
@@ -70,7 +70,7 @@ export function TransacoesToolbar({
                         <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} />
                     </div>
                 ) : null}
-                <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-2xl/transacoes:basis-full">
+                <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-3xl/transacoes:basis-full">
                     <FilterBar
                         fields={campos}
                         value={estado.filtros}
