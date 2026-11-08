@@ -1,4 +1,4 @@
-import { lerData, lerValorBr } from "./normalizar"
+import { lerData, lerValorBr, normalizarDescricao } from "./normalizar"
 import type { ItemBanco } from "./tipos"
 
 /**
@@ -83,4 +83,82 @@ export function mapearCsv(
         itens.push(item)
     }
     return { itens, ignoradas }
+}
+
+export type Deducao = {
+    mapa: { data: number; descricao: number; valor: number; categoria: number | null }
+    temCabecalho: boolean
+    negativoEhDespesa: boolean
+    /** false quando data ou valor não foram achados: o passo Colunas aparece. */
+    certa: boolean
+}
+
+const NOMES = {
+    data: /^(data|date|dt)\b|\bdata\b/,
+    valor: /\b(valor|amount|value|quantia|montante)\b/,
+    descricao: /descri|historico|lancamento|title|titulo|memo|estabelecimento|detalhe|name|nome/,
+    categoria: /categor/,
+}
+
+/**
+ * Deduz colunas, cabeçalho e sinal do CSV: pelos nomes do cabeçalho e, onde eles
+ * não bastam, pelo conteúdo das colunas. Sem sinal claro no arquivo, vale o
+ * padrão do destino (conta: negativo é despesa; cartão: positivo é despesa).
+ */
+export function deduzirMapeamento(linhas: string[][], destino: "cartao" | "conta"): Deducao {
+    const primeira = linhas[0] ?? []
+    const temCabecalho =
+        primeira.length > 0 && !primeira.some((c) => lerData(c) != null || lerValorBr(c) != null)
+    const corpo = temCabecalho ? linhas.slice(1) : linhas
+    const colunas = Math.max(0, ...linhas.map((l) => l.length))
+    const achada = (campo: keyof typeof NOMES) => {
+        if (!temCabecalho) return -1
+        return primeira.findIndex((c) => NOMES[campo].test(normalizarDescricao(c)))
+    }
+    // Fração das células preenchidas da coluna que o `le` entende.
+    const fracao = (i: number, le: (s: string) => unknown) => {
+        const cel = corpo.map((l) => (l[i] ?? "").trim()).filter(Boolean)
+        return cel.length ? cel.filter((c) => le(c) != null).length / cel.length : 0
+    }
+    const melhor = (livres: number[], le: (s: string) => unknown) => {
+        let alvo = -1
+        let max = 0.6
+        for (const i of livres) {
+            const f = fracao(i, le)
+            if (f >= max) {
+                alvo = i
+                max = f
+            }
+        }
+        return alvo
+    }
+    const todas = Array.from({ length: colunas }, (_, i) => i)
+    let data = achada("data")
+    if (data < 0) data = melhor(todas, (s) => lerData(s))
+    let valor = achada("valor")
+    if (valor < 0 || valor === data) valor = melhor(todas.filter((i) => i !== data), lerValorBr)
+    const categoria = achada("categoria")
+    let descricao = achada("descricao")
+    if (descricao < 0 || descricao === data || descricao === valor) {
+        const livres = todas.filter((i) => i !== data && i !== valor && i !== categoria)
+        descricao = livres.find((i) => fracao(i, lerValorBr) < 0.6 && fracao(i, (s) => lerData(s)) < 0.6) ?? livres[0] ?? 0
+    }
+
+    const valores = valor < 0 ? [] : corpo.map((l) => lerValorBr(l[valor] ?? "")).filter((v): v is number => v != null && v !== 0)
+    const pos = valores.filter((v) => v > 0).length
+    const neg = valores.length - pos
+    const padrao = destino === "conta"
+    let negativoEhDespesa = padrao
+    if (valores.length) {
+        // Maioria esmagadora de um sinal só: o arquivo diz de que lado está a despesa.
+        if (padrao && pos / valores.length > 0.8) negativoEhDespesa = false
+        else if (!padrao && neg / valores.length > 0.8) negativoEhDespesa = true
+    }
+
+    return {
+        mapa: { data, descricao, valor, categoria: categoria < 0 ? null : categoria },
+        temCabecalho,
+        negativoEhDespesa,
+        certa: data >= 0 && valor >= 0,
+    }
 }
