@@ -28950,3 +28950,10 @@ como a lista do iOS em modo de edição. As ações vão para o toque longo, que
 menu do botão direito (`rowContextMenu`, montado por `menuDaLinha` para a tabela e o
 gêmeo). Sem menu de contexto, o ⋯ volta, para as ações não sumirem. Transações é a
 primeira a usar; o catálogo ganhou o interruptor "Linha compacta no telefone".
+
+### Rodada 365 — a barra de seleção do `DataTable` na tinta da `BottomBar`
+
+Pedido do dono em 2026-11-08: no escuro a barra flutuante da seleção sumia sobre a tabela,
+porque o `--popover` (L 7,8) é o mesmo do `--card`. Ela passa a vestir a pílula da
+`BottomBar`: `bottomBarTintClassName` (o `--bottom-bar-surface`, L 14,2 no escuro, um degrau
+fora do cartão, com o vidro) e o anel a 15%. Vale para toda tela com `DataTable` e seleção.

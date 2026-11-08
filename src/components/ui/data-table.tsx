@@ -54,6 +54,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
+import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { downloadCsv, toCsv, type CsvColumn } from "@/lib/data-table/csv"
 import { nextCell, nextRowIndex } from "@/lib/data-table/keyboard"
@@ -2005,7 +2006,11 @@ export function DataTableSelectionBar({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reduzir ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.13 } }}
           transition={MOLA_DO_REALCE}
-          className="fixed inset-x-0 bottom-(--bottom-bar-pad) z-(--z-header) mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full bg-popover p-1.5 ps-4 text-popover-foreground shadow-lg ring-1 ring-foreground/10 md:bottom-6"
+          // A pílula da BottomBar (a tinta própria, anel a 15%): o `--popover` sumia sobre a tabela no escuro (pedido do dono, 08/11/2026).
+          className={cn(
+            "fixed inset-x-0 bottom-(--bottom-bar-pad) z-(--z-header) mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full p-1.5 ps-4 text-foreground shadow-lg ring-1 ring-foreground/15 md:bottom-6",
+            bottomBarTintClassName
+          )}
         >
           <span className="me-1 text-sm font-medium nums whitespace-nowrap">
             {numberBR(count)} {count === 1 ? "selecionada" : "selecionadas"}
