@@ -501,3 +501,18 @@ describe("os totais sob o StrictMode (revisão final)", () => {
     expect(chamadas).toEqual([2026, 2025])
   })
 })
+
+describe("a largura do período (revisão final)", () => {
+  const BLOCO = CODIGO.slice(CODIGO.indexOf("function EditorDePeriodo"), CODIGO.indexOf("type ListaProps"))
+
+  it("no desktop as três abas têm a largura de Dias; na gaveta nada muda", () => {
+    // Dias fica montado e sem altura fora da vez: a largura dele segura o editor.
+    const dias = BLOCO.slice(BLOCO.indexOf('<TabsContent\n'), BLOCO.indexOf('<TabsContent value="meses"'))
+    expect(dias).toContain('value="dias"')
+    expect(dias).toContain("forceMount={naGaveta ? undefined : true}")
+    expect(dias).toContain('inert={!naGaveta && aba !== "dias"}')
+    for (const c of ["data-[state=inactive]:block", "data-[state=inactive]:invisible", "data-[state=inactive]:h-0", "data-[state=inactive]:flex-none", "data-[state=inactive]:overflow-hidden"])
+      expect(dias).toContain(c)
+    expect(BLOCO).not.toMatch(/min-w-\[|w-\[\d/)
+  })
+})

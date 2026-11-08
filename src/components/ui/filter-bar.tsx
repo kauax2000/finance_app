@@ -1649,7 +1649,15 @@ function EditorDePeriodo({
         </TabsList>
       </div>
 
-      <TabsContent value="dias">
+      <TabsContent
+        value="dias"
+        // No desktop o editor tem a largura de Dias nas três abas: fora da vez o
+        // painel fica montado, sem altura e inerte, e a largura dele segura a
+        // placa (a grade e os anos esticam). Na gaveta, a largura é a dela.
+        forceMount={naGaveta ? undefined : true}
+        inert={!naGaveta && aba !== "dias"}
+        className="data-[state=inactive]:block data-[state=inactive]:invisible data-[state=inactive]:h-0 data-[state=inactive]:flex-none data-[state=inactive]:overflow-hidden"
+      >
         {/* A gaveta já recua 16px dos lados; somados a 12, as sete células de 44
             não cabiam a 375px. No popover o recuo é só o do calendário (8): as
             linhas ficam como as do `Command`, caixa a 8 e texto a 16. */}
