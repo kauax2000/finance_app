@@ -627,10 +627,9 @@ que já se mexeu.
 %%{init: {"theme": "dark"}}%%
 flowchart TD
     entry["/transactions?params"] --> parse{"Parâmetros da URL"}
-    parse -->|"f=tokens, type, q, sort, page: o formato novo"| filters(["Filtros aplicados"])
-    parse -->|"preset, from, to, cats, uncat, pm, card, min, max, inst, plan, sub, conferir: traduzidos uma vez para f= por router.replace"| filters
-    parse -->|"sem f, sem q e sem parâmetro antigo"| defaultPeriod(["Período Este mês, do dia 1 até hoje"]) --> filters
-    parse -->|"f= vazio, de propósito"| filters
+    parse -->|"f=tokens, type, sort, page: o formato novo"| filters(["Filtros aplicados"])
+    parse -->|"preset, from, to, cats, uncat, pm, card, min, max, inst, plan, sub, conferir, q: traduzidos uma vez para f= por router.replace"| filters
+    parse -->|"sem filtro"| noFilter(["Lista limpa: todos os períodos, do mais recente, em páginas de 100"]) --> list
     parse -->|"sort, page"| order(["Ordenação e página"]) --> list
     parse -->|"new=1, parcelada, receita"| form(("G5b Formulário"))
     parse -->|"txn=id"| detail(("G5b Detalhe"))
@@ -638,7 +637,7 @@ flowchart TD
     parse -->|"compartilhado=chave, tipo, compartilhado_erro: o arquivo compartilhado, tirados por router.replace"| sharedG(("G5c Compartilhar foto ou PDF"))
     parse -->|"importar=1, tirado por router.replace"| importDlg(["Diálogo Importar extrato"])
 
-    filters --> list(["Resumo, barra de filtros e tabela paginada de 100 em 100; no telefone, a lista com o mês"])
+    filters --> list(["Barra de filtros e tabela paginada de 100 em 100, agrupada por dia; no telefone, a lista"])
     list -->|"cabeçalho Data ou Valor; página"| order
     order -.->|"grava de volta"| url
     list -->|"aba Todas, Despesas ou Receitas; token Descrição"| filters
@@ -880,7 +879,7 @@ flowchart TD
 
 | Ponto | Regra | Onde |
 |---|---|---|
-| Parâmetros | O formato da lista é `f=` (um token por campo, `campo:operador:valor`, escrito pelo `serializeFilters` do `FilterBar`) mais `type`, `sort` e `page`. **Sem `f` e sem parâmetro antigo, a leitura põe o período `este-mes`** (`?q=`, o "Ver todas" da paleta, é parâmetro antigo: vira o token Descrição e procura em todos os períodos) (do dia 1 até hoje, o preset do design system: lançamento datado depois de hoje fica de fora). **`f=` presente, mesmo vazio, é "sem filtro de propósito"**: o ✕ do último token grava `f=` e o padrão não volta. Os parâmetros antigos (`preset`, `from`, `to`, `cats`, `uncat`, `pm`, `card`, `min`, `max`, `inst`, `plan`, `sub`, `conferir`, `q`) ainda abrem a tela, porque Painel, Cartões, Categorias, a notificação e o Atalho do ícone os escrevem: viram tokens e a URL é regravada por `router.replace` (`?preset=last30` vira `período`; `?cats=` vira `categoria`; `?inst=1` vira `parcelada`; `?plan=` vira `plano`; `?conferir=1` vira `a conferir`); o que está em `f=` vence o antigo do mesmo campo. `new`, `txn`, `importar`, `frase`, `frase_titulo`, `frase_url`, `compartilhado`, `tipo` e `compartilhado_erro` são consumidos e saem da URL; a casca abre a criação do `new` e do `frase`, e a página só limpa o pedido | `src/lib/transactions/filtros.ts` (`lerFiltrosDaUrl`, `escreverFiltrosNaUrl`), `src/components/transactions/use-transacoes-da-tela.ts`, `src/app/(app)/transactions/page-client.tsx` |
+| Parâmetros | O formato da lista é `f=` (um token por campo, `campo:operador:valor`, escrito pelo `serializeFilters` do `FilterBar`) mais `type`, `sort` e `page`. **Sem filtro, a lista abre limpa** (desde 7/nov/2026; antes abria em "Este mês"): todos os períodos, do lançamento mais recente para trás, em páginas de 100. `?q=`, o "Ver todas" da paleta, é parâmetro antigo e vira o token Descrição. Sem token, a URL não leva `f`. Os parâmetros antigos (`preset`, `from`, `to`, `cats`, `uncat`, `pm`, `card`, `min`, `max`, `inst`, `plan`, `sub`, `conferir`, `q`) ainda abrem a tela, porque Painel, Cartões, Categorias, a notificação e o Atalho do ícone os escrevem: viram tokens e a URL é regravada por `router.replace` (`?preset=last30` vira `período`; `?cats=` vira `categoria`; `?inst=1` vira `parcelada`; `?plan=` vira `plano`; `?conferir=1` vira `a conferir`); o que está em `f=` vence o antigo do mesmo campo. `new`, `txn`, `importar`, `frase`, `frase_titulo`, `frase_url`, `compartilhado`, `tipo` e `compartilhado_erro` são consumidos e saem da URL; a casca abre a criação do `new` e do `frase`, e a página só limpa o pedido | `src/lib/transactions/filtros.ts` (`lerFiltrosDaUrl`, `escreverFiltrosNaUrl`), `src/components/transactions/use-transacoes-da-tela.ts`, `src/app/(app)/transactions/page-client.tsx` |
 | Ordenação e página | `sort=date.desc` · `date.asc` · `amount.desc` · `amount.asc` e `page=N` (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (`date.desc`, página 1) não é escrito. Trocar um filtro volta à página 1. O estado otimista cobre o vão até o `replace` chegar. O modo embutido (Categorias) segue no controlador antigo | `src/components/transactions/use-transacoes-da-tela.ts`, `src/lib/transactions/filtros.ts`, `src/components/transactions/use-transactions-list-controller.ts` (só o embutido) |
 | Tabela | `DataTable` em modo `manual` (o banco ordena e pagina), por dia quando ordenado por data, com o total do dia. A seleção não alcança as projetadas ("Previsto"), que também não abrem nem têm menu. A barra flutuante de seleção mostra a **soma dos selecionados** (`selectionSummary`) e tem Categorizar, Marcar conferidos, Editar (só com 1) e Excluir; cancelar a exclusão mantém a seleção. A linha tem Confirmar (só com `needs_review`), Editar, Duplicar e Excluir. A Data fica sempre visível; no telefone, a lista gerada das colunas. A tela de Categorias embutida segue com a tabela antiga | `src/components/transactions/transacoes-tabela.tsx`, `src/components/transactions/transacoes-tabela-regras.ts`, `src/components/ui/data-table.tsx`, `src/components/transactions/transactions-table.tsx` (Painel e Categorias) |
 | Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |

@@ -44,7 +44,7 @@ describe("fonte da tabela", () => {
         expect(fonte).toMatch(/bulkActions[\s\S]*"Categorizar"[\s\S]*"Marcar conferidos"/)
         expect(fonte).toContain('label: "Confirmar"')
         expect(fonte).toContain('id="transactions"')
-        expect(fonte).toContain("toolbar={{ start: barra, view: !isMobile }}")
+        expect(fonte).toContain("toolbar={{ start: barra }}")
         expect(fonte).toContain("Selecione só despesas ou só receitas")
     })
     it("a Categoria é só o nome; a cor fica no ladrilho da Descrição", () => {
@@ -52,7 +52,7 @@ describe("fonte da tabela", () => {
         expect(fonte).not.toContain("--badge-dot")
         expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(1)
         expect(fonte).toMatch(/\n\s*return c\.name\n/)
-        expect(fonte).toContain('label: "Categoria", mobile: "description", cellClassName: "max-w-40 truncate"')
+        expect(fonte).toContain('label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden"')
         expect(fonte).not.toContain("block truncate")
     })
     it("os vazios da §6.5", () => {

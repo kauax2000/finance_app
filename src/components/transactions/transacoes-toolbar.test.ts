@@ -3,7 +3,6 @@ import type { Category, CreditCard, Project } from "@/lib/supabase"
 import { CAMPOS_BASE, SEM_CATEGORIA } from "@/lib/transactions/filtros"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import type { FilterValue } from "@/components/ui/filter-bar"
-import { filtrosDaPessoa } from "./transacoes-toolbar"
 import { montarCampos, podarCategoriasDoTipo, semCamposOcultos, type DadosDosCampos } from "./use-campos-de-filtro"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -121,12 +120,5 @@ describe("semCamposOcultos", () => {
         const hook = semComentarios(lerFonte("src/components/transactions/use-transacoes-da-tela.ts"), "tudo")
         expect(hook).toMatch(/camposProntos\s*\?\s*semCamposOcultos\(/)
         expect(CAMPOS).toContain("prontos")
-    })
-})
-
-describe("filtrosDaPessoa", () => {
-    it("não conta o período padrão", () => {
-        expect(filtrosDaPessoa([{ field: "periodo", operator: "is", values: ["este-mes"] }])).toBe(0)
-        expect(filtrosDaPessoa([{ field: "periodo", operator: "is", values: ["ultimos-7"] }])).toBe(1)
     })
 })

@@ -18,7 +18,6 @@ export type TransactionsPageSkeletonProps = {
 const COLUNAS: TableSkeletonColumn[] = [
     { selection: true },
     { label: "Descrição" },
-    { label: "Categoria", className: "hidden md:table-cell" },
     { label: "Pagamento", className: "hidden md:table-cell" },
     { label: "Quem", className: "hidden md:table-cell" },
     { label: "Data", className: "hidden md:table-cell" },

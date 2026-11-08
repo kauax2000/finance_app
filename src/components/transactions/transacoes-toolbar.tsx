@@ -14,12 +14,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { FilterBar, type FilterField, type FilterValue } from "@/components/ui/filter-bar"
-
-/** O período que a tela põe sozinha não conta como filtro no cabeçalho. */
-export function filtrosDaPessoa(filtros: FilterValue[]): number {
-    return filtros.filter((f) => !(f.field === "periodo" && f.values.length === 1 && f.values[0] === "este-mes")).length
-}
+import { FilterBar, type FilterField } from "@/components/ui/filter-bar"
 
 export function TransacoesToolbar({
     tela,
@@ -41,7 +36,7 @@ export function TransacoesToolbar({
 
     const semDados = !carregando && workspaceAux?.workspaceHasTransactions === false
     const desligado = carregando || semDados
-    const n = filtrosDaPessoa(estado.filtros)
+    const n = estado.filtros.length
 
     usePageChromeFilter({
         label: n ? `Filtros: ${n} ${n === 1 ? "ativo" : "ativos"}` : "Filtros",

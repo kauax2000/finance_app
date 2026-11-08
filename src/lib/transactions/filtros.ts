@@ -110,8 +110,6 @@ export function lerFiltrosDaUrl(
     const antigos = filtrosAntigos(p, hoje).filter((a) => !novos.some((n) => n.field === a.field))
     const filtros = [...novos, ...antigos]
     const temAntigo = PARAMS_ANTIGOS.some((k) => (p.get(k) ?? "").trim() !== "")
-    const padrao = !p.has("f") && !temAntigo
-    if (padrao) filtros.unshift({ field: "periodo", operator: "is", values: ["este-mes"] })
 
     const type = p.get("type")
     const [s] = parseSort(p.get("sort"), SORT_KEYS)
@@ -121,7 +119,7 @@ export function lerFiltrosDaUrl(
         filtros,
         sort: s ? { key: s.id as "date" | "amount", dir: s.desc ? "desc" : "asc" } : { key: "date", dir: "desc" },
         page: parsePage(p.get("page")) + 1,
-        migrou: temAntigo || padrao,
+        migrou: temAntigo,
     }
 }
 
@@ -129,8 +127,9 @@ export function escreverFiltrosNaUrl(estado: EstadoDaLista, base: URLSearchParam
     const out = new URLSearchParams(base)
     for (const k of ["type", "q", "f", "sort", "page", ...PARAMS_ANTIGOS]) out.delete(k)
     if (estado.type !== "all") out.set("type", estado.type)
-    // `f=` vazio é "sem filtro de propósito": a leitura não põe o período padrão.
-    out.set("f", serializeFilters(estado.filtros) ?? "")
+    // Sem período padrão: a lista abre limpa, da mais recente para trás, em páginas.
+    const f = serializeFilters(estado.filtros)
+    if (f) out.set("f", f)
     if (!(estado.sort.key === "date" && estado.sort.dir === "desc")) {
         out.set("sort", serializeSort([{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]))
     }

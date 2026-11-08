@@ -14,7 +14,6 @@ import {
 import { FunnelIcon, InboxStackIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { useWorkspace } from "@/components/workspace-provider"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { CategorizarEmLoteDialog } from "@/components/transactions/categorizar-em-lote-dialog"
 import {
@@ -204,7 +203,9 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                 // Só o nome, em linha: a cor mora no ladrilho da Descrição, e o gêmeo do telefone junta as colunas na mesma linha.
                 return c.name
             },
-            meta: { label: "Categoria", mobile: "description", cellClassName: "max-w-40 truncate" },
+            // Na tabela a coluna fica escondida (o ladrilho da Descrição já diz a categoria, e as colunas respiram);
+            // ela existe pelo gêmeo do telefone, que a escreve na legenda ("Mercado · Nubank").
+            meta: { label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden" },
         },
         {
             id: "payment",
@@ -358,8 +359,6 @@ function MenuDaLinha({
 export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir, barra }: TransacoesTabelaProps) {
     const shell = useGlobalShellDialogsOptional()
     const { papel, currentWorkspaceId } = useWorkspace()
-    // No telefone a tabela vira a lista: "Exibir" (as colunas) não tem o que mostrar.
-    const isMobile = useIsMobile()
     const convidado = papel === "guest"
     const { estado, setEstado, pagina } = tela
     const transacoes = pagina.transactions
@@ -538,7 +537,8 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                 getRowId={(t) => t.id}
                 getRowLabel={rotuloDe}
                 // A barra da tela (abas e filtros) abre a linha; a contagem do FilterBar e o Exibir ficam na ponta.
-                toolbar={{ start: barra, view: !isMobile }}
+                // Sem o "Exibir": as colunas são uma só, a padrão.
+                toolbar={{ start: barra }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {

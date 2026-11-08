@@ -12,7 +12,6 @@ const ler = (qs: string) => lerFiltrosDaUrl(new URLSearchParams(qs), HOJE)
 const A = "11111111-1111-4111-8111-111111111111"
 const B = "22222222-2222-4222-8222-222222222222"
 const X = "33333333-3333-4333-8333-333333333333"
-const ESTE_MES = { field: "periodo", operator: "is", values: ["este-mes"] }
 
 describe("CAMPOS_BASE", () => {
     it("tem os 15 campos na ordem da spec, plano e assinatura de valor único", () => {
@@ -28,17 +27,17 @@ describe("CAMPOS_BASE", () => {
 })
 
 describe("lerFiltrosDaUrl", () => {
-    it("sem filtro entra o período padrão e migra", () => {
+    it("sem filtro abre limpa, da mais recente, página 1, sem migrar", () => {
         const r = ler("")
-        expect(r.filtros).toEqual([ESTE_MES])
-        expect(r.migrou).toBe(true)
+        expect(r.filtros).toEqual([])
+        expect(r.migrou).toBe(false)
         expect(r.type).toBe("all")
         expect(r.sort).toEqual({ key: "date", dir: "desc" })
         expect(r.page).toBe(1)
     })
 
     it("txn não é filtro", () => {
-        expect(ler("txn=abc").filtros).toEqual([ESTE_MES])
+        expect(ler("txn=abc").filtros).toEqual([])
     })
 
     it("card + preset=last30, na ordem de CAMPOS_BASE e sem padrão", () => {
@@ -113,7 +112,7 @@ describe("lerFiltrosDaUrl", () => {
         expect(r.filtros).toEqual([{ field: "descricao", operator: "contains", values: ["uber"] }])
         expect(r.q).toBe("")
         expect(r.migrou).toBe(true)
-        expect(ler("q=%20%20").filtros).toEqual([ESTE_MES])
+        expect(ler("q=%20%20").filtros).toEqual([])
     })
 
     it("q é aparado", () => {
@@ -150,10 +149,10 @@ describe("escreverFiltrosNaUrl", () => {
         expect(migrou).toBe(false)
     })
 
-    it("não escreve padrões; lista vazia grava f= e volta vazia, sem padrão", () => {
+    it("não escreve padrões; lista vazia não grava f= e volta vazia", () => {
         const e: EstadoDaLista = { type: "all", q: "", sort: { key: "date", dir: "desc" }, page: 1, filtros: [] }
         const p = escreverFiltrosNaUrl(e, new URLSearchParams("type=income&page=2"))
-        expect(p.toString()).toBe("f=")
+        expect(p.toString()).toBe("")
         const { migrou, ...volta } = lerFiltrosDaUrl(p, HOJE)
         expect(volta).toEqual(e)
         expect(migrou).toBe(false)
