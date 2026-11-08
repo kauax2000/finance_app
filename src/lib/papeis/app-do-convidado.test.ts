@@ -121,6 +121,7 @@ describe("o convidado só lança despesa (Ruling 11)", () => {
         expect(f).toContain('papel === "guest" && defaultLaunchKind === "income" ? "expense" : defaultLaunchKind')
         expect(f).toContain("formKind: kindInicial,")
         expect(f).toContain('type: kindInicial === "income" ? "income" : "expense",')
-        expect(f).toContain("}, [active, editingTransaction, kindInicial])")
+        expect(f).toContain("}, [active, editingTransaction, kindInicial, duplicada])")
+        expect(f).toContain('papel === "guest" && valoresIniciais?.tipo === "income" ? null : valoresIniciais')
     })
 })

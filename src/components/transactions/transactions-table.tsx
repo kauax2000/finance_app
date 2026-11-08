@@ -77,7 +77,7 @@ function formatPaymentCell(t: Transaction): string {
     return s
 }
 
-type InvoiceBadge = {
+export type InvoiceBadge = {
     slot: CreditCardInvoiceSlot
     label: string
     chipClass: string
@@ -92,7 +92,7 @@ type InvoiceBadge = {
     dueYmd: string | null
 }
 
-function creditCardInvoiceBadgeForRow(
+export function creditCardInvoiceBadgeForRow(
     t: Transaction,
     invoicePaidByCardClose: ReadonlySet<string>
 ): InvoiceBadge | null {
@@ -156,7 +156,7 @@ function creditCardInvoiceBadgeForRow(
  * portalizada — mas evento de portal do React sobe pela árvore do React, então
  * o clique no "Ver cartão" também abriria a linha. Os dois param aqui.
  */
-const stopRowEvent = (e: React.SyntheticEvent) => e.stopPropagation()
+export const stopRowEvent = (e: React.SyntheticEvent) => e.stopPropagation()
 
 /**
  * O chip vira `<button>` para a prévia abrir no foco; o desenho é o mesmo. O
@@ -168,7 +168,7 @@ const rowChipTriggerClassName =
     "cursor-default outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
 /** O chip de fatura e a prévia dela: cartão, estado, fechamento e vencimento. */
-function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
+export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
@@ -254,7 +254,14 @@ function installmentLastMonthLabel(dateIso: string, restantes: number): string |
 }
 
 /** O chip "Parcelada" e a prévia do plano: qual parcela, valores e quando acaba. */
-function InstallmentChip({ transaction }: { transaction: Transaction }) {
+export function InstallmentChip({
+    transaction,
+    comParcela = false,
+}: {
+    transaction: Transaction
+    /** "Parcelada 1/2" no chip (a tabela da página); sem ele, só "Parcelada". */
+    comParcela?: boolean
+}) {
     const plan = transaction.installment_plan ?? null
     const kn = resolveInstallmentKn(
         transaction.installment_sequence,
@@ -277,7 +284,7 @@ function InstallmentChip({ transaction }: { transaction: Transaction }) {
                     type="button"
                     className={cn(transactionParceladaRowChip, rowChipTriggerClassName)}
                 >
-                    Parcelada
+                    {comParcela && kn ? `Parcelada ${kn.k}/${kn.n}` : "Parcelada"}
                 </button>
             </HoverCardTrigger>
             <HoverCardContent

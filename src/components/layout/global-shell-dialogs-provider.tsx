@@ -20,6 +20,7 @@ import { CategoryCreateDialog } from "@/components/categories/category-create-di
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
+import type { ValoresDuplicados } from "@/lib/transactions/duplicar"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { persistTransactionSave } from "@/lib/transaction-detail-sheet-mutations"
@@ -34,10 +35,11 @@ export type GlobalShellDialogsContextValue = {
     /**
      * `frase`: a frase rápida já escrita no formulário; `fotoInicial`: a foto que a
      * "Foto do recibo" lê ao abrir. As duas vêm do compartilhar do Android.
+     * `valores`: os campos de uma linha duplicada (`valoresDuplicados`).
      */
     openTransactionCreate: (
         mode: NewTransactionMode,
-        opts?: { frase?: string; fotoInicial?: File }
+        opts?: { frase?: string; fotoInicial?: File; valores?: ValoresDuplicados }
     ) => void
     openCategoryCreate: () => void
     openSubscriptionCreate: () => void
@@ -76,6 +78,7 @@ export function GlobalShellDialogsProvider({
     const [txSaving, setTxSaving] = React.useState(false)
     const [createFrase, setCreateFrase] = React.useState<string | undefined>()
     const [createFoto, setCreateFoto] = React.useState<File | undefined>()
+    const [createValores, setCreateValores] = React.useState<ValoresDuplicados | null>(null)
 
     const [categoryOpen, setCategoryOpen] = React.useState(false)
 
@@ -101,10 +104,11 @@ export function GlobalShellDialogsProvider({
     }, [])
 
     const openTransactionCreate = React.useCallback(
-        (mode: NewTransactionMode, opts?: { frase?: string; fotoInicial?: File }) => {
+        (mode: NewTransactionMode, opts?: { frase?: string; fotoInicial?: File; valores?: ValoresDuplicados }) => {
             setCreateLaunchKind(modeToLaunchKind(mode))
             setCreateFrase(opts?.frase)
             setCreateFoto(opts?.fotoInicial)
+            setCreateValores(opts?.valores ?? null)
             setTxOpen(true)
         },
         [],
@@ -116,6 +120,7 @@ export function GlobalShellDialogsProvider({
         if (!open) {
             setCreateFrase(undefined)
             setCreateFoto(undefined)
+            setCreateValores(null)
         }
     }, [])
 
@@ -258,6 +263,7 @@ export function GlobalShellDialogsProvider({
                 onSaveInstallmentPlan={handleTxSaveInstallmentPlan}
                 fraseInicial={createFrase}
                 fotoInicial={createFoto}
+                valoresIniciais={createValores}
             />
             <CategoryCreateDialog
                 open={categoryOpen}

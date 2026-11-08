@@ -24,6 +24,7 @@ import {
     rascunhoDaFrase,
     type CamposDaFrase,
 } from "@/lib/captura/frase-no-form"
+import type { ValoresDuplicados } from "@/lib/transactions/duplicar"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import { transactionFormTitle } from "@/components/transactions/transaction-form-title"
 import {
@@ -186,6 +187,8 @@ export type UseTransactionFormArgs = {
     onClose: () => void
     /** Called after any successful save (before onClose when closeOnSuccess). */
     onSuccess?: () => void
+    /** Na criação, os campos de uma linha duplicada (`valoresDuplicados`). */
+    valoresIniciais?: ValoresDuplicados | null
 }
 
 export function useTransactionForm({
@@ -203,6 +206,7 @@ export function useTransactionForm({
     closeOnSuccess = true,
     onClose,
     onSuccess,
+    valoresIniciais = null,
 }: UseTransactionFormArgs) {
     const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
     const [creditCardPopoverOpen, setCreditCardPopoverOpen] = useState(false)
@@ -244,6 +248,8 @@ export function useTransactionForm({
     // em despesa: ele só lança despesa (Bloco 7A, Ruling 11).
     const kindInicial: TransactionFormKind =
         papel === "guest" && defaultLaunchKind === "income" ? "expense" : defaultLaunchKind
+    // Pelo mesmo motivo, a receita duplicada não abre para o convidado.
+    const duplicada = papel === "guest" && valoresIniciais?.tipo === "income" ? null : valoresIniciais
 
     const segmentMode: "create" | "edit" = editingTransaction
         ? "edit"
@@ -301,7 +307,33 @@ export function useTransactionForm({
                   paidBy: "",
                   pesosDaParcelada: null,
               }
-            : {
+            : duplicada
+              ? {
+                    formKind: duplicada.tipo,
+                    type: duplicada.tipo,
+                    amount: formatMoneyBrlInput(duplicada.valor),
+                    description: duplicada.descricao,
+                    categoryId: duplicada.categoryId ?? "",
+                    date: duplicada.data,
+                    recurringMode: "once",
+                    paymentMethod:
+                        duplicada.tipo === "expense" ? duplicada.paymentMethod : null,
+                    paymentCreditCardId: duplicada.creditCardId ?? "",
+                    // A receita no crédito é o estorno daquele cartão.
+                    estornoCartaoId:
+                        duplicada.tipo === "income" && duplicada.paymentMethod === "credit_card"
+                            ? duplicada.creditCardId
+                            : null,
+                    installmentValueMode: "total",
+                    installmentTotal: "",
+                    installmentPerAmount: "",
+                    installmentCount: DEFAULT_INSTALLMENT_COUNT,
+                    installmentEditScope: "slice",
+                    projectId: duplicada.projectId ?? "",
+                    paidBy: "",
+                    pesosDaParcelada: null,
+                }
+              : {
                   formKind: kindInicial,
                   type: kindInicial === "income" ? "income" : "expense",
                   amount: "",
@@ -345,7 +377,7 @@ export function useTransactionForm({
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
-    }, [active, editingTransaction, kindInicial])
+    }, [active, editingTransaction, kindInicial, duplicada])
     /* eslint-enable react-hooks/set-state-in-effect */
 
     /* eslint-disable react-hooks/set-state-in-effect -- sync form type/panels with launch kind and active state */

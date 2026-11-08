@@ -306,3 +306,16 @@ export async function marcarConferidos(ids: string[]): Promise<void> {
     }
     dispatchFinanceTransactionsMutated()
 }
+
+/** Põe a mesma categoria num lote e tira a marca de "a conferir" (Categorizar). */
+export async function categorizarEmLote(ids: string[], categoryId: string | null): Promise<void> {
+    if (!ids.length) return
+    const { error } = await supabase
+        .from("transactions")
+        .update({ category_id: categoryId, needs_review: false })
+        .in("id", ids)
+    if (error) {
+        throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível categorizar os lançamentos.")
+    }
+    dispatchFinanceTransactionsMutated()
+}
