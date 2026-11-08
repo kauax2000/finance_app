@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { useQueryClient } from "@tanstack/react-query"
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { useAuth } from "@/components/providers"
 import { type Deducao, deduzirMapeamento, lerCsv, mapearCsv } from "@/lib/import/csv"
@@ -261,6 +261,22 @@ export function resumoDoLote(itens: ItemImportavel[]) {
     }
 }
 
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+
+/** "1 a 28 de outubro"; com meses ou anos diferentes, cada ponta diz o seu. */
+export function periodoPtBr({ de, ate }: { de: string; ate: string }) {
+    const partes = (ymd: string) => {
+        const [a, m, d] = ymd.slice(0, 10).split("-").map(Number)
+        return { a, mes: MESES[m - 1], d }
+    }
+    const x = partes(de)
+    const y = partes(ate)
+    if (de.slice(0, 10) === ate.slice(0, 10)) return `${y.d} de ${y.mes}`
+    if (x.a !== y.a) return `${x.d} de ${x.mes} de ${x.a} a ${y.d} de ${y.mes} de ${y.a}`
+    if (x.mes !== y.mes) return `${x.d} de ${x.mes} a ${y.d} de ${y.mes}`
+    return `${x.d} a ${y.d} de ${y.mes}`
+}
+
 /**
  * A vez de cada leitura: `nova()` marca um pedido, `invalidar()` (reiniciar,
  * trocar arquivo ou destino) descarta os que estão no ar, e `vale(n)` diz se a
@@ -464,6 +480,22 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         else if (passo === "colunas") setPasso(lote && ajustando.current ? "conferir" : "arquivo")
     }
 
+    // O CSV deduzido já se lê no passo Arquivo: o total e o período aparecem no item do arquivo.
+    const arquivoLido = useMemo(() => {
+        if (!csv || !deducao?.certa) return null
+        try {
+            const { itens } = mapearCsv(
+                csv,
+                { data: mapeamento.data, descricao: mapeamento.descricao, valor: mapeamento.valor },
+                { temCabecalho: mapeamento.temCabecalho, negativoEhDespesa: mapeamento.negativoEhDespesa },
+            )
+            const datas = itens.map((i) => i.data).sort()
+            return { total: itens.length, periodo: datas.length ? { de: datas[0], ate: datas[datas.length - 1] } : null }
+        } catch {
+            return null
+        }
+    }, [csv, deducao, mapeamento])
+
     const resumo = lote
         ? resumoDaConferencia(lote.itens, marcadas, escolhidas, existentes)
         : { total: 0, entram: 0, saidas: 0, entradas: 0, existem: 0, semCategoria: 0, periodo: null }
@@ -572,6 +604,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         escolherArquivo,
         csv,
         deducao,
+        arquivoLido,
         mapeamento,
         setMapeamento,
         continuar,

@@ -40,7 +40,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
-import type { ItemImportavel } from "@/lib/import/importar"
+import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 
 import type { FiltroConferencia, ImportarExtrato } from "./use-importar-extrato"
@@ -68,6 +68,8 @@ const papeisDe = (m: ImportarExtrato["mapeamento"]) =>
         .join(" · ")
 
 const valorDe = (i: ItemImportavel) => (i.estorno ? i.valor : -i.valor)
+/** O nome da linha nos rótulos ("Trazer Mercado, 02/10/2026"): a data desempata as homônimas. */
+const rotuloDe = (i: ItemImportavel) => `${i.descricao}, ${formatYmdPtBr(i.data)}`
 const descricaoDe = (i: ItemImportavel) => `${i.descricao}${i.parcela ? ` (${i.parcela.k}/${i.parcela.n})` : ""}`
 
 /** O nome da categoria escolhida, ou o da planilha que nasce ao gravar. */
@@ -131,31 +133,62 @@ function JaExiste({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel })
 function Linha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
     const marcada = imp.marcadas.has(item.clientId)
     return (
-        <Item variant="flush" size="sm" className={marcada ? undefined : "opacity-60"}>
+        // A de fora esmaece pela tinta, e não por opacidade: o texto fica no contraste AA.
+        <Item variant="flush" size="sm" className={marcada ? undefined : "text-muted-foreground"}>
             <ItemMedia>
                 <Checkbox
                     checked={marcada}
                     onCheckedChange={(v) => imp.setMarcada(item.clientId, v === true)}
-                    aria-label={`Trazer ${item.descricao}`}
+                    aria-label={`Trazer ${rotuloDe(item)}`}
                 />
             </ItemMedia>
-            <ItemContent>
-                <ItemTitle>{descricaoDe(item)}</ItemTitle>
-                <ItemDescription>
-                    {formatYmdPtBr(item.data)}
-                    {imp.existentes.has(item.clientId) ? " · " : null}
-                    <JaExiste imp={imp} item={item} />
-                </ItemDescription>
-                {/* Embaixo da descrição, como no telefone: o nome não disputa a linha com o campo. */}
-                <div className="mt-1 w-48 max-w-full">
+            {/* Uma linha no desktop (descrição · categoria · valor); no telefone a categoria desce para a segunda. */}
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                <ItemContent className="min-w-0 flex-1">
+                    <ItemTitle className="w-full">
+                        <span className="truncate">{descricaoDe(item)}</span>
+                    </ItemTitle>
+                    <ItemDescription>
+                        {formatYmdPtBr(item.data)}
+                        {imp.existentes.has(item.clientId) ? " · " : null}
+                        <JaExiste imp={imp} item={item} />
+                    </ItemDescription>
+                </ItemContent>
+                <div className="order-last basis-full md:order-none md:basis-auto md:w-40">
                     <CategoriaDaLinha imp={imp} item={item} />
                 </div>
-            </ItemContent>
-            <ItemActions>
-                <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
-            </ItemActions>
+                <MoneyDisplay
+                    // Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor.
+                    className="ms-auto text-end md:min-w-24"
+                    value={valorDe(item)}
+                    signed
+                    tone={item.estorno ? "income" : "expense"}
+                />
+            </div>
         </Item>
     )
+}
+
+/**
+ * O teto do compacto: a altura das 6 primeiras linhas, medida (a linha muda com
+ * a largura e o apontador). A sétima fica por baixo, e a sexta dissolve.
+ */
+function useTetoDasLinhas(ativo: boolean) {
+    const ref = React.useRef<HTMLDivElement>(null)
+    const [teto, setTeto] = React.useState<number | null>(null)
+    React.useLayoutEffect(() => {
+        const el = ref.current
+        if (!ativo || !el) return
+        const medir = () => {
+            const linhas = el.querySelectorAll<HTMLElement>(":scope > [data-slot=item]")
+            if (linhas.length > LIMITE) setTeto(linhas[LIMITE].offsetTop - linhas[0].offsetTop)
+        }
+        medir()
+        const ro = new ResizeObserver(medir)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [ativo])
+    return [ref, ativo ? teto : null] as const
 }
 
 const col = dataTableColumns<ItemImportavel>()
@@ -164,7 +197,7 @@ const col = dataTableColumns<ItemImportavel>()
 function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: ItemImportavel[]; onClose: () => void }) {
     const primeiro = itens[0]
     return (
-        <Dialog open={itens.length > 0} onOpenChange={(o) => (o ? undefined : onClose())}>
+        <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : onClose())}>
             <DialogContent size="sm">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
@@ -227,6 +260,8 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
     const { resumo } = imp
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     const grande = imp.visiveis.length > LIMITE
+    const destino = imp.destino
+    const [listaRef, teto] = useTetoDasLinhas(grande && !imp.expandido)
     const podeExpandir = resumo.total > LIMITE
 
     const colunas: DataTableColumnDef<ItemImportavel>[] = [
@@ -268,7 +303,11 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                 type="button"
                 variant="secondary"
                 // Despesa e receita têm categorias diferentes: filtre Saídas ou Entradas.
-                disabled={marcadasVistas.length === 0 || new Set(marcadasVistas.map((i) => i.estorno)).size > 1}
+                disabled={
+                    marcadasVistas.length === 0 ||
+                    !destino ||
+                    new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1
+                }
                 onClick={() => setPorCategoria(marcadasVistas)}
             >
                 <TagIcon data-icon="inline-start" />
@@ -313,7 +352,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
             }}
         >
             <div className="flex flex-wrap items-center gap-2">
-                <Badge size="md" tone="neutral">
+                <Badge size="md" tone="neutral" role="status">
                     Vão entrar {numberBR(resumo.entram)} de {numberBR(resumo.total)}
                 </Badge>
                 {resumo.saidas > 0 ? (
@@ -370,6 +409,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         variant="tertiary"
                         size="icon-md"
                         aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
+                        aria-expanded={imp.expandido}
                         onClick={() => imp.setExpandido(!imp.expandido)}
                     >
                         {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
@@ -382,7 +422,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                     columns={colunas}
                     data={imp.visiveis}
                     getRowId={(i) => i.clientId}
-                    getRowLabel={(i) => `${i.descricao}, ${formatYmdPtBr(i.data)}`}
+                    getRowLabel={rotuloDe}
                     pageSize={false}
                     toolbar={{ search: "Buscar descrição", end: acoes }}
                     enableSelection
@@ -394,9 +434,14 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                 vazio
             ) : (
                 <>
-                    <ScrollArea variant="fade" sides="end" viewportClassName={grande ? "max-h-72" : undefined}>
-                        <ItemGroup variant="divided">
-                            {imp.visiveis.slice(0, LIMITE).map((i) => (
+                    <ScrollArea
+                        variant="fade"
+                        sides="end"
+                        viewportClassName={grande ? "max-h-(--lista-h)" : undefined}
+                        style={teto ? ({ "--lista-h": `${teto}px` } as React.CSSProperties) : undefined}
+                    >
+                        <ItemGroup ref={listaRef} variant="divided">
+                            {imp.visiveis.slice(0, grande ? LIMITE + 1 : LIMITE).map((i) => (
                                 <Linha key={i.clientId} imp={imp} item={i} />
                             ))}
                         </ItemGroup>

@@ -20,6 +20,7 @@ import {
     loteParaGravar,
     marcadasIniciais,
     passoDepoisDoArquivo,
+    periodoPtBr,
     prepararLote,
     quemFicouDeFora,
     resumoDaConferencia,
@@ -219,6 +220,8 @@ describe("o hook e o diálogo", () => {
     it("as categorias novas da conferência e do fim contam só as marcadas; o fim separa quem já existia", () => {
         expect(hook).toContain("categoriasNovas: loteParaGravar(lote, marcadas, escolhidas).novas")
         expect(hook).toContain("...quemFicouDeFora(lote.itens, marcadas, existentes)")
+        // Antes do Continuar, a leitura do CSV deduzido já dá o total e o período do arquivo.
+        expect(hook).toMatch(/arquivoLido = useMemo\(/)
     })
 })
 
@@ -313,6 +316,13 @@ describe("a conferência", () => {
         expect(categoriaNovaDe(nova, new Map())).toBe("Feira")
         expect(categoriaNovaDe(daCarteira, new Map())).toBeNull()
         expect(categoriaNovaDe(nova, aplicarCategoria(new Map(), ["a"], null))).toBeNull()
+    })
+
+    it("o período em português: mesmo mês, meses e anos diferentes", () => {
+        expect(periodoPtBr({ de: "2026-10-01", ate: "2026-10-28" })).toBe("1 a 28 de outubro")
+        expect(periodoPtBr({ de: "2026-10-05", ate: "2026-10-05" })).toBe("5 de outubro")
+        expect(periodoPtBr({ de: "2026-09-28", ate: "2026-10-03" })).toBe("28 de setembro a 3 de outubro")
+        expect(periodoPtBr({ de: "2025-12-30", ate: "2026-01-02" })).toBe("30 de dezembro de 2025 a 2 de janeiro de 2026")
     })
 
     it("o filtro escolhe as visíveis sem mudar marcadas nem categorias", () => {

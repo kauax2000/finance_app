@@ -23,10 +23,23 @@ describe("o diálogo de importar, versão C", () => {
         expect(dialogo).not.toContain("<RadioGroup")
     })
 
-    it("o arquivo entra arrastado no Card tracejado ou escolhido no computador", () => {
-        expect(dialogo).toMatch(/<Card[\s\S]*?variant="dashed"[\s\S]*?onDragOver=\{[\s\S]*?onDrop=\{/)
+    it("o arquivo entra arrastado no corpo inteiro (também trocando o escolhido) ou escolhido no computador", () => {
+        expect(dialogo).toMatch(/<DialogBody[\s\S]*?onDragOver=\{[\s\S]*?onDrop=\{soltar\}/)
+        // dragover impedido sempre: o navegador nunca abre o arquivo no lugar da página.
+        expect(dialogo).toMatch(/function arrastando\(e: React\.DragEvent\) \{\s*e\.preventDefault\(\)/)
+        expect(dialogo).toMatch(/<Card[\s\S]*?variant="dashed"[\s\S]*?data-dragging=\{sobre \|\| undefined\}/)
+        expect(dialogo).toContain("ring-ring")
+        expect(dialogo).toContain("Só um arquivo por vez; usamos o primeiro.")
         expect(dialogo).toContain("Arraste o arquivo aqui")
         expect(dialogo).toMatch(/type="file"[\s\S]*?accept="\.csv,\.ofx"/)
+    })
+
+    it("o título da conta lê natural, e o arquivo diz o período quando a leitura o tem", () => {
+        expect(dialogo).toContain('{ forma: "pix", rotulo: "Pix", em: "no Pix" }')
+        expect(dialogo).toContain('{ forma: "debit_card", rotulo: "Débito", em: "no Débito" }')
+        expect(dialogo).toContain('{ forma: "other", rotulo: "Outro", em: "em Outro" }')
+        expect(dialogo).toContain("`para o ${cartao.name}`")
+        expect(dialogo).toContain("periodoPtBr(imp.arquivoLido.periodo)")
     })
 
     it("o destino é um Select só, com o grupo dos cartões e o das contas", () => {
@@ -43,7 +56,7 @@ describe("o diálogo de importar, versão C", () => {
     })
 
     it("o mesmo diálogo vai à tela cheia com expandido", () => {
-        expect(dialogo).toMatch(/<DialogContent[\s\S]*?size=\{expandido \? "full" : "lg"\}/)
+        expect(dialogo).toMatch(/<DialogContent[\s\S]*?size=\{expandido \? "full" : imp\.passo === "conferir" \? "xl" : "lg"\}/)
         expect(dialogo).toContain('const expandido = imp.passo === "conferir" && imp.expandido')
     })
 
@@ -57,6 +70,7 @@ describe("o diálogo de importar, versão C", () => {
     it("o fim diz quem ficou de fora e por quê, e o primário leva aos sem categoria", () => {
         expect(dialogo).toContain("porque já existiam")
         expect(dialogo).toMatch(/Ver os \$\{numberBR\(feito\.semCategoria\)\} sem categoria/)
+        expect(dialogo).toContain('"Ver o 1 sem categoria"')
         expect(dialogo).toContain("onRevisar({ semCategoria: feito.semCategoria > 0 })")
         expect(dialogo).toContain("Revisar agora")
     })
@@ -65,11 +79,30 @@ describe("o diálogo de importar, versão C", () => {
 describe("a conferência", () => {
     it("o compacto mostra 6 linhas, e só com mais de 6 aparecem o Ver os N e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        expect(conferir).toContain("imp.visiveis.slice(0, LIMITE)")
+        // Uma linha a mais por baixo do teto: a sexta dissolve e o teto é medido das linhas, sem px cravado.
+        expect(conferir).toContain("imp.visiveis.slice(0, grande ? LIMITE + 1 : LIMITE)")
+        expect(conferir).toContain("linhas[LIMITE].offsetTop - linhas[0].offsetTop")
+        expect(conferir).toContain('viewportClassName={grande ? "max-h-(--lista-h)" : undefined}')
+        // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
+        expect(conferir).toContain("order-last basis-full md:order-none md:basis-auto")
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
         expect(conferir).toMatch(/grande \? \([\s\S]*?Ver os \$\{numberBR\(imp\.visiveis\.length\)\} lançamentos/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/aria-label=\{imp\.expandido \? "Recolher a lista" : "Expandir a lista"\}/)
+        expect(conferir).toContain("aria-expanded={imp.expandido}")
+    })
+
+    it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
+        expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
+        expect(conferir).toContain("getRowLabel={rotuloDe}")
+        expect(conferir).toMatch(/<Badge[^>]*role="status"[^>]*>\s*Vão entrar/)
+        expect(conferir).not.toContain("opacity-60")
+        expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
+    })
+
+    it("Pôr categoria compara o tipo da categoria (estorno do cartão é despesa), e a folha dele vira gaveta no telefone", () => {
+        expect(conferir).toContain("new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1")
+        expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
     })
 
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {

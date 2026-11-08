@@ -52,16 +52,15 @@ import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
-import { formatYmdPtBr } from "@/lib/transaction-date"
 
 import { ConferirImportacao } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
-import { useImportarExtrato } from "./use-importar-extrato"
+import { periodoPtBr, useImportarExtrato } from "./use-importar-extrato"
 
 const CONTAS = [
-    { forma: "pix", rotulo: "Pix" },
-    { forma: "debit_card", rotulo: "Débito" },
-    { forma: "other", rotulo: "Outro" },
+    { forma: "pix", rotulo: "Pix", em: "no Pix" },
+    { forma: "debit_card", rotulo: "Débito", em: "no Débito" },
+    { forma: "other", rotulo: "Outro", em: "em Outro" },
 ] as const
 
 const lancamentos = (n: number) => `${numberBR(n)} ${n === 1 ? "lançamento" : "lançamentos"}`
@@ -98,12 +97,15 @@ export function ImportarExtratoDialog({
     const cartoes = useCreditCardsQuery(currentWorkspaceId).data ?? []
     const imp = useImportarExtrato({ workspaceId: currentWorkspaceId })
     const [perguntando, setPerguntando] = useState(false)
+    const [sobre, setSobre] = useState(false)
+    const [variosArquivos, setVariosArquivos] = useState(false)
     const entrada = useRef<HTMLInputElement>(null)
 
     function mudarAberto(aberto: boolean) {
         if (!aberto) {
             imp.reiniciar()
             setPerguntando(false)
+            setVariosArquivos(false)
         }
         onOpenChange(aberto)
     }
@@ -118,7 +120,10 @@ export function ImportarExtratoDialog({
     const feito = imp.feito
     const d = imp.destino
     const cartao = d?.tipo === "cartao" ? cartoes.find((c) => c.id === d.cardId) : undefined
-    const nomeDoDestino = cartao ? `o ${cartao.name}` : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.rotulo ?? "")
+    // "para o Nubank"; na conta, "no Pix", "no Débito", "em Outro".
+    const nomeDoDestino = cartao
+        ? `para o ${cartao.name}`
+        : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.em ?? "")
     const periodo = imp.resumo.periodo
 
     function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -128,11 +133,21 @@ export function ImportarExtratoDialog({
         if (imp.passo === "conferir") return imp.importar()
     }
 
+    // O corpo inteiro recebe o arquivo, e o `dragover` impedido sempre: sem ele o navegador abre o arquivo no lugar da página.
+    function arrastando(e: React.DragEvent) {
+        e.preventDefault()
+        if (imp.passo === "arquivo" && !travado) setSobre(true)
+    }
+
     function soltar(e: React.DragEvent) {
         e.preventDefault()
-        if (travado) return
-        const f = e.dataTransfer.files?.[0]
-        if (f) imp.escolherArquivo(f)
+        setSobre(false)
+        if (imp.passo !== "arquivo" || travado) return
+        const arquivos = e.dataTransfer.files
+        const f = arquivos?.[0]
+        if (!f) return
+        imp.escolherArquivo(f)
+        setVariosArquivos(arquivos.length > 1)
     }
 
     return (
@@ -144,19 +159,19 @@ export function ImportarExtratoDialog({
             dirty={imp.dirty}
             confirmDiscard
         >
-            <DialogContent size={expandido ? "full" : "lg"} layout={expandido ? "fixed" : "auto"}>
+            <DialogContent size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"} layout={expandido ? "fixed" : "auto"}>
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
                         <DialogTitle>
                             {imp.passo === "conferir" && nomeDoDestino
-                                ? `${lancamentos(imp.resumo.total)} para ${nomeDoDestino}`
+                                ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}`
                                 : "Importar extrato"}
                         </DialogTitle>
                         <DialogDescription>
                             {imp.passo === "feito"
                                 ? "Os lançamentos já estão na lista."
                                 : imp.passo === "conferir"
-                                  ? `${periodo ? `De ${formatYmdPtBr(periodo.de)} a ${formatYmdPtBr(periodo.ate)}. ` : ""}Desmarque o que não quer trazer.`
+                                  ? `${periodo ? `De ${periodoPtBr(periodo)}. ` : ""}Desmarque o que não quer trazer.`
                                   : imp.passo === "colunas"
                                     ? "Diga o que é cada coluna do arquivo."
                                     : "CSV ou OFX do seu banco, ou uma planilha sua."}
@@ -165,7 +180,13 @@ export function ImportarExtratoDialog({
                             <DialogSteps current={atual} total={passos.length} labels={passos} />
                         )}
                     </DialogHeader>
-                    <DialogBody>
+                    <DialogBody
+                        onDragOver={arrastando}
+                        onDragLeave={(e) => {
+                            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSobre(false)
+                        }}
+                        onDrop={soltar}
+                    >
                         {imp.passo === "arquivo" ? (
                             <div className="flex flex-col gap-4">
                                 <Input
@@ -178,12 +199,17 @@ export function ImportarExtratoDialog({
                                         const f = e.target.files?.[0] ?? null
                                         // Limpo, o mesmo arquivo pode ser escolhido de novo.
                                         e.target.value = ""
+                                        setVariosArquivos(false)
                                         imp.escolherArquivo(f)
                                     }}
                                 />
                                 {imp.arquivo ? (
                                     <div className="flex flex-col gap-2">
-                                        <Item variant="outline">
+                                        <Item
+                                            variant="outline"
+                                            data-dragging={sobre || undefined}
+                                            className="data-dragging:ring-3 data-dragging:ring-ring/45"
+                                        >
                                             <ItemMedia>
                                                 <DocumentTextIcon />
                                             </ItemMedia>
@@ -191,8 +217,9 @@ export function ImportarExtratoDialog({
                                                 <ItemTitle>{imp.arquivo.name}</ItemTitle>
                                                 <ItemDescription>
                                                     {tamanho(imp.arquivo.size)}
-                                                    {imp.csv
-                                                        ? ` · ${lancamentos(Math.max(0, imp.csv.length - (imp.mapeamento.temCabecalho ? 1 : 0)))}`
+                                                    {imp.arquivoLido ? ` · ${lancamentos(imp.arquivoLido.total)}` : ""}
+                                                    {imp.arquivoLido?.periodo
+                                                        ? ` · ${periodoPtBr(imp.arquivoLido.periodo)}`
                                                         : ""}
                                                 </ItemDescription>
                                             </ItemContent>
@@ -221,9 +248,8 @@ export function ImportarExtratoDialog({
                                 ) : (
                                     <Card
                                         variant="dashed"
-                                        className="items-center text-center"
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={soltar}
+                                        data-dragging={sobre || undefined}
+                                        className="items-center text-center data-dragging:border-ring data-dragging:ring-3 data-dragging:ring-ring/45"
                                     >
                                         <p className="font-medium text-foreground">Arraste o arquivo aqui</p>
                                         <p>
@@ -240,6 +266,7 @@ export function ImportarExtratoDialog({
                                         </p>
                                     </Card>
                                 )}
+                                {variosArquivos ? <Caption>Só um arquivo por vez; usamos o primeiro.</Caption> : null}
                                 <FormField label="Para onde vão">
                                     <Select
                                         disabled={travado}
@@ -347,9 +374,11 @@ export function ImportarExtratoDialog({
                                             mudarAberto(false)
                                         }}
                                     >
-                                        {feito.semCategoria > 0
-                                            ? `Ver os ${numberBR(feito.semCategoria)} sem categoria`
-                                            : "Revisar agora"}
+                                        {feito.semCategoria === 1
+                                            ? "Ver o 1 sem categoria"
+                                            : feito.semCategoria > 0
+                                              ? `Ver os ${numberBR(feito.semCategoria)} sem categoria`
+                                              : "Revisar agora"}
                                     </Button>
                                 </EmptyStateActions>
                             </EmptyState>
