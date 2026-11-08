@@ -10,7 +10,7 @@ import { parseAmountFilter } from "./valor"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 export type CampoId =
-    | "periodo" | "categoria" | "pagamento" | "cartao" | "valor" | "conferir" | "captura"
+    | "periodo" | "descricao" | "categoria" | "pagamento" | "cartao" | "valor" | "conferir" | "captura"
     | "pessoa" | "pagou" | "projeto" | "parcelada" | "plano" | "assinatura" | "recorrente"
 
 export const SEM_CATEGORIA = "__none__"
@@ -18,6 +18,8 @@ export const SEM_CATEGORIA = "__none__"
 /** Na ordem da spec §5.2; as opções chegam do controlador. */
 export const CAMPOS_BASE: FilterField[] = [
     { id: "periodo", label: "Período", type: "period" },
+    // A busca por descrição é um token: a paleta (⌘K) já procura em tudo, e o "Ver todas" dela chega aqui como `?q=`.
+    { id: "descricao", label: "Descrição", type: "text" },
     { id: "categoria", label: "Categoria", type: "enum" },
     { id: "pagamento", label: "Pagamento", type: "enum" },
     { id: "cartao", label: "Cartão", type: "enum" },
@@ -49,7 +51,7 @@ const PRESETS_ANTIGOS: Record<string, string> = {
     monthToToday: "este-mes",
 }
 const PARAMS_ANTIGOS = [
-    "preset", "from", "to", "cats", "uncat", "pm", "card", "min", "max", "inst", "plan", "sub", "conferir",
+    "preset", "from", "to", "cats", "uncat", "pm", "card", "min", "max", "inst", "plan", "sub", "conferir", "q",
 ] as const
 
 const lista = (v: string | null) => (v ?? "").split(",").map((s) => s.trim()).filter(Boolean)
@@ -87,6 +89,7 @@ function filtrosAntigos(p: URLSearchParams, hoje: Date): FilterValue[] {
     const valor = valorAntigo(p)
     const bruto: FilterValue[] = [
         ...is("periodo", periodoAntigo(p, hoje)),
+        ...((p.get("q") ?? "").trim() ? [{ field: "descricao", operator: "contains" as const, values: [(p.get("q") ?? "").trim()] }] : []),
         ...is("categoria", p.get("uncat") === "1" ? [SEM_CATEGORIA] : uuids(p.get("cats"))),
         ...is("pagamento", lista(p.get("pm")).filter((v) => (PAYMENT_METHOD_VALUES as readonly string[]).includes(v))),
         ...is("cartao", uuids(p.get("card"))),
@@ -106,15 +109,15 @@ export function lerFiltrosDaUrl(
     const novos = parseFilters(p.get("f"), CAMPOS_BASE)
     const antigos = filtrosAntigos(p, hoje).filter((a) => !novos.some((n) => n.field === a.field))
     const filtros = [...novos, ...antigos]
-    const temAntigo = PARAMS_ANTIGOS.some((k) => p.has(k))
-    const padrao = !p.has("f") && !temAntigo && !(p.get("q") ?? "").trim()
+    const temAntigo = PARAMS_ANTIGOS.some((k) => (p.get(k) ?? "").trim() !== "")
+    const padrao = !p.has("f") && !temAntigo
     if (padrao) filtros.unshift({ field: "periodo", operator: "is", values: ["este-mes"] })
 
     const type = p.get("type")
     const [s] = parseSort(p.get("sort"), SORT_KEYS)
     return {
         type: type === "income" || type === "expense" ? type : "all",
-        q: (p.get("q") ?? "").trim(),
+        q: "",
         filtros,
         sort: s ? { key: s.id as "date" | "amount", dir: s.desc ? "desc" : "asc" } : { key: "date", dir: "desc" },
         page: parsePage(p.get("page")) + 1,
@@ -126,7 +129,6 @@ export function escreverFiltrosNaUrl(estado: EstadoDaLista, base: URLSearchParam
     const out = new URLSearchParams(base)
     for (const k of ["type", "q", "f", "sort", "page", ...PARAMS_ANTIGOS]) out.delete(k)
     if (estado.type !== "all") out.set("type", estado.type)
-    if (estado.q.trim()) out.set("q", estado.q.trim())
     // `f=` vazio é "sem filtro de propósito": a leitura não põe o período padrão.
     out.set("f", serializeFilters(estado.filtros) ?? "")
     if (!(estado.sort.key === "date" && estado.sort.dir === "desc")) {

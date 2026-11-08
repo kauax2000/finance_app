@@ -37,13 +37,13 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("transactions-table")
     })
 
-    it("o cabeçalho tem três pesos e o convidado só vê a criação", () => {
+    it("o cabeçalho só importa e exporta: criar mora no + Adicionar da barra lateral", () => {
         expect(f).toMatch(/<PageHeader collapse>/)
         expect(f).toMatch(/<PageHeaderTitle asChild>[\s\S]{0,80}?<p aria-hidden="true">Transações<\/p>/)
-        expect(f).toContain("semReceita={convidado}")
+        expect(f).not.toContain("TransactionNewSplitButton")
         const acoes = f.slice(f.indexOf("<PageHeaderActions"), f.indexOf("</PageHeaderActions>"))
-        expect(acoes).toMatch(/convidado \? null[\s\S]*variant="tertiary"[\s\S]*Exportar[\s\S]*variant="secondary"[\s\S]*Importar/)
-        expect(acoes).toContain("<TransactionNewSplitButton")
+        expect(f).toMatch(/convidado \? null : \(\s*<PageHeaderActions>/)
+        expect(acoes).toMatch(/variant="tertiary"[\s\S]*Exportar[\s\S]*variant="primary"[\s\S]*Importar/)
     })
 
     it("o convidado não vê Importar nem Exportar no ⋯, nem o Confirmar todos (spec §12)", () => {

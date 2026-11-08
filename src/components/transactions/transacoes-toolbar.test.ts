@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { Category, CreditCard, Project } from "@/lib/supabase"
 import { CAMPOS_BASE, SEM_CATEGORIA } from "@/lib/transactions/filtros"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import type { FilterValue } from "@/components/ui/filter-bar"
-import { buscaComQDeFora, esperaDaBusca, filtrosDaPessoa } from "./transacoes-toolbar"
+import { filtrosDaPessoa } from "./transacoes-toolbar"
 import { montarCampos, podarCategoriasDoTipo, semCamposOcultos, type DadosDosCampos } from "./use-campos-de-filtro"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -128,38 +128,5 @@ describe("filtrosDaPessoa", () => {
     it("não conta o período padrão", () => {
         expect(filtrosDaPessoa([{ field: "periodo", operator: "is", values: ["este-mes"] }])).toBe(0)
         expect(filtrosDaPessoa([{ field: "periodo", operator: "is", values: ["ultimos-7"] }])).toBe(1)
-    })
-})
-
-describe("esperaDaBusca", () => {
-    afterEach(() => vi.useRealTimers())
-
-    it("grava 300ms depois da última tecla, com o texto aparado", () => {
-        vi.useFakeTimers()
-        const gravar = vi.fn()
-        const e = esperaDaBusca(300)
-        e.digitou("me", "", gravar)
-        vi.advanceTimersByTime(200)
-        e.digitou("merc ", "", gravar)
-        vi.advanceTimersByTime(299)
-        expect(gravar).not.toHaveBeenCalled()
-        vi.advanceTimersByTime(1)
-        expect(gravar).toHaveBeenCalledExactlyOnceWith("merc")
-    })
-
-    it("não grava o eco nem depois de cancelar (desmontar)", () => {
-        vi.useFakeTimers()
-        const gravar = vi.fn()
-        const e = esperaDaBusca(300)
-        e.digitou("merc ", "merc", gravar)
-        e.digitou("uber", "", gravar)
-        e.cancelar()
-        vi.advanceTimersByTime(1000)
-        expect(gravar).not.toHaveBeenCalled()
-    })
-
-    it("o campo segue o q de fora, menos o eco", () => {
-        expect(buscaComQDeFora("merc", "")).toBe("")
-        expect(buscaComQDeFora("merc ", "merc")).toBe("merc ")
     })
 })

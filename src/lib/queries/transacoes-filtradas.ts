@@ -44,15 +44,19 @@ export function aplicarFiltros<B>(q: B, estado: Pick<EstadoDaLista, "type" | "q"
     let b = q as unknown as Q
     if (estado.type !== "all") b = b.eq("type", estado.type)
 
-    const busca = estado.q.trim()
-    if (busca) {
-        const seguro = busca.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")
+    const contem = (texto: string) => {
+        const seguro = texto.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")
         b = b.ilike("description", `%${seguro}%`)
     }
+    if (estado.q.trim()) contem(estado.q.trim())
 
     for (const { field, operator, values } of estado.filtros) {
         const nega = operator === "is-not"
         switch (field) {
+            case "descricao": {
+                if (values[0]?.trim()) contem(values[0].trim())
+                break
+            }
             case "periodo": {
                 const r = filterPeriodRange(values)
                 if (r) b = b.gte("date", filterRangeStartIso(r.from)).lte("date", filterRangeEndIso(r.to))

@@ -15,9 +15,9 @@ const X = "33333333-3333-4333-8333-333333333333"
 const ESTE_MES = { field: "periodo", operator: "is", values: ["este-mes"] }
 
 describe("CAMPOS_BASE", () => {
-    it("tem os 14 campos na ordem da spec, plano e assinatura de valor único", () => {
+    it("tem os 15 campos na ordem da spec, plano e assinatura de valor único", () => {
         expect(CAMPOS_BASE.map((c) => c.id)).toEqual([
-            "periodo", "categoria", "pagamento", "cartao", "valor", "conferir", "captura",
+            "periodo", "descricao", "categoria", "pagamento", "cartao", "valor", "conferir", "captura",
             "pessoa", "pagou", "projeto", "parcelada", "plano", "assinatura", "recorrente",
         ])
         for (const id of ["plano", "assinatura"]) {
@@ -108,21 +108,21 @@ describe("lerFiltrosDaUrl", () => {
         ])
     })
 
-    it("q sozinho busca em tudo: sem o período padrão nem migrar", () => {
+    it("q (o Ver todas da paleta) vira o token Descrição, busca em tudo e migra", () => {
         const r = ler("q=uber")
-        expect(r.filtros).toEqual([])
-        expect(r.q).toBe("uber")
-        expect(r.migrou).toBe(false)
+        expect(r.filtros).toEqual([{ field: "descricao", operator: "contains", values: ["uber"] }])
+        expect(r.q).toBe("")
+        expect(r.migrou).toBe(true)
         expect(ler("q=%20%20").filtros).toEqual([ESTE_MES])
     })
 
     it("q é aparado", () => {
-        expect(ler("q=%20uber%20").q).toBe("uber")
+        expect(ler("q=%20uber%20").filtros).toEqual([{ field: "descricao", operator: "contains", values: ["uber"] }])
     })
 
-    it("type, q, sort e page", () => {
-        const r = ler("type=expense&q=uber&sort=amount.asc&page=3&f=conferir:is")
-        expect(r).toMatchObject({ type: "expense", q: "uber", sort: { key: "amount", dir: "asc" }, page: 3 })
+    it("type, sort e page", () => {
+        const r = ler("type=expense&sort=amount.asc&page=3&f=conferir:is")
+        expect(r).toMatchObject({ type: "expense", q: "", sort: { key: "amount", dir: "asc" }, page: 3 })
     })
 })
 
@@ -130,11 +130,12 @@ describe("escreverFiltrosNaUrl", () => {
     it("ida e volta, preservando as chaves alheias e sem as antigas", () => {
         const e: EstadoDaLista = {
             type: "expense",
-            q: "uber",
+            q: "",
             sort: { key: "amount", dir: "asc" },
             page: 3,
             filtros: [
                 { field: "periodo", operator: "is", values: ["ultimos-30"] },
+                { field: "descricao", operator: "contains", values: ["uber: 50%, ok"] },
                 { field: "categoria", operator: "is-not", values: [A, SEM_CATEGORIA] },
                 { field: "valor", operator: "between", values: ["10", "50"] },
                 { field: "conferir", operator: "is", values: [] },

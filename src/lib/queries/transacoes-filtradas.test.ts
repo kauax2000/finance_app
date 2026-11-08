@@ -58,6 +58,8 @@ describe("aplicarFiltros", () => {
     it("tipo all não filtra", () => expect(rodar([])).toEqual([]))
     it("busca escapa % _ e barra", () =>
         expect(rodar([], { q: "50% off" })).toContainEqual(["ilike", "description", "%50\\% off%"]))
+    it("token Descrição contém, com o mesmo escape", () =>
+        expect(rodar([f("descricao", "contains", ["50% off"])])).toContainEqual(["ilike", "description", "%50\\% off%"]))
     it("período este-mes", () => {
         const c = rodar([f("periodo", "is", ["este-mes"])])
         expect(c).toContainEqual(["gte", "date", "2026-11-01T00:00:00.000Z"])

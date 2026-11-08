@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/16/solid"
-import { QuickActionResourceLinks } from "@/components/layout/quick-actions"
-import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
 import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
 import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
@@ -12,7 +10,6 @@ import { ResumoDasTransacoes } from "@/components/transactions/resumo-das-transa
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
 import { TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
-import { TransactionNewSplitButton } from "@/components/transactions/transaction-new-split-button"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
 import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -29,7 +26,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
-import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
 import { ROUTES } from "@/config/navigation"
@@ -51,7 +47,6 @@ export default function TransactionsPageClient() {
     const { currentWorkspaceId, currentWorkspace, papel, loading: workspaceLoading, error: workspaceError } = useWorkspace()
     const convidado = papel === "guest"
     const membros = useMemberDirectoryQuery(currentWorkspaceId).data ?? []
-    const shell = useGlobalShellDialogsOptional()
     const duplicar = useDuplicarComoNova()
     const isMobile = useIsMobile()
     const [exportando, setExportando] = useState(false)
@@ -119,34 +114,19 @@ export default function TransactionsPageClient() {
                             <p aria-hidden="true">Transações</p>
                         </PageHeaderTitle>
                     </PageHeaderTitleRow>
-                    <PageHeaderActions>
-                        {convidado ? null : (
-                            <>
-                                <Button type="button" variant="tertiary" disabled={exportando} onClick={() => void exportar()}>
-                                    <ArrowDownTrayIcon aria-hidden />
-                                    Exportar
-                                </Button>
-                                <Button type="button" variant="secondary" onClick={() => pedidos.setImportar(true)}>
-                                    <ArrowUpTrayIcon aria-hidden />
-                                    Importar
-                                </Button>
-                            </>
-                        )}
-                        <TransactionNewSplitButton
-                            semReceita={convidado}
-                            menuAlign="end"
-                            menuSide="bottom"
-                            onNew={(mode) => shell?.openTransactionCreate(mode)}
-                            menuFooter={
-                                convidado ? undefined : (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <QuickActionResourceLinks onCloseMenu={() => {}} />
-                                    </>
-                                )
-                            }
-                        />
-                    </PageHeaderActions>
+                    {/* Criar mora no "+ Adicionar" da barra lateral: o cabeçalho só importa e exporta. */}
+                    {convidado ? null : (
+                        <PageHeaderActions>
+                            <Button type="button" variant="tertiary" disabled={exportando} onClick={() => void exportar()}>
+                                <ArrowDownTrayIcon aria-hidden />
+                                Exportar
+                            </Button>
+                            <Button type="button" variant="primary" onClick={() => pedidos.setImportar(true)}>
+                                <ArrowUpTrayIcon aria-hidden />
+                                Importar
+                            </Button>
+                        </PageHeaderActions>
+                    )}
                 </PageHeader>
             )}
 

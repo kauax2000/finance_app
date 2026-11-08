@@ -100,10 +100,9 @@ describe("o convidado só lança despesa (Ruling 11)", () => {
         expect(f).not.toMatch(/a\.id === "income"/)
     })
 
-    it("o Nova transação da tela de transações não oferece receita", () => {
-        const botao = fonte("src/components/transactions/transaction-new-split-button.tsx")
-        expect(botao).toMatch(/\{semReceita \? null : \(\s*<DropdownMenuItem onClick=\{\(\) => onNew\("income"\)\}>/)
-        expect(fonte("src/app/(app)/transactions/page-client.tsx")).toContain("semReceita={convidado}")
+    it("a tela de transações não tem botão de criar (o convidado cria pelo + Adicionar)", () => {
+        // A tela de Transações não tem mais botão de criar: o convidado cria pelo + Adicionar, que abre a despesa.
+        expect(fonte("src/app/(app)/transactions/page-client.tsx")).not.toContain("TransactionNewSplitButton")
     })
 
     it("o trilho do formulário esconde a Receita: na criação sai a aba, na edição sai o trilho", () => {

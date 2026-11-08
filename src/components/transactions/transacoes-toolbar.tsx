@@ -15,47 +15,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterBar, type FilterField, type FilterValue } from "@/components/ui/filter-bar"
-import { Toolbar, ToolbarActions, ToolbarSearch } from "@/components/ui/toolbar"
-
-const ESPERA_DA_BUSCA_MS = 300
-
-/** A espera da busca, sem React: cada tecla troca o pendente; `cancelar` o tira (ao desmontar). */
-export function esperaDaBusca(ms: number) {
-    let t: ReturnType<typeof setTimeout> | undefined
-    const cancelar = () => clearTimeout(t)
-    return {
-        digitou(busca: string, q: string, gravar: (q: string) => void) {
-            cancelar()
-            const alvo = busca.trim()
-            if (alvo !== q) t = setTimeout(() => gravar(alvo), ms)
-        },
-        cancelar,
-    }
-}
-
-/** O `q` mudou por fora (Limpar, voltar): o campo acompanha, menos quando é o eco do que já se digitou. */
-export const buscaComQDeFora = (busca: string, q: string) => (q !== busca.trim() ? q : busca)
+import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
 
 /** O período que a tela põe sozinha não conta como filtro no cabeçalho. */
 export function filtrosDaPessoa(filtros: FilterValue[]): number {
     return filtros.filter((f) => !(f.field === "periodo" && f.values.length === 1 && f.values[0] === "este-mes")).length
-}
-
-function useBuscaComEspera(q: string, gravar: (q: string) => void) {
-    const [busca, setBusca] = React.useState(q)
-    const [qVisto, setQVisto] = React.useState(q)
-    if (q !== qVisto) {
-        setQVisto(q)
-        setBusca(buscaComQDeFora(busca, q))
-    }
-    const gravarRef = React.useRef(gravar)
-    React.useLayoutEffect(() => {
-        gravarRef.current = gravar
-    })
-    const [espera] = React.useState(() => esperaDaBusca(ESPERA_DA_BUSCA_MS))
-    React.useEffect(() => espera.digitou(busca, q, (alvo) => gravarRef.current(alvo)), [espera, busca, q])
-    React.useEffect(() => espera.cancelar, [espera])
-    return [busca, setBusca] as const
 }
 
 export function TransacoesToolbar({
@@ -74,7 +38,6 @@ export function TransacoesToolbar({
     exportando?: boolean
 }) {
     const { estado, setEstado, pagina, carregando, workspaceAux, categories } = tela
-    const [busca, setBusca] = useBuscaComEspera(estado.q, (q) => setEstado({ q }))
     const raizDosFiltros = React.useRef<HTMLDivElement>(null)
 
     const semDados = !carregando && workspaceAux?.workspaceHasTransactions === false
@@ -128,14 +91,6 @@ export function TransacoesToolbar({
                         </DropdownMenu>
                     </ToolbarActions>
                 ) : null}
-                <ToolbarSearch
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    placeholder="Buscar descrição"
-                    aria-label="Buscar descrição"
-                    disabled={semDados}
-                    className="max-md:basis-full"
-                />
             </Toolbar>
             <div ref={raizDosFiltros}>
                 <FilterBar
