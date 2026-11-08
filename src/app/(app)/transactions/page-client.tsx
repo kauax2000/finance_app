@@ -27,7 +27,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { pedirDestinoDoCsv, salvarCsv } from "@/lib/data-table/csv"
+import { downloadCsv } from "@/lib/data-table/csv"
 import { numberBR } from "@/lib/formatters"
 import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
@@ -64,10 +64,6 @@ export default function TransactionsPageClient() {
 
     const exportar = async () => {
         if (!currentWorkspaceId || exportando) return
-        const arquivo = nomeDoCsv(new Date())
-        // O destino vem antes dos dados: o "Salvar como" exige o gesto do clique, e cancelar não busca nada.
-        const destino = await pedirDestinoDoCsv(arquivo)
-        if (!destino) return
         setExportando(true)
         try {
             // Com linhas marcadas, exporta só elas (as da tela, como o lote); sem, tudo o que o filtro acha.
@@ -81,8 +77,8 @@ export default function TransactionsPageClient() {
                           cartoes: tela.creditCards,
                       })
             const nome = new Map(membros.map((m) => [m.user_id, m.full_name || m.email]))
-            await salvarCsv(destino, arquivo, transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
-            // Só depois de gravado (no "Salvar como") ou do download começar.
+            // Download direto: o "Salvar como" abria uma segunda janela no navegador que recusa gravar.
+            downloadCsv(nomeDoCsv(new Date()), transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
             toastSuccess(mensagemDaExportacao(transactions.length, truncado))
         } catch (e) {
             console.error("Falha ao exportar os lançamentos.", e)

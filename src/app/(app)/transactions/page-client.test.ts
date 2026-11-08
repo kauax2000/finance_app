@@ -86,12 +86,11 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("window.confirm")
     })
 
-    it("exportar pede o destino antes, lê, grava e só então avisa", () => {
-        // O "Salvar como" vem no clique (exige o gesto), antes de buscar os dados.
-        expect(f).toMatch(/pedirDestinoDoCsv\(arquivo\)[\s\S]*fetchTransacoesParaExportar\(/)
-        expect(f).toContain("transacoesParaCsv(")
-        // O toast vem depois de gravar, e não ao escolher.
-        expect(f).toMatch(/await salvarCsv\(destino, arquivo,[\s\S]*toastSuccess\(mensagemDaExportacao\(/)
+    it("exportar leva as marcadas ou o filtro, baixa direto e só então avisa", () => {
+        expect(f).toMatch(/selecionadas\.length > 0[\s\S]*fetchTransacoesParaExportar\(/)
+        // Sem "Salvar como": ele abria uma segunda janela no navegador que recusava gravar.
+        expect(f).not.toContain("showSaveFilePicker")
+        expect(f).toMatch(/downloadCsv\(nomeDoCsv\([\s\S]*transacoesParaCsv\([\s\S]*toastSuccess\(mensagemDaExportacao\(/)
     })
 })
 
