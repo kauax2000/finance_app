@@ -54,6 +54,27 @@ export function paginaDepoisDeExcluir(pagina: number, excluidas: number, naPagin
     return excluidas >= naPagina && pagina > 1 ? pagina - 1 : pagina
 }
 
+/**
+ * A query atual sem `chaves`, partindo da URL mais nova: um `replace` anterior
+ * pode ter chegado depois do render, e partir do `qs` velho devolveria o que já saiu.
+ */
+export function urlSem(atual: string, chaves: readonly string[]): URLSearchParams {
+    const out = new URLSearchParams(atual)
+    for (const k of chaves) out.delete(k)
+    return out
+}
+
+/** Uma vez por valor: verdadeiro só na primeira vez que `valor` chega; `null` rearma. */
+export function primeiraVez(ref: { current: string | null }, valor: string | null): boolean {
+    if (valor == null) {
+        ref.current = null
+        return false
+    }
+    if (ref.current === valor) return false
+    ref.current = valor
+    return true
+}
+
 export type PedidoCompartilhado =
     | { chave: string; tipo?: "pdf" }
     | { erro: true; motivo: "recusado" | "indisponivel" }
@@ -81,15 +102,24 @@ export function useTransacoesDaTela() {
     const qs = searchParams?.toString() ?? ""
     const lido = useMemo(() => lerFiltrosDaUrl(new URLSearchParams(qs)), [qs])
     const [otimista, setOtimista] = useState<{ de: string; estado: EstadoDaLista } | null>(null)
+    // A URL andou: o otimista já cumpriu o papel (ou ficou velho) e sai.
+    if (otimista && otimista.de !== qs) setOtimista(null)
     const estado: EstadoDaLista = otimista?.de === qs ? otimista.estado : lido
     const estadoRef = useRef(estado)
     useLayoutEffect(() => {
         estadoRef.current = estado
     })
 
+    // A URL mais nova: a que chegou ou a última que escrevemos, o que vier depois.
+    const urlRef = useRef(qs)
+    useLayoutEffect(() => {
+        urlRef.current = qs
+    }, [qs])
+    /** Escreve a partir da URL mais nova, nunca do `qs` do render. */
     const substituir = useCallback(
-        (p: URLSearchParams) => {
-            const s = p.toString()
+        (montar: (atual: string) => URLSearchParams) => {
+            const s = montar(urlRef.current).toString()
+            urlRef.current = s
             router.replace(s ? `${pathname}?${s}` : pathname)
         },
         [router, pathname],
@@ -102,15 +132,15 @@ export function useTransacoesDaTela() {
             const novo: EstadoDaLista = { ...base, ...parcial, ...(volta ? { page: 1 } : {}) }
             estadoRef.current = novo
             setOtimista({ de: qs, estado: novo })
-            substituir(escreverFiltrosNaUrl(novo, new URLSearchParams(qs)))
+            substituir((atual) => escreverFiltrosNaUrl(novo, new URLSearchParams(atual)))
         },
         [qs, substituir],
     )
 
     // Parâmetros antigos (ou nenhum filtro) viram o formato novo, uma vez.
     useEffect(() => {
-        if (lido.migrou) substituir(escreverFiltrosNaUrl(lido, new URLSearchParams(qs)))
-    }, [lido, qs, substituir])
+        if (lido.migrou) substituir((atual) => escreverFiltrosNaUrl(lido, new URLSearchParams(atual)))
+    }, [lido, substituir])
 
     // --- Consultas
     // Só os campos do estado: o `migrou` da leitura não entra na chave.
@@ -126,7 +156,12 @@ export function useTransacoesDaTela() {
     })
     const resumoQuery = useQuery({
         queryKey: transacoesKeys.resumo(workspaceId ?? "__none__", estadoDoResumo),
-        queryFn: () => fetchResumoTransacoes({ workspaceId: workspaceId!, estado: estadoDaChave }),
+        // Só o que está na chave: ordem e página não mudam a soma.
+        queryFn: () =>
+            fetchResumoTransacoes({
+                workspaceId: workspaceId!,
+                estado: { ...estadoDoResumo, sort: { key: "date", dir: "desc" }, page: 1 },
+            }),
         enabled: workspaceId != null,
         placeholderData: keepPreviousData,
         staleTime: 60_000,
@@ -213,14 +248,12 @@ export function useTransacoesDaTela() {
                 if (error || !data) return
                 abrirDetalhe(data as Transaction)
             }
-            const resto = new URLSearchParams(qs)
-            resto.delete("txn")
-            substituir(resto)
+            substituir((atual) => urlSem(atual, ["txn"]))
         })()
         return () => {
             cancelado = true
         }
-    }, [txnLido, carregando, currentWorkspaceId, detalheEstado.aberto, txnNaUrl, transactions, abrirDetalhe, qs, substituir])
+    }, [txnLido, carregando, currentWorkspaceId, detalheEstado.aberto, txnNaUrl, transactions, abrirDetalhe, substituir])
 
     // --- Pedidos de abertura vindos da URL
     const [importar, setImportar] = useState(false)
@@ -233,31 +266,40 @@ export function useTransacoesDaTela() {
         const resto = consumirParametroImportar(searchParams)
         if (resto == null) return
         setImportar(true)
-        substituir(new URLSearchParams(resto))
+        substituir((atual) => urlSem(atual, ["importar"]))
     }, [searchParams, substituir])
 
     // `?new=1|receita|parcelada` abre a criação pela casca e sai da URL.
+    // O ref segura o segundo efeito do modo estrito e o `new` que um `replace`
+    // de outro efeito ainda carregava; rearma quando o `new` sai da URL.
     const newNaUrl = searchParams?.get("new") ?? null
+    const newConsumido = useRef<string | null>(null)
     useEffect(() => {
-        const pedido = newNaUrl != null ? CRIAR_DO_NEW[newNaUrl] : undefined
+        if (newNaUrl == null) {
+            primeiraVez(newConsumido, null)
+            return
+        }
+        const pedido = CRIAR_DO_NEW[newNaUrl]
         if (!pedido || carregando || !shell) return
+        if (!primeiraVez(newConsumido, newNaUrl)) return
         setCriar(pedido)
         shell.openTransactionCreate(MODO_DO_CRIAR[pedido])
-        const resto = new URLSearchParams(qs)
-        resto.delete("new")
-        substituir(resto)
-    }, [newNaUrl, carregando, shell, qs, substituir])
+        substituir((atual) => urlSem(atual, ["new"]))
+    }, [newNaUrl, carregando, shell, substituir])
 
     // `?frase=` (o compartilhar do Android) abre a criação com a frase escrita, sem aplicar.
+    const fraseConsumida = useRef<string | null>(null)
     useEffect(() => {
         const texto = consumirParametroFrase(searchParams)
-        if (texto == null || !shell) return
+        if (texto == null) {
+            primeiraVez(fraseConsumida, null)
+            return
+        }
+        if (!shell || !primeiraVez(fraseConsumida, texto)) return
         setFrase(texto)
         shell.openTransactionCreate("expense", { frase: texto })
-        const resto = new URLSearchParams(qs)
-        for (const k of PARAMETROS_DA_FRASE) resto.delete(k)
-        substituir(resto)
-    }, [searchParams, shell, qs, substituir])
+        substituir((atual) => urlSem(atual, PARAMETROS_DA_FRASE))
+    }, [searchParams, shell, substituir])
 
     // `?compartilhado=` / `?compartilhado_erro=1`: só lê e tira da URL. A leitura
     // do Cache Storage (que apaga o arquivo) é da tela, pelo pedido.
@@ -275,10 +317,14 @@ export function useTransacoesDaTela() {
                     ? { chave: pedido.chave, tipo: "pdf" }
                     : { chave: pedido.chave },
         )
-        const resto = new URLSearchParams(qs)
-        for (const k of PARAMETROS_DO_COMPARTILHADO) resto.delete(k)
-        substituir(resto)
-    }, [searchParams, qs, substituir])
+        substituir((atual) => urlSem(atual, PARAMETROS_DO_COMPARTILHADO))
+    }, [searchParams, substituir])
+    const dispensarCompartilhado = useCallback(() => setCompartilhado(undefined), [])
+    /** A tela leu `criar`/`frase` (a casca já abriu a criação): limpa os dois. */
+    const consumirPedido = useCallback(() => {
+        setCriar(null)
+        setFrase(undefined)
+    }, [])
 
     // --- Excluir: abre a confirmação; confirmar exclui, volta a página vazia e recarrega.
     const [pendente, setPendente] = useState<{ ids: string[]; linhas: Transaction[] } | null>(null)
@@ -286,9 +332,14 @@ export function useTransacoesDaTela() {
     const excluir = useCallback(
         (ids: string[]) => {
             if (!ids.length) return
-            setPendente({ ids, linhas: transactions.filter((t) => ids.includes(t.id)) })
+            // A linha aberta no detalhe pode ter saído da página: sem ela, o cascade da parcelada se perdia.
+            const linhas = ids.flatMap((id) => {
+                const t = transactions.find((x) => x.id === id) ?? (detalheAoVivo?.id === id ? detalheAoVivo : null)
+                return t ? [t] : []
+            })
+            setPendente({ ids, linhas })
         },
-        [transactions],
+        [transactions, detalheAoVivo],
     )
     const confirmarExclusao = useCallback(async () => {
         if (!pendente || !currentWorkspaceId) return false
@@ -302,14 +353,15 @@ export function useTransacoesDaTela() {
             if (!ok) return false
             setPendente(null)
             if (detalheEstado.t && pendente.ids.includes(detalheEstado.t.id)) fecharDetalhe()
-            const pagina = paginaDepoisDeExcluir(estadoRef.current.page, pendente.ids.length, transactions.length)
+            const reais = transactions.filter((t) => !isProjectedTransactionRow(t)).length
+            const pagina = paginaDepoisDeExcluir(estadoRef.current.page, pendente.ids.length, reais)
             if (pagina !== estadoRef.current.page) setEstado({ page: pagina })
             await invalidar()
             return true
         } finally {
             setExcluindo(false)
         }
-    }, [pendente, currentWorkspaceId, detalheEstado.t, fecharDetalhe, transactions.length, setEstado, invalidar])
+    }, [pendente, currentWorkspaceId, detalheEstado.t, fecharDetalhe, transactions, setEstado, invalidar])
     const cancelarExclusao = useCallback(() => {
         if (!excluindo) setPendente(null)
     }, [excluindo])
@@ -349,7 +401,8 @@ export function useTransacoesDaTela() {
             /** Já aberta na criação pela casca; fica para leitura. */
             frase,
             compartilhado,
-            dispensarCompartilhado: () => setCompartilhado(undefined),
+            dispensarCompartilhado,
+            consumirPedido,
         },
         excluir,
         exclusao: { pendente, excluindo, confirmar: confirmarExclusao, cancelar: cancelarExclusao },

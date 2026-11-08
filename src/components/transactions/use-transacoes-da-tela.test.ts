@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { Transaction } from "@/lib/supabase"
 import { PROJECTED_TRANSACTION_ID_PREFIX } from "@/lib/category-expense-month-rows"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { paginaDepoisDeExcluir, vizinhosDe } from "./use-transacoes-da-tela"
+import { paginaDepoisDeExcluir, primeiraVez, urlSem, vizinhosDe } from "./use-transacoes-da-tela"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -41,6 +41,27 @@ describe("paginaDepoisDeExcluir", () => {
     })
 })
 
+describe("urlSem", () => {
+    it("tira só as chaves pedidas e preserva o resto da URL mais nova", () => {
+        const atual = "f=periodo.is.este-mes&new=1&txn=abc&frase=oi&frase_titulo=t"
+        expect(urlSem(atual, ["new"]).toString()).toBe("f=periodo.is.este-mes&txn=abc&frase=oi&frase_titulo=t")
+        expect(urlSem(atual, ["frase", "frase_titulo", "frase_url"]).toString()).toBe("f=periodo.is.este-mes&new=1&txn=abc")
+        expect(urlSem("", ["new"]).toString()).toBe("")
+    })
+})
+
+describe("primeiraVez", () => {
+    it("consome um valor uma vez só, e rearma quando ele sai", () => {
+        const ref = { current: null as string | null }
+        expect(primeiraVez(ref, "1")).toBe(true)
+        expect(primeiraVez(ref, "1")).toBe(false) // o segundo efeito do modo estrito
+        expect(primeiraVez(ref, "receita")).toBe(true)
+        expect(primeiraVez(ref, null)).toBe(false)
+        expect(ref.current).toBeNull()
+        expect(primeiraVez(ref, "receita")).toBe(true)
+    })
+})
+
 describe("use-transacoes-da-tela (fonte)", () => {
     const fonte = semComentarios(lerFonte("src/components/transactions/use-transacoes-da-tela.ts"))
 
@@ -52,6 +73,12 @@ describe("use-transacoes-da-tela (fonte)", () => {
         expect(fonte).toContain("lerFiltrosDaUrl")
         expect(fonte).toContain("escreverFiltrosNaUrl")
         expect(fonte).toContain("router.replace")
+    })
+
+    it("os pedidos únicos passam pela guarda e escrevem a partir da URL mais nova", () => {
+        expect(fonte.match(/primeiraVez\((newConsumido|fraseConsumida), (newNaUrl|texto)\)/g)?.length).toBe(2)
+        expect(fonte).not.toMatch(/substituir\([^)]*URLSearchParams\(qs/)
+        expect(fonte).not.toMatch(/escreverFiltrosNaUrl\([^)]*URLSearchParams\(qs/)
     })
 
     it("mantém o número anterior nas três consultas", () => {
