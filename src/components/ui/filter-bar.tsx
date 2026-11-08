@@ -1555,9 +1555,18 @@ const totalDoAno = (meses: (number | null)[] | undefined) =>
     ? (meses as number[]).reduce((a, b) => a + b, 0)
     : null
 
-const primeiroDoMes = (ymd: string) => {
-  const d = parseYmdLocal(ymd)!
-  return new Date(d.getFullYear(), d.getMonth(), 1)
+/** O intervalo que a grade de meses pinta: meses inteiros ou o ano inteiro (Jan–Dez escolhido na grade é um ano); dias não pintam. */
+export function mesesDaGrade(valores: string[]): { from: Date; to: Date } | undefined {
+  const r = filterPeriodRange(valores)
+  const tipo = r ? classifyPeriod(r.from, r.to) : null
+  if (tipo?.kind === "months") {
+    return {
+      from: new Date(tipo.from.year, tipo.from.month, 1),
+      to: new Date(tipo.to.year, tipo.to.month, 1),
+    }
+  }
+  if (tipo?.kind === "year") return { from: new Date(tipo.year, 0, 1), to: new Date(tipo.year, 11, 1) }
+  return undefined
 }
 
 /**
@@ -1585,7 +1594,9 @@ function EditorDePeriodo({
   const tipo = periodo ? classifyPeriod(periodo.from, periodo.to) : null
   const [abaInicial] = React.useState(() => abaInicialDoPeriodo(valores))
   const [aba, setAba] = React.useState<AbaDoPeriodo>(abaInicial)
-  const anoDoValor = periodo ? primeiroDoMes(periodo.from).getFullYear() : new Date().getFullYear()
+  const valorDaGrade = mesesDaGrade(valores)
+  // O ano em que a grade abre (o do valor que ela pinta, senão o atual) é o dos totais pedidos.
+  const anoDoValor = (valorDaGrade?.from ?? new Date()).getFullYear()
   const [anoVisivel, setAnoVisivel] = React.useState(anoDoValor)
   const anoAtual = new Date().getFullYear()
   const anos = Array.from({ length: 6 }, (_, i) => anoAtual - i)
@@ -1657,14 +1668,7 @@ function EditorDePeriodo({
         <MonthGrid
           mode="range"
           className="w-full pointer-coarse:w-full"
-          value={
-            tipo?.kind === "months"
-              ? {
-                  from: new Date(tipo.from.year, tipo.from.month, 1),
-                  to: new Date(tipo.to.year, tipo.to.month, 1),
-                }
-              : undefined
-          }
+          value={valorDaGrade}
           onChange={(r) => {
             const m = monthRangeYmd(
               { year: r.from.getFullYear(), month: r.from.getMonth() },

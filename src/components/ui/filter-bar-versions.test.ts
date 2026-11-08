@@ -5,6 +5,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   abaInicialDoPeriodo,
+  mesesDaGrade,
   FilterBar,
   FILTER_PERIOD_DAY_PRESET_IDS,
   FILTER_PERIOD_PRESETS,
@@ -446,5 +447,22 @@ describe("o período em abas", () => {
     // Tipo: o campo de período aceita `totals`.
     const comTotais: FilterField = { id: "p", label: "P", type: "period", totals: async () => Array(12).fill(null) }
     expect(comTotais.type).toBe("period")
+  })
+})
+
+describe("o período na grade de meses (revisão)", () => {
+  it("meses e o ano inteiro pintam a grade; dias não", () => {
+    expect(mesesDaGrade(["2026-08-01", "2026-10-31"])).toEqual({ from: new Date(2026, 7, 1), to: new Date(2026, 9, 1) })
+    // Jan–Dez escolhido na grade é um ano: a grade continua mostrando os doze.
+    expect(mesesDaGrade(["2025-01-01", "2025-12-31"])).toEqual({ from: new Date(2025, 0, 1), to: new Date(2025, 11, 1) })
+    expect(mesesDaGrade(["2025-03-01", "2025-03-15"])).toBeUndefined()
+    expect(mesesDaGrade([])).toBeUndefined()
+  })
+
+  it("os totais carregam o ano em que a grade abre — a mesma regra nos dois lugares", () => {
+    const BLOCO = CODIGO.slice(CODIGO.indexOf("function EditorDePeriodo"), CODIGO.indexOf("type ListaProps"))
+    expect(BLOCO).toContain("const valorDaGrade = mesesDaGrade(valores)")
+    expect(BLOCO).toContain("const anoDoValor = (valorDaGrade?.from ?? new Date()).getFullYear()")
+    expect(BLOCO).toMatch(/<MonthGrid[\s\S]*?value=\{valorDaGrade\}/)
   })
 })
