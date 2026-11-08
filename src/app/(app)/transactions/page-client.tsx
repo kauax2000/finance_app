@@ -6,7 +6,6 @@ import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
 import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
 import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
 import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
-import { ResumoDasTransacoes } from "@/components/transactions/resumo-das-transacoes"
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
 import { TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
@@ -139,8 +138,6 @@ export default function TransactionsPageClient() {
                 onConfirmarTodos={tela.confirmarTodosAConferir}
                 podeConfirmarTodos={!convidado}
             />
-
-            <ResumoDasTransacoes resumo={tela.resumo.data} pendente={tela.resumo.isFetching} />
 
             <TransacoesTabela
                 barra={

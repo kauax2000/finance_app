@@ -29,7 +29,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
     it("compõe as peças novas", () => {
         expect(importa(f, "useTransacoesDaTela", "@/components/transactions/use-transacoes-da-tela")).toBe(true)
         expect(importa(f, "TransacoesToolbar", "@/components/transactions/transacoes-toolbar")).toBe(true)
-        expect(importa(f, "ResumoDasTransacoes", "@/components/transactions/resumo-das-transacoes")).toBe(true)
+        expect(f).not.toContain("ResumoDasTransacoes")
         expect(importa(f, "AvisoAConferir", "@/components/transactions/aviso-a-conferir")).toBe(true)
         expect(importa(f, "TransacoesTabela", "@/components/transactions/transacoes-tabela")).toBe(true)
         expect(importa(f, "CompartilhadoAviso", "@/components/transactions/compartilhado-aviso")).toBe(true)
@@ -119,9 +119,9 @@ describe("o aviso do compartilhado (spec §9)", () => {
 describe("o esqueleto da página (spec §6.5)", () => {
     const esqueleto = fonte("src/components/transactions/transactions-page-skeleton.tsx")
 
-    it("resumo, filtros e tabela num SkeletonGroup", () => {
+    it("filtros e tabela num SkeletonGroup, sem a linha de resumo", () => {
         expect(esqueleto).toContain("<SkeletonGroup")
-        expect(esqueleto).toContain("<ResumoDasTransacoes")
+        expect(esqueleto).not.toContain("ResumoDasTransacoes")
         expect(esqueleto).toContain("<FilterBarSkeleton")
         expect(esqueleto).toMatch(/<TableSkeleton[\s\S]*group=\{false\}/)
         expect([...esqueleto.matchAll(/function\s+([A-Z]\w*)/g)].map((m) => m[1])).toEqual(["TransactionsPageSkeleton"])

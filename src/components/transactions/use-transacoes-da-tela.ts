@@ -29,7 +29,7 @@ import {
 } from "@/lib/transactions-list-search-params"
 import { marcarTodosConferidos } from "@/lib/transactions/mutations"
 import { escreverFiltrosNaUrl, lerFiltrosDaUrl, type EstadoDaLista } from "@/lib/transactions/filtros"
-import { fetchResumoTransacoes, fetchTransacoesPagina, type Resumo } from "@/lib/queries/transacoes-filtradas"
+import { fetchTransacoesPagina } from "@/lib/queries/transacoes-filtradas"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { transacoesKeys } from "@/lib/queries/keys"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
@@ -186,24 +186,11 @@ export function useTransacoesDaTela() {
 
     // --- Consultas
     // Só os campos do estado: o `migrou` da leitura não entra na chave.
-    const estadoDoResumo = { type: estado.type, q: estado.q, filtros: estado.filtros }
-    const estadoDaChave: EstadoDaLista = { ...estadoDoResumo, sort: estado.sort, page: estado.page }
+    const estadoDaChave: EstadoDaLista = { type: estado.type, q: estado.q, filtros: estado.filtros, sort: estado.sort, page: estado.page }
 
     const paginaQuery = useQuery({
         queryKey: transacoesKeys.pagina(workspaceId ?? "__none__", estadoDaChave),
         queryFn: () => fetchTransacoesPagina({ workspaceId: workspaceId!, estado: estadoDaChave }),
-        enabled: workspaceId != null,
-        placeholderData: keepPreviousData,
-        staleTime: 60_000,
-    })
-    const resumoQuery = useQuery({
-        queryKey: transacoesKeys.resumo(workspaceId ?? "__none__", estadoDoResumo),
-        // Só o que está na chave: ordem e página não mudam a soma.
-        queryFn: () =>
-            fetchResumoTransacoes({
-                workspaceId: workspaceId!,
-                estado: { ...estadoDoResumo, sort: { key: "date", dir: "desc" }, page: 1 },
-            }),
         enabled: workspaceId != null,
         placeholderData: keepPreviousData,
         staleTime: 60_000,
@@ -476,7 +463,6 @@ export function useTransacoesDaTela() {
             error: paginaQuery.error,
             refetch: paginaQuery.refetch,
         },
-        resumo: { data: resumoQuery.data as Resumo | undefined, isFetching: resumoQuery.isFetching },
         contagemAConferir: aConferirQuery.data ?? 0,
         detalhe: {
             aberto: detalheEstado.aberto ? detalheAoVivo : null,

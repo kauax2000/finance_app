@@ -23,7 +23,6 @@ vi.mock("@/lib/supabase", () => ({
 
 import {
     aplicarFiltros,
-    fetchResumoTransacoes,
     fetchTransacoesParaExportar,
     fetchTransacoesPagina,
     LIMITE_DE_SOMA,
@@ -108,47 +107,7 @@ describe("aplicarFiltros", () => {
     })
 })
 
-const linha = (type: string, amount: number, extra: object = {}) => ({
-    type,
-    amount,
-    payment_method: "pix",
-    payment_credit_card_id: null,
-    category: { type },
-    ...extra,
-})
 const estado = { type: "all" as const, q: "", filtros: [], sort: { key: "date" as const, dir: "desc" as const }, page: 1 }
-
-describe("fetchResumoTransacoes", () => {
-    beforeEach(() => {
-        h.linhas = []
-        h.selects = []
-        h.ranges = []
-    })
-
-    it("estorno no cartão abate a saída e não é entrada", async () => {
-        h.linhas = [
-            linha("expense", 100),
-            linha("income", 300),
-            linha("income", 20, { payment_method: "credit_card", payment_credit_card_id: "c1", category: { type: "expense" } }),
-        ]
-        const r = await fetchResumoTransacoes({ workspaceId: "w", estado })
-        expect(r).toEqual({ saidas: 80, entradas: 300, resultado: 220, quantidade: 3, truncado: false })
-        expect(h.selects[0]).toBe("type, amount, payment_method, payment_credit_card_id, category:categories(type)")
-    })
-
-    it("acima de 10.000 linhas soma as primeiras e marca truncado", async () => {
-        h.linhas = Array.from({ length: LIMITE_DE_SOMA + 1 }, (_, i) => linha("expense", i === LIMITE_DE_SOMA ? 999999 : 1))
-        const r = await fetchResumoTransacoes({ workspaceId: "w", estado })
-        expect(r.truncado).toBe(true)
-        expect(r.saidas).toBe(LIMITE_DE_SOMA)
-        expect(r.quantidade).toBe(LIMITE_DE_SOMA)
-    })
-
-    it("exatamente 10.000 não trunca", async () => {
-        h.linhas = Array.from({ length: LIMITE_DE_SOMA }, () => linha("expense", 1))
-        expect((await fetchResumoTransacoes({ workspaceId: "w", estado })).truncado).toBe(false)
-    })
-})
 
 describe("fetchTransacoesParaExportar e página", () => {
     beforeEach(() => {

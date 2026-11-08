@@ -1,6 +1,5 @@
 import { supabase, type CreditCard, type Transaction } from "@/lib/supabase"
 import { filterPeriodRange } from "@/components/ui/filter-bar"
-import { ehEstornoNoCartao } from "../../../supabase/functions/_shared/credit-card-cycle"
 import { filterRangeEndIso, filterRangeStartIso } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { SEM_CATEGORIA, type EstadoDaLista } from "@/lib/transactions/filtros"
@@ -39,7 +38,7 @@ type Q = {
     ilike(c: string, v: string): Q
 }
 
-/** Uma regra de filtro, três leitores: a página, o resumo e a exportação. */
+/** Uma regra de filtro, dois leitores: a página e a exportação. */
 export function aplicarFiltros<B>(q: B, estado: Pick<EstadoDaLista, "type" | "q" | "filtros">): B {
     let b = q as unknown as Q
     if (estado.type !== "all") b = b.eq("type", estado.type)
@@ -163,41 +162,6 @@ async function lerAteOLimite<T>(pagina: (from: number, to: number) => PromiseLik
     }
     const truncado = rows.length > LIMITE_DE_SOMA
     return { rows: truncado ? rows.slice(0, LIMITE_DE_SOMA) : rows, truncado }
-}
-
-export type Resumo = { saidas: number; entradas: number; resultado: number; quantidade: number; truncado: boolean }
-
-type LinhaDoResumo = { type: string; amount: number; payment_method: string | null; payment_credit_card_id: string | null }
-
-export async function fetchResumoTransacoes({ workspaceId, estado }: Args): Promise<Resumo> {
-    const { rows, truncado } = await lerAteOLimite<LinhaDoResumo>((from, to) =>
-        ordenar(
-            aplicarFiltros(
-                supabase
-                    .from("transactions")
-                    // payment_credit_card_id: sem ele o estorno no cartão (ehEstornoNoCartao) nunca casa.
-                    .select("type, amount, payment_method, payment_credit_card_id, category:categories(type)")
-                    .eq("workspace_id", workspaceId),
-                estado,
-            ),
-            { key: "date", dir: "desc" },
-        ).range(from, to) as unknown as PromiseLike<{ data: LinhaDoResumo[] | null; error: { message: string } | null }>,
-    )
-    let centavosSaida = 0
-    let centavosEntrada = 0
-    for (const r of rows) {
-        const c = Math.round(Number(r.amount || 0) * 100)
-        if (r.type === "expense") centavosSaida += c
-        else if (ehEstornoNoCartao(r)) centavosSaida -= c
-        else if (r.type === "income") centavosEntrada += c
-    }
-    return {
-        saidas: centavosSaida / 100,
-        entradas: centavosEntrada / 100,
-        resultado: (centavosEntrada - centavosSaida) / 100,
-        quantidade: rows.length,
-        truncado,
-    }
 }
 
 export async function fetchTransacoesParaExportar({

@@ -59,7 +59,7 @@ const CASES: Case[] = [
             queryRoot.membersPageBundle,
             // a busca da paleta (⌘K)
             queryRoot.transactionsSearch,
-            // a página de Transações: lista, resumo e contagem a conferir
+            // a página de Transações: lista e contagem a conferir
             queryRoot.transacoes,
         ],
     },

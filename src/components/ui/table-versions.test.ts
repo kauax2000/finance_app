@@ -683,9 +683,9 @@ describe("escada do Table", () => {
       PANEL_CODE.indexOf("function TablePanelToolbar"),
       PANEL_CODE.indexOf("function TablePanelFooter")
     )
-    // O fio transparente das laterais alinha o texto com as células; tinta, não.
+    // A barra ocupa a largura inteira da moldura, sem recuo lateral; tinta, não.
     // Sem recuo vertical, e a altura do botão de ação (`sm`): a seleção não faz a barra pular.
-    expect(barra).toContain('cn("min-h-7 border-x border-transparent py-0", className)')
+    expect(barra).toContain('cn("min-h-7 px-0 py-0", className)')
     expect(barra).not.toMatch(/\bbg-/)
     expect(barra).not.toMatch(/border-border|border-b(?:\s|")/)
   })

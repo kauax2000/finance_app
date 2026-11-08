@@ -118,7 +118,7 @@ describe("use-transacoes-da-tela (fonte)", () => {
         expect(efeito.slice(limpa)).toContain("abrirDetalhe")
     })
 
-    it("mantém o número anterior nas três consultas", () => {
-        expect(fonte.match(/placeholderData: keepPreviousData/g)?.length).toBe(3)
+    it("mantém o número anterior nas duas consultas (lista e a conferir)", () => {
+        expect(fonte.match(/placeholderData: keepPreviousData/g)?.length).toBe(2)
     })
 })

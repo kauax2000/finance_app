@@ -242,7 +242,8 @@ function TablePanelToolbar({
   return (
     <CardToolbar
       data-slot="table-panel-toolbar"
-      className={cn("min-h-7 border-x border-transparent py-0", className)}
+      // A barra fica fora da moldura e ocupa a largura dela inteira, sem o recuo do cartão (pedido do dono, 07/11/2026).
+      className={cn("min-h-7 px-0 py-0", className)}
       {...props}
     />
   )

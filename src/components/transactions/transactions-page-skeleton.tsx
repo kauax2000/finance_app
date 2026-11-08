@@ -1,4 +1,3 @@
-import { ResumoDasTransacoes } from "@/components/transactions/resumo-das-transacoes"
 import { TablePanel } from "@/components/ui/data-table"
 import { FilterBarSkeleton } from "@/components/ui/filter-bar"
 import { SkeletonGroup } from "@/components/ui/skeleton"
@@ -27,11 +26,10 @@ const COLUNAS: TableSkeletonColumn[] = [
     { actions: true, className: "hidden md:table-cell" },
 ]
 
-/** O resumo (2 cartões no telefone, 4 no desktop), os filtros e a tabela, num grupo só. */
+/** Os filtros e a tabela, num grupo só. */
 export function TransactionsPageSkeleton({ rowCount = DEFAULT_ROW_COUNT }: TransactionsPageSkeletonProps) {
     return (
         <SkeletonGroup className="flex min-w-0 max-w-full flex-col gap-4" label="Carregando transações…" delay>
-            <ResumoDasTransacoes resumo={undefined} pendente={false} />
             <FilterBarSkeleton group={false} />
             <TablePanel>
                 <TableSkeleton columns={COLUNAS} rows={rowCount} group={false} />
