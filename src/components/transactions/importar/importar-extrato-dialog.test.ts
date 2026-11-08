@@ -84,7 +84,14 @@ describe("a conferência", () => {
         expect(conferir).toContain("linhas[LIMITE].offsetTop - linhas[0].offsetTop")
         expect(conferir).toContain('viewportClassName={grande ? "max-h-(--lista-h)" : undefined}')
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
-        expect(conferir).toContain("order-last basis-full md:order-none md:basis-auto")
+        // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
+        expect(conferir).toContain('<div className="hidden md:block md:w-40">')
+        expect(conferir).toMatch(/<span className="md:hidden">\s*\{formatYmdPtBr\(item\.data\)\.slice\(0, 5\)\} · \{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}/)
+        expect(conferir).not.toContain("order-last basis-full")
+        // Trocar a de uma linha no telefone: marcar e usar o Pôr categoria, que o aviso diz.
+        expect(conferir).toContain("Marque e use Pôr categoria para trocar")
+        // Com uma marcada só, a folha nomeia o lançamento.
+        expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
         expect(conferir).toMatch(/grande \? \([\s\S]*?Ver os \$\{numberBR\(imp\.visiveis\.length\)\} lançamentos/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
@@ -102,6 +109,7 @@ describe("a conferência", () => {
 
     it("Pôr categoria compara o tipo da categoria (estorno do cartão é despesa), e a folha dele vira gaveta no telefone", () => {
         expect(conferir).toContain("new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1")
+        expect(conferir.match(/disabled=\{porCategoriaDesligado\}/g)?.length).toBe(2)
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
     })
 

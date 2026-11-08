@@ -171,7 +171,13 @@ export function ImportarExtratoDialog({
                             {imp.passo === "feito"
                                 ? "Os lançamentos já estão na lista."
                                 : imp.passo === "conferir"
-                                  ? `${periodo ? `De ${periodoPtBr(periodo)}. ` : ""}Desmarque o que não quer trazer.`
+                                  ? (
+                                    <>
+                                        {periodo ? `De ${periodoPtBr(periodo)}. ` : ""}
+                                        {/* No telefone a gaveta guarda a linha para a lista; o "Vão entrar" já diz o que conta. */}
+                                        <span className="hidden md:inline">Desmarque o que não quer trazer.</span>
+                                    </>
+                                )
                                   : imp.passo === "colunas"
                                     ? "Diga o que é cada coluna do arquivo."
                                     : "CSV ou OFX do seu banco, ou uma planilha sua."}

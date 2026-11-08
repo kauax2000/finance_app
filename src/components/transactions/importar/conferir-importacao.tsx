@@ -39,6 +39,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Caption } from "@/components/ui/typography"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
@@ -142,19 +143,22 @@ function Linha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
                     aria-label={`Trazer ${rotuloDe(item)}`}
                 />
             </ItemMedia>
-            {/* Uma linha no desktop (descrição · categoria · valor); no telefone a categoria desce para a segunda. */}
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+            {/* Uma linha no desktop (descrição · categoria · valor). No telefone a categoria é texto na segunda linha, e trocar é o Pôr categoria. */}
+            <div className="flex min-w-0 flex-1 items-center gap-x-3">
                 <ItemContent className="min-w-0 flex-1">
                     <ItemTitle className="w-full">
                         <span className="truncate">{descricaoDe(item)}</span>
                     </ItemTitle>
-                    <ItemDescription>
-                        {formatYmdPtBr(item.data)}
+                    <ItemDescription className="truncate">
+                        <span className="md:hidden">
+                            {formatYmdPtBr(item.data).slice(0, 5)} · {nomeDaCategoria(imp, item) ?? "Sem categoria"}
+                        </span>
+                        <span className="hidden md:inline">{formatYmdPtBr(item.data)}</span>
                         {imp.existentes.has(item.clientId) ? " · " : null}
                         <JaExiste imp={imp} item={item} />
                     </ItemDescription>
                 </ItemContent>
-                <div className="order-last basis-full md:order-none md:basis-auto md:w-40">
+                <div className="hidden md:block md:w-40">
                     <CategoriaDaLinha imp={imp} item={item} />
                 </div>
                 <MoneyDisplay
@@ -201,7 +205,11 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
             <DialogContent size="sm">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
-                    <DialogDescription>Vale para os {numberBR(itens.length)} selecionados.</DialogDescription>
+                    <DialogDescription>
+                        {itens.length === 1
+                            ? `Vale para ${itens[0].descricao}.`
+                            : `Vale para os ${numberBR(itens.length)} marcados.`}
+                    </DialogDescription>
                 </DialogHeader>
                 <DialogBody>
                     {primeiro ? (
@@ -293,6 +301,11 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
 
     // As ações em massa moram na barra da tabela: a pílula flutuante do `DataTable` fica sob o véu do diálogo.
     const marcadasVistas = imp.visiveis.filter((i) => imp.marcadas.has(i.clientId))
+    // Despesa e receita têm categorias diferentes: misturadas, filtre Saídas ou Entradas (o estorno do cartão é despesa).
+    const porCategoriaDesligado =
+        marcadasVistas.length === 0 ||
+        !destino ||
+        new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1
     const acoes = (
         <div className="flex items-center gap-2">
             <span className="hidden text-sm whitespace-nowrap text-muted-foreground sm:inline">
@@ -302,12 +315,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
             <Button
                 type="button"
                 variant="secondary"
-                // Despesa e receita têm categorias diferentes: filtre Saídas ou Entradas.
-                disabled={
-                    marcadasVistas.length === 0 ||
-                    !destino ||
-                    new Set(marcadasVistas.map((i) => tipoDoItem(i, destino))).size > 1
-                }
+                disabled={porCategoriaDesligado}
                 onClick={() => setPorCategoria(marcadasVistas)}
             >
                 <TagIcon data-icon="inline-start" />
@@ -346,12 +354,13 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
     return (
         // O Enter da busca e dos campos da lista não envia o Importar.
         <div
-            className="flex min-w-0 flex-col gap-4"
+            className="flex min-w-0 flex-col gap-2 md:gap-4"
             onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault()
             }}
         >
-            <div className="flex flex-wrap items-center gap-2">
+            {/* No telefone os chips são uma fileira que rola de lado: a gaveta guarda a altura para as 6 linhas. */}
+            <div className="no-scrollbar flex items-center gap-2 overflow-x-auto *:shrink-0 md:flex-wrap md:overflow-visible">
                 <Badge size="md" tone="neutral" role="status">
                     Vão entrar {numberBR(resumo.entram)} de {numberBR(resumo.total)}
                 </Badge>
@@ -403,6 +412,21 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                         ))}
                     </ToggleGroup>
                 </div>
+                {/* No telefone a linha não tem campo de categoria: trocar é marcar e usar este botão. */}
+                {imp.expandido ? null : (
+                    <div className="md:hidden">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="xs"
+                            disabled={porCategoriaDesligado}
+                            onClick={() => setPorCategoria(marcadasVistas)}
+                        >
+                            <TagIcon data-icon="inline-start" />
+                            Pôr categoria
+                        </Button>
+                    </div>
+                )}
                 {podeExpandir ? (
                     <Button
                         type="button"
@@ -434,6 +458,7 @@ export function ConferirImportacao({ imp }: { imp: ImportarExtrato }) {
                 vazio
             ) : (
                 <>
+                    <Caption className="md:hidden">Marque e use Pôr categoria para trocar</Caption>
                     <ScrollArea
                         variant="fade"
                         sides="end"
