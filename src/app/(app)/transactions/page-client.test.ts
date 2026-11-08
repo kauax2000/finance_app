@@ -90,7 +90,8 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).toMatch(/selecionadas\.length > 0[\s\S]*fetchTransacoesParaExportar\(/)
         // Sem "Salvar como": ele abria uma segunda janela no navegador que recusava gravar.
         expect(f).not.toContain("showSaveFilePicker")
-        expect(f).toMatch(/downloadCsv\(nomeDoCsv\([\s\S]*transacoesParaCsv\([\s\S]*toastSuccess\(mensagemDaExportacao\(/)
+        expect(f).toMatch(/downloadCsv\(nomeDoCsv\([\s\S]*transacoesParaCsv\([\s\S]*if \(truncado\) toastWarning\(mensagemDaExportacao\(/)
+        expect(f).not.toMatch(/toastSuccess\(mensagemDaExportacao/)
     })
 })
 

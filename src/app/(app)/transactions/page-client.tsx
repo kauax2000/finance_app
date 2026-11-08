@@ -32,7 +32,7 @@ import { numberBR } from "@/lib/formatters"
 import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
-import { toastError, toastSuccess } from "@/lib/toast"
+import { toastError, toastWarning } from "@/lib/toast"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { transacoesParaCsv } from "@/lib/transactions/csv"
 import { hasInstallmentDeleteImpact, INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
@@ -79,7 +79,9 @@ export default function TransactionsPageClient() {
             const nome = new Map(membros.map((m) => [m.user_id, m.full_name || m.email]))
             // Download direto: o "Salvar como" abria uma segunda janela no navegador que recusa gravar.
             downloadCsv(nomeDoCsv(new Date()), transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
-            toastSuccess(mensagemDaExportacao(transactions.length, truncado))
+            // Sem toast de sucesso: o navegador não diz quando o download termina, e o aviso
+            // saía antes de a pessoa salvar. O download é a confirmação; só o corte avisa.
+            if (truncado) toastWarning(mensagemDaExportacao(transactions.length, truncado))
         } catch (e) {
             console.error("Falha ao exportar os lançamentos.", e)
             toastError("Não foi possível exportar os lançamentos.")
