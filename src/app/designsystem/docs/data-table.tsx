@@ -161,6 +161,7 @@ function DemoNaTela() {
   const [striped, setStriped] = React.useState(false)
   const [agrupar, setAgrupar] = React.useState(true)
   const [somaDaSelecao, setSomaDaSelecao] = React.useState(true)
+  const [linhaCompacta, setLinhaCompacta] = React.useState(false)
   const [ultima, setUltima] = React.useState("Clique numa linha, marque, ordene, filtre.")
 
   return (
@@ -177,6 +178,7 @@ function DemoNaTela() {
             <Interruptor id="ds-dt-striped" rotulo="striped" valor={striped} onChange={setStriped} />
             <Interruptor id="ds-dt-grupo" rotulo="groupBy" valor={agrupar} onChange={setAgrupar} />
             <Interruptor id="ds-dt-soma" rotulo="Soma da seleção" valor={somaDaSelecao} onChange={setSomaDaSelecao} />
+            <Interruptor id="ds-dt-compacta" rotulo="Linha compacta no telefone" valor={linhaCompacta} onChange={setLinhaCompacta} />
           </Interruptores>
         }
       />
@@ -208,6 +210,7 @@ function DemoNaTela() {
         ]}
         rowActions={ACOES(setUltima)}
         rowContextMenu
+        mobileRow={linhaCompacta ? "compact" : "full"}
         onRowClick={(l) => setUltima(`Abrir ${l.descricao}`)}
         rowState={(l) => (l.status === "prevista" ? "pending" : undefined)}
         groupBy={
@@ -586,6 +589,7 @@ col.money({ … })        // trailing, de fábrica`}
           { prop: "enableSelection", type: "boolean | (row) => boolean", description: "A coluna de caixas; a função diz quais linhas se marcam." },
           { prop: "bulkActions / onSelectAllMatching", type: "DataTableBulkAction[] / () => void", description: "As ações da barra flutuante; marcar todas além da página." },
           { prop: "rowActions / rowContextMenu", type: "DataTableAction[] / boolean", description: "primary fica à vista, o resto vai para o ⋯; o botão direito repete." },
+          { prop: "mobileRow", type: '"full" | "compact"', description: "A linha do gêmeo. compact: a caixa só aparece com uma seleção em curso (e o toque marca), e as ações moram no toque longo; sem menu de contexto, o ⋯ volta." },
         ]}
       />
 

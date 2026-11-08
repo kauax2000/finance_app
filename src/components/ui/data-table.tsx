@@ -552,6 +552,8 @@ export type DataTableProps<T extends RowData> = {
 
   /** O gêmeo do telefone, das colunas com `meta.mobile`. Ligado se houver título. */
   mobile?: boolean
+  /** A linha do gêmeo. `full` (o padrão): caixa de seleção e ⋯ sempre à vista. `compact`: a caixa só aparece com uma seleção em curso (e aí o toque marca em vez de abrir), e as ações moram no toque longo — o mesmo menu do botão direito; sem menu, o ⋯ volta. */
+  mobileRow?: "full" | "compact"
   /** As linhas que entram em cascata e deslizam ao reordenar. */
   motion?: boolean
   virtualize?: { estimateSize?: number; overscan?: number }
@@ -597,6 +599,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     onSelectAllMatching,
     rowActions,
     rowContextMenu = false,
+    mobileRow = "full",
     toolbar,
     panel = true,
     striped,
@@ -878,6 +881,36 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
 
   const marcadas = Object.keys(rowSelection).filter((k) => rowSelection[k])
   const idsMarcados = new Set(marcadas)
+
+  /** O menu do botão direito (e do toque longo) de uma linha: o da tela, ou as `rowActions` repetidas. */
+  const menuDaLinha = (row: DataTableRow<T>): React.ReactNode =>
+    typeof rowContextMenu === "function"
+      ? rowContextMenu(row.original, {
+          targets: contextMenuTargets(row.id, idsMarcados).flatMap((rid) => {
+            const alvo = rid === row.id ? row : table.getRow(rid, true)
+            return alvo ? [alvo.original] : []
+          }),
+          selected: row.getIsSelected(),
+        })
+      : rowContextMenu && rowActions?.length
+        ? (
+            <ContextMenuContent header={rotuloDe(row.original)} size="md">
+              {rowActions
+                .filter((a) => !a.hidden?.(row.original))
+                .map((a) => (
+                  <ContextMenuItem
+                    key={a.label}
+                    variant={a.variant}
+                    onSelect={() => void a.onSelect(row.original)}
+                  >
+                    {a.icon}
+                    {a.label}
+                  </ContextMenuItem>
+                ))}
+            </ContextMenuContent>
+          )
+        : null
+
   const total = manual?.rowCount ?? table.getPrePaginatedRowModel().rows.length
 
   const exportar = React.useCallback(() => {
@@ -1076,33 +1109,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       <TableRow {...propsDaLinha}>{conteudo}</TableRow>
     )
 
-    const menu =
-      typeof rowContextMenu === "function"
-        ? rowContextMenu(row.original, {
-            targets: contextMenuTargets(row.id, idsMarcados).flatMap((rid) => {
-              const alvo = rid === row.id ? row : table.getRow(rid, true)
-              return alvo ? [alvo.original] : []
-            }),
-            selected: selecionada,
-          })
-        : rowContextMenu && rowActions?.length
-          ? (
-              <ContextMenuContent header={rotuloDe(row.original)} size="md">
-                {rowActions
-                  .filter((a) => !a.hidden?.(row.original))
-                  .map((a) => (
-                    <ContextMenuItem
-                      key={a.label}
-                      variant={a.variant}
-                      onSelect={() => void a.onSelect(row.original)}
-                    >
-                      {a.icon}
-                      {a.label}
-                    </ContextMenuItem>
-                  ))}
-              </ContextMenuContent>
-            )
-          : null
+    const menu = menuDaLinha(row)
 
     const comMenu = menu ? (
       <ContextMenu key={row.id}>
@@ -1331,6 +1338,9 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       rotuloDe={rotuloDe}
       enableSelection={Boolean(enableSelection)}
       FlexRender={table.FlexRender}
+      compacta={mobileRow === "compact"}
+      marcando={marcadas.length > 0}
+      menuDe={menuDaLinha}
     />
   ) : null
 
@@ -1512,6 +1522,9 @@ function GemeoDoTelefone<T extends RowData>({
   rotuloDe,
   enableSelection,
   FlexRender,
+  compacta = false,
+  marcando = false,
+  menuDe,
 }: {
   rows: DataTableRow<T>[]
   rowState?: (row: T) => "current" | "pending" | undefined
@@ -1523,6 +1536,11 @@ function GemeoDoTelefone<T extends RowData>({
   rotuloDe: (row: T) => string
   enableSelection: boolean
   FlexRender: ReactTable<DataTableFeatures, T>["FlexRender"]
+  /** `mobileRow="compact"`: caixa só marcando, ações no toque longo. */
+  compacta?: boolean
+  /** Alguma linha marcada: na linha compacta, o toque marca em vez de abrir. */
+  marcando?: boolean
+  menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
   return (
     <ItemGroup variant="divided" data-slot="data-table-mobile">
@@ -1554,9 +1572,12 @@ function GemeoDoTelefone<T extends RowData>({
         const midiaDaIdentidade = identidade?.media?.(row.original)
         const estado = rowState?.(row.original)
         const clicavel = Boolean(onRowClick) && (rowClickable?.(row.original) ?? true)
-        return (
-          <React.Fragment key={row.id}>
-          {faixa}
+        const menu = compacta ? menuDe?.(row) : null
+        // Na linha compacta, com uma seleção em curso, o toque marca (como na lista do iOS em modo de edição).
+        const marcaNoToque = compacta && marcando && enableSelection && row.getCanSelect()
+        const comCaixa = enableSelection && row.getCanSelect() && (!compacta || marcando)
+        const comAcoes = Boolean(rowActions?.length) && (!compacta || !menu)
+        const item = (
           <Item
             variant="flush"
             size="lg"
@@ -1568,11 +1589,17 @@ function GemeoDoTelefone<T extends RowData>({
               estado === "pending" &&
                 "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=money-display]]:opacity-50"
             )}
-            interactive={clicavel}
+            interactive={clicavel || marcaNoToque}
             selected={row.getIsSelected()}
-            onClick={clicavel ? () => onRowClick?.(row.original) : undefined}
+            onClick={
+              marcaNoToque
+                ? () => row.toggleSelected()
+                : clicavel
+                  ? () => onRowClick?.(row.original)
+                  : undefined
+            }
           >
-            {enableSelection && row.getCanSelect() ? (
+            {comCaixa ? (
               <CaixaDaLinha row={row} label={rotuloDe(row.original)} />
             ) : null}
             {midiaDaIdentidade ?? midia ? (
@@ -1620,7 +1647,7 @@ function GemeoDoTelefone<T extends RowData>({
                 ) : null}
               </ItemContent>
             ) : null}
-            {rowActions?.length ? (
+            {comAcoes && rowActions ? (
               <ItemActions className="-me-2">
                 <AcoesDaLinha
                   row={row.original}
@@ -1630,6 +1657,18 @@ function GemeoDoTelefone<T extends RowData>({
               </ItemActions>
             ) : null}
           </Item>
+        )
+        return (
+          <React.Fragment key={row.id}>
+            {faixa}
+            {menu ? (
+              <ContextMenu>
+                <ContextMenuTrigger asChild>{item}</ContextMenuTrigger>
+                {menu}
+              </ContextMenu>
+            ) : (
+              item
+            )}
           </React.Fragment>
         )
       })}

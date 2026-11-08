@@ -28939,3 +28939,14 @@ summary`) e na região viva do anúncio. Sem a prop nada muda. Transações pass
 (receitas menos despesas, `totalDoDia`) num `MoneyDisplay signed`; a página do catálogo
 ganha o interruptor "Soma da seleção" no "Na tela". Em tabela de servidor a soma cobre só
 o que está carregado, como as ações em lote.
+
+### Rodada 364 — `DataTable mobileRow="compact"`
+
+Decisão do dono em 2026-11-07, depois de ver Transações a 375px: no gêmeo do telefone a
+caixa de seleção à esquerda e o ⋯ à direita apertavam a linha de apoio ("Mercado · …"). A
+prop `mobileRow` (`"full"`, o padrão, ou `"compact"`) muda só o gêmeo. Na compacta a caixa
+aparece apenas com uma seleção em curso, e então o toque na linha marca em vez de abrir,
+como a lista do iOS em modo de edição. As ações vão para o toque longo, que abre o mesmo
+menu do botão direito (`rowContextMenu`, montado por `menuDaLinha` para a tabela e o
+gêmeo). Sem menu de contexto, o ⋯ volta, para as ações não sumirem. Transações é a
+primeira a usar; o catálogo ganhou o interruptor "Linha compacta no telefone".

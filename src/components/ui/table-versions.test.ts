@@ -178,6 +178,28 @@ describe("o DataTable", () => {
     expect(fonte).toMatch(/aria-live="polite"[\s\S]{0,400}selectionSummary/)
   })
 
+  it('`mobileRow="compact"`: no gêmeo, caixa só marcando e ações no toque longo', () => {
+    const acoes = [{ label: "Editar", onSelect: () => {} }]
+    const gemeo = (html: string) => html.slice(html.indexOf('data-slot="data-table-mobile"'))
+    const comum = { ...base, enableSelection: true, rowActions: acoes, rowContextMenu: true, mobileRow: "compact" as const }
+
+    const parado = gemeo(renderToStaticMarkup(h(DataTable<L>, comum)))
+    expect(parado).not.toContain('aria-label="Selecionar Mercado"')
+    expect(parado).not.toContain('aria-label="Mais ações para Mercado"')
+
+    const marcando = gemeo(renderToStaticMarkup(h(DataTable<L>, { ...comum, rowSelection: { b: true } })))
+    expect(marcando).toContain('aria-label="Selecionar Mercado"')
+
+    // Sem menu de contexto, o ⋯ volta: as ações não podem sumir.
+    const semMenu = gemeo(renderToStaticMarkup(h(DataTable<L>, { ...comum, rowContextMenu: false })))
+    expect(semMenu).toContain('aria-label="Mais ações para Mercado"')
+
+    // O padrão segue igual.
+    const cheio = gemeo(renderToStaticMarkup(h(DataTable<L>, { ...comum, mobileRow: undefined })))
+    expect(cheio).toContain('aria-label="Selecionar Mercado"')
+    expect(cheio).toContain('aria-label="Mais ações para Mercado"')
+  })
+
   it("marca com o nome da linha, o indeterminado no cabeçalho, e a tabela de leitura não é grade", () => {
     const html = renderToStaticMarkup(h(DataTable<L>, { ...base, enableSelection: true, rowSelection: { a: true } }))
     expect(html).toContain('aria-label="Selecionar Mercado"')

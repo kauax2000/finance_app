@@ -211,8 +211,9 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             cell: ({ row }) => {
                 const fatura = creditCardInvoiceBadgeForRow(row.original, faturasPagas)
                 return (
-                    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                        <span className="min-w-0 truncate">{pagamentoDe(row.original)}</span>
+                    // No telefone a célula entra na legenda do gêmeo: fica em linha, senão o `flex` quebra a linha e a legenda vira "Mercado · …".
+                    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground max-md:inline">
+                        <span className="min-w-0 truncate max-md:whitespace-normal">{pagamentoDe(row.original)}</span>
                         {/* O chip é do desktop: no telefone a legenda diz só "Nubank" ou "Pix". */}
                         {fatura ? (
                             <span className="max-md:hidden">
@@ -559,6 +560,7 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                 onRowSelectionChange={(next) => setMarcadas(new Set(Object.keys(next).filter((id) => next[id])))}
                 bulkActions={bulkActions}
                 selectionSummary={(rows) => <MoneyDisplay value={totalDoDia(rows)} signed />}
+                mobileRow="compact"
                 rowActions={rowActions}
                 // As projetadas são cobranças previstas: não abrem, não têm menu e aparecem apagadas.
                 onRowClick={(t) => tela.detalhe.abrir(t)}
