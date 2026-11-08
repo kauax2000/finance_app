@@ -51,7 +51,9 @@ describe("fonte da tabela", () => {
         expect(fonte).not.toContain("tileColorFor")
         expect(fonte).not.toContain("--badge-dot")
         expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(1)
-        expect(fonte).toContain('<span className="block truncate">{c.name}</span>')
+        expect(fonte).toMatch(/\n\s*return c\.name\n/)
+        expect(fonte).toContain('label: "Categoria", mobile: "description", cellClassName: "max-w-40 truncate"')
+        expect(fonte).not.toContain("block truncate")
     })
     it("os vazios da §6.5", () => {
         expect(fonte).toContain("Seu primeiro lançamento")
