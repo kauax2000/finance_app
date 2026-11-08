@@ -26,9 +26,11 @@ type Props = {
     ativo: boolean
     onRevisar: () => void
     onConfirmarTodos: () => Promise<void>
+    /** O convidado só vê os próprios lançamentos: revisa, mas não confirma a carteira toda. */
+    podeConfirmarTodos?: boolean
 }
 
-export function AvisoAConferir({ total, ativo, onRevisar, onConfirmarTodos }: Props) {
+export function AvisoAConferir({ total, ativo, onRevisar, onConfirmarTodos, podeConfirmarTodos = true }: Props) {
     const [pending, setPending] = React.useState(false)
     const [aberto, setAberto] = React.useState(false)
     const [erro, setErro] = React.useState<string | null>(null)
@@ -57,38 +59,40 @@ export function AvisoAConferir({ total, ativo, onRevisar, onConfirmarTodos }: Pr
                     Entraram pelo Atalho, Apple Pay, IA ou importação. Confira categoria e valor.
                 </AlertDescription>
             )}
-            <AlertActions placement="inline">
-                {ativo ? (
-                    <AlertDialog open={aberto} onOpenChange={setAberto} pending={pending}>
-                        <AlertDialogTrigger asChild>
-                            <AlertAction>Confirmar todos</AlertAction>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar {total} lançamentos?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Todos saem da lista a conferir. Dá para editar cada um depois.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            {erro ? <AlertDialogError>{erro}</AlertDialogError> : null}
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                    variant="primary"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        void confirmar()
-                                    }}
-                                >
-                                    Confirmar
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                ) : (
-                    <AlertAction onClick={onRevisar}>Revisar</AlertAction>
-                )}
-            </AlertActions>
+            {ativo && !podeConfirmarTodos ? null : (
+                <AlertActions placement="inline">
+                    {ativo ? (
+                        <AlertDialog open={aberto} onOpenChange={setAberto} pending={pending}>
+                            <AlertDialogTrigger asChild>
+                                <AlertAction>Confirmar todos</AlertAction>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar {total} lançamentos?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Todos saem da lista a conferir. Dá para editar cada um depois.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                {erro ? <AlertDialogError>{erro}</AlertDialogError> : null}
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        variant="primary"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            void confirmar()
+                                        }}
+                                    >
+                                        Confirmar
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    ) : (
+                        <AlertAction onClick={onRevisar}>Revisar</AlertAction>
+                    )}
+                </AlertActions>
+            )}
         </Alert>
     )
 }

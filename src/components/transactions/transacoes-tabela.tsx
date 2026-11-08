@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/16/solid"
 import { FunnelIcon, InboxStackIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { useWorkspace } from "@/components/workspace-provider"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { CategorizarEmLoteDialog } from "@/components/transactions/categorizar-em-lote-dialog"
 import {
@@ -363,6 +364,7 @@ function MenuDaLinha({
 /** A tabela da página de Transações (spec §6): por dia, com as ações da linha e do lote. */
 export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir }: TransacoesTabelaProps) {
     const shell = useGlobalShellDialogsOptional()
+    const convidado = useWorkspace().papel === "guest"
     const { estado, setEstado, pagina } = tela
     const transacoes = pagina.transactions
     const [marcadas, setMarcadas] = React.useState<Set<string>>(() => new Set())
@@ -490,9 +492,12 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                     <Button type="button" variant="primary" onClick={() => shell?.openTransactionCreate("expense")}>
                         Nova transação
                     </Button>
-                    <Button type="button" variant="tertiary" onClick={() => tela.pedidosDeAbertura.setImportar(true)}>
-                        Importar extrato
-                    </Button>
+                    {/* O convidado não importa (spec §12). */}
+                    {convidado ? null : (
+                        <Button type="button" variant="tertiary" onClick={() => tela.pedidosDeAbertura.setImportar(true)}>
+                            Importar extrato
+                        </Button>
+                    )}
                 </EmptyStateActions>
             </EmptyState>
         ) : comConferir ? (

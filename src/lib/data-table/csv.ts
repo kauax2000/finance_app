@@ -40,6 +40,10 @@ export function downloadCsv(filename: string, csv: string) {
   const a = document.createElement("a")
   a.href = url
   a.download = filename.endsWith(".csv") ? filename : `${filename}.csv`
+  // Anexada e revogada um minuto depois: o Safari do iOS cancela o download de um
+  // link solto e o de uma URL revogada na hora (o mesmo de `lib/cofre/baixar.ts`).
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }

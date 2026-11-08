@@ -63,11 +63,15 @@ export function TransacoesToolbar({
     campos,
     onImportar,
     onExportar,
+    exportando = false,
 }: {
     tela: TelaDeTransacoes
     campos: FilterField[]
-    onImportar: () => void
-    onExportar: () => void
+    /** Sem ele (o convidado), o item some do ⋯; sem os dois, some o ⋯. */
+    onImportar?: () => void
+    onExportar?: () => void
+    /** Exportando: o item fica desligado até o arquivo sair. */
+    exportando?: boolean
 }) {
     const { estado, setEstado, pagina, carregando, workspaceAux, categories } = tela
     const [busca, setBusca] = useBuscaComEspera(estado.q, (q) => setEstado({ q }))
@@ -99,25 +103,31 @@ export function TransacoesToolbar({
                     className="min-w-0 flex-1 shrink md:max-w-fit md:shrink-0"
                 />
                 {/* Só no telefone: no desktop Importar e Exportar moram no cabeçalho da página. */}
-                <ToolbarActions className="hidden max-md:flex">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
-                                <EllipsisHorizontalIcon aria-hidden />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={onImportar}>
-                                <ArrowUpTrayIcon aria-hidden />
-                                Importar extrato
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={onExportar}>
-                                <ArrowDownTrayIcon aria-hidden />
-                                Exportar CSV
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </ToolbarActions>
+                {onImportar || onExportar ? (
+                    <ToolbarActions className="hidden max-md:flex">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
+                                    <EllipsisHorizontalIcon aria-hidden />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {onImportar ? (
+                                    <DropdownMenuItem onSelect={onImportar}>
+                                        <ArrowUpTrayIcon aria-hidden />
+                                        Importar extrato
+                                    </DropdownMenuItem>
+                                ) : null}
+                                {onExportar ? (
+                                    <DropdownMenuItem onSelect={onExportar} disabled={exportando}>
+                                        <ArrowDownTrayIcon aria-hidden />
+                                        Exportar CSV
+                                    </DropdownMenuItem>
+                                ) : null}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </ToolbarActions>
+                ) : null}
                 <ToolbarSearch
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}

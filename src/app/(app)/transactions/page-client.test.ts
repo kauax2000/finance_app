@@ -46,6 +46,25 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(acoes).toContain("<TransactionNewSplitButton")
     })
 
+    it("o convidado não vê Importar nem Exportar no ⋯, nem o Confirmar todos (spec §12)", () => {
+        expect(f).toContain("onImportar={convidado ? undefined :")
+        expect(f).toContain("onExportar={convidado ? undefined :")
+        expect(f).toContain("exportando={exportando}")
+        expect(f).toContain("podeConfirmarTodos={!convidado}")
+        const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
+        expect(barra).toContain("onImportar?: () => void")
+        expect(barra).toContain("onExportar?: () => void")
+        expect(barra).toMatch(/\{onImportar \|\| onExportar \? \(\s*<ToolbarActions/)
+        expect(barra).toMatch(/\{onImportar \? \(\s*<DropdownMenuItem onSelect=\{onImportar\}>/)
+        expect(barra).toMatch(/\{onExportar \? \(\s*<DropdownMenuItem onSelect=\{onExportar\} disabled=\{exportando\}>/)
+        const tabela = fonte("src/components/transactions/transacoes-tabela.tsx")
+        expect(tabela).toContain('const convidado = useWorkspace().papel === "guest"')
+        expect(tabela).toMatch(/\{convidado \? null : \(\s*<Button[\s\S]{0,140}?setImportar\(true\)\}>\s*Importar extrato/)
+        const aviso = fonte("src/components/transactions/aviso-a-conferir.tsx")
+        expect(aviso).toContain("podeConfirmarTodos = true")
+        expect(aviso).toMatch(/\{ativo && !podeConfirmarTodos \? null : \(\s*<AlertActions/)
+    })
+
     it("Revisar aplica o token conferir, por data, sem os outros tokens", () => {
         expect(f).toMatch(
             /setEstado\(\{\s*filtros:\s*\[\{\s*field:\s*"conferir",\s*operator:\s*"is",\s*values:\s*\[\]\s*\}\],\s*sort:\s*\{\s*key:\s*"date",\s*dir:\s*"desc"\s*\}/,

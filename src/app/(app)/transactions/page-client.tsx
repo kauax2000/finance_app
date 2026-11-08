@@ -158,6 +158,7 @@ export default function TransactionsPageClient() {
                 ativo={conferindo}
                 onRevisar={revisar}
                 onConfirmarTodos={tela.confirmarTodosAConferir}
+                podeConfirmarTodos={!convidado}
             />
 
             <ResumoDasTransacoes resumo={tela.resumo.data} pendente={tela.resumo.isFetching} />
@@ -165,8 +166,9 @@ export default function TransactionsPageClient() {
             <TransacoesToolbar
                 tela={tela}
                 campos={campos}
-                onImportar={() => pedidos.setImportar(true)}
-                onExportar={() => void exportar()}
+                onImportar={convidado ? undefined : () => pedidos.setImportar(true)}
+                onExportar={convidado ? undefined : () => void exportar()}
+                exportando={exportando}
             />
 
             <TransacoesTabela
