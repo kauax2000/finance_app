@@ -7,7 +7,7 @@ import { desfazerImportacao } from "@/lib/import/importar"
 import type { ItemBanco } from "@/lib/import/tipos"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-import { gravarLote, prepararLote, resumoDoLote, sourceDoModo, tipoDoArquivo } from "./use-importar-extrato"
+import { criarVez, gravarLote, prepararLote, resumoDoLote, sourceDoModo, tipoDoArquivo } from "./use-importar-extrato"
 
 type Chamada = { tabela: string; op: string; args: unknown[] }
 
@@ -149,6 +149,34 @@ describe("importar extrato", () => {
     })
 })
 
+describe("a vez da leitura", () => {
+    it("a resposta de um pedido invalidado (reiniciar, trocar modo) ou superado é descartada", async () => {
+        const vez = criarVez()
+        const aplicadas: string[] = []
+        // A leitura demora; no meio dela o diálogo reinicia.
+        let soltar: () => void = () => {}
+        const ler = (nome: string) => {
+            const n = vez.nova()
+            return new Promise<void>((ok) => (soltar = ok)).then(() => {
+                if (vez.vale(n)) aplicadas.push(nome)
+            })
+        }
+        const primeira = ler("velha")
+        vez.invalidar()
+        soltar()
+        await primeira
+        expect(aplicadas).toEqual([])
+
+        const a = ler("a")
+        const soltarA = soltar
+        const b = ler("b")
+        soltarA()
+        soltar()
+        await Promise.all([a, b])
+        expect(aplicadas).toEqual(["b"])
+    })
+})
+
 describe("o hook e o diálogo", () => {
     const hook = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
     const dialogo = semComentarios(lerFonte("src/components/transactions/importar/importar-extrato-dialog.tsx"), "tudo")
@@ -157,6 +185,9 @@ describe("o hook e o diálogo", () => {
         expect(hook).toMatch(/setLote\(\s*r\.lote\s*\)/)
         expect(hook).toContain("gravarLote(supabase, { userId, workspaceId }, lote)")
         expect(hook).toContain("desfazerImportacao(supabase, workspaceId, lote.batchId)")
+        // A resposta da leitura só aterrissa se ainda for a vez dela.
+        expect(hook).toMatch(/prepararLote\([^)]*\)\s*if \(!vez\.vale\(n\)\) return/)
+        expect(hook).toMatch(/function reiniciar\(\) \{\s*vez\.invalidar\(\)/)
     })
 
     it("o diálogo é o dos passos, com pending, dirty e o desfazer no AlertDialog", () => {
@@ -169,5 +200,7 @@ describe("o hook e o diálogo", () => {
         expect(dialogo).toContain("<AlertDialog")
         expect(dialogo).toContain("itens.slice(0, 20)")
         expect(dialogo).not.toContain("window.confirm")
+        // Lendo ou gravando, modo, destino e arquivo travam.
+        expect(dialogo.match(/disabled=\{travado\}/g)?.length).toBe(6)
     })
 })

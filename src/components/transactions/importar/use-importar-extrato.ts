@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 import { useAuth } from "@/components/providers"
 import { lerCsv, mapearCsv } from "@/lib/import/csv"
@@ -145,6 +145,22 @@ export function resumoDoLote(itens: ItemImportavel[]) {
     }
 }
 
+/**
+ * A vez de cada leitura: `nova()` marca um pedido, `invalidar()` (reiniciar,
+ * trocar modo ou destino) descarta os que estão no ar, e `vale(n)` diz se a
+ * resposta do pedido `n` ainda é a mais recente.
+ */
+export function criarVez() {
+    let atual = 0
+    return {
+        nova: () => ++atual,
+        invalidar: () => {
+            atual++
+        },
+        vale: (n: number) => n === atual,
+    }
+}
+
 const MAPEAMENTO_INICIAL: MapeamentoColunas = {
     data: 0,
     descricao: 1,
@@ -171,8 +187,11 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     const [lote, setLote] = useState<LoteImportacao | null>(null)
     const [pendente, setPendente] = useState<"lendo" | "importar" | "desfazer" | null>(null)
     const [erro, setErro] = useState<string | null>(null)
+    const vez = useRef(criarVez()).current
 
     function limparLeitura() {
+        // A leitura no ar não aterrissa num estado que mudou.
+        vez.invalidar()
         setCsv(null)
         setLote(null)
         setErro(null)
@@ -199,45 +218,64 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setArquivo(f)
     }
 
-    async function preparar(leitura: { itens: ItemBanco[]; ignoradas: number }) {
+    /** `n`: a vez do pedido; a resposta de um pedido velho é descartada. */
+    async function preparar(n: number, leitura: { itens: ItemBanco[]; ignoradas: number }) {
         if (!workspaceId || !destino) return
+        const r = await prepararLote(supabase, workspaceId, leitura, destino, modo)
+        if (!vez.vale(n)) return
+        if (!r.ok) {
+            setErro(r.erro)
+            return
+        }
+        setLote(r.lote)
+        setPasso("conferir")
+    }
+
+    /** Roda uma leitura com a trava `lendo`; erro lançado vira o `erro` do passo. */
+    async function lendo(passoDaLeitura: (n: number) => Promise<void>) {
+        const n = vez.nova()
         setPendente("lendo")
         setErro(null)
         try {
-            const r = await prepararLote(supabase, workspaceId, leitura, destino, modo)
-            if (!r.ok) {
-                setErro(r.erro)
-                return
-            }
-            setLote(r.lote)
-            setPasso("conferir")
+            await passoDaLeitura(n)
+        } catch {
+            if (vez.vale(n)) setErro("Não foi possível ler o arquivo. Tente de novo.")
         } finally {
-            setPendente(null)
+            if (vez.vale(n)) setPendente(null)
         }
     }
 
     /** Do arquivo: o CSV vai às colunas; o OFX vai direto à conferência. */
-    async function continuar() {
-        if (!arquivo || !destino) return
-        const tipo = tipoDoArquivo(arquivo.name, modo)
-        const texto = await arquivo.text()
-        if (tipo === "csv") {
-            setCsv(lerCsv(texto))
-            setMapeamento({ ...MAPEAMENTO_INICIAL, negativoEhDespesa: negativoEhDespesaPadrao(destino) })
-            setPasso("colunas")
-        } else if (tipo === "ofx") {
-            await preparar(lerOfx(texto, destino.tipo))
-        }
+    function continuar() {
+        const f = arquivo
+        const d = destino
+        if (!f || !d) return Promise.resolve()
+        return lendo(async (n) => {
+            const tipo = tipoDoArquivo(f.name, modo)
+            const texto = await f.text()
+            if (!vez.vale(n)) return
+            if (tipo === "csv") {
+                setCsv(lerCsv(texto))
+                setMapeamento({ ...MAPEAMENTO_INICIAL, negativoEhDespesa: negativoEhDespesaPadrao(d) })
+                setPasso("colunas")
+            } else if (tipo === "ofx") {
+                await preparar(n, lerOfx(texto, d.tipo))
+            }
+        })
     }
 
-    async function lerColunas() {
-        if (!csv) return
+    function lerColunas() {
+        const linhas = csv
+        if (!linhas) return Promise.resolve()
         const m = mapeamento
-        await preparar(
-            mapearCsv(
-                csv,
-                { data: m.data, descricao: m.descricao, valor: m.valor, categoria: m.categoria ?? undefined },
-                { temCabecalho: m.temCabecalho, negativoEhDespesa: m.negativoEhDespesa },
+        return lendo((n) =>
+            preparar(
+                n,
+                mapearCsv(
+                    linhas,
+                    { data: m.data, descricao: m.descricao, valor: m.valor, categoria: m.categoria ?? undefined },
+                    { temCabecalho: m.temCabecalho, negativoEhDespesa: m.negativoEhDespesa },
+                ),
             ),
         )
     }
@@ -249,7 +287,11 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     }
 
     async function importar(): Promise<{ quantidade: number; loteId: string } | null> {
-        if (!lote || !workspaceId || !userId || lote.itens.length === 0) return null
+        if (!lote || !workspaceId || lote.itens.length === 0) return null
+        if (!userId) {
+            setErro("Sua sessão não carregou. Recarregue a página e tente de novo.")
+            return null
+        }
         setPendente("importar")
         setErro(null)
         try {
@@ -290,12 +332,16 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
                 domains: ["transactions", "credit_card_expense_rows"],
             })
             return true
+        } catch {
+            setErro("Não foi possível desfazer a importação. Tente de novo.")
+            return false
         } finally {
             setPendente(null)
         }
     }
 
     function reiniciar() {
+        vez.invalidar()
         setPasso("arquivo")
         setModoEstado("extrato")
         setDestinoEstado(null)

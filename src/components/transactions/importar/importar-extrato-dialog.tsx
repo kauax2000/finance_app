@@ -103,6 +103,8 @@ export function ImportarExtratoDialog({
     const atual = Math.max(0, passos.indexOf({ arquivo: "Arquivo", colunas: "Colunas", conferir: "Conferir", feito: "" }[imp.passo]))
     const previa = imp.previa
     const gravando = imp.pendente === "importar" || imp.pendente === "desfazer"
+    // Lendo ou gravando, nada do passo muda: a resposta cairia num estado trocado.
+    const travado = imp.pendente != null
 
     function enviar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -138,8 +140,8 @@ export function ImportarExtratoDialog({
                             <div className="flex flex-col gap-4">
                                 <Tabs value={imp.modo} onValueChange={(m) => imp.setModo(m as ModoImportacao)}>
                                     <TabsList aria-label="O que é o arquivo">
-                                        <TabsTrigger value="extrato">Extrato do banco (CSV ou OFX)</TabsTrigger>
-                                        <TabsTrigger value="planilha">Planilha (CSV)</TabsTrigger>
+                                        <TabsTrigger value="extrato" disabled={travado}>Extrato do banco (CSV ou OFX)</TabsTrigger>
+                                        <TabsTrigger value="planilha" disabled={travado}>Planilha (CSV)</TabsTrigger>
                                     </TabsList>
                                 </Tabs>
                                 <div className="flex flex-col gap-2">
@@ -171,6 +173,7 @@ export function ImportarExtratoDialog({
                                         <Button
                                             type="button"
                                             variant="secondary"
+                                            disabled={travado}
                                             onClick={() => entrada.current?.click()}
                                         >
                                             {imp.arquivo ? "Trocar arquivo" : "Escolher arquivo"}
@@ -181,6 +184,7 @@ export function ImportarExtratoDialog({
                                     aria-label="Destino"
                                     variant="card"
                                     orientation="horizontal"
+                                    disabled={travado}
                                     value={tipoDestino}
                                     onValueChange={(v) => {
                                         setTipoDestino(v as "cartao" | "conta")
@@ -193,6 +197,7 @@ export function ImportarExtratoDialog({
                                 {tipoDestino === "cartao" ? (
                                     <FormField label="Cartão">
                                         <Select
+                                            disabled={travado}
                                             value={imp.destino?.tipo === "cartao" ? imp.destino.cardId : ""}
                                             onValueChange={(cardId) => imp.setDestino({ tipo: "cartao", cardId })}
                                         >
@@ -213,6 +218,7 @@ export function ImportarExtratoDialog({
                                 ) : tipoDestino === "conta" ? (
                                     <FormField label="Forma">
                                         <Select
+                                            disabled={travado}
                                             value={imp.destino?.tipo === "conta" ? imp.destino.paymentMethod : ""}
                                             onValueChange={(v) =>
                                                 imp.setDestino({
