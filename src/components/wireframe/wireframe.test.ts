@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
@@ -66,9 +67,11 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
     expect(fonte("src/app/(app)/transactions/page-client.tsx")).toMatch(
       /import\s*\{[^}]*\bImportarExtratoWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/importar-extrato-wireframe["']/,
     )
+    // O a conferir do detalhe saiu do wireframe (redesenho de Transações, Tarefa 8).
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
-      /import\s*\{[^}]*\bAConferirWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/a-conferir-wireframe["']/,
+      /import\s*\{[^}]*\bAConferirNoDetalhe\b[^}]*\}\s*from\s*["']@\/components\/transactions\/a-conferir-no-detalhe["']/,
     )
+    expect(existsSync("src/components/wireframe/a-conferir-wireframe.tsx")).toBe(false)
   })
 
   it("importar: prepara uma vez no estado, importa e desfaz (Foco 3)", () => {
@@ -82,23 +85,31 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
     expect(f).toMatch(/onConflict:\s*"workspace_id,client_id"/)
   })
 
-  it("a conferir: confirma e desfaz o lote com confirmação", () => {
-    const f = fonte("src/components/wireframe/a-conferir-wireframe.tsx")
+  it("a conferir: confirma e desfaz o lote com a confirmação do AlertDialog", () => {
+    const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
     expect(f).toContain("Importado · a conferir")
-    expect(f).toMatch(/needs_review:\s*false/)
-    expect(f).toContain('window.confirm("Desfazer a importação inteira deste lote?")')
-    expect(f).toContain("desfazerImportacao(")
+    expect(f).toContain("confirmarLancamento(supabase, t.id)")
+    expect(f).toContain("desfazerLote(supabase, workspaceId, t.import_batch_id)")
+    expect(f).toContain("<AlertDialog")
+    expect(f).toContain("lançamentos desta importação?")
+    expect(f).not.toContain("window.confirm")
+    const acoes = fonte("src/lib/captura/a-conferir-acoes.ts")
+    expect(acoes).toMatch(/needs_review:\s*false/)
+    expect(acoes).toContain("desfazerImportacao(")
   })
 
   it("o detalhe mostra o a conferir para importado, a revisar ou Apple Pay com o cartão da Wallet", () => {
+    expect(fonte("src/components/transactions/a-conferir-no-detalhe.tsx")).toContain(
+      'Boolean(t.needs_review || t.import_batch_id || (t.source === "apple_pay" && t.capture_meta?.walletCard))',
+    )
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
-      /t\.needs_review \|\| t\.import_batch_id \|\| \(t\.source === "apple_pay" && t\.capture_meta\?\.walletCard\) \? \(\s*<AConferirWireframe/,
+      /temAConferir\(t\) \? \(\s*<AConferirNoDetalhe/,
     )
   })
 
   it("o quadro remonta quando o lançamento ou o needs_review muda", () => {
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
-      /<AConferirWireframe[\s\S]*?key=\{`\$\{t\.id\}:\$\{t\.needs_review\}`\}/,
+      /<AConferirNoDetalhe[\s\S]*?key=\{`\$\{t\.id\}:\$\{t\.needs_review\}`\}/,
     )
   })
 })
@@ -157,20 +168,22 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
   })
 
   it("a conferir: o Apple Pay aprende o cartão pelo wallet_alias", () => {
-    const f = fonte("src/components/wireframe/a-conferir-wireframe.tsx")
-    expect(f).toContain("wallet_alias")
+    const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+    const acoes = fonte("src/lib/captura/a-conferir-acoes.ts")
+    expect(acoes).toContain("wallet_alias")
     expect(f).toContain("como este cartão")
     // Já lembrado, sem botão: a comparação ignora caixa e acento.
     expect(f).toContain("Cartão já lembrado.")
-    expect(f).toContain("normalizeSearchText(")
+    expect(acoes).toContain("normalizeSearchText(")
     // Fora de lote e conferido, só o bloco do lembrar.
-    expect(f).toMatch(/confirmado \|\| soLembrar \? null/)
+    expect(f).toContain("const conferido = confirmado || soLembrar")
+    expect(f).toContain("const mostraConfirmar = !conferido")
     expect(f).toContain("Capturado · a conferir")
     // Zero linhas atualizadas não é sucesso; o apelido novo vai direto ao cache.
-    expect(f).toMatch(/\.update\(\{ wallet_alias: walletCard \}\)\s*\.eq\("id", cartaoId\)\s*\.select\("id"\)/)
-    expect(f).toContain("data?.length !== 1")
-    expect(f).toContain("setQueryData(chaveDoAlias, walletCard)")
-    expect(f).toContain("Trocar '${aliasAtual.data}' por '${walletCard}'")
+    expect(acoes).toMatch(/\.update\(\{ wallet_alias: valor \}\)\s*\.eq\("id", cardId\)\s*\.select\("id"\)/)
+    expect(acoes).toContain("data?.length !== 1")
+    expect(f).toContain("setQueryData(chaveDoAlias, gravado)")
+    expect(f).toContain('Trocar "${aliasAtual.data}" por "${walletCard}"')
     expect(f).toContain("Nome da Wallet longo demais para lembrar.")
   })
 })

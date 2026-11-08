@@ -156,3 +156,16 @@ describe("o detalhe recebe o capture_meta (o lembrar da Wallet)", () => {
         expect(fonte("src/lib/transactions-detail-sheet-query.ts")).toMatch(/TRANSACTION_DETAIL_SHEET_SELECT =\s*"\*,/)
     })
 })
+
+describe("o a conferir no detalhe (redesenho de Transações)", () => {
+    it("o detalhe monta o AConferirNoDetalhe, e o desfazer pergunta num AlertDialog", () => {
+        const sheet = fonte("src/components/transactions/transaction-detail-sheet.tsx")
+        expect(sheet).toMatch(/import\s*\{[^}]*\bAConferirNoDetalhe\b[^}]*\}\s*from\s*["']@\/components\/transactions\/a-conferir-no-detalhe["']/)
+        expect(sheet).not.toContain("a-conferir-wireframe")
+        const bloco = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+        expect(bloco).toContain('<Alert tone={conferido ? "success" : "info"} size="sm">')
+        expect(bloco).toContain("`Apagar os ${n} lançamentos desta importação?`")
+        expect(bloco).toContain("Capturado pelo Apple Pay · a conferir")
+        expect(bloco).not.toContain("window.confirm")
+    })
+})

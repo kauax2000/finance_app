@@ -1,71 +1,86 @@
 "use client"
 
-import { currencyBRL } from "@/lib/formatters"
-import { Card, CardField } from "@/components/ui/card"
-import { useEffect, useMemo, useState } from "react"
-import type {
-    Category,
-    CreditCard,
-    Transaction,
-    TransactionInstallmentPlanRef,
-} from "@/lib/supabase"
-import { supabase } from "@/lib/supabase"
+import Link from "next/link"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
-    formatTransactionDayPtBr,
-    formatTransactionDmyPtBr,
-} from "@/lib/transaction-date"
-import { resolveInstallmentKn } from "@/lib/transaction-installment"
-import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
-import { paymentMethodLabel } from "@/lib/payment-methods"
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DocumentDuplicateIcon,
+    EllipsisHorizontalIcon,
+    PencilIcon,
+    TrashIcon,
+} from "@heroicons/react/16/solid"
+import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
+import { AConferirNoDetalhe, temAConferir } from "@/components/transactions/a-conferir-no-detalhe"
 import {
-    creditCardInvoiceHintForPurchase,
-    creditCardInvoiceSlotLabelPt,
-    formatDatePtBr,
-} from "@/lib/credit-card-billing"
-import { useIsMobile } from "@/hooks/use-mobile"
+    direcaoDaTecla,
+    ehCampoDeTexto,
+    fraseDaFatura,
+    linhaDoHeroi,
+    podeNavegar,
+    rotuloDaOrigem,
+    rotuloDaRecorrencia,
+} from "@/components/transactions/detalhe-regras"
+import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
+import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import {
     InstallmentPurchaseSection,
-    SectionLabel,
     summarizeInstallmentPlan,
     useInstallmentSlices,
 } from "@/components/transactions/installment-purchase-section"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import {
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { valorComSinal } from "@/components/transactions/transacoes-tabela-regras"
+import type {
+    InstallmentPlanUpdatePayload,
+    TransactionFormSavePayload,
+    TransactionSaveResult,
+} from "@/components/transactions/transaction-form-types"
+import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
+import { useTransactionForm } from "@/components/transactions/transaction-form-use"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ColorTile } from "@/components/ui/color-tile"
+import {
+    DescriptionDetails,
+    DescriptionHint,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    DialogBody,
+    DialogCloseButton,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogHeaderRow,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
-import { AConferirWireframe } from "@/components/wireframe/a-conferir-wireframe"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Muted } from "@/components/ui/typography"
 import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
-import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
-import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesaWireframe } from "@/components/wireframe/divisao-wireframe"
-import { useTransactionForm } from "@/components/transactions/transaction-form-use"
-import type {
-    InstallmentPlanUpdatePayload,
-    TransactionFormSavePayload,
-    TransactionSaveResult,
-} from "@/components/transactions/transaction-form-types"
-import { ArrowPathRoundedSquareIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
-
-import Link from "next/link"
+import { projetoDetailPath } from "@/config/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
+import { creditCardInvoiceHintForPurchase, creditCardInvoiceSlotLabelPt } from "@/lib/credit-card-billing"
+import { currencyBRL } from "@/lib/formatters"
+import { paymentMethodLabel } from "@/lib/payment-methods"
+import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
+import type { Category, CreditCard, Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase"
+import { formatDateLongPtBr, formatTransactionDayPtBr, formatTransactionDmyPtBr } from "@/lib/transaction-date"
+import { resolveInstallmentKn } from "@/lib/transaction-installment"
+import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { cn } from "@/lib/utils"
-
-const RECURRING_INTERVAL_LABEL: Record<"daily" | "weekly" | "monthly", string> = {
-    daily: "diária",
-    weekly: "semanal",
-    monthly: "mensal",
-}
 
 export type TransactionDetailSheetProps = {
     transaction: Transaction | null
@@ -78,14 +93,18 @@ export type TransactionDetailSheetProps = {
     subscriptionsHref: string
     saving: boolean
     onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
-    onUpdateInstallmentPlan: (
-        planId: string,
-        payload: InstallmentPlanUpdatePayload
-    ) => Promise<boolean>
+    onUpdateInstallmentPlan: (planId: string, payload: InstallmentPlanUpdatePayload) => Promise<boolean>
     onDelete: (t: Transaction) => void
     /** When the sheet opens with this true, switch to edit mode once (e.g. table “Editar”). */
     launchInEditMode?: boolean
     onLaunchEditConsumed?: () => void
+    /** A linha de cima e a de baixo na página da lista; sem elas, as setas não aparecem. */
+    anterior?: Transaction | null
+    seguinte?: Transaction | null
+    /** Troca o lançamento mostrado, sem fechar a folha (setas, ↑/↓ e J/K). */
+    onNavegar?: (t: Transaction) => void
+    /** Sem ele, o Duplicar abre o criar da casca (`useDuplicarComoNova`). */
+    onDuplicar?: (t: Transaction) => void
 }
 
 export function TransactionDetailSheet({
@@ -103,13 +122,21 @@ export function TransactionDetailSheet({
     onDelete,
     launchInEditMode = false,
     onLaunchEditConsumed,
+    anterior,
+    seguinte,
+    onNavegar,
+    onDuplicar,
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
-    const [planFallback, setPlanFallback] =
-        useState<TransactionInstallmentPlanRef | null>(null)
+    const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
+    const marca = useRef<HTMLDivElement>(null)
 
     const t = transaction
+    const membros = useMemberDirectoryQuery(t?.workspace_id ?? null).data ?? []
+    const shell = useGlobalShellDialogsOptional()
+    const duplicarNaCasca = useDuplicarComoNova()
+    const duplicar = onDuplicar ?? (shell ? duplicarNaCasca : undefined)
 
     /* eslint-disable react-hooks/set-state-in-effect -- load/clear installment plan embed when sheet opens */
     useEffect(() => {
@@ -162,14 +189,7 @@ export function TransactionDetailSheet({
         return { ...t, installment_plan: planFallback }
     }, [t, planFallback])
 
-    const {
-        handleSubmit,
-        fieldsProps,
-        formTitle,
-        formDescription,
-        showFooter,
-        submitDisabled,
-    } = useTransactionForm({
+    const { handleSubmit, fieldsProps, formTitle, formDescription, showFooter, submitDisabled } = useTransactionForm({
         active: open && detailMode === "edit",
         saving,
         editingTransaction: txForForm,
@@ -200,243 +220,237 @@ export function TransactionDetailSheet({
         onLaunchEditConsumed?.()
     }, [open, launchInEditMode, onLaunchEditConsumed])
 
+    // As setas: só no desktop, só abertas pela lista, e desligadas enquanto edita.
+    const setas = podeNavegar(isMobile || !onNavegar ? null : { anterior, seguinte }, detailMode === "edit")
+    const { anterior: podeAnterior, seguinte: podeSeguinte } = setas
+    const comSetas = !isMobile && Boolean(onNavegar) && (anterior !== undefined || seguinte !== undefined)
+
+    useEffect(() => {
+        if (!open || !onNavegar || (!podeAnterior && !podeSeguinte)) return
+        const aoTeclar = (e: KeyboardEvent) => {
+            if (e.defaultPrevented || ehCampoDeTexto(e.target)) return
+            const direcao = direcaoDaTecla(e)
+            if (!direcao) return
+            // Só a folha: um menu ou uma confirmação portalizados por cima ficam com as setas.
+            const casca = marca.current?.closest('[data-slot="sheet-content"]')
+            const alvo = e.target as Node | null
+            if (alvo && alvo !== document.body && !casca?.contains(alvo)) return
+            const destino = direcao === "anterior" ? anterior : seguinte
+            if (!destino || !(direcao === "anterior" ? podeAnterior : podeSeguinte)) return
+            e.preventDefault()
+            onNavegar(destino)
+        }
+        document.addEventListener("keydown", aoTeclar)
+        return () => document.removeEventListener("keydown", aoTeclar)
+    }, [open, onNavegar, anterior, seguinte, podeAnterior, podeSeguinte])
+
     if (!t) {
         return null
     }
 
-    const paymentCard = t.payment_credit_card_id
-        ? creditCards.find((c) => c.id === t.payment_credit_card_id)
-        : null
+    const paymentCard = t.payment_credit_card_id ? creditCards.find((c) => c.id === t.payment_credit_card_id) : null
 
     const paymentLine =
         t.type === "expense" && t.payment_method
             ? t.payment_method === "credit_card" && paymentCard
-                ? `${paymentMethodLabel(t.payment_method)} · ${paymentCard.name} · •••• ${paymentCard.last_four}`
+                ? `${paymentMethodLabel(t.payment_method)} · ${paymentCard.name} · •• ${paymentCard.last_four}`
                 : paymentMethodLabel(t.payment_method)
             : null
 
-    const creditInvoiceHint =
-        t.type === "expense" &&
-        t.payment_method === "credit_card" &&
-        paymentCard
+    const fatura =
+        t.type === "expense" && t.payment_method === "credit_card" && paymentCard
             ? creditCardInvoiceHintForPurchase(t.date, paymentCard)
             : null
 
     const isIncome = t.type === "income"
+    const descricao = t.description?.trim() || t.category?.name || "Sem descrição"
+    const nomeDe = (id: string | null | undefined) => {
+        const m = id ? membros.find((x) => x.user_id === id) : undefined
+        return m ? m.full_name || m.email : null
+    }
+    const variosMembros = membros.length >= 2
+    const autor = variosMembros ? nomeDe(t.user_id) : null
+    const pagou = variosMembros ? nomeDe(t.paid_by) : null
+
+    const editar = () => setDetailMode("edit")
+    const excluir = () => onDelete(t)
+    const duplicarEsta = duplicar
+        ? () => {
+              onOpenChange(false)
+              duplicar(t)
+          }
+        : undefined
+
+    const seta = (direcao: "anterior" | "seguinte") => {
+        const destino = direcao === "anterior" ? anterior : seguinte
+        const rotulo = direcao === "anterior" ? "Lançamento anterior" : "Próximo lançamento"
+        return (
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label={rotulo}
+                        disabled={!setas[direcao]}
+                        onClick={() => destino && onNavegar?.(destino)}
+                    >
+                        {direcao === "anterior" ? <ChevronUpIcon aria-hidden /> : <ChevronDownIcon aria-hidden />}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent shortcut={direcao === "anterior" ? "up" : "down"}>{rotulo}</TooltipContent>
+            </Tooltip>
+        )
+    }
 
     const viewBody = (
-        <div className="flex min-h-0 flex-1 flex-col gap-0">
-            <DialogDescription className="sr-only">
-                {isIncome ? "Receita" : "Despesa"}. {formatTransactionDayPtBr(t.date)}.
-                Valor {currencyBRL(Number(t.amount))}.
-            </DialogDescription>
-            <div
-                className={cn(
-                    "shrink-0 border-b border-border",
-                    "mb-3",
-                )}
-            >
-                <div
-                    className={cn(
-                        "flex items-center gap-3 px-4 pb-4 pt-4 sm:px-5 md:pt-5",
-                        isMobile && "pt-2"
-                    )}
+        <div ref={marca} className="flex min-h-0 flex-1 flex-col">
+            <DialogHeader>
+                <DialogHeaderRow
+                    endAdornment={
+                        <>
+                            {/* O ⋯ abre como menu também no telefone, na escala do toque. */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais opções">
+                                        <EllipsisHorizontalIcon aria-hidden />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" size="sm">
+                                    <DropdownMenuItem onClick={editar}>
+                                        <PencilIcon aria-hidden />
+                                        Editar
+                                    </DropdownMenuItem>
+                                    {duplicarEsta ? (
+                                        <DropdownMenuItem onClick={duplicarEsta}>
+                                            <DocumentDuplicateIcon aria-hidden />
+                                            Duplicar
+                                        </DropdownMenuItem>
+                                    ) : null}
+                                    <DropdownMenuItem variant="destructive" onClick={excluir}>
+                                        <TrashIcon aria-hidden />
+                                        Excluir
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DialogCloseButton placement="inline" />
+                        </>
+                    }
                 >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="min-w-0 flex-1">
-                            <DialogTitle className="font-heading text-base font-medium leading-tight">
-                                Detalhe da transação
-                            </DialogTitle>
+                    {comSetas ? (
+                        <div className="flex items-center gap-1">
+                            {seta("anterior")}
+                            {seta("seguinte")}
                         </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                        {/* O ⋯ abre como menu também no telefone, na escala do toque. */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    size="icon-md"
-                                    className="shrink-0"
-                                    aria-label="Mais opções"
-                                >
-                                    <EllipsisHorizontalIcon aria-hidden />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                size="sm"
-                            >
-                                <DropdownMenuItem
-                                    onClick={() => setDetailMode("edit")}
-                                >
-                                    <PencilIcon aria-hidden />
-                                    Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem variant="destructive"
-                                    onClick={() => onDelete(t)}
-                                >
-                                    <TrashIcon aria-hidden />
-                                    Excluir
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="icon-sm"
-                            className="shrink-0 -mr-1"
-                            onClick={() => onOpenChange(false)}
-                            aria-label="Fechar"
-                        >
-                            <XMarkIcon aria-hidden />
-                        </Button>
+                    ) : null}
+                </DialogHeaderRow>
+            </DialogHeader>
+            <DialogDescription className="sr-only">
+                {isIncome ? "Receita" : "Despesa"}. {formatTransactionDayPtBr(t.date)}. Valor {currencyBRL(Number(t.amount))}.
+            </DialogDescription>
+
+            <DialogBody className="flex flex-col gap-6">
+                <div className="flex flex-col items-start gap-3">
+                    <ColorTile size="md" color={t.category?.color}>
+                        <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
+                    </ColorTile>
+                    <div className="min-w-0">
+                        <DialogTitle>{descricao}</DialogTitle>
+                        <MoneyDisplay size="xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
+                        <Muted>{linhaDoHeroi(formatDateLongPtBr(t.date), autor, t.source)}</Muted>
                     </div>
                 </div>
-            </div>
 
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <Card asChild variant="muted" className="gap-3 px-4">
-                <section>
-                    <div className="flex items-start justify-between gap-3">
-                        <SectionLabel className="shrink-0">Resumo</SectionLabel>
-                        <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-                            {formatTransactionDayPtBr(t.date)}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">
-                            {t.installment_plan_id
-                                ? "Valor desta movimentação"
-                                : "Valor"}
-                        </p>
-                        <p
-                            className={cn(
-                                "mt-0.5 text-2xl font-semibold tabular-nums tracking-tight",
-                                isIncome
-                                    ? "text-income"
-                                    : "text-foreground"
-                            )}
-                        >
-                            {isIncome ? "+" : "−"}
-                            {currencyBRL(Number(t.amount))}
-                        </p>
-                        {t.installment_plan_id ? (
-                            <p className="mt-1 text-2xs leading-snug text-muted-foreground">
-                                Em compras parceladas, o valor acima é desta
-                                parcela no extrato; o total da compra aparece em
-                                Compra parcelada.
-                            </p>
-                        ) : null}
-                    </div>
-                </section>
-                </Card>
-
-                <section className="space-y-3">
-                    <SectionLabel>Detalhes</SectionLabel>
-                    <div className="space-y-3 text-sm">
-                        <CardField label="Descrição">
-                            <p className="line-clamp-4 break-words text-foreground">
-                                {t.description?.trim() || "—"}
-                            </p>
-                        </CardField>
-
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <CardField label="Categoria">
-                                {t.category ? (
-                                    <p className="inline-flex items-center gap-2">
-                                        <span
-                                            className="size-2 shrink-0 rounded-full"
-                                            style={{
-                                                backgroundColor:
-                                                    t.category.color ||
-                                                    "var(--muted-foreground)",
-                                            }}
-                                            aria-hidden
-                                        />
-                                        {t.category.name}
-                                    </p>
-                                ) : (
-                                    <p>—</p>
-                                )}
-                            </CardField>
-                            <CardField label="Data (calendário)">
-                                <p className="tabular-nums">
-                                    {formatTransactionDmyPtBr(t.date)}
-                                </p>
-                            </CardField>
-                            {t.type === "expense" && paymentLine ? (
-                                <CardField label="Pagamento" className="sm:col-span-2">
-                                    <p>{paymentLine}</p>
-                                    {creditInvoiceHint ? (
-                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
-                                            <span className="font-medium text-foreground/90">
-                                                {creditCardInvoiceSlotLabelPt(
-                                                    creditInvoiceHint.slot
-                                                )}
-                                            </span>
-                                            {" · "}
-                                            Fecha em{" "}
-                                            {formatDatePtBr(
-                                                creditInvoiceHint.statementClose
-                                            )}
-                                            {" · "}
-                                            Vencimento estimado{" "}
-                                            {formatDatePtBr(
-                                                creditInvoiceHint.dueEstimate
-                                            )}
-                                        </p>
-                                    ) : null}
-                                </CardField>
-                            ) : null}
-                            {t.is_recurring ? (
-                                <CardField label="Recorrência" className="sm:col-span-2">
-                                    <p>
-                                        Sim ·{" "}
-                                        {t.recurring_interval
-                                            ? RECURRING_INTERVAL_LABEL[t.recurring_interval]
-                                            : "—"}
-                                    </p>
-                                </CardField>
-                            ) : null}
-                            {t.subscription_id ? (
-                                <CardField label="Assinatura" className="sm:col-span-2">
-                                    <Button asChild variant="outline" size="xs" className="mt-1 self-start">
-                                        <Link href={subscriptionsHref}>
-                                            <ArrowPathRoundedSquareIcon aria-hidden />
-                                            {t.subscription?.name ??
-                                                "Ver assinaturas"}
-                                        </Link>
-                                    </Button>
-                                </CardField>
-                            ) : null}
-                        </div>
-                    </div>
-                </section>
-
-                {t.needs_review || t.import_batch_id || (t.source === "apple_pay" && t.capture_meta?.walletCard) ? (
-                    <AConferirWireframe
-                        // Confirmado na lista com o detalhe aberto: o quadro remonta, sem "Confirmar" velho.
+                {temAConferir(t) ? (
+                    <AConferirNoDetalhe
+                        // Confirmado na lista com o detalhe aberto: o bloco remonta, sem "Confirmar" velho.
                         key={`${t.id}:${t.needs_review}`}
                         transaction={t}
-                        onChanged={(o) => {
+                        onFeito={(o) => {
                             if (o === "desfeito") onOpenChange(false)
                         }}
                     />
                 ) : null}
 
-                {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
-                <PartesDaDespesaWireframe transaction={t} />
-
-                {t.workspace_id ? (
-                    <AnexosWireframe
-                        key={t.id}
-                        workspaceId={t.workspace_id}
-                        vinculo={{ transactionId: t.id }}
-                        // Com a conta paga por este lançamento, o boleto da instância aparece junto.
-                        listar={() => anexosDoLancamento(supabase, t.id)}
-                    />
-                ) : null}
+                <DescriptionList>
+                    <DescriptionListItem>
+                        <DescriptionTerm>Categoria</DescriptionTerm>
+                        <DescriptionDetails>
+                            {t.category ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <ColorTile size="xs" color={t.category.color}>
+                                        <CategoryIconPreview name={normalizeCategoryIcon(t.category.icon)} />
+                                    </ColorTile>
+                                    {t.category.name}
+                                </span>
+                            ) : (
+                                "Sem categoria"
+                            )}
+                        </DescriptionDetails>
+                    </DescriptionListItem>
+                    {paymentLine ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Pagamento</DescriptionTerm>
+                            <DescriptionDetails>
+                                {paymentLine}
+                                {fatura ? (
+                                    <DescriptionHint className="flex flex-wrap items-center gap-2">
+                                        <Badge size="xs">{creditCardInvoiceSlotLabelPt(fatura.slot)}</Badge>
+                                        {fraseDaFatura(fatura.statementClose, fatura.dueEstimate)}
+                                    </DescriptionHint>
+                                ) : null}
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                    <DescriptionListItem>
+                        <DescriptionTerm>Data</DescriptionTerm>
+                        <DescriptionDetails>{formatTransactionDmyPtBr(t.date)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    {t.is_recurring ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Recorrência</DescriptionTerm>
+                            <DescriptionDetails>{rotuloDaRecorrencia(t.recurring_interval)}</DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                    {t.subscription_id ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Assinatura</DescriptionTerm>
+                            <DescriptionDetails>
+                                <Button asChild variant="link" size="sm">
+                                    <Link href={`${subscriptionsHref}?sub=${encodeURIComponent(t.subscription_id)}`}>
+                                        {t.subscription?.name ?? "Ver assinatura"}
+                                    </Link>
+                                </Button>
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                    {t.project_id ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Projeto</DescriptionTerm>
+                            <DescriptionDetails>
+                                <Button asChild variant="link" size="sm">
+                                    <Link href={projetoDetailPath(t.project_id)}>Ver projeto</Link>
+                                </Button>
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                    <DescriptionListItem>
+                        <DescriptionTerm>Entrou por</DescriptionTerm>
+                        <DescriptionDetails>{rotuloDaOrigem(t.source)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    {autor ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Lançado por</DescriptionTerm>
+                            <DescriptionDetails>{autor}</DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                    {pagou && !isIncome ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Quem pagou</DescriptionTerm>
+                            <DescriptionDetails>{pagou}</DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                </DescriptionList>
 
                 {installmentBlock ? (
                     <InstallmentPurchaseSection
@@ -451,7 +465,43 @@ export function TransactionDetailSheet({
                 {installmentBlock && t.installment_plan_id ? (
                     <ImpactoDaParcela planoId={t.installment_plan_id} />
                 ) : null}
-            </div>
+
+                {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
+                <PartesDaDespesaWireframe transaction={t} />
+
+                {t.workspace_id ? (
+                    <AnexosWireframe
+                        key={t.id}
+                        workspaceId={t.workspace_id}
+                        vinculo={{ transactionId: t.id }}
+                        // Com a conta paga por este lançamento, o boleto da instância aparece junto.
+                        listar={() => anexosDoLancamento(supabase, t.id)}
+                    />
+                ) : null}
+            </DialogBody>
+
+            {/* Três ações: o `TresAcoesContext` sobe o Duplicar a `secondary`. */}
+            <DialogFooter
+                start={
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        className="text-destructive [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)]"
+                        onClick={excluir}
+                    >
+                        Excluir
+                    </Button>
+                }
+            >
+                {duplicarEsta ? (
+                    <Button type="button" variant="tertiary" onClick={duplicarEsta}>
+                        Duplicar
+                    </Button>
+                ) : null}
+                <Button type="button" variant="primary" onClick={editar}>
+                    Editar
+                </Button>
+            </DialogFooter>
         </div>
     )
 
@@ -460,9 +510,10 @@ export function TransactionDetailSheet({
             <SheetContent
                 side="right"
                 variant="flush"
+                size="md"
                 fillMobileViewport={isMobile}
                 className={cn(
-                    "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
+                    "flex w-full flex-col gap-0 overflow-hidden p-0",
                     isMobile && "rounded-t-modal pt-0 sm:max-w-full"
                 )}
             >
