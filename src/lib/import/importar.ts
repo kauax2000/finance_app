@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
-import { calendarYmdToStorageIso } from "@/lib/transaction-date"
+import {
+    addDaysYmd,
+    calendarYmdToStorageIso,
+    filterRangeEndIso,
+    filterRangeStartIso,
+    transactionLocalYmd,
+} from "@/lib/transaction-date"
 import type { TablesInsert } from "@/types/database"
 import { sugerirCategoria } from "./categoria-pelo-historico"
 import { normalizarDescricao } from "./normalizar"
@@ -152,4 +158,48 @@ export async function desfazerImportacao(
         }
     }
     return { ok: true }
+}
+
+export type Existente = { id: string; description: string; date: string }
+
+/**
+ * Os itens do lote que já estão na carteira: mesmo dia local, valor, tipo e destino,
+ * 1 para 1. Falha na consulta não bloqueia a importação: devolve o mapa vazio.
+ */
+export async function buscarJaExistentes(
+    db: SupabaseClient,
+    workspaceId: string,
+    destino: DestinoImportacao,
+    itens: ItemImportavel[],
+): Promise<Map<string, Existente>> {
+    const achados = new Map<string, Existente>()
+    if (itens.length === 0) return achados
+    const dias = itens.map((i) => i.data).sort()
+    // um dia de folga de cada lado: o dia é conferido localmente depois
+    let q = db
+        .from("transactions")
+        .select("id, description, date, amount, type, payment_method, payment_credit_card_id")
+        .eq("workspace_id", workspaceId)
+        .gte("date", filterRangeStartIso(addDaysYmd(dias[0], -1)))
+        .lte("date", filterRangeEndIso(addDaysYmd(dias[dias.length - 1], 1)))
+    q =
+        destino.tipo === "cartao"
+            ? q.eq("payment_credit_card_id", destino.cardId)
+            : q.eq("payment_method", destino.paymentMethod).is("payment_credit_card_id", null)
+    const { data, error } = await q
+    if (error || !data) return achados
+
+    const livres = new Map<string, Existente[]>()
+    for (const t of data) {
+        const dia = transactionLocalYmd(t.date)
+        if (!dia) continue
+        const k = `${dia}|${t.type}|${Math.round(Number(t.amount) * 100)}`
+        livres.set(k, [...(livres.get(k) ?? []), { id: t.id, description: t.description, date: t.date }])
+    }
+    for (const i of itens) {
+        const k = `${i.data}|${i.estorno ? "income" : "expense"}|${Math.round(i.valor * 100)}`
+        const e = livres.get(k)?.shift()
+        if (e) achados.set(i.clientId, e)
+    }
+    return achados
 }

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { describe, expect, it } from "vitest"
 import { sugerirCategoria } from "./categoria-pelo-historico"
 import {
+    buscarJaExistentes,
     categoriasQueFaltam,
     comCategoriaDaPlanilha,
     desfazerImportacao,
@@ -247,5 +248,71 @@ describe("negativoEhDespesaPadrao", () => {
     it("conta: negativo é despesa; cartão: compra positiva", () => {
         expect(negativoEhDespesaPadrao({ tipo: "conta", paymentMethod: "pix" })).toBe(true)
         expect(negativoEhDespesaPadrao({ tipo: "cartao", cardId: "c1" })).toBe(false)
+    })
+})
+
+describe("buscarJaExistentes", () => {
+    type Linha = { id: string; description: string; date: string; amount: number; type: string; payment_method: string; payment_credit_card_id: string | null }
+    const linha = (p: Partial<Linha> = {}): Linha => ({
+        id: "t1", description: "Padaria", date: "2026-10-10T12:00:00.000Z", amount: 30,
+        type: "expense", payment_method: "pix", payment_credit_card_id: null, ...p,
+    })
+    function mock(resultado: { data: Linha[] | null; error: { message: string } | null }) {
+        const chamadas: Array<[string, unknown[]]> = []
+        const q: Record<string, unknown> = {}
+        for (const m of ["select", "eq", "is", "gte", "lte"]) {
+            q[m] = (...args: unknown[]) => { chamadas.push([m, args]); return q }
+        }
+        q.then = (ok: (r: unknown) => unknown) => Promise.resolve(resultado).then(ok)
+        const from = (t: string) => { chamadas.push(["from", [t]]); return q }
+        return { db: { from } as unknown as SupabaseClient, chamadas }
+    }
+    const conta = { tipo: "conta", paymentMethod: "pix" } as const
+    const cartao = { tipo: "cartao", cardId: "k1" } as const
+
+    it("sem lote não consulta", async () => {
+        const { db, chamadas } = mock({ data: [], error: null })
+        expect((await buscarJaExistentes(db, "w1", conta, [])).size).toBe(0)
+        expect(chamadas).toEqual([])
+    })
+
+    it("consulta as colunas, a carteira, o intervalo e o destino", async () => {
+        const { db, chamadas } = mock({ data: [], error: null })
+        await buscarJaExistentes(db, "w1", conta, [item({ data: "2026-10-12" }), item({ data: "2026-10-05", clientId: "c2" })])
+        expect(chamadas).toContainEqual(["select", ["id, description, date, amount, type, payment_method, payment_credit_card_id"]])
+        expect(chamadas).toContainEqual(["eq", ["workspace_id", "w1"]])
+        expect(chamadas).toContainEqual(["gte", ["date", "2026-10-04T00:00:00.000Z"]])
+        expect(chamadas).toContainEqual(["lte", ["date", "2026-10-13T23:59:59.999Z"]])
+        expect(chamadas).toContainEqual(["eq", ["payment_method", "pix"]])
+        expect(chamadas).toContainEqual(["is", ["payment_credit_card_id", null]])
+        const c = mock({ data: [], error: null })
+        await buscarJaExistentes(c.db, "w1", cartao, [item()])
+        expect(c.chamadas).toContainEqual(["eq", ["payment_credit_card_id", "k1"]])
+    })
+
+    it("casa por dia, valor e tipo", async () => {
+        const { db } = mock({ data: [
+            linha({ id: "a" }),
+            linha({ id: "b", amount: 31, date: "2026-10-11T12:00:00.000Z" }),
+            linha({ id: "c", type: "income", date: "2026-10-12T12:00:00.000Z" }),
+        ], error: null })
+        const r = await buscarJaExistentes(db, "w1", conta, [
+            item({ clientId: "x" }),
+            item({ clientId: "y", data: "2026-10-11" }),
+            item({ clientId: "z", data: "2026-10-12" }),
+        ])
+        expect([...r.keys()]).toEqual(["x"])
+        expect(r.get("x")).toEqual({ id: "a", description: "Padaria", date: "2026-10-10T12:00:00.000Z" })
+    })
+
+    it("1 para 1: dois iguais e um existente casa só um", async () => {
+        const { db } = mock({ data: [linha()], error: null })
+        const r = await buscarJaExistentes(db, "w1", conta, [item({ clientId: "a" }), item({ clientId: "b" })])
+        expect([...r.keys()]).toEqual(["a"])
+    })
+
+    it("erro da consulta devolve mapa vazio", async () => {
+        const { db } = mock({ data: null, error: { message: "boom" } })
+        expect((await buscarJaExistentes(db, "w1", conta, [item()])).size).toBe(0)
     })
 })
