@@ -1,13 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/16/solid"
 import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
 import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
 import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
 import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
-import { TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
+import { MenuMaisAcoes, TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
 import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
@@ -23,13 +22,12 @@ import {
     AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { downloadCsv } from "@/lib/data-table/csv"
+import { pedirDestinoDoCsv, salvarCsv } from "@/lib/data-table/csv"
 import { numberBR } from "@/lib/formatters"
 import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
@@ -64,6 +62,10 @@ export default function TransactionsPageClient() {
 
     const exportar = async () => {
         if (!currentWorkspaceId || exportando) return
+        const arquivo = nomeDoCsv(new Date())
+        // O destino vem antes dos dados: o "Salvar como" exige o gesto do clique, e cancelar não busca nada.
+        const destino = await pedirDestinoDoCsv(arquivo)
+        if (!destino) return
         setExportando(true)
         try {
             const { transactions, truncado } = await fetchTransacoesParaExportar({
@@ -72,7 +74,8 @@ export default function TransactionsPageClient() {
                 cartoes: tela.creditCards,
             })
             const nome = new Map(membros.map((m) => [m.user_id, m.full_name || m.email]))
-            downloadCsv(nomeDoCsv(new Date()), transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
+            await salvarCsv(destino, arquivo, transacoesParaCsv(transactions, { nomeDoMembro: (id) => nome.get(id) ?? "" }))
+            // Só depois de gravado (no "Salvar como") ou do download começar.
             toastSuccess(mensagemDaExportacao(transactions.length, truncado))
         } catch {
             toastError("Não foi possível exportar os lançamentos.")
@@ -116,14 +119,12 @@ export default function TransactionsPageClient() {
                     {/* Criar mora no "+ Adicionar" da barra lateral: o cabeçalho só importa e exporta. */}
                     {convidado ? null : (
                         <PageHeaderActions>
-                            <Button type="button" variant="tertiary" disabled={exportando} onClick={() => void exportar()}>
-                                <ArrowDownTrayIcon aria-hidden />
-                                Exportar
-                            </Button>
-                            <Button type="button" variant="primary" onClick={() => pedidos.setImportar(true)}>
-                                <ArrowUpTrayIcon aria-hidden />
-                                Importar
-                            </Button>
+                            {/* Importar e Exportar são de vez em quando: moram no ⋯, o mesmo menu do telefone. */}
+                            <MenuMaisAcoes
+                                onImportar={() => pedidos.setImportar(true)}
+                                onExportar={() => void exportar()}
+                                exportando={exportando}
+                            />
                         </PageHeaderActions>
                     )}
                 </PageHeader>

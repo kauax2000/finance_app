@@ -63,27 +63,7 @@ export function TransacoesToolbar({
                 {/* Só no telefone: no desktop Importar e Exportar moram no cabeçalho da página. */}
                 {onImportar || onExportar ? (
                     <div className="hidden shrink-0 max-md:flex">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
-                                    <EllipsisHorizontalIcon aria-hidden />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                {onImportar ? (
-                                    <DropdownMenuItem onSelect={onImportar}>
-                                        <ArrowUpTrayIcon aria-hidden />
-                                        Importar extrato
-                                    </DropdownMenuItem>
-                                ) : null}
-                                {onExportar ? (
-                                    <DropdownMenuItem onSelect={onExportar} disabled={exportando}>
-                                        <ArrowDownTrayIcon aria-hidden />
-                                        Exportar CSV
-                                    </DropdownMenuItem>
-                                ) : null}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} />
                     </div>
                 ) : null}
             <div ref={raizDosFiltros} className="min-w-0 flex-1 max-md:order-last max-md:basis-full">
@@ -99,5 +79,40 @@ export function TransacoesToolbar({
                 />
             </div>
         </div>
+    )
+}
+
+/** O ⋯ de Importar e Exportar: no cabeçalho do desktop e na barra do telefone. Sem um handler, o item some. */
+export function MenuMaisAcoes({
+    onImportar,
+    onExportar,
+    exportando = false,
+}: {
+    onImportar?: () => void
+    onExportar?: () => void
+    exportando?: boolean
+}) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
+                    <EllipsisHorizontalIcon aria-hidden />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {onImportar ? (
+                    <DropdownMenuItem onSelect={onImportar}>
+                        <ArrowUpTrayIcon aria-hidden />
+                        Importar extrato
+                    </DropdownMenuItem>
+                ) : null}
+                {onExportar ? (
+                    <DropdownMenuItem onSelect={onExportar} disabled={exportando}>
+                        <ArrowDownTrayIcon aria-hidden />
+                        Exportar CSV
+                    </DropdownMenuItem>
+                ) : null}
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }

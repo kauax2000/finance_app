@@ -37,13 +37,15 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("transactions-table")
     })
 
-    it("o cabeçalho só importa e exporta: criar mora no + Adicionar da barra lateral", () => {
+    it("o cabeçalho só tem o ⋯ de importar e exportar: criar mora no + Adicionar da barra lateral", () => {
         expect(f).toMatch(/<PageHeader collapse>/)
         expect(f).toMatch(/<PageHeaderTitle asChild>[\s\S]{0,80}?<p aria-hidden="true">Transações<\/p>/)
         expect(f).not.toContain("TransactionNewSplitButton")
         const acoes = f.slice(f.indexOf("<PageHeaderActions"), f.indexOf("</PageHeaderActions>"))
         expect(f).toMatch(/convidado \? null : \(\s*<PageHeaderActions>/)
-        expect(acoes).toMatch(/variant="tertiary"[\s\S]*Exportar[\s\S]*variant="primary"[\s\S]*Importar/)
+        // Importar e Exportar moram no ⋯ (o mesmo menu do telefone), sem botão primário no cabeçalho.
+        expect(acoes).toMatch(/<MenuMaisAcoes[\s\S]*onImportar=[\s\S]*onExportar=/)
+        expect(acoes).not.toContain('variant="primary"')
     })
 
     it("o convidado não vê Importar nem Exportar no ⋯, nem o Confirmar todos (spec §12)", () => {
@@ -84,11 +86,12 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("window.confirm")
     })
 
-    it("exportar lê, gera o CSV e baixa", () => {
-        expect(f).toContain("fetchTransacoesParaExportar(")
+    it("exportar pede o destino antes, lê, grava e só então avisa", () => {
+        // O "Salvar como" vem no clique (exige o gesto), antes de buscar os dados.
+        expect(f).toMatch(/pedirDestinoDoCsv\(arquivo\)[\s\S]*fetchTransacoesParaExportar\(/)
         expect(f).toContain("transacoesParaCsv(")
-        expect(f).toContain("downloadCsv(nomeDoCsv(new Date())")
-        expect(f).toContain("toastSuccess(mensagemDaExportacao(")
+        // O toast vem depois de gravar, e não ao escolher.
+        expect(f).toMatch(/await salvarCsv\(destino, arquivo,[\s\S]*toastSuccess\(mensagemDaExportacao\(/)
     })
 })
 

@@ -47,3 +47,35 @@ export function downloadCsv(filename: string, csv: string) {
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
+
+type SaveFilePicker = (opts: {
+  suggestedName: string
+  types: { description: string; accept: Record<string, string[]> }[]
+}) => Promise<FileSystemFileHandle>
+
+/**
+ * O destino do CSV, pedido no clique (o seletor exige um gesto recente): o "Salvar como"
+ * do navegador quando ele existe (Chrome, Edge), e `"download"` quando não existe
+ * (Safari, Firefox), para o link de download de sempre. `null` é a pessoa que cancelou.
+ */
+export async function pedirDestinoDoCsv(filename: string): Promise<FileSystemFileHandle | "download" | null> {
+  const picker = (globalThis as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker
+  if (!picker) return "download"
+  try {
+    return await picker({
+      suggestedName: filename.endsWith(".csv") ? filename : `${filename}.csv`,
+      types: [{ description: "Planilha CSV", accept: { "text/csv": [".csv"] } }],
+    })
+  } catch (e) {
+    if ((e as { name?: string })?.name === "AbortError") return null
+    return "download"
+  }
+}
+
+/** Grava o CSV no destino; resolve só quando o arquivo está salvo (ou o download começou). */
+export async function salvarCsv(destino: FileSystemFileHandle | "download", filename: string, csv: string) {
+  if (destino === "download") return downloadCsv(filename, csv)
+  const escrita = await destino.createWritable()
+  await escrita.write(new Blob([csv], { type: "text/csv;charset=utf-8" }))
+  await escrita.close()
+}
