@@ -128,7 +128,10 @@ describe("a conferência", () => {
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
-        expect(conferir).toMatch(/<p role="status"[^>]*>[\s\S]*?Vão entrar/)
+        // Quantas entram é a região viva do rodapé, ao lado do Importar; a conferência só traz os valores.
+        expect(dialogo).toMatch(/<DialogFooter>[\s\S]*?<p\s+role="status"[\s\S]*?Vão entrar/)
+        expect(dialogo).toContain("sm:me-auto")
+        expect(conferir).not.toContain("Vão entrar")
         expect(conferir).not.toContain("opacity-60")
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
     })

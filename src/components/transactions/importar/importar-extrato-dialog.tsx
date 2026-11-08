@@ -420,6 +420,19 @@ export function ImportarExtratoDialog({
                     </DialogBody>
                     {imp.passo === "feito" ? null : (
                         <DialogFooter>
+                            {/* Quantas entram fica à esquerda, na linha dos botões; no telefone sobe para cima deles.
+                                Dentro do rodapé (e não no `start`): o par Voltar e Importar mantém os dois pesos. */}
+                            {imp.passo === "conferir" ? (
+                                <p
+                                    role="status"
+                                    className="text-sm text-muted-foreground max-sm:order-last max-sm:text-center sm:me-auto sm:self-center"
+                                >
+                                    Vão entrar{" "}
+                                    <span className="font-medium text-foreground nums">
+                                        {numberBR(imp.resumo.entram)} de {numberBR(imp.resumo.total)}
+                                    </span>
+                                </p>
+                            ) : null}
                             {imp.passo === "arquivo" ? (
                                 <DialogClose asChild>
                                     <FormCancel>Cancelar</FormCancel>

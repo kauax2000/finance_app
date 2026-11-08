@@ -465,25 +465,18 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ))}
                 </div>
             ) : null}
-            {/* O resumo é uma linha só, falada pelo leitor de tela a cada marcação; as ações da lista moram na ponta dela. */}
+            {/* Os valores são uma linha só; as ações da lista moram na ponta dela. */}
             <div className="flex items-start gap-2">
-                <p role="status" className="min-w-0 flex-1 text-sm text-muted-foreground">
+                {/* Quantas entram mora no rodapé, ao lado do Importar; aqui ficam os valores. */}
+                <p className="min-w-0 flex-1 text-sm text-muted-foreground">
                     {resumo.saidas > 0 ? (
-                        <>
-                            <span className="text-expense nums">Saídas {signedCurrencyBRL(-resumo.saidas)}</span>
-                            {" · "}
-                        </>
+                        <span className="text-expense nums">Saídas {signedCurrencyBRL(-resumo.saidas)}</span>
                     ) : null}
+                    {resumo.saidas > 0 && resumo.entradas > 0 ? " · " : null}
                     {resumo.entradas > 0 ? (
-                        <>
-                            <span className="text-income nums">Entradas {signedCurrencyBRL(resumo.entradas)}</span>
-                            {" · "}
-                        </>
+                        <span className="text-income nums">Entradas {signedCurrencyBRL(resumo.entradas)}</span>
                     ) : null}
-                    Vão entrar{" "}
-                    <span className="font-medium text-foreground nums">
-                        {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                    </span>
+                    {resumo.saidas === 0 && resumo.entradas === 0 ? "Nenhuma linha marcada" : null}
                 </p>
                 {imp.expandido ? null : (
                     <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
