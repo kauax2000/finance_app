@@ -32,9 +32,9 @@ import {
 import { useWorkspace } from "@/components/workspace-provider"
 import { identityToneFor } from "@/lib/avatar"
 import { definirPartes, lerPartes } from "@/lib/divisao/dados"
-import { emCentavos, faltaParaFechar, partesFecham, textoDaFalta } from "@/lib/divisao/partes"
+import { emCentavos, faltaParaFechar, lerParte, partesFecham, textoDaFalta } from "@/lib/divisao/partes"
 import { chaves, useAdultos } from "@/lib/divisao/use-adultos"
-import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
 import type { Transaction } from "@/lib/supabase"
 import { cn, getInitials } from "@/lib/utils"
@@ -98,9 +98,13 @@ function Partes({ t, ws }: { t: Transaction; ws: string }) {
     }
 
     const reais = editando
-        ? Object.fromEntries(lista.map((a) => [a.user_id, parseMoneyBrl(editando[a.user_id] || "0") ?? 0]))
+        ? Object.fromEntries(lista.map((a) => [a.user_id, lerParte(editando[a.user_id] ?? "")]))
         : {}
-    const falta = faltaParaFechar(reais, Number(t.amount))
+    // O que não se lê conta zero só no "Faltam"; para fechar, o NaN reprova.
+    const falta = faltaParaFechar(
+        Object.fromEntries(Object.entries(reais).map(([id, v]) => [id, Number.isNaN(v) ? 0 : v])),
+        Number(t.amount),
+    )
     const digitadas = Object.entries(reais).map(([user_id, v]) => ({ user_id, centavos: emCentavos(v) }))
     const fecha = editando != null && partesFecham(digitadas, emCentavos(t.amount))
 

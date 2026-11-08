@@ -5,9 +5,15 @@
  * sugestão de quem paga quem. Tudo em centavos.
  */
 import { currencyBRL } from "@/lib/formatters"
+import { parseMoneyBrl } from "@/lib/money-brl"
 
 /** O `numeric` do banco (número ou texto) em centavos inteiros. */
 export const emCentavos = (valor: number | string) => Math.round(Number(valor) * 100)
+
+/** A parte digitada em reais: vazio é zero; o que não se lê é `NaN`, para o `partesFecham` reprovar. */
+export function lerParte(texto: string): number {
+    return texto.trim() ? (parseMoneyBrl(texto) ?? Number.NaN) : 0
+}
 
 /**
  * As partes digitadas fecham o valor da despesa: centavos inteiros, nenhuma

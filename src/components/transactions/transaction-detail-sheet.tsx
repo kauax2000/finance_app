@@ -355,7 +355,7 @@ export function TransactionDetailSheet({
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
                     <div className="min-w-0">
-                        <DialogTitle>{descricao}</DialogTitle>
+                        <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                         <MoneyDisplay size="xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                         <Muted>{linhaDoHeroi(formatDateLongPtBr(t.date), autor, t.source)}</Muted>
                     </div>
@@ -505,6 +505,14 @@ export function TransactionDetailSheet({
                 variant="flush"
                 size="md"
                 fillMobileViewport={isMobile}
+                onOpenAutoFocus={(e) => {
+                    // O foco vai ao título, e não ao primeiro botão (a seta ↑, que abriria a dica).
+                    const casca = e.currentTarget as HTMLElement | null
+                    const titulo = casca?.querySelector<HTMLElement>('[data-slot="dialog-title"]')
+                    if (!titulo) return
+                    e.preventDefault()
+                    titulo.focus()
+                }}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0",
                     isMobile && "rounded-t-modal pt-0 sm:max-w-full"

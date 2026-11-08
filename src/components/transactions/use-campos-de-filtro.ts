@@ -109,8 +109,23 @@ export function podarCategoriasDoTipo(
     })
 }
 
+/**
+ * Sem os tokens de campo que a barra não mostra (o `f=` escrito à mão com
+ * `pessoa` para o convidado, um cartão numa carteira sem cartão): filtrar por
+ * um campo invisível deixaria a lista filtrada sem nada para tirar o filtro.
+ */
+export function semCamposOcultos(filtros: FilterValue[], campos: Pick<FilterField, "id">[]): FilterValue[] {
+    const visiveis = new Set(campos.map((c) => c.id))
+    return filtros.every((f) => visiveis.has(f.field)) ? filtros : filtros.filter((f) => visiveis.has(f.field))
+}
+
 /** Os campos do `FilterBar` de Transações, das mesmas consultas (em cache) que a tela já faz. */
-export function useCamposDeFiltro(type: EstadoDaLista["type"]): { campos: FilterField[]; carregando: boolean } {
+export function useCamposDeFiltro(type: EstadoDaLista["type"]): {
+    campos: FilterField[]
+    carregando: boolean
+    /** Todas as consultas que decidem quais campos existem terminaram: só aí se poda. */
+    prontos: boolean
+} {
     const { currentWorkspaceId: ws, currentWorkspace, papel } = useWorkspace()
     const divide = currentWorkspace?.split_mode === "split"
     const categorias = useCategoriesQuery(ws)
@@ -142,5 +157,6 @@ export function useCamposDeFiltro(type: EstadoDaLista["type"]): { campos: Filter
         [type, categorias.data, cartoes.data, membros.data, papel, adultos.lista, divide, projetos.data, aux.data],
     )
     const carregando = categorias.isPending || cartoes.isPending || aux.isPending || membros.isPending
-    return { campos, carregando }
+    const prontos = Boolean(ws) && !carregando && !projetos.isPending && !adultos.carregando
+    return { campos, carregando, prontos }
 }

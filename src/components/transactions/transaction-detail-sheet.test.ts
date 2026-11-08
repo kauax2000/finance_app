@@ -137,4 +137,10 @@ describe("fonte do detalhe", () => {
             expect(f, arquivo).not.toContain("destructive)_22%")
         }
     })
+
+    it("abre com o foco no título, e não na seta (a dica não salta ao abrir)", () => {
+        const f = fonte(SHEET)
+        expect(f).toMatch(/onOpenAutoFocus=\{[^}]*preventDefault/)
+        expect(f).toMatch(/<DialogTitle[^>]*tabIndex=\{-1\}/)
+    })
 })

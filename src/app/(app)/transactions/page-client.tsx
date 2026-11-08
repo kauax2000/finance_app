@@ -14,7 +14,6 @@ import { TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { TransactionNewSplitButton } from "@/components/transactions/transaction-new-split-button"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
-import { useCamposDeFiltro } from "@/components/transactions/use-campos-de-filtro"
 import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
@@ -48,7 +47,7 @@ import { mensagemDaExportacao, nomeDoCsv } from "@/lib/transactions/exportar-csv
 export default function TransactionsPageClient() {
     const tela = useTransacoesDaTela()
     const { estado, setEstado, pedidosDeAbertura: pedidos, exclusao } = tela
-    const { campos } = useCamposDeFiltro(estado.type)
+    const { campos } = tela
     const { currentWorkspaceId, currentWorkspace, papel, loading: workspaceLoading, error: workspaceError } = useWorkspace()
     const convidado = papel === "guest"
     const membros = useMemberDirectoryQuery(currentWorkspaceId).data ?? []

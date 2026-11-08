@@ -35,6 +35,8 @@ const SEM_CATEGORIA = "__sem__"
 export type CategorizarEmLoteDialogProps = {
     /** As ids marcadas; `null` fecha. */
     ids: string[] | null
+    /** A carteira das ids: o update se restringe a ela. */
+    workspaceId: string | null
     tipo: "expense" | "income"
     categorias: Pick<Category, "id" | "name" | "type" | "color">[]
     /** `true` depois de gravar; `false` ao cancelar. */
@@ -42,7 +44,7 @@ export type CategorizarEmLoteDialogProps = {
 }
 
 /** Uma categoria para o lote todo (spec §6.4): grava a categoria e tira o "a conferir". */
-export function CategorizarEmLoteDialog({ ids, tipo, categorias, onDone }: CategorizarEmLoteDialogProps) {
+export function CategorizarEmLoteDialog({ ids, workspaceId, tipo, categorias, onDone }: CategorizarEmLoteDialogProps) {
     const [escolha, setEscolha] = useState("")
     const [gravando, setGravando] = useState(false)
     const aberto = ids != null
@@ -53,10 +55,10 @@ export function CategorizarEmLoteDialog({ ids, tipo, categorias, onDone }: Categ
     const n = ids?.length ?? 0
 
     async function gravar() {
-        if (!ids || !escolha) return
+        if (!ids || !escolha || !workspaceId) return
         setGravando(true)
         try {
-            await categorizarEmLote(ids, escolha === SEM_CATEGORIA ? null : escolha)
+            await categorizarEmLote(ids, escolha === SEM_CATEGORIA ? null : escolha, workspaceId)
         } catch (e) {
             toastError(e instanceof Error ? e.message : "Não foi possível categorizar os lançamentos.")
             return

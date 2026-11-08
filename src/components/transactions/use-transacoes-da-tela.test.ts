@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { Transaction } from "@/lib/supabase"
 import { PROJECTED_TRANSACTION_ID_PREFIX } from "@/lib/category-expense-month-rows"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { paginaDepoisDeExcluir, primeiraVez, urlSem, vizinhosDe } from "./use-transacoes-da-tela"
+import { paginaDepoisDeExcluir, primeiraVez, urlSem, vizinhosDe, vizinhosNaLista } from "./use-transacoes-da-tela"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -27,6 +27,35 @@ describe("vizinhosDe", () => {
     it("devolve {} quando o id não está na lista", () => {
         expect(vizinhosDe(lista, "z")).toEqual({})
         expect(vizinhosDe([], "a")).toEqual({})
+    })
+})
+
+describe("vizinhosNaLista", () => {
+    const lista = [t("a"), t("b"), t("c"), t("d")]
+
+    it("na lista, devolve os vizinhos e o índice da linha entre as reais", () => {
+        const p = t(`${PROJECTED_TRANSACTION_ID_PREFIX}x`)
+        expect(vizinhosNaLista([p, ...lista], "b")).toEqual({
+            vizinhos: { anterior: lista[0], seguinte: lista[2] },
+            indice: 1,
+        })
+    })
+
+    it("a linha saiu da lista: o seguinte ocupa o lugar dela e o anterior fica", () => {
+        const semB = [lista[0], lista[2], lista[3]]
+        expect(vizinhosNaLista(semB, "b", 1)).toEqual({
+            vizinhos: { anterior: lista[0], seguinte: lista[2] },
+            indice: 1,
+        })
+    })
+
+    it("a última saiu: só o anterior; a lista esvaziou: nada", () => {
+        expect(vizinhosNaLista([lista[0], lista[1]], "z", 5)).toEqual({ vizinhos: { anterior: lista[1] }, indice: 5 })
+        expect(vizinhosNaLista([], "z", 0)).toEqual({ vizinhos: {}, indice: 0 })
+    })
+
+    it("sem memória e fora da lista (a linha do ?txn=), sem setas", () => {
+        expect(vizinhosNaLista(lista, "z")).toEqual({ vizinhos: {} })
     })
 })
 
@@ -79,6 +108,14 @@ describe("use-transacoes-da-tela (fonte)", () => {
         expect(fonte.match(/primeiraVez\((newConsumido|fraseConsumida), (newNaUrl|texto)\)/g)?.length).toBe(2)
         expect(fonte).not.toMatch(/substituir\([^)]*URLSearchParams\(qs/)
         expect(fonte).not.toMatch(/escreverFiltrosNaUrl\([^)]*URLSearchParams\(qs/)
+    })
+
+    it("o ?txn= sai da URL também quando a busca falha ou não acha", () => {
+        const efeito = fonte.slice(fonte.indexOf("const naPagina"), fonte.indexOf("// --- Pedidos de abertura"))
+        const limpa = efeito.indexOf('substituir((atual) => urlSem(atual, ["txn"]))')
+        expect(limpa).toBeGreaterThan(-1)
+        expect(efeito.slice(0, limpa)).not.toMatch(/!data\)\s*return/)
+        expect(efeito.slice(limpa)).toContain("abrirDetalhe")
     })
 
     it("mantém o número anterior nas três consultas", () => {

@@ -108,6 +108,14 @@ describe("lerFiltrosDaUrl", () => {
         ])
     })
 
+    it("q sozinho busca em tudo: sem o período padrão nem migrar", () => {
+        const r = ler("q=uber")
+        expect(r.filtros).toEqual([])
+        expect(r.q).toBe("uber")
+        expect(r.migrou).toBe(false)
+        expect(ler("q=%20%20").filtros).toEqual([ESTE_MES])
+    })
+
     it("q é aparado", () => {
         expect(ler("q=%20uber%20").q).toBe("uber")
     })

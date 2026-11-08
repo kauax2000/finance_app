@@ -62,13 +62,23 @@ export function AvisoAConferir({ total, ativo, onRevisar, onConfirmarTodos, pode
             {ativo && !podeConfirmarTodos ? null : (
                 <AlertActions placement="inline">
                     {ativo ? (
-                        <AlertDialog open={aberto} onOpenChange={setAberto} pending={pending}>
+                        <AlertDialog
+                            open={aberto}
+                            onOpenChange={(o) => {
+                                // Reabrir começa sem o erro da tentativa anterior.
+                                if (o) setErro(null)
+                                setAberto(o)
+                            }}
+                            pending={pending}
+                        >
                             <AlertDialogTrigger asChild>
                                 <AlertAction>Confirmar todos</AlertAction>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirmar {total} lançamentos?</AlertDialogTitle>
+                                    <AlertDialogTitle>
+                                        Confirmar {total} {total === 1 ? "lançamento" : "lançamentos"}?
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
                                         Todos saem da lista a conferir. Dá para editar cada um depois.
                                     </AlertDialogDescription>

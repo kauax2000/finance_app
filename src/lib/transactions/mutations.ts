@@ -298,9 +298,13 @@ export async function deleteTransactionById(
 }
 
 /** Tira a marca de "a conferir" de um lote de lançamentos (Confirmar todos). */
-export async function marcarConferidos(ids: string[]): Promise<void> {
+export async function marcarConferidos(ids: string[], workspaceId: string): Promise<void> {
     if (!ids.length) return
-    const { error } = await supabase.from("transactions").update({ needs_review: false }).in("id", ids)
+    const { error } = await supabase
+        .from("transactions")
+        .update({ needs_review: false })
+        .in("id", ids)
+        .eq("workspace_id", workspaceId)
     if (error) {
         throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível confirmar os lançamentos.")
     }
@@ -321,12 +325,17 @@ export async function marcarTodosConferidos(workspaceId: string): Promise<void> 
 }
 
 /** Põe a mesma categoria num lote e tira a marca de "a conferir" (Categorizar). */
-export async function categorizarEmLote(ids: string[], categoryId: string | null): Promise<void> {
+export async function categorizarEmLote(
+    ids: string[],
+    categoryId: string | null,
+    workspaceId: string,
+): Promise<void> {
     if (!ids.length) return
     const { error } = await supabase
         .from("transactions")
         .update({ category_id: categoryId, needs_review: false })
         .in("id", ids)
+        .eq("workspace_id", workspaceId)
     if (error) {
         throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível categorizar os lançamentos.")
     }

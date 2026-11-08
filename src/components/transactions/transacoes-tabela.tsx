@@ -14,6 +14,7 @@ import {
 import { FunnelIcon, InboxStackIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { CategorizarEmLoteDialog } from "@/components/transactions/categorizar-em-lote-dialog"
 import {
@@ -31,7 +32,7 @@ import {
 } from "@/components/transactions/transactions-table"
 import type { TelaDeTransacoes } from "@/components/transactions/use-transacoes-da-tela"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge, BadgeDot, badgeVariants } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -67,7 +68,6 @@ import { paymentMethodLabel } from "@/lib/payment-methods"
 import { PAGE_SIZE } from "@/lib/queries/fetch-transactions-list-page"
 import type { MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 import type { Transaction } from "@/lib/supabase"
-import { tileColorFor } from "@/lib/tile-palette"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { formatDayHeadingPtBr, formatTransactionDayPtBr, groupByLocalDay } from "@/lib/transaction-date"
 import { marcarConferidos } from "@/lib/transactions/mutations"
@@ -201,13 +201,7 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                 if (!c) return <span className="text-muted-foreground">Sem categoria</span>
                 return (
                     <span className="inline-flex max-w-full items-center gap-1.5">
-                        <BadgeDot
-                            style={
-                                {
-                                    "--badge-dot": tileColorFor(c.color) ?? "var(--muted-foreground)",
-                                } as React.CSSProperties
-                            }
-                        />
+                        <ColorTile size="xs" color={c.color} />
                         <span className="truncate">{c.name}</span>
                     </span>
                 )
@@ -364,7 +358,10 @@ function MenuDaLinha({
 /** A tabela da página de Transações (spec §6): por dia, com as ações da linha e do lote. */
 export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir }: TransacoesTabelaProps) {
     const shell = useGlobalShellDialogsOptional()
-    const convidado = useWorkspace().papel === "guest"
+    const { papel, currentWorkspaceId } = useWorkspace()
+    // No telefone a tabela vira a lista: "Exibir" (as colunas) não tem o que mostrar.
+    const isMobile = useIsMobile()
+    const convidado = papel === "guest"
     const { estado, setEstado, pagina } = tela
     const transacoes = pagina.transactions
     const [marcadas, setMarcadas] = React.useState<Set<string>>(() => new Set())
@@ -396,8 +393,9 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
     }, [transacoes])
 
     async function conferir(ids: string[], aviso: string) {
+        if (!currentWorkspaceId) return false
         try {
-            await marcarConferidos(ids)
+            await marcarConferidos(ids, currentWorkspaceId)
         } catch (e) {
             toastError(e instanceof Error ? e.message : "Não foi possível confirmar os lançamentos.")
             return false
@@ -540,7 +538,7 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                 data={transacoes}
                 getRowId={(t) => t.id}
                 getRowLabel={rotuloDe}
-                toolbar={{ view: true }}
+                toolbar={{ view: !isMobile }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {
@@ -593,6 +591,7 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
             />
             <CategorizarEmLoteDialog
                 ids={categorizar?.ids ?? null}
+                workspaceId={currentWorkspaceId}
                 tipo={categorizar?.tipo ?? "expense"}
                 categorias={tela.categories}
                 onDone={(gravou) => {

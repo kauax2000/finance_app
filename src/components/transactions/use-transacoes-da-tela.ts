@@ -33,6 +33,7 @@ import { fetchResumoTransacoes, fetchTransacoesPagina, type Resumo } from "@/lib
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { transacoesKeys } from "@/lib/queries/keys"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
+import { semCamposOcultos, useCamposDeFiltro } from "@/components/transactions/use-campos-de-filtro"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 
@@ -57,6 +58,27 @@ export function vizinhosDe(lista: Transaction[], id: string): Vizinhos {
     if (i > 0) out.anterior = reais[i - 1]
     if (i < reais.length - 1) out.seguinte = reais[i + 1]
     return out
+}
+
+/**
+ * Os vizinhos com memória: a linha aberta que saiu da lista (confirmada,
+ * categorizada ou editada para fora do filtro) deixa o lugar dela, e o seguinte
+ * passa a ser quem o ocupou — as setas não somem enquanto há vizinho.
+ */
+export function vizinhosNaLista(
+    lista: Transaction[],
+    id: string,
+    ultimoIndice?: number,
+): { vizinhos: Vizinhos; indice?: number } {
+    const reais = lista.filter((t) => !isProjectedTransactionRow(t))
+    const i = reais.findIndex((t) => t.id === id)
+    if (i >= 0) return { vizinhos: vizinhosDe(lista, id), indice: i }
+    if (ultimoIndice === undefined) return { vizinhos: {} }
+    const lugar = Math.min(ultimoIndice, reais.length)
+    const vizinhos: Vizinhos = {}
+    if (lugar > 0) vizinhos.anterior = reais[lugar - 1]
+    if (lugar < reais.length) vizinhos.seguinte = reais[lugar]
+    return { vizinhos, indice: ultimoIndice }
 }
 
 /** Página (1-based) depois de excluir: a que esvaziou volta uma. */
@@ -114,7 +136,17 @@ export function useTransacoesDaTela() {
     const [otimista, setOtimista] = useState<{ de: string; estado: EstadoDaLista } | null>(null)
     // A URL andou: o otimista já cumpriu o papel (ou ficou velho) e sai.
     if (otimista && otimista.de !== qs) setOtimista(null)
-    const estado: EstadoDaLista = otimista?.de === qs ? otimista.estado : lido
+    const estadoBruto: EstadoDaLista = otimista?.de === qs ? otimista.estado : lido
+    // O token de um campo que a barra não mostra sai antes da chave e da contagem do cabeçalho.
+    const { campos, prontos: camposProntos } = useCamposDeFiltro(estadoBruto.type)
+    const filtrosVisiveis = useMemo(
+        () => (camposProntos ? semCamposOcultos(estadoBruto.filtros, campos) : estadoBruto.filtros),
+        [camposProntos, estadoBruto.filtros, campos],
+    )
+    const estado: EstadoDaLista = useMemo(
+        () => (filtrosVisiveis === estadoBruto.filtros ? estadoBruto : { ...estadoBruto, filtros: filtrosVisiveis }),
+        [estadoBruto, filtrosVisiveis],
+    )
     const estadoRef = useRef(estado)
     useLayoutEffect(() => {
         estadoRef.current = estado
@@ -227,10 +259,20 @@ export function useTransacoesDaTela() {
     }, [])
     const fecharDetalhe = useCallback(() => setDetalheEstado((d) => ({ ...d, aberto: false, editar: false })), [])
     const consumirEditar = useCallback(() => setDetalheEstado((d) => ({ ...d, editar: false })), [])
-    const vizinhos = useMemo(
-        () => (detalheAoVivo ? vizinhosDe(transactions, detalheAoVivo.id) : {}),
-        [detalheAoVivo, transactions],
+    // O último lugar da linha aberta entre as reais, para as setas sobreviverem à saída dela.
+    const [lugarAberto, setLugarAberto] = useState<{ id: string; indice: number } | null>(null)
+    const idAberto = detalheAoVivo?.id
+    const naLista = useMemo(
+        () =>
+            idAberto
+                ? vizinhosNaLista(transactions, idAberto, lugarAberto?.id === idAberto ? lugarAberto.indice : undefined)
+                : { vizinhos: {} },
+        [idAberto, transactions, lugarAberto],
     )
+    if (idAberto && naLista.indice !== undefined && (lugarAberto?.id !== idAberto || lugarAberto.indice !== naLista.indice)) {
+        setLugarAberto({ id: idAberto, indice: naLista.indice })
+    }
+    const vizinhos = naLista.vizinhos
 
     // `?txn=<id>`: a linha da página, ou do banco; o parâmetro sai da URL.
     const [txnLido, setTxnLido] = useState(false)
@@ -243,10 +285,8 @@ export function useTransacoesDaTela() {
         let cancelado = false
         void (async () => {
             const naPagina = transactions.find((t) => t.id === txnNaUrl)
-            if (naPagina) {
-                setTxnLido(true)
-                abrirDetalhe(naPagina)
-            } else {
+            let linha: Transaction | null = naPagina ?? null
+            if (!naPagina) {
                 const { data, error } = await supabase
                     .from("transactions")
                     .select("*")
@@ -254,11 +294,12 @@ export function useTransacoesDaTela() {
                     .eq("workspace_id", currentWorkspaceId)
                     .maybeSingle()
                 if (cancelado) return
-                setTxnLido(true)
-                if (error || !data) return
-                abrirDetalhe(data as Transaction)
+                linha = error ? null : ((data as Transaction | null) ?? null)
             }
+            setTxnLido(true)
+            // Consumido mesmo sem linha: o parâmetro não fica na URL depois da falha.
             substituir((atual) => urlSem(atual, ["txn"]))
+            if (linha) abrirDetalhe(linha)
         })()
         return () => {
             cancelado = true
@@ -422,6 +463,7 @@ export function useTransacoesDaTela() {
     return {
         estado,
         setEstado,
+        campos,
         carregando,
         categories: categoriesQuery.data ?? [],
         creditCards,

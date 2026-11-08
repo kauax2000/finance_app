@@ -4,6 +4,7 @@ import {
     acertoEhMeu,
     emCentavos,
     faltaParaFechar,
+    lerParte,
     lerPeso,
     partesFecham,
     pesosDigitados,
@@ -147,6 +148,26 @@ describe("faltaParaFechar", () => {
         expect(textoDaFalta(12)).toBe(`Faltam ${currencyBRL(12)}`)
         expect(textoDaFalta(-3)).toBe(`Passam ${currencyBRL(3)}`)
         expect(textoDaFalta(0)).toBeNull()
+    })
+})
+
+describe("lerParte", () => {
+    it("vazio é zero; o que não se lê fica NaN e reprova o fechamento", () => {
+        expect(lerParte("")).toBe(0)
+        expect(lerParte("12,50")).toBe(12.5)
+        expect(lerParte("abc")).toBeNaN()
+        const partes = [
+            { user_id: "a", centavos: emCentavos(lerParte("abc")) },
+            { user_id: "b", centavos: emCentavos(lerParte("100,00")) },
+        ]
+        expect(partesFecham(partes, 10000)).toBe(false)
+    })
+
+    it("o detalhe lê as partes por ela, e só zera o NaN para o que falta", async () => {
+        const { lerFonte, semComentarios } = await import("@/test/fonte")
+        const f = semComentarios(lerFonte("src/components/transactions/partes-da-despesa.tsx"), "tudo")
+        expect(f).toContain("lerParte(")
+        expect(f).not.toMatch(/parseMoneyBrl\([^)]*\) \?\? 0/)
     })
 })
 

@@ -107,7 +107,7 @@ export function lerFiltrosDaUrl(
     const antigos = filtrosAntigos(p, hoje).filter((a) => !novos.some((n) => n.field === a.field))
     const filtros = [...novos, ...antigos]
     const temAntigo = PARAMS_ANTIGOS.some((k) => p.has(k))
-    const padrao = !p.has("f") && !temAntigo
+    const padrao = !p.has("f") && !temAntigo && !(p.get("q") ?? "").trim()
     if (padrao) filtros.unshift({ field: "periodo", operator: "is", values: ["este-mes"] })
 
     const type = p.get("type")

@@ -4,7 +4,7 @@ import { CAMPOS_BASE, SEM_CATEGORIA } from "@/lib/transactions/filtros"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import type { FilterValue } from "@/components/ui/filter-bar"
 import { buscaComQDeFora, esperaDaBusca, filtrosDaPessoa } from "./transacoes-toolbar"
-import { montarCampos, podarCategoriasDoTipo, type DadosDosCampos } from "./use-campos-de-filtro"
+import { montarCampos, podarCategoriasDoTipo, semCamposOcultos, type DadosDosCampos } from "./use-campos-de-filtro"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -101,6 +101,26 @@ describe("podarCategoriasDoTipo", () => {
         const so = [tok("categoria", ["mercado"])]
         expect(podarCategoriasDoTipo(so, "income", base.categorias)).toEqual([])
         expect(podarCategoriasDoTipo(filtros, "all", base.categorias)).toBe(filtros)
+    })
+})
+
+describe("semCamposOcultos", () => {
+    const f = (field: string): FilterValue => ({ field, operator: "is", values: ["x"] })
+    const campos = CAMPOS_BASE.filter((c) => c.id !== "pessoa")
+
+    it("tira o token de um campo que a barra não mostra (o f= escrito à mão)", () => {
+        expect(semCamposOcultos([f("periodo"), f("pessoa"), f("categoria")], campos)).toEqual([f("periodo"), f("categoria")])
+    })
+
+    it("sem campo oculto, devolve a mesma lista", () => {
+        const lista = [f("periodo")]
+        expect(semCamposOcultos(lista, campos)).toBe(lista)
+    })
+
+    it("a tela poda só com os campos prontos, antes da chave e da contagem", () => {
+        const hook = semComentarios(lerFonte("src/components/transactions/use-transacoes-da-tela.ts"), "tudo")
+        expect(hook).toMatch(/camposProntos\s*\?\s*semCamposOcultos\(/)
+        expect(CAMPOS).toContain("prontos")
     })
 })
 

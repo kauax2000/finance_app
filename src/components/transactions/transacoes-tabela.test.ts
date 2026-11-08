@@ -44,8 +44,13 @@ describe("fonte da tabela", () => {
         expect(fonte).toMatch(/bulkActions[\s\S]*"Categorizar"[\s\S]*"Marcar conferidos"/)
         expect(fonte).toContain('label: "Confirmar"')
         expect(fonte).toContain('id="transactions"')
-        expect(fonte).toContain("toolbar={{ view: true }}")
+        expect(fonte).toContain("toolbar={{ view: !isMobile }}")
         expect(fonte).toContain("Selecione só despesas ou só receitas")
+    })
+    it("a cor da categoria passa pelo ColorTile, sem cor crua em style", () => {
+        expect(fonte).not.toContain("tileColorFor")
+        expect(fonte).not.toContain("--badge-dot")
+        expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(2)
     })
     it("os vazios da §6.5", () => {
         expect(fonte).toContain("Seu primeiro lançamento")
