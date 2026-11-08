@@ -142,15 +142,16 @@ export default function TransactionsPageClient() {
 
             <ResumoDasTransacoes resumo={tela.resumo.data} pendente={tela.resumo.isFetching} />
 
-            <TransacoesToolbar
-                tela={tela}
-                campos={campos}
-                onImportar={convidado ? undefined : () => pedidos.setImportar(true)}
-                onExportar={convidado ? undefined : () => void exportar()}
-                exportando={exportando}
-            />
-
             <TransacoesTabela
+                barra={
+                    <TransacoesToolbar
+                        tela={tela}
+                        campos={campos}
+                        onImportar={convidado ? undefined : () => pedidos.setImportar(true)}
+                        onExportar={convidado ? undefined : () => void exportar()}
+                        exportando={exportando}
+                    />
+                }
                 tela={tela}
                 membros={membros}
                 divide={currentWorkspace?.split_mode === "split"}

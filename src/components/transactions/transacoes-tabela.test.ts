@@ -44,7 +44,7 @@ describe("fonte da tabela", () => {
         expect(fonte).toMatch(/bulkActions[\s\S]*"Categorizar"[\s\S]*"Marcar conferidos"/)
         expect(fonte).toContain('label: "Confirmar"')
         expect(fonte).toContain('id="transactions"')
-        expect(fonte).toContain("toolbar={{ view: !isMobile }}")
+        expect(fonte).toContain("toolbar={{ start: barra, view: !isMobile }}")
         expect(fonte).toContain("Selecione só despesas ou só receitas")
     })
     it("a Categoria é só o nome; a cor fica no ladrilho da Descrição", () => {

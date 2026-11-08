@@ -15,7 +15,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterBar, type FilterField, type FilterValue } from "@/components/ui/filter-bar"
-import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
 
 /** O período que a tela põe sozinha não conta como filtro no cabeçalho. */
 export function filtrosDaPessoa(filtros: FilterValue[]): number {
@@ -58,16 +57,17 @@ export function TransacoesToolbar({
     })
 
     return (
-        <div className="flex flex-col gap-3">
-            <Toolbar>
+        // Uma linha só sobre a tabela: abas, filtros e, na ponta (do DataTable), a contagem e o Exibir.
+        // No telefone o FilterBar desce para a linha de baixo.
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                 <TransactionTypeSegment
                     value={estado.type}
                     onChange={(type) => setEstado({ type, filtros: podarCategoriasDoTipo(estado.filtros, type, categories) })}
-                    className="min-w-0 flex-1 shrink md:max-w-fit md:shrink-0"
+                    className="min-w-0 flex-1 shrink md:max-w-fit md:flex-none md:shrink-0"
                 />
                 {/* Só no telefone: no desktop Importar e Exportar moram no cabeçalho da página. */}
                 {onImportar || onExportar ? (
-                    <ToolbarActions className="hidden max-md:flex">
+                    <div className="hidden shrink-0 max-md:flex">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
@@ -89,10 +89,9 @@ export function TransacoesToolbar({
                                 ) : null}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                    </ToolbarActions>
+                    </div>
                 ) : null}
-            </Toolbar>
-            <div ref={raizDosFiltros}>
+            <div ref={raizDosFiltros} className="min-w-0 flex-1 max-md:order-last max-md:basis-full">
                 <FilterBar
                     fields={campos}
                     value={estado.filtros}

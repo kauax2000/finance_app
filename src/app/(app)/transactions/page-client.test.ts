@@ -54,7 +54,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
         expect(barra).toContain("onImportar?: () => void")
         expect(barra).toContain("onExportar?: () => void")
-        expect(barra).toMatch(/\{onImportar \|\| onExportar \? \(\s*<ToolbarActions/)
+        expect(barra).toMatch(/\{onImportar \|\| onExportar \? \(\s*<div className="hidden shrink-0 max-md:flex">/)
         expect(barra).toMatch(/\{onImportar \? \(\s*<DropdownMenuItem onSelect=\{onImportar\}>/)
         expect(barra).toMatch(/\{onExportar \? \(\s*<DropdownMenuItem onSelect=\{onExportar\} disabled=\{exportando\}>/)
         const tabela = fonte("src/components/transactions/transacoes-tabela.tsx")

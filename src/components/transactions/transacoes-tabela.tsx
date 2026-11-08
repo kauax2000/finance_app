@@ -81,6 +81,8 @@ export type TransacoesTabelaProps = {
     onEditar: (t: Transaction) => void
     onDuplicar: (t: Transaction) => void
     onExcluir: (ids: string[]) => void
+    /** A barra da tela (abas e filtros), na mesma linha da contagem e do Exibir. */
+    barra?: React.ReactNode
 }
 
 const col = dataTableColumns<Transaction>()
@@ -353,7 +355,7 @@ function MenuDaLinha({
 }
 
 /** A tabela da página de Transações (spec §6): por dia, com as ações da linha e do lote. */
-export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir }: TransacoesTabelaProps) {
+export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDuplicar, onExcluir, barra }: TransacoesTabelaProps) {
     const shell = useGlobalShellDialogsOptional()
     const { papel, currentWorkspaceId } = useWorkspace()
     // No telefone a tabela vira a lista: "Exibir" (as colunas) não tem o que mostrar.
@@ -535,7 +537,8 @@ export function TransacoesTabela({ tela, membros, divide = false, onEditar, onDu
                 data={transacoes}
                 getRowId={(t) => t.id}
                 getRowLabel={rotuloDe}
-                toolbar={{ view: !isMobile }}
+                // A barra da tela (abas e filtros) abre a linha; a contagem do FilterBar e o Exibir ficam na ponta.
+                toolbar={{ start: barra, view: !isMobile }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {
