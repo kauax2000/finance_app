@@ -204,6 +204,15 @@ const CENARIOS = {
 }
 type Cenario = keyof typeof CENARIOS
 
+/** Cinco filtros: na faixa estreita, o bastante para ela rolar. */
+const CINCO_FILTROS: FilterValue[] = [
+  { field: "tipo", operator: "is", values: ["despesa"] },
+  { field: "categoria", operator: "is", values: ["mercado", "restaurantes"] },
+  { field: "pagamento", operator: "is-not", values: ["cash"] },
+  { field: "valor", operator: "gte", values: ["50"] },
+  { field: "parcelado", operator: "is", values: [] },
+]
+
 /* ── As peças da demonstração ──────────────────────────────────────────── */
 
 function Extrato({ itens, onLimpar }: { itens: Lancamento[]; onLimpar: () => void }) {
@@ -261,6 +270,7 @@ function DemoNaTela() {
   const [desligada, setDesligada] = React.useState(false)
   const [filtros, setFiltros] = React.useState<FilterValue[]>(CENARIOS.filtrado)
   const [match, setMatch] = React.useState<FilterMatch>("all")
+  const [overflow, setOverflow] = React.useState<"wrap" | "scroll">("wrap")
 
   const campos = esperando
     ? CAMPOS.map((c) => (c.id === "categoria" ? { ...c, pending: true } : c))
@@ -284,6 +294,15 @@ function DemoNaTela() {
                 setFiltros(CENARIOS[c])
               }}
             />
+            <Eixo
+              rotulo="overflow"
+              valores={["wrap", "scroll"] as const}
+              valor={overflow}
+              onChange={(o) => {
+                setOverflow(o)
+                setFiltros(o === "scroll" ? CINCO_FILTROS : CENARIOS[cenario])
+              }}
+            />
           </>
         }
         fim={
@@ -298,7 +317,7 @@ function DemoNaTela() {
       <ViewportFrame title="Lançamentos numa janela" height={560} className="rounded-surface" screenClassName="bg-background">
         <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
           <FilterBar
-            key={`${size}-${tone}`}
+            key={`${size}-${tone}-${overflow}`}
             fields={campos}
             value={filtros}
             onValueChange={setFiltros}
@@ -309,7 +328,9 @@ function DemoNaTela() {
             noun={["lançamento", "lançamentos"]}
             size={size}
             tone={tone}
+            overflow={overflow}
             disabled={desligada}
+            className={overflow === "scroll" ? "max-w-xl" : undefined}
           />
           <Extrato itens={itens} onLimpar={() => setFiltros([])} />
         </div>
@@ -514,6 +535,10 @@ export default function FilterBarDoc() {
         O filtro novo nasce onde estava o + Filtro, de 90% e com 4px de desfoque — a escala na mola da casa, a opacidade e o desfoque em 200ms —, e o que sai faz o caminho de volta em 150ms, sem mola. Quem abre e fecha o espaço são os vizinhos: os outros tokens, o E/OU, o + Filtro e a contagem deslizam na mola até o lugar novo, inclusive de uma linha para a outra. A largura não anima: com ela a mola passava do alvo, e a pílula inchava 8px além do conteúdo antes de voltar. Com movimento reduzido, tudo aparece e some no lugar.
       </DocNote>
 
+      <DocNote title="A faixa: uma linha que nunca muda de altura">
+        Com <code>overflow=&quot;scroll&quot;</code> os filtros rolam numa faixa de uma linha só, em qualquer largura, e o + Filtro, o Limpar e a contagem ficam fixos à direita, fora dela. É para a linha que divide a fileira com vizinhos fixos — abas à esquerda, uma tabela logo abaixo — e não pode crescer quando um filtro entra. A borda que corta dissolve, o filtro novo rola a faixa até ele, e o token não trunca. O padrão continua <code>wrap</code>, que quebra a fileira; na faixa, <code>mobile</code> não vale.
+      </DocNote>
+
       <DocNote title="O stack é uma grade, não uma pilha">
         Empilhados em flex, cada linha punha o operador e o valor onde o rótulo do campo terminasse, e a coluna de valores não se lia. Agora a linha é uma grade de quatro colunas e cada token as herda (<code>subgrid</code>): os valores descem num x só. Na grade os rótulos já formam a coluna, e o ícone do campo sai — ele custava 22px ao valor, e &ldquo;Mercado&rdquo; cortava num iPhone de 375px. O filtro sem valor estende o campo pelas três colunas, e o respiro separa os grupos: 6px entre filtros, 10 até as ações, 8 até a contagem.
       </DocNote>
@@ -618,6 +643,7 @@ export default function FilterBarDoc() {
           { prop: "size", type: '"sm" | "md" | "lg"', default: '"lg"', description: "28, 32 ou 36 (40 no dedo). Dentro de uma Toolbar, o degrau dela." },
           { prop: "tone", type: '"neutral" | "success"', default: '"neutral"', description: "A superfície de campo, ou o verde das fichas de filtro." },
           { prop: "mobile", type: '"scroll" | "stack"', default: '"scroll"', description: "Abaixo de 28rem da própria barra: a faixa que rola, ou um token por linha." },
+          { prop: "overflow", type: '"wrap" | "scroll"', default: '"wrap"', description: "wrap quebra a fileira; scroll é a faixa de uma linha em qualquer largura, com + Filtro, Limpar e a contagem fixos fora dela (e mobile não vale)." },
           { prop: "urlParam", type: "string", description: "Grava na URL e desfaz no voltar." },
           { prop: "shortcut", type: "string | false", default: '"f"', description: "A tecla que abre o + Filtro, fora de campo de texto." },
           { prop: "disabled", type: "boolean", default: "false", description: "Trava a barra inteira." },

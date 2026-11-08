@@ -264,7 +264,7 @@ describe("a URL", () => {
 
 describe("o comportamento", () => {
   it("o teclado é o da Toolbar, e o Backspace só vale de dentro do token no DOM", () => {
-    expect(CODIGO).toContain("useToolbarKeyboard(linhaRef, !disabled)")
+    expect(CODIGO).toContain("useToolbarKeyboard(barraRef, !disabled)")
     expect(CODIGO).toContain("if (!e.currentTarget.contains(e.target as Node)) return")
     expect(CODIGO).toContain('e.key !== "Backspace" && e.key !== "Delete"')
   })
@@ -514,5 +514,65 @@ describe("a largura do período (revisão final)", () => {
     for (const c of ["data-[state=inactive]:block", "data-[state=inactive]:invisible", "data-[state=inactive]:h-0", "data-[state=inactive]:flex-none", "data-[state=inactive]:overflow-hidden"])
       expect(dias).toContain(c)
     expect(BLOCO).not.toMatch(/min-w-\[|w-\[\d/)
+  })
+})
+
+/** O trecho de um `<div>` inteiro, do `data-slot` até o `</div>` que o fecha. */
+const divDoSlot = (html: string, slot: string) => {
+  const ini = html.lastIndexOf("<div", html.indexOf(`data-slot="${slot}"`))
+  const re = /<div\b|<\/div>/g
+  re.lastIndex = ini
+  let fundo = 0
+  for (let m = re.exec(html); m; m = re.exec(html)) {
+    fundo += m[0] === "</div>" ? -1 : 1
+    if (fundo === 0) return html.slice(ini, m.index + 6)
+  }
+  return html.slice(ini)
+}
+
+describe("overflow scroll", () => {
+  const TRES: FilterValue[] = [
+    { field: "categoria", operator: "is", values: ["mercado"] },
+    { field: "descricao", operator: "contains", values: ["pão"] },
+    { field: "parcelado", operator: "is", values: [] },
+  ]
+
+  it("as ações e a contagem são irmãs da faixa, fora dela", () => {
+    const html = barra({ overflow: "scroll", defaultValue: TRES, count: 3 })
+    expect(html).toContain('data-overflow="scroll"')
+    const faixa = divDoSlot(html, "filter-bar-row")
+    expect(faixa).toContain('data-slot="filter-bar-token"')
+    expect(faixa).not.toContain('data-slot="filter-bar-add"')
+    expect(faixa).not.toContain('data-slot="filter-bar-clear"')
+    expect(faixa).not.toContain('data-slot="filter-bar-count"')
+    expect(html).toContain('data-slot="filter-bar-add"')
+    expect(html).toContain('data-slot="filter-bar-count"')
+    // O teclado de setas atravessa a faixa e as ações: o `toolbar` é o invólucro.
+    expect(faixa).not.toContain('role="toolbar"')
+    expect(html.match(/role="toolbar"/g)).toHaveLength(1)
+  })
+
+  it("a faixa é uma linha só que rola em qualquer largura, e os tokens não truncam", () => {
+    expect(CODIGO).toMatch(/faixa\s*\?\s*"flex-nowrap overflow-x-auto[^"]*"/)
+    // A dissolução X é a da faixa do telefone, sem prefixo; a faixa força `mobile` nela.
+    expect(CODIGO).toContain('const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp')
+    expect(CODIGO).toContain('mobile === "scroll" && scrollFadeViewportXClassName')
+    expect(CODIGO).toContain('faixa ? "shrink-0 max-w-none"')
+  })
+
+  it("a linha de fora só empilha na forma wrap", () => {
+    expect(CODIGO).toMatch(/!faixa && "@max-md\/filter-bar:flex-col/)
+    expect(CODIGO).not.toMatch(/className="flex items-center gap-3 @max-md\/filter-bar:flex-col/)
+  })
+
+  it("sem overflow, igual a hoje: o \"+ Filtro\" mora na fileira", () => {
+    const html = barra({ defaultValue: TRES })
+    expect(html).not.toContain("data-overflow")
+    expect(divDoSlot(html, "filter-bar-row")).toContain('data-slot="filter-bar-add"')
+  })
+
+  it("um token a mais rola a faixa até o fim", () => {
+    expect(CODIGO).toMatch(/scrollTo\(\{ left: [a-z]+\.scrollWidth, behavior: reduzir \? "auto" : "smooth" \}\)/)
+    expect(CODIGO).toMatch(/\[tokens\.length, faixa, reduzir\]/)
   })
 })

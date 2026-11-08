@@ -529,6 +529,13 @@ type FilterBarProps = Omit<React.ComponentProps<"div">, "defaultValue" | "onChan
   tone?: FilterBarTone
   /** Abaixo de 28rem da própria barra: uma faixa que rola, ou um token por linha. */
   mobile?: FilterBarMobile
+  /**
+   * `wrap` (o padrão) quebra a fileira; `scroll` é a faixa de uma linha só, em
+   * qualquer largura: os tokens rolam no meio, e "+ Filtro", "Limpar" e a
+   * contagem ficam fixos à direita. Para a linha com vizinhos fixos, cuja altura
+   * não pode mudar. Com `scroll`, `mobile` não vale.
+   */
+  overflow?: "wrap" | "scroll"
   /** Grava os filtros na URL (`?f=…`), e o voltar desfaz o último. */
   urlParam?: string
   /** A tecla que abre o "+ Filtro". `false` desliga. */
@@ -549,7 +556,8 @@ function FilterBar({
   noun = ["resultado", "resultados"],
   size: sizeProp,
   tone = "neutral",
-  mobile = "scroll",
+  mobile: mobileProp = "scroll",
+  overflow = "wrap",
   urlParam,
   shortcut = "f",
   disabled = false,
@@ -557,6 +565,9 @@ function FilterBar({
   "aria-label": ariaLabel = "Filtros",
   ...props
 }: FilterBarProps) {
+  const faixa = overflow === "scroll"
+  // A faixa já é a forma do telefone: a grade empilhada não se aplica nela.
+  const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp
   const doGrupo = React.useContext(ButtonSizeContext)
   const size: FilterBarSize = sizeProp ?? (doGrupo === "sm" || doGrupo === "md" ? doGrupo : "lg")
 
@@ -609,6 +620,8 @@ function FilterBar({
 
   const conteudoId = React.useId()
   const linhaRef = React.useRef<HTMLDivElement | null>(null)
+  // O `role="toolbar"`: a fileira no `wrap`; na faixa, o invólucro dela com as ações.
+  const barraRef = React.useRef<HTMLDivElement | null>(null)
   const addRef = React.useRef<HTMLButtonElement | null>(null)
   const dissolver = useScrollFade({ axis: "x" })
   // O `popLayout` põe a regra que tira do fluxo o que sai no `<head>` do
@@ -618,15 +631,16 @@ function FilterBar({
   const refLinha = React.useCallback(
     (el: HTMLDivElement | null) => {
       linhaRef.current = el
+      if (!faixa) barraRef.current = el
       if (el) setCabeca(el.ownerDocument.head)
       return dissolver(el)
     },
-    [dissolver]
+    [dissolver, faixa]
   )
   const reduzir = useReducedMotion()
   const surgir = reduzir ? SURGIR_REDUZIDO : SURGIR
   const deslizar = reduzir ? undefined : "position"
-  useToolbarKeyboard(linhaRef, !disabled)
+  useToolbarKeyboard(barraRef, !disabled)
 
   /* ── Foco ────────────────────────────────────────────────────────────── */
 
@@ -903,135 +917,171 @@ function FilterBar({
   const tokenAberto =
     aberto?.tipo === "valor" ? tokens.find((t) => t.field === aberto.field) : undefined
 
+  // Na faixa, o token que chega (também o rascunho do "+ Filtro") entra à vista.
+  const qtdAntes = React.useRef(tokens.length)
+  React.useEffect(() => {
+    const antes = qtdAntes.current
+    qtdAntes.current = tokens.length
+    const el = linhaRef.current
+    if (!faixa || !el || tokens.length <= antes) return
+    el.scrollTo({ left: el.scrollWidth, behavior: reduzir ? "auto" : "smooth" })
+  }, [tokens.length, faixa, reduzir])
+
+  const barraProps = {
+    role: "toolbar",
+    "aria-label": ariaLabel,
+    "aria-orientation": "horizontal",
+    "aria-disabled": disabled || undefined,
+  } as const
+
+  // `relative`: o "Limpar" que sai é posicionado contra o grupo, que desliza ao
+  // mesmo tempo — contra a linha, a transformação do grupo o deslocaria.
+  const acoes = (
+    <motion.div
+      layout={deslizar}
+      transition={SURGIR.transition}
+      className={cn("relative flex shrink-0 items-center gap-1.5", ACOES_TELEFONE[mobile])}
+    >
+      <Button
+        ref={addRef}
+        type="button"
+        variant="outline"
+        data-slot="filter-bar-add"
+        disabled={disabled}
+        aria-label="Adicionar filtro"
+        aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
+        aria-haspopup="dialog"
+        aria-expanded={aberto?.tipo === "campos"}
+        aria-controls={conteudoId}
+        className="border-dashed pointer-coarse:h-11"
+        onClick={abrirCampos}
+      >
+        <PlusIcon aria-hidden />
+        filtro
+      </Button>
+      <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
+        {completos.length >= 2 ? (
+          <motion.div key="limpar" {...surgir} className="flex">
+            <Button
+              type="button"
+              variant="tertiary"
+              data-slot="filter-bar-clear"
+              disabled={disabled}
+              aria-label="Limpar filtros"
+              className="pointer-coarse:h-11"
+              onClick={limpar}
+            >
+              limpar
+            </Button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </motion.div>
+  )
+
+  // `relative`: o que sai é posicionado contra a linha, e na faixa que rola
+  // precisa continuar dentro do recorte. `layoutScroll`: na faixa ela é o
+  // contêiner que rola, e o deslize descontaria o `scrollLeft`.
+  const linha = (
+    <motion.div
+      ref={refLinha}
+      layoutScroll
+      {...(faixa ? {} : barraProps)}
+      data-slot="filter-bar-row"
+      className={cn(
+        "relative flex min-w-0 flex-1 items-center gap-1.5 no-scrollbar",
+        faixa ? "flex-nowrap overflow-x-auto -mx-1 px-1 -my-1 py-1" : "flex-wrap",
+        mobile === "scroll" && scrollFadeViewportXClassName,
+        !faixa && LINHA_TELEFONE[mobile]
+      )}
+    >
+      {/* O E/OU e o "Limpar" animam num invólucro e não por
+          `motion.create(Button)`: o `Button` junta os `ref`s numa função
+          nova a cada render, e isso desmontava o elemento animado no meio
+          da saída. */}
+      <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
+        {onMatchChange && completos.length >= 2 ? (
+          <motion.div
+            key="match"
+            layout={deslizar}
+            {...surgir}
+            className={cn("flex shrink-0", MATCH_TELEFONE[mobile])}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              data-slot="filter-bar-match"
+              disabled={disabled}
+              aria-label={
+                match === "all"
+                  ? "Combinar filtros: todos (E). Trocar para qualquer um (OU)."
+                  : "Combinar filtros: qualquer um (OU). Trocar para todos (E)."
+              }
+              className="px-2.5 text-2xs font-semibold tracking-wider uppercase pointer-coarse:h-11 pointer-coarse:min-w-10"
+              onClick={() => emitirMatch(match === "all" ? "any" : "all")}
+            >
+              {match === "all" ? "e" : "ou"}
+            </Button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
+        {tokens.map((t) => {
+          const campo = porId.get(t.field)!
+          return (
+            <FilterToken
+              key={t.field}
+              campo={campo}
+              token={t}
+              descricao={descrever(campo, t, (v) => opcaoDe(campo, v))}
+              size={size}
+              tone={tone}
+              mobile={mobile}
+              faixa={faixa}
+              disabled={disabled}
+              aberto={aberto?.tipo === "valor" && aberto.field === t.field}
+              conteudoId={conteudoId}
+              onAbrir={() => abrirValor(t.field)}
+              onOperador={(op) => trocarOperador(t.field, op)}
+              onOperadorAberto={() => {
+                if (aberto) fechar()
+              }}
+              onRemover={() => remover(t.field)}
+            />
+          )
+        })}
+      </AnimatePresence>
+
+      {!faixa && acoes}
+    </motion.div>
+  )
+
   return (
     <div
       data-slot="filter-bar"
       data-size={size}
       data-tone={tone}
       data-mobile={mobile}
+      data-overflow={faixa ? "scroll" : undefined}
       className={cn("@container/filter-bar min-w-0", className)}
       {...props}
     >
-      <div className="flex items-center gap-3 @max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2">
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          !faixa && "@max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2"
+        )}
+      >
         <ButtonSizeContext.Provider value={size}>
-          {/* `relative`: o que sai é posicionado contra a linha, e na faixa que
-              rola precisa continuar dentro do recorte. `layoutScroll`: na faixa
-              ela é o contêiner que rola, e o deslize descontaria o `scrollLeft`. */}
-          <motion.div
-            ref={refLinha}
-            layoutScroll
-            role="toolbar"
-            aria-label={ariaLabel}
-            aria-orientation="horizontal"
-            aria-disabled={disabled || undefined}
-            data-slot="filter-bar-row"
-            className={cn(
-              "relative flex min-w-0 flex-1 flex-wrap items-center gap-1.5 no-scrollbar",
-              mobile === "scroll" && scrollFadeViewportXClassName,
-              LINHA_TELEFONE[mobile]
-            )}
-          >
-            {/* O E/OU e o "Limpar" animam num invólucro e não por
-                `motion.create(Button)`: o `Button` junta os `ref`s numa função
-                nova a cada render, e isso desmontava o elemento animado no meio
-                da saída. */}
-            <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
-              {onMatchChange && completos.length >= 2 ? (
-                <motion.div
-                  key="match"
-                  layout={deslizar}
-                  {...surgir}
-                  className={cn("flex shrink-0", MATCH_TELEFONE[mobile])}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-slot="filter-bar-match"
-                    disabled={disabled}
-                    aria-label={
-                      match === "all"
-                        ? "Combinar filtros: todos (E). Trocar para qualquer um (OU)."
-                        : "Combinar filtros: qualquer um (OU). Trocar para todos (E)."
-                    }
-                    className="px-2.5 text-2xs font-semibold tracking-wider uppercase pointer-coarse:h-11 pointer-coarse:min-w-10"
-                    onClick={() => emitirMatch(match === "all" ? "any" : "all")}
-                  >
-                    {match === "all" ? "e" : "ou"}
-                  </Button>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-
-            <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
-              {tokens.map((t) => {
-                const campo = porId.get(t.field)!
-                return (
-                  <FilterToken
-                    key={t.field}
-                    campo={campo}
-                    token={t}
-                    descricao={descrever(campo, t, (v) => opcaoDe(campo, v))}
-                    size={size}
-                    tone={tone}
-                    mobile={mobile}
-                    disabled={disabled}
-                    aberto={aberto?.tipo === "valor" && aberto.field === t.field}
-                    conteudoId={conteudoId}
-                    onAbrir={() => abrirValor(t.field)}
-                    onOperador={(op) => trocarOperador(t.field, op)}
-                    onOperadorAberto={() => {
-                      if (aberto) fechar()
-                    }}
-                    onRemover={() => remover(t.field)}
-                  />
-                )
-              })}
-            </AnimatePresence>
-
-            {/* `relative`: o "Limpar" que sai é posicionado contra o grupo, que
-                desliza ao mesmo tempo — contra a linha, a transformação do
-                grupo o deslocaria. */}
-            <motion.div
-              layout={deslizar}
-              transition={SURGIR.transition}
-              className={cn("relative flex shrink-0 items-center gap-1.5", ACOES_TELEFONE[mobile])}
-            >
-              <Button
-                ref={addRef}
-                type="button"
-                variant="outline"
-                data-slot="filter-bar-add"
-                disabled={disabled}
-                aria-label="Adicionar filtro"
-                aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
-                aria-haspopup="dialog"
-                aria-expanded={aberto?.tipo === "campos"}
-                aria-controls={conteudoId}
-                className="border-dashed pointer-coarse:h-11"
-                onClick={abrirCampos}
-              >
-                <PlusIcon aria-hidden />
-                filtro
-              </Button>
-              <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
-                {completos.length >= 2 ? (
-                  <motion.div key="limpar" {...surgir} className="flex">
-                    <Button
-                      type="button"
-                      variant="tertiary"
-                      data-slot="filter-bar-clear"
-                      disabled={disabled}
-                      aria-label="Limpar filtros"
-                      className="pointer-coarse:h-11"
-                      onClick={limpar}
-                    >
-                      limpar
-                    </Button>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
+          {faixa ? (
+            <div ref={barraRef} {...barraProps} className="flex min-w-0 flex-1 items-center gap-1.5">
+              {linha}
+              {acoes}
+            </div>
+          ) : (
+            linha
+          )}
         </ButtonSizeContext.Provider>
 
         {count != null ? (
@@ -1079,7 +1129,7 @@ function FilterBar({
             // o resto (o vão da linha, a contagem, a página) fecha.
             const alvo = e.target as Element | null
             if (
-              linhaRef.current?.contains(alvo) &&
+              barraRef.current?.contains(alvo) &&
               alvo?.closest("[data-slot=filter-bar-token], [data-slot=filter-bar-add]")
             ) {
               e.preventDefault()
@@ -1124,6 +1174,7 @@ function FilterToken({
   size,
   tone,
   mobile,
+  faixa,
   disabled,
   aberto,
   conteudoId,
@@ -1141,6 +1192,7 @@ function FilterToken({
   size: FilterBarSize
   tone: FilterBarTone
   mobile: FilterBarMobile
+  faixa: boolean
   disabled: boolean
   aberto: boolean
   conteudoId: string
@@ -1193,7 +1245,7 @@ function FilterToken({
         CAPSULA_TOM[tone],
         CAPSULA_TAMANHO[size],
         fieldControlHeightClassName[size],
-        TOKEN_TELEFONE[mobile]
+        faixa ? "shrink-0 max-w-none" : TOKEN_TELEFONE[mobile]
       )}
     >
       <span
