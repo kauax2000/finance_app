@@ -1002,8 +1002,9 @@ function FilterBar({
       {...(faixa ? {} : barraProps)}
       data-slot="filter-bar-row"
       className={cn(
-        "relative flex min-w-0 flex-1 items-center gap-1.5 no-scrollbar",
-        faixa ? "flex-nowrap overflow-x-auto -mx-1 px-1 -my-1 py-1" : "flex-wrap",
+        "relative flex min-w-0 items-center gap-1.5 no-scrollbar",
+        // Na faixa ela só encolhe: o "+ Filtro" segue o último token, à esquerda, e a contagem fica na ponta.
+        faixa ? "flex-initial flex-nowrap overflow-x-auto -mx-1 px-1 -my-1 py-1 empty:hidden" : "flex-1 flex-wrap",
         mobile === "scroll" && scrollFadeViewportXClassName,
         !faixa && LINHA_TELEFONE[mobile]
       )}

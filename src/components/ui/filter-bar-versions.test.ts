@@ -553,7 +553,9 @@ describe("overflow scroll", () => {
   })
 
   it("a faixa é uma linha só que rola em qualquer largura, e os tokens não truncam", () => {
-    expect(CODIGO).toMatch(/faixa\s*\?\s*"flex-nowrap overflow-x-auto[^"]*"/)
+    expect(CODIGO).toMatch(/faixa\s*\?\s*"flex-initial flex-nowrap overflow-x-auto[^"]*"/)
+    // A faixa só encolhe (não estica): o "+ Filtro" segue o último token, à esquerda; vazia, ela some.
+    expect(CODIGO).toMatch(/faixa\s*\?\s*"[^"]*empty:hidden"\s*:\s*"flex-1 flex-wrap"/)
     // A dissolução X é a da faixa do telefone, sem prefixo; a faixa força `mobile` nela.
     expect(CODIGO).toContain('const mobile: FilterBarMobile = faixa ? "scroll" : mobileProp')
     expect(CODIGO).toContain('mobile === "scroll" && scrollFadeViewportXClassName')
