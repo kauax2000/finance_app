@@ -1522,11 +1522,45 @@ function EditorDeValor(props: EditorProps) {
   )
 }
 
+type BuscarTotais = (year: number, signal: AbortSignal) => Promise<(number | null)[]>
+
+/**
+ * Pede os anos ainda não pedidos e devolve a limpeza, que cancela e tira do
+ * `pedidos` os que não chegaram — na hora, para a próxima rodada (o efeito que
+ * o StrictMode roda duas vezes) pedir de novo.
+ */
+export function pedirTotais(
+  pedidos: Set<number>,
+  anos: number[],
+  buscar: BuscarTotais,
+  chegou: (ano: number, meses: (number | null)[]) => void
+): () => void {
+  const ctrl = new AbortController()
+  const emVoo = new Set<number>()
+  for (const ano of anos) {
+    if (pedidos.has(ano)) continue
+    pedidos.add(ano)
+    emVoo.add(ano)
+    buscar(ano, ctrl.signal).then(
+      (v) => {
+        emVoo.delete(ano)
+        chegou(ano, v)
+      },
+      // Só a falha desta rodada libera o ano: a de um cancelado chega depois da rodada nova.
+      () => {
+        if (emVoo.delete(ano)) pedidos.delete(ano)
+      }
+    )
+  }
+  return () => {
+    ctrl.abort()
+    for (const ano of emVoo) pedidos.delete(ano)
+    emVoo.clear()
+  }
+}
+
 /** Os totais de despesa por mês dos anos pedidos, carregados uma vez por ano; só busca com `totals`. */
-function useTotaisPorAno(
-  totals: ((year: number, signal: AbortSignal) => Promise<(number | null)[]>) | undefined,
-  anos: number[]
-) {
+function useTotaisPorAno(totals: BuscarTotais | undefined, anos: number[]) {
   const [porAno, setPorAno] = React.useState<Record<number, (number | null)[]>>({})
   // Já pedido ou chegado: não pede de novo. Um pedido cancelado sai daqui e volta a ser pedido.
   const pedidos = React.useRef(new Set<number>())
@@ -1535,16 +1569,9 @@ function useTotaisPorAno(
   const chave = anos.join(",")
   React.useEffect(() => {
     if (!temTotais || !chave) return
-    const ctrl = new AbortController()
-    for (const ano of chave.split(",").map(Number)) {
-      if (pedidos.current.has(ano)) continue
-      pedidos.current.add(ano)
-      buscar(ano, ctrl.signal).then(
-        (v) => setPorAno((atual) => ({ ...atual, [ano]: v })),
-        () => pedidos.current.delete(ano)
-      )
-    }
-    return () => ctrl.abort()
+    return pedirTotais(pedidos.current, chave.split(",").map(Number), (ano, s) => buscar(ano, s), (ano, v) =>
+      setPorAno((atual) => ({ ...atual, [ano]: v }))
+    )
   }, [temTotais, chave])
   return porAno
 }

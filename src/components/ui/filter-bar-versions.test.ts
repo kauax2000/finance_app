@@ -6,6 +6,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import {
   abaInicialDoPeriodo,
   mesesDaGrade,
+  pedirTotais,
   FilterBar,
   FILTER_PERIOD_DAY_PRESET_IDS,
   FILTER_PERIOD_PRESETS,
@@ -464,5 +465,39 @@ describe("o período na grade de meses (revisão)", () => {
     expect(BLOCO).toContain("const valorDaGrade = mesesDaGrade(valores)")
     expect(BLOCO).toContain("const anoDoValor = (valorDaGrade?.from ?? new Date()).getFullYear()")
     expect(BLOCO).toMatch(/<MonthGrid[\s\S]*?value=\{valorDaGrade\}/)
+  })
+})
+
+describe("os totais sob o StrictMode (revisão final)", () => {
+  // Rejeita no cancelamento, como o Supabase; chega no próximo giro, senão.
+  const buscar = (chamadas: number[]) => (ano: number, signal: AbortSignal) => {
+    chamadas.push(ano)
+    return new Promise<(number | null)[]>((ok, falha) => {
+      signal.addEventListener("abort", () => falha(new DOMException("cancelado", "AbortError")))
+      setTimeout(() => ok(Array(12).fill(ano)), 0)
+    })
+  }
+
+  it("montar, limpar e montar de novo pede o ano outra vez, e ele chega", async () => {
+    const pedidos = new Set<number>()
+    const chamadas: number[] = []
+    const chegou = vi.fn()
+    const limpar = pedirTotais(pedidos, [2026], buscar(chamadas), chegou)
+    limpar()
+    pedirTotais(pedidos, [2026], buscar(chamadas), chegou)
+    await new Promise((r) => setTimeout(r, 5))
+    expect(chamadas).toEqual([2026, 2026])
+    expect(chegou).toHaveBeenCalledWith(2026, Array(12).fill(2026))
+    // O cancelado que rejeita depois não tira o pedido da rodada nova.
+    expect(pedidos.has(2026)).toBe(true)
+  })
+
+  it("o que já chegou não é pedido de novo", async () => {
+    const pedidos = new Set<number>()
+    const chamadas: number[] = []
+    pedirTotais(pedidos, [2026], buscar(chamadas), () => {})
+    await new Promise((r) => setTimeout(r, 5))
+    pedirTotais(pedidos, [2026, 2025], buscar(chamadas), () => {})
+    expect(chamadas).toEqual([2026, 2025])
   })
 })
