@@ -493,7 +493,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const esperando = saindo || mudando
     // Idempotente: o fim, o cancelamento e o tempo de reserva podem chegar juntos; só o primeiro troca.
     function trocar() {
+        // Já trocou (o fim chegou antes da reserva): nada a fazer, nem soltar o esmaecer da vista que sai.
         const de = pedido.current
+        if (de === null) return
         pedido.current = null
         if (de !== imp.expandido) {
             setSaindoDe(null)

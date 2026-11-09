@@ -12,9 +12,8 @@ export function ContagemQueAnda({ value, formatar }: { value: number; formatar: 
     const ref = useCountUp(value, formatar, { chave: "importar", entrada: 0, troca: TROCA, ease: CURVA })
     return (
         <span className="inline-grid">
-            <span ref={ref} aria-hidden className="col-start-1 row-start-1">
-                {final}
-            </span>
+            {/* Quem escreve aqui é só o hook, como no `ChartNumber`: o React não disputa o texto. */}
+            <span ref={ref} aria-hidden className="col-start-1 row-start-1" />
             <span aria-hidden className="invisible col-start-1 row-start-1">
                 {final}
             </span>

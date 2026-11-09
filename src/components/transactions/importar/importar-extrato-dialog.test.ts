@@ -292,7 +292,8 @@ describe("a troca do Ver todos não fica presa", () => {
     })
 
     it("a troca é idempotente e não vale depois de o expandido mudar por fora", () => {
-        expect(conferir).toMatch(/const de = pedido\.current\s*pedido\.current = null\s*if \(de !== imp\.expandido\)/)
+        // A segunda chamada (o fim e a reserva) volta antes de mexer no estado: a vista que sai segue apagada.
+        expect(conferir).toMatch(/const de = pedido\.current\s*if \(de === null\) return\s*pedido\.current = null\s*if \(de !== imp\.expandido\)/)
         expect(conferir).toContain("const saindo = saindoDe === imp.expandido")
         expect(conferir).toContain("imp.setExpandido(!de)")
     })
