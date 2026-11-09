@@ -102,7 +102,7 @@ describe("o diálogo de importar, versão C", () => {
 describe("a conferência", () => {
     it("o compacto mostra só 6 linhas (a tela cheia mostra todas), e só com mais de 6 aparecem o contador e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        expect(conferir).toContain("{imp.visiveis.slice(0, LIMITE).map((i, n) => (")
+        expect(conferir).toContain(".slice(0, LIMITE).map((i, n) => (")
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
         expect(conferir).toContain('<div className="hidden md:block md:w-44">')

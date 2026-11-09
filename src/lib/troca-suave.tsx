@@ -17,10 +17,13 @@ const PRESENTE = { opacity: 1, scale: 1, filter: "blur(0px)" }
 function TrocaSuave({
   chave,
   className,
+  atraso = 0,
   children,
 }: {
   chave: string
   className?: string
+  /** Segundos de espera só na chegada (a saída é imediata): a escada de uma lista. */
+  atraso?: number
   children: ReactNode
 }) {
   const reduzido = useReducedMotion()
@@ -32,7 +35,7 @@ function TrocaSuave({
         initial={reduzido ? false : SUMIDO}
         animate={PRESENTE}
         exit={reduzido ? { opacity: 0, transition: { duration: 0 } } : { ...SUMIDO, transition: SAIDA }}
-        transition={MOLA}
+        transition={reduzido || !atraso ? MOLA : { ...MOLA, delay: atraso }}
       >
         {children}
       </motion.span>

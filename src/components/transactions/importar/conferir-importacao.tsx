@@ -83,6 +83,7 @@ import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { TrocaSuave } from "@/lib/troca-suave"
 import { cn } from "@/lib/utils"
+import { chavesDasLinhas } from "./chave-da-linha"
 import { ContagemQueAnda } from "./contagem-que-anda"
 
 import {
@@ -202,7 +203,9 @@ function Linha({
     item,
     travado,
     onTrocarCategoria,
+    posicao = 0,
 }: {
+    posicao?: number
     imp: ImportarExtrato
     item: ItemImportavel
     travado: boolean
@@ -248,7 +251,7 @@ function Linha({
                 </div>
                 {/* Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor. A troca de sinal (Inverter) vira no lugar. */}
                 <span className="relative ms-auto text-end md:min-w-24">
-                    <TrocaSuave chave={`${item.estorno}:${valorDe(item)}`}>
+                    <TrocaSuave chave={`${item.estorno}:${valorDe(item)}`} atraso={Math.min(posicao, 5) * 0.03}>
                         <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
                     </TrocaSuave>
                 </span>
@@ -473,6 +476,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
+    const chavesCompacto = chavesDasLinhas(imp.visiveis.slice(0, LIMITE))
     const podeExpandir = resumo.total > LIMITE
     const botaoExpandir = (
         <Button
@@ -651,8 +655,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i, n) => (
                             <Linha
-                                // O `clientId` nasce de novo a cada leitura: a posição segura a linha, para o valor trocar no lugar.
-                                key={n}
+                                // O `clientId` nasce de novo a cada leitura: a chave do conteúdo segura a linha, para o valor trocar no lugar.
+                                key={chavesCompacto[n]}
+                                posicao={n}
                                 imp={imp}
                                 item={i}
                                 travado={travado}
