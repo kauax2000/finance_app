@@ -188,6 +188,8 @@ export function ImportarExtratoDialog({
                         )}
                     </DialogHeader>
                     <DialogBody
+                        // No layout auto a casca já recua --dialog-px; o corpo sangra até ela para não recuar em dobro.
+                        className={expandido ? undefined : "-mx-(--dialog-px)"}
                         onDragOver={arrastando}
                         onDragLeave={(e) => {
                             if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSobre(false)
