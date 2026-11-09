@@ -65,3 +65,29 @@ export function aplicarAlinhamento<T extends ItemImportavel>(
         daIA,
     }
 }
+
+/**
+ * Qual chamada à IA a conferência faz agora, uma de cada vez. O PDF incompleto e ainda
+ * sem IA é relido antes; o alinhamento só começa depois que a releitura daquela leitura
+ * terminou, e não começa se ela acabou sem cota. Cada uma vale uma vez por leitura.
+ */
+export function proximaChamadaDaIA(e: {
+    origem: string
+    completa: boolean | null
+    ia: boolean
+    leituraId: string
+    relidaIniciada: string | null
+    relidaTerminou: string | null
+    cotaEsgotada: boolean
+    sobraDosDoisLados: boolean
+    alinhadaIniciada: string | null
+    pendente: string | null
+}): "reler" | "alinhar" | null {
+    if (e.pendente != null || !e.leituraId) return null
+    if (e.origem === "pdf" && e.completa === false && !e.ia) {
+        if (e.relidaIniciada !== e.leituraId) return "reler"
+        if (e.relidaTerminou !== e.leituraId || e.cotaEsgotada) return null
+    }
+    if (!e.sobraDosDoisLados || e.alinhadaIniciada === e.leituraId) return null
+    return "alinhar"
+}

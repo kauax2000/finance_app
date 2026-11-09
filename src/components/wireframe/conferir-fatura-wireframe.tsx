@@ -14,7 +14,7 @@ import {
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
-import { aplicarAlinhamento, paraAlinhar } from "@/lib/fatura/alinhar"
+import { aplicarAlinhamento, paraAlinhar, proximaChamadaDaIA } from "@/lib/fatura/alinhar"
 import { desfazerCorrecoes, type LoteAplicado } from "@/lib/fatura/aplicar-correcoes"
 import { aprovarFatura } from "@/lib/fatura/aprovar"
 import { conferirNoCiclo } from "@/lib/fatura/ciclo"
@@ -135,10 +135,14 @@ export function ConferirFaturaWireframe({
     const [leituraId, setLeituraId] = useState("")
     // A leitura (pelo leituraId) já aprovada: a aprovação automática roda uma vez por leitura.
     const aprovadaNaLeitura = useRef<string | null>(null)
-    // A IA relê e alinha sozinha, cada uma uma vez por leitura: o ref marca antes da chamada,
-    // então re-render, StrictMode e erro (cota, rede) não repetem.
-    const relidaNaLeitura = useRef<string | null>(null)
-    const alinhadaNaLeitura = useRef<string | null>(null)
+    // A IA relê e alinha sozinha, cada uma uma vez por leitura e nessa ordem (`proximaChamadaDaIA`):
+    // o ref marca antes da chamada, então re-render, StrictMode e erro (cota, rede) não repetem.
+    const relidaIniciada = useRef<string | null>(null)
+    const alinhadaIniciada = useRef<string | null>(null)
+    // O alinhamento espera a releitura terminar; sem cota, não alinha.
+    const [relidaTerminou, setRelidaTerminou] = useState<{ id: string; esgotada: boolean } | null>(null)
+    // A leitura em vigor: a resposta do alinhamento de outra leitura é jogada fora.
+    const leituraAtual = useRef("")
     // Os pares da IA guardados por id: recarregar os lançamentos muda os índices da conferência.
     const [alinhados, setAlinhados] = useState<Array<{ clientId: string; appId: string }>>([])
     // O lote das correções aplicadas mora aqui: o Desfazer fica enquanto a pessoa está na tela,
@@ -186,7 +190,6 @@ export function ConferirFaturaWireframe({
         })
         return aplicarAlinhamento(daRegra, pares)
     }, [daRegra, alinhados])
-    const precisaReler = Boolean(leitura && leitura.origem === "pdf" && leitura.completa === false && !leitura.ia && textoPdf)
     const igualAoBanco = Boolean(leitura?.completa && conferencia && semDiferencas(conferencia, ciclo))
     const estado = estadoDaFatura(totalDoCiclo(totais.data, card.id, ciclo.fechamento), somaDoCiclo(doApp, ciclo))
 
@@ -217,24 +220,33 @@ export function ConferirFaturaWireframe({
     }, [igualAoBanco, leitura, conferencia, leituraId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
 
     useEffect(() => {
-        if (!precisaReler || pendente != null || relidaNaLeitura.current === leituraId) return
-        relidaNaLeitura.current = leituraId
-        void lerComIA()
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- lerComIA lê o estado deste render; o ref segura a repetição.
-    }, [precisaReler, pendente, leituraId])
-
-    useEffect(() => {
-        if (!daRegra || pendente != null || alinhadaNaLeitura.current === leituraId) return
-        if (daRegra.faltaNoApp.length === 0 || daRegra.soNoApp.length === 0) return
-        // A releitura vem antes: ela troca os itens e a leitura.
-        if (precisaReler && relidaNaLeitura.current !== leituraId) return
-        alinhadaNaLeitura.current = leituraId
+        if (!leitura || !daRegra) return
+        const proxima = proximaChamadaDaIA({
+            origem: textoPdf ? leitura.origem : "sem-texto",
+            completa: leitura.completa,
+            ia: Boolean(leitura.ia),
+            leituraId,
+            relidaIniciada: relidaIniciada.current,
+            relidaTerminou: relidaTerminou?.id ?? null,
+            cotaEsgotada: relidaTerminou?.id === leituraId && relidaTerminou.esgotada,
+            sobraDosDoisLados: daRegra.faltaNoApp.length > 0 && daRegra.soNoApp.length > 0,
+            alinhadaIniciada: alinhadaIniciada.current,
+            pendente,
+        })
+        if (proxima === "reler") {
+            relidaIniciada.current = leituraId
+            void lerComIA()
+            return
+        }
+        if (proxima !== "alinhar") return
+        alinhadaIniciada.current = leituraId
         const meu = pedido.current
+        const id = leituraId
         const { banco, app } = paraAlinhar(daRegra)
         setPendente("alinhar")
         void alinharFaturaComIA(workspaceId, banco, app).then((r) => {
             setPendente((p) => (p === "alinhar" ? null : p))
-            if (meu !== pedido.current) return
+            if (meu !== pedido.current || id !== leituraAtual.current) return
             if (!r.ok) {
                 setAviso({ erro: true, texto: r.mensagem })
                 return
@@ -247,10 +259,12 @@ export function ConferirFaturaWireframe({
                 }),
             )
         })
-    }, [daRegra, pendente, leituraId, precisaReler, workspaceId])
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- lerComIA lê o estado deste render; os refs seguram a repetição.
+    }, [leitura, daRegra, textoPdf, leituraId, relidaTerminou, pendente, workspaceId])
 
     function limparLeitura() {
         pedido.current += 1
+        leituraAtual.current = ""
         setTextoPdf(null)
         setLeitura(null)
         setItens([])
@@ -286,7 +300,9 @@ export function ConferirFaturaWireframe({
         setLeitura(l)
         setItens(prepararItens(lidos, transactions))
         setAlinhados([])
-        setLeituraId(crypto.randomUUID())
+        const id = crypto.randomUUID()
+        leituraAtual.current = id
+        setLeituraId(id)
     }
 
     async function gravarTotal(valor: number, source: "manual" | Origem) {
@@ -390,12 +406,14 @@ export function ConferirFaturaWireframe({
     async function lerComIA() {
         if (!leitura || !textoPdf) return
         const total = leitura.total
+        const id = leituraId
         const meu = ++pedido.current
         setPendente("ia")
         setAviso(null)
         const lido = await lerFaturaComIA(workspaceId, textoPdf, ciclo.fechamento)
         // Nada mais fica pendente enquanto a IA lê (o arquivo e a IA travam), então só ela solta.
         setPendente((p) => (p === "ia" ? null : p))
+        setRelidaTerminou({ id, esgotada: !lido.ok && Boolean(lido.esgotada) })
         if (meu !== pedido.current) return
         if (!lido.ok) {
             setAviso({ erro: true, texto: lido.mensagem })

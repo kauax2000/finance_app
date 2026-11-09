@@ -110,11 +110,14 @@ describe("fonte dos wireframes", () => {
     // O botão saiu: a releitura é automática.
     expect(fonte).not.toContain('"Ler com IA"')
     expect(fonte).not.toMatch(/onClick=\{\(\) => void lerComIA\(\)\}/)
-    // Guarda em ref, marcada antes da chamada: StrictMode e re-render não repetem, e o erro não tenta de novo.
-    expect(fonte).toMatch(/relidaNaLeitura\.current === leituraId[\s\S]*relidaNaLeitura\.current = leituraId[\s\S]*lerComIA\(\)/)
-    const alinhar = fonte.slice(fonte.indexOf("alinhadaNaLeitura.current === leituraId"))
-    expect(alinhar).toMatch(/alinhadaNaLeitura\.current = leituraId[\s\S]*alinharFaturaComIA\(/)
-    expect(alinhar).toMatch(/alinharFaturaComIA\([\s\S]*if \(meu !== pedido\.current\) return[\s\S]*setAviso\(/)
+    // Quem decide a ordem é a função testada; os refs marcam antes da chamada.
+    expect(fonte).toMatch(/import\s*\{[^}]*\bproximaChamadaDaIA\b[^}]*\}/)
+    expect(fonte).toMatch(/proxima === "reler"\) \{\s*relidaIniciada\.current = leituraId\s*void lerComIA\(\)/)
+    expect(fonte).toMatch(/alinhadaIniciada\.current = leituraId[\s\S]*alinharFaturaComIA\(/)
+    // A resposta velha (outro pedido ou outra leitura) não entra.
+    expect(fonte).toMatch(/alinharFaturaComIA\([\s\S]*if \(meu !== pedido\.current \|\| id !== leituraAtual\.current\) return[\s\S]*setAviso\(/)
+    // A releitura marca o fim, com a cota, para o alinhamento esperar.
+    expect(fonte).toMatch(/setRelidaTerminou\(\{ id, esgotada: /)
     // A conferência alinhada é a que segue para o CorrigirFatura e para a aprovação.
     expect(fonte).toMatch(/aplicarAlinhamento\(/)
     expect(fonte).toMatch(/semDiferencas\(conferencia, ciclo\)/)

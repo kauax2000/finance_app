@@ -93,3 +93,56 @@ describe("alinharFaturaComIA", () => {
         expect(await alinharFaturaComIA("w1", [], [])).toEqual({ ok: false, mensagem: "Sem conexão com a IA." })
     })
 })
+
+describe("proximaChamadaDaIA", async () => {
+    const { proximaChamadaDaIA } = await import("@/lib/fatura/alinhar")
+    const base = {
+        origem: "pdf",
+        completa: false as boolean | null,
+        ia: false,
+        leituraId: "L1",
+        relidaIniciada: null as string | null,
+        relidaTerminou: null as string | null,
+        cotaEsgotada: false,
+        sobraDosDoisLados: true,
+        alinhadaIniciada: null as string | null,
+        pendente: null as string | null,
+    }
+
+    it("PDF incompleto: relê primeiro, mesmo sobrando dos dois lados", () => {
+        expect(proximaChamadaDaIA(base)).toBe("reler")
+    })
+
+    it("com a releitura começada ou pendente, nada", () => {
+        expect(proximaChamadaDaIA({ ...base, relidaIniciada: "L1" })).toBeNull()
+        expect(proximaChamadaDaIA({ ...base, relidaIniciada: "L1", pendente: "ia" })).toBeNull()
+    })
+
+    it("a releitura terminou (sem trocar a leitura): alinha", () => {
+        expect(proximaChamadaDaIA({ ...base, relidaIniciada: "L1", relidaTerminou: "L1" })).toBe("alinhar")
+    })
+
+    it("a releitura terminou sem cota: não alinha", () => {
+        expect(proximaChamadaDaIA({ ...base, relidaIniciada: "L1", relidaTerminou: "L1", cotaEsgotada: true })).toBeNull()
+    })
+
+    it("a releitura que terminou numa leitura velha não libera a nova", () => {
+        expect(proximaChamadaDaIA({ ...base, leituraId: "L2", relidaIniciada: "L2", relidaTerminou: "L1" })).toBeNull()
+    })
+
+    it("leitura completa, ou já lida pela IA, com sobra: alinha", () => {
+        expect(proximaChamadaDaIA({ ...base, completa: true })).toBe("alinhar")
+        expect(proximaChamadaDaIA({ ...base, ia: true })).toBe("alinhar")
+        expect(proximaChamadaDaIA({ ...base, origem: "csv" })).toBe("alinhar")
+    })
+
+    it("já alinhada nesta leitura, sem sobra, ou com algo pendente: nada", () => {
+        expect(proximaChamadaDaIA({ ...base, completa: true, alinhadaIniciada: "L1" })).toBeNull()
+        expect(proximaChamadaDaIA({ ...base, completa: true, sobraDosDoisLados: false })).toBeNull()
+        expect(proximaChamadaDaIA({ ...base, completa: true, pendente: "total" })).toBeNull()
+    })
+
+    it("sem leitura, nada", () => {
+        expect(proximaChamadaDaIA({ ...base, leituraId: "" })).toBeNull()
+    })
+})

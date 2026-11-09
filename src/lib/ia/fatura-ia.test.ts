@@ -74,7 +74,8 @@ describe("Conferir fatura: Ler com IA (fonte)", () => {
 
     it("relê sozinha só com a leitura do PDF incompleta e ainda sem IA", () => {
         expect(tela).not.toContain('"Ler com IA"')
-        expect(tela).toMatch(/leitura\.origem === "pdf" && leitura\.completa === false && !leitura\.ia[\s\S]*lerComIA\(\)/)
+        expect(tela).toMatch(/proxima === "reler"[\s\S]*lerComIA\(\)/)
+        expect(semComentarios(lerFonte("src/lib/fatura/alinhar.ts"))).toMatch(/e\.origem === "pdf" && e\.completa === false && !e\.ia/)
     })
 
     it("o texto guardado é o redigido, e é ele que vai à IA", () => {
