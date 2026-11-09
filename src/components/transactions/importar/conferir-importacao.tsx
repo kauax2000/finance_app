@@ -581,6 +581,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                 type="button"
                                 variant="tertiary"
                                 size="sm"
+                                // a sobra de 12px à direita do rótulo é invisível e puxava a linha para a esquerda
+                                className="-me-3"
                                 aria-expanded={false}
                                 disabled={travado}
                                 onClick={() => imp.setExpandido(true)}
