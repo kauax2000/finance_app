@@ -239,10 +239,10 @@ function Linha({
  * a largura e o apontador). A sétima fica por baixo, e a sexta dissolve.
  */
 function useTetoDasLinhas(ativo: boolean) {
-    const ref = React.useRef<HTMLDivElement>(null)
+    // Ref de estado: a lista nasce depois (vazio, filtro, tela cheia), e o efeito precisa do nó novo.
+    const [el, ref] = React.useState<HTMLDivElement | null>(null)
     const [teto, setTeto] = React.useState<number | null>(null)
     React.useLayoutEffect(() => {
-        const el = ref.current
         if (!ativo || !el) return
         const medir = () => {
             const linhas = el.querySelectorAll<HTMLElement>(":scope > [data-slot=item]")
@@ -252,7 +252,7 @@ function useTetoDasLinhas(ativo: boolean) {
         const ro = new ResizeObserver(medir)
         ro.observe(el)
         return () => ro.disconnect()
-    }, [ativo])
+    }, [ativo, el])
     return [ref, ativo ? teto : null] as const
 }
 
@@ -529,6 +529,32 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </Tabs>
                 </div>
             </div>
+            {/* Como o arquivo foi lido mora logo abaixo do filtro, antes das linhas que ele explica. */}
+            {imp.csv && !imp.expandido ? (
+                <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
+                    <ItemContent>
+                        <ItemDescription>
+                            Colunas: {papeisDe(imp.mapeamento)} · gasto é{" "}
+                            {imp.mapeamento.negativoEhDespesa ? "negativo" : "positivo"}
+                        </ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                        {/* O sinal ao contrário do destino é o engano mais comum: um toque refaz a leitura. */}
+                        <Button type="button" variant="tertiary" size="sm" disabled={travado} onClick={() => void imp.inverterSinal()}>
+                            Inverter
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            size="sm"
+                            disabled={travado}
+                            onClick={imp.ajustarColunas}
+                        >
+                            Ajustar
+                        </Button>
+                    </ItemActions>
+                </Item>
+            ) : null}
             {imp.expandido ? (
                 <DataTable
                     aria-label="Lançamentos do arquivo"
@@ -606,31 +632,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ) : null}
                 </ItemContent>
             </Item>
-            {imp.csv && !imp.expandido ? (
-                <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
-                    <ItemContent>
-                        <ItemDescription>
-                            Colunas: {papeisDe(imp.mapeamento)} · gasto é{" "}
-                            {imp.mapeamento.negativoEhDespesa ? "negativo" : "positivo"}
-                        </ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        {/* O sinal ao contrário do destino é o engano mais comum: um toque refaz a leitura. */}
-                        <Button type="button" variant="tertiary" size="sm" disabled={travado} onClick={() => void imp.inverterSinal()}>
-                            Inverter
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="sm"
-                            disabled={travado}
-                            onClick={imp.ajustarColunas}
-                        >
-                            Ajustar
-                        </Button>
-                    </ItemActions>
-                </Item>
-            ) : null}
             <PorCategoria imp={imp} itens={porCategoria} onClose={() => setPorCategoria([])} />
         </div>
     )
