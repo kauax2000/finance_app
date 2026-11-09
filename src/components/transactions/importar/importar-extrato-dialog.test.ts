@@ -205,9 +205,19 @@ describe("a conferência", () => {
     it("as colunas mostram a prévia com o papel no topo e perguntam o sinal", () => {
         expect(colunas).toContain("<TableHead")
         expect(colunas).toContain("<Select")
-        expect(colunas).toContain("Neste arquivo, −12,34 é:")
-        expect(colunas).toContain("um gasto")
-        expect(colunas).toContain("uma entrada")
+        expect(colunas).not.toContain("Neste arquivo, −12,34 é:")
+        expect(colunas).not.toContain("FormRadioGroup")
+        expect(colunas).toContain("Valor negativo é")
+        expect(colunas).toMatch(/<TabsTrigger value="gasto"[^>]*>\s*Gasto/)
+        expect(colunas).toMatch(/<TabsTrigger value="entrada"[^>]*>\s*Entrada/)
         expect(colunas).not.toContain("Valor negativo é despesa")
+    })
+
+    it("o valor ganha a cor do sinal e a linha de cabeçalho um fundo", () => {
+        expect(colunas).toContain("lerValorBr")
+        expect(colunas).toContain("text-expense")
+        expect(colunas).toContain("text-income")
+        expect(colunas).toContain("A linha com fundo não entra como lançamento.")
+        expect(colunas).toMatch(/<SelectTrigger[^>]*w-full/)
     })
 })

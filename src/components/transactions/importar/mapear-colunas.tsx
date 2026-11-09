@@ -1,8 +1,14 @@
 "use client"
 
-import { FormRadioGroup, FormSwitch } from "@/components/ui/form"
+import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
+import { FormSwitch } from "@/components/ui/form"
+import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+import { lerValorBr } from "@/lib/import/normalizar"
 
 import type { MapeamentoColunas } from "./use-importar-extrato"
 
@@ -15,6 +21,13 @@ const PAPEIS: { papel: Papel; rotulo: string }[] = [
     { papel: "valor", rotulo: "Valor" },
     { papel: "categoria", rotulo: "Categoria" },
 ]
+
+/** A cor do valor conforme o sinal e o que o negativo significa neste arquivo. */
+function tomDoValor(texto: string, negativoEhDespesa: boolean): "expense" | "income" | null {
+    const n = lerValorBr(texto)
+    if (n === null || n === 0) return null
+    return (n < 0) === negativoEhDespesa ? "expense" : "income"
+}
 
 /** O papel que a coluna `i` tem no mapeamento (ou nenhum). */
 const papelDa = (m: MapeamentoColunas, i: number) => PAPEIS.find(({ papel }) => m[papel] === i)?.papel ?? IGNORAR
@@ -57,13 +70,13 @@ export function MapearColunas({
                 <TableHeader>
                     <TableRow>
                         {colunas.map((i) => (
-                            <TableHead key={i}>
+                            <TableHead key={i} className={i === valor.valor ? "text-right" : undefined}>
                                 <Select
                                     value={papelDa(valor, i)}
                                     disabled={disabled}
                                     onValueChange={(v) => onChange(comPapel(valor, i, v as Papel | typeof IGNORAR))}
                                 >
-                                    <SelectTrigger size="sm" aria-label={`Papel da coluna ${nomeDa(i)}`}>
+                                    <SelectTrigger size="sm" className="w-full" aria-label={`Papel da coluna ${nomeDa(i)}`}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -83,9 +96,9 @@ export function MapearColunas({
                 </TableHeader>
                 <TableBody>
                     {cabecalho ? (
-                        <TableRow>
+                        <TableRow className="bg-muted/50">
                             {colunas.map((i) => (
-                                <TableCell key={i} className="font-medium">
+                                <TableCell key={i} className={cn("font-medium", i === valor.valor && "nums text-right")}>
                                     {nomeDa(i)}
                                 </TableCell>
                             ))}
@@ -93,33 +106,63 @@ export function MapearColunas({
                     ) : null}
                     {dados.map((linha, r) => (
                         <TableRow key={r}>
-                            {colunas.map((i) => (
-                                <TableCell key={i} className="max-w-48 truncate text-muted-foreground">
-                                    {(linha[i] ?? "").trim()}
-                                </TableCell>
-                            ))}
+                            {colunas.map((i) => {
+                                const texto = (linha[i] ?? "").trim()
+                                const tom = i === valor.valor ? tomDoValor(texto, valor.negativoEhDespesa) : null
+                                return (
+                                    <TableCell
+                                        key={i}
+                                        className={cn(
+                                            "max-w-48 truncate",
+                                            i === valor.valor && "nums text-right",
+                                            tom === "expense" ? "text-expense" : tom === "income" ? "text-income" : "text-muted-foreground",
+                                        )}
+                                    >
+                                        {texto}
+                                    </TableCell>
+                                )
+                            })}
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
-            <FormSwitch
-                label="1ª linha é cabeçalho"
-                checked={valor.temCabecalho}
-                disabled={disabled}
-                onCheckedChange={(temCabecalho) => onChange({ ...valor, temCabecalho })}
-            />
-            <FormRadioGroup
-                label="Neste arquivo, −12,34 é:"
-                variant="chip"
-                orientation="horizontal"
-                disabled={disabled}
-                value={valor.negativoEhDespesa ? "gasto" : "entrada"}
-                onValueChange={(v) => onChange({ ...valor, negativoEhDespesa: v === "gasto" })}
-                options={[
-                    { value: "gasto", label: "um gasto" },
-                    { value: "entrada", label: "uma entrada" },
-                ]}
-            />
+            <Card variant="muted" padding="none">
+                <ItemGroup variant="divided">
+                    <Item size="sm">
+                        <ItemContent>
+                            <FormSwitch
+                                label="1ª linha é cabeçalho"
+                                description={
+                                    valor.temCabecalho
+                                        ? "A linha com fundo não entra como lançamento."
+                                        : "Ligue se a 1ª linha tiver os nomes das colunas."
+                                }
+                                checked={valor.temCabecalho}
+                                disabled={disabled}
+                                onCheckedChange={(temCabecalho) => onChange({ ...valor, temCabecalho })}
+                            />
+                        </ItemContent>
+                    </Item>
+                    <Item size="sm">
+                        <ItemContent>
+                            <ItemTitle>Valor negativo é</ItemTitle>
+                        </ItemContent>
+                        <Tabs
+                            value={valor.negativoEhDespesa ? "gasto" : "entrada"}
+                            onValueChange={(v) => onChange({ ...valor, negativoEhDespesa: v === "gasto" })}
+                        >
+                            <TabsList aria-label="Valor negativo é">
+                                <TabsTrigger value="gasto" disabled={disabled}>
+                                    Gasto
+                                </TabsTrigger>
+                                <TabsTrigger value="entrada" disabled={disabled}>
+                                    Entrada
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </Item>
+                </ItemGroup>
+            </Card>
         </div>
     )
 }
