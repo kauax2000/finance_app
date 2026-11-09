@@ -478,6 +478,27 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
     const chavesCompacto = chavesDasLinhas(imp.visiveis.slice(0, LIMITE))
     const podeExpandir = resumo.total > LIMITE
+    // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-fast`, a `SAIDA`),
+    // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
+    const [mudando, startTransition] = React.useTransition()
+    const [saindo, setSaindo] = React.useState(false)
+    const esperando = saindo || mudando
+    function trocar() {
+        startTransition(() => {
+            setSaindo(false)
+            imp.setExpandido(!imp.expandido)
+        })
+    }
+    function alternar() {
+        if (esperando) return
+        // Com movimento reduzido não há esmaecer, nem o `transitionend` que o encerra: troca na hora.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return trocar()
+        setSaindo(true)
+    }
+    function sair(e: React.TransitionEvent) {
+        if (saindo && e.target === e.currentTarget && e.propertyName === "opacity") trocar()
+    }
+    const saida = cn("transition-opacity duration-(--duration-fast)", saindo && "opacity-0 ease-(--ease-in-out)")
     const botaoExpandir = (
         <Button
             type="button"
@@ -486,9 +507,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
             aria-expanded={imp.expandido}
             disabled={travado}
-            onClick={() => imp.setExpandido(!imp.expandido)}
+            onClick={alternar}
         >
-            {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
+            {esperando ? <Spinner /> : imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
         </Button>
     )
 
@@ -631,27 +652,42 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 </Item>
             ) : null}
             {imp.expandido ? (
-                <DataTable
-                    aria-label="Lançamentos do arquivo"
-                    columns={colunas}
-                    data={imp.visiveis}
-                    getRowId={(i) => i.clientId}
-                    getRowLabel={rotuloDe}
-                    pageSize={false}
-                    toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} travado={travado} /> }}
-                    onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
-                    enableSelection={travado ? () => false : true}
-                    pending={travado}
-                    rowSelection={selecao}
-                    onRowSelectionChange={mudarSelecao}
-                    empty={vazio}
-                />
+                // A barra e as linhas chegam em escada (teto de 8), a barra junto com a primeira; a moldura e o cabeçalho já estão lá.
+                <div
+                    className={cn(
+                        saida,
+                        "[--stagger-base:var(--duration-fast)] [&_[data-slot=table-panel-group]]:dialog-step [&_[data-slot=table-panel]]:animate-none!",
+                        "[&_tbody]:dialog-step [&_tbody>tr]:[--stagger-cap:8]",
+                    )}
+                    onTransitionEnd={sair}
+                >
+                    <DataTable
+                        aria-label="Lançamentos do arquivo"
+                        columns={colunas}
+                        data={imp.visiveis}
+                        getRowId={(i) => i.clientId}
+                        getRowLabel={rotuloDe}
+                        pageSize={false}
+                        toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} travado={travado} /> }}
+                        onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
+                        enableSelection={travado ? () => false : true}
+                        pending={travado}
+                        rowSelection={selecao}
+                        onRowSelectionChange={mudarSelecao}
+                        empty={vazio}
+                    />
+                </div>
             ) : imp.visiveis.length === 0 ? (
                 vazio
             ) : (
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
-                    <ItemGroup variant="divided" className={esmaece} aria-busy={lendo}>
+                    <ItemGroup
+                        variant="divided"
+                        className={cn(esmaece, saida, "dialog-step [--stagger-base:var(--duration-fast)]")}
+                        aria-busy={lendo}
+                        onTransitionEnd={sair}
+                    >
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i, n) => (
                             <Linha
@@ -679,9 +715,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                 className="-me-3"
                                 aria-expanded={false}
                                 disabled={travado}
-                                onClick={() => imp.setExpandido(true)}
+                                onClick={alternar}
                             >
-                                <ArrowsPointingOutIcon data-icon="inline-start" />
+                                {esperando ? <Spinner data-icon="inline-start" /> : <ArrowsPointingOutIcon data-icon="inline-start" />}
                                 <span>Ver todos</span>
                             </Button>
                         </div>

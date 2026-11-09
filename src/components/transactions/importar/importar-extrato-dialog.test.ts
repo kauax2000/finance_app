@@ -264,3 +264,22 @@ describe("Inverter responde e troca em fases", () => {
         expect(conferir).toMatch(/count=\{[\s\S]*?<ContagemQueAnda/)
     })
 })
+
+describe("Ver todos e Recolher em três fases", () => {
+    it("a troca vai numa transição, com o Spinner no botão enquanto espera", () => {
+        expect(conferir).toContain("React.useTransition()")
+        expect(conferir).toMatch(/startTransition\(\(\) => \{[\s\S]*?imp\.setExpandido\(/)
+        expect(conferir).not.toMatch(/onClick=\{\(\) => imp\.setExpandido\(/)
+        expect(conferir).toMatch(/esperando \? <Spinner data-icon="inline-start" \/>/)
+    })
+
+    it("o que sai esmaece antes da troca, e o que chega surge em escada", () => {
+        expect(conferir).toContain("onTransitionEnd={sair}")
+        expect(conferir).toContain('saindo && "opacity-0 ease-(--ease-in-out)"')
+        expect(conferir).toMatch(/<ItemGroup[^>]*dialog-step/)
+        expect(conferir).toContain("[&_tbody]:dialog-step")
+        expect(conferir).toContain("[&_tbody>tr]:[--stagger-cap:8]")
+        expect(conferir).toContain("[&_[data-slot=table-panel-group]]:dialog-step")
+        expect(conferir).toContain("[--stagger-base:var(--duration-fast)]")
+    })
+})
