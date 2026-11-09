@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { rotuloDePorCategoria } from "./rotulo-por-categoria"
+import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 const ler = (nome: string) => semComentarios(lerFonte(`src/components/transactions/importar/${nome}`), "tudo")
@@ -144,7 +144,7 @@ describe("a conferência", () => {
         expect(conferir).toContain("idsParaCategoria(itens, t, destino)")
         expect(conferir).toContain('TabsTrigger value="expense"')
         expect(conferir).toContain('TabsTrigger value="income"')
-        expect(conferir).toContain('aria-label="Tipo da categoria"')
+        expect(conferir).toContain('aria-label="Tipo do lançamento"')
         expect(conferir).toContain("escolhas")
         expect(conferir).not.toContain('<Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>')
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
@@ -156,7 +156,10 @@ describe("a conferência", () => {
         expect(conferir).toContain("ColorTile")
         expect(conferir).toContain("CategoryIconPreview")
         expect(conferir).toContain("SearchInput")
-        expect(conferir).toContain("com categoria")
+        expect(conferir).toContain("Escolha uma categoria para as saídas e outra para as entradas. Cada uma vale só para o seu tipo.")
+        expect(guiaDaAba("expense", 56, null)).toBe("Escolha a categoria das 56 saídas.")
+        expect(guiaDaAba("income", 1, null)).toBe("Escolha a categoria da 1 entrada.")
+        expect(guiaDaAba("expense", 56, "Mercado")).toBe("Para as 56 saídas: Mercado.")
         expect(conferir).not.toContain('ComboboxTrigger placeholder="Escolha uma categoria"')
         expect(ler("use-importar-extrato.ts")).toContain('"id,name,type,color,icon"')
     })

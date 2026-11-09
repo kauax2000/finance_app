@@ -12,7 +12,7 @@ import {
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
-import { Badge, BadgeDot } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
@@ -77,7 +77,7 @@ import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
-import { rotuloDePorCategoria } from "./rotulo-por-categoria"
+import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
@@ -269,7 +269,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 
     const saidas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "expense").length : 0
     const entradas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "income").length : 0
-    const comCategoria = itens.filter((i) => imp.categoriaDe(i.clientId) != null).length
+    const nomeDaEscolha = (id: string | null) =>
+        id == null ? null : id === SEM ? "sem categoria" : (categorias.find((c) => c.id === id)?.name ?? null)
 
     const q = normalizeSearchText(busca.trim())
     const achadas = categorias.filter((c) => c.type === tipo && (!q || normalizeSearchText(c.name).includes(q)))
@@ -310,21 +311,10 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                     <DialogDescription>
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
-                            : `Vale para todos os ${numberBR(itens.length)} lançamentos.`}
+                            : misturadas
+                              ? "Escolha uma categoria para as saídas e outra para as entradas. Cada uma vale só para o seu tipo."
+                              : `Vale para todos os ${numberBR(itens.length)} lançamentos.`}
                     </DialogDescription>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        {saidas > 0 ? (
-                            <Badge variant="soft">
-                                {numberBR(saidas)} {saidas === 1 ? "saída" : "saídas"}
-                            </Badge>
-                        ) : null}
-                        {entradas > 0 ? (
-                            <Badge variant="soft">
-                                {numberBR(entradas)} {entradas === 1 ? "entrada" : "entradas"}
-                            </Badge>
-                        ) : null}
-                        <Badge variant="soft">{numberBR(comCategoria)} com categoria</Badge>
-                    </div>
                 </DialogHeader>
                 <Form layout="none" onSubmit={aplicar} className="flex min-h-0 flex-1 flex-col">
                     {/* A busca fica parada acima da lista: só a lista rola. */}
@@ -338,17 +328,19 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                         />
                     </div>
                     {misturadas ? (
-                        <div className="px-(--dialog-px) pt-3">
+                        <div className="flex flex-col gap-2 px-(--dialog-px) pt-3">
                             <Tabs value={aba} onValueChange={(v) => setAba(v as TipoDeCategoria)}>
-                                <TabsList aria-label="Tipo da categoria" stretch>
-                                    <TabsTrigger value="expense" count={escolhas.expense != null ? <BadgeDot className="[--badge-dot:var(--foreground)]" /> : undefined}>
-                                        Despesas
+                                <TabsList aria-label="Tipo do lançamento" stretch>
+                                    <TabsTrigger value="expense" count={numberBR(saidas)}>
+                                        Saídas
                                     </TabsTrigger>
-                                    <TabsTrigger value="income" count={escolhas.income != null ? <BadgeDot className="[--badge-dot:var(--foreground)]" /> : undefined}>
-                                        Receitas
+                                    <TabsTrigger value="income" count={numberBR(entradas)}>
+                                        Entradas
                                     </TabsTrigger>
                                 </TabsList>
                             </Tabs>
+                            {/* Diz para quem vale a lista aberta e o que já foi escolhido nela. */}
+                            <Caption className="px-1">{guiaDaAba(tipo, tipo === "expense" ? saidas : entradas, nomeDaEscolha(escolhas[tipo]))}</Caption>
                         </div>
                     ) : null}
                     <DialogBody className="flex flex-col gap-3">
