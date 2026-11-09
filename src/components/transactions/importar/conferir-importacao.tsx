@@ -240,7 +240,7 @@ function Linha({
                         <JaExiste imp={imp} item={item} />
                     </ItemDescription>
                 </ItemContent>
-                <div className="hidden md:block md:w-40">
+                <div className="hidden md:block md:w-44">
                     <CategoriaDaLinha imp={imp} item={item} travado={travado} />
                 </div>
                 <MoneyDisplay
