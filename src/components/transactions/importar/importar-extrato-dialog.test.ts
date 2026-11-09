@@ -188,8 +188,8 @@ describe("a conferência", () => {
         expect(conferir).toContain("text-income")
         expect(conferir).not.toContain('<Badge size="md" tone="expense">')
         expect(conferir).not.toContain('<Badge size="md" tone="income">')
-        // O menu das ações em massa é o ⋯ ao lado do filtro, com o nome Ações (o N já está em cada item).
-        expect(conferir).toMatch(/aria-label="Ações"[\s\S]*?<EllipsisHorizontalIcon \/>/)
+        // O menu das ações em massa se chama Ações (o N já está em cada item).
+        expect(conferir).toMatch(/<span>Ações<\/span>/)
         // O sinal ao contrário se desfaz num toque, ao lado do Ajustar.
         expect(conferir).toMatch(/onClick=\{\(\) => void imp\.inverterSinal\(\)\}>\s*Inverter/)
     })

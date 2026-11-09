@@ -5,7 +5,7 @@ import {
     ArrowsPointingInIcon,
     ArrowsPointingOutIcon,
     CheckIcon,
-    EllipsisHorizontalIcon,
+    ChevronDownIcon,
     NoSymbolIcon,
     TagIcon,
 } from "@heroicons/react/16/solid"
@@ -336,11 +336,13 @@ function AcoesDasVisiveis({
     imp,
     itens,
     onPorCategoria,
+    size,
     travado,
 }: {
     imp: ImportarExtrato
     itens: ItemImportavel[]
     onPorCategoria: (itens: ItemImportavel[]) => void
+    size?: "xs"
     travado: boolean
 }) {
     const rotulos = rotulosDasVisiveis(itens.length)
@@ -348,8 +350,9 @@ function AcoesDasVisiveis({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="floating" size="icon-lg" className="shadow-none" aria-label="Ações" disabled={travado || itens.length === 0}>
-                    <EllipsisHorizontalIcon />
+                <Button type="button" variant="secondary" size={size} disabled={travado || itens.length === 0}>
+                    <span>Ações</span>
+                    <ChevronDownIcon data-icon="inline-end" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -475,6 +478,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ) : null}
                     {resumo.saidas === 0 && resumo.entradas === 0 ? "Nenhuma linha marcada" : null}
                 </p>
+                {imp.expandido ? null : (
+                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
+                )}
                 {podeExpandir ? (
                     <Button
                         type="button"
@@ -525,9 +531,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         </TabsList>
                     </Tabs>
                 </div>
-                {imp.expandido ? null : (
-                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} travado={travado} />
-                )}
             </div>
             {imp.expandido ? (
                 <DataTable
