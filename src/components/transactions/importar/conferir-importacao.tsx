@@ -12,6 +12,7 @@ import {
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { Badge } from "@/components/ui/badge"
+import { ChartSplit } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -78,6 +79,11 @@ import {
 
 /** O compacto mostra no máximo isto; acima, o "Ver os N" e o expandir. */
 const LIMITE = 6
+
+const CONFIG_DA_DIVISAO = {
+    saidas: { label: "Saídas", color: "var(--chart-expense)" },
+    entradas: { label: "Entradas", color: "var(--chart-income)" },
+}
 const SEM = "__sem__"
 
 const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true }[] = [
@@ -465,19 +471,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ))}
                 </div>
             ) : null}
-            {/* Os valores são uma linha só; as ações da lista moram na ponta dela. */}
-            <div className="flex items-start gap-2">
-                {/* Quantas entram mora no rodapé, ao lado do Importar; aqui ficam os valores. */}
-                <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-                    {resumo.saidas > 0 ? (
-                        <span className="text-expense nums">Saídas {signedCurrencyBRL(-resumo.saidas)}</span>
-                    ) : null}
-                    {resumo.saidas > 0 && resumo.entradas > 0 ? " · " : null}
-                    {resumo.entradas > 0 ? (
-                        <span className="text-income nums">Entradas {signedCurrencyBRL(resumo.entradas)}</span>
-                    ) : null}
-                    {resumo.saidas === 0 && resumo.entradas === 0 ? "Nenhuma linha marcada" : null}
-                </p>
+            {/* As ações da lista moram acima dela, à direita; o resumo fica embaixo. */}
+            <div className="flex items-center justify-end gap-2">
                 {imp.expandido ? null : (
                     <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 )}
@@ -557,12 +552,11 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ScrollArea
                         variant="fade"
-                        sides="end"
                         viewportClassName={grande ? "max-h-(--lista-h)" : undefined}
                         style={teto ? ({ "--lista-h": `${teto}px` } as React.CSSProperties) : undefined}
                     >
                         <ItemGroup ref={listaRef} variant="divided">
-                            {imp.visiveis.slice(0, grande ? LIMITE + 1 : LIMITE).map((i) => (
+                            {imp.visiveis.map((i) => (
                                 <Linha
                                     key={i.clientId}
                                     imp={imp}
@@ -574,19 +568,44 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         </ItemGroup>
                     </ScrollArea>
                     {grande ? (
-                        <div className="flex justify-center">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                disabled={travado}
-                                onClick={() => imp.setExpandido(true)}
-                            >
-                                {`Ver os ${numberBR(imp.visiveis.length)} lançamentos`}
-                            </Button>
-                        </div>
+                        <Caption className="text-center">
+                            {`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} · role a lista ou abra em tela cheia`}
+                        </Caption>
                     ) : null}
                 </>
             )}
+            {/* O resumo é um só, logo abaixo da lista: quantas entram, os valores e a divisão entre saídas e entradas. */}
+            <Item variant="muted" size="sm" className="rounded-surface">
+                <ItemContent>
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm text-muted-foreground" role="status">
+                        <span>
+                            Vão entrar{" "}
+                            <span className="font-medium text-foreground nums">
+                                {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                            </span>
+                        </span>
+                        <span>
+                            {resumo.saidas > 0 ? <span className="text-expense nums">{signedCurrencyBRL(-resumo.saidas)}</span> : null}
+                            {resumo.saidas > 0 && resumo.entradas > 0 ? " · " : null}
+                            {resumo.entradas > 0 ? <span className="text-income nums">{signedCurrencyBRL(resumo.entradas)}</span> : null}
+                        </span>
+                    </div>
+                    {resumo.saidas > 0 || resumo.entradas > 0 ? (
+                        <ChartSplit
+                            className="pt-2"
+                            label="Saídas e entradas marcadas"
+                            labels="legend"
+                            nameKey="parte"
+                            dataKey="valor"
+                            config={CONFIG_DA_DIVISAO}
+                            data={[
+                                { parte: "saidas", valor: resumo.saidas },
+                                { parte: "entradas", valor: resumo.entradas },
+                            ]}
+                        />
+                    ) : null}
+                </ItemContent>
+            </Item>
             {imp.csv && !imp.expandido ? (
                 <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
                     <ItemContent>

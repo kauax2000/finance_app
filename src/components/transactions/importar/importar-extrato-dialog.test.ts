@@ -99,10 +99,10 @@ describe("o diálogo de importar, versão C", () => {
 })
 
 describe("a conferência", () => {
-    it("o compacto mostra 6 linhas, e só com mais de 6 aparecem o Ver os N e o expandir", () => {
+    it("o compacto mostra 6 linhas e rola o resto, e só com mais de 6 aparecem o contador e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        // Uma linha a mais por baixo do teto: a sexta dissolve e o teto é medido das linhas, sem px cravado.
-        expect(conferir).toContain("imp.visiveis.slice(0, grande ? LIMITE + 1 : LIMITE)")
+        // Todas as linhas sob o teto de 6, rolando dentro da lista; o teto é medido das linhas, sem px cravado.
+        expect(conferir).toContain("{imp.visiveis.map((i) => (")
         expect(conferir).toContain("linhas[LIMITE].offsetTop - linhas[0].offsetTop")
         expect(conferir).toContain('viewportClassName={grande ? "max-h-(--lista-h)" : undefined}')
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
@@ -119,7 +119,7 @@ describe("a conferência", () => {
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
-        expect(conferir).toMatch(/grande \? \([\s\S]*?Ver os \$\{numberBR\(imp\.visiveis\.length\)\} lançamentos/)
+        expect(conferir).toMatch(/grande \? \([\s\S]*?Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(imp\.visiveis\.length\)\}/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/aria-label=\{imp\.expandido \? "Recolher a lista" : "Expandir a lista"\}/)
         expect(conferir).toContain("aria-expanded={imp.expandido}")
@@ -128,10 +128,9 @@ describe("a conferência", () => {
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
-        // Quantas entram é a região viva do rodapé, ao lado do Importar; a conferência só traz os valores.
-        expect(dialogo).toMatch(/<DialogFooter>[\s\S]*?<p\s+role="status"[\s\S]*?Vão entrar/)
-        expect(dialogo).toContain("sm:me-auto")
-        expect(conferir).not.toContain("Vão entrar")
+        // Quantas entram, os valores e a divisão são um resumo só, a região viva abaixo da lista.
+        expect(conferir).toMatch(/role="status"[\s\S]*?Vão entrar[\s\S]*?<ChartSplit/)
+        expect(dialogo).not.toContain("Vão entrar")
         expect(conferir).not.toContain("opacity-60")
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
     })
