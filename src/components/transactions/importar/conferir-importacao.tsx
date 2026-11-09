@@ -12,7 +12,7 @@ import {
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
@@ -77,6 +77,7 @@ import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
+import { rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
@@ -245,6 +246,9 @@ function Linha({
 
 const col = dataTableColumns<ItemImportavel>()
 
+type TipoDeCategoria = "expense" | "income"
+type Escolhas = Record<TipoDeCategoria, string | null>
+
 /**
  * "Pôr categoria" das linhas à vista (ou de uma, tocada no telefone): a lista
  * mora no diálogo, tocar só marca, e o botão do rodapé diz o efeito e aplica.
@@ -257,41 +261,46 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
     const tipos = destino ? (["expense", "income"] as const).filter((t) => itens.some((i) => tipoDoItem(i, destino) === t)) : []
     const misturadas = tipos.length > 1
     const categorias = imp.previa?.categorias ?? []
-    const [escolhida, setEscolhida] = React.useState<string | null>(null)
+    const [escolhas, setEscolhas] = React.useState<Escolhas>({ expense: null, income: null })
+    const [aba, setAba] = React.useState<TipoDeCategoria>("expense")
     const [busca, setBusca] = React.useState("")
+    // Com um tipo só à vista, a lista é desse tipo; com os dois, a aba aberta manda.
+    const tipo = misturadas ? aba : (tipos[0] ?? "expense")
 
     const saidas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "expense").length : 0
     const entradas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "income").length : 0
     const comCategoria = itens.filter((i) => imp.categoriaDe(i.clientId) != null).length
 
     const q = normalizeSearchText(busca.trim())
-    const achadas = categorias.filter((c) => !q || normalizeSearchText(c.name).includes(q))
-    const escolhidaCat = escolhida && escolhida !== SEM ? categorias.find((c) => c.id === escolhida) : undefined
-    const tipoEscolhido = escolhidaCat?.type ?? null
-    const n = !destino || escolhida == null ? 0 : idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino).length
-    const rotulo =
-        escolhida === SEM
-            ? `Tirar a categoria de ${numberBR(n)}`
-            : escolhidaCat
-              ? `Pôr ${escolhidaCat.name} em ${numberBR(n)}`
-              : "Pôr categoria"
+    const achadas = categorias.filter((c) => c.type === tipo && (!q || normalizeSearchText(c.name).includes(q)))
+    const escolhida = escolhas[tipo]
+    const marcar = (id: string) => setEscolhas((e) => ({ ...e, [tipo]: e[tipo] === id ? null : id }))
+    const aplicaveis = (destino ? tipos : []).flatMap((t) => {
+        const id = escolhas[t]
+        if (id == null || !destino) return []
+        const ids = idsParaCategoria(itens, t, destino)
+        const cat = id === SEM ? null : (categorias.find((c) => c.id === id) ?? null)
+        return id === SEM || cat ? [{ ids, categoriaId: id === SEM ? null : id, nome: cat?.name ?? null }] : []
+    })
+    const rotulo = rotuloDePorCategoria(aplicaveis.map((p) => ({ nome: p.nome, n: p.ids.length })))
 
     function fechar() {
-        setEscolhida(null)
+        setEscolhas({ expense: null, income: null })
+        setAba("expense")
         setBusca("")
         onClose()
     }
 
     function aplicar(e: React.FormEvent) {
         e.stopPropagation()
-        if (!destino || escolhida == null) return
-        imp.setCategoria(idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino), escolhida === SEM ? null : escolhida)
+        if (aplicaveis.length === 0) return
+        for (const p of aplicaveis) imp.setCategoria(p.ids, p.categoriaId)
         fechar()
     }
 
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
-            <DialogContent size="sm" layout="fixed">
+            <DialogContent size="sm" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,30rem)]">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
                     <DialogDescription>
@@ -324,10 +333,24 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                             onClear={() => setBusca("")}
                         />
                     </div>
+                    {misturadas ? (
+                        <div className="px-(--dialog-px) pt-3">
+                            <Tabs value={aba} onValueChange={(v) => setAba(v as TipoDeCategoria)}>
+                                <TabsList aria-label="Tipo da categoria" stretch>
+                                    <TabsTrigger value="expense" count={escolhas.expense != null ? <BadgeDot /> : undefined}>
+                                        Despesas
+                                    </TabsTrigger>
+                                    <TabsTrigger value="income" count={escolhas.income != null ? <BadgeDot /> : undefined}>
+                                        Receitas
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+                    ) : null}
                     <DialogBody className="flex flex-col gap-3">
                         <ul className="flex flex-col gap-0.5">
                             <li>
-                                <FormPickerPopoverItem selected={escolhida === SEM} onClick={() => setEscolhida(SEM)}>
+                                <FormPickerPopoverItem selected={escolhida === SEM} onClick={() => marcar(SEM)}>
                                     <span className="min-w-0 truncate">Sem categoria</span>
                                     {escolhida === SEM ? <CheckIcon className="ms-auto shrink-0" /> : null}
                                 </FormPickerPopoverItem>
@@ -339,33 +362,19 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                                 Nenhuma categoria com esse nome.
                             </p>
                         ) : (
-                            tipos.map((t) => {
-                                const doTipo = achadas.filter((c) => c.type === t)
-                                if (doTipo.length === 0) return null
-                                return (
-                                    <div key={t} className="flex flex-col gap-1">
-                                        {misturadas ? (
-                                            <Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>
-                                        ) : null}
-                                        <ul className="flex flex-col gap-0.5">
-                                            {doTipo.map((c) => (
-                                                <li key={c.id}>
-                                                    <FormPickerPopoverItem
-                                                        selected={escolhida === c.id}
-                                                        onClick={() => setEscolhida(c.id)}
-                                                    >
-                                                        <ColorTile size="xs" color={c.color} className="shrink-0">
-                                                            <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
-                                                        </ColorTile>
-                                                        <span className="min-w-0 truncate">{c.name}</span>
-                                                        {escolhida === c.id ? <CheckIcon className="ms-auto shrink-0" /> : null}
-                                                    </FormPickerPopoverItem>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )
-                            })
+                            <ul className="flex flex-col gap-0.5">
+                                {achadas.map((c) => (
+                                    <li key={c.id}>
+                                        <FormPickerPopoverItem selected={escolhida === c.id} onClick={() => marcar(c.id)}>
+                                            <ColorTile size="xs" color={c.color} className="shrink-0">
+                                                <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
+                                            </ColorTile>
+                                            <span className="min-w-0 truncate">{c.name}</span>
+                                            {escolhida === c.id ? <CheckIcon className="ms-auto shrink-0" /> : null}
+                                        </FormPickerPopoverItem>
+                                    </li>
+                                ))}
+                            </ul>
                         )}
                     </DialogBody>
                     <DialogFooter>
@@ -374,7 +383,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                                 Cancelar
                             </Button>
                         </DialogClose>
-                        <FormSubmit disabled={escolhida == null || n === 0}>{rotulo}</FormSubmit>
+                        <FormSubmit disabled={aplicaveis.every((p) => p.ids.length === 0)}>{rotulo}</FormSubmit>
                     </DialogFooter>
                 </Form>
             </DialogContent>

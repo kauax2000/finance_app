@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 const ler = (nome: string) => semComentarios(lerFonte(`src/components/transactions/importar/${nome}`), "tudo")
@@ -140,11 +141,16 @@ describe("a conferência", () => {
         expect(conferir).not.toContain("marcadasVistas")
         expect(conferir).not.toContain("porCategoriaDesligado")
         // Cada categoria vale para as visíveis do tipo dela (o estorno do cartão é despesa).
-        expect(conferir).toContain("idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino)")
+        expect(conferir).toContain("idsParaCategoria(itens, t, destino)")
+        expect(conferir).toContain('TabsTrigger value="expense"')
+        expect(conferir).toContain('TabsTrigger value="income"')
+        expect(conferir).toContain('aria-label="Tipo da categoria"')
+        expect(conferir).toContain("escolhas")
+        expect(conferir).not.toContain('<Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>')
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
         expect(conferir).toContain('"Vale para as linhas à vista."')
-        expect(conferir).toContain("`Pôr ${")
-        expect(conferir).toContain("Tirar a categoria de")
+        expect(conferir).toContain("rotuloDePorCategoria(")
+        expect(ler("rotulo-por-categoria.ts")).toContain("Tirar a categoria de")
         expect(conferir).toContain("ColorTile")
         expect(conferir).toContain("CategoryIconPreview")
         expect(conferir).toContain("SearchInput")
@@ -227,5 +233,15 @@ describe("a conferência", () => {
         expect(colunas).toContain("text-income")
         expect(colunas).not.toContain("A linha com fundo não entra como lançamento.")
         expect(colunas).toMatch(/<SelectTrigger[^>]*w-full/)
+    })
+})
+
+describe("rotuloDePorCategoria", () => {
+    it("diz o efeito de cada escolha", () => {
+        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }])).toBe("Pôr Mercado em 5")
+        expect(rotuloDePorCategoria([{ nome: null, n: 3 }])).toBe("Tirar a categoria de 3")
+        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: "Salário", n: 1 }])).toBe("Pôr Mercado em 5 e pôr Salário em 1")
+        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: null, n: 1 }])).toBe("Pôr Mercado em 5 e tirar a categoria de 1")
+        expect(rotuloDePorCategoria([])).toBe("Pôr categoria")
     })
 })
