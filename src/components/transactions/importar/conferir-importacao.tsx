@@ -387,7 +387,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const botaoExpandir = (
         <Button
             type="button"
-            variant={imp.expandido ? "tertiary" : "floating"}
+            variant="tertiary"
             size="icon-md"
             aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
             aria-expanded={imp.expandido}
