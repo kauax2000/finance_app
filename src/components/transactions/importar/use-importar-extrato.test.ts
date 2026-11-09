@@ -366,16 +366,16 @@ describe("a conferência", () => {
 
     it("as ações das visíveis dizem quantas, no singular e no plural", () => {
         expect(rotulosDasVisiveis(5)).toEqual({
-            categoria: "Pôr categoria nos 5 visíveis",
-            fora: "Deixar de fora os 5 visíveis",
-            trazer: "Trazer os 5 visíveis",
+            categoria: "Pôr categoria em todos os 5",
+            fora: "Deixar de fora todos os 5",
+            trazer: "Trazer todos os 5",
         })
         expect(rotulosDasVisiveis(1)).toEqual({
-            categoria: "Pôr categoria no 1 visível",
-            fora: "Deixar de fora o 1 visível",
-            trazer: "Trazer o 1 visível",
+            categoria: "Pôr categoria no 1 lançamento",
+            fora: "Deixar de fora o 1 lançamento",
+            trazer: "Trazer o 1 lançamento",
         })
-        expect(rotulosDasVisiveis(1048).categoria).toBe("Pôr categoria nos 1.048 visíveis")
+        expect(rotulosDasVisiveis(1048).categoria).toBe("Pôr categoria em todos os 1.048")
     })
 
     it("a categoria das visíveis vale só para as do tipo dela; sem categoria vale para todas", () => {

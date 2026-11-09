@@ -292,6 +292,10 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
     }
 
     function aplicar(e: React.FormEvent) {
+        // O `Form` não impede o envio nativo (quem impede é o `onSubmit`): sem o
+        // `preventDefault`, o navegador recarrega a página. O `stopPropagation`
+        // segura o submit que subiria pela árvore do React até o do Importar.
+        e.preventDefault()
         e.stopPropagation()
         if (aplicaveis.length === 0) return
         for (const p of aplicaveis) imp.setCategoria(p.ids, p.categoriaId)
@@ -306,7 +310,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                     <DialogDescription>
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
-                            : "Vale para as linhas à vista."}
+                            : `Vale para todos os ${numberBR(itens.length)} lançamentos, não só os que aparecem na lista.`}
                     </DialogDescription>
                     <div className="mt-3 flex flex-wrap gap-2">
                         {saidas > 0 ? (

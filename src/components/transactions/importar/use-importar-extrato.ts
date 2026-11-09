@@ -137,9 +137,9 @@ export function rotulosDasVisiveis(n: number) {
     const um = n === 1
     const q = numberBR(n)
     return {
-        categoria: um ? "Pôr categoria no 1 visível" : `Pôr categoria nos ${q} visíveis`,
-        fora: um ? "Deixar de fora o 1 visível" : `Deixar de fora os ${q} visíveis`,
-        trazer: um ? "Trazer o 1 visível" : `Trazer os ${q} visíveis`,
+        categoria: um ? "Pôr categoria no 1 lançamento" : `Pôr categoria em todos os ${q}`,
+        fora: um ? "Deixar de fora o 1 lançamento" : `Deixar de fora todos os ${q}`,
+        trazer: um ? "Trazer o 1 lançamento" : `Trazer todos os ${q}`,
     }
 }
 
