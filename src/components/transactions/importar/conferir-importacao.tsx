@@ -61,7 +61,6 @@ import {
     ItemTitle,
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -234,27 +233,6 @@ function Linha({
     )
 }
 
-/**
- * O teto do compacto: a altura das 6 primeiras linhas, medida (a linha muda com
- * a largura e o apontador). A sétima fica por baixo, e a sexta dissolve.
- */
-function useTetoDasLinhas(ativo: boolean) {
-    // Ref de estado: a lista nasce depois (vazio, filtro, tela cheia), e o efeito precisa do nó novo.
-    const [el, ref] = React.useState<HTMLDivElement | null>(null)
-    const [teto, setTeto] = React.useState<number | null>(null)
-    React.useLayoutEffect(() => {
-        if (!ativo || !el) return
-        const medir = () => {
-            const linhas = el.querySelectorAll<HTMLElement>(":scope > [data-slot=item]")
-            if (linhas.length > LIMITE) setTeto(linhas[LIMITE].offsetTop - linhas[0].offsetTop)
-        }
-        medir()
-        const ro = new ResizeObserver(medir)
-        ro.observe(el)
-        return () => ro.disconnect()
-    }, [ativo, el])
-    return [ref, ativo ? teto : null] as const
-}
 
 const col = dataTableColumns<ItemImportavel>()
 
@@ -405,7 +383,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
-    const [listaRef, teto] = useTetoDasLinhas(grande && !imp.expandido)
     const podeExpandir = resumo.total > LIMITE
 
     const colunas: DataTableColumnDef<ItemImportavel>[] = [
@@ -576,26 +553,21 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : (
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
-                    <ScrollArea
-                        variant="fade"
-                        viewportClassName={grande ? "max-h-(--lista-h)" : undefined}
-                        style={teto ? ({ "--lista-h": `${teto}px` } as React.CSSProperties) : undefined}
-                    >
-                        <ItemGroup ref={listaRef} variant="divided">
-                            {imp.visiveis.map((i) => (
-                                <Linha
-                                    key={i.clientId}
-                                    imp={imp}
-                                    item={i}
-                                    travado={travado}
-                                    onTrocarCategoria={(item) => setPorCategoria([item])}
-                                />
-                            ))}
-                        </ItemGroup>
-                    </ScrollArea>
+                    <ItemGroup variant="divided">
+                        {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
+                        {imp.visiveis.slice(0, LIMITE).map((i) => (
+                            <Linha
+                                key={i.clientId}
+                                imp={imp}
+                                item={i}
+                                travado={travado}
+                                onTrocarCategoria={(item) => setPorCategoria([item])}
+                            />
+                        ))}
+                    </ItemGroup>
                     {grande ? (
                         <Caption className="text-center">
-                            {`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} · role a lista ou abra em tela cheia`}
+                            {`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} · abra em tela cheia para ver todos`}
                         </Caption>
                     ) : null}
                 </>

@@ -99,12 +99,9 @@ describe("o diálogo de importar, versão C", () => {
 })
 
 describe("a conferência", () => {
-    it("o compacto mostra 6 linhas e rola o resto, e só com mais de 6 aparecem o contador e o expandir", () => {
+    it("o compacto mostra só 6 linhas (a tela cheia mostra todas), e só com mais de 6 aparecem o contador e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        // Todas as linhas sob o teto de 6, rolando dentro da lista; o teto é medido das linhas, sem px cravado.
-        expect(conferir).toContain("{imp.visiveis.map((i) => (")
-        expect(conferir).toContain("linhas[LIMITE].offsetTop - linhas[0].offsetTop")
-        expect(conferir).toContain('viewportClassName={grande ? "max-h-(--lista-h)" : undefined}')
+        expect(conferir).toContain("{imp.visiveis.slice(0, LIMITE).map((i) => (")
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
         expect(conferir).toContain('<div className="hidden md:block md:w-40">')
