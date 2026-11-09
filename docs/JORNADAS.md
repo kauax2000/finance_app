@@ -89,7 +89,7 @@ flowchart LR
     G4 -->|"despesas por categoria"| G9
 
     G6 -->|"ver transações do cartão"| G5
-    G6 -->|"conferir fatura importa o que falta"| G5
+    G6 -->|"conferir fatura corrige e aprova"| G5
     G6 -->|"gasto por categoria"| G9
     G6 <-->|"fatura fechada em aberto, pelo total do banco"| G7
     G7 -->|"pagar conta cria despesa"| G5
@@ -965,20 +965,30 @@ flowchart TD
     recent -->|"linha"| txDetail
     recent -->|"Ver todas"| G5
 
-    top --> check(["WIREFRAME Conferir fatura: ciclo fechado, total do banco, arquivo"])
+    top --> check(["WIREFRAME Conferir fatura: ciclo fechado, status, total do banco, arquivo"])
     check -.->|"cartão com titular: só o titular e o dono conferem"| G17
     check -->|"digitar o total e Gravar"| bankTotal[("Grava credit_card_statement_totals, um por cartão e fechamento")]
     check -->|"arquivo .pdf"| pdfRead{"PDF com senha?"}
     pdfRead -->|"sim"| pdfPass(["Pede a senha; errada: Senha incorreta"]) -->|"Abrir"| pdfRead
     pdfRead -->|"não ou senha certa"| reading(["Leitura: total, completa ou incompleta com a diferença"])
     check -->|"arquivo .csv: mapeamento; .ofx"| reading
-    reading --> groups(["Grupos: Bate, Falta no app, Só no app, Valor diferente, Parcela fora de sequência"])
+    reading -->|"sem nenhuma diferença e leitura completa"| igual(["100% igual ao banco"])
+    igual -->|"uma vez por leitura"| aprov[("Grava approved_at e approved_by em credit_card_statement_totals")]
+    aprov --> aprovada(["Aprovada em dd/mm/aaaa"])
+    aprovada -.->|"a soma do app deixa de ser igual: Mudou depois da aprovação"| reading
+    reading -->|"com diferença"| groups(["Grupos por motivo, com o impacto: Fora do período, Falta no app, Valor diferente, Parcela fora de sequência, Só no app"])
     reading -->|"PDF incompleto: Ler com IA"| iaFat[("Edge ia-ler, op fatura: o texto redigido, em fatias de 12 mil caracteres, até 6")]
     iaFat -->|"itens: Lido pela IA; o total segue o do leitor"| groups
     iaFat -.->|"cota, sem IA, fatura grande ou sem itens: o aviso"| reading
-    groups -->|"Importar selecionados de Falta no app"| importMissing[("Insere com a data levada para dentro do ciclo e compra em dd/mm na descrição")]
-    importMissing -->|"lançamentos recarregam sem esqueleto"| groups
-    importMissing -.-> G5
+    groups -->|"Só no app: Apagar, Mudar a forma de pagamento ou Manter, nenhuma marcada"| escolha(["Escolha por item"])
+    escolha --> caminho{"Como aprovar"}
+    groups --> caminho
+    caminho -->|"Aprovar todas (N)"| aplicar
+    caminho -->|"Revisar uma por uma"| fila(["Fila: Corrigir ou Pular; no fim, Novo total"])
+    fila -->|"Aplicar escolhidas (N)"| aplicar[("Um lote: atualiza lançamentos e valor da assinatura, apaga com snapshot dos anexos, cria pelo lote de importação; qualquer falha desfaz tudo")]
+    aplicar -->|"lançamentos recarregam sem esqueleto e a leitura é refeita"| reading
+    aplicar -->|"Desfazer, até usar ou a leitura ou o ciclo mudar"| groups
+    aplicar -.-> G5
     reading -->|"Gravar o total lido"| bankTotal
     bankTotal -->|"veio de PDF"| pdfAttach[("PDF anexado ao total, bucket attachments")]
     bankTotal -->|"fatura fechada: Total do banco · diferença"| unpaid
@@ -993,7 +1003,7 @@ flowchart TD
 | Selo na tabela de transações | `Aberta`, `Fechada`, `Anterior`, `Paga`; Aberta é verde, Fechada âmbar, Anterior vermelha | `src/lib/credit-card-display.ts` |
 | Pagamento de fatura | Linha em `credit_card_invoice_payments`, sem criar despesa | `src/lib/bills/pay-bill-flow.ts` |
 | "Ver" do toast | Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a `/credit-cards/id`; na fila offline, sem "Ver" | `src/app/(app)/credit-cards/page-client.tsx`, `src/components/credit-cards/credit-card-create-dialog.tsx` |
-| Conferir fatura (Bloco 2) | Wireframe na página do cartão, sobre os ciclos já fechados. O arquivo do banco é `.pdf` (lido no aparelho por `pdfjs-dist`, sem IA; com senha, pede e tenta de novo, e a errada mostra "Senha incorreta"), `.csv` (com o mapeamento de colunas) ou `.ofx`. A leitura cuja soma não fecha com o total fica incompleta e mostra a diferença, e ainda deixa importar o que achou. Os grupos são Bate, Falta no app, Só no app, Valor diferente e Parcela fora de sequência; o que já foi importado cai em Bate. "Importar selecionados" grava os itens de Falta no app como despesas do cartão (estorno como receita), com a data levada para dentro do ciclo (`ajustarAoCiclo`, que acrescenta "compra em dd/mm" à descrição), `source` `import_pdf` (PDF) ou `import_statement` (CSV, OFX), `needs_review` e o lote em `import_batch_id`, e recarrega só os lançamentos do cartão | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/ciclo.ts`, `src/lib/fatura/conferir.ts`, `src/lib/import/pdf-texto.ts`, `src/lib/import/fatura-texto.ts` |
+| Conferir fatura (Bloco 2) | Wireframe na página do cartão, sobre os ciclos já fechados. O arquivo do banco é `.pdf` (lido no aparelho por `pdfjs-dist`, sem IA; com senha, pede e tenta de novo, e a errada mostra "Senha incorreta"), `.csv` (com o mapeamento de colunas) ou `.ofx`. A leitura cuja soma não fecha com o total fica incompleta e mostra a diferença. Uma linha de status mostra "Aprovada em dd/mm/aaaa", "Mudou depois da aprovação", "Igual ao banco" ou a diferença. Sem nenhuma diferença e com a leitura completa, a tela diz "100% igual ao banco" e aprova sozinha, uma vez por leitura: grava `approved_at` e `approved_by` em `credit_card_statement_totals` (migração `20261109120000_fatura_aprovada.sql`, colunas anuláveis, ainda não aplicada em produção; até lá a aprovação mostra o erro do banco). Com diferença, os grupos são Fora do período, Falta no app, Valor diferente, Parcela fora de sequência e Só no app, cada um com o impacto na diferença e a correção sugerida (data para o primeiro dia do ciclo com "compra em dd/mm" na descrição; criar o lançamento; usar o valor do banco, e o da assinatura também; usar a parcela do banco). Só no app não tem sugestão: Apagar, Mudar a forma de pagamento ou Manter, nenhuma marcada. "Aprovar todas (N)" aplica as sugestões e as escolhas feitas; "Revisar uma por uma" abre a fila com Corrigir ou Pular e termina em "Novo total" e "Aplicar escolhidas (N)". Aplicar é um lote só (atualizar, valor da assinatura, apagar com snapshot dos anexos, criar pelo lote de importação, `source` `import_pdf`, `import_statement`), e qualquer falha desfaz tudo. "Desfazer" fica na tela até ser usado ou a leitura ou o ciclo mudar. O "Importar selecionados" acabou. Quem confere é o titular do cartão e o dono | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/ciclo.ts`, `src/lib/fatura/conferir.ts`, `src/lib/import/pdf-texto.ts`, `src/lib/import/fatura-texto.ts` |
 | Ler com IA (Bloco 3B) | Quando a leitura de um PDF fica incompleta, aparece "Ler com IA": o texto do PDF já redigido no aparelho (`removerIdentificacao`), guardado da leitura, vai à `ia-ler` com o fechamento do ciclo, sem reler o arquivo nem pedir a senha. A Edge redige de novo e corta em fatias de 12.000 caracteres (até 6; acima, "Fatura grande demais para a IA. Use o CSV do banco."), cada uma gastando uma cota. Os itens da IA substituem os do leitor, com "Lido pela IA" no topo; o total continua o do leitor determinístico. Sem item válido, os itens do leitor ficam e o aviso diz "A IA não achou itens nesta fatura. Confira à mão.". Lida pela IA, o botão some | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/ia/fatura.ts`, `src/lib/ia/ler.ts` |
 | Total do banco (Bloco 2) | Gravar o total (digitado ou lido) faz um `upsert` em `credit_card_statement_totals` (`workspace_id`, `credit_card_id`, `statement_close_date`), com `source` `manual`, `pdf`, `csv` ou `ofx`. Lido de PDF, o PDF vira anexo do total (o mesmo PDF não sobe duas vezes; falhar aqui não desfaz o total). Numa fatura fechada, o painel mostra "Total do banco · diferença", e o Painel, Contas a pagar e os avisos de fatura da Edge usam o total do banco no lugar do calculado | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/total-com-banco.ts`, `src/components/credit-cards/credit-card-invoice-analytics-panel.tsx` |
 | Estorno (Bloco 2) | A fatura é despesas menos estornos (receita no cartão), e pode ficar negativa; os percentuais por categoria seguem sobre o gasto bruto. Os alertas de limite, fechamento e vencimento descontam o estorno | `src/lib/credit-card-billing.ts`, `src/lib/credit-card-invoice-analytics.ts`, `supabase/functions/_shared/credit-card-cycle.ts` |
