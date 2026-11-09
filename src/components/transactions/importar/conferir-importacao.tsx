@@ -504,6 +504,11 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                     key={f.valor}
                                     value={f.valor}
                                     disabled={travado}
+                                    // A fileira rola de lado quando não cabe: a aba escolhida vem inteira à vista.
+                                    onClick={(e) => {
+                                        const aba = e.currentTarget
+                                        requestAnimationFrame(() => aba.scrollIntoView({ block: "nearest", inline: "nearest" }))
+                                    }}
                                     count={
                                         f.aviso && imp.contagens[f.valor] > 0 ? (
                                             <Badge size="xs" tone="warning" className="nums">
