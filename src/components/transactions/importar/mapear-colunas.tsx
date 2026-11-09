@@ -65,8 +65,8 @@ export function MapearColunas({
     const nomeDa = (i: number) => cabecalho?.[i]?.trim() || `Coluna ${i + 1}`
 
     return (
-        <div className="flex flex-col gap-4">
-            <Table size="sm" variant="outline">
+        <div className="flex flex-col gap-6">
+            <Table size="lg" variant="outline">
                 <TableHeader>
                     <TableRow>
                         {colunas.map((i) => (
@@ -76,7 +76,7 @@ export function MapearColunas({
                                     disabled={disabled}
                                     onValueChange={(v) => onChange(comPapel(valor, i, v as Papel | typeof IGNORAR))}
                                 >
-                                    <SelectTrigger size="sm" className="w-full" aria-label={`Papel da coluna ${nomeDa(i)}`}>
+                                    <SelectTrigger className="w-full" aria-label={`Papel da coluna ${nomeDa(i)}`}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -128,7 +128,7 @@ export function MapearColunas({
             </Table>
             <Card variant="muted" padding="none">
                 <ItemGroup variant="divided">
-                    <Item size="sm">
+                    <Item>
                         <ItemContent>
                             <FormSwitch
                                 label="1ª linha é cabeçalho"
@@ -143,7 +143,7 @@ export function MapearColunas({
                             />
                         </ItemContent>
                     </Item>
-                    <Item size="sm">
+                    <Item>
                         <ItemContent>
                             <ItemTitle>Valor negativo é</ItemTitle>
                         </ItemContent>
