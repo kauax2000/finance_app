@@ -275,19 +275,18 @@ describe("Ver todos e Recolher em três fases", () => {
 
     it("o que sai esmaece antes da troca, e o que chega surge em escada", () => {
         expect(conferir).toContain("onTransitionEnd={sair}")
-        expect(conferir).toContain('saindo && "opacity-0 ease-(--ease-in-out)"')
-        expect(conferir).toMatch(/<ItemGroup[^>]*dialog-step/)
-        expect(conferir).toContain("[&_tbody]:dialog-step")
-        expect(conferir).toContain("[&_tbody>tr]:[--stagger-cap:8]")
-        expect(conferir).toContain("[&_[data-slot=table-panel-group]]:dialog-step")
-        expect(conferir).toContain("[--stagger-base:var(--duration-fast)]")
+        expect(conferir).toContain('const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")')
+        expect(conferir).toContain("cn(esmaece, saida, ESCADA_DA_LISTA)")
+        expect(conferir).toMatch(/saida,\s*ESCADA_DA_TABELA,/)
+        // Nada do `menu-content-in` (desfoque de 10px): o dono achou brusco.
+        expect(conferir).not.toContain("dialog-step")
     })
 })
 
 describe("a troca do Ver todos não fica presa", () => {
     it("o cancelamento encerra como o fim, e um tempo de reserva troca se nenhum chegar", () => {
         expect(conferir.match(/onTransitionCancel=\{sair\}/g)).toHaveLength(2)
-        expect(conferir).toContain("const RESERVA_DA_SAIDA_MS = SAIDA.duration * 1000")
+        expect(conferir).toContain("const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100")
         expect(conferir).toMatch(/if \(!saindo\) return\s*const t = window\.setTimeout\(trocarDeReserva, RESERVA_DA_SAIDA_MS\)\s*return \(\) => window\.clearTimeout\(t\)/)
     })
 
@@ -301,19 +300,20 @@ describe("a troca do Ver todos não fica presa", () => {
 
 describe("a troca de passo chega em escada", () => {
     it("cada passo leva a escada na própria raiz; a conferência só esmaece, a lista dela já desce por dentro", () => {
-        expect(dialogo).toContain('<div key="arquivo" className="dialog-step flex flex-col gap-4">')
-        expect(colunas).toContain('<div key="colunas" className="dialog-step')
-        expect(dialogo).toContain('<EmptyState key="feito" variant="plain" className="dialog-step">')
-        expect(dialogo).toMatch(/<div key="conferir" className="dialog-step">\s*<ConferirImportacao/)
-        expect(conferir).not.toMatch(/return \(\s*<div\s+className="[^"]*dialog-step/)
+        expect(dialogo).toContain('<div key="arquivo" className={cn(ESCADA, "flex flex-col gap-4")}>')
+        expect(colunas).toContain('<div key="colunas" className={cn(ESCADA, "flex flex-col gap-6")}>')
+        expect(dialogo).toContain('<EmptyState key="feito" variant="plain" className={ESCADA}>')
+        expect(dialogo).toMatch(/<div key="conferir" className=\{ESMAECE_AO_CHEGAR\}>\s*<ConferirImportacao/)
+        expect(dialogo).not.toContain("dialog-step")
+        expect(colunas).not.toContain("dialog-step")
     })
 
     it("o título tem um nome só para o leitor: a cena é aria-hidden e o texto vai num sr-only", () => {
-        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave forma="texto" chave=\{titulo\}/)
         expect(dialogo).toContain('<span className="sr-only">{titulo}</span>')
     })
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
-        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
     })
 })

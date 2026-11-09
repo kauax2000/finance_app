@@ -22,6 +22,9 @@ function filhoEmVoo(el: HTMLElement): boolean {
     )
 }
 
+const VIAGEM_CURTA = "height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"
+const VIAGEM_LONGA = "height var(--duration-gentle) var(--ease-emphasized), width var(--duration-gentle) var(--ease-emphasized)"
+
 /**
  * Anima a altura de uma caixa de altura automática quando o conteúdo dela
  * muda (o diálogo que troca de Despesa para Parcelada). CSS não transiciona de
@@ -78,8 +81,10 @@ export function useAlturaAnimada<T extends HTMLElement>() {
                 el.style.width = `${de.w}px`
             }
             void el.offsetHeight
-            el.style.transition =
-                "height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"
+            // Só a altura (trocar uma aba do formulário): a mola de sempre. A caixa que muda de degrau
+            // (a largura anda centenas de px) vai na curva longa e sem quique: na mola ela passava do
+            // alvo e voltava, e o diálogo inteiro balançava.
+            el.style.transition = andaLargura ? VIAGEM_LONGA : VIAGEM_CURTA
             el.style.height = `${alvo.h}px`
             if (andaLargura) el.style.width = `${alvo.w}px`
             if (andaAltura) pendentes.add("height")

@@ -1227,8 +1227,10 @@ declaração de `background-color` no trilho).
     esquerda de uma placa centralizada).
     **A caixa anda na mola**: quando o conteúdo ou o `size` muda (trocar
     Despesa, Parcelada e Receita; o Ver todos do Importar, de `xl` a `full`),
-    a placa vai da altura e da largura antigas às novas em
-    `--duration-spring`/`--ease-spring`, centrada, recortando o que transborda
+    a placa vai da altura e da largura antigas às novas, centrada, recortando o
+    que transborda: só a altura anda na mola (`--duration-spring`/`--ease-spring`);
+    a troca de degrau, que mexe na largura, vai em `--duration-gentle`/`--ease-emphasized`,
+    sem quique (na mola o diálogo inteiro balançava — "brusco, violento", 09/11)
     (`useAlturaAnimada`, `hooks/use-altura-animada.ts`; rodada 327, largura em
     09/11). Durante a viagem o `max-width` do degrau sai, senão o encolher
     saltava. Abaixo de 768px só a altura anda; a gaveta é do `vaul`.

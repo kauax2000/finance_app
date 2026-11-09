@@ -77,12 +77,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
-import { SAIDA } from "@/lib/spring"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { TrocaSuave } from "@/lib/troca-suave"
+import { ESCADA_DA_LISTA, ESCADA_DA_TABELA, VISTA_QUE_SAI, VISTA_QUE_SAI_MS } from "./movimento"
 import { cn } from "@/lib/utils"
 import { chavesDasLinhas } from "./chave-da-linha"
 import { ContagemQueAnda } from "./contagem-que-anda"
@@ -252,7 +252,7 @@ function Linha({
                 </div>
                 {/* Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor. A troca de sinal (Inverter) vira no lugar. */}
                 <span className="relative ms-auto text-end md:min-w-24">
-                    <TrocaSuave chave={`${item.estorno}:${valorDe(item)}`} atraso={Math.min(posicao, 5) * 0.03}>
+                    <TrocaSuave forma="texto" chave={`${item.estorno}:${valorDe(item)}`} atraso={Math.min(posicao, 5) * 0.04}>
                         <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
                     </TrocaSuave>
                 </span>
@@ -464,8 +464,8 @@ function AcoesDaTabela(props: {
     return <AcoesDasVisiveis {...props} itens={itens} />
 }
 
-/** `--duration-fast` (a `SAIDA`) e uma folga: o esmaecer já terminou se o fim não chegou. */
-const RESERVA_DA_SAIDA_MS = SAIDA.duration * 1000 + 100
+/** O esmaecer da vista que sai (`--duration-base`) e uma folga: ele já terminou se o fim não chegou. */
+const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 
 /**
  * A conferência: o resumo em chips, o filtro e a lista. Compacta, no máximo 6
@@ -482,7 +482,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
     const chavesCompacto = chavesDasLinhas(imp.visiveis.slice(0, LIMITE))
     const podeExpandir = resumo.total > LIMITE
-    // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-fast`, a `SAIDA`),
+    // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-base`, `VISTA_QUE_SAI`),
     // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
     const [mudando, startTransition] = React.useTransition()
     // De que vista a troca pedida parte. Se o `expandido` mudar por fora (reiniciar, Ajustar), a
@@ -523,7 +523,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         const t = window.setTimeout(trocarDeReserva, RESERVA_DA_SAIDA_MS)
         return () => window.clearTimeout(t)
     }, [saindo])
-    const saida = cn("transition-opacity duration-(--duration-fast)", saindo && "opacity-0 ease-(--ease-in-out)")
+    const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")
     const botaoExpandir = (
         <Button
             type="button"
@@ -681,8 +681,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <div
                     className={cn(
                         saida,
-                        "[--stagger-base:var(--duration-fast)] [&_[data-slot=table-panel-group]]:dialog-step [&_[data-slot=table-panel]]:animate-none!",
-                        "[&_tbody]:dialog-step [&_tbody>tr]:[--stagger-cap:8]",
+                        ESCADA_DA_TABELA,
                     )}
                     onTransitionEnd={sair}
                     onTransitionCancel={sair}
@@ -710,7 +709,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ItemGroup
                         variant="divided"
-                        className={cn(esmaece, saida, "dialog-step [--stagger-base:var(--duration-fast)]")}
+                        className={cn(esmaece, saida, ESCADA_DA_LISTA)}
                         aria-busy={lendo}
                         onTransitionEnd={sair}
                         onTransitionCancel={sair}

@@ -19,7 +19,7 @@ describe("as versões do Dialog", () => {
     expect(CODIGO).toContain("const placaRef = useComposedRefs(ref, alturaAnimada)")
     expect(CODIGO).toMatch(/<DialogPrimitive\.Content\s+ref=\{placaRef\}/)
     const gancho = lerFonte("src/hooks/use-altura-animada.ts")
-    expect(gancho).toContain('"height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"')
+    expect(gancho).toContain('"height var(--duration-gentle) var(--ease-emphasized), width var(--duration-gentle) var(--ease-emphasized)"')
     expect(gancho).toContain('"(prefers-reduced-motion: reduce)"')
     // A altura volta a ser do conteúdo no fim da viagem.
     expect(gancho).toMatch(/transitionend[\s\S]*transitioncancel/)

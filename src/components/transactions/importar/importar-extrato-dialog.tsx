@@ -51,6 +51,8 @@ import {
 import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
 import { TrocaSuave } from "@/lib/troca-suave"
+import { cn } from "@/lib/utils"
+import { ESCADA, ESMAECE_AO_CHEGAR } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
@@ -167,7 +169,7 @@ export function ImportarExtratoDialog({
                         <DialogTitle className="relative">
                             {/* Um título só para o leitor: o que sai da cena é decoração. */}
                             <span aria-hidden="true">
-                                <TrocaSuave chave={titulo}>{titulo}</TrocaSuave>
+                                <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
                             </span>
                             <span className="sr-only">{titulo}</span>
                         </DialogTitle>
@@ -199,7 +201,7 @@ export function ImportarExtratoDialog({
                     >
                         {/* O passo novo chega em escada enquanto a caixa anda: cada passo leva a escada na própria raiz. */}
                         {imp.passo === "arquivo" ? (
-                            <div key="arquivo" className="dialog-step flex flex-col gap-4">
+                            <div key="arquivo" className={cn(ESCADA, "flex flex-col gap-4")}>
                                 <Input
                                     ref={entrada}
                                     type="file"
@@ -347,11 +349,11 @@ export function ImportarExtratoDialog({
                             />
                         ) : imp.passo === "conferir" ? (
                             // Só o esmaecer da chegada: a lista e a tabela já descem em escada por dentro.
-                            <div key="conferir" className="dialog-step">
+                            <div key="conferir" className={ESMAECE_AO_CHEGAR}>
                                 <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
                             </div>
                         ) : imp.passo === "feito" && feito ? (
-                            <EmptyState key="feito" variant="plain" className="dialog-step">
+                            <EmptyState key="feito" variant="plain" className={ESCADA}>
                                 <EmptyStateIcon variant="done" />
                                 <EmptyStateTitle>
                                     {feito.importados === 1

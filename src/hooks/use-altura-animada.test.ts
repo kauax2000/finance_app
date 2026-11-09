@@ -33,10 +33,14 @@ describe("useAlturaAnimada — filho que anima a altura", () => {
 describe("useAlturaAnimada — a largura anda junto", () => {
   const fonte = semComentarios(lerFonte("src/hooks/use-altura-animada.ts"))
 
-  it("lê a largura e escreve as duas propriedades na mesma mola", () => {
+  it("lê a largura; só a altura anda na mola, e a troca de degrau na curva longa sem quique", () => {
     expect(fonte).toContain("offsetWidth")
     expect(fonte).toContain(
       '"height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"',
+    )
+    expect(fonte).toContain("andaLargura ? VIAGEM_LONGA : VIAGEM_CURTA")
+    expect(fonte).toContain(
+      '"height var(--duration-gentle) var(--ease-emphasized), width var(--duration-gentle) var(--ease-emphasized)"',
     )
   })
 

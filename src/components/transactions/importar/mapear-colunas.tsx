@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { ESCADA } from "./movimento"
 import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
@@ -66,7 +67,7 @@ export function MapearColunas({
     const nomeDa = (i: number) => cabecalho?.[i]?.trim() || `Coluna ${i + 1}`
 
     return (
-        <div key="colunas" className="dialog-step flex flex-col gap-6">
+        <div key="colunas" className={cn(ESCADA, "flex flex-col gap-6")}>
             <Table size="md" variant="outline" className="[--table-head-h:--spacing(12)]">
                 <TableHeader>
                     <TableRow>
