@@ -46,6 +46,8 @@ describe("useAlturaAnimada — a largura anda junto", () => {
 
   it("o limpar solta a largura, e o fim só limpa quando as que andaram terminaram", () => {
     expect(fonte).toContain('el.style.width = ""')
+    expect(fonte).toContain('el.style.maxWidth = ""')
+    expect(fonte).toContain('el.style.maxWidth = "none"')
     expect(fonte).toContain("pendentes")
   })
 })

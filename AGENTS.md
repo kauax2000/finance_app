@@ -1225,11 +1225,13 @@ declaração de `background-color` no trilho).
     corpo, rodapé).
     Nascer do ponto do clique saiu (aberto pela barra lateral, surgia da
     esquerda de uma placa centralizada).
-    **A altura anda na mola**: quando o conteúdo muda (trocar Despesa,
-    Parcelada e Receita), a placa vai da altura antiga à nova em
+    **A caixa anda na mola**: quando o conteúdo ou o `size` muda (trocar
+    Despesa, Parcelada e Receita; o Ver todos do Importar, de `xl` a `full`),
+    a placa vai da altura e da largura antigas às novas em
     `--duration-spring`/`--ease-spring`, centrada, recortando o que transborda
-    (`useAlturaAnimada`, `hooks/use-altura-animada.ts`; rodada 327). Só no
-    desktop; a gaveta é do `vaul`.
+    (`useAlturaAnimada`, `hooks/use-altura-animada.ts`; rodada 327, largura em
+    09/11). Durante a viagem o `max-width` do degrau sai, senão o encolher
+    saltava. Abaixo de 768px só a altura anda; a gaveta é do `vaul`.
     `dialog-versions.test.ts`.
 - **`AlertDialog`** mora na camada da folha (`--z-sheet`, véu e placa), para a
   confirmação aberta de dentro de uma folha ficar por cima dela.

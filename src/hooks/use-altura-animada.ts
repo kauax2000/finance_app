@@ -48,6 +48,7 @@ export function useAlturaAnimada<T extends HTMLElement>() {
         const limpar = () => {
             el.style.height = ""
             el.style.width = ""
+            el.style.maxWidth = ""
             el.style.overflow = ""
             el.style.transition = ""
             pendentes.clear()
@@ -70,7 +71,12 @@ export function useAlturaAnimada<T extends HTMLElement>() {
             el.style.overflow = "clip"
             // A que não mudou fica fixa em px durante a viagem.
             el.style.height = `${de.h}px`
-            if (andaLargura) el.style.width = `${de.w}px`
+            if (andaLargura) {
+                // O teto do degrau (`max-w-xl`…) cortaria a largura de partida ao encolher e a
+                // caixa saltaria: durante a viagem as duas pontas já são larguras válidas.
+                el.style.maxWidth = "none"
+                el.style.width = `${de.w}px`
+            }
             void el.offsetHeight
             el.style.transition =
                 "height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"
