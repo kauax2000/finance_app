@@ -66,7 +66,7 @@ export function MapearColunas({
 
     return (
         <div className="flex flex-col gap-6">
-            <Table size="lg" variant="outline">
+            <Table size="md" variant="outline" className="[--table-head-h:--spacing(12)]">
                 <TableHeader>
                     <TableRow>
                         {colunas.map((i) => (
