@@ -77,6 +77,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
+import { SAIDA } from "@/lib/spring"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
@@ -463,6 +464,9 @@ function AcoesDaTabela(props: {
     return <AcoesDasVisiveis {...props} itens={itens} />
 }
 
+/** `--duration-fast` (a `SAIDA`) e uma folga: o esmaecer já terminou se o fim não chegou. */
+const RESERVA_DA_SAIDA_MS = SAIDA.duration * 1000 + 100
+
 /**
  * A conferência: o resumo em chips, o filtro e a lista. Compacta, no máximo 6
  * linhas (a última dissolve) e "Ver os N"; expandida, o mesmo diálogo em tela
@@ -481,23 +485,42 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-fast`, a `SAIDA`),
     // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
     const [mudando, startTransition] = React.useTransition()
-    const [saindo, setSaindo] = React.useState(false)
+    // De que vista a troca pedida parte. Se o `expandido` mudar por fora (reiniciar, Ajustar), a
+    // vista não é mais a que esmaecia: `saindo` apaga sozinho, e a troca pendente não vale mais.
+    const [saindoDe, setSaindoDe] = React.useState<boolean | null>(null)
+    const saindo = saindoDe === imp.expandido
+    const pedido = React.useRef<boolean | null>(null)
     const esperando = saindo || mudando
+    // Idempotente: o fim, o cancelamento e o tempo de reserva podem chegar juntos; só o primeiro troca.
     function trocar() {
+        const de = pedido.current
+        pedido.current = null
+        if (de !== imp.expandido) {
+            setSaindoDe(null)
+            return
+        }
         startTransition(() => {
-            setSaindo(false)
-            imp.setExpandido(!imp.expandido)
+            setSaindoDe(null)
+            imp.setExpandido(!de)
         })
     }
     function alternar() {
         if (esperando) return
+        pedido.current = imp.expandido
         // Com movimento reduzido não há esmaecer, nem o `transitionend` que o encerra: troca na hora.
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return trocar()
-        setSaindo(true)
+        setSaindoDe(imp.expandido)
     }
     function sair(e: React.TransitionEvent) {
         if (saindo && e.target === e.currentTarget && e.propertyName === "opacity") trocar()
     }
+    // Reserva para quando o fim da transição não chega (aba em segundo plano, a vista desmontada no meio).
+    const trocarDeReserva = React.useEffectEvent(trocar)
+    React.useEffect(() => {
+        if (!saindo) return
+        const t = window.setTimeout(trocarDeReserva, RESERVA_DA_SAIDA_MS)
+        return () => window.clearTimeout(t)
+    }, [saindo])
     const saida = cn("transition-opacity duration-(--duration-fast)", saindo && "opacity-0 ease-(--ease-in-out)")
     const botaoExpandir = (
         <Button
@@ -660,6 +683,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         "[&_tbody]:dialog-step [&_tbody>tr]:[--stagger-cap:8]",
                     )}
                     onTransitionEnd={sair}
+                    onTransitionCancel={sair}
                 >
                     <DataTable
                         aria-label="Lançamentos do arquivo"
@@ -687,6 +711,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         className={cn(esmaece, saida, "dialog-step [--stagger-base:var(--duration-fast)]")}
                         aria-busy={lendo}
                         onTransitionEnd={sair}
+                        onTransitionCancel={sair}
                     >
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i, n) => (
