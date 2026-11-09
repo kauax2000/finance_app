@@ -46,6 +46,9 @@ export type ItemFaturaIA = {
   estorno: boolean
   parcela: { k: number; n: number } | null
 }
+/** Um lado do alinhamento: `i` é o índice que a IA cita no par. */
+export type ItemParaAlinhar = { i: number; data: string; descricao: string; valor: number; estorno: boolean }
+export type ParAlinhado = { banco: number; app: number }
 export type ResultadoIA<T> =
   | { ok: true; dados: T; provedor: Provedor; modelo: string; doCache: boolean }
   | { ok: false; motivo: 'cota' | 'sem_ia' | 'fatura_grande' | 'sem_chave' }
@@ -157,6 +160,38 @@ export function validarItensFatura(bruto: unknown): ItemFaturaIA[] | null {
   return ok.length || itens.length === 0 ? ok : null
 }
 
+const DIA_MS = 86_400_000
+
+/**
+ * A IA só sugere o par; vale o que passa aqui: índices existentes e sem repetição,
+ * mesmo tipo, até 7 dias e valor a até max(R$ 10, 25% do banco). O resto sai em silêncio.
+ */
+export function validarPares(bruto: unknown, banco: ItemParaAlinhar[], app: ItemParaAlinhar[]): ParAlinhado[] {
+  const pares = lerJson(bruto)?.pares
+  if (!Array.isArray(pares)) return []
+  const porI = (lista: ItemParaAlinhar[]) => new Map(lista.map((x) => [x.i, x]))
+  const doBanco = porI(banco)
+  const doApp = porI(app)
+  const usadosBanco = new Set<number>()
+  const usadosApp = new Set<number>()
+  const ok: ParAlinhado[] = []
+  for (const p of pares) {
+    const { banco: ib, app: ia } = (p ?? {}) as Record<string, unknown>
+    if (!Number.isInteger(ib) || !Number.isInteger(ia)) continue
+    const b = doBanco.get(ib as number)
+    const a = doApp.get(ia as number)
+    if (!b || !a || usadosBanco.has(b.i) || usadosApp.has(a.i)) continue
+    if (b.estorno !== a.estorno) continue
+    if (Math.abs(Date.parse(`${b.data}T00:00:00Z`) - Date.parse(`${a.data}T00:00:00Z`)) > 7 * DIA_MS) continue
+    // Em centavos: 228.14 − 228.13 em ponto flutuante não é 0.01 exato.
+    if (Math.abs(Math.round(b.valor * 100) - Math.round(a.valor * 100)) > Math.max(1000, Math.round(b.valor * 25))) continue
+    usadosBanco.add(b.i)
+    usadosApp.add(a.i)
+    ok.push({ banco: b.i, app: a.i })
+  }
+  return ok
+}
+
 // ---------------------------------------------------------------- prompts
 
 /** Sobe a cada mudança de prompt: entra na chave do cache, que deixa de servir a resposta velha. */
@@ -183,6 +218,14 @@ const promptFatura = (fechamento: string | null) =>
 - "valor": positivo, em reais. "estorno": true para estorno ou crédito.
 - "parcela": {"k": 3, "n": 10} para "03/10" ou "parcela 3 de 10"; senão null.
 - Se não houver nenhuma compra, responda {"itens": []}.
+${REGRA_SEGURANCA}`
+
+const PROMPT_ALINHAR = `Você recebe duas listas de compras de um mesmo cartão de crédito: "banco" (a fatura do banco) e "app" (o que a pessoa lançou à mão). Responda só um objeto JSON:
+{"pares": [{"banco": number, "app": number}]}
+- Cada par liga o "i" de um item do banco ao "i" de um item do app que é a mesma compra.
+- Os nomes costumam ser diferentes: o banco traz o estabelecimento ("PELANDA ALPINO 3") e o app uma descrição livre ("Gasolina"). Case pela data e pelo valor próximos e pelo sentido da compra.
+- Só case o que é a mesma compra. Na dúvida, não case. Cada item entra em no máximo um par.
+- Se nada casar, responda {"pares": []}.
 ${REGRA_SEGURANCA}`
 
 // ---------------------------------------------------------------- provedores
@@ -438,6 +481,34 @@ export async function lerFatura(ctx: ContextoIA, textoBruto: string, fechamento:
   return primeiro && itens.length
     ? { ok: true, dados: itens, ...primeiro, doCache: todasDoCache }
     : { ok: false, motivo: 'sem_ia' }
+}
+
+/** Itens de cada lado do alinhamento; acima disso, `fatura_grande`. */
+const MAX_ALINHAR = 200
+
+/** Pede à IA os pares entre o que sobrou da fatura do banco e o que sobrou do app. */
+export async function alinharFatura(
+  ctx: ContextoIA,
+  banco: ItemParaAlinhar[],
+  app: ItemParaAlinhar[],
+): Promise<ResultadoIA<ParAlinhado[]>> {
+  if (banco.length > MAX_ALINHAR || app.length > MAX_ALINHAR) return { ok: false, motivo: 'fatura_grande' }
+  // Só índice, data, descrição redigida e valor vão à IA: nunca id, categoria, autor nem estorno.
+  const enviar = (lista: ItemParaAlinhar[]) =>
+    lista.map(({ i, data, descricao, valor }) => ({ i, data, descricao: redigir(descricao, ctx.nomes), valor }))
+  const entrada = JSON.stringify({ banco: enviar(banco), app: enviar(app) })
+  return executar(
+    ctx,
+    'texto',
+    await sha256Hex(`alinhar:${VERSAO_PROMPT}:${entrada}`),
+    [
+      { role: 'system', content: PROMPT_ALINHAR },
+      { role: 'user', content: entrada },
+    ],
+    MAX_TOKENS_FATIA,
+    // Sem a lista `pares` a resposta é falha e passa ao próximo provedor; com ela, vale o que validar.
+    (b) => (Array.isArray(lerJson(b)?.pares) ? validarPares(b, banco, app) : null),
+  )
 }
 
 /** O `full_name` dos membros das carteiras, que `redigir` tira do texto (Decisão 6); null se a busca falhar. */

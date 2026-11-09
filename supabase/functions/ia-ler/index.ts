@@ -13,8 +13,10 @@ import { tipoDoArquivo } from '../_shared/captura.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 import {
+  alinharFatura,
   ehDataValida,
   interpretar,
+  type ItemParaAlinhar,
   lerFatura,
   lerImagem,
   nomesDosMembros,
@@ -49,6 +51,20 @@ type Pedido =
   | { op: 'frase'; workspaceId: string; texto: string }
   | { op: 'fatura'; workspaceId: string; texto: string; fechamento: string }
   | { op: 'imagem'; workspaceId: string; bytes: Uint8Array; mime: string }
+  | { op: 'alinhar'; workspaceId: string; banco: ItemParaAlinhar[]; app: ItemParaAlinhar[] }
+
+/** Uma lista de `ItemParaAlinhar`, com descrição de até 200 caracteres; null se algum item falhar. */
+function listaParaAlinhar(v: unknown): ItemParaAlinhar[] | null {
+  if (!Array.isArray(v)) return null
+  const ok = v.every((x) => {
+    const { i, data, descricao, valor, estorno } = (x ?? {}) as Record<string, unknown>
+    return Number.isInteger(i) && (i as number) >= 0 && ehDataValida(data) &&
+      typeof descricao === 'string' && descricao.length <= 200 &&
+      typeof valor === 'number' && Number.isFinite(valor) && valor > 0 && typeof estorno === 'boolean'
+  })
+  // Só os cinco campos seguem adiante: id, categoria ou autor que viessem junto ficam aqui.
+  return ok ? v.map(({ i, data, descricao, valor, estorno }) => ({ i, data, descricao, valor, estorno })) : null
+}
 
 // Um erro solto viraria 500 sem CORS, que o navegador mostra como "Sem conexão".
 Deno.serve(async (req: Request) => {
@@ -96,20 +112,27 @@ async function atender(req: Request): Promise<Response> {
     } else {
       const corpo = JSON.parse(new TextDecoder().decode(bruto)) as Record<string, unknown>
       const { op, workspaceId, texto, fechamento } = corpo ?? {}
-      if (op !== 'frase' && op !== 'fatura') return INVALIDO('Operação inválida.')
-      if (typeof texto !== 'string' || !texto.trim()) {
-        return INVALIDO(op === 'frase' ? 'Escreva a frase em até 500 caracteres.' : 'Texto da fatura vazio.')
-      }
-      if (texto.length > MAX_TEXTO[op]) {
-        // A fatura longa demais responde como o `lerFatura`: o cliente mostra a dica do CSV.
-        if (op === 'fatura') return json(200, { ok: false, motivo: 'fatura_grande' })
-        return INVALIDO('Escreva a frase em até 500 caracteres.')
-      }
-      const ws = typeof workspaceId === 'string' ? workspaceId : ''
-      if (op === 'frase') pedido = { op, workspaceId: ws, texto }
-      else {
-        if (!ehDataValida(fechamento)) return INVALIDO('Data de fechamento inválida.')
-        pedido = { op, workspaceId: ws, texto, fechamento }
+      if (op === 'alinhar') {
+        const banco = listaParaAlinhar(corpo.banco)
+        const app = listaParaAlinhar(corpo.app)
+        if (!banco || !app) return INVALIDO('Itens para alinhar inválidos.')
+        pedido = { op, workspaceId: typeof workspaceId === 'string' ? workspaceId : '', banco, app }
+      } else {
+        if (op !== 'frase' && op !== 'fatura') return INVALIDO('Operação inválida.')
+        if (typeof texto !== 'string' || !texto.trim()) {
+          return INVALIDO(op === 'frase' ? 'Escreva a frase em até 500 caracteres.' : 'Texto da fatura vazio.')
+        }
+        if (texto.length > MAX_TEXTO[op]) {
+          // A fatura longa demais responde como o `lerFatura`: o cliente mostra a dica do CSV.
+          if (op === 'fatura') return json(200, { ok: false, motivo: 'fatura_grande' })
+          return INVALIDO('Escreva a frase em até 500 caracteres.')
+        }
+        const ws = typeof workspaceId === 'string' ? workspaceId : ''
+        if (op === 'frase') pedido = { op, workspaceId: ws, texto }
+        else {
+          if (!ehDataValida(fechamento)) return INVALIDO('Data de fechamento inválida.')
+          pedido = { op, workspaceId: ws, texto, fechamento }
+        }
       }
     }
   } catch {
@@ -133,7 +156,7 @@ async function atender(req: Request): Promise<Response> {
   if (plano !== 'familia') return json(402, { error: 'Sem plano ativo nesta carteira.' })
 
   const hoje = formatYmd(appTodayYmd())
-  const responder = <T>(r: ResultadoIA<T>, chave: 'campos' | 'itens') => {
+  const responder = <T>(r: ResultadoIA<T>, chave: 'campos' | 'itens' | 'pares') => {
     if (r.ok) return json(200, { ok: true, [chave]: r.dados, provedor: r.provedor, modelo: r.modelo })
     // Sem chave é problema de configuração: para a pessoa, a IA só não respondeu.
     if (r.motivo === 'sem_chave') console.error('ia-ler: sem chave de provedor')
@@ -150,5 +173,6 @@ async function atender(req: Request): Promise<Response> {
   if (!nomes) return json(200, { ok: false, motivo: 'sem_ia' })
   const ctx = { admin, userId, hoje, nomes }
   if (pedido.op === 'frase') return responder(await interpretar(ctx, pedido.texto), 'campos')
+  if (pedido.op === 'alinhar') return responder(await alinharFatura(ctx, pedido.banco, pedido.app), 'pares')
   return responder(await lerFatura(ctx, pedido.texto, pedido.fechamento), 'itens')
 }

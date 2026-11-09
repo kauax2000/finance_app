@@ -1,12 +1,15 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@1.0.19'
 import { FATIA_FATURA, MAX_TOKENS_CAMPOS, MAX_TOKENS_FATIA } from './ia-config.ts'
 import {
+  alinharFatura,
   type ContextoIA,
+  type ItemParaAlinhar,
   interpretar,
   lerFatura,
   lerImagem,
   validarCampos,
   validarItensFatura,
+  validarPares,
 } from './ia.ts'
 
 const HOJE = '2026-10-22'
@@ -457,4 +460,62 @@ Deno.test('lerFatura: rodapé sem valor pode vir vazio', async () => {
       assertEquals(f.eventos().map((e) => e.args?.p_status), ['ok', 'ok'])
     },
   )
+})
+
+// ---- alinharFatura ----
+
+const BANCO: ItemParaAlinhar[] = [
+  { i: 0, data: '2026-10-05', descricao: 'PELANDA ALPINO 3', valor: 228.13, estorno: false },
+  { i: 1, data: '2026-10-06', descricao: 'MERCADO X', valor: 100, estorno: false },
+  { i: 2, data: '2026-10-07', descricao: 'ESTORNO LOJA', valor: 50, estorno: true },
+]
+const APP: ItemParaAlinhar[] = [
+  { i: 0, data: '2026-10-05', descricao: 'Gasolina', valor: 228.14, estorno: false },
+  { i: 1, data: '2026-10-20', descricao: 'Mercado', valor: 100, estorno: false },
+  { i: 2, data: '2026-10-07', descricao: 'Loja', valor: 50, estorno: false },
+  { i: 3, data: '2026-10-06', descricao: 'Feira', valor: 160, estorno: false },
+]
+
+Deno.test('validarPares descarta índice fora, repetido, tipo trocado, dias > 7 e valor longe', () => {
+  assertEquals(validarPares({ pares: [{ banco: 9, app: 0 }, { banco: 0, app: -1 }, { banco: 0, app: 1.5 }] }, BANCO, APP), [])
+  assertEquals(validarPares({ pares: [{ banco: 0, app: 0 }, { banco: 0, app: 3 }, { banco: 1, app: 0 }] }, BANCO, APP), [{ banco: 0, app: 0 }])
+  // estorno do banco contra despesa do app
+  assertEquals(validarPares({ pares: [{ banco: 2, app: 2 }] }, BANCO, APP), [])
+  // 14 dias
+  assertEquals(validarPares({ pares: [{ banco: 1, app: 1 }] }, BANCO, APP), [])
+  // 100 contra 160: diferença 60 > max(10, 25)
+  assertEquals(validarPares({ pares: [{ banco: 1, app: 3 }] }, BANCO, APP), [])
+  assertEquals(validarPares({ pares: [{ banco: '0', app: 0 }] }, BANCO, APP), [])
+  assertEquals(validarPares('não é json', BANCO, APP), [])
+  assertEquals(validarPares({ pares: 'x' }, BANCO, APP), [])
+})
+
+Deno.test('validarPares aceita 228.13 x 228.14 a 0 dias', () => {
+  assertEquals(validarPares('```json\n{"pares":[{"banco":0,"app":0}]}\n```', BANCO, APP), [{ banco: 0, app: 0 }])
+})
+
+Deno.test('alinharFatura redige o nome do membro antes de enviar', async () => {
+  const f = adminFalso()
+  const app = [{ ...APP[0], descricao: 'Gasolina Maria Souza' }]
+  await comFetch(() => resposta({ pares: [{ banco: 0, app: 0 }] }), async (pedidos) => {
+    const r = await alinharFatura(f.ctx, [BANCO[0]], app)
+    assert(r.ok)
+    assertEquals(r.dados, [{ banco: 0, app: 0 }])
+    const corpo = pedidos[0].body
+    assertFalse(corpo.includes('Souza'), corpo)
+    assertFalse(corpo.includes('estorno'), corpo)
+    assert(corpo.includes('PELANDA ALPINO 3'), corpo)
+    assertEquals(JSON.parse(corpo).model, 'openai/gpt-oss-20b')
+  })
+})
+
+Deno.test('alinharFatura recusa mais de 200 itens com fatura_grande', async () => {
+  const f = adminFalso()
+  const muitos = Array.from({ length: 201 }, (_, i) => ({ ...APP[0], i }))
+  await comFetch(() => resposta({ pares: [] }), async (pedidos) => {
+    assertEquals(await alinharFatura(f.ctx, BANCO, muitos), { ok: false, motivo: 'fatura_grande' })
+    assertEquals(await alinharFatura(f.ctx, muitos, APP), { ok: false, motivo: 'fatura_grande' })
+    assertEquals(pedidos.length, 0)
+    assertEquals(f.rpcs.length, 0)
+  })
 })
