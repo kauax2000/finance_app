@@ -276,8 +276,11 @@ describe("Ver todos e Recolher em três fases", () => {
     it("o que sai esmaece antes da troca, e o que chega surge em escada", () => {
         expect(conferir).toContain("onTransitionEnd={sair}")
         expect(conferir).toContain('const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")')
-        expect(conferir).toContain("cn(esmaece, saida, ESCADA_DA_LISTA)")
-        expect(conferir).toMatch(/saida,\s*ESCADA_DA_TABELA,/)
+        // A vista inteira esmaece (abas, faixa das colunas, saldo), não só a lista: o resto pulava de lugar.
+        expect(conferir).toMatch(/className=\{cn\("flex min-w-0 flex-col gap-2 md:gap-4", saida\)\}\s*data-saindo=\{saindo \|\| undefined\}/)
+        expect(conferir).toContain("cn(esmaece, ESCADA_DA_LISTA)")
+        expect(conferir).toContain("<div className={ESCADA_DA_TABELA}>")
+        expect(dialogo).toContain("className={PASSOS_ACOMPANHAM}")
         // Nada do `menu-content-in` (desfoque de 10px): o dono achou brusco.
         expect(conferir).not.toContain("dialog-step")
     })
@@ -285,7 +288,7 @@ describe("Ver todos e Recolher em três fases", () => {
 
 describe("a troca do Ver todos não fica presa", () => {
     it("o cancelamento encerra como o fim, e um tempo de reserva troca se nenhum chegar", () => {
-        expect(conferir.match(/onTransitionCancel=\{sair\}/g)).toHaveLength(2)
+        expect(conferir.match(/onTransitionCancel=\{sair\}/g)).toHaveLength(1)
         expect(conferir).toContain("const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100")
         expect(conferir).toMatch(/if \(!saindo\) return\s*const t = window\.setTimeout\(trocarDeReserva, RESERVA_DA_SAIDA_MS\)\s*return \(\) => window\.clearTimeout\(t\)/)
     })

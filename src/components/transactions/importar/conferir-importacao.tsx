@@ -585,8 +585,14 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
 
     return (
         // O Enter da busca e dos campos da lista não envia o Importar.
+        // No Ver todos e no Recolher a vista inteira esmaece junto (as abas, a faixa das colunas, o
+        // saldo): só a lista sumir e o resto pular de lugar lia como tranco. `data-saindo` deixa os
+        // passos do cabeçalho esmaecerem no mesmo compasso.
         <div
-            className="flex min-w-0 flex-col gap-2 md:gap-4"
+            className={cn("flex min-w-0 flex-col gap-2 md:gap-4", saida)}
+            data-saindo={saindo || undefined}
+            onTransitionEnd={sair}
+            onTransitionCancel={sair}
             onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault()
             }}
@@ -678,14 +684,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : null}
             {imp.expandido ? (
                 // A barra e as linhas chegam em escada (teto de 8), a barra junto com a primeira; a moldura e o cabeçalho já estão lá.
-                <div
-                    className={cn(
-                        saida,
-                        ESCADA_DA_TABELA,
-                    )}
-                    onTransitionEnd={sair}
-                    onTransitionCancel={sair}
-                >
+                <div className={ESCADA_DA_TABELA}>
                     <DataTable
                         aria-label="Lançamentos do arquivo"
                         columns={colunas}
@@ -709,10 +708,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ItemGroup
                         variant="divided"
-                        className={cn(esmaece, saida, ESCADA_DA_LISTA)}
+                        className={cn(esmaece, ESCADA_DA_LISTA)}
                         aria-busy={lendo}
-                        onTransitionEnd={sair}
-                        onTransitionCancel={sair}
                     >
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i, n) => (

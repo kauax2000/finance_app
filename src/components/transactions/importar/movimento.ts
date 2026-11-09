@@ -33,3 +33,10 @@ export const ESMAECE_AO_CHEGAR =
 export const VISTA_QUE_SAI = "transition-opacity duration-(--duration-base) ease-(--ease-out)"
 /** Os 200ms de `--duration-base`, para a reserva do fim da transição. */
 export const VISTA_QUE_SAI_MS = 200
+
+/**
+ * Os passos do cabeçalho: somem no Ver todos. Esmaecem com a conferência (`data-saindo` na raiz
+ * dela) e, ao voltar no Recolher, chegam esmaecendo, em vez de saltar.
+ */
+export const PASSOS_ACOMPANHAM =
+    "transition-opacity duration-(--duration-base) ease-(--ease-out) group-has-[[data-saindo]]/dialog-content:opacity-0 animate-in fade-in-0 fill-mode-backwards motion-reduce:animate-none"

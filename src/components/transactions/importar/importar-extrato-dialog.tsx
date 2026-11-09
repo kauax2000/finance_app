@@ -52,7 +52,7 @@ import { Caption } from "@/components/ui/typography"
 import { numberBR } from "@/lib/formatters"
 import { TrocaSuave } from "@/lib/troca-suave"
 import { cn } from "@/lib/utils"
-import { ESCADA, ESMAECE_AO_CHEGAR } from "./movimento"
+import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
@@ -189,7 +189,13 @@ export function ImportarExtratoDialog({
                                     : "CSV ou OFX do seu banco, ou uma planilha sua."}
                         </DialogDescription>
                         {imp.passo === "feito" || expandido ? null : (
-                            <DialogSteps current={atual} total={passos.length} labels={passos} />
+                            // Esmaece junto com a conferência no Ver todos, em vez de sumir seca e puxar tudo para cima.
+                            <DialogSteps
+                                current={atual}
+                                total={passos.length}
+                                labels={passos}
+                                className={PASSOS_ACOMPANHAM}
+                            />
                         )}
                     </DialogHeader>
                     <DialogBody
