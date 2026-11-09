@@ -148,7 +148,7 @@ describe("a conferência", () => {
         expect(conferir).toContain("escolhas")
         expect(conferir).not.toContain('<Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>')
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
-        expect(conferir).toContain('não só os que aparecem na lista.')
+        expect(conferir).toContain('`Vale para todos os ${numberBR(itens.length)} lançamentos.`')
         // O Form do diálogo é dele: impede o envio nativo (senão a página recarrega) e não sobe ao do Importar.
         expect(conferir).toMatch(/function aplicar\(e: React\.FormEvent\) \{[\s\S]*?e\.preventDefault\(\)\s*e\.stopPropagation\(\)/)
         expect(conferir).toContain("rotuloDePorCategoria(")

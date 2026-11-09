@@ -304,13 +304,13 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
-            <DialogContent size="md" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,30rem)]">
+            <DialogContent size="md" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,34rem)] [--dialog-body-fade-h:--spacing(12)]">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
                     <DialogDescription>
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
-                            : `Vale para todos os ${numberBR(itens.length)} lançamentos, não só os que aparecem na lista.`}
+                            : `Vale para todos os ${numberBR(itens.length)} lançamentos.`}
                     </DialogDescription>
                     <div className="mt-3 flex flex-wrap gap-2">
                         {saidas > 0 ? (
