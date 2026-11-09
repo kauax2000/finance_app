@@ -105,7 +105,7 @@ describe("a conferência", () => {
         expect(conferir).toContain("{imp.visiveis.slice(0, LIMITE).map((i) => (")
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
-        expect(conferir).toContain('<div className="hidden md:block md:w-40">')
+        expect(conferir).toContain('<div className="hidden md:block md:w-44">')
         expect(conferir).toMatch(/<span className="md:hidden">\s*\{formatYmdPtBr\(item\.data\)\.slice\(0, 5\)\} · \{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}/)
         expect(conferir).not.toContain("order-last basis-full")
         // Trocar a de uma linha no telefone: marcar e usar o Pôr categoria, que o aviso diz.
