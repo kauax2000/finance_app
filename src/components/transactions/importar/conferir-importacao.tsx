@@ -588,7 +588,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 </>
             )}
             {imp.csv && !imp.expandido ? (
-                <Item variant="muted" size="sm">
+                <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
                     <ItemContent>
                         <ItemDescription>
                             Colunas: {papeisDe(imp.mapeamento)} · gasto é{" "}
