@@ -30,14 +30,15 @@ const FORMAS = paymentMethodOptions().filter(
 
 type Escolha = "apagar" | "mudar" | "manter"
 
-function deParaDe(c: Correcao): string {
+/** `daIA`: ids dos lançamentos do app que a IA casou com o banco. */
+function deParaDe(c: Correcao, daIA?: Set<string>): string {
     switch (c.motivo) {
         case "fora-do-periodo":
             return `${c.descricao}: ${formatYmdPtBr(c.de)} → ${formatYmdPtBr(c.para)}`
         case "falta-no-app":
             return `${formatYmdPtBr(c.item.data)} · ${c.item.descricao}: lançar ${c.item.estorno ? "−" : ""}${currencyBRL(c.item.valor)} no app`
         case "valor-diferente":
-            return `${c.descricao}: ${currencyBRL(c.de)} → ${currencyBRL(c.para)}${c.assinaturaId ? " (e a assinatura)" : ""}`
+            return `${c.descricao}: ${currencyBRL(c.de)} → ${currencyBRL(c.para)}${c.assinaturaId ? " (e a assinatura)" : ""}${daIA?.has(c.appId) ? " (IA)" : ""}`
         case "parcela":
             return `${c.descricao}: parcela ${c.de ?? "sem número"} → ${c.para}`
     }
@@ -47,7 +48,7 @@ const linhaApp = (a: LancamentoParaConferir) =>
     `${formatYmdPtBr(a.date)} · ${a.description ?? "(sem descrição)"} · ${a.type === "income" ? "−" : ""}${currencyBRL(a.amount)}`
 
 export function CorrigirFatura(p: {
-    conferencia: ConferenciaNoCiclo<ItemImportavel>
+    conferencia: ConferenciaNoCiclo<ItemImportavel> & { daIA?: Set<string> }
     ciclo: CicloFatura
     /** Sem `batchId`: cada aplicação gera o seu, e o Desfazer cobre só o último lote. */
     ctx: Omit<ContextoDeCorrecao, "batchId">
@@ -183,7 +184,7 @@ export function CorrigirFatura(p: {
                 </p>
                 {c ? (
                     <p>
-                        {TITULO_DO_MOTIVO[c.motivo]}: {deParaDe(c)} · {currencyBRL(c.impacto)}
+                        {TITULO_DO_MOTIVO[c.motivo]}: {deParaDe(c, conferencia.daIA)} · {currencyBRL(c.impacto)}
                     </p>
                 ) : a ? (
                     <>
@@ -236,7 +237,7 @@ export function CorrigirFatura(p: {
                     </h3>
                     <ul className="mt-1 space-y-1 pl-4">
                         {g.correcoes.map((c) => (
-                            <li key={c.id}>{deParaDe(c)}</li>
+                            <li key={c.id}>{deParaDe(c, conferencia.daIA)}</li>
                         ))}
                     </ul>
                 </section>

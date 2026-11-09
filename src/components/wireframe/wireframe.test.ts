@@ -101,6 +101,31 @@ describe("fonte dos wireframes", () => {
     expect(conferir).toContain("aprovadaNaLeitura.current === leituraId")
   })
 
+  it("conferir fatura: relê e alinha com IA sozinha, uma vez por leitura, e descarta a resposta velha", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
+    expect(fonte).toMatch(/import\s*\{[^}]*\balinharFaturaComIA\b[^}]*\}/)
+    expect(fonte).toMatch(/import\s*\{[^}]*\baplicarAlinhamento\b[^}]*\}/)
+    expect(fonte).toContain("Relendo com IA")
+    expect(fonte).toContain("Alinhando com IA")
+    // O botão saiu: a releitura é automática.
+    expect(fonte).not.toContain('"Ler com IA"')
+    expect(fonte).not.toMatch(/onClick=\{\(\) => void lerComIA\(\)\}/)
+    // Guarda em ref, marcada antes da chamada: StrictMode e re-render não repetem, e o erro não tenta de novo.
+    expect(fonte).toMatch(/relidaNaLeitura\.current === leituraId[\s\S]*relidaNaLeitura\.current = leituraId[\s\S]*lerComIA\(\)/)
+    const alinhar = fonte.slice(fonte.indexOf("alinhadaNaLeitura.current === leituraId"))
+    expect(alinhar).toMatch(/alinhadaNaLeitura\.current = leituraId[\s\S]*alinharFaturaComIA\(/)
+    expect(alinhar).toMatch(/alinharFaturaComIA\([\s\S]*if \(meu !== pedido\.current\) return[\s\S]*setAviso\(/)
+    // A conferência alinhada é a que segue para o CorrigirFatura e para a aprovação.
+    expect(fonte).toMatch(/aplicarAlinhamento\(/)
+    expect(fonte).toMatch(/semDiferencas\(conferencia, ciclo\)/)
+  })
+
+  it("corrigir fatura: o par que veio da IA leva (IA) em Valor diferente", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"), "tudo")
+    expect(fonte).toContain(" (IA)")
+    expect(fonte).toMatch(/daIA\?\.has\(c\.appId\)/)
+  })
+
   it("o auditor pula a pasta dos wireframes", () => {
     expect(lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")).toContain("components/wireframe/")
   })

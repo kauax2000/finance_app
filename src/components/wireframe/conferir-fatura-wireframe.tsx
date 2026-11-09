@@ -14,6 +14,7 @@ import {
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
+import { aplicarAlinhamento, paraAlinhar } from "@/lib/fatura/alinhar"
 import { desfazerCorrecoes, type LoteAplicado } from "@/lib/fatura/aplicar-correcoes"
 import { aprovarFatura } from "@/lib/fatura/aprovar"
 import { conferirNoCiclo } from "@/lib/fatura/ciclo"
@@ -22,7 +23,7 @@ import { estadoDaFatura, semDiferencas, somaDoCiclo } from "@/lib/fatura/estado"
 import { bancoTotalDoCiclo, totalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import { itensDaIA, releitura } from "@/lib/ia/fatura"
-import { lerFaturaComIA } from "@/lib/ia/ler"
+import { alinharFaturaComIA, lerFaturaComIA } from "@/lib/ia/ler"
 import { lerCsv } from "@/lib/import/csv"
 import { extrairItensDaFatura, removerIdentificacao } from "@/lib/import/fatura-texto"
 import { type ItemImportavel, prepararItens } from "@/lib/import/importar"
@@ -115,7 +116,7 @@ export function ConferirFaturaWireframe({
     const [senhaPedida, setSenhaPedida] = useState<{ incorreta: boolean } | null>(null)
     const [senha, setSenha] = useState("")
     const [csv, setCsv] = useState<string[][] | null>(null)
-    // O texto do PDF já redigido: "Ler com IA" o envia sem reler o arquivo nem pedir a senha de novo.
+    // O texto do PDF já redigido: a releitura com IA o envia sem reler o arquivo nem pedir a senha de novo.
     const [textoPdf, setTextoPdf] = useState<string | null>(null)
     // Cada pedido à IA ganha um número; trocar de arquivo, de ciclo ou sair da
     // tela o muda, e a resposta atrasada de um pedido velho é jogada fora.
@@ -134,6 +135,12 @@ export function ConferirFaturaWireframe({
     const [leituraId, setLeituraId] = useState("")
     // A leitura (pelo leituraId) já aprovada: a aprovação automática roda uma vez por leitura.
     const aprovadaNaLeitura = useRef<string | null>(null)
+    // A IA relê e alinha sozinha, cada uma uma vez por leitura: o ref marca antes da chamada,
+    // então re-render, StrictMode e erro (cota, rede) não repetem.
+    const relidaNaLeitura = useRef<string | null>(null)
+    const alinhadaNaLeitura = useRef<string | null>(null)
+    // Os pares da IA guardados por id: recarregar os lançamentos muda os índices da conferência.
+    const [alinhados, setAlinhados] = useState<Array<{ clientId: string; appId: string }>>([])
     // O lote das correções aplicadas mora aqui: o Desfazer fica enquanto a pessoa está na tela,
     // também quando a fatura vira "100% igual" e o CorrigirFatura sai.
     const [aplicado, setAplicado] = useState<{ lote: LoteAplicado; aplicadas: number } | null>(null)
@@ -166,10 +173,20 @@ export function ConferirFaturaWireframe({
         [transactions, card.id],
     )
 
-    const conferencia = useMemo(
+    const daRegra = useMemo(
         () => (leitura ? conferirNoCiclo(itens, doApp, ciclo) : null),
         [leitura, itens, doApp, ciclo],
     )
+    const conferencia = useMemo(() => {
+        if (!daRegra) return null
+        const pares = alinhados.flatMap(({ clientId, appId }) => {
+            const banco = daRegra.faltaNoApp.findIndex((b) => b.clientId === clientId)
+            const app = daRegra.soNoApp.findIndex((a) => a.id === appId)
+            return banco < 0 || app < 0 ? [] : [{ banco, app }]
+        })
+        return aplicarAlinhamento(daRegra, pares)
+    }, [daRegra, alinhados])
+    const precisaReler = Boolean(leitura && leitura.origem === "pdf" && leitura.completa === false && !leitura.ia && textoPdf)
     const igualAoBanco = Boolean(leitura?.completa && conferencia && semDiferencas(conferencia, ciclo))
     const estado = estadoDaFatura(totalDoCiclo(totais.data, card.id, ciclo.fechamento), somaDoCiclo(doApp, ciclo))
 
@@ -198,6 +215,39 @@ export function ConferirFaturaWireframe({
                 if (meu === pedido.current) setAviso({ erro: true, texto: "Não foi possível aprovar a fatura." })
             })
     }, [igualAoBanco, leitura, conferencia, leituraId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
+
+    useEffect(() => {
+        if (!precisaReler || pendente != null || relidaNaLeitura.current === leituraId) return
+        relidaNaLeitura.current = leituraId
+        void lerComIA()
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- lerComIA lê o estado deste render; o ref segura a repetição.
+    }, [precisaReler, pendente, leituraId])
+
+    useEffect(() => {
+        if (!daRegra || pendente != null || alinhadaNaLeitura.current === leituraId) return
+        if (daRegra.faltaNoApp.length === 0 || daRegra.soNoApp.length === 0) return
+        // A releitura vem antes: ela troca os itens e a leitura.
+        if (precisaReler && relidaNaLeitura.current !== leituraId) return
+        alinhadaNaLeitura.current = leituraId
+        const meu = pedido.current
+        const { banco, app } = paraAlinhar(daRegra)
+        setPendente("alinhar")
+        void alinharFaturaComIA(workspaceId, banco, app).then((r) => {
+            setPendente((p) => (p === "alinhar" ? null : p))
+            if (meu !== pedido.current) return
+            if (!r.ok) {
+                setAviso({ erro: true, texto: r.mensagem })
+                return
+            }
+            setAlinhados(
+                r.pares.flatMap((par) => {
+                    const b = daRegra.faltaNoApp[par.banco]
+                    const a = daRegra.soNoApp[par.app]
+                    return b && a ? [{ clientId: b.clientId, appId: a.id }] : []
+                }),
+            )
+        })
+    }, [daRegra, pendente, leituraId, precisaReler, workspaceId])
 
     function limparLeitura() {
         pedido.current += 1
@@ -235,6 +285,7 @@ export function ConferirFaturaWireframe({
     function aplicar(lidos: ItemBanco[], l: Leitura) {
         setLeitura(l)
         setItens(prepararItens(lidos, transactions))
+        setAlinhados([])
         setLeituraId(crypto.randomUUID())
     }
 
@@ -337,7 +388,7 @@ export function ConferirFaturaWireframe({
     }
 
     async function lerComIA() {
-        if (!leitura || !textoPdf || pendente != null) return
+        if (!leitura || !textoPdf) return
         const total = leitura.total
         const meu = ++pedido.current
         setPendente("ia")
@@ -441,6 +492,8 @@ export function ConferirFaturaWireframe({
                 />
             </label>
             {pendente === "arquivo" ? <p role="status">Lendo o arquivo…</p> : null}
+            {pendente === "ia" ? <p role="status">Relendo com IA…</p> : null}
+            {pendente === "alinhar" ? <p role="status">Alinhando com IA…</p> : null}
 
             {senhaPedida ? (
                 <form className="flex flex-wrap items-center gap-2" onSubmit={onAbrirComSenha}>
@@ -477,11 +530,6 @@ export function ConferirFaturaWireframe({
                             : `leitura INCOMPLETA${leitura.diferenca != null ? ` (diferença ${currencyBRL(leitura.diferenca)})` : ""}`}
                         {leitura.ignoradas ? ` · ${leitura.ignoradas} linha(s) ignorada(s)` : ""}
                     </p>
-                    {leitura.origem === "pdf" && leitura.completa === false && !leitura.ia && textoPdf ? (
-                        <button type="button" className={botao} disabled={pendente != null} onClick={() => void lerComIA()}>
-                            {pendente === "ia" ? "Lendo com IA…" : "Ler com IA"}
-                        </button>
-                    ) : null}
                     <button
                         type="button"
                         className={botao}

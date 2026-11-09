@@ -72,9 +72,9 @@ describe("Conferir fatura: Ler com IA (fonte)", () => {
     const leitor = semComentarios(lerFonte("src/lib/import/fatura-texto.ts"))
     const ia = semComentarios(lerFonte("src/lib/ia/fatura.ts"))
 
-    it("o botão só aparece com a leitura do PDF incompleta", () => {
-        expect(tela).toContain("Ler com IA")
-        expect(tela).toMatch(/leitura\.origem === "pdf" && leitura\.completa === false[\s\S]*Ler com IA/)
+    it("relê sozinha só com a leitura do PDF incompleta e ainda sem IA", () => {
+        expect(tela).not.toContain('"Ler com IA"')
+        expect(tela).toMatch(/leitura\.origem === "pdf" && leitura\.completa === false && !leitura\.ia[\s\S]*lerComIA\(\)/)
     })
 
     it("o texto guardado é o redigido, e é ele que vai à IA", () => {
@@ -100,7 +100,9 @@ describe("Conferir fatura: Ler com IA (fonte)", () => {
     })
 
     it("o que se importa dali vai pelo caminho de sempre, que marca needs_review", () => {
-        expect(tela).toMatch(/importarLancamentos\(/)
+        const corrigir = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"))
+        expect(`${tela}\n${corrigir}`).toMatch(/aplicarCorrecoes\(/)
+        expect(semComentarios(lerFonte("src/lib/fatura/aplicar-correcoes.ts"))).toMatch(/importarLancamentos\(/)
         expect(semComentarios(lerFonte("src/lib/import/importar.ts"))).toContain("needs_review: true")
     })
 })
