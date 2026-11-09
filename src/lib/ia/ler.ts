@@ -36,18 +36,18 @@ const MENSAGEM: Record<string, string> = {
 }
 const SEM_CONEXAO = "Sem conexão com a IA."
 
-function traduzir<T>(r: Resposta<T>): Lido<T> {
+function traduzir<T>(r: Resposta<T>, mensagens: Record<string, string> = MENSAGEM): Lido<T> {
     if (r.ok) return r
     if (r.motivo === "cota") {
         marcarCotaEsgotada()
         return { ok: false, mensagem: MENSAGEM.cota, esgotada: true }
     }
-    return { ok: false, mensagem: MENSAGEM[r.motivo] ?? MENSAGEM.sem_ia }
+    return { ok: false, mensagem: mensagens[r.motivo] ?? MENSAGEM.sem_ia }
 }
 
-async function pelaEdge<T>(body: Record<string, unknown>): Promise<Lido<T>> {
+async function pelaEdge<T>(body: Record<string, unknown>, mensagens?: Record<string, string>): Promise<Lido<T>> {
     try {
-        return traduzir(await invokeEdgeJson<Resposta<T>>("ia-ler", { body }))
+        return traduzir(await invokeEdgeJson<Resposta<T>>("ia-ler", { body }), mensagens)
     } catch (e) {
         const mensagem = isEdgeInvokeTransportFailure(e) || !(e instanceof Error) || !e.message ? SEM_CONEXAO : e.message
         return { ok: false, mensagem }
@@ -63,7 +63,11 @@ export function lerFaturaComIA(workspaceId: string, texto: string, fechamento: s
 }
 
 export function alinharFaturaComIA(workspaceId: string, banco: ItemParaAlinhar[], app: ItemParaAlinhar[]) {
-    return pelaEdge<{ pares: ParAlinhado[] }>({ op: "alinhar", workspaceId, banco, app })
+    // Aqui "fatura_grande" é sobra demais dos dois lados: o CSV não ajudaria.
+    return pelaEdge<{ pares: ParAlinhado[] }>(
+        { op: "alinhar", workspaceId, banco, app },
+        { ...MENSAGEM, fatura_grande: "Muitas diferenças para a IA alinhar. Confira à mão." },
+    )
 }
 
 /** A foto vai em multipart (o `invokeEdgeJson` só manda JSON), com o token da sessão. */

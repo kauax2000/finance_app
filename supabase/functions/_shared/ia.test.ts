@@ -504,6 +504,8 @@ Deno.test('alinharFatura redige o nome do membro antes de enviar', async () => {
     const corpo = pedidos[0].body
     assertFalse(corpo.includes('Souza'), corpo)
     assertFalse(corpo.includes('estorno'), corpo)
+    // O sentido (estorno) não vai à IA, então o prompt não o cita.
+    assertFalse(corpo.includes('sentido da compra'), corpo)
     assert(corpo.includes('PELANDA ALPINO 3'), corpo)
     assertEquals(JSON.parse(corpo).model, 'openai/gpt-oss-20b')
   })

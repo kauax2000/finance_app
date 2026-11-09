@@ -70,6 +70,22 @@ describe("alinhar", () => {
         expect([r.somaBanco, r.somaApp, r.diferenca]).toEqual([c.somaBanco, c.somaApp, c.diferenca])
     })
 
+    it("paraAlinhar deixa de fora o valor zero, e o par volta ao item certo", () => {
+        const c = conferirNoCiclo(
+            prepararItens([it_("2026-10-01", "TARIFA", 0), it_("2026-10-01", "PELANDA ALPINO 3", 228.13)], []),
+            [ap("z", "2026-10-20", "Zero", 0), ap("g", "2026-10-02", "Gasolina", 228.14)],
+            ciclo,
+        )
+        const { banco, app } = paraAlinhar(c)
+        expect(banco.every((x) => x.valor > 0)).toBe(true)
+        expect(app.every((x) => x.valor > 0)).toBe(true)
+        expect(banco).toHaveLength(1)
+        expect(app).toHaveLength(1)
+        // O "i" é a posição na conferência: o par volta ao item certo.
+        const r = aplicarAlinhamento(c, [{ banco: banco[0].i, app: app[0].i }])
+        expect(r.valorDiferente.map((p) => [p.banco.descricao, p.app.id])).toEqual([["PELANDA ALPINO 3", "g"]])
+    })
+
     it("sugerirCorrecoes vê o par como valor-diferente", () => {
         const r = aplicarAlinhamento(montar(), [{ banco: 0, app: 0 }])
         expect(sugerirCorrecoes(r, ciclo).map((c) => c.motivo)).toEqual(["valor-diferente"])
@@ -91,6 +107,11 @@ describe("alinharFaturaComIA", () => {
         expect(await alinharFaturaComIA("w1", [], [])).toMatchObject({ ok: false, esgotada: true, mensagem: "Você usou a IA 30 vezes hoje. Amanhã volta." })
         invokeEdgeJson.mockRejectedValueOnce(new Error("Failed to fetch"))
         expect(await alinharFaturaComIA("w1", [], [])).toEqual({ ok: false, mensagem: "Sem conexão com a IA." })
+    })
+
+    it("fatura_grande no alinhamento manda conferir à mão, e não o CSV", async () => {
+        invokeEdgeJson.mockResolvedValueOnce({ ok: false, motivo: "fatura_grande" })
+        expect(await alinharFaturaComIA("w1", [], [])).toEqual({ ok: false, mensagem: "Muitas diferenças para a IA alinhar. Confira à mão." })
     })
 })
 

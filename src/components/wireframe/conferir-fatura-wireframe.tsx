@@ -19,7 +19,7 @@ import { desfazerCorrecoes, type LoteAplicado } from "@/lib/fatura/aplicar-corre
 import { aprovarFatura } from "@/lib/fatura/aprovar"
 import { conferirNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
-import { estadoDaFatura, semDiferencas, somaDoCiclo } from "@/lib/fatura/estado"
+import { aprovaSozinha, estadoDaFatura, semDiferencas, somaDoCiclo } from "@/lib/fatura/estado"
 import { bancoTotalDoCiclo, totalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import { itensDaIA, releitura } from "@/lib/ia/fatura"
@@ -191,23 +191,22 @@ export function ConferirFaturaWireframe({
         return aplicarAlinhamento(daRegra, pares)
     }, [daRegra, alinhados])
     const igualAoBanco = Boolean(leitura?.completa && conferencia && semDiferencas(conferencia, ciclo))
+    // Com par da IA a fatura fica igual, mas a pessoa vê os pares e aprova no botão.
+    const aprovaSo = Boolean(leitura && conferencia && aprovaSozinha(conferencia, ciclo, Boolean(leitura.completa)))
     const estado = estadoDaFatura(totalDoCiclo(totais.data, card.id, ciclo.fechamento), somaDoCiclo(doApp, ciclo))
 
-    useEffect(() => {
-        if (!igualAoBanco || !leitura || !conferencia || aprovadaNaLeitura.current === leituraId) return
-        aprovadaNaLeitura.current = leituraId
+    function aprovar(l: Leitura, somaBanco: number): Promise<void> {
         // Trocar de ciclo ou de arquivo muda o pedido: a resposta velha é jogada fora.
         const meu = pedido.current
-        void aprovarFatura(supabase, {
+        return aprovarFatura(supabase, {
             workspaceId,
             userId,
             cardId: card.id,
             fechamento: ciclo.fechamento,
-            bankTotal: leitura.total ?? conferencia.somaBanco,
-            source: leitura.origem,
+            bankTotal: l.total ?? somaBanco,
+            source: l.origem,
         })
             .then(async (r) => {
-                // O erro não tenta de novo: o ref já marcou a leitura.
                 if (!r.ok) {
                     if (meu === pedido.current) setAviso({ erro: true, texto: `Não foi possível aprovar a fatura: ${r.erro}` })
                     return
@@ -217,7 +216,26 @@ export function ConferirFaturaWireframe({
             .catch(() => {
                 if (meu === pedido.current) setAviso({ erro: true, texto: "Não foi possível aprovar a fatura." })
             })
-    }, [igualAoBanco, leitura, conferencia, leituraId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
+    }
+
+    useEffect(() => {
+        if (!aprovaSo || !leitura || !conferencia || aprovadaNaLeitura.current === leituraId) return
+        // O erro não tenta de novo: o ref já marcou a leitura.
+        aprovadaNaLeitura.current = leituraId
+        void aprovar(leitura, conferencia.somaBanco)
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- aprovar lê o estado deste render; o ref segura a repetição.
+    }, [aprovaSo, leitura, conferencia, leituraId])
+
+    async function aprovarAgora() {
+        if (!leitura || !conferencia || pendente != null) return
+        setPendente("aprovar")
+        setAviso(null)
+        try {
+            await aprovar(leitura, conferencia.somaBanco)
+        } finally {
+            setPendente((p) => (p === "aprovar" ? null : p))
+        }
+    }
 
     useEffect(() => {
         if (!leitura || !daRegra) return
@@ -560,14 +578,39 @@ export function ConferirFaturaWireframe({
                     <Lista
                         titulo="Bate"
                         linhas={conferencia.bate.map((p) => (
-                            <li key={p.app.id}>{linhaBanco(p.banco)}</li>
+                            <li key={p.app.id}>
+                                {linhaBanco(p.banco)}
+                                {conferencia.daIA.has(p.app.id) ? " (IA)" : ""}
+                            </li>
                         ))}
                     />
                     {igualAoBanco ? (
-                        <p role="status">
-                            100% igual ao banco · App {currencyBRL(conferencia.somaApp)} · Banco{" "}
-                            {currencyBRL(leitura.total ?? conferencia.somaBanco)}
-                        </p>
+                        <div className="space-y-2">
+                            <p role="status">
+                                100% igual ao banco · App {currencyBRL(conferencia.somaApp)} · Banco{" "}
+                                {currencyBRL(leitura.total ?? conferencia.somaBanco)}
+                            </p>
+                            {conferencia.daIA.size > 0 ? (
+                                <>
+                                    <Lista
+                                        titulo="A IA casou"
+                                        linhas={conferencia.bate
+                                            .filter((p) => conferencia.daIA.has(p.app.id))
+                                            .map((p) => (
+                                                <li key={p.app.id}>
+                                                    {linhaBanco(p.banco)} ↔ {formatYmdPtBr(p.app.date)} · {p.app.description} ·{" "}
+                                                    {currencyBRL(p.app.amount)} (IA)
+                                                </li>
+                                            ))}
+                                    />
+                                    {estado.tipo === "aprovada" ? null : (
+                                        <button type="button" className={botao} disabled={pendente != null} onClick={() => void aprovarAgora()}>
+                                            {pendente === "aprovar" ? "Aprovando…" : "Aprovar"}
+                                        </button>
+                                    )}
+                                </>
+                            ) : null}
+                        </div>
                     ) : (
                         <CorrigirFatura
                             conferencia={conferencia}

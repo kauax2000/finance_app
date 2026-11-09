@@ -5,7 +5,8 @@ import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
 import { prepararItens } from "@/lib/import/importar"
 import type { CreditCardStatementTotal } from "@/lib/supabase"
 
-import { estadoDaFatura, semDiferencas, somaDoCiclo } from "./estado"
+import { aplicarAlinhamento } from "./alinhar"
+import { aprovaSozinha, estadoDaFatura, semDiferencas, somaDoCiclo } from "./estado"
 
 const ciclo = { inicio: "2026-09-27", fechamento: "2026-10-26" }
 const ap = (id: string, date: string, amount: number, type: "expense" | "income" = "expense"): LancamentoParaConferir => ({
@@ -38,4 +39,18 @@ describe("semDiferencas", () => {
         expect(semDiferencas(conferirNoCiclo(banco, [ap("Cafe", "2026-10-01", 23), ap("x", "2026-10-02", 5)], ciclo), ciclo)).toBe(false))
     it("verdadeiro com tudo batendo", () =>
         expect(semDiferencas(conferirNoCiclo(banco, [ap("Cafe", "2026-10-01", 23)], ciclo), ciclo)).toBe(true))
+})
+
+describe("aprovaSozinha", () => {
+    const banco = prepararItens([{ data: "2026-10-01", descricao: "PELANDA ALPINO 3", valor: 228.13, estorno: false, parcela: null }], [])
+    it("aprova a leitura completa sem diferenças e sem par da IA", () =>
+        expect(aprovaSozinha(conferirNoCiclo(banco, [ap("PELANDA ALPINO 3", "2026-10-01", 228.13)], ciclo), ciclo, true)).toBe(true))
+    it("não aprova a leitura incompleta", () =>
+        expect(aprovaSozinha(conferirNoCiclo(banco, [ap("PELANDA ALPINO 3", "2026-10-01", 228.13)], ciclo), ciclo, false)).toBe(false))
+    it("com par da IA, mesmo de valor igual, não aprova sozinha", () => {
+        const c = aplicarAlinhamento(conferirNoCiclo(banco, [ap("Gasolina", "2026-10-06", 228.13)], ciclo), [{ banco: 0, app: 0 }])
+        expect(semDiferencas(c, ciclo)).toBe(true)
+        expect(c.daIA.size).toBe(1)
+        expect(aprovaSozinha(c, ciclo, true)).toBe(false)
+    })
 })

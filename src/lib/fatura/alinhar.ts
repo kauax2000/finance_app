@@ -6,12 +6,20 @@ import { daysBetweenYmd } from "@/lib/transaction-date"
 
 const cents = (n: number) => Math.round(n * 100)
 
-/** Só índice, data, descrição e valor vão à IA: nunca id, categoria nem autor. */
+/**
+ * Só índice, data, descrição e valor vão à IA: nunca id, categoria nem autor. O "i" é a
+ * posição na conferência, e o valor zero fica de fora (a Edge recusa o pedido inteiro com ele).
+ */
 export function paraAlinhar(conf: ConferenciaNoCiclo<ItemImportavel>): { banco: ItemParaAlinhar[]; app: ItemParaAlinhar[] } {
     const corta = (s: string | null) => (s ?? "").slice(0, 200)
+    const comValor = (x: ItemParaAlinhar) => x.valor > 0
     return {
-        banco: conf.faltaNoApp.map((b, i) => ({ i, data: b.data, descricao: corta(b.descricao), valor: Math.abs(b.valor), estorno: b.estorno })),
-        app: conf.soNoApp.map((a, i) => ({ i, data: a.date, descricao: corta(a.description), valor: Math.abs(a.amount), estorno: a.type === "income" })),
+        banco: conf.faltaNoApp
+            .map((b, i) => ({ i, data: b.data, descricao: corta(b.descricao), valor: Math.abs(b.valor), estorno: b.estorno }))
+            .filter(comValor),
+        app: conf.soNoApp
+            .map((a, i) => ({ i, data: a.date, descricao: corta(a.description), valor: Math.abs(a.amount), estorno: a.type === "income" }))
+            .filter(comValor),
     }
 }
 

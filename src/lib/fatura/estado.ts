@@ -20,6 +20,15 @@ export function semDiferencas(conf: ConferenciaNoCiclo<ItemImportavel>, ciclo: C
     return conf.soNoApp.length === 0 && sugerirCorrecoes(conf, ciclo).length === 0
 }
 
+/** A aprovação automática: leitura completa, sem diferenças e sem par da IA (esse a pessoa vê e aprova). */
+export function aprovaSozinha(
+    conf: ConferenciaNoCiclo<ItemImportavel> & { daIA?: Set<string> },
+    ciclo: CicloFatura,
+    leituraCompleta: boolean,
+): boolean {
+    return leituraCompleta && (conf.daIA?.size ?? 0) === 0 && semDiferencas(conf, ciclo)
+}
+
 export type EstadoDaFatura =
     | { tipo: "sem-total" }
     | { tipo: "a-conferir"; diferenca: number }

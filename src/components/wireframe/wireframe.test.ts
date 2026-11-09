@@ -129,6 +129,21 @@ describe("fonte dos wireframes", () => {
     expect(fonte).toMatch(/daIA\?\.has\(c\.appId\)/)
   })
 
+  it("conferir fatura: o par da IA não aprova sozinho; mostra os pares, o (IA) em Bate e um Aprovar", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
+    expect(fonte).toMatch(/import\s*\{[^}]*\baprovaSozinha\b[^}]*\}/)
+    expect(fonte).toMatch(/aprovaSozinha\(conferencia, ciclo/)
+    // A aprovação automática só segue o aprovaSozinha, nunca o igualAoBanco.
+    expect(fonte).toMatch(/if \(!aprovaSo \|\|/)
+    // O Bate marca o par da IA.
+    const bate = fonte.slice(fonte.indexOf('titulo="Bate"'), fonte.indexOf("100% igual ao banco"))
+    expect(bate).toMatch(/conferencia\.daIA\.has\(p\.app\.id\) \? " \(IA\)"/)
+    // Com par da IA: os pares e um Aprovar manual, com espera e a mesma aprovação.
+    expect(fonte).toMatch(/<button type="button"[^>]*onClick=\{\(\) => void aprovarAgora\(\)\}[^>]*>\s*\{pendente === "aprovar" \? "Aprovando…" : "Aprovar"\}/)
+    const manual = fonte.slice(fonte.indexOf("function aprovarAgora("))
+    expect(manual.slice(0, manual.indexOf("\n    }\n"))).toMatch(/setPendente\("aprovar"\)[\s\S]*aprovar\(/)
+  })
+
   it("o auditor pula a pasta dos wireframes", () => {
     expect(lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")).toContain("components/wireframe/")
   })
