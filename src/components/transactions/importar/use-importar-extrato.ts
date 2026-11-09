@@ -28,7 +28,7 @@ import { toastSuccess } from "@/lib/toast"
 
 export type PassoImportacao = "arquivo" | "colunas" | "conferir" | "feito"
 
-type Categoria = { id: string; name: string; type: "income" | "expense" }
+type Categoria = { id: string; name: string; type: "income" | "expense"; color?: string | null; icon?: string | null }
 export type SourceImportacao = "import_statement" | "import_sheet"
 export type FiltroConferencia = "todos" | "saidas" | "entradas" | "existem" | "sem-categoria"
 /** A categoria que a pessoa escolheu por item (`null`: sem categoria, de propósito). */
@@ -231,7 +231,7 @@ export async function prepararLote(
             .not("category_id", "is", null)
             .order("date", { ascending: false })
             .limit(1000),
-        db.from("categories").select("id,name,type").eq("workspace_id", workspaceId),
+        db.from("categories").select("id,name,type,color,icon").eq("workspace_id", workspaceId),
     ])
     if (historico.error || cats.error) return { ok: false, erro: "Não foi possível ler as categorias. Tente de novo." }
     const categorias = (cats.data ?? []) as Categoria[]

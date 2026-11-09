@@ -11,7 +11,12 @@ import {
 } from "@heroicons/react/16/solid"
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
+import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { Badge } from "@/components/ui/badge"
+import { ColorTile } from "@/components/ui/color-tile"
+import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
+import { SearchInput } from "@/components/ui/search-input"
+import { Separator } from "@/components/ui/separator"
 import {
     DescriptionDetails,
     DescriptionList,
@@ -70,6 +75,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { normalizeSearchText } from "@/lib/command-filter"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
@@ -240,76 +246,134 @@ function Linha({
 const col = dataTableColumns<ItemImportavel>()
 
 /**
- * "Pôr categoria" das linhas à vista (ou de uma, tocada no telefone): escolher
- * aplica e fecha. Sem formulário: o de fora é o do Importar. Com despesas e
- * receitas à vista, cada categoria vale para as do tipo dela.
+ * "Pôr categoria" das linhas à vista (ou de uma, tocada no telefone): a lista
+ * mora no diálogo, tocar só marca, e o botão do rodapé diz o efeito e aplica.
+ * O `Form` é do diálogo (portalizado, mas o submit sobe pela árvore do React
+ * até o do Importar: `stopPropagation`). Com despesas e receitas à vista,
+ * cada categoria vale para as do tipo dela.
  */
 function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: ItemImportavel[]; onClose: () => void }) {
     const destino = imp.destino
     const tipos = destino ? (["expense", "income"] as const).filter((t) => itens.some((i) => tipoDoItem(i, destino) === t)) : []
     const misturadas = tipos.length > 1
     const categorias = imp.previa?.categorias ?? []
+    const [escolhida, setEscolhida] = React.useState<string | null>(null)
+    const [busca, setBusca] = React.useState("")
 
-    function escolher(v: string) {
-        if (!destino) return
-        const tipo = v === SEM ? null : (categorias.find((c) => c.id === v)?.type ?? null)
-        imp.setCategoria(idsParaCategoria(itens, tipo, destino), v === SEM ? null : v)
+    const saidas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "expense").length : 0
+    const entradas = destino ? itens.filter((i) => tipoDoItem(i, destino) === "income").length : 0
+    const comCategoria = itens.filter((i) => imp.categoriaDe(i.clientId) != null).length
+
+    const q = normalizeSearchText(busca.trim())
+    const achadas = categorias.filter((c) => !q || normalizeSearchText(c.name).includes(q))
+    const escolhidaCat = escolhida && escolhida !== SEM ? categorias.find((c) => c.id === escolhida) : undefined
+    const tipoEscolhido = escolhidaCat?.type ?? null
+    const n = !destino || escolhida == null ? 0 : idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino).length
+    const rotulo =
+        escolhida === SEM
+            ? `Tirar a categoria de ${numberBR(n)}`
+            : escolhidaCat
+              ? `Pôr ${escolhidaCat.name} em ${numberBR(n)}`
+              : "Pôr categoria"
+
+    function fechar() {
+        setEscolhida(null)
+        setBusca("")
         onClose()
     }
 
+    function aplicar(e: React.FormEvent) {
+        e.stopPropagation()
+        if (!destino || escolhida == null) return
+        imp.setCategoria(idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino), escolhida === SEM ? null : escolhida)
+        fechar()
+    }
+
     return (
-        <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : onClose())}>
+        <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
             <DialogContent size="sm">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
                     <DialogDescription>
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
-                            : `Vale para os ${numberBR(itens.length)} visíveis.`}
-                        {misturadas ? " Cada categoria vale para as do tipo dela." : null}
+                            : "Vale para as linhas à vista."}
                     </DialogDescription>
+                    <div className="flex flex-wrap gap-2">
+                        {saidas > 0 ? (
+                            <Badge variant="soft">
+                                {numberBR(saidas)} {saidas === 1 ? "saída" : "saídas"}
+                            </Badge>
+                        ) : null}
+                        {entradas > 0 ? (
+                            <Badge variant="soft">
+                                {numberBR(entradas)} {entradas === 1 ? "entrada" : "entradas"}
+                            </Badge>
+                        ) : null}
+                        <Badge variant="soft">{numberBR(comCategoria)} com categoria</Badge>
+                    </div>
                 </DialogHeader>
-                <DialogBody>
-                    <Combobox value="" onValueChange={escolher}>
-                        <ComboboxField>
-                            <ComboboxTrigger placeholder="Escolha uma categoria" aria-label="Categoria">
-                                <ComboboxValue placeholder="Escolha uma categoria" />
-                            </ComboboxTrigger>
-                        </ComboboxField>
-                        <ComboboxContent>
-                            <ComboboxInput placeholder="Buscar categoria…" />
-                            <ComboboxList>
-                                <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
-                                {tipos.map((t) => (
-                                    <ComboboxGroup
-                                        key={t}
-                                        heading={misturadas ? (t === "expense" ? "Despesas" : "Receitas") : undefined}
-                                    >
-                                        {categorias
-                                            .filter((c) => c.type === t)
-                                            .map((c) => (
-                                                <ComboboxItem key={c.id} value={c.id}>
-                                                    {c.name}
-                                                </ComboboxItem>
+                <Form layout="none" onSubmit={aplicar}>
+                    <DialogBody className="flex flex-col gap-3">
+                        <SearchInput
+                            placeholder="Buscar categoria"
+                            aria-label="Buscar categoria"
+                            value={busca}
+                            onChange={(e) => setBusca(e.target.value)}
+                            onClear={() => setBusca("")}
+                        />
+                        <ul className="flex flex-col gap-0.5">
+                            <li>
+                                <FormPickerPopoverItem selected={escolhida === SEM} onClick={() => setEscolhida(SEM)}>
+                                    <span className="min-w-0 truncate">Sem categoria</span>
+                                    {escolhida === SEM ? <CheckIcon className="ms-auto shrink-0" /> : null}
+                                </FormPickerPopoverItem>
+                            </li>
+                        </ul>
+                        <Separator />
+                        {achadas.length === 0 ? (
+                            <p className="px-1 py-4 text-center text-sm text-muted-foreground">
+                                Nenhuma categoria com esse nome.
+                            </p>
+                        ) : (
+                            tipos.map((t) => {
+                                const doTipo = achadas.filter((c) => c.type === t)
+                                if (doTipo.length === 0) return null
+                                return (
+                                    <div key={t} className="flex flex-col gap-1">
+                                        {misturadas ? (
+                                            <Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>
+                                        ) : null}
+                                        <ul className="flex flex-col gap-0.5">
+                                            {doTipo.map((c) => (
+                                                <li key={c.id}>
+                                                    <FormPickerPopoverItem
+                                                        selected={escolhida === c.id}
+                                                        onClick={() => setEscolhida(c.id)}
+                                                    >
+                                                        <ColorTile size="xs" color={c.color} className="shrink-0">
+                                                            <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
+                                                        </ColorTile>
+                                                        <span className="min-w-0 truncate">{c.name}</span>
+                                                        {escolhida === c.id ? <CheckIcon className="ms-auto shrink-0" /> : null}
+                                                    </FormPickerPopoverItem>
+                                                </li>
                                             ))}
-                                    </ComboboxGroup>
-                                ))}
-                                <ComboboxGroup>
-                                    <ComboboxItem value={SEM} variant="none">
-                                        Sem categoria
-                                    </ComboboxItem>
-                                </ComboboxGroup>
-                            </ComboboxList>
-                        </ComboboxContent>
-                    </Combobox>
-                </DialogBody>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="secondary" type="button">
-                            Cancelar
-                        </Button>
-                    </DialogClose>
-                </DialogFooter>
+                                        </ul>
+                                    </div>
+                                )
+                            })
+                        )}
+                    </DialogBody>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="tertiary" type="button">
+                                Cancelar
+                            </Button>
+                        </DialogClose>
+                        <FormSubmit disabled={escolhida == null || n === 0}>{rotulo}</FormSubmit>
+                    </DialogFooter>
+                </Form>
             </DialogContent>
         </Dialog>
     )

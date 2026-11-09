@@ -140,9 +140,17 @@ describe("a conferência", () => {
         expect(conferir).not.toContain("marcadasVistas")
         expect(conferir).not.toContain("porCategoriaDesligado")
         // Cada categoria vale para as visíveis do tipo dela (o estorno do cartão é despesa).
-        expect(conferir).toContain("idsParaCategoria(itens, tipo, destino)")
+        expect(conferir).toContain("idsParaCategoria(itens, escolhida === SEM ? null : tipoEscolhido, destino)")
         expect(conferir).toMatch(/<Dialog open=\{itens\.length > 0\} surface="auto"/)
-        expect(conferir).toContain("`Vale para os ${numberBR(itens.length)} visíveis.`")
+        expect(conferir).toContain('"Vale para as linhas à vista."')
+        expect(conferir).toContain("`Pôr ${")
+        expect(conferir).toContain("Tirar a categoria de")
+        expect(conferir).toContain("ColorTile")
+        expect(conferir).toContain("CategoryIconPreview")
+        expect(conferir).toContain("SearchInput")
+        expect(conferir).toContain("com categoria")
+        expect(conferir).not.toContain('ComboboxTrigger placeholder="Escolha uma categoria"')
+        expect(ler("use-importar-extrato.ts")).toContain('"id,name,type,color,icon"')
     })
 
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {
