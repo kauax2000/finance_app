@@ -115,6 +115,8 @@ export interface CreditCardStatementTotal {
     bank_total: number
     source: CreditCardStatementTotalSource
     created_by: string
+    approved_at: string | null
+    approved_by: string | null
     created_at: string
     updated_at: string
 }

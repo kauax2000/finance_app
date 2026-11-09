@@ -18,15 +18,26 @@ export function statementTotalKey(cardId: string, closeYmd: string): string {
     return `${cardId}:${closeYmd}`
 }
 
+/** O total do cartão naquele fechamento (YYYY-MM-DD), ou `null`. */
+export function totalDoCiclo(
+    totais: CreditCardStatementTotal[] | undefined,
+    cardId: string,
+    closeYmd: string,
+): CreditCardStatementTotal | null {
+    return (
+        totais?.find(
+            (t) => statementTotalKey(t.credit_card_id, t.statement_close_date) === statementTotalKey(cardId, closeYmd),
+        ) ?? null
+    )
+}
+
 /** O total do banco do cartão naquele fechamento (YYYY-MM-DD), ou `null`. */
 export function bancoTotalDoCiclo(
     totais: CreditCardStatementTotal[] | undefined,
     cardId: string,
     closeYmd: string,
 ): number | null {
-    const achado = totais?.find(
-        (t) => statementTotalKey(t.credit_card_id, t.statement_close_date) === statementTotalKey(cardId, closeYmd),
-    )
+    const achado = totalDoCiclo(totais, cardId, closeYmd)
     return achado ? Number(achado.bank_total) : null
 }
 

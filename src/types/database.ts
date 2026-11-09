@@ -814,6 +814,8 @@ export type Database = {
       }
       credit_card_statement_totals: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           bank_total: number
           created_at: string
           created_by: string
@@ -825,6 +827,8 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           bank_total: number
           created_at?: string
           created_by?: string
@@ -836,6 +840,8 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           bank_total?: number
           created_at?: string
           created_by?: string

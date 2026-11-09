@@ -179,5 +179,7 @@ export function totalDoBanco(
         bank_total,
         source: "manual",
         created_by: "u",
+        approved_at: null,
+        approved_by: null,
     }
 }
