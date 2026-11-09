@@ -142,9 +142,6 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
     const atual = id ? imp.previa?.categorias.find((c) => c.id === id) : undefined
     return (
         <Combobox
-            // Modal: o diálogo do Importar trava a rolagem fora dele, e o menu é portalizado;
-            // com a própria trava, a lista volta a rolar com a roda do mouse.
-            modal
             value={id ?? ""}
             onValueChange={(v) => imp.setCategoria([item.clientId], v === SEM ? null : v)}
         >

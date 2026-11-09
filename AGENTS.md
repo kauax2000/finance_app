@@ -1431,7 +1431,9 @@ declaração de `background-color` no trilho).
   obrigatório vazio é o `placeholder`. **Nenhuma chamada escreve
   `py-*`/`pl-*`/`pr-*` no `SelectItem` nem `p-1` e
   `min-w-[var(--radix-select-trigger-width)]` no `SelectContent`.**
-- **`Combobox`**: o gatilho é **um campo, não um botão**. **Categoria é
+- **`Combobox`**: o gatilho é **um campo, não um botão**. **Dentro de um
+  `Dialog` ou `Sheet` o painel é modal sozinho** (a trava do diálogo engolia a
+  roda do mouse na lista portalizada). **Categoria é
   `Combobox`, não `Select`.** `multiple` é união discriminada (precisa de
   literal); `ComboboxClear` é irmão do gatilho, no `ComboboxField`; **o tique
   não escreve `aria-selected`**. `ComboboxItem` `media`/`description`/

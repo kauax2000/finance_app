@@ -22,6 +22,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { NavegarFechandoContext } from "@/components/ui/dialog"
 import {
   Command,
   CommandEmpty,
@@ -137,7 +138,11 @@ type ComboboxProps = (
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
-  /** Trava a rolagem de trás; o padrão é ligar no telefone, como o `FormPickerPopover`, senão rolar a lista arrasta a folha. */
+  /**
+   * Trava a rolagem de trás; o padrão é ligar no telefone (senão rolar a lista
+   * arrasta a folha) e dentro de um `Dialog` ou `Sheet`: o painel é
+   * portalizado, e a trava do diálogo engolia a roda do mouse na lista.
+   */
   modal?: boolean
   children: React.ReactNode
 }
@@ -153,6 +158,8 @@ function Combobox(props: ComboboxProps) {
   const { open: openProp, defaultOpen = false, onOpenChange, modal, children } = props
   const variant: ComboboxVariant = props.variant ?? "select"
   const isMobile = useIsMobile()
+  // Dentro de um diálogo (o `Dialog` e o `Sheet` publicam este contexto na raiz).
+  const dentroDeDialogo = React.useContext(NavegarFechandoContext) != null
   const listId = `${React.useId()}-listbox`
   const exclusivos = React.useRef(new Set<string>())
   const campoRef = React.useRef<HTMLDivElement | null>(null)
@@ -245,7 +252,7 @@ function Combobox(props: ComboboxProps) {
       <Popover
         open={currentOpen}
         onOpenChange={setOpen}
-        modal={variant === "input" ? false : (modal ?? isMobile)}
+        modal={variant === "input" ? false : (modal ?? (isMobile || dentroDeDialogo))}
       >
         {variant === "input" ? (
           // A raiz do cmdk envolve o campo e o painel: o teclado do campo só

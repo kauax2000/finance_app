@@ -10,6 +10,11 @@ import { Combobox, ComboboxChips, ComboboxValue } from "./combobox"
 const CODIGO = lerFonte("src/components/ui/combobox.tsx")
 
 describe("as versões do Combobox", () => {
+  it("dentro de um diálogo o painel é modal, senão a trava do diálogo engole a roda do mouse na lista", () => {
+    expect(CODIGO).toContain("const dentroDeDialogo = React.useContext(NavegarFechandoContext) != null")
+    expect(CODIGO).toContain('modal={variant === "input" ? false : (modal ?? (isMobile || dentroDeDialogo))}')
+  })
+
   it("o ladrilho do valor é prop, fora do texto que trunca", () => {
     const html = renderToStaticMarkup(
       h(ComboboxValue, { media: h("i", { id: "tile" }) }, "Mercado")
