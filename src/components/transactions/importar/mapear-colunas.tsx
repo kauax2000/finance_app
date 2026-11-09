@@ -133,11 +133,6 @@ export function MapearColunas({
                         <ItemContent>
                             <FormSwitch
                                 label="1ª linha é cabeçalho"
-                                description={
-                                    valor.temCabecalho
-                                        ? "A linha com fundo não entra como lançamento."
-                                        : "Ligue se a 1ª linha tiver os nomes das colunas."
-                                }
                                 checked={valor.temCabecalho}
                                 disabled={disabled}
                                 onCheckedChange={(temCabecalho) => onChange({ ...valor, temCabecalho })}

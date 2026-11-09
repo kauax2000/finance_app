@@ -217,7 +217,7 @@ describe("a conferência", () => {
         expect(colunas).toContain("lerValorBr")
         expect(colunas).toContain("text-expense")
         expect(colunas).toContain("text-income")
-        expect(colunas).toContain("A linha com fundo não entra como lançamento.")
+        expect(colunas).not.toContain("A linha com fundo não entra como lançamento.")
         expect(colunas).toMatch(/<SelectTrigger[^>]*w-full/)
     })
 })
