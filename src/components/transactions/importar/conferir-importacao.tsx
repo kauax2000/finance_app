@@ -348,7 +348,7 @@ function AcoesDasVisiveis({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="floating" size="icon-lg" className="shadow-none" aria-label="Ações" disabled={travado || itens.length === 0}>
+                <Button type="button" variant="floating" size="icon-md" className="shadow-none" aria-label="Ações" disabled={travado || itens.length === 0}>
                     <EllipsisHorizontalIcon />
                 </Button>
             </DropdownMenuTrigger>
@@ -498,7 +498,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
-                        <TabsList aria-label="Filtro" scrollable>
+                        <TabsList aria-label="Filtro" size="md" scrollable>
                             {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
                                 <TabsTrigger
                                     key={f.valor}
