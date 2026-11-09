@@ -25,6 +25,7 @@ export type LoteAplicado = {
         payment_credit_card_id: string | null
     }>
     apagados: Array<Record<string, unknown>>
+    anexosApagados: Array<Record<string, unknown>> // o delete do lançamento leva os anexos em cascata
     assinaturas: Array<{ id: string; amount: number }>
 }
 
@@ -36,11 +37,15 @@ export async function aplicarCorrecoes(
     ctx: ContextoDeCorrecao,
     correcoes: Correcao[],
     decisoes: ReadonlyMap<string, DecisaoSoNoApp>,
-): Promise<{ ok: true; lote: LoteAplicado; aplicadas: number } | { ok: false; erro: string }> {
-    const lote: LoteAplicado = { workspaceId: ctx.workspaceId, batchId: null, antes: [], apagados: [], assinaturas: [] }
+): Promise<{ ok: true; lote: LoteAplicado; aplicadas: number } | { ok: false; erro: string; desfeito: boolean }> {
+    const lote: LoteAplicado = { workspaceId: ctx.workspaceId, batchId: null, antes: [], apagados: [], anexosApagados: [], assinaturas: [] }
     const falhar = async (erro: string) => {
-        await desfazerCorrecoes(db, lote)
-        return { ok: false as const, erro }
+        const d = await desfazerCorrecoes(db, lote)
+        return {
+            ok: false as const,
+            erro: d.ok ? erro : `${erro} Além disso, não foi possível desfazer: ${d.erro}`,
+            desfeito: d.ok,
+        }
     }
 
     const patches = new Map<string, Record<string, unknown>>()
@@ -72,10 +77,14 @@ export async function aplicarCorrecoes(
         lote.antes = (data ?? []) as LoteAplicado["antes"]
     }
     let apagados: Array<Record<string, unknown>> = []
+    let anexos: Array<Record<string, unknown>> = []
     if (apagar.length) {
         const { data, error } = await db.from("transactions").select("*").eq("workspace_id", ctx.workspaceId).in("id", apagar)
         if (error) return falhar(msg(error, "Não foi possível ler os lançamentos."))
         apagados = (data ?? []) as typeof apagados
+        const an = await db.from("attachments").select("*").eq("workspace_id", ctx.workspaceId).in("transaction_id", apagar)
+        if (an.error) return falhar(msg(an.error, "Não foi possível ler os anexos."))
+        anexos = (an.data ?? []) as typeof anexos
     }
     if (assinaturas.size) {
         const { data, error } = await db.from("workspace_subscriptions").select("id, amount").eq("workspace_id", ctx.workspaceId).in("id", [...assinaturas.keys()])
@@ -98,6 +107,7 @@ export async function aplicarCorrecoes(
         const { error } = await db.from("transactions").delete().eq("workspace_id", ctx.workspaceId).in("id", apagar)
         if (error) return falhar(msg(error, "Não foi possível apagar os lançamentos."))
         lote.apagados = apagados
+        lote.anexosApagados = anexos
     }
     // 5. criar
     if (criar.length) {
@@ -108,23 +118,28 @@ export async function aplicarCorrecoes(
     return { ok: true, lote, aplicadas: correcoes.length + decisoesAplicadas }
 }
 
+/** Melhor esforço: tenta cada devolução e junta os erros. */
 export async function desfazerCorrecoes(db: SupabaseClient, lote: LoteAplicado): Promise<{ ok: true } | { ok: false; erro: string }> {
     const w = lote.workspaceId
+    const erros: string[] = []
+    const tentar = (erro: unknown, padrao: string) => {
+        if (erro) erros.push(msg(erro, padrao))
+    }
     if (lote.batchId) {
         const r = await desfazerImportacao(db, w, lote.batchId)
-        if (!r.ok) return { ok: false, erro: r.erro ?? "Não foi possível desfazer." }
+        if (!r.ok) erros.push(r.erro ?? "Não foi possível desfazer.")
     }
     for (const { id, ...resto } of lote.antes) {
-        const { error } = await db.from("transactions").update(resto).eq("id", id).eq("workspace_id", w)
-        if (error) return { ok: false, erro: msg(error, "Não foi possível desfazer.") }
+        tentar((await db.from("transactions").update(resto).eq("id", id).eq("workspace_id", w)).error, "Não foi possível desfazer.")
     }
     if (lote.apagados.length) {
-        const { error } = await db.from("transactions").insert(lote.apagados)
-        if (error) return { ok: false, erro: msg(error, "Não foi possível desfazer.") }
+        tentar((await db.from("transactions").insert(lote.apagados)).error, "Não foi possível devolver os lançamentos.")
+        if (lote.anexosApagados.length) {
+            tentar((await db.from("attachments").insert(lote.anexosApagados)).error, "Não foi possível devolver os anexos.")
+        }
     }
     for (const { id, amount } of lote.assinaturas) {
-        const { error } = await db.from("workspace_subscriptions").update({ amount }).eq("id", id).eq("workspace_id", w)
-        if (error) return { ok: false, erro: msg(error, "Não foi possível desfazer.") }
+        tentar((await db.from("workspace_subscriptions").update({ amount }).eq("id", id).eq("workspace_id", w)).error, "Não foi possível desfazer.")
     }
-    return { ok: true }
+    return erros.length ? { ok: false, erro: erros.join(" ") } : { ok: true }
 }

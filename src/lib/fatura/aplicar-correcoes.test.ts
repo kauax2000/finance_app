@@ -6,7 +6,7 @@ import { aplicarCorrecoes, desfazerCorrecoes, type ContextoDeCorrecao } from "./
 type Chamada = { tabela: string; op: string; valores?: unknown; filtros: Array<[string, unknown]> }
 
 /** Banco falso: grava cada escrita e pode falhar na n-ésima (1-based, só nas escritas). */
-function dbFalso(tabelas: Record<string, Array<Record<string, unknown>>>, falharNa?: number) {
+function dbFalso(tabelas: Record<string, Array<Record<string, unknown>>>, falharNa?: number | number[]) {
     const chamadas: Chamada[] = []
     let escritas = 0
     const db = {
@@ -32,7 +32,7 @@ function dbFalso(tabelas: Record<string, Array<Record<string, unknown>>>, falhar
                     return res({ data: (tabelas[tabela] ?? []).filter((r) => !ids || ids.includes(r.id as string)), error: null })
                 }
                 escritas++
-                return res({ data: null, error: escritas === falharNa ? { message: "falhou", code: "X" } : null })
+                return res({ data: null, error: [falharNa].flat().includes(escritas) ? { message: "falhou", code: "X" } : null })
             }
             return b
         },
@@ -123,11 +123,47 @@ describe("desfazerCorrecoes", () => {
     it("reinsere o apagado igual e apaga o lote criado", async () => {
         const f = dbFalso({})
         const apagado = { ...linha("z"), workspace_id: "w1", user_id: "u1" }
-        const r = await desfazerCorrecoes(f.db, { workspaceId: "w1", batchId: "lote1", antes: [], apagados: [apagado], assinaturas: [{ id: "s1", amount: 25 }] })
+        const r = await desfazerCorrecoes(f.db, { workspaceId: "w1", batchId: "lote1", antes: [], apagados: [apagado], anexosApagados: [], assinaturas: [{ id: "s1", amount: 25 }] })
         expect(r.ok).toBe(true)
         expect(f.escritasDe("transactions", "insert")[0].valores).toEqual([apagado])
         const del = f.escritasDe("transactions", "delete")[0]
         expect(del.filtros).toEqual(expect.arrayContaining([["workspace_id", "w1"], ["import_batch_id", "lote1"]]))
         expect(f.escritasDe("workspace_subscriptions", "update")[0].valores).toEqual({ amount: 25 })
+    })
+})
+
+describe("falha e desfazer", () => {
+    it("avisa quando nem o desfazer deu certo", async () => {
+        const f = dbFalso({ transactions: [linha("a"), linha("b"), linha("c")] }, [3, 4])
+        const cs: Correcao[] = ["a", "b", "c"].map((id) => ({ ...valor, id: `v:${id}`, appId: id }))
+        const r = await aplicarCorrecoes(f.db, ctx, cs, semDecisoes)
+        expect(r.ok).toBe(false)
+        if (r.ok) return
+        expect(r.desfeito).toBe(false)
+        expect(r.erro).toContain("não foi possível desfazer")
+    })
+
+    it("desfazer tenta tudo mesmo se um passo falha", async () => {
+        const f = dbFalso({}, 1)
+        const r = await desfazerCorrecoes(f.db, {
+            workspaceId: "w1", batchId: null, antes: [{ id: "a", date: "d", description: null, amount: 1, installment_sequence: null, payment_method: null, payment_credit_card_id: null }],
+            apagados: [{ id: "z" }], anexosApagados: [], assinaturas: [{ id: "s1", amount: 25 }],
+        })
+        expect(r.ok).toBe(false)
+        expect(f.escritasDe("transactions", "insert")).toHaveLength(1)
+        expect(f.escritasDe("workspace_subscriptions", "update")).toHaveLength(1)
+    })
+
+    it("desfazer devolve os anexos do apagado, depois do lançamento", async () => {
+        const anexo = { id: "an1", transaction_id: "a", workspace_id: "w1", path: "x.pdf" }
+        const f = dbFalso({ transactions: [linha("a")], attachments: [anexo] })
+        const r = await aplicarCorrecoes(f.db, ctx, [], new Map([["a", "apagar"]]))
+        expect(r.ok).toBe(true)
+        if (!r.ok) return
+        expect(r.lote.anexosApagados).toEqual([anexo])
+        await desfazerCorrecoes(f.db, r.lote)
+        const ordem = f.chamadas.filter((c) => c.op === "insert").map((c) => c.tabela)
+        expect(ordem).toEqual(["transactions", "attachments"])
+        expect(f.escritasDe("attachments", "insert")[0].valores).toEqual([anexo])
     })
 })
