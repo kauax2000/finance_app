@@ -291,7 +291,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
-            <DialogContent size="sm">
+            <DialogContent size="sm" layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
                     <DialogDescription>
@@ -299,7 +299,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                             ? `Vale para ${itens[0].descricao}.`
                             : "Vale para as linhas à vista."}
                     </DialogDescription>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                         {saidas > 0 ? (
                             <Badge variant="soft">
                                 {numberBR(saidas)} {saidas === 1 ? "saída" : "saídas"}
@@ -313,8 +313,9 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                         <Badge variant="soft">{numberBR(comCategoria)} com categoria</Badge>
                     </div>
                 </DialogHeader>
-                <Form layout="none" onSubmit={aplicar}>
-                    <DialogBody className="flex flex-col gap-3">
+                <Form layout="none" onSubmit={aplicar} className="flex min-h-0 flex-1 flex-col">
+                    {/* A busca fica parada acima da lista: só a lista rola. */}
+                    <div className="px-(--dialog-px)">
                         <SearchInput
                             placeholder="Buscar categoria"
                             aria-label="Buscar categoria"
@@ -322,6 +323,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                             onChange={(e) => setBusca(e.target.value)}
                             onClear={() => setBusca("")}
                         />
+                    </div>
+                    <DialogBody className="flex flex-col gap-3">
                         <ul className="flex flex-col gap-0.5">
                             <li>
                                 <FormPickerPopoverItem selected={escolhida === SEM} onClick={() => setEscolhida(SEM)}>
