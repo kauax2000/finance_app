@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
+import { CorrigirFatura } from "@/components/wireframe/corrigir-fatura-wireframe"
 import { MapeamentoCsv } from "@/components/wireframe/mapeamento-csv"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -13,15 +14,17 @@ import {
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
-import { ajustarAoCiclo, conferirNoCiclo } from "@/lib/fatura/ciclo"
+import { aprovarFatura } from "@/lib/fatura/aprovar"
+import { conferirNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
-import { bancoTotalDoCiclo } from "@/lib/fatura/total-com-banco"
+import { estadoDaFatura, semDiferencas, somaDoCiclo } from "@/lib/fatura/estado"
+import { bancoTotalDoCiclo, totalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import { itensDaIA, releitura } from "@/lib/ia/fatura"
 import { lerFaturaComIA } from "@/lib/ia/ler"
 import { lerCsv } from "@/lib/import/csv"
 import { extrairItensDaFatura, removerIdentificacao } from "@/lib/import/fatura-texto"
-import { importarLancamentos, type ItemImportavel, prepararItens } from "@/lib/import/importar"
+import { type ItemImportavel, prepararItens } from "@/lib/import/importar"
 import { lerValorBr } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
 import { pdfParaTexto } from "@/lib/import/pdf-texto"
@@ -83,9 +86,6 @@ function Lista({ titulo, linhas }: { titulo: string; linhas: ReactNode[] }) {
 
 const linhaBanco = (i: ItemBanco) =>
     `${formatYmdPtBr(i.data)} · ${i.descricao}${i.parcela ? ` (${i.parcela.k}/${i.parcela.n})` : ""} · ${i.estorno ? "−" : ""}${currencyBRL(i.valor)}`
-const linhaApp = (a: LancamentoParaConferir) =>
-    `${formatYmdPtBr(a.date)} · ${a.description ?? "(sem descrição)"} · ${a.type === "income" ? "−" : ""}${currencyBRL(a.amount)}`
-
 export function ConferirFaturaWireframe({
     card,
     transactions,
@@ -130,7 +130,8 @@ export function ConferirFaturaWireframe({
     // O clientId nasce uma vez por leitura e fica aqui: repetir o envio não duplica (Foco 3).
     const [itens, setItens] = useState<ItemImportavel[]>([])
     const [batchId, setBatchId] = useState("")
-    const [desmarcados, setDesmarcados] = useState<Set<string>>(new Set())
+    // A leitura (pelo batchId) já aprovada: a aprovação automática roda uma vez por leitura.
+    const aprovadaNaLeitura = useRef<string | null>(null)
 
     const [pendente, setPendente] = useState<string | null>(null)
     const [aviso, setAviso] = useState<{ erro: boolean; texto: string } | null>(null)
@@ -152,6 +153,7 @@ export function ConferirFaturaWireframe({
                         amount: Number(t.amount),
                         type: t.type,
                         installment_sequence: t.installment_sequence ?? null,
+                        subscription_id: t.subscription_id ?? null,
                     },
                 ]
             }),
@@ -162,8 +164,25 @@ export function ConferirFaturaWireframe({
         () => (leitura ? conferirNoCiclo(itens, doApp, ciclo) : null),
         [leitura, itens, doApp, ciclo],
     )
-    const faltam = conferencia?.faltaNoApp ?? []
-    const selecionados = faltam.filter((i) => !desmarcados.has(i.clientId))
+    const igualAoBanco = Boolean(leitura?.completa && conferencia && semDiferencas(conferencia, ciclo))
+    const estado = estadoDaFatura(totalDoCiclo(totais.data, card.id, ciclo.fechamento), somaDoCiclo(doApp, ciclo))
+
+    useEffect(() => {
+        if (!igualAoBanco || !leitura || !conferencia || aprovadaNaLeitura.current === batchId) return
+        aprovadaNaLeitura.current = batchId
+        void aprovarFatura(supabase, {
+            workspaceId,
+            userId,
+            cardId: card.id,
+            fechamento: ciclo.fechamento,
+            bankTotal: leitura.total ?? conferencia.somaBanco,
+            source: leitura.origem,
+        }).then(async (r) => {
+            // O erro não tenta de novo: o ref já marcou a leitura.
+            if (!r.ok) return setAviso({ erro: true, texto: `Não foi possível aprovar a fatura: ${r.erro}` })
+            await queryClient.invalidateQueries({ queryKey: statementTotalsKeys.list(workspaceId) })
+        })
+    }, [igualAoBanco, leitura, conferencia, batchId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
 
     function limparLeitura() {
         pedido.current += 1
@@ -174,14 +193,12 @@ export function ConferirFaturaWireframe({
         setArquivoPdf(null)
         setSenhaPedida(null)
         setSenha("")
-        setDesmarcados(new Set())
     }
 
     function aplicar(lidos: ItemBanco[], l: Leitura) {
         setLeitura(l)
         setItens(prepararItens(lidos, transactions))
         setBatchId(crypto.randomUUID())
-        setDesmarcados(new Set())
     }
 
     async function gravarTotal(valor: number, source: "manual" | Origem) {
@@ -313,35 +330,6 @@ export function ConferirFaturaWireframe({
         aplicar(lidos, { origem: "csv", total: somaComEstorno(lidos), completa: true, diferenca: 0, ignoradas })
     }
 
-    async function onImportar() {
-        if (!leitura || selecionados.length === 0) return
-        setPendente("importar")
-        setAviso(null)
-        try {
-            const r = await importarLancamentos(
-                supabase,
-                { userId, workspaceId },
-                // A parcela com a data da compra entra nesta fatura, e não numa velha.
-                ajustarAoCiclo(selecionados, ciclo),
-                { tipo: "cartao", cardId: card.id },
-                leitura.origem === "pdf" ? "import_pdf" : "import_statement",
-                batchId,
-            )
-            if (!r.ok) {
-                setAviso({ erro: true, texto: r.erro })
-                return
-            }
-            await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["transactions"] })
-            await onMudou?.()
-            setAviso({ erro: false, texto: `${r.inseridos} lançamento(s) importado(s), marcados para revisar.` })
-        } catch {
-            // O mesmo lote, com os mesmos clientId, pode ser reenviado sem duplicar (Foco 3).
-            setAviso({ erro: true, texto: "A importação não terminou. Tente de novo: nada se duplica." })
-        } finally {
-            setPendente(null)
-        }
-    }
-
     // Num cartão com titular, a conferência é do titular e do dono (a RLS dos
     // totais e do PDF diz o mesmo).
     if (card.holder_user_id && card.holder_user_id !== userId && papel !== "owner") {
@@ -372,6 +360,17 @@ export function ConferirFaturaWireframe({
                     ))}
                 </select>
             </label>
+            {estado.tipo === "sem-total" ? null : (
+                <p>
+                    {estado.tipo === "aprovada"
+                        ? `Aprovada em ${formatYmdPtBr(transactionLocalYmd(estado.em) ?? estado.em)}`
+                        : estado.tipo === "mudou-depois"
+                          ? `Mudou depois da aprovação: diferença ${currencyBRL(estado.diferenca)}`
+                          : estado.tipo === "igual"
+                            ? "Igual ao banco"
+                            : `Diferença ${currencyBRL(estado.diferenca)}`}
+                </p>
+            )}
 
             <form className="flex flex-wrap items-center gap-2" onSubmit={onGravarTotal}>
                 <label className="flex items-center gap-2">
@@ -446,10 +445,6 @@ export function ConferirFaturaWireframe({
                             {pendente === "ia" ? "Lendo com IA…" : "Ler com IA"}
                         </button>
                     ) : null}
-                    <p>
-                        Banco {currencyBRL(conferencia.somaBanco)} · app {currencyBRL(conferencia.somaApp)} · diferença{" "}
-                        {currencyBRL(conferencia.diferenca)}
-                    </p>
                     <button
                         type="button"
                         className={botao}
@@ -465,60 +460,29 @@ export function ConferirFaturaWireframe({
                             <li key={p.app.id}>{linhaBanco(p.banco)}</li>
                         ))}
                     />
-                    <Lista
-                        titulo="Falta no app"
-                        linhas={faltam.map((i) => (
-                            <li key={i.clientId}>
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={!desmarcados.has(i.clientId)}
-                                        onChange={(e) =>
-                                            setDesmarcados((d) => {
-                                                const novo = new Set(d)
-                                                if (e.target.checked) novo.delete(i.clientId)
-                                                else novo.add(i.clientId)
-                                                return novo
-                                            })
-                                        }
-                                    />
-                                    {linhaBanco(i)}
-                                </label>
-                            </li>
-                        ))}
-                    />
-                    {faltam.length > 0 ? (
-                        <button
-                            type="button"
-                            className={botao}
-                            disabled={pendente != null || selecionados.length === 0}
-                            onClick={() => void onImportar()}
-                        >
-                            {pendente === "importar" ? "Importando…" : `Importar selecionados (${selecionados.length})`}
-                        </button>
-                    ) : null}
-                    <Lista
-                        titulo="Só no app"
-                        linhas={conferencia.soNoApp.map((a) => (
-                            <li key={a.id}>{linhaApp(a)}</li>
-                        ))}
-                    />
-                    <Lista
-                        titulo="Valor diferente"
-                        linhas={conferencia.valorDiferente.map((p) => (
-                            <li key={p.app.id}>
-                                banco {linhaBanco(p.banco)} / app {linhaApp(p.app)}
-                            </li>
-                        ))}
-                    />
-                    <Lista
-                        titulo="Parcela fora de sequência"
-                        linhas={conferencia.parcelaForaDeSequencia.map((p) => (
-                            <li key={p.app.id}>
-                                banco {linhaBanco(p.banco)} / app parcela {p.app.installment_sequence}
-                            </li>
-                        ))}
-                    />
+                    {igualAoBanco ? (
+                        <p role="status">
+                            100% igual ao banco · App {currencyBRL(conferencia.somaApp)} · Banco{" "}
+                            {currencyBRL(leitura.total ?? conferencia.somaBanco)}
+                        </p>
+                    ) : (
+                        <CorrigirFatura
+                            conferencia={conferencia}
+                            ciclo={ciclo}
+                            ctx={{
+                                userId,
+                                workspaceId,
+                                cardId: card.id,
+                                ciclo,
+                                source: leitura.origem === "pdf" ? "import_pdf" : "import_statement",
+                                batchId,
+                            }}
+                            onAplicado={async () => {
+                                await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["transactions"] })
+                                await onMudou?.()
+                            }}
+                        />
+                    )}
                 </div>
             ) : null}
 

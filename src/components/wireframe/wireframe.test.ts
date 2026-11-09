@@ -55,6 +55,25 @@ describe("fonte dos wireframes", () => {
     expect(fonte).toMatch(/set\w+\(\s*prepararItens\(/)
   })
 
+  it("corrigir fatura: aprovar todas ou uma por uma, com desfazer e as três decisões do só no app", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"), "tudo")
+    for (const texto of ["Aprovar todas", "Revisar uma por uma", "Corrigir", "Pular", "Desfazer", "Apagar", "Mudar forma de pagamento", "Manter"]) {
+      expect(fonte).toContain(texto)
+    }
+    expect(fonte).toContain("aplicarCorrecoes(")
+    expect(fonte).toContain("desfazerCorrecoes(")
+  })
+
+  it("conferir fatura: corrige pelo CorrigirFatura e aprova sozinha a fatura igual ao banco", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
+    expect(fonte).toMatch(/import\s*\{[^}]*\bCorrigirFatura\b[^}]*\}/)
+    expect(fonte).toMatch(/import\s*\{[^}]*\baprovarFatura\b[^}]*\}/)
+    expect(fonte).toContain("100% igual ao banco")
+    expect(fonte).toContain("useRef")
+    expect(fonte).toContain("estadoDaFatura(")
+    expect(fonte).not.toContain("Importar selecionados")
+  })
+
   it("o auditor pula a pasta dos wireframes", () => {
     expect(lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")).toContain("components/wireframe/")
   })
