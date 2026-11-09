@@ -1183,7 +1183,9 @@ declaração de `background-color` no trilho).
 
 - **`Dialog`**: `size` (`sm` 384 | **`md` 448** | `lg` 512 | `xl` 576 |
   `full`) e `layout` (`auto` | `fixed`, com o corpo em `DialogBody`). **Não
-  escreva `min-h-0 flex-1 overflow-y-auto` à mão.** A rampa do `DialogBody`
+  escreva `min-h-0 flex-1 overflow-y-auto` à mão.** No `layout="auto"` o
+  `DialogBody` sangra até o recuo da placa (`-mx-(--dialog-px)`): o conteúdo
+  alinha com o cabeçalho, em vez de recuar 48px. A rampa do `DialogBody`
   é `--dialog-body-fade-h` (24px; o painel de notificações declara 48), e a de
   baixo pode ser outra, `--dialog-body-fade-end-h` (por padrão, a mesma).
   - **O teto de altura é a janela** (`--dialog-max-h: calc(100dvh - 4rem)`):
