@@ -19,7 +19,7 @@ export type DestinoImportacao =
 
 export type ItemImportavel = ItemBanco & { clientId: string; categoryId: string | null }
 
-type SourceImportacao = "import_pdf" | "import_sheet" | "import_statement"
+export type SourceImportacao = "import_pdf" | "import_sheet" | "import_statement"
 
 const FATIA = 500
 
