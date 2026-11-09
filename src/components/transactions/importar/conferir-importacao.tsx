@@ -500,16 +500,18 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : null}
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
             {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
-                No telefone a fileira rola de lado. */}
+                No desktop as abas dividem a linha; no telefone, onde não cabem, a fileira rola de lado. */}
             <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
-                        <TabsList aria-label="Filtro" scrollable>
+                        <TabsList aria-label="Filtro" scrollable={celular}>
                             {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
                                 <TabsTrigger
                                     key={f.valor}
                                     value={f.valor}
                                     disabled={travado}
+                                    // A sobra da linha se divide a partir do rótulo de cada aba, para "Sem categoria" não apertar.
+                                    className="flex-auto"
                                     // A fileira rola de lado quando não cabe: a aba escolhida vem inteira à vista.
                                     onClick={(e) => {
                                         const aba = e.currentTarget
