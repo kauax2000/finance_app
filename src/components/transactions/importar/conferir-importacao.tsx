@@ -61,7 +61,7 @@ import {
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
@@ -499,33 +499,30 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <Caption>Não deu para conferir o que já existe.</Caption>
             ) : null}
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
-            <div className="flex items-center gap-2">
-                {/* O filtro é o resumo: cada opção traz a contagem, e a que pede atenção acende em aviso.
-                    No telefone a fileira rola de lado. */}
-                <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
-                    <ToggleGroup
-                        type="single"
-                        aria-label="Filtro"
-                        className="w-max"
-                        disabled={travado}
-                        value={imp.filtro}
-                        onValueChange={(v) => v && imp.setFiltro(v as FiltroConferencia)}
-                    >
-                        {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
-                            <ToggleGroupItem key={f.valor} value={f.valor}>
-                                {f.rotulo}
-                                {f.aviso && imp.contagens[f.valor] > 0 ? (
+            {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
+                No telefone a fileira rola de lado. */}
+            <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
+                <TabsList aria-label="Filtro" scrollable>
+                    {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
+                        <TabsTrigger
+                            key={f.valor}
+                            value={f.valor}
+                            disabled={travado}
+                            count={
+                                f.aviso && imp.contagens[f.valor] > 0 ? (
                                     <Badge size="xs" tone="warning" className="nums">
                                         {numberBR(imp.contagens[f.valor])}
                                     </Badge>
                                 ) : (
-                                    <span className="text-muted-foreground nums">{numberBR(imp.contagens[f.valor])}</span>
-                                )}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                </div>
-            </div>
+                                    numberBR(imp.contagens[f.valor])
+                                )
+                            }
+                        >
+                            {f.rotulo}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
             {imp.expandido ? (
                 <DataTable
                     aria-label="Lançamentos do arquivo"

@@ -162,8 +162,8 @@ describe("a conferência", () => {
         expect(conferir).toContain("rotulos.categoria")
     })
 
-    it("o filtro é um ToggleGroup, a categoria é Combobox, o já existe é um Badge, o dinheiro é MoneyDisplay", () => {
-        expect(conferir).toContain("<ToggleGroup")
+    it("o filtro é Tabs, a categoria é Combobox, o já existe é um Badge, o dinheiro é MoneyDisplay", () => {
+        expect(conferir).toContain("<Tabs ")
         for (const f of ["todos", "saidas", "entradas", "existem", "sem-categoria"]) expect(conferir).toContain(`"${f}"`)
         expect(conferir).toContain("<Combobox")
         expect(conferir).toMatch(/<Badge[^>]*tone="warning"[^>]*>\s*já existe/)
@@ -198,7 +198,7 @@ describe("a conferência", () => {
         expect(conferir).toContain("export function ConferirImportacao({ imp, travado = false }")
         expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Trazer/)
         expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Categoria de/)
-        expect(conferir).toMatch(/<ToggleGroup[\s\S]*?disabled=\{travado\}/)
+        expect(conferir).toMatch(/<TabsTrigger[\s\S]*?disabled=\{travado\}/)
         expect(conferir).toMatch(/disabled=\{travado \|\| itens\.length === 0\}/)
         expect(conferir).toMatch(/aria-expanded=\{imp\.expandido\}\s*disabled=\{travado\}/)
         expect(conferir).toContain("enableSelection={travado ? () => false : true}")
