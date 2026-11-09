@@ -18,7 +18,7 @@ import {
     DescriptionListItem,
     DescriptionTerm,
 } from "@/components/ui/description-list"
-import { Separator } from "@/components/ui/separator"
+import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -73,6 +73,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 
 import {
     type FiltroConferencia,
@@ -591,44 +592,47 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ) : null}
                 </>
             )}
-            {/* O resumo é um recibo, logo abaixo da lista: quantas entram, cada tipo com a quantidade,
-                o que ficou sem categoria e, depois do fio, o efeito no saldo. */}
+            {/* O resumo é um recibo recolhido: a linha mostra o saldo, e abrir mostra quantas entram,
+                cada tipo com a quantidade e o que ficou sem categoria. O diálogo não cresce sem pedir. */}
             <Item variant="muted" size="sm" className="rounded-surface" role="status">
                 <ItemContent>
-                <DescriptionList layout="inline" size="sm">
-                    <DescriptionListItem>
-                        <DescriptionTerm>Entram</DescriptionTerm>
-                        <DescriptionDetails>
-                            {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                        </DescriptionDetails>
-                    </DescriptionListItem>
-                    <DescriptionListItem>
-                        <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
-                        <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
-                    </DescriptionListItem>
-                    <DescriptionListItem>
-                        <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
-                        <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
-                    </DescriptionListItem>
-                    {resumo.semCategoria > 0 ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Sem categoria</DescriptionTerm>
-                            <DescriptionDetails className="text-warning-muted-foreground">{numberBR(resumo.semCategoria)}</DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                </DescriptionList>
-                <Separator className="my-2" />
-                <DescriptionList layout="inline" size="sm">
-                    <DescriptionListItem>
-                        <DescriptionTerm className="font-medium text-foreground">Saldo</DescriptionTerm>
-                        <DescriptionDetails
-                            size="lg"
-                            className={resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income"}
+                    <Collapsible>
+                        <CollapsibleRow
+                            trailing={
+                                <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
+                                    {signedCurrencyBRL(resumo.entradas - resumo.saidas)}
+                                </span>
+                            }
                         >
-                            {signedCurrencyBRL(resumo.entradas - resumo.saidas)}
-                        </DescriptionDetails>
-                    </DescriptionListItem>
-                </DescriptionList>
+                            Saldo
+                        </CollapsibleRow>
+                        <CollapsibleContent>
+                            <DescriptionList layout="inline" size="sm" className="pt-1">
+                                <DescriptionListItem>
+                                    <DescriptionTerm>Entram</DescriptionTerm>
+                                    <DescriptionDetails>
+                                        {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                                <DescriptionListItem>
+                                    <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
+                                    <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
+                                </DescriptionListItem>
+                                <DescriptionListItem>
+                                    <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
+                                    <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
+                                </DescriptionListItem>
+                                {resumo.semCategoria > 0 ? (
+                                    <DescriptionListItem>
+                                        <DescriptionTerm>Sem categoria</DescriptionTerm>
+                                        <DescriptionDetails className="text-warning-muted-foreground">
+                                            {numberBR(resumo.semCategoria)}
+                                        </DescriptionDetails>
+                                    </DescriptionListItem>
+                                ) : null}
+                            </DescriptionList>
+                        </CollapsibleContent>
+                    </Collapsible>
                 </ItemContent>
             </Item>
             <PorCategoria imp={imp} itens={porCategoria} onClose={() => setPorCategoria([])} />

@@ -125,8 +125,8 @@ describe("a conferência", () => {
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
-        // O resumo é um recibo, a região viva abaixo da lista: entram, cada tipo, sem categoria e o saldo depois do fio.
-        expect(conferir).toMatch(/<Item variant="muted" size="sm" className="rounded-surface" role="status">[\s\S]*?Entram[\s\S]*?<Separator[\s\S]*?Saldo/)
+        // O resumo é um recibo recolhido: a linha é o saldo, e abrir mostra entram, cada tipo e sem categoria.
+        expect(conferir).toMatch(/role="status">[\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
         expect(dialogo).not.toContain("Vão entrar")
         expect(conferir).not.toContain("opacity-60")
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
