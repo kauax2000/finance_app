@@ -575,7 +575,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     {podeExpandir ? (
                         <div className="flex items-center justify-center gap-1">
                             {grande ? (
-                                <Caption>{`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} ·`}</Caption>
+                                <Caption className="text-control-sm leading-5">{`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} ·`}</Caption>
                             ) : null}
                             <Button
                                 type="button"
