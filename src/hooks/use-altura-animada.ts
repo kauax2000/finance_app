@@ -2,6 +2,26 @@
 
 import * as React from "react"
 
+/** Os keyframes que animam a altura de um filho (Collapsible, Accordion). */
+export function animaAAltura(animationName: string): boolean {
+    return /^(accordion|collapsible)-(down|up)$/.test(animationName)
+}
+
+/**
+ * Há um filho animando a própria altura agora? Duas molas da mesma altura
+ * (a do filho e a da caixa) saíam em duas etapas; sem `getAnimations`
+ * (jsdom), vale o comportamento de antes.
+ */
+function filhoEmVoo(el: HTMLElement): boolean {
+    return (el.getAnimations?.({ subtree: true }) ?? []).some(
+        (a) =>
+            a instanceof CSSAnimation &&
+            animaAAltura(a.animationName) &&
+            a.playState === "running" &&
+            (a.effect as KeyframeEffect | null)?.target !== el,
+    )
+}
+
 /**
  * Anima a altura de uma caixa de altura automática quando o conteúdo dela
  * muda (o diálogo que troca de Despesa para Parcelada). CSS não transiciona de
@@ -37,7 +57,7 @@ export function useAlturaAnimada<T extends HTMLElement>() {
             ultima = alvo
             // Um filho que anda a própria altura (`data-altura-em-voo`) já leva a
             // caixa junto: duas animações da mesma altura sairiam em duas etapas.
-            if (el.querySelector("[data-altura-em-voo]")) return
+            if (el.querySelector("[data-altura-em-voo]") || filhoEmVoo(el)) return
             if (reduzido.matches || de === 0 || alvo === 0) return
             animando = true
             el.style.overflow = "clip"
