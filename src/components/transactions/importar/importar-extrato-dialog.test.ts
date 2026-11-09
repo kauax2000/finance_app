@@ -245,8 +245,8 @@ describe("rotuloDePorCategoria", () => {
     it("diz o efeito de cada escolha", () => {
         expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }])).toBe("Pôr Mercado em 5")
         expect(rotuloDePorCategoria([{ nome: null, n: 3 }])).toBe("Tirar a categoria de 3")
-        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: "Salário", n: 1 }])).toBe("Pôr Mercado em 5 e pôr Salário em 1")
-        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: null, n: 1 }])).toBe("Pôr Mercado em 5 e tirar a categoria de 1")
+        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: "Salário", n: 1 }])).toBe("Aplicar em 6")
+        expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: null, n: 1 }])).toBe("Aplicar em 6")
         expect(rotuloDePorCategoria([])).toBe("Pôr categoria")
     })
 })
