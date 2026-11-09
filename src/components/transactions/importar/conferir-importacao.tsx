@@ -12,7 +12,13 @@ import {
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { Badge } from "@/components/ui/badge"
-import { ChartSplit } from "@/components/ui/chart"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -79,10 +85,6 @@ import {
 /** O compacto mostra no máximo isto; acima, o "Ver os N" e o expandir. */
 const LIMITE = 6
 
-const CONFIG_DA_DIVISAO = {
-    saidas: { label: "Saídas", color: "var(--chart-expense)" },
-    entradas: { label: "Entradas", color: "var(--chart-income)" },
-}
 const SEM = "__sem__"
 
 const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true }[] = [
@@ -589,36 +591,44 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ) : null}
                 </>
             )}
-            {/* O resumo é um só, logo abaixo da lista: quantas entram, os valores e a divisão entre saídas e entradas. */}
-            <Item variant="muted" size="sm" className="rounded-surface">
+            {/* O resumo é um recibo, logo abaixo da lista: quantas entram, cada tipo com a quantidade,
+                o que ficou sem categoria e, depois do fio, o efeito no saldo. */}
+            <Item variant="muted" size="sm" className="rounded-surface" role="status">
                 <ItemContent>
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm text-muted-foreground" role="status">
-                        <span>
-                            Vão entrar{" "}
-                            <span className="font-medium text-foreground nums">
-                                {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                            </span>
-                        </span>
-                        <span>
-                            {resumo.saidas > 0 ? <span className="text-expense nums">{signedCurrencyBRL(-resumo.saidas)}</span> : null}
-                            {resumo.saidas > 0 && resumo.entradas > 0 ? " · " : null}
-                            {resumo.entradas > 0 ? <span className="text-income nums">{signedCurrencyBRL(resumo.entradas)}</span> : null}
-                        </span>
-                    </div>
-                    {resumo.saidas > 0 || resumo.entradas > 0 ? (
-                        <ChartSplit
-                            className="pt-2"
-                            label="Saídas e entradas marcadas"
-                            labels="legend"
-                            nameKey="parte"
-                            dataKey="valor"
-                            config={CONFIG_DA_DIVISAO}
-                            data={[
-                                { parte: "saidas", valor: resumo.saidas },
-                                { parte: "entradas", valor: resumo.entradas },
-                            ]}
-                        />
+                <DescriptionList layout="inline" size="sm">
+                    <DescriptionListItem>
+                        <DescriptionTerm>Entram</DescriptionTerm>
+                        <DescriptionDetails>
+                            {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                        </DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    {resumo.semCategoria > 0 ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Sem categoria</DescriptionTerm>
+                            <DescriptionDetails className="text-warning-muted-foreground">{numberBR(resumo.semCategoria)}</DescriptionDetails>
+                        </DescriptionListItem>
                     ) : null}
+                </DescriptionList>
+                <Separator className="my-2" />
+                <DescriptionList layout="inline" size="sm">
+                    <DescriptionListItem>
+                        <DescriptionTerm className="font-medium text-foreground">Saldo</DescriptionTerm>
+                        <DescriptionDetails
+                            size="lg"
+                            className={resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income"}
+                        >
+                            {signedCurrencyBRL(resumo.entradas - resumo.saidas)}
+                        </DescriptionDetails>
+                    </DescriptionListItem>
+                </DescriptionList>
                 </ItemContent>
             </Item>
             <PorCategoria imp={imp} itens={porCategoria} onClose={() => setPorCategoria([])} />

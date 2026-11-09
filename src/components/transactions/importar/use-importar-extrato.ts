@@ -124,6 +124,8 @@ export function resumoDaConferencia(
         entram: entram.length,
         saidas: soma(entram.filter((i) => !i.estorno)),
         entradas: soma(entram.filter((i) => i.estorno)),
+        nSaidas: entram.filter((i) => !i.estorno).length,
+        nEntradas: entram.filter((i) => i.estorno).length,
         existem: existentes.size,
         semCategoria: entram.filter((i) => semCategoria(i, escolhidas)).length,
         periodo: resumoDoLote(itens).periodo,
@@ -566,7 +568,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
 
     const resumo = lote
         ? resumoDaConferencia(lote.itens, marcadas, escolhidas, existentes)
-        : { total: 0, entram: 0, saidas: 0, entradas: 0, existem: 0, semCategoria: 0, periodo: null }
+        : { total: 0, entram: 0, saidas: 0, entradas: 0, nSaidas: 0, nEntradas: 0, existem: 0, semCategoria: 0, periodo: null }
 
     async function importar(): Promise<{ quantidade: number; loteId: string } | null> {
         if (!lote || !workspaceId || resumo.entram === 0) return null

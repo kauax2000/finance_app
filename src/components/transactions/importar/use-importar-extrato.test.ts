@@ -321,6 +321,8 @@ describe("a conferência", () => {
             entram: 4,
             saidas: 85,
             entradas: 200,
+            nSaidas: 3,
+            nEntradas: 1,
             existem: 1,
             semCategoria: 2,
             periodo: { de: "2026-10-01", ate: "2026-10-05" },
