@@ -39,38 +39,55 @@ export function useAlturaAnimada<T extends HTMLElement>() {
     React.useEffect(() => {
         if (!el) return
         const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)")
-        let ultima = el.offsetHeight
+        const gaveta = window.matchMedia("(max-width: 47.99rem)")
+        let ultima = { w: el.offsetWidth, h: el.offsetHeight }
         let animando = false
+        // As propriedades que andam agora: a caixa só se solta quando todas terminam.
+        const pendentes = new Set<string>()
 
         const limpar = () => {
             el.style.height = ""
+            el.style.width = ""
             el.style.overflow = ""
             el.style.transition = ""
+            pendentes.clear()
             animando = false
         }
 
         const observador = new ResizeObserver(() => {
             if (animando) return
-            const alvo = el.offsetHeight
-            if (alvo === ultima) return
+            const alvo = { w: el.offsetWidth, h: el.offsetHeight }
             const de = ultima
+            // Na gaveta (abaixo de 768px) a largura é do `vaul`: só a altura anda.
+            const andaLargura = !gaveta.matches && alvo.w !== de.w && de.w !== 0 && alvo.w !== 0
+            const andaAltura = alvo.h !== de.h && de.h !== 0 && alvo.h !== 0
             ultima = alvo
             // Um filho que anda a própria altura (`data-altura-em-voo`) já leva a
             // caixa junto: duas animações da mesma altura sairiam em duas etapas.
             if (el.querySelector("[data-altura-em-voo]") || filhoEmVoo(el)) return
-            if (reduzido.matches || de === 0 || alvo === 0) return
+            if (reduzido.matches || (!andaLargura && !andaAltura)) return
             animando = true
             el.style.overflow = "clip"
-            el.style.height = `${de}px`
+            // A que não mudou fica fixa em px durante a viagem.
+            el.style.height = `${de.h}px`
+            if (andaLargura) el.style.width = `${de.w}px`
             void el.offsetHeight
-            el.style.transition = "height var(--duration-spring) var(--ease-spring)"
-            el.style.height = `${alvo}px`
+            el.style.transition =
+                "height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"
+            el.style.height = `${alvo.h}px`
+            if (andaLargura) el.style.width = `${alvo.w}px`
+            if (andaAltura) pendentes.add("height")
+            if (andaLargura) pendentes.add("width")
+            // Só a largura mudou: a altura fixa em px não dispara transição.
+            if (!andaAltura) el.style.height = ""
         })
 
         // `ultima` fica no alvo: se o conteúdo mudou durante a viagem, soltar a
-        // altura faz o observador ver a diferença e animar a partir do alvo.
+        // caixa faz o observador ver a diferença e animar a partir do alvo.
         const fim = (e: TransitionEvent) => {
-            if (e.target === el && e.propertyName === "height") limpar()
+            if (e.target !== el) return
+            pendentes.delete(e.propertyName)
+            if (pendentes.size === 0) limpar()
         }
 
         observador.observe(el)

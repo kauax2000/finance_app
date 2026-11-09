@@ -29,3 +29,23 @@ describe("useAlturaAnimada — filho que anima a altura", () => {
     expect(fonte).toMatch(/\[data-altura-em-voo\]"\) \|\| filhoEmVoo\(el\)/)
   })
 })
+
+describe("useAlturaAnimada — a largura anda junto", () => {
+  const fonte = semComentarios(lerFonte("src/hooks/use-altura-animada.ts"))
+
+  it("lê a largura e escreve as duas propriedades na mesma mola", () => {
+    expect(fonte).toContain("offsetWidth")
+    expect(fonte).toContain(
+      '"height var(--duration-spring) var(--ease-spring), width var(--duration-spring) var(--ease-spring)"',
+    )
+  })
+
+  it("abaixo de 768px (a gaveta) só a altura anda", () => {
+    expect(fonte).toContain('"(max-width: 47.99rem)"')
+  })
+
+  it("o limpar solta a largura, e o fim só limpa quando as que andaram terminaram", () => {
+    expect(fonte).toContain('el.style.width = ""')
+    expect(fonte).toContain("pendentes")
+  })
+})
