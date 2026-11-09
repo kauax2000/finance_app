@@ -36,14 +36,14 @@
 
 **Interfaces:** a assinatura de `MapearColunas` e `comPapel` não muda.
 
-- [ ] **Step 1: testes de fonte que falham** (lendo `mapear-colunas.tsx` como o arquivo já faz com `ler(...)`):
+- [x] **Step 1: testes de fonte que falham** (lendo `mapear-colunas.tsx` como o arquivo já faz com `ler(...)`):
   - não contém `"Neste arquivo, −12,34 é:"` nem `FormRadioGroup`;
   - contém `"Valor negativo é"`, `TabsTrigger value="gasto"` com `Gasto` e `TabsTrigger value="entrada"` com `Entrada`;
   - contém `lerValorBr` e `text-expense` e `text-income`;
   - contém `"A linha com fundo não entra como lançamento."`;
   - o `SelectTrigger` tem `w-full`.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar/importar-extrato-dialog.test.ts` → FAIL.
-- [ ] **Step 3: implementar.**
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar/importar-extrato-dialog.test.ts` → FAIL.
+- [x] **Step 3: implementar.**
   - `SelectTrigger` com `className="w-full"`.
   - Coluna do Valor (`i === valor.valor`): `TableHead`/`TableCell` alinhados à direita com `.nums`. Nas linhas de dados, a cor sai de uma função local `tomDoValor(texto: string, negativoEhDespesa: boolean): "expense" | "income" | null` — `lerValorBr(texto)`; `null` ou `0` → `null`; `< 0` → `negativoEhDespesa ? "expense" : "income"`; `> 0` → o oposto. `expense` → `text-expense`, `income` → `text-income`, `null` → `text-muted-foreground` (como hoje).
   - Linha de cabeçalho do arquivo (`temCabecalho`): continua `font-medium`, ganha `bg-muted/50` na `TableRow`.
@@ -51,9 +51,9 @@
     1. `FormSwitch label="1ª linha é cabeçalho"` com `description`: ligado → `"A linha com fundo não entra como lançamento."`; desligado → `"Ligue se a 1ª linha tiver os nomes das colunas."`.
     2. Rótulo `"Valor negativo é"` à esquerda e, à direita, `Tabs value={negativoEhDespesa ? "gasto" : "entrada"} onValueChange=…` com `TabsList aria-label="Valor negativo é"` e os dois `TabsTrigger` (`Gasto`, `Entrada`), `disabled` repassado aos gatilhos. Sem `TabsContent`. Versão padrão do `Tabs` (sem `variant`/`size`).
   - Se `Card muted` + `ItemGroup divided` não montar as duas linhas com o fio do mockup, use o que o `npm run ds:catalog` oferecer de mais próximo e diga no relatório; nunca markup solto com classes de cartão à mão.
-- [ ] **Step 4:** a Verificação das Global Constraints passa (o `ds:audit` sem violação nova no arquivo).
-- [ ] **Step 5:** commit `feat(importar): o passo Colunas mostra o efeito do sinal e marca a linha de cabeçalho`.
+- [x] **Step 4:** a Verificação das Global Constraints passa (o `ds:audit` sem violação nova no arquivo).
+- [x] **Step 5:** commit `feat(importar): o passo Colunas mostra o efeito do sinal e marca a linha de cabeçalho`.
 
 ### Task 2: Conferir no navegador (controlador)
 
-- [ ] `http://localhost:3000/transactions` → Importar extrato com `teste-importacao.csv`, Ajustar na conferência para chegar ao passo Colunas (só ler; **nunca clicar Importar**): trocar Gasto/Entrada pinta os valores ao contrário; desligar o cabeçalho tira o fundo e a frase troca; print para o dono.
+- [x] `http://localhost:3000/transactions` → Importar extrato com `teste-importacao.csv`, Ajustar na conferência para chegar ao passo Colunas (só ler; **nunca clicar Importar**): trocar Gasto/Entrada pinta os valores ao contrário; desligar o cabeçalho tira o fundo e a frase troca; print para o dono.
