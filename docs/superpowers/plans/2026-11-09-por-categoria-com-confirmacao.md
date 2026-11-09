@@ -47,12 +47,12 @@
 - Modify: `src/components/transactions/importar/conferir-importacao.tsx` (`PorCategoria`)
 - Test: `src/components/transactions/importar/importar-extrato-dialog.test.ts` (as asserções do `PorCategoria`, perto das que citam `idsParaCategoria(itens, tipo, destino)`) e `use-importar-extrato.test.ts` se tocar no select.
 
-- [ ] **Step 1: testes de fonte que falham** (`conferir` = fonte de `conferir-importacao.tsx`): contém `"Vale para as linhas à vista."`, `` `Pôr ${`` , `"Tirar a categoria de"`, `ColorTile`, `CategoryIconPreview`, `SearchInput`, `"com categoria"`; não contém `ComboboxTrigger placeholder="Escolha uma categoria"`. E na fonte do hook: `"id,name,type,color,icon"`.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
-- [ ] **Step 3:** implementar o "Comportamento" acima. Reaproveite as peças do formulário (veja `CategoryPickerList` em `src/components/transactions/transaction-form-fields.tsx`: `ColorTile`, `CategoryIconPreview`, `normalizeCategoryIcon`, `FormPickerPopoverItem`). Se `FormPickerPopoverItem` só funcionar dentro do popover, use `Item` (`size="sm"`, `selected`, `asChild` num `<button type="button">`) — nada de linha desenhada à mão.
-- [ ] **Step 4:** a Verificação das Global Constraints passa.
-- [ ] **Step 5:** commit `feat(importar): Pôr categoria com a lista no diálogo e o efeito no botão`.
+- [x] **Step 1: testes de fonte que falham** (`conferir` = fonte de `conferir-importacao.tsx`): contém `"Vale para as linhas à vista."`, `` `Pôr ${`` , `"Tirar a categoria de"`, `ColorTile`, `CategoryIconPreview`, `SearchInput`, `"com categoria"`; não contém `ComboboxTrigger placeholder="Escolha uma categoria"`. E na fonte do hook: `"id,name,type,color,icon"`.
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
+- [x] **Step 3:** implementar o "Comportamento" acima. Reaproveite as peças do formulário (veja `CategoryPickerList` em `src/components/transactions/transaction-form-fields.tsx`: `ColorTile`, `CategoryIconPreview`, `normalizeCategoryIcon`, `FormPickerPopoverItem`). Se `FormPickerPopoverItem` só funcionar dentro do popover, use `Item` (`size="sm"`, `selected`, `asChild` num `<button type="button">`) — nada de linha desenhada à mão.
+- [x] **Step 4:** a Verificação das Global Constraints passa.
+- [x] **Step 5:** commit `feat(importar): Pôr categoria com a lista no diálogo e o efeito no botão`.
 
 ### Task 2: Conferir no navegador (controlador)
 
-- [ ] Na conferência (só ler; **nunca clicar Importar**): abrir Ações → Pôr categoria; a lista mostra cor e ícone; marcar uma categoria muda o botão; Cancelar não aplica; print para o dono.
+- [x] Na conferência (só ler; **nunca clicar Importar**): abrir Ações → Pôr categoria; a lista mostra cor e ícone; marcar uma categoria muda o botão; Cancelar não aplica; print para o dono.
