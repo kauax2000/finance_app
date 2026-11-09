@@ -102,7 +102,7 @@ describe("o diálogo de importar, versão C", () => {
 describe("a conferência", () => {
     it("o compacto mostra só 6 linhas (a tela cheia mostra todas), e só com mais de 6 aparecem o contador e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        expect(conferir).toContain("{imp.visiveis.slice(0, LIMITE).map((i) => (")
+        expect(conferir).toContain("{imp.visiveis.slice(0, LIMITE).map((i, n) => (")
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
         expect(conferir).toContain('<div className="hidden md:block md:w-44">')
@@ -127,9 +127,10 @@ describe("a conferência", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
         // O resumo é um recibo recolhido: a linha é o saldo, e abrir mostra entram, cada tipo e sem categoria.
-        expect(conferir).toMatch(/role="status">[\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
+        expect(conferir).toMatch(/role="status"[^>]*>[\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
         expect(dialogo).not.toContain("Vão entrar")
-        expect(conferir).not.toContain("opacity-60")
+        // A linha de fora não esmaece por opacidade; só a espera da releitura (lendo) usa 60%.
+        expect(conferir.match(/opacity-60/g)).toHaveLength(1)
         expect(conferir).toContain('marcada ? undefined : "text-muted-foreground"')
     })
 
@@ -206,7 +207,7 @@ describe("a conferência", () => {
         // O menu das ações em massa se chama Ações (o N já está em cada item).
         expect(conferir).toMatch(/<span>Ações<\/span>/)
         // O sinal ao contrário se desfaz num toque, ao lado do Ajustar.
-        expect(conferir).toMatch(/onClick=\{\(\) => void imp\.inverterSinal\(\)\}>\s*Inverter/)
+        expect(conferir).toMatch(/onClick=\{\(\) => void imp\.inverterSinal\(\)\}>\s*\{lendo \? <Spinner[^>]*\/> : null\}\s*Inverter/)
     })
 
     it("travado, nenhum controle da conferência muda o lote", () => {
@@ -248,5 +249,18 @@ describe("rotuloDePorCategoria", () => {
         expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: "Salário", n: 1 }])).toBe("Aplicar em 6")
         expect(rotuloDePorCategoria([{ nome: "Mercado", n: 5 }, { nome: null, n: 1 }])).toBe("Aplicar em 6")
         expect(rotuloDePorCategoria([])).toBe("Pôr categoria")
+    })
+})
+
+describe("Inverter responde e troca em fases", () => {
+    it("a leitura esmaece o conteúdo velho, trava o botão e mostra o Spinner", () => {
+        expect(conferir).toContain('imp.pendente === "lendo"')
+        expect(conferir).toContain("aria-busy")
+        expect(conferir).toContain("<Spinner")
+    })
+
+    it("o valor da linha troca no lugar e as contagens contam", () => {
+        expect(conferir).toContain("<TrocaSuave")
+        expect(conferir).toMatch(/count=\{[\s\S]*?<ContagemQueAnda/)
     })
 })

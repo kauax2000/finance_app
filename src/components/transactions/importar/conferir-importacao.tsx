@@ -72,6 +72,7 @@ import {
     ItemTitle,
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -80,7 +81,9 @@ import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
+import { TrocaSuave } from "@/lib/troca-suave"
 import { cn } from "@/lib/utils"
+import { ContagemQueAnda } from "./contagem-que-anda"
 
 import {
     type FiltroConferencia,
@@ -243,13 +246,12 @@ function Linha({
                 <div className="hidden md:block md:w-44">
                     <CategoriaDaLinha imp={imp} item={item} travado={travado} />
                 </div>
-                <MoneyDisplay
-                    // Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor.
-                    className="ms-auto text-end md:min-w-24"
-                    value={valorDe(item)}
-                    signed
-                    tone={item.estorno ? "income" : "expense"}
-                />
+                {/* Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor. A troca de sinal (Inverter) vira no lugar. */}
+                <span className="relative ms-auto text-end md:min-w-24">
+                    <TrocaSuave chave={`${item.estorno}:${valorDe(item)}`}>
+                        <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
+                    </TrocaSuave>
+                </span>
             </div>
         </Item>
     )
@@ -468,6 +470,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
+    // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
+    const lendo = imp.pendente === "lendo"
+    const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
     const podeExpandir = resumo.total > LIMITE
     const botaoExpandir = (
         <Button
@@ -561,7 +566,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
             {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
                 No desktop as abas dividem a linha; no telefone, onde não cabem, a fileira rola de lado. */}
-            <div className="flex items-center gap-2">
+            <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
                 <div className="min-w-0 flex-1">
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
                         <TabsList aria-label="Filtro" scrollable={celular}>
@@ -580,10 +585,10 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                     count={
                                         f.aviso && imp.contagens[f.valor] > 0 ? (
                                             <Badge size="xs" tone="warning" className="nums">
-                                                {numberBR(imp.contagens[f.valor])}
+                                                <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
                                             </Badge>
                                         ) : (
-                                            numberBR(imp.contagens[f.valor])
+                                            <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
                                         )
                                     }
                                 >
@@ -604,7 +609,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </ItemContent>
                     <ItemActions>
                         {/* O sinal ao contrário do destino é o engano mais comum: um toque refaz a leitura. */}
-                        <Button type="button" variant="tertiary" size="sm" disabled={travado} onClick={() => void imp.inverterSinal()}>
+                        <Button type="button" variant="tertiary" size="sm" disabled={travado || lendo} onClick={() => void imp.inverterSinal()}>
+                            {lendo ? <Spinner data-icon="inline-start" /> : null}
                             Inverter
                         </Button>
                         <Button
@@ -641,11 +647,12 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : (
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
-                    <ItemGroup variant="divided">
+                    <ItemGroup variant="divided" className={esmaece} aria-busy={lendo}>
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
-                        {imp.visiveis.slice(0, LIMITE).map((i) => (
+                        {imp.visiveis.slice(0, LIMITE).map((i, n) => (
                             <Linha
-                                key={i.clientId}
+                                // O `clientId` nasce de novo a cada leitura: a posição segura a linha, para o valor trocar no lugar.
+                                key={n}
                                 imp={imp}
                                 item={i}
                                 travado={travado}
@@ -678,14 +685,14 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             )}
             {/* O resumo é um recibo recolhido: a linha mostra o saldo, e abrir mostra quantas entram,
                 cada tipo com a quantidade e o que ficou sem categoria. O diálogo não cresce sem pedir. */}
-            <Item variant="muted" size="sm" className="rounded-surface" role="status">
+            <Item variant="muted" size="sm" className={cn("rounded-surface", esmaece)} role="status" aria-busy={lendo}>
                 <ItemContent>
                     <Collapsible>
                         <CollapsibleRow
                             className="[&_[data-slot=collapsible-row-label]]:no-underline"
                             trailing={
                                 <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
-                                    {signedCurrencyBRL(resumo.entradas - resumo.saidas)}
+                                    <ContagemQueAnda value={resumo.entradas - resumo.saidas} formatar={signedCurrencyBRL} />
                                 </span>
                             }
                         >
