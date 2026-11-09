@@ -126,10 +126,20 @@ function nomeDaCategoria(imp: ImportarExtrato, item: ItemImportavel) {
     return id ? imp.previa?.nomeDaCategoria.get(id) : nova ? `${nova} (nova)` : undefined
 }
 
+/** O ladrilho da categoria (cor e ícone), o mesmo do formulário de lançamento. */
+function LadrilhoDaCategoria({ categoria }: { categoria: { color?: string | null; icon?: string | null } }) {
+    return (
+        <ColorTile size="xs" color={categoria.color} className="shrink-0">
+            <CategoryIconPreview name={normalizeCategoryIcon(categoria.icon)} />
+        </ColorTile>
+    )
+}
+
 /** A categoria de uma linha: a sugerida ou a da planilha já vem escolhida. */
 function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: ItemImportavel; travado: boolean }) {
     const id = imp.categoriaDe(item.clientId)
     const nome = nomeDaCategoria(imp, item)
+    const atual = id ? imp.previa?.categorias.find((c) => c.id === id) : undefined
     return (
         <Combobox
             value={id ?? ""}
@@ -142,7 +152,9 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
                     disabled={travado}
                     aria-label={`Categoria de ${item.descricao}`}
                 >
-                    <ComboboxValue placeholder="Sem categoria">{nome}</ComboboxValue>
+                    <ComboboxValue placeholder="Sem categoria" media={atual ? <LadrilhoDaCategoria categoria={atual} /> : undefined}>
+                        {nome}
+                    </ComboboxValue>
                 </ComboboxTrigger>
             </ComboboxField>
             <ComboboxContent>
@@ -150,14 +162,15 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
                 <ComboboxList>
                     <ComboboxEmpty>Nenhuma categoria com esse nome.</ComboboxEmpty>
                     <ComboboxGroup>
-                        {(imp.previa?.categoriasDo(item) ?? []).map((c) => (
-                            <ComboboxItem key={c.id} value={c.id}>
-                                {c.name}
-                            </ComboboxItem>
-                        ))}
+                        {/* A ausência abre a lista: o `variant="none"` traz o fio embaixo dele. */}
                         <ComboboxItem value={SEM} variant="none">
                             Sem categoria
                         </ComboboxItem>
+                        {(imp.previa?.categoriasDo(item) ?? []).map((c) => (
+                            <ComboboxItem key={c.id} value={c.id} media={<LadrilhoDaCategoria categoria={c} />}>
+                                {c.name}
+                            </ComboboxItem>
+                        ))}
                     </ComboboxGroup>
                 </ComboboxList>
             </ComboboxContent>
@@ -362,9 +375,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                                 {achadas.map((c) => (
                                     <li key={c.id}>
                                         <FormPickerPopoverItem selected={escolhida === c.id} onClick={() => marcar(c.id)}>
-                                            <ColorTile size="xs" color={c.color} className="shrink-0">
-                                                <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
-                                            </ColorTile>
+                                            <LadrilhoDaCategoria categoria={c} />
                                             <span className="min-w-0 truncate">{c.name}</span>
                                             {escolhida === c.id ? <CheckIcon className="ms-auto shrink-0" /> : null}
                                         </FormPickerPopoverItem>
