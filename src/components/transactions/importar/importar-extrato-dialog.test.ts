@@ -116,7 +116,7 @@ describe("a conferência", () => {
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
-        expect(conferir).toMatch(/grande \? \([\s\S]*?Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(imp\.visiveis\.length\)\}/)
+        expect(conferir).toMatch(/grande \? \(\s*<Caption>\{`Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(imp\.visiveis\.length\)\} ·`[\s\S]*?<span>Ver todos<\/span>/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/aria-label=\{imp\.expandido \? "Recolher a lista" : "Expandir a lista"\}/)
         expect(conferir).toContain("aria-expanded={imp.expandido}")

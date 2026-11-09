@@ -556,9 +556,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : (
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
-                    {/* O expandir paira no canto de cima das linhas, à direita. */}
-                    <div className="relative">
-                    {podeExpandir ? <div className="absolute end-0 top-1 z-10">{botaoExpandir}</div> : null}
                     <ItemGroup variant="divided">
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i) => (
@@ -571,11 +568,24 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                             />
                         ))}
                     </ItemGroup>
-                    </div>
-                    {grande ? (
-                        <Caption className="text-center">
-                            {`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} · abra em tela cheia para ver todos`}
-                        </Caption>
+                    {/* O contador e o "Ver todos" (que abre a tela cheia) dividem a linha de baixo, centrados. */}
+                    {podeExpandir ? (
+                        <div className="flex items-center justify-center gap-1">
+                            {grande ? (
+                                <Caption>{`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} ·`}</Caption>
+                            ) : null}
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                size="sm"
+                                aria-expanded={false}
+                                disabled={travado}
+                                onClick={() => imp.setExpandido(true)}
+                            >
+                                <ArrowsPointingOutIcon data-icon="inline-start" />
+                                <span>Ver todos</span>
+                            </Button>
+                        </div>
                     ) : null}
                 </>
             )}
