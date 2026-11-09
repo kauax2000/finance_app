@@ -60,7 +60,8 @@ export function MapearColunas({
 }) {
     const largura = Math.max(0, ...linhas.slice(0, 6).map((l) => l.length))
     const cabecalho = valor.temCabecalho ? linhas[0] : undefined
-    const dados = linhas.slice(valor.temCabecalho ? 1 : 0, (valor.temCabecalho ? 1 : 0) + 5)
+    // A prévia mostra sempre as 6 primeiras linhas do arquivo: ligar o cabeçalho só muda o papel da 1ª, a tabela não encolhe.
+    const dados = linhas.slice(valor.temCabecalho ? 1 : 0, 6)
     const colunas = Array.from({ length: largura }, (_, i) => i)
     const nomeDa = (i: number) => cabecalho?.[i]?.trim() || `Coluna ${i + 1}`
 
