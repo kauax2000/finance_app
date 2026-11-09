@@ -9,6 +9,7 @@ export type LancamentoParaConferir = {
     amount: number
     type: "expense" | "income"
     installment_sequence: number | null
+    subscription_id?: string | null
 }
 
 type Par = { banco: ItemBanco; app: LancamentoParaConferir }

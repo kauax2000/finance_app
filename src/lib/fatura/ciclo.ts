@@ -13,6 +13,8 @@ export type CicloFatura = { inicio: string; fechamento: string }
 
 const JANELA_DIAS = 3
 
+export type ConferenciaNoCiclo<T extends ItemBanco> = ReturnType<typeof conferirNoCiclo<T>>
+
 /**
  * Leva a data de cada item para dentro do ciclo. A fatura imprime a parcela com a
  * data da compra ("05/03 LOJA 07/10"): importada assim, ela cairia numa fatura
