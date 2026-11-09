@@ -300,7 +300,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
-            <DialogContent size="sm" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,30rem)]">
+            <DialogContent size="md" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,30rem)]">
                 <DialogHeader>
                     <DialogTitle>Pôr categoria</DialogTitle>
                     <DialogDescription>
@@ -337,10 +337,10 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                         <div className="px-(--dialog-px) pt-3">
                             <Tabs value={aba} onValueChange={(v) => setAba(v as TipoDeCategoria)}>
                                 <TabsList aria-label="Tipo da categoria" stretch>
-                                    <TabsTrigger value="expense" count={escolhas.expense != null ? <BadgeDot /> : undefined}>
+                                    <TabsTrigger value="expense" count={escolhas.expense != null ? <BadgeDot className="[--badge-dot:var(--foreground)]" /> : undefined}>
                                         Despesas
                                     </TabsTrigger>
-                                    <TabsTrigger value="income" count={escolhas.income != null ? <BadgeDot /> : undefined}>
+                                    <TabsTrigger value="income" count={escolhas.income != null ? <BadgeDot className="[--badge-dot:var(--foreground)]" /> : undefined}>
                                         Receitas
                                     </TabsTrigger>
                                 </TabsList>
