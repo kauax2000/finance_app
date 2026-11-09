@@ -100,21 +100,53 @@ describe("aplicarCorrecoes", () => {
         expect(r.ok && r.lote.batchId).toBe("lote1")
     })
 
+    it("falha na assinatura devolve os lançamentos e só as assinaturas já escritas", async () => {
+        const f = dbFalso({ transactions: [linha("g"), linha("h")], workspace_subscriptions: [{ id: "s1", amount: 25 }, { id: "s2", amount: 30 }] }, 4)
+        const cs: Correcao[] = [
+            { ...valor, assinaturaId: "s1", para: 19.9 },
+            { ...valor, id: "v:h", appId: "h", assinaturaId: "s2", para: 9.9 },
+        ]
+        const r = await aplicarCorrecoes(f.db, ctx, cs, semDecisoes)
+        expect(r.ok).toBe(false)
+        // Escritas: g, h, s1, s2 (falha). A volta: g, h e s1, nunca s2.
+        const volta = f.escritasDe("workspace_subscriptions", "update").slice(2)
+        expect(volta.map((c) => c.filtros.find(([k]) => k === "id")![1])).toEqual(["s1"])
+        expect(volta[0].valores).toEqual({ amount: 25 })
+        expect(f.escritasDe("transactions", "update").slice(2)).toHaveLength(2)
+    })
+
+    it("apagar o lançamento de outra pessoa é recusado antes de qualquer escrita", async () => {
+        const f = dbFalso({ transactions: [{ ...linha("g") }, { ...linha("a"), user_id: "u2" }] })
+        const r = await aplicarCorrecoes(f.db, ctx, [valor], new Map([["a", "apagar"]]))
+        expect(r).toEqual({ ok: false, erro: expect.stringContaining("outra pessoa"), desfeito: true })
+        expect(f.chamadas.filter((c) => c.op !== "select")).toHaveLength(0)
+    })
+
+    it("apagar o próprio lançamento segue", async () => {
+        const f = dbFalso({ transactions: [{ ...linha("a"), user_id: "u1" }] })
+        const r = await aplicarCorrecoes(f.db, ctx, [], new Map([["a", "apagar"]]))
+        expect(r.ok).toBe(true)
+        expect(f.escritasDe("transactions", "delete")).toHaveLength(1)
+    })
+
     it("toda escrita filtra pela carteira", async () => {
-        const f = dbFalso({ transactions: [linha("g"), linha("a")] })
+        const f = dbFalso({ transactions: [linha("g"), { ...linha("a"), user_id: "u1" }] })
         await aplicarCorrecoes(f.db, ctx, [valor], new Map([["a", "apagar"]]))
         const escritas = f.chamadas.filter((c) => c.op === "update" || c.op === "delete")
         expect(escritas.length).toBe(2)
         for (const c of escritas) expect(c.filtros).toContainEqual(["workspace_id", "w1"])
     })
 
-    it("falha no meio desfaz o que já foi feito", async () => {
-        const f = dbFalso({ transactions: [linha("a"), linha("b"), linha("c")] }, 3)
+    it("falha no meio desfaz só o que já foi escrito", async () => {
+        const f = dbFalso({ transactions: [linha("a"), linha("b"), linha("c")] }, 2)
         const cs: Correcao[] = ["a", "b", "c"].map((id) => ({ ...valor, id: `v:${id}`, appId: id }))
         const r = await aplicarCorrecoes(f.db, ctx, cs, semDecisoes)
         expect(r.ok).toBe(false)
-        const volta = f.escritasDe("transactions", "update").slice(3)
-        expect(volta.map((c) => c.filtros.find(([k]) => k === "id")![1]).sort()).toEqual(["a", "b", "c"])
+        if (r.ok) return
+        expect(r.desfeito).toBe(true)
+        // b falhou e c nem foi tentado: devolver os dois pisaria numa edição de outra pessoa.
+        const volta = f.escritasDe("transactions", "update").slice(2)
+        expect(volta.map((c) => c.filtros.find(([k]) => k === "id")![1])).toEqual(["a"])
         for (const c of volta) expect(c.valores).toEqual({ date: "2026-09-25T12:00:00Z", description: "Gasolina", amount: 200, installment_sequence: null, payment_method: "credit_card", payment_credit_card_id: "card1" })
     })
 })
@@ -156,7 +188,7 @@ describe("falha e desfazer", () => {
 
     it("desfazer devolve os anexos do apagado, depois do lançamento", async () => {
         const anexo = { id: "an1", transaction_id: "a", workspace_id: "w1", path: "x.pdf" }
-        const f = dbFalso({ transactions: [linha("a")], attachments: [anexo] })
+        const f = dbFalso({ transactions: [{ ...linha("a"), user_id: "u1" }], attachments: [anexo] })
         const r = await aplicarCorrecoes(f.db, ctx, [], new Map([["a", "apagar"]]))
         expect(r.ok).toBe(true)
         if (!r.ok) return

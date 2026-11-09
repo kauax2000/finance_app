@@ -49,7 +49,8 @@ const linhaApp = (a: LancamentoParaConferir) =>
 export function CorrigirFatura(p: {
     conferencia: ConferenciaNoCiclo<ItemImportavel>
     ciclo: CicloFatura
-    ctx: ContextoDeCorrecao
+    /** Sem `batchId`: cada aplicação gera o seu, e o Desfazer cobre só o último lote. */
+    ctx: Omit<ContextoDeCorrecao, "batchId">
     /** O lote sobe a quem chama: o Desfazer fica lá, e sobrevive à fatura que ficou igual. */
     onAplicado: (lote: LoteAplicado, aplicadas: number) => Promise<void>
     /** Quem chama está gravando (o desfazer): os botões daqui esperam. */
@@ -86,7 +87,7 @@ export function CorrigirFatura(p: {
         setPendente(true)
         setErro(null)
         try {
-            const r = await aplicarCorrecoes(supabase, ctx, lista, decisoes())
+            const r = await aplicarCorrecoes(supabase, { ...ctx, batchId: crypto.randomUUID() }, lista, decisoes())
             // Sem `desfeito`, o texto já diz que o desfazer falhou.
             if (!r.ok) return setErro(r.erro)
             setFila(null)
@@ -104,10 +105,13 @@ export function CorrigirFatura(p: {
         const marcar = (e: Escolha) => setEscolhas((s) => ({ ...s, [a.id]: e }))
         return (
             <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-1">
-                    <input type="radio" name={nome} checked={escolhas[a.id] === "apagar"} onChange={() => marcar("apagar")} />
-                    Apagar
-                </label>
+                {/* O lançamento de outra pessoa não volta no Desfazer (RLS do insert): só o próprio se apaga. */}
+                {a.user_id === ctx.userId ? (
+                    <label className="flex items-center gap-1">
+                        <input type="radio" name={nome} checked={escolhas[a.id] === "apagar"} onChange={() => marcar("apagar")} />
+                        Apagar
+                    </label>
+                ) : null}
                 <label className="flex items-center gap-1">
                     <input type="radio" name={nome} checked={escolhas[a.id] === "mudar"} onChange={() => marcar("mudar")} />
                     Mudar forma de pagamento

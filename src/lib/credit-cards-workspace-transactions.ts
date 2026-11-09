@@ -263,9 +263,8 @@ export async function fetchStatementTotals(
 ): Promise<CreditCardStatementTotal[]> {
     const { data, error } = await supabase
         .from("credit_card_statement_totals")
-        .select(
-            "id,workspace_id,credit_card_id,statement_close_date,bank_total,source,created_by,created_at,updated_at"
-        )
+        // `*`: approved_at/approved_by só existem depois da migração 20261109120000; lista fixa os escondia.
+        .select("*")
         .eq("workspace_id", workspaceId)
     // Antes da migração aplicada, a tabela não existe: vale o calculado.
     if (error && isPostgrestRelationMissingError(error)) return []

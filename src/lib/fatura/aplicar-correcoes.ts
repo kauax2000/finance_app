@@ -69,12 +69,13 @@ export async function aplicarCorrecoes(
         else patch(id, { payment_method: d.forma, payment_credit_card_id: null })
     }
 
-    // 1. ler antes de escrever
+    // 1. ler antes de escrever; o lote só guarda o que já foi escrito, e a falha devolve só isso.
     const ids = [...patches.keys()]
+    let antes: LoteAplicado["antes"] = []
     if (ids.length) {
         const { data, error } = await db.from("transactions").select(COLUNAS).eq("workspace_id", ctx.workspaceId).in("id", ids)
         if (error) return falhar(msg(error, "Não foi possível ler os lançamentos."))
-        lote.antes = (data ?? []) as LoteAplicado["antes"]
+        antes = (data ?? []) as LoteAplicado["antes"]
     }
     let apagados: Array<Record<string, unknown>> = []
     let anexos: Array<Record<string, unknown>> = []
@@ -82,25 +83,32 @@ export async function aplicarCorrecoes(
         const { data, error } = await db.from("transactions").select("*").eq("workspace_id", ctx.workspaceId).in("id", apagar)
         if (error) return falhar(msg(error, "Não foi possível ler os lançamentos."))
         apagados = (data ?? []) as typeof apagados
+        // O desfazer reinsere o apagado, e a RLS só deixa inserir com user_id = auth.uid().
+        if (apagados.some((a) => a.user_id !== ctx.userId)) {
+            return { ok: false, erro: "Só dá para apagar lançamentos seus; o de outra pessoa não voltaria no desfazer.", desfeito: true }
+        }
         const an = await db.from("attachments").select("*").eq("workspace_id", ctx.workspaceId).in("transaction_id", apagar)
         if (an.error) return falhar(msg(an.error, "Não foi possível ler os anexos."))
         anexos = (an.data ?? []) as typeof anexos
     }
+    let assinaturasAntes: LoteAplicado["assinaturas"] = []
     if (assinaturas.size) {
         const { data, error } = await db.from("workspace_subscriptions").select("id, amount").eq("workspace_id", ctx.workspaceId).in("id", [...assinaturas.keys()])
         if (error) return falhar(msg(error, "Não foi possível ler as assinaturas."))
-        lote.assinaturas = (data ?? []) as LoteAplicado["assinaturas"]
+        assinaturasAntes = (data ?? []) as LoteAplicado["assinaturas"]
     }
 
     // 2. um update por lançamento
     for (const [id, p] of patches) {
         const { error } = await db.from("transactions").update(p).eq("id", id).eq("workspace_id", ctx.workspaceId)
         if (error) return falhar(msg(error, "Não foi possível corrigir os lançamentos."))
+        lote.antes.push(...antes.filter((a) => a.id === id))
     }
     // 3. assinaturas
     for (const [id, amount] of assinaturas) {
         const { error } = await db.from("workspace_subscriptions").update({ amount }).eq("id", id).eq("workspace_id", ctx.workspaceId)
         if (error) return falhar(msg(error, "Não foi possível corrigir as assinaturas."))
+        lote.assinaturas.push(...assinaturasAntes.filter((a) => a.id === id))
     }
     // 4. apagar
     if (apagar.length) {

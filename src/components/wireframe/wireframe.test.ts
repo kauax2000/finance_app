@@ -85,6 +85,22 @@ describe("fonte dos wireframes", () => {
     expect(fonte).not.toContain("Importar selecionados")
   })
 
+  it("corrigir fatura: Apagar só aparece no lançamento da própria pessoa", () => {
+    const corrigir = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"), "tudo")
+    const radios = corrigir.slice(corrigir.indexOf("function radios("), corrigir.indexOf("Mudar forma de pagamento"))
+    expect(radios).toMatch(/a\.user_id === ctx\.userId \?/)
+    const conferir = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
+    expect(conferir).toMatch(/user_id: t\.user_id/)
+  })
+
+  it("corrigir fatura: um lote novo por aplicação, e a aprovação automática segue a leitura", () => {
+    const corrigir = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"), "tudo")
+    expect(corrigir).toMatch(/aplicarCorrecoes\(supabase, \{ \.\.\.ctx, batchId: crypto\.randomUUID\(\) \}/)
+    const conferir = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
+    expect(conferir).not.toContain("batchId")
+    expect(conferir).toContain("aprovadaNaLeitura.current === leituraId")
+  })
+
   it("o auditor pula a pasta dos wireframes", () => {
     expect(lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")).toContain("components/wireframe/")
   })

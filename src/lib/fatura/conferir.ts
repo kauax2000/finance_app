@@ -10,6 +10,7 @@ export type LancamentoParaConferir = {
     type: "expense" | "income"
     installment_sequence: number | null
     subscription_id?: string | null
+    user_id?: string | null // quem lançou: Apagar só vale para o próprio
 }
 
 type Par = { banco: ItemBanco; app: LancamentoParaConferir }

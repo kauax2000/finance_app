@@ -130,8 +130,9 @@ export function ConferirFaturaWireframe({
     const [leitura, setLeitura] = useState<Leitura | null>(null)
     // O clientId nasce uma vez por leitura e fica aqui: repetir o envio não duplica (Foco 3).
     const [itens, setItens] = useState<ItemImportavel[]>([])
-    const [batchId, setBatchId] = useState("")
-    // A leitura (pelo batchId) já aprovada: a aprovação automática roda uma vez por leitura.
+    // A leitura tem um id próprio; cada aplicação de correções gera o seu lote no CorrigirFatura.
+    const [leituraId, setLeituraId] = useState("")
+    // A leitura (pelo leituraId) já aprovada: a aprovação automática roda uma vez por leitura.
     const aprovadaNaLeitura = useRef<string | null>(null)
     // O lote das correções aplicadas mora aqui: o Desfazer fica enquanto a pessoa está na tela,
     // também quando a fatura vira "100% igual" e o CorrigirFatura sai.
@@ -158,6 +159,7 @@ export function ConferirFaturaWireframe({
                         type: t.type,
                         installment_sequence: t.installment_sequence ?? null,
                         subscription_id: t.subscription_id ?? null,
+                        user_id: t.user_id,
                     },
                 ]
             }),
@@ -172,8 +174,8 @@ export function ConferirFaturaWireframe({
     const estado = estadoDaFatura(totalDoCiclo(totais.data, card.id, ciclo.fechamento), somaDoCiclo(doApp, ciclo))
 
     useEffect(() => {
-        if (!igualAoBanco || !leitura || !conferencia || aprovadaNaLeitura.current === batchId) return
-        aprovadaNaLeitura.current = batchId
+        if (!igualAoBanco || !leitura || !conferencia || aprovadaNaLeitura.current === leituraId) return
+        aprovadaNaLeitura.current = leituraId
         // Trocar de ciclo ou de arquivo muda o pedido: a resposta velha é jogada fora.
         const meu = pedido.current
         void aprovarFatura(supabase, {
@@ -195,7 +197,7 @@ export function ConferirFaturaWireframe({
             .catch(() => {
                 if (meu === pedido.current) setAviso({ erro: true, texto: "Não foi possível aprovar a fatura." })
             })
-    }, [igualAoBanco, leitura, conferencia, batchId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
+    }, [igualAoBanco, leitura, conferencia, leituraId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
 
     function limparLeitura() {
         pedido.current += 1
@@ -233,7 +235,7 @@ export function ConferirFaturaWireframe({
     function aplicar(lidos: ItemBanco[], l: Leitura) {
         setLeitura(l)
         setItens(prepararItens(lidos, transactions))
-        setBatchId(crypto.randomUUID())
+        setLeituraId(crypto.randomUUID())
     }
 
     async function gravarTotal(valor: number, source: "manual" | Origem) {
@@ -510,7 +512,6 @@ export function ConferirFaturaWireframe({
                                 cardId: card.id,
                                 ciclo,
                                 source: leitura.origem === "pdf" ? "import_pdf" : "import_statement",
-                                batchId,
                             }}
                             ocupado={pendente != null}
                             onAplicado={async (lote, aplicadas) => {

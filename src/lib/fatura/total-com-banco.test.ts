@@ -60,6 +60,9 @@ describe("consumidores do total do banco", () => {
     it("a leitura e a chave de React Query combinadas", () => {
         const leitura = semComentarios(lerFonte("src/lib/credit-cards-workspace-transactions.ts"))
         expect(leitura).toMatch(/export async function fetchStatementTotals\(\s*workspaceId: string/)
+        // Coluna fixa escondia approved_at atrás do cast: o "Aprovada em" nunca aparecia.
+        const corpo = leitura.slice(leitura.indexOf("export async function fetchStatementTotals("))
+        expect(corpo.slice(0, corpo.indexOf("export ", 10))).toContain('.select("*")')
         const chaves = semComentarios(lerFonte("src/lib/queries/keys.ts"))
         expect(chaves).toMatch(/\["credit-card-statement-totals", workspaceId\]/)
     })
