@@ -384,6 +384,19 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
     const podeExpandir = resumo.total > LIMITE
+    const botaoExpandir = (
+        <Button
+            type="button"
+            variant={imp.expandido ? "tertiary" : "floating"}
+            size="icon-md"
+            aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
+            aria-expanded={imp.expandido}
+            disabled={travado}
+            onClick={() => imp.setExpandido(!imp.expandido)}
+        >
+            {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
+        </Button>
+    )
 
     const colunas: DataTableColumnDef<ItemImportavel>[] = [
         col.date({ id: "data", header: "Data", accessor: (i) => i.data }),
@@ -448,26 +461,15 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ))}
                 </div>
             ) : null}
-            {/* As ações da lista moram acima dela, à direita; o resumo fica embaixo. */}
-            <div className="flex items-center justify-end gap-2">
-                {/* Com CSV as Ações moram na faixa das Colunas; sem ela (OFX), ficam aqui. */}
-                {imp.expandido || imp.csv ? null : (
-                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
-                )}
-                {podeExpandir ? (
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="icon-md"
-                        aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
-                        aria-expanded={imp.expandido}
-                        disabled={travado}
-                        onClick={() => imp.setExpandido(!imp.expandido)}
-                    >
-                        {imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
-                    </Button>
-                ) : null}
-            </div>
+            {/* Sem a faixa das Colunas (OFX), as Ações e, na tela cheia, o recolher moram acima da lista. */}
+            {(!imp.csv && !imp.expandido) || (imp.expandido && podeExpandir) ? (
+                <div className="flex items-center justify-end gap-2">
+                    {imp.expandido || imp.csv ? null : (
+                        <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
+                    )}
+                    {imp.expandido ? botaoExpandir : null}
+                </div>
+            ) : null}
             {!imp.existentesConferidos ? (
                 <Caption>Não deu para conferir o que já existe.</Caption>
             ) : null}
@@ -554,6 +556,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : (
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
+                    {/* O expandir paira no canto de cima das linhas, à direita. */}
+                    <div className="relative">
+                    {podeExpandir ? <div className="absolute end-0 top-1 z-10">{botaoExpandir}</div> : null}
                     <ItemGroup variant="divided">
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
                         {imp.visiveis.slice(0, LIMITE).map((i) => (
@@ -566,6 +571,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                             />
                         ))}
                     </ItemGroup>
+                    </div>
                     {grande ? (
                         <Caption className="text-center">
                             {`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} · abra em tela cheia para ver todos`}
