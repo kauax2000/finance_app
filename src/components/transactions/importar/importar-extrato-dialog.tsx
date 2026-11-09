@@ -125,6 +125,7 @@ export function ImportarExtratoDialog({
     const nomeDoDestino = cartao
         ? `para o ${cartao.name}`
         : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.em ?? "")
+    const titulo = imp.passo === "conferir" && nomeDoDestino ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}` : "Importar extrato"
     const periodo = imp.resumo.periodo
 
     function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -163,10 +164,8 @@ export function ImportarExtratoDialog({
             <DialogContent size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"} layout={expandido ? "fixed" : "auto"}>
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
-                        <DialogTitle>
-                            {imp.passo === "conferir" && nomeDoDestino
-                                ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}`
-                                : "Importar extrato"}
+                        <DialogTitle className="relative">
+                            <TrocaSuave chave={titulo}>{titulo}</TrocaSuave>
                         </DialogTitle>
                         <DialogDescription>
                             {imp.passo === "feito"
@@ -194,6 +193,8 @@ export function ImportarExtratoDialog({
                         }}
                         onDrop={soltar}
                     >
+                        {/* O passo novo chega em escada enquanto a caixa anda (a altura e a largura, do DialogContent). */}
+                        <div key={imp.passo} className="dialog-step">
                         {imp.passo === "arquivo" ? (
                             <div className="flex flex-col gap-4">
                                 <Input
@@ -417,6 +418,7 @@ export function ImportarExtratoDialog({
                                 </EmptyStateActions>
                             </EmptyState>
                         ) : null}
+                        </div>
                         {imp.passo !== "feito" ? <FormError>{imp.erro}</FormError> : null}
                     </DialogBody>
                     {imp.passo === "feito" ? null : (

@@ -297,3 +297,13 @@ describe("a troca do Ver todos não fica presa", () => {
         expect(conferir).toContain("imp.setExpandido(!de)")
     })
 })
+
+describe("a troca de passo chega em escada", () => {
+    it("o corpo de cada passo vai num invólucro com key do passo e dialog-step", () => {
+        expect(dialogo).toMatch(/<div key=\{imp\.passo\} className="dialog-step">/)
+    })
+
+    it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
+        expect(dialogo).toMatch(/<DialogTitle className="relative">\s*<TrocaSuave chave=\{titulo\}/)
+    })
+})
