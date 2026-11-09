@@ -163,10 +163,6 @@ export function ImportarExtratoDialog({
             <DialogContent size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"} layout={expandido ? "fixed" : "auto"}>
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
-                        {/* A barra dos passos é a primeira linha do cabeçalho (a regra do DialogSteps), acima do título. */}
-                        {imp.passo === "feito" || expandido ? null : (
-                            <DialogSteps current={atual} total={passos.length} labels={passos} />
-                        )}
                         <DialogTitle>
                             {imp.passo === "conferir" && nomeDoDestino
                                 ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}`
@@ -187,6 +183,9 @@ export function ImportarExtratoDialog({
                                     ? "Diga o que é cada coluna do arquivo."
                                     : "CSV ou OFX do seu banco, ou uma planilha sua."}
                         </DialogDescription>
+                        {imp.passo === "feito" || expandido ? null : (
+                            <DialogSteps current={atual} total={passos.length} labels={passos} />
+                        )}
                     </DialogHeader>
                     <DialogBody
                         onDragOver={arrastando}
