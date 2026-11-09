@@ -147,7 +147,6 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
         >
             <ComboboxField>
                 <ComboboxTrigger
-                    size="sm"
                     placeholder="Sem categoria"
                     disabled={travado}
                     aria-label={`Categoria de ${item.descricao}`}
