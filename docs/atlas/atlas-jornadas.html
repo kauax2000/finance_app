@@ -2559,14 +2559,14 @@ flowchart TD
     quem --&gt;|"o titular ou o dono"| confere(["WIREFRAME Conferir fatura: total do banco e arquivo"])
     aberta --&gt; confere
     confere --&gt;|"gravar o total, anexar o PDF"| totais[("credit_card_statement_totals e attachments da fatura: só com conferencia_liberada")]
-    confere --&gt; grupos(["Bate, Falta no app, Só no app, Valor diferente, Parcela fora de sequência"])
+    confere --&gt; grupos(["Bate, Fora do período, Falta no app, Valor diferente, Parcela fora de sequência, Só no app"])
     fechada -.-&gt;|"a RLS diz o mesmo: o total e o PDF não vêm"| totais
     totais -.-&gt;|"fatura fechada vale o total do banco"| G7(("G7 Contas a pagar"))
     totais -.-&gt;|"aviso de fatura e limite com o total do banco"| avisos[("credit-card-calendar-alerts e evaluate-credit-card-alerts: só o titular e os donos")]
     avisos --&gt; G3(("G3 Sino"))
     totais -.-&gt;|"insight Fatura fechou"| fechou[("insights-daily: do titular e de cada dono, e não da carteira")]
     fechou --&gt; G14(("G14 Insights"))
-    grupos --&gt;|"Importar selecionados"| G5(("G5 Lançamentos"))
+    grupos --&gt;|"Aprovar todas ou Aplicar escolhidas"| G5(("G5 Lançamentos"))
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
