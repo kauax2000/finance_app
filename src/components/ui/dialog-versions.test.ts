@@ -10,6 +10,10 @@ import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
+  it("no layout auto o corpo sangra até o recuo da placa, e o conteúdo alinha com o cabeçalho", () => {
+    expect(CODIGO).toContain('"group-data-[layout=auto]/dialog-content:-mx-(--dialog-px)"')
+  })
+
   it("a altura anda na mola quando o conteúdo muda, e o ref de quem chama continua valendo", () => {
     expect(CODIGO).toContain("const alturaAnimada = useAlturaAnimada<HTMLDivElement>()")
     expect(CODIGO).toContain("const placaRef = useComposedRefs(ref, alturaAnimada)")

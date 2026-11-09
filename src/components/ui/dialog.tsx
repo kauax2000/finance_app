@@ -682,6 +682,11 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="dialog-body"
       className={cn(
         "min-h-0 flex-1 overflow-y-auto overscroll-contain px-(--dialog-px) py-4",
+        // No `layout="auto"` a placa já recua `--dialog-px`: o corpo sangra até
+        // ela, senão o conteúdo recuaria em dobro (48px) e ficaria mais estreito
+        // que o cabeçalho. O recuo dele continua, para o anel de foco não ser
+        // cortado pelo `overflow`.
+        "group-data-[layout=auto]/dialog-content:-mx-(--dialog-px)",
         // A dissolução das duas bordas no lugar dos fios, sem faixa nem camada
         // de borrão: cabeçalho e rodapé têm altura variável, e o conteúdo
         // dissolve na borda do próprio corpo. O piso é zero (não os 0,06 da
