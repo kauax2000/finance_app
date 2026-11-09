@@ -2,12 +2,7 @@
 
 import { useMemo, useState } from "react"
 
-import {
-    aplicarCorrecoes,
-    type ContextoDeCorrecao,
-    desfazerCorrecoes,
-    type LoteAplicado,
-} from "@/lib/fatura/aplicar-correcoes"
+import { aplicarCorrecoes, type ContextoDeCorrecao, type LoteAplicado } from "@/lib/fatura/aplicar-correcoes"
 import type { CicloFatura, ConferenciaNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
 import {
@@ -55,7 +50,10 @@ export function CorrigirFatura(p: {
     conferencia: ConferenciaNoCiclo<ItemImportavel>
     ciclo: CicloFatura
     ctx: ContextoDeCorrecao
-    onAplicado: () => Promise<void>
+    /** O lote sobe a quem chama: o Desfazer fica lá, e sobrevive à fatura que ficou igual. */
+    onAplicado: (lote: LoteAplicado, aplicadas: number) => Promise<void>
+    /** Quem chama está gravando (o desfazer): os botões daqui esperam. */
+    ocupado?: boolean
 }) {
     const { conferencia, ciclo, ctx, onAplicado } = p
     const correcoes = useMemo(() => sugerirCorrecoes(conferencia, ciclo), [conferencia, ciclo])
@@ -65,9 +63,9 @@ export function CorrigirFatura(p: {
     const [formas, setFormas] = useState<Record<string, FormaForaDoCartao>>({})
     // Na fila: as correções aceitas, e a posição.
     const [fila, setFila] = useState<{ k: number; aceitas: Set<string> } | null>(null)
-    const [pendente, setPendente] = useState(false)
+    const [aplicando, setPendente] = useState(false)
+    const pendente = aplicando || Boolean(p.ocupado)
     const [erro, setErro] = useState<string | null>(null)
-    const [feito, setFeito] = useState<{ aplicadas: number; lote: LoteAplicado | null } | null>(null)
 
     const decisao = (id: string): DecisaoSoNoApp | undefined => {
         const e = escolhas[id]
@@ -91,28 +89,11 @@ export function CorrigirFatura(p: {
             const r = await aplicarCorrecoes(supabase, ctx, lista, decisoes())
             // Sem `desfeito`, o texto já diz que o desfazer falhou.
             if (!r.ok) return setErro(r.erro)
-            setFeito({ aplicadas: r.aplicadas, lote: r.lote })
             setFila(null)
             setEscolhas({})
-            await onAplicado()
+            await onAplicado(r.lote, r.aplicadas)
         } catch {
             setErro("As correções não terminaram. Confira a fatura de novo.")
-        } finally {
-            setPendente(false)
-        }
-    }
-
-    async function desfazer() {
-        if (!feito?.lote) return
-        setPendente(true)
-        setErro(null)
-        try {
-            const r = await desfazerCorrecoes(supabase, feito.lote)
-            setFeito(null)
-            if (!r.ok) setErro(r.erro)
-            await onAplicado()
-        } catch {
-            setErro("O desfazer não terminou. Confira a fatura de novo.")
         } finally {
             setPendente(false)
         }
@@ -151,25 +132,11 @@ export function CorrigirFatura(p: {
         )
     }
 
-    const avisos = (
-        <>
-            {feito ? (
-                <p role="status" className="flex flex-wrap items-center gap-2">
-                    {feito.aplicadas} correções aplicadas.
-                    {feito.lote ? (
-                        <button type="button" className={botao} disabled={pendente} onClick={() => void desfazer()}>
-                            Desfazer
-                        </button>
-                    ) : null}
-                </p>
-            ) : null}
-            {erro ? (
-                <p role="alert" className="text-destructive">
-                    {erro}
-                </p>
-            ) : null}
-        </>
-    )
+    const avisos = erro ? (
+        <p role="alert" className="text-destructive">
+            {erro}
+        </p>
+    ) : null
 
     if (fila) {
         const total = correcoes.length + soNoApp.length
@@ -186,7 +153,7 @@ export function CorrigirFatura(p: {
                     <p>Novo total: {currencyBRL(novoTotal)}</p>
                     <div className="flex flex-wrap gap-2">
                         <button type="button" className={botao} disabled={pendente || n === 0} onClick={() => void aplicar(aceitas)}>
-                            {pendente ? "Aplicando…" : `Aplicar escolhidas (${n})`}
+                            {aplicando ? "Aplicando…" : `Aplicar escolhidas (${n})`}
                         </button>
                         <button type="button" className={botao} disabled={pendente} onClick={() => setFila(null)}>
                             Voltar ao resumo
@@ -292,7 +259,7 @@ export function CorrigirFatura(p: {
                     disabled={pendente || n === 0}
                     onClick={() => void aplicar(correcoes)}
                 >
-                    {pendente ? "Aplicando…" : `Aprovar todas (${n})`}
+                    {aplicando ? "Aplicando…" : `Aprovar todas (${n})`}
                 </button>
                 <button
                     type="button"

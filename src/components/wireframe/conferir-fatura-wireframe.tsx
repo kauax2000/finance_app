@@ -14,6 +14,7 @@ import {
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
+import { desfazerCorrecoes, type LoteAplicado } from "@/lib/fatura/aplicar-correcoes"
 import { aprovarFatura } from "@/lib/fatura/aprovar"
 import { conferirNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
@@ -132,6 +133,9 @@ export function ConferirFaturaWireframe({
     const [batchId, setBatchId] = useState("")
     // A leitura (pelo batchId) já aprovada: a aprovação automática roda uma vez por leitura.
     const aprovadaNaLeitura = useRef<string | null>(null)
+    // O lote das correções aplicadas mora aqui: o Desfazer fica enquanto a pessoa está na tela,
+    // também quando a fatura vira "100% igual" e o CorrigirFatura sai.
+    const [aplicado, setAplicado] = useState<{ lote: LoteAplicado; aplicadas: number } | null>(null)
 
     const [pendente, setPendente] = useState<string | null>(null)
     const [aviso, setAviso] = useState<{ erro: boolean; texto: string } | null>(null)
@@ -170,6 +174,8 @@ export function ConferirFaturaWireframe({
     useEffect(() => {
         if (!igualAoBanco || !leitura || !conferencia || aprovadaNaLeitura.current === batchId) return
         aprovadaNaLeitura.current = batchId
+        // Trocar de ciclo ou de arquivo muda o pedido: a resposta velha é jogada fora.
+        const meu = pedido.current
         void aprovarFatura(supabase, {
             workspaceId,
             userId,
@@ -177,11 +183,18 @@ export function ConferirFaturaWireframe({
             fechamento: ciclo.fechamento,
             bankTotal: leitura.total ?? conferencia.somaBanco,
             source: leitura.origem,
-        }).then(async (r) => {
-            // O erro não tenta de novo: o ref já marcou a leitura.
-            if (!r.ok) return setAviso({ erro: true, texto: `Não foi possível aprovar a fatura: ${r.erro}` })
-            await queryClient.invalidateQueries({ queryKey: statementTotalsKeys.list(workspaceId) })
         })
+            .then(async (r) => {
+                // O erro não tenta de novo: o ref já marcou a leitura.
+                if (!r.ok) {
+                    if (meu === pedido.current) setAviso({ erro: true, texto: `Não foi possível aprovar a fatura: ${r.erro}` })
+                    return
+                }
+                await queryClient.invalidateQueries({ queryKey: statementTotalsKeys.list(workspaceId) })
+            })
+            .catch(() => {
+                if (meu === pedido.current) setAviso({ erro: true, texto: "Não foi possível aprovar a fatura." })
+            })
     }, [igualAoBanco, leitura, conferencia, batchId, workspaceId, userId, card.id, ciclo.fechamento, queryClient])
 
     function limparLeitura() {
@@ -193,6 +206,28 @@ export function ConferirFaturaWireframe({
         setArquivoPdf(null)
         setSenhaPedida(null)
         setSenha("")
+        setAplicado(null)
+    }
+
+    async function recarregar() {
+        await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["transactions"] })
+        await onMudou?.()
+    }
+
+    async function desfazer() {
+        if (!aplicado) return
+        setPendente("desfazer")
+        setAviso(null)
+        try {
+            const r = await desfazerCorrecoes(supabase, aplicado.lote)
+            if (r.ok) setAplicado(null)
+            else setAviso({ erro: true, texto: r.erro })
+            await recarregar()
+        } catch {
+            setAviso({ erro: true, texto: "O desfazer não terminou. Confira a fatura de novo." })
+        } finally {
+            setPendente(null)
+        }
     }
 
     function aplicar(lidos: ItemBanco[], l: Leitura) {
@@ -477,12 +512,21 @@ export function ConferirFaturaWireframe({
                                 source: leitura.origem === "pdf" ? "import_pdf" : "import_statement",
                                 batchId,
                             }}
-                            onAplicado={async () => {
-                                await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["transactions"] })
-                                await onMudou?.()
+                            ocupado={pendente != null}
+                            onAplicado={async (lote, aplicadas) => {
+                                setAplicado({ lote, aplicadas })
+                                await recarregar()
                             }}
                         />
                     )}
+                    {aplicado ? (
+                        <p role="status" className="flex flex-wrap items-center gap-2">
+                            {aplicado.aplicadas} correções aplicadas.
+                            <button type="button" className={botao} disabled={pendente != null} onClick={() => void desfazer()}>
+                                {pendente === "desfazer" ? "Desfazendo…" : "Desfazer"}
+                            </button>
+                        </p>
+                    ) : null}
                 </div>
             ) : null}
 

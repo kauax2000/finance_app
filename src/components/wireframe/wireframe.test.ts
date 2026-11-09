@@ -57,11 +57,22 @@ describe("fonte dos wireframes", () => {
 
   it("corrigir fatura: aprovar todas ou uma por uma, com desfazer e as três decisões do só no app", () => {
     const fonte = semComentarios(lerFonte("src/components/wireframe/corrigir-fatura-wireframe.tsx"), "tudo")
-    for (const texto of ["Aprovar todas", "Revisar uma por uma", "Corrigir", "Pular", "Desfazer", "Apagar", "Mudar forma de pagamento", "Manter"]) {
+    for (const texto of ["Aprovar todas", "Revisar uma por uma", "Corrigir", "Pular", "Apagar", "Mudar forma de pagamento", "Manter"]) {
       expect(fonte).toContain(texto)
     }
     expect(fonte).toContain("aplicarCorrecoes(")
+    // O lote aplicado sobe ao conferir: o Desfazer sobrevive quando a fatura fica igual.
+    expect(fonte).not.toContain("desfazerCorrecoes(")
+  })
+
+  it("conferir fatura: o Desfazer mora fora do CorrigirFatura, e a aprovação diz quando falha e ignora a velha", () => {
+    const fonte = semComentarios(lerFonte("src/components/wireframe/conferir-fatura-wireframe.tsx"), "tudo")
     expect(fonte).toContain("desfazerCorrecoes(")
+    expect(fonte).toContain("Desfazer")
+    expect(fonte).toContain("correções aplicadas.")
+    const aprovacao = fonte.slice(fonte.indexOf("aprovarFatura(supabase"))
+    expect(aprovacao).toMatch(/\.catch\(/)
+    expect(aprovacao.slice(0, aprovacao.indexOf("}, ["))).toContain("pedido.current")
   })
 
   it("conferir fatura: corrige pelo CorrigirFatura e aprova sozinha a fatura igual ao banco", () => {
