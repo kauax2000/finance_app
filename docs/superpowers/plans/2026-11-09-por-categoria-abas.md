@@ -42,12 +42,12 @@
 - Modify: `src/components/transactions/importar/conferir-importacao.tsx` (`PorCategoria`)
 - Test: `src/components/transactions/importar/importar-extrato-dialog.test.ts`
 
-- [ ] **Step 1: testes de fonte que falham** (fonte de `conferir-importacao.tsx`): contém `TabsTrigger value="expense"` com `Despesas`, `TabsTrigger value="income"` com `Receitas`, `aria-label="Tipo da categoria"`, `" e "` na montagem do rótulo, `escolhas`; e a lista não tem mais `<Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>`. Se a frase "Tirar a categoria de" e `` `Pôr ${`` já têm asserção, mantenha.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
-- [ ] **Step 3:** implementar o "Comportamento". Extraia a montagem do rótulo para uma função pura exportada `rotuloDePorCategoria(partes: { nome: string | null; n: number }[]): string` (nome `null` = sem categoria) e teste-a em `importar-extrato-dialog.test.ts` com: `[{nome:"Mercado",n:5}]` → `"Pôr Mercado em 5"`; `[{nome:null,n:3}]` → `"Tirar a categoria de 3"`; `[{nome:"Mercado",n:5},{nome:"Salário",n:1}]` → `"Pôr Mercado em 5 e pôr Salário em 1"`; `[{nome:"Mercado",n:5},{nome:null,n:1}]` → `"Pôr Mercado em 5 e tirar a categoria de 1"`; `[]` → `"Pôr categoria"`. Números com `numberBR`.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): Pôr categoria em abas, uma escolha por tipo, e mais baixo`.
+- [x] **Step 1: testes de fonte que falham** (fonte de `conferir-importacao.tsx`): contém `TabsTrigger value="expense"` com `Despesas`, `TabsTrigger value="income"` com `Receitas`, `aria-label="Tipo da categoria"`, `" e "` na montagem do rótulo, `escolhas`; e a lista não tem mais `<Caption className="px-1">{t === "expense" ? "Despesas" : "Receitas"}</Caption>`. Se a frase "Tirar a categoria de" e `` `Pôr ${`` já têm asserção, mantenha.
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
+- [x] **Step 3:** implementar o "Comportamento". Extraia a montagem do rótulo para uma função pura exportada `rotuloDePorCategoria(partes: { nome: string | null; n: number }[]): string` (nome `null` = sem categoria) e teste-a em `importar-extrato-dialog.test.ts` com: `[{nome:"Mercado",n:5}]` → `"Pôr Mercado em 5"`; `[{nome:null,n:3}]` → `"Tirar a categoria de 3"`; `[{nome:"Mercado",n:5},{nome:"Salário",n:1}]` → `"Pôr Mercado em 5 e pôr Salário em 1"`; `[{nome:"Mercado",n:5},{nome:null,n:1}]` → `"Pôr Mercado em 5 e tirar a categoria de 1"`; `[]` → `"Pôr categoria"`. Números com `numberBR`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): Pôr categoria em abas, uma escolha por tipo, e mais baixo`.
 
 ### Task 2: Conferir no navegador (controlador)
 
-- [ ] Conferência com CSV de teste na conta Pix (só ler; **nunca clicar Importar**): diálogo baixo com a lista rolando; abas; marcar uma despesa e uma receita muda o rótulo; Cancelar não aplica; print.
+- [x] Conferência com CSV de teste na conta Pix (só ler; **nunca clicar Importar**): diálogo baixo com a lista rolando; abas; marcar uma despesa e uma receita muda o rótulo; Cancelar não aplica; print.
