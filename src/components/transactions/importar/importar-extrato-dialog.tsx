@@ -165,7 +165,11 @@ export function ImportarExtratoDialog({
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
                         <DialogTitle className="relative">
-                            <TrocaSuave chave={titulo}>{titulo}</TrocaSuave>
+                            {/* Um título só para o leitor: o que sai da cena é decoração. */}
+                            <span aria-hidden="true">
+                                <TrocaSuave chave={titulo}>{titulo}</TrocaSuave>
+                            </span>
+                            <span className="sr-only">{titulo}</span>
                         </DialogTitle>
                         <DialogDescription>
                             {imp.passo === "feito"
@@ -193,10 +197,9 @@ export function ImportarExtratoDialog({
                         }}
                         onDrop={soltar}
                     >
-                        {/* O passo novo chega em escada enquanto a caixa anda (a altura e a largura, do DialogContent). */}
-                        <div key={imp.passo} className="dialog-step">
+                        {/* O passo novo chega em escada enquanto a caixa anda: cada passo leva a escada na própria raiz. */}
                         {imp.passo === "arquivo" ? (
-                            <div className="flex flex-col gap-4">
+                            <div key="arquivo" className="dialog-step flex flex-col gap-4">
                                 <Input
                                     ref={entrada}
                                     type="file"
@@ -343,9 +346,12 @@ export function ImportarExtratoDialog({
                                 disabled={travado}
                             />
                         ) : imp.passo === "conferir" ? (
-                            <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
+                            // Só o esmaecer da chegada: a lista e a tabela já descem em escada por dentro.
+                            <div key="conferir" className="dialog-step">
+                                <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
+                            </div>
                         ) : imp.passo === "feito" && feito ? (
-                            <EmptyState variant="plain">
+                            <EmptyState key="feito" variant="plain" className="dialog-step">
                                 <EmptyStateIcon variant="done" />
                                 <EmptyStateTitle>
                                     {feito.importados === 1
@@ -418,7 +424,6 @@ export function ImportarExtratoDialog({
                                 </EmptyStateActions>
                             </EmptyState>
                         ) : null}
-                        </div>
                         {imp.passo !== "feito" ? <FormError>{imp.erro}</FormError> : null}
                     </DialogBody>
                     {imp.passo === "feito" ? null : (

@@ -66,7 +66,7 @@ export function MapearColunas({
     const nomeDa = (i: number) => cabecalho?.[i]?.trim() || `Coluna ${i + 1}`
 
     return (
-        <div className="flex flex-col gap-6">
+        <div key="colunas" className="dialog-step flex flex-col gap-6">
             <Table size="md" variant="outline" className="[--table-head-h:--spacing(12)]">
                 <TableHeader>
                     <TableRow>

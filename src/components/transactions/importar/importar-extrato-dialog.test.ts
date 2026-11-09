@@ -299,11 +299,20 @@ describe("a troca do Ver todos não fica presa", () => {
 })
 
 describe("a troca de passo chega em escada", () => {
-    it("o corpo de cada passo vai num invólucro com key do passo e dialog-step", () => {
-        expect(dialogo).toMatch(/<div key=\{imp\.passo\} className="dialog-step">/)
+    it("cada passo leva a escada na própria raiz; a conferência só esmaece, a lista dela já desce por dentro", () => {
+        expect(dialogo).toContain('<div key="arquivo" className="dialog-step flex flex-col gap-4">')
+        expect(colunas).toContain('<div key="colunas" className="dialog-step')
+        expect(dialogo).toContain('<EmptyState key="feito" variant="plain" className="dialog-step">')
+        expect(dialogo).toMatch(/<div key="conferir" className="dialog-step">\s*<ConferirImportacao/)
+        expect(conferir).not.toMatch(/return \(\s*<div\s+className="[^"]*dialog-step/)
+    })
+
+    it("o título tem um nome só para o leitor: a cena é aria-hidden e o texto vai num sr-only", () => {
+        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave chave=\{titulo\}/)
+        expect(dialogo).toContain('<span className="sr-only">{titulo}</span>')
     })
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
-        expect(dialogo).toMatch(/<DialogTitle className="relative">\s*<TrocaSuave chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave chave=\{titulo\}/)
     })
 })
