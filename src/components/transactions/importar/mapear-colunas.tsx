@@ -81,14 +81,15 @@ export function MapearColunas({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        {/* A ausência abre a lista: o `variant="none"` traz o fio embaixo dele. */}
+                                        <SelectItem value={IGNORAR} variant="none">
+                                            Ignorar
+                                        </SelectItem>
                                         {PAPEIS.map(({ papel, rotulo }) => (
                                             <SelectItem key={papel} value={papel}>
                                                 {rotulo}
                                             </SelectItem>
                                         ))}
-                                        <SelectItem value={IGNORAR} variant="none">
-                                            Ignorar
-                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </TableHead>
