@@ -1,6 +1,7 @@
 import { isEdgeInvokeTransportFailure } from "@/lib/edge-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { supabase } from "@/lib/supabase"
+import { marcarCotaEsgotada } from "@/lib/ia/cota-esgotada"
 
 /** O que a Edge `ia-ler` devolve; espelha `CamposIA` e `ItemFaturaIA` de `supabase/functions/_shared/ia.ts`. */
 export type CamposIA = {
@@ -20,7 +21,8 @@ export type ItemFaturaIA = {
     parcela: { k: number; n: number } | null
 }
 
-type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string }
+/** `esgotada`: a cota do dia acabou (e ficou marcada neste aparelho). */
+type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string; esgotada?: true }
 type Resposta<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; motivo: string }
 
 const MENSAGEM: Record<string, string> = {
@@ -31,7 +33,12 @@ const MENSAGEM: Record<string, string> = {
 const SEM_CONEXAO = "Sem conexão com a IA."
 
 function traduzir<T>(r: Resposta<T>): Lido<T> {
-    return r.ok ? r : { ok: false, mensagem: MENSAGEM[r.motivo] ?? MENSAGEM.sem_ia }
+    if (r.ok) return r
+    if (r.motivo === "cota") {
+        marcarCotaEsgotada()
+        return { ok: false, mensagem: MENSAGEM.cota, esgotada: true }
+    }
+    return { ok: false, mensagem: MENSAGEM[r.motivo] ?? MENSAGEM.sem_ia }
 }
 
 async function pelaEdge<T>(body: Record<string, unknown>): Promise<Lido<T>> {

@@ -41,6 +41,7 @@ export function useLeituraDoLancamento({
     categorias,
     fraseInicial,
     fotoInicial,
+    onCotaEsgotada,
 }: {
     form: ReturnType<typeof useTransactionForm>
     /** A paleta aberta: fechada (ou trocada pelo formulário completo), nada se aplica nem carrega. */
@@ -51,6 +52,8 @@ export function useLeituraDoLancamento({
     fraseInicial?: string
     /** A foto do compartilhar: lida uma vez, ao montar. */
     fotoInicial?: File
+    /** A IA recusou pela cota do dia: o que já foi lido está no formulário. */
+    onCotaEsgotada?: () => void
 }) {
     const { currentWorkspaceId, papel } = useWorkspace()
     const semReceita = papel === "guest"
@@ -184,8 +187,10 @@ export function useLeituraDoLancamento({
         try {
             const lido = await lerFraseComIA(currentWorkspaceId, frase)
             if (meu !== pedido.current) return
-            if (!lido.ok) setAviso(lido.mensagem)
-            else setIaDoTexto(lido.campos)
+            if (!lido.ok) {
+                setAviso(lido.mensagem)
+                if (lido.esgotada) onCotaEsgotada?.()
+            } else setIaDoTexto(lido.campos)
         } catch (erro) {
             // Só a sessão (`getSession`) rejeita; a revisão fica como está.
             console.error("frase pela IA:", erro)
@@ -249,8 +254,10 @@ export function useLeituraDoLancamento({
             setFotoDoRecibo(foto)
             const lido = await lerImagemComIA(workspaceId, foto)
             if (!vale()) return
-            if (!lido.ok) setAviso(lido.mensagem)
-            else setIaDaFoto(lido.campos)
+            if (!lido.ok) {
+                setAviso(lido.mensagem)
+                if (lido.esgotada) onCotaEsgotada?.()
+            } else setIaDaFoto(lido.campos)
         } catch (erro) {
             // Só a sessão (`getSession`) rejeita; a leitura falhou, a foto fica.
             console.error("foto do recibo:", erro)

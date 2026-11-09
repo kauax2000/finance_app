@@ -44,8 +44,9 @@ describe("lerFraseComIA e lerFaturaComIA", () => {
     for (const [motivo, mensagem] of Object.entries(MENSAGENS)) {
         it(`motivo ${motivo} vira a mensagem exata`, async () => {
             invokeEdgeJson.mockResolvedValue({ ok: false, motivo })
-            expect(await lerFraseComIA(CARTEIRA, "x")).toEqual({ ok: false, mensagem })
-            expect(await lerFaturaComIA(CARTEIRA, "x", "2026-10-05")).toEqual({ ok: false, mensagem })
+            const esperado = motivo === "cota" ? { ok: false, mensagem, esgotada: true } : { ok: false, mensagem }
+            expect(await lerFraseComIA(CARTEIRA, "x")).toEqual(esperado)
+            expect(await lerFaturaComIA(CARTEIRA, "x", "2026-10-05")).toEqual(esperado)
         })
     }
 
@@ -100,7 +101,7 @@ describe("lerImagemComIA", () => {
 
     it("motivo vira a mensagem exata", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue(resposta(200, { ok: false, motivo: "cota" })))
-        expect(await lerImagemComIA(CARTEIRA, foto)).toEqual({ ok: false, mensagem: MENSAGENS.cota })
+        expect(await lerImagemComIA(CARTEIRA, foto)).toEqual({ ok: false, mensagem: MENSAGENS.cota, esgotada: true })
     })
 
     it("erro da Edge passa como veio; sem corpo, sem_ia", async () => {

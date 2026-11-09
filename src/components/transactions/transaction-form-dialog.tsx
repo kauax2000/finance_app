@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useLancamentoInteligente } from "@/hooks/use-lancamento-inteligente"
+import { cotaEsgotadaHoje } from "@/lib/ia/cota-esgotada"
+import { toastInfo } from "@/lib/toast"
 import type { Category, CreditCard, Transaction } from "@/lib/supabase"
 import {
     Dialog,
@@ -106,13 +108,15 @@ export function TransactionFormDialog({
     if (!open && usarFormulario) setUsarFormulario(false)
     // O lançamento inteligente é do telefone: no laptop e no desktop a criação
     // é sempre o formulário, ligado ou não (pedido do dono, 28/10). O
-    // compartilhar do Android só chega no telefone.
+    // compartilhar do Android só chega no telefone. Com a cota da IA esgotada
+    // hoje, a paleta não teria quem lesse a frase: abre o formulário.
     const usarPaleta =
         !editingTransaction &&
         !valoresIniciais &&
         isMobile &&
         ((ligado && defaultLaunchKind === "expense") || Boolean(fraseInicial || fotoInicial)) &&
-        !usarFormulario
+        !usarFormulario &&
+        !cotaEsgotadaHoje()
 
     // Estáveis: cada troca relê a frase.
     const cartoes = useMemo(
@@ -129,6 +133,10 @@ export function TransactionFormDialog({
         categorias: categories,
         fraseInicial,
         fotoInicial,
+        onCotaEsgotada: () => {
+            setUsarFormulario(true)
+            toastInfo("Você usou a IA 30 vezes hoje. Continue pelo formulário; amanhã a IA volta.")
+        },
     })
     // O diálogo fica montado entre uma paleta e outra: fechada, a leitura zera.
     // Aberta com uma frase compartilhada nova, ela entra no campo e já é lida.
