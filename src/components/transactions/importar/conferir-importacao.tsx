@@ -598,6 +598,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <ItemContent>
                     <Collapsible>
                         <CollapsibleRow
+                            className="[&_[data-slot=collapsible-row-label]]:no-underline"
                             trailing={
                                 <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
                                     {signedCurrencyBRL(resumo.entradas - resumo.saidas)}
