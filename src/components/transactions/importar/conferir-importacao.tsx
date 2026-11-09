@@ -348,7 +348,7 @@ function AcoesDasVisiveis({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="tertiary" size="icon-md" aria-label="Ações" disabled={travado || itens.length === 0}>
+                <Button type="button" variant="floating" size="icon-lg" className="shadow-none" aria-label="Ações" disabled={travado || itens.length === 0}>
                     <EllipsisHorizontalIcon />
                 </Button>
             </DropdownMenuTrigger>
