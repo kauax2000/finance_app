@@ -21,6 +21,10 @@ export type ItemFaturaIA = {
     parcela: { k: number; n: number } | null
 }
 
+/** Espelham `ItemParaAlinhar` e `ParAlinhado` de `supabase/functions/_shared/ia.ts`. */
+export type ItemParaAlinhar = { i: number; data: string; descricao: string; valor: number; estorno: boolean }
+export type ParAlinhado = { banco: number; app: number }
+
 /** `esgotada`: a cota do dia acabou (e ficou marcada neste aparelho). */
 type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string; esgotada?: true }
 type Resposta<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; motivo: string }
@@ -56,6 +60,10 @@ export function lerFraseComIA(workspaceId: string, texto: string) {
 
 export function lerFaturaComIA(workspaceId: string, texto: string, fechamento: string) {
     return pelaEdge<{ itens: ItemFaturaIA[] }>({ op: "fatura", workspaceId, texto, fechamento })
+}
+
+export function alinharFaturaComIA(workspaceId: string, banco: ItemParaAlinhar[], app: ItemParaAlinhar[]) {
+    return pelaEdge<{ pares: ParAlinhado[] }>({ op: "alinhar", workspaceId, banco, app })
 }
 
 /** A foto vai em multipart (o `invokeEdgeJson` só manda JSON), com o token da sessão. */
