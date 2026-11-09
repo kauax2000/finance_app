@@ -326,7 +326,7 @@ function AcoesDasVisiveis({
     imp: ImportarExtrato
     itens: ItemImportavel[]
     onPorCategoria: (itens: ItemImportavel[]) => void
-    size?: "xs"
+    size?: "xs" | "sm"
     travado: boolean
 }) {
     const rotulos = rotulosDasVisiveis(itens.length)
@@ -450,7 +450,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : null}
             {/* As ações da lista moram acima dela, à direita; o resumo fica embaixo. */}
             <div className="flex items-center justify-end gap-2">
-                {imp.expandido ? null : (
+                {/* Com CSV as Ações moram na faixa das Colunas; sem ela (OFX), ficam aqui. */}
+                {imp.expandido || imp.csv ? null : (
                     <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 )}
                 {podeExpandir ? (
@@ -511,8 +512,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
                     <ItemContent>
                         <ItemDescription>
-                            Colunas: {papeisDe(imp.mapeamento)} · gasto é{" "}
-                            {imp.mapeamento.negativoEhDespesa ? "negativo" : "positivo"}
+                            Colunas: {papeisDe(imp.mapeamento)}
                         </ItemDescription>
                     </ItemContent>
                     <ItemActions>
@@ -529,6 +529,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         >
                             Ajustar
                         </Button>
+                        <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="sm" travado={travado} />
                     </ItemActions>
                 </Item>
             ) : null}
