@@ -40,12 +40,12 @@
 export function animaAAltura(animationName: string): boolean
 ```
 
-- [ ] **Step 1: teste que falha** — `animaAAltura`: `true` para `"collapsible-down"`, `"collapsible-up"`, `"accordion-down"`, `"accordion-up"`; `false` para `"rise"`, `"menu-content-in"`, `"zoom-in"`, `""`. E um teste de fonte (`lerFonte`/`semComentarios` de `src/test/fonte.ts`): o `ResizeObserver` do hook chama `getAnimations?.({ subtree: true })`, filtra `CSSAnimation` com `animaAAltura`, `playState === "running"` e alvo diferente de `el`, e retorna sem animar quando acha (depois de atualizar `ultima`, como o `[data-altura-em-voo]`).
-- [ ] **Step 2:** `npx vitest run src/hooks/use-altura-animada.test.ts` → FAIL (`animaAAltura` não existe).
-- [ ] **Step 3:** implementar `animaAAltura` (regex `^(accordion|collapsible)-(down|up)$`) e a função local `filhoEmVoo(el)` usada no `ResizeObserver`, ao lado do `[data-altura-em-voo]`. Comentário de uma linha com o porquê (duas molas da mesma altura saíam em duas etapas).
-- [ ] **Step 4:** testes passam; `npx tsc --noEmit`; `npx eslint src/hooks`; `npx vitest run src/components/ui/dialog-versions.test.ts src/components/ui/drawer-versions.test.ts src/components/transactions/lancamento-inteligente.test.ts`.
-- [ ] **Step 5:** commit `fix(dialog): a altura acompanha o Collapsible e o Accordion de dentro, num movimento só`.
+- [x] **Step 1: teste que falha** — `animaAAltura`: `true` para `"collapsible-down"`, `"collapsible-up"`, `"accordion-down"`, `"accordion-up"`; `false` para `"rise"`, `"menu-content-in"`, `"zoom-in"`, `""`. E um teste de fonte (`lerFonte`/`semComentarios` de `src/test/fonte.ts`): o `ResizeObserver` do hook chama `getAnimations?.({ subtree: true })`, filtra `CSSAnimation` com `animaAAltura`, `playState === "running"` e alvo diferente de `el`, e retorna sem animar quando acha (depois de atualizar `ultima`, como o `[data-altura-em-voo]`).
+- [x] **Step 2:** `npx vitest run src/hooks/use-altura-animada.test.ts` → FAIL (`animaAAltura` não existe).
+- [x] **Step 3:** implementar `animaAAltura` (regex `^(accordion|collapsible)-(down|up)$`) e a função local `filhoEmVoo(el)` usada no `ResizeObserver`, ao lado do `[data-altura-em-voo]`. Comentário de uma linha com o porquê (duas molas da mesma altura saíam em duas etapas).
+- [x] **Step 4:** testes passam; `npx tsc --noEmit`; `npx eslint src/hooks`; `npx vitest run src/components/ui/dialog-versions.test.ts src/components/ui/drawer-versions.test.ts src/components/transactions/lancamento-inteligente.test.ts`.
+- [x] **Step 5:** commit `fix(dialog): a altura acompanha o Collapsible e o Accordion de dentro, num movimento só`.
 
 ### Task 2: Conferir no navegador (controlador)
 
-- [ ] `http://localhost:3000/transactions`, Importar extrato com `teste-importacao-grande.csv` (só ler; **nunca clicar Importar** — o banco é produção): abrir e fechar o "Saldo" e conferir, por amostragem da altura do diálogo a cada quadro (`requestAnimationFrame`), que a altura cresce de forma contínua até o fim, sem patamar no meio.
+- [x] `http://localhost:3000/transactions`, Importar extrato com `teste-importacao-grande.csv` (só ler; **nunca clicar Importar** — o banco é produção): abrir e fechar o "Saldo" e conferir, por amostragem da altura do diálogo a cada quadro (`requestAnimationFrame`), que a altura cresce de forma contínua até o fim, sem patamar no meio.
