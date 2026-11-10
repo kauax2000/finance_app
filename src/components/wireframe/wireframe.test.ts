@@ -566,15 +566,12 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
 })
 
 describe("categorias pela IA (Bloco 2)", () => {
-  it("o wireframe tem a etiqueta e a borda tracejada, e a conferência o usa com o filtro Pela IA", () => {
+  it("a marca tem a borda tracejada, e a conferência a usa com o filtro Pela IA (a faixa virou o RotuloDaIa)", () => {
     const wf = semComentarios(lerFonte("src/components/wireframe/importar-ia-wireframe.tsx"), "tudo")
-    expect(wf).toContain('titulo="Categorias pela IA"')
     expect(wf).toContain("border-dashed")
+    expect(wf).not.toContain("FaixaDaIaWireframe")
     const conferir = semComentarios(lerFonte("src/components/transactions/importar/conferir-importacao.tsx"), "tudo")
-    expect(wf).toContain("A IA não achou categoria para estas linhas.")
-    expect(wf).toContain("A IA sugeriu 1 categoria.")
-    expect(wf).toContain("ia.sugeridas > 0")
-    expect(conferir).toContain("FaixaDaIaWireframe")
+    expect(conferir).not.toContain("FaixaDaIaWireframe")
     expect(conferir).toContain("MarcaIaWireframe")
     expect(conferir).toContain('rotulo: "Pela IA"')
   })

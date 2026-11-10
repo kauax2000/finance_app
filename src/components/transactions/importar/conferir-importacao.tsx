@@ -11,11 +11,11 @@ import {
 } from "@heroicons/react/16/solid"
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
-import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { BuscaQueAbre } from "./busca-que-abre"
-import { FaixaDaIaWireframe, MarcaIaWireframe } from "@/components/wireframe/importar-ia-wireframe"
+import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
+import { RotuloDaIa } from "./rotulo-da-ia"
+import { MarcaIaWireframe } from "@/components/wireframe/importar-ia-wireframe"
 import { Badge } from "@/components/ui/badge"
-import { ColorTile } from "@/components/ui/color-tile"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
 import { Separator } from "@/components/ui/separator"
@@ -131,15 +131,6 @@ function nomeDaCategoria(imp: ImportarExtrato, item: ItemImportavel) {
     const id = imp.categoriaDe(item.clientId)
     const nova = imp.categoriaNovaDe(item.clientId)
     return id ? imp.previa?.nomeDaCategoria.get(id) : nova ? `${nova} (nova)` : undefined
-}
-
-/** O ladrilho da categoria (cor e ícone), o mesmo do formulário de lançamento. */
-function LadrilhoDaCategoria({ categoria }: { categoria: { color?: string | null; icon?: string | null } }) {
-    return (
-        <ColorTile size="xs" color={categoria.color} className="shrink-0">
-            <CategoryIconPreview name={normalizeCategoryIcon(categoria.icon)} />
-        </ColorTile>
-    )
 }
 
 /** A categoria de uma linha: a sugerida ou a da planilha já vem escolhida. */
@@ -596,7 +587,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault()
             }}
         >
-            <FaixaDaIaWireframe ia={imp.ia} onVer={() => imp.setFiltro("ia")} onTentar={imp.tentarIaDeNovo} />
             {imp.previa && imp.previa.categoriasNovas.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-muted-foreground">Categorias novas, criadas ao importar:</span>
@@ -619,8 +609,14 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
             {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
                 No desktop as abas dividem a linha; no telefone, onde não cabem, a fileira rola de lado. */}
+            {/* No compacto e no telefone as abas ocupam a linha: o rótulo da IA mora logo acima, à esquerda. */}
+            {!imp.expandido || celular ? (
+                <div className={cn("flex empty:hidden", esmaece)}>
+                    <RotuloDaIa imp={imp} travado={travado} />
+                </div>
+            ) : null}
             <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
-                <div className="min-w-0 flex-1">
+                <div className={cn("min-w-0", (!imp.expandido || celular) && "flex-1")}>
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
                         {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
                         <TabsList aria-label="Filtro" scrollable={celular} stretch={!imp.expandido}>
@@ -653,6 +649,13 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </Tabs>
                 </div>
                 {/* Na tela cheia sobra largura: as Ações e o recolher vêm para a linha das abas. */}
+                {imp.expandido && !celular ? (
+                    <>
+                        <RotuloDaIa imp={imp} travado={travado} />
+                        {/* A sobra fica entre o rótulo e a busca: o resto vai à direita. */}
+                        <div className="flex-1" />
+                    </>
+                ) : null}
                 {imp.expandido ? (
                     <>
                         <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />

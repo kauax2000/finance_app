@@ -155,8 +155,9 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/function aplicar\(e: React\.FormEvent\) \{[\s\S]*?e\.preventDefault\(\)\s*e\.stopPropagation\(\)/)
         expect(conferir).toContain("rotuloDePorCategoria(")
         expect(ler("rotulo-por-categoria.ts")).toContain("Tirar a categoria de")
-        expect(conferir).toContain("ColorTile")
-        expect(conferir).toContain("CategoryIconPreview")
+        expect(conferir).toContain("LadrilhoDaCategoria")
+        expect(ler("ladrilho-da-categoria.tsx")).toContain("ColorTile")
+        expect(ler("ladrilho-da-categoria.tsx")).toContain("CategoryIconPreview")
         expect(conferir).toContain("SearchInput")
         expect(conferir).toContain("Escolha uma categoria para as saídas e outra para as entradas. Cada uma vale só para o seu tipo.")
         expect(guiaDaAba("expense", 56, null)).toBe("Escolha a categoria das 56 saídas.")
@@ -369,5 +370,30 @@ describe("na tela cheia o topo fica parado e só as linhas rolam", () => {
         for (const s of novas) {
             for (const classe of s.split(/\s+/).filter(Boolean)) expect(classe).toMatch(/^md:/)
         }
+    })
+})
+
+describe("o rótulo da IA mora depois das abas (Bloco 2 no DS)", () => {
+    const rotulo = ler("rotulo-da-ia.tsx")
+
+    it("a faixa do wireframe saiu da conferência", () => {
+        expect(conferir).not.toContain("FaixaDaIaWireframe")
+    })
+
+    it("na linha das abas: Tabs, depois o rótulo, depois a busca", () => {
+        const tabs = conferir.indexOf("</Tabs>")
+        const meio = conferir.indexOf("<RotuloDaIa", tabs)
+        expect(tabs).toBeGreaterThan(-1)
+        expect(meio).toBeGreaterThan(tabs)
+        expect(conferir.indexOf("<BuscaQueAbre", meio)).toBeGreaterThan(meio)
+    })
+
+    it("é um link que abre o resumo, com o Desfazer de volta no toast, sem Ver sugeridas", () => {
+        expect(rotulo).toContain('variant="link"')
+        expect(rotulo).toContain("PopoverTitle")
+        expect(rotulo).toContain("toastUndo")
+        expect(rotulo).toContain('"Desfazer as "')
+        expect(rotulo).toContain("tentarIaDeNovo")
+        expect(rotulo).not.toMatch(/Ver (as )?sugeridas/)
     })
 })
