@@ -4,6 +4,7 @@ import {
   monthRangeYmd,
   periodLabel,
   periodSummary,
+  wholeYears,
   yearRangeYmd,
 } from "./period-range"
 import { formatDateLongPtBr, formatTransactionCompactPtBr } from "./transaction-date"
@@ -70,5 +71,20 @@ describe("period-range", () => {
     expect(periodSummary("2026-11-02", "2026-11-08")).toBe("2 nov – 8 nov · 7 dias")
     expect(periodSummary("2026-11-08", "2026-11-08")).toBe("8 nov · 1 dia")
     expect(periodSummary("2025-12-20", "2026-01-10")).toBe("20 dez 2025 – 10 jan 2026 · 22 dias")
+  })
+
+  it("wholeYears", () => {
+    expect(wholeYears("2024-01-01", "2026-12-31")).toEqual({ from: 2024, to: 2026 })
+    expect(wholeYears("2025-01-01", "2025-12-31")).toEqual({ from: 2025, to: 2025 })
+    expect(wholeYears("2024-02-01", "2026-12-31")).toBeNull()
+    expect(wholeYears("2024-01-01", "2026-11-30")).toBeNull()
+  })
+
+  it("intervalo de anos no rótulo e no resumo", () => {
+    expect(periodLabel("2024-01-01", "2026-12-31")).toEqual({ rotulo: "2024 – 2026", falado: "de 2024 a 2026", operador: "é" })
+    expect(periodSummary("2024-01-01", "2026-12-31")).toBe("2024 – 2026 · 3 anos")
+    // Um ano só segue como antes.
+    expect(periodLabel("2025-01-01", "2025-12-31").rotulo).toBe("2025")
+    expect(periodSummary("2025-01-01", "2025-12-31")).toBe("2025 · ano inteiro")
   })
 })

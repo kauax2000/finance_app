@@ -44,6 +44,14 @@ export function yearRangeYmd(year: number) {
   return { from: `${year}-01-01`, to: `${year}-12-31` }
 }
 
+// Anos de 1º de janeiro a 31 de dezembro (um ou mais); senão null.
+export function wholeYears(from: string, to: string): { from: number; to: number } | null {
+  const a = ymdParts(from)
+  const b = ymdParts(to)
+  if (!a || !b || from > to || a.m !== 0 || a.d !== 1 || b.m !== 11 || b.d !== 31) return null
+  return { from: a.y, to: b.y }
+}
+
 const curto = (ym: YearMonth) => formatMonthShortPtBr(new Date(ym.year, ym.month, 1)).toLowerCase()
 const longo = (ym: YearMonth) => formatMonthLongPtBr(new Date(ym.year, ym.month, 1)).toLowerCase()
 
@@ -53,6 +61,10 @@ export function periodLabel(
 ): { rotulo: string; falado: string; operador: "é" | "entre" } {
   const p = classifyPeriod(from, to)
   if (p.kind === "year") return { rotulo: String(p.year), falado: String(p.year), operador: "é" }
+  const anos = wholeYears(from, to)
+  if (anos) {
+    return { rotulo: `${anos.from} – ${anos.to}`, falado: `de ${anos.from} a ${anos.to}`, operador: "é" }
+  }
   if (p.kind === "months") {
     const { from: a, to: b } = p
     const mesmoMes = a.year === b.year && a.month === b.month
@@ -89,6 +101,8 @@ export function periodLabel(
 export function periodSummary(from: string, to: string): string {
   const p = classifyPeriod(from, to)
   if (p.kind === "year") return `${p.year} · ano inteiro`
+  const anos = wholeYears(from, to)
+  if (anos) return `${anos.from} – ${anos.to} · ${anos.to - anos.from + 1} anos`
   const a = ymdParts(from)
   const b = ymdParts(to)
   if (!a || !b) return ""
