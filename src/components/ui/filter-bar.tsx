@@ -143,10 +143,10 @@ const OPERADORES: Record<FilterFieldType, FilterOperator[]> = {
   boolean: ["is"],
 }
 
-/** O operador segue a contagem ("é um de" com um valor só não existe), e é curto de propósito: "é qualquer de" custava 45px e num iPhone empilhado o valor ficava em "M…". */
-function rotuloOperador(op: FilterOperator, n: number): string {
-  if (op === "is") return n > 1 ? "é um de" : "é"
-  if (op === "is-not") return n > 1 ? "não é um de" : "não é"
+/** O operador é o mesmo com um valor ou vários ("é um de" saiu a pedido do dono, 10/11/2026): o "+N" do valor já diz que são vários, e o curto cabe no iPhone empilhado. */
+function rotuloOperador(op: FilterOperator): string {
+  if (op === "is") return "é"
+  if (op === "is-not") return "não é"
   if (op === "between") return "entre"
   if (op === "gte") return "pelo menos"
   if (op === "lte") return "até"
@@ -327,7 +327,7 @@ function descrever(
       const achadas = f.values.map(opcao)
       const nomes = f.values.map((v, i) => achadas[i]?.label ?? v)
       return {
-        operador: rotuloOperador(f.operator, Math.max(1, nomes.length)),
+        operador: rotuloOperador(f.operator),
         rotulo: nomes[0] ?? "",
         falado: nomes.join(", "),
         resto: Math.max(0, nomes.length - 1),
@@ -346,7 +346,7 @@ function descrever(
       const [a, b] = f.values.map(Number)
       const texto =
         f.operator === "between" ? `${currencyBRL(a)} e ${currencyBRL(b)}` : currencyBRL(a)
-      return { operador: rotuloOperador(f.operator, 1), rotulo: texto, falado: texto, resto: 0 }
+      return { operador: rotuloOperador(f.operator), rotulo: texto, falado: texto, resto: 0 }
     }
     case "text":
       return {
@@ -394,7 +394,7 @@ const CAPSULA_TAMANHO: Record<FilterBarSize, string> = {
 const SEGMENTO =
   "relative flex min-w-0 items-center whitespace-nowrap outline-none transition-colors first:rounded-s-full last:rounded-e-full focus-visible:z-10 focus-visible:ring-3 focus-visible:ring-ring/45 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-w-10 pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-px pointer-coarse:after:content-['']"
 
-// No telefone o recuo desce a 8px: é o que faz "Categoria · é um de ·
+// No telefone o recuo desce a 8px: é o que faz "Categoria · é ·
 // Mercado +1" caber inteiro num iPhone de 375px empilhado.
 const SEGMENTO_TAMANHO: Record<FilterBarSize, string> = {
   sm: "px-2",
@@ -1518,7 +1518,7 @@ function FilterToken({
             >
               {ops.map((op) => (
                 <DropdownMenuRadioItem key={op} value={op}>
-                  {rotuloOperador(op, Math.max(1, token.values.length))}
+                  {rotuloOperador(op)}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
@@ -1713,7 +1713,7 @@ function EditorDeValor(props: EditorProps) {
           >
             {ops.map((op) => (
               <ToggleGroupItem key={op} value={op}>
-                {rotuloOperador(op, Math.max(1, valores.length))}
+                {rotuloOperador(op)}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>

@@ -161,10 +161,10 @@ describe("o token e os nomes", () => {
     expect(html).toContain('aria-label="Filtro Categoria"')
   })
 
-  it("o operador segue a contagem, e o nome do valor diz todos", () => {
+  it("o operador não muda com a contagem, e o nome do valor diz todos", () => {
     const html = barra({ defaultValue: filtros })
-    expect(html).toContain('aria-label="Categoria: é um de Mercado, Transporte. Editar valor."')
-    expect(html).toContain('aria-label="Categoria: é um de. Trocar operador."')
+    expect(html).toContain('aria-label="Categoria: é Mercado, Transporte. Editar valor."')
+    expect(html).toContain('aria-label="Categoria: é. Trocar operador."')
     expect(html).toContain("+1")
     const um = barra({ defaultValue: [{ field: "categoria", operator: "is-not", values: ["mercado"] }] })
     expect(um).toContain('aria-label="Categoria: não é Mercado. Editar valor."')

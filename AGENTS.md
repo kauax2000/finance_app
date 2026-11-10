@@ -1617,8 +1617,8 @@ declaração de `background-color` no trilho).
   overflow="menu"` (as do começo saem). **No grupo da direita o menor fica por
   fora**, pela ordem do código, nunca por `order`.
 - **`FilterBar`**: cada filtro é uma cápsula partida (campo · operador · valor ·
-  ×) na superfície de campo; `FilterField` declara os campos; **o operador segue
-  a contagem**; **um popover para a barra inteira** (`virtualRef`); **um token
+  ×) na superfície de campo; `FilterField` declara os campos; **o operador não segue
+  a contagem** ("é" / "não é" com um valor ou vários); **um popover para a barra inteira** (`virtualRef`); **um token
   por campo** e **tudo grava ao vivo** (o incompleto nunca é emitido);
   `serializeFilters`/`parseFilters`, `filterPeriodRange`, `FilterBarSkeleton`;
   `match`, `urlParam` (`history.pushState(null, …)`), `mobile="scroll" |

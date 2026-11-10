@@ -523,8 +523,8 @@ export default function FilterBarDoc() {
         A superfície é a de campo (<code>fieldSurfaceClassName</code>), na altura da escada — 28, 32, 36, e 40 no dedo —, e um fio — o texto a 14%, mais forte que o contorno, porque é ele que parte a cápsula — separa os segmentos (o <code>--input</code> do contorno dava 1,12:1 contra o preenchimento, e eles não se separavam; o fio dá 1,54 no escuro e 1,36 no claro). Cada segmento acende sozinho no cursor e no toque, e o anel de foco é dele, não da cápsula. <code>tone=&quot;success&quot;</code> é o verde das fichas de filtro de hoje, para a migração de Transações não trocar a cor que a pessoa já conhece.
       </DocNote>
 
-      <DocNote title="O operador segue a contagem">
-        Uma categoria marcada lê &ldquo;é&rdquo;; duas, &ldquo;é um de&rdquo;. O &ldquo;é um de&rdquo; com um valor só não existe, e o menu do operador tem duas linhas e não três. O valor mostra o primeiro rótulo e um &ldquo;+N&rdquo;; o nome do botão diz todos.
+      <DocNote title="O operador não muda com a contagem">
+        Uma categoria marcada ou duas, o operador lê &ldquo;é&rdquo; e &ldquo;não é&rdquo;: o &ldquo;+N&rdquo; do valor já diz que são várias, e o curto cabe no iPhone. O menu do operador tem duas linhas. O valor mostra o primeiro rótulo e um &ldquo;+N&rdquo;; o nome do botão diz todos.
       </DocNote>
 
       <DocNote title="Um token por campo, e tudo grava ao vivo">
