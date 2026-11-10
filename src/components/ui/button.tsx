@@ -59,7 +59,7 @@ const buttonVariants = cva(
         brandColorful: `button-colorful bg-primary text-primary-foreground ${FLORESCER} aria-busy:disabled:opacity-100`,
         // O terciário da IA: em repouso, só a tinta do `tertiary`; no cursor, no
         // toque e com o menu aberto, um arco-íris borrado acende por trás do
-        // rótulo, recortado na cápsula, e desliza num laço (`@utility
+        // rótulo no formato da cápsula, com as bordas em aurora, e desliza num laço (`@utility
         // button-veil`). Um por tela, como toda peça de marca.
         brandTertiary: `button-veil brand-rainbow-slide text-foreground ${ACENDER_VEU}`,
         // CTA neutro: superfície do `secondary` com o fio do sistema; o

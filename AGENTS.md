@@ -1006,9 +1006,9 @@ declaração de `background-color` no trilho).
     embaixo, num laço de 2s, `@utility brand-rainbow-button`; sempre aceso) e
     `brandTertiary` (o terciário da IA, o rótulo ✦ do Importar: em repouso só a
     tinta; no cursor, no toque e com o menu aberto o arco-íris borrado acende por
-    trás do rótulo, **recortado na cápsula**, e desliza num laço de 3s — `@utility
-    button-veil` + `@property --button-veil`, o `::after` com `overflow: hidden`
-    como no `brandColorful`; parado com movimento reduzido; o ícone fica na tinta
+    trás do rótulo **no formato da cápsula**, com as bordas em aurora (o `::after`
+    3px para dentro, borrado em 8px, deixa escapar um halo de poucos pixels), e
+    desliza num laço de 3s — `@utility button-veil` + `@property --button-veil`; parado com movimento reduzido; o ícone fica na tinta
     do rótulo).
   - `button-primary.test.ts` e `button-touch-response.test.ts` cobram que a
     lava, o brilho do primário e o disco do `button-fill` não voltem; a

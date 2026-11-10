@@ -1584,8 +1584,10 @@
 
 /* O véu do `Button brandTertiary`: em repouso, nada; no cursor, a lista do
    `brand-rainbow-slide` acende borrada por trás do rótulo, recortada na cápsula
-   (`overflow: hidden`; o `::after` é o mesmo do `brandColorful`), e desliza no laço
-   de 3s. É uma exceção nomeada ao "arco-íris sob texto": o volume mora em
+   sem quina dura: o `::after` mora 3px para dentro das bordas e o borrão de 8px o
+   espalha até a borda, deixando escapar um halo de poucos pixels — a aurora no
+   formato do botão. Desliza no laço de 3s; onde a parada clara passa, o halo
+   acende mais. É uma exceção nomeada ao "arco-íris sob texto": o volume mora em
    `--button-veil-opacity`, por tema e medido contra o rótulo, nunca nas paradas.
    Movimento reduzido: o véu acende parado. */
 @property --button-veil {
@@ -1597,19 +1599,18 @@
 @utility button-veil {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
 
   &::after {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: 3px;
     z-index: -10;
     border-radius: inherit;
     pointer-events: none;
     background-image: var(--brand-rainbow-slide);
     background-size: 200% auto;
     opacity: calc(var(--button-veil) * var(--button-veil-opacity));
-    filter: blur(6px);
+    filter: blur(8px);
     animation: brand-rainbow-slide 3s linear infinite;
   }
 

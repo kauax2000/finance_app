@@ -266,15 +266,17 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     expect(claridade(ESCURO, "--primary-hover-ring")).toBe(1)
   })
 
-  it("7. `brandTertiary` em repouso é a tinta do terciário; o véu acende no cursor, no toque e no menu aberto, recortado na cápsula", () => {
+  it("7. `brandTertiary` em repouso é a tinta do terciário; o véu acende no cursor, no toque e no menu aberto, no formato da cápsula", () => {
     const classes = buttonVariants({ variant: "brandTertiary" }).split(/\s+/)
     for (const c of ["button-veil", "brand-rainbow-slide", "text-foreground", "hover:[--button-veil:1]", "active:[--button-veil:1]", "aria-expanded:[--button-veil:1]"]) {
       expect(classes, c).toContain(c)
     }
     expect(classes.some((c) => /^bg-(?!clip)/.test(c))).toBe(false)
     const css = semComentarios(CSS)
-    const veu = css.slice(css.indexOf("@utility button-veil"), css.indexOf("/* ── O arco-íris como material"))
-    expect(veu).toContain("overflow: hidden")
+    const veu = blocoCss(css, "@utility button-veil {")
+    // Sem recorte duro: o borrão sai poucos pixels da cápsula, como aurora.
+    expect(veu).not.toContain("overflow: hidden")
+    expect(veu).toContain("inset: 3px")
     expect(veu).toContain("var(--button-veil-opacity)")
     expect(veu).toContain("prefers-reduced-motion")
   })
