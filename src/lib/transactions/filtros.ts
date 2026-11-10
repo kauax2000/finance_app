@@ -10,7 +10,7 @@ import { parseAmountFilter } from "./valor"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 export type CampoId =
-    | "periodo" | "descricao" | "categoria" | "pagamento" | "cartao" | "valor" | "conferir" | "captura"
+    | "periodo" | "descricao" | "categoria" | "pagamento" | "cartao" | "valor" | "conferir"
     | "pessoa" | "pagou" | "projeto" | "parcelada" | "plano" | "assinatura" | "recorrente"
 
 export const SEM_CATEGORIA = "__none__"
@@ -25,7 +25,6 @@ export const CAMPOS_BASE: FilterField[] = [
     { id: "cartao", label: "Cartão", type: "enum" },
     { id: "valor", label: "Valor", type: "money" },
     { id: "conferir", label: "A conferir", type: "boolean" },
-    { id: "captura", label: "Entrou por", type: "enum" },
     { id: "pessoa", label: "Lançado por", type: "enum" },
     { id: "pagou", label: "Quem pagou", type: "enum" },
     { id: "projeto", label: "Projeto", type: "enum" },

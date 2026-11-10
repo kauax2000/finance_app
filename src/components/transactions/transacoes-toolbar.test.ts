@@ -95,12 +95,6 @@ describe("montarCampos", () => {
         expect(opcoes(base, "projeto")).toEqual(["p1"])
         expect(ids({ ...base, projetos: [base.projetos[1]] })).not.toContain("projeto")
     })
-
-    it("Entrou por junta as importações num id só", () => {
-        expect(opcoes(base, "captura")).toEqual([
-            "app", "quick_text", "shortcut", "apple_pay", "ia_externa", "share", "importacao", "recurring",
-        ])
-    })
 })
 
 describe("podarCategoriasDoTipo", () => {

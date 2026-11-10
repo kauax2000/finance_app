@@ -14,9 +14,9 @@ const B = "22222222-2222-4222-8222-222222222222"
 const X = "33333333-3333-4333-8333-333333333333"
 
 describe("CAMPOS_BASE", () => {
-    it("tem os 15 campos na ordem da spec, plano e assinatura de valor único", () => {
+    it("tem os 14 campos na ordem da spec, plano e assinatura de valor único", () => {
         expect(CAMPOS_BASE.map((c) => c.id)).toEqual([
-            "periodo", "descricao", "categoria", "pagamento", "cartao", "valor", "conferir", "captura",
+            "periodo", "descricao", "categoria", "pagamento", "cartao", "valor", "conferir",
             "pessoa", "pagou", "projeto", "parcelada", "plano", "assinatura", "recorrente",
         ])
         for (const id of ["plano", "assinatura"]) {

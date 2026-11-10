@@ -95,12 +95,6 @@ describe("aplicarFiltros", () => {
         ])
     })
     it("conferir", () => expect(rodar([f("conferir", "is")])).toEqual([["eq", "needs_review", true]]))
-    it("captura expande importação e mcp", () => {
-        expect(rodar([f("captura", "is", ["importacao"])])).toEqual([
-            ["in", "source", ["import_pdf", "import_sheet", "import_statement"]],
-        ])
-        expect(rodar([f("captura", "is", ["mcp", "app"])])).toEqual([["in", "source", ["ia_externa", "app"]]])
-    })
     it("pessoa, pagou, projeto", () => {
         expect(rodar([f("pessoa", "is", ["u"])])).toEqual([["in", "user_id", ["u"]]])
         expect(rodar([f("pagou", "is", ["u"])])).toEqual([["in", "paid_by", ["u"]]])

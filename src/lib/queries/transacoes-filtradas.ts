@@ -9,12 +9,6 @@ import { executarComFallbackDeEmbed, PAGE_SIZE } from "./fetch-transactions-list
 // shortcut: soma no cliente até 10.000 linhas; trocar por RPC de agregação quando uma carteira passar disso
 export const LIMITE_DE_SOMA = 10_000
 
-/** Os ids de "Entrou por" e as origens do banco que cada um cobre. */
-const ORIGENS: Record<string, string[]> = {
-    importacao: ["import_pdf", "import_sheet", "import_statement"],
-    mcp: ["ia_externa"],
-}
-
 const COLUNA_DE_LISTA: Record<string, string> = {
     pagamento: "payment_method",
     cartao: "payment_credit_card_id",
@@ -74,11 +68,6 @@ export function aplicarFiltros<B>(q: B, estado: Pick<EstadoDaLista, "type" | "q"
                 } else if (ids.length) {
                     b = b.in("category_id", ids)
                 }
-                break
-            }
-            case "captura": {
-                const v = values.flatMap((x) => ORIGENS[x] ?? [x])
-                b = nega ? b.not("source", "in", `(${v.join(",")})`) : b.in("source", v)
                 break
             }
             case "pagamento":

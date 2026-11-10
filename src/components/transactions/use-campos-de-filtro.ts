@@ -21,18 +21,6 @@ import type { Category, CreditCard, Project } from "@/lib/supabase"
 import { CAMPOS_BASE, SEM_CATEGORIA, type CampoId, type EstadoDaLista } from "@/lib/transactions/filtros"
 import { cn, getInitials } from "@/lib/utils"
 
-/** "Entrou por": os ids que a consulta entende (`importacao` cobre as três importações). */
-const CAPTURA: FilterOption[] = [
-    { value: "app", label: "App" },
-    { value: "quick_text", label: "Frase" },
-    { value: "shortcut", label: "Atalho" },
-    { value: "apple_pay", label: "Apple Pay" },
-    { value: "ia_externa", label: "IA conectada" },
-    { value: "share", label: "Compartilhar" },
-    { value: "importacao", label: "Importação" },
-    { value: "recurring", label: "Recorrente" },
-]
-
 export type DadosDosCampos = {
     type: EstadoDaLista["type"]
     categorias: Pick<Category, "id" | "name" | "type" | "color" | "icon">[]
@@ -81,7 +69,6 @@ export function montarCampos(d: DadosDosCampos): FilterField[] {
         cartao: d.cartoes.length
             ? d.cartoes.map((c) => ({ value: c.id, label: c.last_four ? `${c.name} · ${c.last_four}` : c.name }))
             : null,
-        captura: CAPTURA,
         pessoa:
             !d.convidado && d.membros.length >= 2
                 ? d.membros.map((m) => ({ value: m.user_id, label: m.full_name || m.email, media: avatarDe(m) }))
