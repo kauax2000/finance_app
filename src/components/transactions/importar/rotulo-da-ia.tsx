@@ -31,7 +31,7 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
         return (
             <span role="status" className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
                 <Spinner />
-                IA lendo…
+                IA categorizando…
             </span>
         )
     }
@@ -50,7 +50,7 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
                 className={cn("shrink-0", falhou && "text-warning-muted-foreground")}
             >
                 {falhou ? <ExclamationTriangleIcon data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
-                {falhou ? "A IA falhou" : n > 0 ? `${numberBR(n)} pela IA` : desfeitas ? "Sugestões desfeitas" : "IA sem sugestões"}
+                {falhou ? "A IA falhou" : n > 0 ? `IA categorizou ${numberBR(n)}` : desfeitas ? "Sugestões desfeitas" : "IA sem sugestões"}
             </Button>
         </PopoverTrigger>
     )

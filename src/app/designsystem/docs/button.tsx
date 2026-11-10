@@ -76,7 +76,7 @@ export default function ButtonDoc() {
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="brandColorful" size="xl">continuar</Button>
 <Button variant="brandOutline" size="xl">começar</Button>
-<Button variant="brandTertiary" size="xl"><SparklesIcon data-icon="inline-start" />4 pela IA</Button>`}
+<Button variant="brandTertiary" size="xl"><SparklesIcon data-icon="inline-start" />IA categorizou 4</Button>`}
         previewClassName="gap-6 py-10"
       >
         <Button variant="brand" size="xl">
@@ -89,7 +89,7 @@ export default function ButtonDoc() {
           começar
         </Button>
         <Button variant="brandTertiary" size="xl">
-          <SparklesIcon data-icon="inline-start" />4 pela IA
+          <SparklesIcon data-icon="inline-start" />IA categorizou 4
         </Button>
       </DocSection>
 
