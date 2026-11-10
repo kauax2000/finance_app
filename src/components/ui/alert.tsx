@@ -357,7 +357,9 @@ function AlertActions({
         // esquerda quando há "Agora não"; os botões dividem 50/50 e a ação nunca sobe.
         "pointer-coarse:col-[1/-1]! pointer-coarse:group-has-[>[data-slot=alert-dismiss]]/alert:col-[1/-2]!",
         "pointer-coarse:mt-3! pointer-coarse:flex-nowrap pointer-coarse:[&>*]:flex-1",
-        "@xs/alert:data-[placement=inline]:col-[-2/-1] @xs/alert:data-[placement=inline]:row-[1/span_2] @xs/alert:data-[placement=inline]:mt-0 @xs/alert:data-[placement=inline]:self-center @xs/alert:data-[placement=inline]:ps-3",
+        // Só atravessa duas linhas quando há título e descrição: com uma linha só, a segunda
+        // nascia com a sobra da ação (4px) e o ícone e o texto subiam.
+        "@xs/alert:data-[placement=inline]:col-[-2/-1] @xs/alert:data-[placement=inline]:row-1 @xs/alert:data-[placement=inline]:group-has-[>[data-slot=alert-title]~[data-slot=alert-description]]/alert:row-[1/span_2] @xs/alert:data-[placement=inline]:mt-0 @xs/alert:data-[placement=inline]:self-center @xs/alert:data-[placement=inline]:ps-3",
         className
       )}
       {...props}
@@ -373,8 +375,12 @@ function AlertActions({
  */
 function AlertAction({
   className,
+  outline = true,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button> & {
+  /** O fio de `currentColor` a 25%. `false` é o terciário puro, sem contorno, para a ação secundária do aviso. */
+  outline?: boolean
+}) {
   return (
     <Button
       data-slot="alert-action"
@@ -382,7 +388,8 @@ function AlertAction({
       variant="tertiary"
       size="sm"
       className={cn(
-        "border-current/25 bg-transparent text-current",
+        outline ? "border-current/25" : "border-transparent",
+        "bg-transparent text-current",
         "pointer-coarse:h-11 pointer-coarse:text-sm",
         // A cor do realce na pele do alerta: `currentColor` a 10%.
         "[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)]",

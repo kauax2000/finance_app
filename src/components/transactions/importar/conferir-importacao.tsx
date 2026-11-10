@@ -762,7 +762,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <Alert size="sm" icon={<SparklesIcon />} className={esmaece}>
                     <AlertDescription>A IA sugeriu estas. Troque o que não fizer sentido: a troca vira sua.</AlertDescription>
                     <AlertActions placement="inline">
-                        <AlertAction disabled={travado} onClick={desfazerTodas}>
+                        <AlertAction outline={false} disabled={travado} onClick={desfazerTodas}>
                             Desfazer todas
                         </AlertAction>
                     </AlertActions>

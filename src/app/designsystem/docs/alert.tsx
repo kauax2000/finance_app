@@ -403,6 +403,13 @@ export default function AlertDoc() {
               "O detalhe, na tinta do alerta a 85%.",
           },
           {
+            prop: "AlertAction · outline",
+            type: "boolean",
+            default: "true",
+            description:
+              "O fio de currentColor a 25%. false tira o contorno: o terciário puro, para a ação secundária de um aviso (o Desfazer todas do Importar).",
+          },
+          {
             prop: "AlertActions · placement",
             type: '"block" | "inline"',
             default: '"block"',

@@ -1108,9 +1108,9 @@ declaração de `background-color` no trilho).
   - **Nenhuma chamada escreve o `svg` como filho**: cada tom traz o seu
     (`TONE_ICON`), `icon` troca e `icon={false}` tira — `alert-icon.test.ts`.
   - **A ação é o `AlertAction`** (tira tinta e realce de `currentColor`): não
-    escreva `border-destructive/40 hover:bg-destructive/10`. `AlertActions
+    escreva `border-destructive/40 hover:bg-destructive/10`. `outline={false}` tira o fio (o terciário puro, para a ação secundária do aviso). `AlertActions
     placement="inline"` põe a ação à direita com o alerta a partir de 20rem (os
-    filhos leem `--alert-text-col`). `onDismiss` é o ×; **`storageKey`** põe o
+    filhos leem `--alert-text-col`), centrada na linha do texto; ela só atravessa duas linhas com título e descrição. `onDismiss` é o ×; **`storageKey`** põe o
     × e lembra a dispensa no aparelho (`localStorage`, chave
     `alert-dispensado:<storageKey>`; sem `localStorage` vale até recarregar).
     Entra esmaecendo.
