@@ -381,7 +381,11 @@ describe("as ações numa cápsula", () => {
 
 
 describe("TopBarActionSwap", () => {
-  const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionSwap("), CODIGO.indexOf("const CAPSULA_COLA"))
+  const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionSwap("), CODIGO.indexOf("function TopBarActionGroup("))
+
+  it("a fatia termina na TopBarActionGroup, que vem depois da Swap", () => {
+    expect(CODIGO.indexOf("function TopBarActionGroup(")).toBeGreaterThan(CODIGO.indexOf("function TopBarActionSwap("))
+  })
 
   it("existe, é exportada e é o próprio vidro", () => {
     expect(CODIGO).toContain("function TopBarActionSwap(")

@@ -1701,8 +1701,8 @@ declaração de `background-color` no trilho).
   **`TopBarActionGroup`** (ações `plate` numa cápsula só: um vidro no grupo, com o anel nele, e
   cada ação num círculo, com o realce em círculo nos dois apontadores, no
   telefone e no desktop — 09/11/2026; no telefone a lupa e o filtro da tela
-  colam, rodada 334; `trailingKey` troca o segundo filho (um ou dois filhos,
-  `[lupa | filtro]`) e faz o vidro
+  colam, rodada 334; o grupo vai de um a dois filhos (`[lupa | filtro]`):
+  entrar o segundo faz o vidro
   esticar da lupa até a cápsula, como os itens da barra do iOS 26 — um vidro
   só, o do grupo (dois vidros lado a lado mostravam a emenda dos borrões), com
   a lupa e o filtro transparentes por dentro, o anel no `::after`, o calendário
