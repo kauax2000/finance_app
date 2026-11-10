@@ -33,6 +33,7 @@ import {
   type FilterMatch,
   type FilterOption,
   type FilterValue,
+  approxRange,
 } from "@/components/ui/filter-bar"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Kbd } from "@/components/ui/kbd"
@@ -173,7 +174,14 @@ function passa(l: Lancamento, f: FilterValue) {
     case "valor": {
       const a = Math.abs(l.valor)
       const [x, y] = f.values.map(Number)
-      return f.operator === "between" ? a >= x && a <= y : f.operator === "gte" ? a >= x : a <= x
+      if (f.operator === "between") return a >= x && a <= y
+      if (f.operator === "gte") return a >= x
+      if (f.operator === "eq") return a === x
+      if (f.operator === "approx") {
+        const [de, ate] = approxRange(x)
+        return a >= de && a <= ate
+      }
+      return a <= x
     }
     case "descricao":
       return normalizeSearchText(l.titulo).includes(normalizeSearchText(f.values[0]))
@@ -521,6 +529,10 @@ export default function FilterBarDoc() {
 
       <DocNote title="O token é uma cápsula partida">
         A superfície é a de campo (<code>fieldSurfaceClassName</code>), na altura da escada — 28, 32, 36, e 40 no dedo —, e um fio — o texto a 14%, mais forte que o contorno, porque é ele que parte a cápsula — separa os segmentos (o <code>--input</code> do contorno dava 1,12:1 contra o preenchimento, e eles não se separavam; o fio dá 1,54 no escuro e 1,36 no claro). Cada segmento acende sozinho no cursor e no toque, e o anel de foco é dele, não da cápsula. <code>tone=&quot;success&quot;</code> é o verde das fichas de filtro de hoje, para a migração de Transações não trocar a cor que a pessoa já conhece.
+      </DocNote>
+
+      <DocNote title="O Valor tem cinco modos, e cada um mostra só os seus campos">
+        até, a partir de, entre, igual a e por volta de (10% para cada lado). As abas ocupam a linha, cada uma da largura do nome, e uma frase abaixo diz o que entra (&ldquo;Mostra lançamentos de R$ 100 ou menos.&rdquo;). O modo de um campo mostra um campo só; os números ficam guardados ao trocar e voltam. Os atalhos seguem o modo: valores redondos em até e a partir de, faixas em entre. O &ldquo;entre&rdquo; invertido não é aplicado: a frase vira o erro. Na pílula o valor sai curto, &ldquo;R$ 50 – 200&rdquo;. Com dois operadores (é / não é) o clique no operador troca direto, sem menu.
       </DocNote>
 
       <DocNote title="O operador não muda com a contagem">

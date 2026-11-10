@@ -169,7 +169,9 @@ describe("o token e os nomes", () => {
     const um = barra({ defaultValue: [{ field: "categoria", operator: "is-not", values: ["mercado"] }] })
     expect(um).toContain('aria-label="Categoria: não é Mercado. Editar valor."')
     // O `currencyBRL` separa o R$ com espaço inseparável.
-    expect(html).toMatch(/R\$\s50,00 e R\$\s200,00/)
+    // A pílula sai curta; o nome do botão diz as duas pontas por extenso.
+    expect(html).toMatch(/R\$\s50 – 200/)
+    expect(html).toMatch(/Valor: entre R\$\s50,00 a R\$\s200,00\. Editar valor\./)
     expect(html).toContain('aria-label="Remover filtro Categoria"')
   })
 

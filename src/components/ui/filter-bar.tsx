@@ -44,6 +44,7 @@ import {
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toggle } from "@/components/ui/toggle"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useCommandSearch } from "@/hooks/use-command-search"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -83,7 +84,7 @@ import { cn } from "@/lib/utils"
  */
 
 export type FilterFieldType = "enum" | "period" | "money" | "text" | "boolean"
-export type FilterOperator = "is" | "is-not" | "between" | "gte" | "lte" | "contains"
+export type FilterOperator = "is" | "is-not" | "between" | "gte" | "lte" | "eq" | "approx" | "contains"
 export type FilterMatch = "all" | "any"
 
 export type FilterOption = {
@@ -125,7 +126,8 @@ export type FilterField =
 /**
  * Um filtro sempre completo — o rascunho nunca sai do componente.
  * `values` por tipo: enum, os valores das opções; period, `[atalho]` ou
- * `[deYmd, ateYmd]`; money, `[min, max]` em `between` e `[n]` em `gte`/`lte`
+ * `[deYmd, ateYmd]`; money, `[min, max]` em `between` e `[n]` em `lte`, `gte`,
+ * `eq` e `approx` (este, ±10%: `approxRange`)
  * (decimal com ponto, "1284.6"); text, `[texto]`; boolean, `[]`.
  */
 export type FilterValue = { field: string; operator: FilterOperator; values: string[] }
@@ -138,7 +140,7 @@ type FilterBarMobile = "scroll" | "stack"
 const OPERADORES: Record<FilterFieldType, FilterOperator[]> = {
   enum: ["is", "is-not"],
   period: ["is"],
-  money: ["between", "gte", "lte"],
+  money: ["lte", "gte", "between", "eq", "approx"],
   text: ["contains"],
   boolean: ["is"],
 }
@@ -148,10 +150,23 @@ function rotuloOperador(op: FilterOperator): string {
   if (op === "is") return "é"
   if (op === "is-not") return "não é"
   if (op === "between") return "entre"
-  if (op === "gte") return "pelo menos"
+  if (op === "gte") return "a partir de"
   if (op === "lte") return "até"
+  if (op === "eq") return "igual a"
+  if (op === "approx") return "por volta de"
   return "contém"
 }
+
+/** A folga do "por volta de": 10% para cada lado, em centavos. */
+export function approxRange(n: number): [number, number] {
+  return [Math.round(n * 90) / 100, Math.round(n * 110) / 100]
+}
+
+/** "R$ 100" sem centavos zerados, "R$ 234,70" com eles. */
+const brlCurto = (n: number) => currencyBRL(n, { minimumFractionDigits: Number.isInteger(n) ? 0 : 2 })
+
+/** O valor que o editor de dinheiro escreve: `lte` usa o máximo, os outros de um campo só, o mínimo. */
+const usaMaximo = (op: FilterOperator) => op === "lte"
 
 const YMD = /^\d{4}-\d{2}-\d{2}$/
 const ymdValido = (s: string) => YMD.test(s) && parseYmdLocal(s) != null
@@ -345,8 +360,9 @@ function descrever(
     case "money": {
       const [a, b] = f.values.map(Number)
       const texto =
-        f.operator === "between" ? `${currencyBRL(a)} e ${currencyBRL(b)}` : currencyBRL(a)
-      return { operador: rotuloOperador(f.operator), rotulo: texto, falado: texto, resto: 0 }
+        f.operator === "between" ? `${brlCurto(a)} – ${brlCurto(b).replace(/^R\$\s/, "")}` : brlCurto(a)
+      const falado = f.operator === "between" ? `${currencyBRL(a)} a ${currencyBRL(b)}` : currencyBRL(a)
+      return { operador: rotuloOperador(f.operator), rotulo: texto, falado, resto: 0 }
     }
     case "text":
       return {
@@ -863,13 +879,13 @@ function FilterBar({
     if (!t || !campo) return
     // No dinheiro as pontas atravessam a troca: o mínimo continua mínimo.
     const [a, b] = t.values
-    const min = t.operator === "lte" ? undefined : a
-    const max = t.operator === "between" ? b : t.operator === "lte" ? a : undefined
+    const min = usaMaximo(t.operator) ? undefined : a
+    const max = t.operator === "between" ? b : usaMaximo(t.operator) ? a : undefined
     const values =
       campo.type !== "money" ? t.values
       : op === "between" ? [min ?? "", max ?? ""]
-      : op === "gte" ? [min ?? max ?? ""]
-      : [max ?? min ?? ""]
+      : usaMaximo(op) ? [max ?? min ?? ""]
+      : [min ?? max ?? ""]
     gravar(field, op, values, { guardar: true })
     if (!normalizar(campo, op, values)) {
       focoDepois.current = field
@@ -1337,7 +1353,7 @@ function FilterBar({
           // A lista é `lg` (352): a contagem por opção e o rodapé com as teclas não cabem em 288.
           size={
             aberto?.tipo === "campos" ? "sm"
-            : campoAberto?.type === "period" ? "auto"
+            : campoAberto?.type === "period" || campoAberto?.type === "money" ? "auto"
             : campoAberto?.type === "enum" ? "lg"
             : "md"
           }
@@ -1675,22 +1691,30 @@ function EditorDeValor(props: EditorProps) {
 
   // Dinheiro e texto guardam o que se digita: o "entre" com uma ponta só é
   // rascunho, e o campo não pode se apagar por isso.
-  const [de, setDe] = React.useState(() => (operador === "lte" ? "" : mascarar(valores[0])))
+  // Os dois guardam o número ao trocar de modo; cada modo mostra só o que usa.
+  const [de, setDe] = React.useState(() => (usaMaximo(operador) ? "" : mascarar(valores[0])))
   const [ate, setAte] = React.useState(() =>
-    mascarar(operador === "between" ? valores[1] : operador === "lte" ? valores[0] : undefined)
+    mascarar(operador === "between" ? valores[1] : usaMaximo(operador) ? valores[0] : undefined)
   )
   const [texto, setTexto] = React.useState(valores[0] ?? "")
 
   const dinheiro = (op: FilterOperator, a: string, b: string) => {
     const x = parseMoneyBrl(a)
     const y = parseMoneyBrl(b)
-    if (op === "between") return [x == null ? "" : String(x), y == null ? "" : String(y)]
-    if (op === "gte") return x == null ? [] : [String(x)]
-    return y == null ? [] : [String(y)]
+    // O "entre" invertido não é emitido: o editor diz o erro em vez de trocar as pontas.
+    if (op === "between") return x != null && y != null && x > y ? ["", ""] : [x == null ? "" : String(x), y == null ? "" : String(y)]
+    if (usaMaximo(op)) return y == null ? [] : [String(y)]
+    return x == null ? [] : [String(x)]
   }
 
-  const trocarOperador = (op: FilterOperator) =>
-    onGravar(op, campo.type === "money" ? dinheiro(op, de, ate) : valores)
+  const trocarOperador = (op: FilterOperator) => {
+    if (campo.type !== "money") return onGravar(op, valores)
+    // Num modo de um campo só, o número de quem tem passa ao campo vazio: "até 100" vira "igual a 100".
+    let [a, b] = [de, ate]
+    if (op !== "between" && usaMaximo(op) && !b) setAte((b = a))
+    if (op !== "between" && !usaMaximo(op) && !a) setDe((a = b))
+    onGravar(op, dinheiro(op, a, b))
+  }
 
   const concluirNoEnter = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") onConcluir()
@@ -1715,7 +1739,30 @@ function EditorDeValor(props: EditorProps) {
         </Button>
       </PopoverHeader>
 
-      {ops.length > 1 ? (
+      {campo.type === "money" ? (
+        <EditorDeDinheiro
+          operador={operador}
+          de={de}
+          ate={ate}
+          recuo={recuo}
+          dedo={dedo}
+          onModo={trocarOperador}
+          onDe={(raw, op = operador) => {
+            setDe(raw)
+            onGravar(op, dinheiro(op, raw, ate))
+          }}
+          onAte={(raw, op = operador) => {
+            setAte(raw)
+            onGravar(op, dinheiro(op, de, raw))
+          }}
+          onFaixa={(a, b, op) => {
+            setDe(a)
+            setAte(b)
+            onGravar(op, dinheiro(op, a, b))
+          }}
+          onEnter={concluirNoEnter}
+        />
+      ) : ops.length > 1 ? (
         <div className={cn("pt-2 pb-1", recuo)}>
           <ToggleGroup
             type="single"
@@ -1758,42 +1805,6 @@ function EditorDeValor(props: EditorProps) {
         />
       ) : null}
 
-      {campo.type === "money" ? (
-        <div className={cn("flex items-center gap-2 pt-2 pb-3", recuo)}>
-          {operador !== "lte" ? (
-            <Input
-              money
-              aria-label={operador === "between" ? "De" : "Valor mínimo"}
-              placeholder="0,00"
-              autoFocus={!dedo}
-              value={de}
-              onValueChange={(raw) => {
-                setDe(raw)
-                onGravar(operador, dinheiro(operador, raw, ate))
-              }}
-              onKeyDown={concluirNoEnter}
-            />
-          ) : null}
-          {operador === "between" ? (
-            <span className="shrink-0 text-sm text-muted-foreground">e</span>
-          ) : null}
-          {operador !== "gte" ? (
-            <Input
-              money
-              aria-label={operador === "between" ? "Até" : "Valor máximo"}
-              placeholder="0,00"
-              autoFocus={!dedo && operador === "lte"}
-              value={ate}
-              onValueChange={(raw) => {
-                setAte(raw)
-                onGravar(operador, dinheiro(operador, de, raw))
-              }}
-              onKeyDown={concluirNoEnter}
-            />
-          ) : null}
-        </div>
-      ) : null}
-
       {campo.type === "text" ? (
         <div className={cn("pt-2 pb-3", recuo)}>
           <Input
@@ -1810,6 +1821,133 @@ function EditorDeValor(props: EditorProps) {
         </div>
       ) : null}
     </>
+  )
+}
+
+const REDONDOS = [50, 100, 500, 1000]
+const FAIXAS: [number | null, number | null][] = [
+  [null, 50],
+  [50, 200],
+  [200, 1000],
+  [1000, null],
+]
+const brlMil = (n: number) => (n >= 1000 ? `R$ ${numberBR(n / 1000)} mil` : `R$ ${numberBR(n)}`)
+
+/** O editor do "Valor": os modos ocupam a linha, a frase diz o que entra, e só os campos do modo aparecem. */
+function EditorDeDinheiro({
+  operador,
+  de,
+  ate,
+  recuo,
+  dedo,
+  onModo,
+  onDe,
+  onAte,
+  onFaixa,
+  onEnter,
+}: {
+  operador: FilterOperator
+  de: string
+  ate: string
+  recuo: string
+  dedo: boolean
+  onModo: (op: FilterOperator) => void
+  onDe: (raw: string, op?: FilterOperator) => void
+  onAte: (raw: string, op?: FilterOperator) => void
+  onFaixa: (de: string, ate: string, op: FilterOperator) => void
+  onEnter: (e: React.KeyboardEvent) => void
+}) {
+  const x = parseMoneyBrl(de)
+  const y = parseMoneyBrl(ate)
+  const erro = operador === "between" && x != null && y != null && x > y
+  const pinta = (n: number | null) => (n == null ? "" : formatMoneyBrlInput(n))
+
+  let frase = "Digite um valor."
+  if (operador === "lte" && y != null) frase = `Mostra lançamentos de ${brlCurto(y)} ou menos.`
+  if (operador === "gte" && x != null) frase = `Mostra lançamentos de ${brlCurto(x)} ou mais.`
+  if (operador === "between")
+    frase = erro ? "O mínimo passa do máximo." : x != null && y != null ? `Mostra lançamentos de ${brlCurto(x)} a ${brlCurto(y)}.` : "Digite as duas pontas."
+  if (operador === "eq" && x != null) frase = `Mostra lançamentos de exatamente ${brlCurto(x)}.`
+  if (operador === "approx" && x != null) {
+    const [a, b] = approxRange(x)
+    frase = `Mostra lançamentos de ${brlCurto(a)} a ${brlCurto(b)} (10% para mais ou para menos).`
+  }
+
+  const campo = (rotulo: string, valor: string, mudar: (raw: string) => void, foco: boolean) => (
+    <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted-foreground">
+      {rotulo}
+      <Input money size="md" placeholder="0,00" autoFocus={foco} value={valor} onValueChange={mudar} onKeyDown={onEnter} />
+    </label>
+  )
+
+  return (
+    <div className="w-104 max-w-full">
+      <div className={cn("pt-2", recuo)}>
+        <ToggleGroup
+          type="single"
+          variant="floating"
+          size="sm"
+          className="w-full"
+          value={operador}
+          onValueChange={(op) => op && onModo(op as FilterOperator)}
+          aria-label="Modo"
+        >
+          {OPERADORES.money.map((op) => (
+            <ToggleGroupItem key={op} value={op} className="flex-auto px-1.5">
+              {rotuloOperador(op)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
+      <p aria-live="polite" className={cn("pt-2 text-xs", erro ? "text-destructive" : "text-muted-foreground", recuo)}>
+        {frase}
+      </p>
+
+      <div className={cn("flex items-end gap-2 pt-3", operador === "eq" || operador === "approx" ? "pb-3" : "", recuo)}>
+        {operador === "between" ? (
+          <>
+            {campo("Mínimo", de, onDe, !dedo)}
+            <span className="pb-2 text-sm text-muted-foreground">–</span>
+            {campo("Máximo", ate, onAte, false)}
+          </>
+        ) : usaMaximo(operador) ? (
+          campo("Valor máximo", ate, onAte, !dedo)
+        ) : (
+          campo(operador === "gte" ? "Valor mínimo" : "Valor", de, onDe, !dedo)
+        )}
+      </div>
+
+      {operador === "lte" || operador === "gte" || operador === "between" ? (
+        <div className={cn("flex flex-wrap gap-1.5 pt-3 pb-3", recuo)}>
+          {operador === "between"
+            ? FAIXAS.map(([a, b]) => {
+                const op: FilterOperator = a == null ? "lte" : b == null ? "gte" : "between"
+                return (
+                  <Toggle
+                    key={`${a}-${b}`}
+                    variant="chip"
+                    size="sm"
+                    pressed={x === a && y === b}
+                    onPressedChange={() => onFaixa(pinta(a), pinta(b), op)}
+                  >
+                    {a == null ? `até ${brlMil(b!)}` : b == null ? `acima de ${brlMil(a)}` : `${brlMil(a)} – ${brlMil(b).replace("R$ ", "")}`}
+                  </Toggle>
+                )
+              })
+            : REDONDOS.map((n) => (
+                <Toggle
+                  key={n}
+                  variant="chip"
+                  size="sm"
+                  pressed={(usaMaximo(operador) ? y : x) === n}
+                  onPressedChange={() => (usaMaximo(operador) ? onAte(pinta(n)) : onDe(pinta(n)))}
+                >
+                  {brlMil(n)}
+                </Toggle>
+              ))}
+        </div>
+      ) : null}
+    </div>
   )
 }
 

@@ -1,5 +1,5 @@
 import { supabase, type CreditCard, type Transaction } from "@/lib/supabase"
-import { filterPeriodRange } from "@/components/ui/filter-bar"
+import { approxRange, filterPeriodRange } from "@/components/ui/filter-bar"
 import { filterRangeEndIso, filterRangeStartIso, transactionCalendarParts } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { SEM_CATEGORIA, type EstadoDaLista } from "@/lib/transactions/filtros"
@@ -98,6 +98,11 @@ export function aplicarFiltros<B>(q: B, estado: Pick<EstadoDaLista, "type" | "q"
                     if (y != null) b = b.lte("amount", y)
                 } else if (operator === "gte" && x != null) b = b.gte("amount", x)
                 else if (operator === "lte" && x != null) b = b.lte("amount", x)
+                else if (operator === "eq" && x != null) b = b.eq("amount", x)
+                else if (operator === "approx" && x != null) {
+                    const [de, ate] = approxRange(x)
+                    b = b.gte("amount", de).lte("amount", ate)
+                }
                 break
             }
             case "conferir":

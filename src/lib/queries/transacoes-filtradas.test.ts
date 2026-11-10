@@ -87,6 +87,13 @@ describe("aplicarFiltros", () => {
         expect(rodar([f("valor", "gte", ["1234.56"])])).toEqual([["gte", "amount", 1234.56]])
         expect(rodar([f("valor", "lte", ["5"])])).toEqual([["lte", "amount", 5]])
     })
+    it("valor igual a e por volta de", () => {
+        expect(rodar([f("valor", "eq", ["234.7"])])).toEqual([["eq", "amount", 234.7]])
+        expect(rodar([f("valor", "approx", ["200"])])).toEqual([
+            ["gte", "amount", 180],
+            ["lte", "amount", 220],
+        ])
+    })
     it("conferir", () => expect(rodar([f("conferir", "is")])).toEqual([["eq", "needs_review", true]]))
     it("captura expande importação e mcp", () => {
         expect(rodar([f("captura", "is", ["importacao"])])).toEqual([
