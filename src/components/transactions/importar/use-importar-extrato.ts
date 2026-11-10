@@ -158,10 +158,10 @@ export function sugestoesPelaChave(
     return out
 }
 
-/** A falha da IA na faixa: sem plano não diz nada; a cota diz a dela; o resto, o "categorize à mão". */
+/** A falha da IA na faixa: sem plano não diz nada; toda falha diz a sua; sem texto, o "categorize à mão". */
 export function iaQueFalhou(r: Extract<Lido<unknown>, { ok: false }>, ficaram: number): IaDaConferencia {
     if (r.semPlano) return { estado: "indisponivel", sugeridas: 0, ficaram, mensagem: null }
-    return { estado: "falhou", sugeridas: 0, ficaram, mensagem: r.esgotada ? r.mensagem : FALHA_DA_IA }
+    return { estado: "falhou", sugeridas: 0, ficaram, mensagem: r.mensagem || FALHA_DA_IA }
 }
 
 /** Saídas e entradas são valores positivos, só das marcadas; o período é o do arquivo. */

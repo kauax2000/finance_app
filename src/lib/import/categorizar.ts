@@ -7,6 +7,15 @@ import { normalizarDescricao } from "./normalizar"
 export const MAX_CATEGORIZAR = 200
 /** O teto de nomes por tipo que a `ia-ler` aceita (`lerPedidoCategorizar`); acima, a IA escolhe entre os primeiros. */
 export const MAX_NOMES_POR_TIPO = 100
+/** Os tetos de texto de `lerPedidoCategorizar`: acima deles o servidor recusa o pedido inteiro. */
+export const MAX_DESCRICAO_IA = 200
+export const MAX_NOME_IA = 60
+
+const nomesPara = (categorias: CategoriaParaCasar[], tipo: "expense" | "income") =>
+    categorias
+        .filter((c) => c.type === tipo && c.name.length <= MAX_NOME_IA && normalizarDescricao(c.name))
+        .map((c) => c.name)
+        .slice(0, MAX_NOMES_POR_TIPO)
 
 export type PedidoDaIA = {
     itens: ItemParaCategorizar[]
@@ -27,8 +36,8 @@ export function pedidoDaIA(
     destino: DestinoImportacao,
 ): PedidoDaIA {
     const nomes: CategoriasPorTipo = {
-        expense: categorias.filter((c) => c.type === "expense").map((c) => c.name).slice(0, MAX_NOMES_POR_TIPO),
-        income: categorias.filter((c) => c.type === "income").map((c) => c.name).slice(0, MAX_NOMES_POR_TIPO),
+        expense: nomesPara(categorias, "expense"),
+        income: nomesPara(categorias, "income"),
     }
     const pedido: PedidoDaIA = { itens: [], categorias: nomes, clientIds: [], ficaram: 0 }
     for (const item of itens) {
@@ -40,7 +49,7 @@ export function pedidoDaIA(
             pedido.ficaram++
             continue
         }
-        pedido.itens.push({ i: pedido.itens.length, descricao: item.descricao, tipo })
+        pedido.itens.push({ i: pedido.itens.length, descricao: item.descricao.slice(0, MAX_DESCRICAO_IA), tipo })
         pedido.clientIds.push(item.clientId)
     }
     return pedido

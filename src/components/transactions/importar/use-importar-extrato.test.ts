@@ -523,7 +523,8 @@ describe("a IA na conferência", () => {
             ficaram: 3,
             mensagem: "Você usou a IA 30 vezes hoje. Amanhã volta.",
         })
-        expect(iaQueFalhou({ ok: false, mensagem: "Erro" }, 0).mensagem).toBe("A IA não respondeu agora. Categorize à mão.")
+        expect(iaQueFalhou({ ok: false, mensagem: "Sem conexão." }, 0).mensagem).toBe("Sem conexão.")
+        expect(iaQueFalhou({ ok: false, mensagem: "" }, 0).mensagem).toBe("A IA não respondeu agora. Categorize à mão.")
     })
 
     it("a vez atual não abre outra: a leitura no ar continua valendo", () => {

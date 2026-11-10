@@ -21,6 +21,13 @@ const cats = [
 const semCategoria = () => null
 
 describe("pedidoDaIA", () => {
+    it("respeita os tetos do servidor: descrição em 200, nome de até 60 e com letra", () => {
+        const cs = [...cats, { id: "x", name: "N".repeat(61), type: "expense" as const }, { id: "y", name: "!!!", type: "expense" as const }]
+        const p = pedidoDaIA([item("a", { descricao: "D".repeat(250) })], semCategoria, cs, conta)
+        expect(p.itens[0].descricao).toHaveLength(200)
+        expect(p.categorias.expense).toEqual(["Mercado", "Lazer"])
+    })
+
     it("pula as linhas com categoria e os tipos sem categoria; só vão índice, descrição e tipo", () => {
         const itens = [item("a"), item("b"), item("c", { estorno: true })]
         const p = pedidoDaIA(itens, (id) => (id === "b" ? "lazer" : null), cats, conta)

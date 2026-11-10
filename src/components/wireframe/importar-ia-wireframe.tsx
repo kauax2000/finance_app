@@ -20,12 +20,16 @@ export function FaixaDaIaWireframe({
             {ia.estado === "pronto" ? (
                 <div className="flex flex-wrap items-center gap-2">
                     <p role="status">
-                        {`A IA sugeriu ${ia.sugeridas} categorias. Revise antes de importar.`}
+                        {ia.sugeridas === 0
+                            ? "A IA não achou categoria para estas linhas."
+                            : `${ia.sugeridas === 1 ? "A IA sugeriu 1 categoria." : `A IA sugeriu ${ia.sugeridas} categorias.`} Revise antes de importar.`}
                         {ia.ficaram > 0 ? ` ${ia.ficaram} ficaram para você.` : ""}
                     </p>
-                    <button type="button" className={botao} onClick={onVer}>
-                        Ver sugeridas
-                    </button>
+                    {ia.sugeridas > 0 ? (
+                        <button type="button" className={botao} onClick={onVer}>
+                            Ver sugeridas
+                        </button>
+                    ) : null}
                 </div>
             ) : null}
             {ia.estado === "falhou" ? (
