@@ -9,7 +9,7 @@ import {
     transactionLocalYmd,
 } from "@/lib/transaction-date"
 import type { TablesInsert } from "@/types/database"
-import { sugerirCategoria } from "./categoria-pelo-historico"
+import { type CategoriaParaCasar, casarCategoria, type LinhaHistorico } from "@/lib/captura/frase"
 import { normalizarDescricao } from "./normalizar"
 import type { ItemBanco } from "./tipos"
 
@@ -17,7 +17,14 @@ export type DestinoImportacao =
     | { tipo: "cartao"; cardId: string }
     | { tipo: "conta"; paymentMethod: "debit_card" | "pix" | "other" }
 
-export type ItemImportavel = ItemBanco & { clientId: string; categoryId: string | null }
+/** De onde veio a categoria da linha; `null` quando ela não tem categoria. */
+export type OrigemDaCategoria = "planilha" | "historico" | "regra" | "ia" | "pessoa"
+
+export type ItemImportavel = ItemBanco & {
+    clientId: string
+    categoryId: string | null
+    origem: OrigemDaCategoria | null
+}
 
 export type SourceImportacao = "import_pdf" | "import_sheet" | "import_statement"
 
@@ -29,13 +36,19 @@ const FATIA = 500
  */
 export function prepararItens(
     itens: ItemBanco[],
-    historico: Parameters<typeof sugerirCategoria>[1],
+    historico: LinhaHistorico[],
+    categorias: CategoriaParaCasar[],
+    destino: DestinoImportacao,
 ): ItemImportavel[] {
-    return itens.map((i) => ({
-        ...i,
-        clientId: crypto.randomUUID(),
-        categoryId: sugerirCategoria(i.descricao, historico),
-    }))
+    return itens.map((i) => {
+        const r = casarCategoria(i.descricao, tipoDoItem(i, destino), categorias, historico)
+        return {
+            ...i,
+            clientId: crypto.randomUUID(),
+            categoryId: r?.categoryId ?? null,
+            origem: r ? (r.motivo === "historico" || r.motivo === "palavra" ? "historico" : "regra") : null,
+        }
+    })
 }
 
 type CategoriaPorNome = { id: string; name: string; type: "income" | "expense" }
@@ -60,7 +73,7 @@ export function comCategoriaDaPlanilha(
     const porChave = new Map(categorias.map((c) => [chave(c.name, c.type), c.id]))
     return itens.map((i) => {
         const id = i.categoria ? porChave.get(chave(i.categoria, tipoDoItem(i, destino))) : undefined
-        return id ? { ...i, categoryId: id } : i
+        return id ? { ...i, categoryId: id, origem: "planilha" as const } : i
     })
 }
 

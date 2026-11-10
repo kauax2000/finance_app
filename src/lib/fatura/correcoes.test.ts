@@ -28,6 +28,8 @@ const banco = (extra: ItemBanco[] = []) =>
             ...extra,
         ],
         [],
+        [],
+        { tipo: "cartao", cardId: "card" } as const,
     )
 const lancados = [
     ap("g", "2026-09-25", "Gasolina", 228.14),

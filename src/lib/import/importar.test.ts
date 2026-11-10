@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { describe, expect, it } from "vitest"
-import { sugerirCategoria } from "./categoria-pelo-historico"
 import {
     buscarJaExistentes,
     categoriasQueFaltam,
@@ -25,44 +24,63 @@ function item(p: Partial<ItemImportavel> = {}): ItemImportavel {
         parcela: null,
         clientId: "c1",
         categoryId: "cat1",
+        origem: "historico",
         ...p,
     }
 }
 
-describe("sugerirCategoria", () => {
-    const historico = [
-        { description: "Padaria Sol", category_id: "antiga", date: "2026-01-01T12:00:00.000Z" },
-        { description: "padaria sol", category_id: "recente", date: "2026-09-01T12:00:00.000Z" },
-        { description: "Padaria Sol", category_id: null, date: "2026-10-01T12:00:00.000Z" },
-        { description: "Uber Eats", category_id: "comida", date: "2026-03-01T12:00:00.000Z" },
-        { description: "Uber Trip", category_id: "transporte", date: "2026-08-01T12:00:00.000Z" },
+describe("prepararItens", () => {
+    const conta = { tipo: "conta", paymentMethod: "pix" } as const
+    const cartao = { tipo: "cartao", cardId: "card1" } as const
+    const it_ = (descricao: string, estorno = false): ItemBanco => ({
+        data: "2026-10-10",
+        descricao,
+        valor: 10,
+        estorno,
+        parcela: null,
+    })
+    const cats = [
+        { id: "mercado", name: "Mercado", type: "expense" as const },
+        { id: "salario", name: "Salário", type: "income" as const },
     ]
 
-    it("a descrição normalizada igual, a mais recente com categoria", () => {
-        expect(sugerirCategoria("PADARIA SOL", historico)).toBe("recente")
-    })
-
-    it("senão, a mais recente com a mesma palavra significativa", () => {
-        expect(sugerirCategoria("UBER *PENDING", historico)).toBe("transporte")
-    })
-
-    it("senão, null", () => {
-        expect(sugerirCategoria("FARMACIA", historico)).toBeNull()
-        expect(sugerirCategoria("12 34", historico)).toBeNull()
-    })
-})
-
-describe("prepararItens", () => {
-    it("gera um clientId por item e sugere a categoria", () => {
-        const itens: ItemBanco[] = [
-            { data: "2026-10-10", descricao: "Padaria Sol", valor: 10, estorno: false, parcela: null },
-            { data: "2026-10-11", descricao: "Outro", valor: 5, estorno: false, parcela: null },
+    it("gera um clientId por item e casa pelo histórico do mesmo tipo", () => {
+        const historico = [
+            {
+                description: "padaria sol",
+                category_id: "padaria",
+                date: "2026-01-01",
+                type: "expense" as const,
+                payment_method: "pix",
+                payment_credit_card_id: null,
+            },
         ]
-        const r = prepararItens(itens, [{ description: "padaria sol", category_id: "cat", date: "2026-01-01" }])
-        expect(r[0].categoryId).toBe("cat")
-        expect(r[1].categoryId).toBeNull()
+        const r = prepararItens(
+            [it_("Padaria Sol"), it_("Outro")],
+            historico,
+            [...cats, { id: "padaria", name: "Padaria", type: "expense" }],
+            conta,
+        )
+        expect(r[0]).toMatchObject({ categoryId: "padaria", origem: "historico" })
+        expect(r[1]).toMatchObject({ categoryId: null, origem: null })
         expect(r[0].clientId).toMatch(/^[0-9a-f-]{36}$/)
         expect(r[0].clientId).not.toBe(r[1].clientId)
+    })
+
+    it("sem histórico, o nome da categoria na descrição decide, com origem regra", () => {
+        const [r] = prepararItens([it_("COMPRA MERCADO EXTRA")], [], cats, conta)
+        expect(r).toMatchObject({ categoryId: "mercado", origem: "regra" })
+    })
+
+    it("o estorno no cartão casa com categoria de despesa", () => {
+        const [r] = prepararItens([it_("ESTORNO MERCADO EXTRA", true)], [], cats, cartao)
+        expect(r).toMatchObject({ categoryId: "mercado", origem: "regra" })
+    })
+
+    it("a receita na conta casa só com categoria de receita", () => {
+        const [mercado, salario] = prepararItens([it_("PIX MERCADO", true), it_("SALARIO OUTUBRO", true)], [], cats, conta)
+        expect(mercado).toMatchObject({ categoryId: null, origem: null })
+        expect(salario).toMatchObject({ categoryId: "salario", origem: "regra" })
     })
 })
 

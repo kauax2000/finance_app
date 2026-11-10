@@ -26,6 +26,7 @@ import { itensDaIA, releitura } from "@/lib/ia/fatura"
 import { alinharFaturaComIA, lerFaturaComIA } from "@/lib/ia/ler"
 import { lerCsv } from "@/lib/import/csv"
 import { extrairItensDaFatura, removerIdentificacao } from "@/lib/import/fatura-texto"
+import type { LinhaHistorico } from "@/lib/captura/frase"
 import { type ItemImportavel, prepararItens } from "@/lib/import/importar"
 import { lerValorBr } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
@@ -316,7 +317,17 @@ export function ConferirFaturaWireframe({
 
     function aplicar(lidos: ItemBanco[], l: Leitura) {
         setLeitura(l)
-        setItens(prepararItens(lidos, transactions))
+        // Sem a lista de categorias aqui: as do próprio histórico do cartão servem para casar.
+        const categorias = [
+            ...new Map(
+                transactions.flatMap((t) =>
+                    t.category_id && t.category?.name
+                        ? [[`${t.type}:${t.category_id}`, { id: t.category_id, name: t.category.name, type: t.type }] as const]
+                        : [],
+                ),
+            ).values(),
+        ]
+        setItens(prepararItens(lidos, transactions as LinhaHistorico[], categorias, { tipo: "cartao", cardId: card.id }))
         setAlinhados([])
         const id = crypto.randomUUID()
         leituraAtual.current = id

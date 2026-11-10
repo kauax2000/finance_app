@@ -5,7 +5,7 @@ const { invokeEdgeJson, getSession } = vi.hoisted(() => ({ invokeEdgeJson: vi.fn
 vi.mock("@/lib/edge-invoke", () => ({ invokeEdgeJson }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession } } }))
 
-const { lerFaturaComIA, lerFraseComIA, lerImagemComIA } = await import("./ler")
+const { categorizarComIA, lerFaturaComIA, lerFraseComIA, lerImagemComIA } = await import("./ler")
 
 const CARTEIRA = "00000000-0000-4000-8000-000000000001"
 const CAMPOS = { valor: 42.9, data: "2026-10-22", descricao: "Mercado", tipo: "expense", parcelas: null, forma: null, cartao: null }
@@ -19,6 +19,23 @@ afterEach(() => {
     vi.clearAllMocks()
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+})
+
+describe("categorizarComIA", () => {
+    it("pede a op categorizar e mapeia grande para a mensagem de categorizar à mão", async () => {
+        const itens = [{ i: 0, descricao: "LOJA", tipo: "expense" as const }]
+        const categorias = { expense: ["Mercado"], income: [] }
+        invokeEdgeJson.mockResolvedValueOnce({ ok: true, sugestoes: [{ i: 0, categoria: "Mercado" }], provedor: "groq", modelo: "m" })
+        expect(await categorizarComIA(CARTEIRA, itens, categorias)).toMatchObject({ ok: true, sugestoes: [{ i: 0, categoria: "Mercado" }] })
+        expect(invokeEdgeJson).toHaveBeenCalledWith("ia-ler", {
+            body: { op: "categorizar", workspaceId: CARTEIRA, itens, categorias },
+        })
+        invokeEdgeJson.mockResolvedValueOnce({ ok: false, motivo: "grande" })
+        expect(await categorizarComIA(CARTEIRA, itens, categorias)).toEqual({
+            ok: false,
+            mensagem: "Muitas linhas para a IA. Categorize o resto à mão.",
+        })
+    })
 })
 
 describe("lerFraseComIA e lerFaturaComIA", () => {

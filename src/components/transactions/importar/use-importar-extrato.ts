@@ -19,6 +19,7 @@ import {
     prepararItens,
     tipoDoItem,
 } from "@/lib/import/importar"
+import type { LinhaHistorico } from "@/lib/captura/frase"
 import { normalizarDescricao } from "@/lib/import/normalizar"
 import { lerOfx } from "@/lib/import/ofx"
 import type { ItemBanco } from "@/lib/import/tipos"
@@ -226,7 +227,7 @@ export async function prepararLote(
     const [historico, cats] = await Promise.all([
         db
             .from("transactions")
-            .select("description,category_id,date")
+            .select("description,category_id,date,type,payment_method,payment_credit_card_id")
             .eq("workspace_id", workspaceId)
             .not("category_id", "is", null)
             .order("date", { ascending: false })
@@ -236,8 +237,12 @@ export async function prepararLote(
     if (historico.error || cats.error) return { ok: false, erro: "Não foi possível ler as categorias. Tente de novo." }
     const categorias = (cats.data ?? []) as Categoria[]
     // A categoria da planilha já aparece na conferência; a que ainda não existe fica vazia até nascer ao gravar.
-    const itens = comCategoriaDaPlanilha(prepararItens(leitura.itens, historico.data ?? []), categorias, destino).map(
-        (i) => (categoriasQueFaltam([i], categorias, destino).length > 0 ? { ...i, categoryId: null } : i),
+    const itens = comCategoriaDaPlanilha(
+        prepararItens(leitura.itens, (historico.data ?? []) as LinhaHistorico[], categorias, destino),
+        categorias,
+        destino,
+    ).map((i) =>
+        categoriasQueFaltam([i], categorias, destino).length > 0 ? { ...i, categoryId: null, origem: null } : i,
     )
     return {
         ok: true,

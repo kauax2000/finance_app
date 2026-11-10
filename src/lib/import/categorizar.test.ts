@@ -1,0 +1,57 @@
+import { describe, expect, it } from "vitest"
+import { aplicarSugestoes, pedidoDaIA } from "./categorizar"
+import type { ItemImportavel } from "./importar"
+
+const conta = { tipo: "conta", paymentMethod: "pix" } as const
+const item = (clientId: string, o: Partial<ItemImportavel> = {}): ItemImportavel => ({
+    data: "2026-10-10",
+    descricao: `LOJA ${clientId}`,
+    valor: 10,
+    estorno: false,
+    parcela: null,
+    clientId,
+    categoryId: null,
+    origem: null,
+    ...o,
+})
+const cats = [
+    { id: "mercado", name: "Mercado", type: "expense" as const },
+    { id: "lazer", name: "Lazer", type: "expense" as const },
+]
+const semCategoria = () => null
+
+describe("pedidoDaIA", () => {
+    it("pula as linhas com categoria e os tipos sem categoria; só vão índice, descrição e tipo", () => {
+        const itens = [item("a"), item("b"), item("c", { estorno: true })]
+        const p = pedidoDaIA(itens, (id) => (id === "b" ? "lazer" : null), cats, conta)
+        expect(p.itens).toEqual([{ i: 0, descricao: "LOJA a", tipo: "expense" }])
+        expect(p.clientIds).toEqual(["a"])
+        expect(p.categorias).toEqual({ expense: ["Mercado", "Lazer"], income: [] })
+        expect(p.ficaram).toBe(0)
+    })
+
+    it("corta em 200, e ficaram conta as de fora", () => {
+        const itens = Array.from({ length: 203 }, (_, n) => item(`x${n}`))
+        const p = pedidoDaIA(itens, semCategoria, cats, conta)
+        expect(p.itens).toHaveLength(200)
+        expect(p.itens[199].i).toBe(199)
+        expect(p.clientIds[199]).toBe("x199")
+        expect(p.ficaram).toBe(3)
+    })
+})
+
+describe("aplicarSugestoes", () => {
+    it("mapeia clientId para a categoria do tipo da linha, e ignora índice sem linha e nome que não existe", () => {
+        const p = pedidoDaIA([item("a"), item("b")], semCategoria, cats, conta)
+        const r = aplicarSugestoes(
+            [
+                { i: 0, categoria: "Mercado" },
+                { i: 1, categoria: "Inexistente" },
+                { i: 7, categoria: "Lazer" },
+            ],
+            p,
+            cats,
+        )
+        expect([...r]).toEqual([["a", "mercado"]])
+    })
+})

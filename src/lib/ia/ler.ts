@@ -25,8 +25,13 @@ export type ItemFaturaIA = {
 export type ItemParaAlinhar = { i: number; data: string; descricao: string; valor: number; estorno: boolean }
 export type ParAlinhado = { banco: number; app: number }
 
+/** Espelham `ItemParaCategorizar`, `CategoriasPorTipo` e `Sugestao` de `supabase/functions/_shared/ia.ts`. */
+export type ItemParaCategorizar = { i: number; descricao: string; tipo: "expense" | "income" }
+export type CategoriasPorTipo = { expense: string[]; income: string[] }
+export type Sugestao = { i: number; categoria: string }
+
 /** `esgotada`: a cota do dia acabou (e ficou marcada neste aparelho). */
-type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string; esgotada?: true }
+export type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string; esgotada?: true }
 type Resposta<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; motivo: string }
 
 const MENSAGEM: Record<string, string> = {
@@ -67,6 +72,13 @@ export function alinharFaturaComIA(workspaceId: string, banco: ItemParaAlinhar[]
     return pelaEdge<{ pares: ParAlinhado[] }>(
         { op: "alinhar", workspaceId, banco, app },
         { ...MENSAGEM, fatura_grande: "Muitas diferenças para a IA alinhar. Confira à mão." },
+    )
+}
+
+export function categorizarComIA(workspaceId: string, itens: ItemParaCategorizar[], categorias: CategoriasPorTipo) {
+    return pelaEdge<{ sugestoes: Sugestao[] }>(
+        { op: "categorizar", workspaceId, itens, categorias },
+        { ...MENSAGEM, grande: "Muitas linhas para a IA. Categorize o resto à mão." },
     )
 }
 

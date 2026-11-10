@@ -130,7 +130,7 @@ describe("importar extrato", () => {
     it("a prévia lê o histórico da carteira", async () => {
         const { db, chamadas } = clienteFalso(respostas())
         await prepararLote(db, "w1", { itens: lidos, ignoradas: 0 }, conta, "import_statement")
-        expect(chamadas).toContainEqual({ tabela: "transactions", op: "select", args: ["description,category_id,date"] })
+        expect(chamadas).toContainEqual({ tabela: "transactions", op: "select", args: ["description,category_id,date,type,payment_method,payment_credit_card_id"] })
         expect(chamadas).toContainEqual({ tabela: "transactions", op: "limit", args: [1000] })
     })
 
@@ -263,6 +263,7 @@ const item = (o: Partial<ItemImportavel> & { clientId: string }): ItemImportavel
     estorno: false,
     parcela: null,
     categoryId: null,
+    origem: null,
     ...o,
 })
 const existe: Existente = { id: "t-1", description: "Mercado", date: "2026-10-02T12:00:00Z" }

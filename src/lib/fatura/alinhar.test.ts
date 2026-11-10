@@ -19,7 +19,7 @@ const ap = (id: string, date: string, description: string, amount: number): Lanc
     id, date, description, amount, type: "expense", installment_sequence: null,
 })
 const montar = (valorApp = 228.14) =>
-    conferirNoCiclo(prepararItens([it_("2026-10-01", "PELANDA ALPINO 3", 228.13)], []), [ap("g", "2026-10-02", "Gasolina", valorApp)], ciclo)
+    conferirNoCiclo(prepararItens([it_("2026-10-01", "PELANDA ALPINO 3", 228.13)], [], [], { tipo: "cartao", cardId: "card" } as const), [ap("g", "2026-10-02", "Gasolina", valorApp)], ciclo)
 
 describe("alinhar", () => {
     it("paraAlinhar manda só i/data/descricao/valor/estorno", () => {
@@ -55,7 +55,7 @@ describe("alinhar", () => {
         expect(aplicarAlinhamento(montar(300), [{ banco: 0, app: 0 }]).valorDiferente).toEqual([])
         // repetido: o segundo é descartado
         const dois = conferirNoCiclo(
-            prepararItens([it_("2026-10-01", "A", 10), it_("2026-10-01", "B", 10)], []),
+            prepararItens([it_("2026-10-01", "A", 10), it_("2026-10-01", "B", 10)], [], [], { tipo: "cartao", cardId: "card" } as const),
             [ap("x", "2026-10-01", "Z", 10.5), ap("y", "2026-10-01", "W", 10.5)],
             ciclo,
         )
@@ -72,7 +72,7 @@ describe("alinhar", () => {
 
     it("paraAlinhar deixa de fora o valor zero, e o par volta ao item certo", () => {
         const c = conferirNoCiclo(
-            prepararItens([it_("2026-10-01", "TARIFA", 0), it_("2026-10-01", "PELANDA ALPINO 3", 228.13)], []),
+            prepararItens([it_("2026-10-01", "TARIFA", 0), it_("2026-10-01", "PELANDA ALPINO 3", 228.13)], [], [], { tipo: "cartao", cardId: "card" } as const),
             [ap("z", "2026-10-20", "Zero", 0), ap("g", "2026-10-02", "Gasolina", 228.14)],
             ciclo,
         )

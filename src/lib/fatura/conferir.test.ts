@@ -95,7 +95,7 @@ describe("conferirFatura", () => {
 
         const linhas = linhasDeImportacao(
             { userId: "u", workspaceId: "w", batchId: "b" },
-            primeira.faltaNoApp.map((i, n) => ({ ...i, clientId: `c${n}`, categoryId: null })),
+            primeira.faltaNoApp.map((i, n) => ({ ...i, clientId: `c${n}`, categoryId: null, origem: null })),
             { tipo: "cartao", cardId: "card" },
             "import_pdf",
         )

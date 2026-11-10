@@ -34,7 +34,7 @@ describe("somaDoCiclo", () => {
 })
 
 describe("semDiferencas", () => {
-    const banco = prepararItens([{ data: "2026-10-01", descricao: "Cafe", valor: 23, estorno: false, parcela: null }], [])
+    const banco = prepararItens([{ data: "2026-10-01", descricao: "Cafe", valor: 23, estorno: false, parcela: null }], [], [], { tipo: "cartao", cardId: "card" } as const)
     it("falso com um só no app", () =>
         expect(semDiferencas(conferirNoCiclo(banco, [ap("Cafe", "2026-10-01", 23), ap("x", "2026-10-02", 5)], ciclo), ciclo)).toBe(false))
     it("verdadeiro com tudo batendo", () =>
@@ -42,7 +42,7 @@ describe("semDiferencas", () => {
 })
 
 describe("aprovaSozinha", () => {
-    const banco = prepararItens([{ data: "2026-10-01", descricao: "PELANDA ALPINO 3", valor: 228.13, estorno: false, parcela: null }], [])
+    const banco = prepararItens([{ data: "2026-10-01", descricao: "PELANDA ALPINO 3", valor: 228.13, estorno: false, parcela: null }], [], [], { tipo: "cartao", cardId: "card" } as const)
     it("aprova a leitura completa sem diferenças e sem par da IA", () =>
         expect(aprovaSozinha(conferirNoCiclo(banco, [ap("PELANDA ALPINO 3", "2026-10-01", 228.13)], ciclo), ciclo, true)).toBe(true))
     it("não aprova a leitura incompleta", () =>

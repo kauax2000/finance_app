@@ -91,7 +91,7 @@ describe("aplicarCorrecoes", () => {
 
     it("criar usa o lote e ajusta ao ciclo", async () => {
         const f = dbFalso({})
-        const item = { data: "2026-09-20", descricao: "NOVO", valor: 10, estorno: false, parcela: null, clientId: "c1", categoryId: null }
+        const item = { data: "2026-09-20", descricao: "NOVO", valor: 10, estorno: false, parcela: null, clientId: "c1", categoryId: null, origem: null }
         const r = await aplicarCorrecoes(f.db, ctx, [{ id: "n", motivo: "falta-no-app", item, impacto: 10 }], semDecisoes)
         const [u] = f.escritasDe("transactions", "upsert")
         const linhas = u.valores as Array<Record<string, unknown>>

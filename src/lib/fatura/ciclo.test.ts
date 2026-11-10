@@ -48,7 +48,7 @@ describe("ajustarAoCiclo", () => {
     })
 
     it("guarda o clientId de quem foi preparado (o reenvio não duplica)", () => {
-        const [preparado] = prepararItens([item("2026-03-05", "LOJA", 50)], [])
+        const [preparado] = prepararItens([item("2026-03-05", "LOJA", 50)], [], [], { tipo: "cartao", cardId: "card" } as const)
         expect(ajustarAoCiclo([preparado], ciclo)[0].clientId).toBe(preparado.clientId)
     })
 })
@@ -80,7 +80,7 @@ describe("conferirNoCiclo", () => {
             item("2026-03-05", "LOJA FICTICIA", 50, { parcela: { k: 7, n: 10 } }),
             item("2026-09-20", "PADARIA", 12.9),
         ]
-        const primeira = conferirNoCiclo(prepararItens(banco, []), [], ciclo)
+        const primeira = conferirNoCiclo(prepararItens(banco, [], [], { tipo: "cartao", cardId: "card" } as const), [], ciclo)
         expect(primeira.faltaNoApp).toHaveLength(2)
 
         const linhas = linhasDeImportacao(
