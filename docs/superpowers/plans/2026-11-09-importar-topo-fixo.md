@@ -1,6 +1,6 @@
 # Topo fixo na tela cheia do Importar — plano
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** na tela cheia ("Ver todos") do Importar extrato, no desktop, ficam parados:
 - a linha das abas, com a busca, as Ações e o Ver menos;
@@ -96,23 +96,23 @@ O que os seletores de descendente (6–8) fazem:
 
 **Por que `stickyHeader` basta:** o `TableHeader` com `sticky` cola no topo do viewport, e o viewport agora rola nos dois eixos.
 
-- [ ] **Step 1: testes de fonte que falham.**
+- [x] **Step 1: testes de fonte que falham.**
   - `importar-extrato-dialog.tsx` contém `md:overflow-hidden` no `DialogBody`, ligado a `expandido`.
   - `conferir-importacao.tsx` contém `stickyHeader={imp.expandido}`.
   - `conferir-importacao.tsx` (ou `movimento.ts`) contém `has-[` ou `:has(>[data-slot=table-viewport])`.
   - Toda classe nova de flex na cadeia começa com `md:`. Teste com `not.toMatch(/(?<![:\w-])flex-1 md:min-h-0/)` ou uma asserção equivalente que pegue um `flex` sem `md:` nas strings novas.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
-- [ ] **Step 3:** implementar a tabela de classes acima e o `stickyHeader`. Ligue o `fade="bottom"` se a prop existir no `DataTable`.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): na tela cheia o topo e o cabeçalho ficam parados, e só as linhas rolam`.
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
+- [x] **Step 3:** implementar a tabela de classes acima e o `stickyHeader`. Ligue o `fade="bottom"` se a prop existir no `DataTable`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): na tela cheia o topo e o cabeçalho ficam parados, e só as linhas rolam`.
 
 ### Task 2: conferir no navegador (controlador)
 
-- [ ] Abrir o Importar com um CSV de teste de 60 linhas, gerado no próprio navegador, e ir a "Ver todos". Só ler: **nunca clicar Importar**.
-- [ ] Medir os cinco pontos do Review Focus:
+- [x] Abrir o Importar com um CSV de teste de 60 linhas, gerado no próprio navegador, e ir a "Ver todos". Só ler: **nunca clicar Importar**.
+- [x] Medir os cinco pontos do Review Focus:
   - o `scrollTop` do `dialog-body` fica 0 depois de rolar a tabela;
   - o `top` da linha das abas e do `thead` não muda;
   - a busca com 3 resultados;
   - a 375px;
   - Recolher e voltar.
-- [ ] Mandar um print ao dono.
+- [x] Mandar um print ao dono.
