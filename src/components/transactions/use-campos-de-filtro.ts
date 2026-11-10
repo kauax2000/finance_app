@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { createElement, useMemo } from "react"
+import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ColorTile } from "@/components/ui/color-tile"
 import type { FilterField, FilterOption, FilterValue } from "@/components/ui/filter-bar"
@@ -34,7 +35,7 @@ const CAPTURA: FilterOption[] = [
 
 export type DadosDosCampos = {
     type: EstadoDaLista["type"]
-    categorias: Pick<Category, "id" | "name" | "type" | "color">[]
+    categorias: Pick<Category, "id" | "name" | "type" | "color" | "icon">[]
     cartoes: Pick<CreditCard, "id" | "name" | "last_four">[]
     membros: MemberDirectoryRow[]
     convidado: boolean
@@ -68,7 +69,11 @@ export function montarCampos(d: DadosDosCampos): FilterField[] {
                 .map((c) => ({
                     value: c.id,
                     label: c.name,
-                    media: createElement(ColorTile, { size: "xs", color: c.color }),
+                    media: createElement(
+                        ColorTile,
+                        { size: "xs", color: c.color },
+                        createElement(CategoryIconPreview, { name: normalizeCategoryIcon(c.icon) }),
+                    ),
                 })),
             { value: SEM_CATEGORIA, label: "Sem categoria" },
         ],

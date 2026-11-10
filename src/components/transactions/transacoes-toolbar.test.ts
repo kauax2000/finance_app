@@ -52,7 +52,7 @@ describe("transacoes-toolbar (fonte)", () => {
     })
 })
 
-const cat = (id: string, type: "income" | "expense") => ({ id, name: id, type, color: null }) as Category
+const cat = (id: string, type: "income" | "expense") => ({ id, name: id, type, color: null, icon: null }) as Category
 const base: DadosDosCampos = {
     type: "all",
     categorias: [cat("mercado", "expense"), cat("salario", "income")],
