@@ -862,8 +862,13 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             setEscolhidas((e) => aplicarCategoria(e, ids, categoryId)),
         /** Tira da IA as linhas dadas (só as que ainda são dela); devolve a volta. */
         desfazerIa: (clientIds: string[]) => {
-            const { ids, escolhidas: nova } = escolhidasSemIa(lote?.itens ?? [], escolhidas, clientIds)
-            setEscolhidas(nova)
+            // O updater vê as escolhas de agora; os ids são os que ele de fato mudou (atribuição idempotente).
+            let ids: string[] = []
+            setEscolhidas((e) => {
+                const r = escolhidasSemIa(lote?.itens ?? [], e, clientIds)
+                ids = r.ids
+                return r.escolhidas
+            })
             return () => setEscolhidas((e) => escolhidasDevolvidas(e, ids))
         },
         origemDe: (id: string) => {
