@@ -43,7 +43,6 @@ import {
     DataTable,
     dataTableColumns,
     type DataTableColumnDef,
-    useDataTable,
 } from "@/components/ui/data-table"
 import {
     Dialog,
@@ -455,18 +454,6 @@ function AcoesDasVisiveis({
     )
 }
 
-/**
- * Na tela cheia as Ações moram na linha das abas, fora do `DataTable`: daqui ele publica as que
- * filtrou (o filtro da conferência mais a busca). Só republica quando o conjunto muda.
- */
-function VisiveisDaTabela({ onChange }: { onChange: (itens: ItemImportavel[]) => void }) {
-    const itens = useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)
-    const chave = itens.map((i) => i.clientId).join(" ")
-    const publicar = React.useEffectEvent(() => onChange(itens))
-    React.useEffect(() => publicar(), [chave])
-    return null
-}
-
 /** O esmaecer da vista que sai (`--duration-base`) e uma folga: ele já terminou se o fim não chegou. */
 const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 
@@ -478,10 +465,11 @@ const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
     const { resumo } = imp
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
-    // As que o `DataTable` filtrou, na tela cheia; até ele publicar, as da conferência.
-    const [daTabela, setDaTabela] = React.useState<ItemImportavel[] | null>(null)
-    // A busca da tela cheia mora na linha das abas e filtra o `DataTable`.
+    // A busca da tela cheia mora na linha das abas. Ela filtra aqui, pela descrição e sem acento, e não
+    // no `DataTable`: a tabela e as Ações recebem a mesma lista, e a tabela fica sem a barra dela.
     const [busca, setBusca] = React.useState("")
+    const termo = normalizeSearchText(busca.trim())
+    const daTabela = termo ? imp.visiveis.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : imp.visiveis
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
@@ -570,7 +558,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     // A seleção do DataTable é o que entra; só as linhas à vista mudam (limpar não tira as filtradas).
     const selecao = Object.fromEntries([...imp.marcadas].map((id) => [id, true as const]))
     function mudarSelecao(v: Record<string, true>) {
-        const vistas = new Set(imp.visiveis.map((i) => i.clientId))
+        const vistas = new Set(daTabela.map((i) => i.clientId))
         const ligadas = Object.keys(v).filter((id) => v[id])
         imp.marcarVarias(ligadas.filter((id) => !imp.marcadas.has(id)), true)
         imp.marcarVarias([...imp.marcadas].filter((id) => vistas.has(id) && !v[id]), false)
@@ -658,7 +646,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 {imp.expandido ? (
                     <>
                         <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
-                        <AcoesDasVisiveis imp={imp} itens={daTabela ?? imp.visiveis} onPorCategoria={setPorCategoria} travado={travado} />
+                        <AcoesDasVisiveis imp={imp} itens={daTabela} onPorCategoria={setPorCategoria} travado={travado} />
                         {podeExpandir ? botaoRecolher : null}
                     </>
                 ) : null}
@@ -696,13 +684,10 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     <DataTable
                         aria-label="Lançamentos do arquivo"
                         columns={colunas}
-                        data={imp.visiveis}
+                        data={daTabela}
                         getRowId={(i) => i.clientId}
                         getRowLabel={rotuloDe}
                         pageSize={false}
-                        toolbar={<VisiveisDaTabela onChange={setDaTabela} />}
-                        globalFilter={busca}
-                        onGlobalFilterChange={setBusca}
                         onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
                         enableSelection={travado ? () => false : true}
                         pending={travado}

@@ -137,7 +137,7 @@ describe("a conferência", () => {
 
     it("as ações em massa valem para as visíveis (filtro e busca), nunca para as marcadas; a folha vira gaveta no telefone", () => {
         // O que se vê é o que o DataTable filtrou (o filtro da conferência mais a busca).
-        expect(conferir).toContain("useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)")
+        expect(conferir).toContain("normalizeSearchText(descricaoDe(i)).includes(termo)")
         expect(conferir).toContain("<AcoesDasVisiveis imp={imp} itens={imp.visiveis}")
         expect(conferir).toContain("rotulosDasVisiveis(itens.length)")
         expect(conferir).not.toContain("marcadasVistas")
@@ -169,13 +169,14 @@ describe("a conferência", () => {
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {
         expect(conferir).toContain("<DataTable")
         expect(conferir).not.toMatch(/toolbar=\{\{ search: "Buscar descrição"/)
-        expect(conferir).toContain("toolbar={<VisiveisDaTabela onChange={setDaTabela} />}")
-        expect(conferir).toContain("globalFilter={busca}")
-        expect(conferir).toContain("onGlobalFilterChange={setBusca}")
-        expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela \?\? imp\.visiveis\}[\s\S]*?botaoRecolher/)
+        // A busca filtra fora da tabela: sem a barra do DataTable (que deixava a faixa vazia) e sem busca dele.
+        expect(conferir).toContain("data={daTabela}")
+        expect(conferir).not.toContain("toolbar=")
+        expect(conferir).not.toContain("globalFilter")
+        expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}[\s\S]*?botaoRecolher/)
         expect(conferir).toMatch(/if \(de\) setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
-        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela \?\? imp\.visiveis\}[\s\S]*?botaoRecolher/)
+        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}[\s\S]*?botaoRecolher/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.
