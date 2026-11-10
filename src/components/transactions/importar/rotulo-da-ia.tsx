@@ -76,7 +76,7 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
                 <PopoverTitle>IA sem sugestões</PopoverTitle>
                 <PopoverDescription>
                     A IA não achou categoria para estas linhas.
-                    {ia.ficaram > 0 ? ` ${numberBR(ia.ficaram)} ficaram sem categoria.` : ""}
+                    {ia.ficaram > 0 ? ` ${numberBR(ia.ficaram)} ${ia.ficaram === 1 ? "ficou" : "ficaram"} sem categoria.` : ""}
                 </PopoverDescription>
             </PopoverHeader>
         )
@@ -106,7 +106,7 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
                     <PopoverTitle>{`A IA categorizou ${numberBR(n)}`}</PopoverTitle>
                     <PopoverDescription>
                         Confira antes de importar.
-                        {semCategoria > 0 ? ` ${numberBR(semCategoria)} ficaram sem categoria.` : ""}
+                        {semCategoria > 0 ? ` ${numberBR(semCategoria)} ${semCategoria === 1 ? "ficou" : "ficaram"} sem categoria.` : ""}
                     </PopoverDescription>
                 </PopoverHeader>
                 <ul className="flex flex-col">

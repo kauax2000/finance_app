@@ -489,17 +489,22 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         return {
             key: id,
             label: (
-                <span data-grupo-ia={id} className="inline-flex items-center gap-1.5">
+                // O rótulo ocupa a célula do grupo, com as ações na ponta direita: na célula do total elas alargavam a coluna Valor.
+                <span data-grupo-ia={id} className="flex min-w-0 flex-1 items-center gap-1.5">
                     {cat ? <LadrilhoDaCategoria categoria={cat} /> : null}
-                    {`${nomeDoId(id)} · ${numberBR(porGrupo.get(id) ?? 0)}`}
+                    <span className="min-w-0 truncate">{`${nomeDoId(id)} · ${numberBR(porGrupo.get(id) ?? 0)}`}</span>
+                    {/* No telefone o rótulo vira a faixa do gêmeo, sem lugar para alvo de toque: lá a troca é tocar na linha. */}
+                    {celular ? null : acoesDoGrupo(i)}
                 </span>
             ),
         }
     }
-    function acoesDoGrupo(membros: ItemImportavel[]) {
-        const nome = nomeDoId(imp.categoriaDe(membros[0]?.clientId ?? ""))
+    function acoesDoGrupo(item: ItemImportavel) {
+        const id = imp.categoriaDe(item.clientId)
+        const nome = nomeDoId(id)
+        const membros = daTabela.filter((m) => imp.categoriaDe(m.clientId) === id)
         return (
-            <span className="inline-flex items-center gap-1">
+            <span className="ms-auto inline-flex shrink-0 items-center gap-1 normal-case tracking-normal">
                 <Button
                     type="button"
                     variant="tertiary"
@@ -601,13 +606,14 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             meta: { label: "Categoria", csv: false },
         },
         // No gêmeo do telefone a categoria é texto (a legenda é um `<p>`); tocar na linha a troca.
-        {
+        // Só no telefone: no desktop a célula some por CSS, mas o colSpan da linha de grupo contava a vaga dela.
+        ...(celular ? [{
             id: "categoria-nome",
             header: "Categoria",
             enableSorting: false,
             cell: ({ row }) => nomeDaCategoria(imp, row.original) ?? "Sem categoria",
             meta: { label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden", csv: false },
-        },
+        } satisfies DataTableColumnDef<ItemImportavel>] : []),
         col.money({ id: "valor", header: "Valor", accessor: valorDe }),
     ]
 
@@ -758,6 +764,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <div
                     className={cn(
                         ESCADA_DA_TABELA,
+                        // O rótulo do grupo enche a célula (o DataTable o embrulha num inline-flex): as ações vão à ponta direita.
+                        "[&_[data-slot=table-group-row]>td:last-child>span]:flex",
                         "md:flex md:min-h-0 md:flex-col md:[&_[data-slot=table-panel-group]]:min-h-0 md:[&_[data-slot=table-panel]]:min-h-0 md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:flex md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:min-h-0 md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:flex-col"
                     )}
                 >
@@ -770,7 +778,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         getRowId={(i) => i.clientId}
                         getRowLabel={rotuloDe}
                         groupBy={grupoDaIa}
-                        groupTotal={pelaIa ? acoesDoGrupo : undefined}
                         pageSize={false}
                         onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
                         enableSelection={travado ? () => false : true}

@@ -422,3 +422,21 @@ describe("a aba Pela IA agrupada, e o ✦ no campo (Bloco 2 no DS)", () => {
         expect(alerta).not.toMatch(/<\w*Icon className/)
     })
 })
+
+describe("as ações do grupo moram no rótulo, e a tabela fica alinhada (correção 1)", () => {
+    it("nada na célula do total: as ações vão à ponta direita do rótulo, em caixa normal", () => {
+        expect(conferir).not.toContain("groupTotal=")
+        expect(conferir).toContain("[&_[data-slot=table-group-row]>td:last-child>span]:flex")
+        expect(conferir).toMatch(/ms-auto[^"]*normal-case/)
+    })
+
+    it("a coluna escondida do telefone não entra no desktop, para o colSpan do grupo bater", () => {
+        expect(conferir).toMatch(/\.\.\.\(celular \? \[\{[\s\S]*?id: "categoria-nome"/)
+    })
+
+    it("o resumo da IA concorda o número: 1 ficou, N ficaram", () => {
+        const rotulo = ler("rotulo-da-ia.tsx")
+        expect(rotulo).toContain('=== 1 ? "ficou" : "ficaram"')
+        expect(rotulo).not.toMatch(/\)\} ficaram sem categoria/)
+    })
+})
