@@ -28991,3 +28991,10 @@ do ícone. O toast é um flex que quebra linha, e o `[data-content]` pedia a lar
 do texto (`flex: 9999 1 auto`). Ele ganha `max-width: calc(100% - 40px)`, a faixa ao lado do
 poço (28 + 12 de vão; o × já mora no recuo da direita), e quebra dentro dela; só os botões
 de ação descem. O poço passa a `align-self: flex-start`, na primeira linha como o ×.
+
+### Rodada 369 — a cápsula do cabeçalho é uma só
+
+Pedido do dono em 2026-11-09: no desktop a cápsula `[lupa | filtro]` do cabeçalho aparecia
+como meia pílula, com os cantos de dentro achatados. Saíram `morph`, `join` e `CAPSULA_COLA`
+do `TopBarActionGroup`: ele é sempre a cápsula que estica, um vidro no grupo, cada ação num
+círculo e o realce em círculo nos dois apontadores. `trailingKey` fica.

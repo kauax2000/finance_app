@@ -456,7 +456,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="Ações numa cápsula"
-        description="TopBarActionGroup cola ações com plate numa pílula só: os cantos de dentro achatados, sem divisor e com um anel só, o do grupo. É a busca compacta do app (Configurações › Aparência › Busca no cabeçalho: Botão). No telefone os botões voltam a ser círculos soltos."
+        description="TopBarActionGroup é uma cápsula só: um vidro no grupo, com um anel só, e cada ação num círculo, com o realce em círculo dentro dela. É igual no telefone e no desktop. É a busca compacta do app (Configurações › Aparência › Busca no cabeçalho: Botão)."
         code={`<TopBarActionGroup>
   <TopBarAction label="Buscar" plate shortcut="mod+k" onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
@@ -478,7 +478,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="O vidro estica da lupa"
-        description="Com morph, a cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
+        description="A cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
         code={`<TopBarActionGroup trailingKey={filtro?.icon}>
   <TopBarAction label="Buscar" plate onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
@@ -555,7 +555,7 @@ export default function TopBarDoc() {
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
           { prop: "TopBarActionSwap", type: "{ swapKey, className?, children }", description: "O círculo de vidro que fica enquanto o miolo troca: mudar swapKey afunda o vidro na mola e cruza os ícones no desfoque. O filho não desenha o próprio vidro." },
-          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join?, morph?, trailingKey? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto. morph é a cápsula do telefone, com um ou dois filhos: o vidro estica da lupa ao entrar o segundo e encolhe ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { trailingKey? }", description: "Ações com plate numa cápsula: um vidro no grupo, com o anel nele, e cada ação num círculo, com o realce em círculo nos dois apontadores. Aceita um ou dois filhos: o vidro estica da lupa ao entrar o segundo e encolhe ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },

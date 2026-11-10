@@ -1698,11 +1698,11 @@ declaração de `background-color` no trilho).
   sem pular, e movimento reduzido troca na hora (rodada 349); no gesto os dois
   miolos estão montados, e um ref passado ao filho tolera duas instâncias (o
   `filtroRef` do cabeçalho é um ref de função que só zera o próprio nó);
-  **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
-  divisor, com o anel no grupo; `join` — `always`, `desktop`, `phone` — diz de
-  que lado da quebra cola, quando um botão só existe num lado; no telefone a
-  lupa e o filtro da tela colam, rodada 334; **`morph`** + `trailingKey` (um ou
-  dois filhos, `[lupa | filtro]`, com o `join="always"` padrão) faz o vidro
+  **`TopBarActionGroup`** (ações `plate` numa cápsula só: um vidro no grupo, com o anel nele, e
+  cada ação num círculo, com o realce em círculo nos dois apontadores, no
+  telefone e no desktop — 09/11/2026; no telefone a lupa e o filtro da tela
+  colam, rodada 334; `trailingKey` troca o segundo filho (um ou dois filhos,
+  `[lupa | filtro]`) e faz o vidro
   esticar da lupa até a cápsula, como os itens da barra do iOS 26 — um vidro
   só, o do grupo (dois vidros lado a lado mostravam a emenda dos borrões), com
   a lupa e o filtro transparentes por dentro, o anel no `::after`, o calendário
