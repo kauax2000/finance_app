@@ -210,7 +210,7 @@ const ATALHOS_DE_ANO = FILTER_PERIOD_YEAR_PRESET_IDS.map(
 
 type AbaDoPeriodo = "dias" | "meses" | "ano"
 
-/** A aba que o editor de período abre: a unidade do valor; sem valor, Meses. */
+/** A aba que o editor de período abre: a unidade do valor; sem valor, Dias. */
 export function abaInicialDoPeriodo(valores: string[]): AbaDoPeriodo {
   if (FILTER_PERIOD_YEAR_PRESET_IDS.some((id) => id === valores[0])) return "ano"
   const r = filterPeriodRange(valores)
@@ -2100,7 +2100,7 @@ function EditorDePeriodo({
       </TabsContent>
 
       <TabsContent value="ano">
-        <div className={cn("flex flex-col gap-2 pt-2 pb-2", recuo)}>
+        <div className={cn("flex flex-col gap-3 pt-2 pb-2", recuo)}>
           <ul aria-label="Atalhos de ano" className="grid grid-cols-3 gap-1">
             {ATALHOS_DE_ANO.map((p) => (
               <li key={p.id}>

@@ -667,7 +667,7 @@ export default function FilterBarDoc() {
         title="FilterValue"
         rows={[
           { prop: "enum", type: '"is" | "is-not"', description: "values: os valores das opções." },
-          { prop: "period", type: '"is"', description: 'values: ["ultimos-90"] (um atalho de FILTER_PERIOD_PRESETS) ou ["2026-10-01", "2026-10-15"]. filterPeriodRange resolve os dois.' },
+          { prop: "period", type: '"is"', description: 'values: ["ultimos-90"] (um atalho de FILTER_PERIOD_PRESETS, inclusive "este-ano", "ano-passado" e "ultimos-12-meses") ou ["2026-10-01", "2026-10-15"] (um ano ou anos inteiros são ["2024-01-01", "2026-12-31"]). filterPeriodRange resolve os dois.' },
           { prop: "money", type: '"between" | "gte" | "lte"', description: 'values: ["50", "200"] no between, ["50"] nos outros — decimal com ponto.' },
           { prop: "text", type: '"contains"', description: "values: [texto]." },
           { prop: "boolean", type: '"is"', description: "values: []." },
@@ -680,7 +680,7 @@ export default function FilterBarDoc() {
           { prop: "FilterBarSkeleton", type: "{ size?, tokens?, count?, label?, group? }", description: "A barra esperando. group={false} dentro de um esqueleto de página." },
           { prop: "serializeFilters · parseFilters", type: "(value) => string | null · (texto, fields) => FilterValue[]", description: "O formato da URL, para montar um link fora da barra." },
           { prop: "filterPeriodRange", type: "(values) => { from, to } | null", description: "O intervalo de um filtro de período, com o atalho resolvido hoje — o que vai à consulta." },
-          { prop: "FILTER_PERIOD_PRESETS · FILTER_PERIOD_DAY_PRESET_IDS", type: "preset[] · string[]", description: "Os atalhos do filtro (os do DatePicker, Hoje e Últimos 90 dias) e os quatro que a aba Dias mostra." },
+          { prop: "FILTER_PERIOD_PRESETS · FILTER_PERIOD_DAY_PRESET_IDS · FILTER_PERIOD_YEAR_PRESET_IDS", type: "preset[] · string[] · string[]", description: "Os atalhos do filtro (os do DatePicker, Hoje, Últimos 90 dias e os três de ano), os quatro que a aba Dias mostra e, em ordem, os botões de atalho da aba Ano (Este ano, Ano passado, Últimos 12 meses)." },
           { prop: "abaInicialDoPeriodo", type: '(values) => "dias" | "meses" | "ano"', description: "A aba em que o editor de período abre." },
         ]}
       />
