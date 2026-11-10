@@ -1,6 +1,6 @@
 # Busca que abre, na tela cheia do Importar — plano
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** na tela cheia ("Ver todos") do Importar extrato, a busca deixa a linha própria. Ela vira uma lupa fechada à direita, na linha das abas, antes das Ações. Tocar abre o campo animando, como a lupa do cabeçalho do telefone se estica em cápsula.
 
@@ -72,7 +72,7 @@
   export function efeitoDoEsc(valor: string): "limpar" | "fechar"
   ```
 
-- [ ] **Step 1: testes que falham.**
+- [x] **Step 1: testes que falham.**
   - `efeitoDoEsc("Uber")` é `"limpar"`; `efeitoDoEsc("")` é `"fechar"`.
   - A fonte de `busca-que-abre.tsx` contém:
     - `SearchInput`, `size="lg"`;
@@ -80,15 +80,15 @@
     - `stopPropagation`;
     - `prefers-reduced-motion` (ou o `useReducedMotion` do motion);
     - `18rem`.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
-- [ ] **Step 3: implementar o "Comportamento".**
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
+- [x] **Step 3: implementar o "Comportamento".**
   - `aberta = foco || value !== ""`.
   - A largura do invólucro anda por `animate(el, { width }, …)` do `motion`, a partir da largura atual medida, para a interrupção não saltar.
   - Fechada, um `<button type="button">` cobre a pílula e abre. Ele tem `aria-label={label}` e `aria-expanded={false}`. Nada de `Button` do design system por cima de outro controle se isso duplicar o foco; o `input` fechado fica `tabIndex={-1}` e `aria-hidden`.
   - Sem `#hex` nem `px` arbitrário fora de `18rem` e do 36 que a escada já dá (`size-9`).
   - O `ds:audit` precisa passar. Se ele reprovar algo inevitável, diga no relatório e não mexa no auditor.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): a busca que abre da lupa, para a tela cheia`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): a busca que abre da lupa, para a tela cheia`.
 
 ### Task 2: a busca na linha das abas
 
@@ -100,19 +100,19 @@
 - Consumes: `BuscaQueAbre` (Task 1).
 - O `DataTable` aceita `globalFilter?: string`, `onGlobalFilterChange?: (v: string) => void` e `toolbar` como elemento React, que é desenhado cru, sem a linha da barra.
 
-- [ ] **Step 1: testes de fonte que falham.**
+- [x] **Step 1: testes de fonte que falham.**
   - Some o `/toolbar=\{\{ search: "Buscar descrição"/` atual.
   - `conferir-importacao.tsx` contém `toolbar={<VisiveisDaTabela onChange={setDaTabela} />}`, `globalFilter={busca}` e `onGlobalFilterChange={setBusca}`.
   - Na linha das abas, em ordem: `<BuscaQueAbre` antes de `<AcoesDasVisiveis imp={imp} itens={daTabela ?? imp.visiveis}`, e esta antes de `botaoRecolher`.
   - O Recolher zera a busca: `setBusca("")` aparece no caminho do `alternar`/`trocar` que volta ao compacto.
-- [ ] **Step 2:** rodar → FAIL.
-- [ ] **Step 3:** implementar. `const [busca, setBusca] = React.useState("")` em `ConferirImportacao`; `<BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />` na linha das abas, só com `imp.expandido`.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): na tela cheia a busca mora fechada na linha das abas`.
+- [x] **Step 2:** rodar → FAIL.
+- [x] **Step 3:** implementar. `const [busca, setBusca] = React.useState("")` em `ConferirImportacao`; `<BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />` na linha das abas, só com `imp.expandido`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): na tela cheia a busca mora fechada na linha das abas`.
 
 ### Task 3: conferir no navegador (controlador)
 
-- [ ] No Importar com o CSV de teste, em "Ver todos" (só ler; **nunca clicar Importar**), passe pelos cinco pontos do Review Focus:
+- [x] No Importar com o CSV de teste, em "Ver todos" (só ler; **nunca clicar Importar**), passe pelos cinco pontos do Review Focus:
   - lupa fechada à direita;
   - tocar abre esticando;
   - digitar filtra;
