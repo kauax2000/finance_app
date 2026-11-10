@@ -18,4 +18,7 @@ Rules:
 - Add a header to every page in the app from now on.
 - Use the collapsing large-title header animation (centered name appears under the top bar) on all mobile screens, not only Settings.
 - Apply the same page transition to every subpage in the app; switching between main menu sections is not a page change and needs no transition.
+- On mobile, keep drawer headers fixed when forms rise; scroll form content beneath the header, not the whole drawer.
+- When positioning content above the keyboard, account for the toolbar bar above the keyboard too, so content never sits behind it.
+- When three buttons appear together in the app, give each a different visual weight: first plain, second with background, third may be unstyled.
 <!-- end claude-reflect -->

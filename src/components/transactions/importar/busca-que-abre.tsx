@@ -76,11 +76,14 @@ export function BuscaQueAbre({
     // e chegaria antes do `onKeyDown` do campo, perguntando "Descartar alterações?".
     React.useEffect(() => {
         const aoTeclar = (e: KeyboardEvent) => {
-            if (e.key !== "Escape" || e.target !== campo.current) return
+            // Também com o foco no × (dentro da pílula); durante a composição do IME o Esc é dela.
+            if (e.key !== "Escape" || e.isComposing || !casca.current?.contains(e.target as Node)) return
             e.stopPropagation()
             e.preventDefault()
             if (efeitoDoEsc(campo.current?.value ?? "") === "limpar") {
                 onChange("")
+                // O × some com o texto: o foco volta ao campo, e não cai no `body`.
+                campo.current?.focus()
                 return
             }
             flushSync(() => setFoco(false))
