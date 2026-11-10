@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { existsSync } from "node:fs"
 
-import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
+import { guiaDaAba, ordemPelaIa, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { efeitoDoEsc } from "./busca-que-abre"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
@@ -438,5 +438,27 @@ describe("as ações do grupo moram no rótulo, e a tabela fica alinhada (corre�
         const rotulo = ler("rotulo-da-ia.tsx")
         expect(rotulo).toContain('=== 1 ? "ficou" : "ficaram"')
         expect(rotulo).not.toMatch(/\)\} ficaram sem categoria/)
+    })
+})
+
+describe("revisão final: grupos contíguos, desfeitas e o popover que não reabre", () => {
+    it("o nome empatado desempata pelo id: cada categoria fica num grupo só, e o resto segue a ordem de hoje", () => {
+        const cat: Record<string, string> = { a: "o1", b: "o2", c: "o1", d: "m", e: "o2" }
+        const nome = (id: string | null) => ({ o1: "Outros", o2: "Outros", m: "Mercado" })[id ?? ""] ?? ""
+        expect(ordemPelaIa(["a", "b", "c", "d", "e"], (i) => cat[i], nome)).toEqual(["d", "a", "c", "b", "e"])
+        expect(conferir).toContain("ordemPelaIa(imp.visiveis")
+    })
+
+    it("depois do Desfazer as N, o rótulo diz Sugestões desfeitas, e não IA sem sugestões", () => {
+        const rotulo = ler("rotulo-da-ia.tsx")
+        expect(rotulo).toContain("n === 0 && ia.sugeridas > 0")
+        expect(rotulo).toContain('"Sugestões desfeitas"')
+        expect(rotulo).toContain("<PopoverTitle>Sugestões da IA desfeitas</PopoverTitle>")
+        expect(rotulo).toContain("As linhas voltaram para Sem categoria.")
+    })
+
+    it("saindo de pronto/falhou o popover fecha, para não reabrir sozinho", () => {
+        const rotulo = ler("rotulo-da-ia.tsx")
+        expect(rotulo).toMatch(/if \(ia\.estado !== "pronto" && ia\.estado !== "falhou"\) setAberto\(false\)/)
     })
 })

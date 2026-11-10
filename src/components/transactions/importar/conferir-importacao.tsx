@@ -80,7 +80,7 @@ import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
-import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
+import { guiaDaAba, ordemPelaIa, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { toastUndo } from "@/lib/toast"
@@ -470,11 +470,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const [busca, setBusca] = React.useState("")
     const termo = normalizeSearchText(busca.trim())
     const nomeDoId = (id: string | null) => (id ? (imp.previa?.nomeDaCategoria.get(id) ?? "") : "")
-    // Na aba Pela IA as linhas vêm pela categoria sugerida (o sort é estável: dentro dela, a ordem de hoje).
     const pelaIa = imp.filtro === "ia"
-    const linhas = pelaIa
-        ? [...imp.visiveis].sort((a, b) => nomeDoId(imp.categoriaDe(a.clientId)).localeCompare(nomeDoId(imp.categoriaDe(b.clientId)), "pt-BR"))
-        : imp.visiveis
+    const linhas = pelaIa ? ordemPelaIa(imp.visiveis, (i) => imp.categoriaDe(i.clientId), nomeDoId) : imp.visiveis
     const daTabela = termo ? linhas.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : linhas
     const porGrupo = new Map<string, number>()
     if (pelaIa) for (const i of daTabela) {

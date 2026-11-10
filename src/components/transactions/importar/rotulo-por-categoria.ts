@@ -17,3 +17,16 @@ export function guiaDaAba(tipo: "expense" | "income", n: number, escolha: string
     const quem = tipo === "expense" ? (n === 1 ? "a 1 saída" : `as ${numberBR(n)} saídas`) : n === 1 ? "a 1 entrada" : `as ${numberBR(n)} entradas`
     return escolha ? `Para ${quem}: ${escolha}.` : `Escolha a categoria d${quem}.`
 }
+
+/**
+ * A ordem da aba Pela IA: pelo nome da categoria sugerida e, no empate do
+ * nome ("Outros" de saída e de entrada), pelo id, para cada id ficar contíguo
+ * (um grupo só por categoria). O sort é estável: dentro dela, a ordem de hoje.
+ */
+export function ordemPelaIa<T>(itens: T[], categoriaDe: (i: T) => string | null, nomeDe: (id: string | null) => string): T[] {
+    return [...itens].sort((a, b) => {
+        const ia = categoriaDe(a)
+        const ib = categoriaDe(b)
+        return nomeDe(ia).localeCompare(nomeDe(ib), "pt-BR") || String(ia).localeCompare(String(ib))
+    })
+}

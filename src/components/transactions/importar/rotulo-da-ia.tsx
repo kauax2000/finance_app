@@ -20,6 +20,12 @@ const NO_RESUMO = 5
 export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: boolean }) {
     const [aberto, setAberto] = React.useState(false)
     const { ia } = imp
+    // Saindo de pronto/falhou (Inverter, Ajustar relêem), o popover fecha: na volta ele não reabre sozinho.
+    const [estadoVisto, setEstadoVisto] = React.useState(ia.estado)
+    if (estadoVisto !== ia.estado) {
+        setEstadoVisto(ia.estado)
+        if (ia.estado !== "pronto" && ia.estado !== "falhou") setAberto(false)
+    }
     if (ia.estado === "ocioso" || ia.estado === "indisponivel") return null
     if (ia.estado === "lendo") {
         return (
@@ -32,6 +38,8 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
 
     const n = imp.contagens.ia
     const falhou = ia.estado === "falhou"
+    // A IA sugeriu, e a pessoa desfez tudo: não é "sem sugestões".
+    const desfeitas = n === 0 && ia.sugeridas > 0
     const gatilho = (
         <PopoverTrigger asChild>
             <Button
@@ -42,7 +50,7 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
                 className={cn("shrink-0", falhou && "text-warning-muted-foreground")}
             >
                 {falhou ? <ExclamationTriangleIcon data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
-                {falhou ? "A IA falhou" : n > 0 ? `${numberBR(n)} pela IA` : "IA sem sugestões"}
+                {falhou ? "A IA falhou" : n > 0 ? `${numberBR(n)} pela IA` : desfeitas ? "Sugestões desfeitas" : "IA sem sugestões"}
             </Button>
         </PopoverTrigger>
     )
@@ -69,6 +77,13 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
                     </Button>
                 </PopoverFooter>
             </>
+        )
+    } else if (desfeitas) {
+        conteudo = (
+            <PopoverHeader>
+                <PopoverTitle>Sugestões da IA desfeitas</PopoverTitle>
+                <PopoverDescription>As linhas voltaram para Sem categoria.</PopoverDescription>
+            </PopoverHeader>
         )
     } else if (n === 0) {
         conteudo = (
