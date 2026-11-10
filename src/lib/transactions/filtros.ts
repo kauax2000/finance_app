@@ -28,8 +28,9 @@ export const CAMPOS_BASE: FilterField[] = [
     { id: "pessoa", label: "Lançado por", type: "enum" },
     { id: "pagou", label: "Quem pagou", type: "enum" },
     { id: "projeto", label: "Projeto", type: "enum" },
-    { id: "parcelada", label: "Parcelada", type: "boolean" },
-    { id: "plano", label: "Compra parcelada", type: "enum", multiple: false },
+    { id: "parcelada", label: "Compras parceladas", type: "boolean" },
+    // "Parcelamento" é uma compra só; "Compras parceladas", todas. Os dois nomes não podem quase coincidir.
+    { id: "plano", label: "Parcelamento", type: "enum", multiple: false },
     { id: "assinatura", label: "Assinatura", type: "enum", multiple: false },
     { id: "recorrente", label: "Recorrente", type: "boolean" },
 ]
