@@ -649,8 +649,8 @@ function TopBarActionSwap({
 /**
  * O miolo que troca, sem o vidro: a caixa que segura o de agora e, durante o
  * gesto, o de antes por cima. É o de dentro do `TopBarActionSwap` (onde a
- * caixa é o próprio vidro, que afunda) e o do filtro da `TopBarActionGroup
- * morph` (onde a caixa mora dentro do vidro e não afunda, `afundar` falso:
+ * caixa é o próprio vidro, que afunda) e o do filtro da `TopBarActionGroup`
+ * (onde a caixa mora dentro do vidro e não afunda, `afundar` falso:
  * o vidro é do filtro, e o recorte dele é da cápsula). Fora disso, o mesmo gesto.
  */
 function MioloQueTroca({
@@ -793,45 +793,26 @@ function MioloQueTroca({
   )
 }
 
-/** Onde a cápsula cola, por extenso (classe montada não chega ao CSS). */
-const CAPSULA_COLA = {
-  always: "rounded-full ring-1 ring-foreground/10 max-md:ring-foreground/15 *:ring-0!",
-  desktop: "md:rounded-full md:ring-1 md:ring-foreground/10 md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!",
-  phone: "max-md:rounded-full max-md:ring-1 max-md:ring-foreground/15 max-md:*:ring-0! md:gap-1 md:*:rounded-full!",
-} as const
-
 /**
- * Ações da barra numa cápsula só: `TopBarAction plate` lado a lado, colados pelo
- * `ButtonGroup` (os cantos de dentro achatados), sem o divisor dele e sem a
- * sobreposição de 1px. O anel é um só, o do grupo: o de cada botão desenhava uma
- * linha na emenda. `join` diz onde cola, para quando um dos botões só existe num
- * lado da quebra (`md:hidden`, `max-md:hidden`): do outro lado o que sobra fica
- * um círculo solto, com o próprio anel. A busca compacta do app (lupa e sino) a
- * veste.
- * `morph` é a cápsula do telefone, `[lupa | filtro]`, que aceita um ou dois
- * filhos: com um, o círculo do primeiro; com dois, a cápsula. O segundo entra
- * e sai com o vidro esticando da lupa (`CapsulaQueEstica`), e `trailingKey` é a identidade
- * dele (`"month"`, `"filter"`): mudá-la com os dois presentes troca o miolo
- * no lugar, sem mexer na forma. Na troca o segundo filho de antes e o de agora
- * ficam montados juntos: um ref passado a ele precisa tolerar duas instâncias.
+ * As ações da barra numa cápsula só: a lupa (o primeiro filho) e, se houver, o
+ * segundo, `[lupa | filtro]`. Aceita um ou dois filhos: com um, o círculo do
+ * primeiro; com dois, a cápsula. O segundo entra e sai com o vidro esticando da
+ * lupa (`CapsulaQueEstica`), e o realce de cada um é um círculo dentro da pílula,
+ * no cursor e no toque. `trailingKey` é a identidade do segundo (`"month"`,
+ * `"filter"`): mudá-la com os dois presentes troca o miolo no lugar, sem mexer
+ * na forma. Na troca o segundo filho de antes e o de agora ficam montados
+ * juntos: um ref passado a ele precisa tolerar duas instâncias. A busca compacta
+ * do app (lupa e sino) a veste.
  */
 function TopBarActionGroup({
-  join = "always",
-  morph = false,
   trailingKey,
   className,
   ...props
 }: ButtonGroupProps & {
-  /** Onde os botões colam: sempre, só do `md` para cima ou só no telefone. */
-  join?: keyof typeof CAPSULA_COLA
-  /** A cápsula que estica: o segundo filho entra e sai com o vidro se alargando a partir da lupa. */
-  morph?: boolean
-  /** Com `morph`, a identidade do segundo filho; trocá-la troca o miolo dele no lugar. */
+  /** A identidade do segundo filho; trocá-la troca o miolo dele no lugar. */
   trailingKey?: string
 }) {
-  const classe = cn("*:before:hidden *:ml-0!", CAPSULA_COLA[join], className)
-  if (morph) return <CapsulaQueEstica data-join={join} trailingKey={trailingKey} className={classe} {...props} />
-  return <ButtonGroup data-slot="top-bar-action-group" data-join={join} className={classe} {...props} />
+  return <CapsulaQueEstica trailingKey={trailingKey} className={cn("*:before:hidden *:ml-0!", className)} {...props} />
 }
 
 /**
@@ -885,7 +866,7 @@ function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, miolo: HTMLElemen
 }
 
 /**
- * A cápsula que estica, o `TopBarActionGroup morph`: a lupa (o primeiro filho,
+ * A cápsula que estica, a `TopBarActionGroup`: a lupa (o primeiro filho,
  * num vidro do grupo) e o filtro (o segundo, noutro vidro, com o miolo que
  * troca). A ordem é `[lupa | filtro]`, e a ponta
  * direita fica parada: o pixel da lupa sozinha é o da ponta da cápsula.
@@ -1019,7 +1000,7 @@ const TOP_BAR_SEARCH_PLATE =
  * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
  * realce é o das carteiras, `--sidebar-accent` a 50%. Vale em todo tamanho: no
  * telefone os botões da barra são os mesmos círculos de vidro do desktop
- * (rodada 329). O `TopBarActionSwap` e os vidros da `TopBarActionGroup morph`
+ * (rodada 329). O `TopBarActionSwap` e os vidros da `TopBarActionGroup`
  * vestem a mesma receita. No telefone a tinta é a da barra de baixo
  * (`--bottom-bar-surface`, um degrau fora do `--card`) e o anel a 15%, como o
  * dela: os vidros de cima e o de baixo pairam sobre o mesmo conteúdo, e no

@@ -319,7 +319,7 @@ function DemoVidroQueEstica() {
       />
       {/* A ponta direita fica parada, como na barra do app: o grupo encosta à direita. */}
       <div className="flex w-56 justify-end">
-        <TopBarActionGroup morph trailingKey={segundo === "nenhum" ? undefined : segundo}>
+        <TopBarActionGroup trailingKey={segundo === "nenhum" ? undefined : segundo}>
           <TopBarAction label="Buscar" plate tooltip={false}>
             <MagnifyingGlassIcon className="size-4" />
           </TopBarAction>
@@ -479,7 +479,7 @@ export default function TopBarDoc() {
       <DocSection
         title="O vidro estica da lupa"
         description="Com morph, a cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
-        code={`<TopBarActionGroup morph trailingKey={filtro?.icon}>
+        code={`<TopBarActionGroup trailingKey={filtro?.icon}>
   <TopBarAction label="Buscar" plate onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
   </TopBarAction>

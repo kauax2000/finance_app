@@ -47,8 +47,8 @@ function relogioLento(fator: number) {
 }
 
 /**
- * O laboratório da cápsula do cabeçalho do telefone: a `TopBarActionGroup
- * morph` sozinha, para ver o vidro esticar da lupa, o filtro trocar de ícone
+ * O laboratório da cápsula do cabeçalho do telefone: a `TopBarActionGroup`
+ * sozinha, para ver o vidro esticar da lupa, o filtro trocar de ícone
  * e o vidro voltar a ser a lupa. Só em desenvolvimento (a mesma guarda do catálogo).
  * Temporário: sai quando o gesto estiver aprovado no aparelho.
  *
@@ -103,7 +103,7 @@ export default function Page() {
             </div>
             <Card padding="none" className="overflow-hidden">
                 <div className="flex justify-end p-4" style={ampliar ? { zoom: 3 } : undefined}>
-                    <TopBarActionGroup morph trailingKey={estado === "lupa" ? undefined : estado}>
+                    <TopBarActionGroup trailingKey={estado === "lupa" ? undefined : estado}>
                         <TopBarAction label="Buscar" plate tooltip={false}>
                             <MagnifyingGlassIcon className="size-4" />
                         </TopBarAction>

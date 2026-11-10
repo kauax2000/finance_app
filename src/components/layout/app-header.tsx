@@ -73,7 +73,7 @@ type AppHeaderProps = {
  *
  * Trocar de tela no telefone é líquido: o sino e o voltar dividem um vidro só
  * (`TopBarActionSwap`), que afunda e volta enquanto o ícone troca, e o filtro
- * pinga da lupa e volta a ela (`TopBarActionGroup morph`). Montar não anima.
+ * pinga da lupa e volta a ela (`TopBarActionGroup`). Montar não anima.
  */
 const LG = "(min-width: 64rem)"
 function assinarLg(avisar: () => void) {
@@ -281,7 +281,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
                     // volta a ela ao sair, e a identidade (`month`, `filter`)
                     // troca o ícone no lugar.
-                    <TopBarActionGroup morph trailingKey={filtro?.icon}>
+                    <TopBarActionGroup trailingKey={filtro?.icon}>
                         {lupa(true)}
                         {filtroNoCabecalho}
                     </TopBarActionGroup>

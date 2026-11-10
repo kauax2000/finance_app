@@ -317,17 +317,15 @@ describe("a base da barra", () => {
 })
 
 describe("as ações numa cápsula", () => {
-  it("TopBarActionGroup é o ButtonGroup com um anel só e sem divisor, e join diz de que lado cola", () => {
-    const peca = CODIGO.slice(CODIGO.indexOf("const CAPSULA_COLA"), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
-    expect(peca).toContain("<ButtonGroup")
-    expect(peca).toContain('data-slot="top-bar-action-group"')
-    expect(peca).toContain('join = "always"')
+  it("TopBarActionGroup é uma cápsula só: sempre o vidro que estica, sem morph nem join", () => {
+    const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup("), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
+    expect(CODIGO).not.toContain("CAPSULA_COLA")
+    expect(peca).not.toMatch(/\bmorph\b/)
+    expect(peca).not.toContain("join")
+    expect(peca).toContain("<CapsulaQueEstica")
     expect(peca).toContain('"*:before:hidden *:ml-0!"')
-    // O anel é do grupo onde cola; o de cada botão desenhava uma linha na emenda.
-    expect(peca).toContain('always: "rounded-full ring-1 ring-foreground/10 max-md:ring-foreground/15 *:ring-0!"')
-    // Do outro lado da quebra, o botão que sobra é um círculo solto com o próprio anel.
-    expect(peca).toContain("md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!")
-    expect(peca).toContain("max-md:*:ring-0! md:gap-1 md:*:rounded-full!")
+    // O realce é um círculo dentro da pílula, nos dois apontadores.
+    expect(peca).toMatch(/data-slot="top-bar-action-lupa"[\s\S]{0,160}rounded-full[\s\S]{0,80}REALCE_DO_VIDRO_NO_MIOLO/)
   })
 
   it("o cabeçalho do app escolhe a busca pela preferência do aparelho", () => {
@@ -343,8 +341,8 @@ describe("as ações numa cápsula", () => {
   it("no telefone o sino fica à esquerda (o voltar o substitui) e a lupa cola no filtro da tela, à direita", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
-    // A cápsula é a mesma com ou sem filtro: ele pinga da lupa (`morph`).
-    expect(cabecalho).toMatch(/<TopBarActionGroup\s+morph[^>]*>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
+    // A cápsula é a mesma com ou sem filtro: ele pinga da lupa.
+    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
@@ -437,11 +435,11 @@ describe("TopBarActionSwap", () => {
   })
 })
 
-describe("TopBarActionGroup morph", () => {
+describe("TopBarActionGroup", () => {
   const grupo = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup("), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
 
   it("aceita um ou dois filhos, com a identidade do segundo", () => {
-    for (const parte of ["morph", "trailingKey", "quadroDoVidroQueEstica(", "BALANCO"]) {
+    for (const parte of ["trailingKey", "quadroDoVidroQueEstica(", "BALANCO"]) {
       expect(grupo).toContain(parte)
     }
   })
@@ -500,7 +498,7 @@ describe("TopBarActionGroup morph", () => {
 
   it("o catálogo mostra os três estados: só a lupa, lupa + mês, lupa + ajustes", () => {
     const pagina = fonte("src/app/designsystem/docs/top-bar.tsx")
-    expect(pagina).toMatch(/<TopBarActionGroup[^>]*\bmorph\b/)
+    expect(pagina).toMatch(/<TopBarActionGroup[^>]*\btrailingKey=/)
     expect(pagina).toContain("trailingKey=")
   })
 })

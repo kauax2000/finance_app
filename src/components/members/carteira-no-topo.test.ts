@@ -46,6 +46,6 @@ describe("Membros no telefone", () => {
 
     it("a barra volta à lupa de sempre: nenhum convite nela", () => {
         expect(header).not.toMatch(/mobileHeaderActionFor|usePageChromeActionFor|botaoConvidar|UserPlusIcon/)
-        expect(header).toMatch(/<TopBarActionGroup morph trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}/)
+        expect(header).toMatch(/<TopBarActionGroup trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}/)
     })
 })
