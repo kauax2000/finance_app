@@ -13,6 +13,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { BuscaQueAbre } from "./busca-que-abre"
+import { FaixaDaIaWireframe, MarcaIaWireframe } from "@/components/wireframe/importar-ia-wireframe"
 import { Badge } from "@/components/ui/badge"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
@@ -107,6 +108,7 @@ const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
     { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
     { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
+    { valor: "ia", rotulo: "Pela IA", so_com_linhas: true },
 ]
 
 const papeisDe = (m: ImportarExtrato["mapeamento"]) =>
@@ -145,7 +147,7 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
     const id = imp.categoriaDe(item.clientId)
     const nome = nomeDaCategoria(imp, item)
     const atual = id ? imp.previa?.categorias.find((c) => c.id === id) : undefined
-    return (
+    const combo = (
         <Combobox
             value={id ?? ""}
             onValueChange={(v) => imp.setCategoria([item.clientId], v === SEM ? null : v)}
@@ -179,6 +181,13 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
                 </ComboboxList>
             </ComboboxContent>
         </Combobox>
+    )
+    if (imp.origemDe(item.clientId) !== "ia") return combo
+    return (
+        <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1">{combo}</div>
+            <MarcaIaWireframe />
+        </div>
     )
 }
 
@@ -587,6 +596,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault()
             }}
         >
+            <FaixaDaIaWireframe ia={imp.ia} onVer={() => imp.setFiltro("ia")} onTentar={imp.tentarIaDeNovo} />
             {imp.previa && imp.previa.categoriasNovas.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-muted-foreground">Categorias novas, criadas ao importar:</span>

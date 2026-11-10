@@ -564,3 +564,15 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
     for (const t of ["Quem pagou", "Pesos desta parcelada"]) expect(w).not.toContain(`titulo="${t}"`)
   })
 })
+
+describe("categorias pela IA (Bloco 2)", () => {
+  it("o wireframe tem a etiqueta e a borda tracejada, e a conferência o usa com o filtro Pela IA", () => {
+    const wf = semComentarios(lerFonte("src/components/wireframe/importar-ia-wireframe.tsx"), "tudo")
+    expect(wf).toContain('titulo="Categorias pela IA"')
+    expect(wf).toContain("border-dashed")
+    const conferir = semComentarios(lerFonte("src/components/transactions/importar/conferir-importacao.tsx"), "tudo")
+    expect(conferir).toContain("FaixaDaIaWireframe")
+    expect(conferir).toContain("MarcaIaWireframe")
+    expect(conferir).toContain('rotulo: "Pela IA"')
+  })
+})
