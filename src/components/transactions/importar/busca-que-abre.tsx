@@ -118,7 +118,8 @@ export function BuscaQueAbre({
                 onFocus={() => setFoco(true)}
                 onBlur={() => setFoco(false)}
                 // O recuo fica igual aberto e fechado, para a lupa não saltar ao abrir.
-                className="overflow-hidden ps-2.5 pointer-coarse:ps-3.5"
+                // Fechada, a lupa não tem fundo nem fio (o terciário da linha); aberta, volta a ser campo.
+                className={cn("overflow-hidden ps-2.5 pointer-coarse:ps-3.5", !aberta && "border-transparent bg-transparent")}
                 inputClassName="opacity-0 transition-opacity duration-(--duration-fast) ease-(--ease-out) group-data-[texto]/busca:opacity-100"
             />
             {aberta ? null : (

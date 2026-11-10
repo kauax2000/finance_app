@@ -121,8 +121,8 @@ describe("a conferência", () => {
         expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
         expect(conferir).toMatch(/grande \? \(\s*<Caption className="text-control-sm leading-5">\{`Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(imp\.visiveis\.length\)\} ·`[\s\S]*?<span>Ver todos<\/span>/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
-        expect(conferir).toMatch(/variant="secondary" aria-expanded[\s\S]*?<ArrowsPointingInIcon data-icon="inline-start" \/>\}\s*<span>Ver menos<\/span>/)
-        expect(conferir).toContain("aria-expanded={false}")
+        expect(conferir).toMatch(/variant="tertiary" disabled=\{travado\} onClick=\{alternar\}>[\s\S]*?<ArrowsPointingInIcon data-icon="inline-start" \/>\}\s*<span>Ver menos<\/span>/)
+        expect(conferir).not.toContain("aria-expanded")
     })
 
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {
@@ -175,10 +175,10 @@ describe("a conferência", () => {
         expect(conferir).toContain("data={daTabela}")
         expect(conferir).not.toContain("toolbar=")
         expect(conferir).not.toContain("globalFilter")
-        expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}[\s\S]*?botaoRecolher/)
+        expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toMatch(/if \(de\) setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
-        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}[\s\S]*?botaoRecolher/)
+        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.
@@ -227,7 +227,7 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Categoria de/)
         expect(conferir).toMatch(/<TabsTrigger[\s\S]*?disabled=\{travado\}/)
         expect(conferir).toMatch(/disabled=\{travado \|\| itens\.length === 0\}/)
-        expect(conferir).toMatch(/aria-expanded disabled=\{travado\}/)
+        expect(conferir).toMatch(/variant="tertiary" disabled=\{travado\} onClick=\{alternar\}/)
         expect(conferir).toContain("enableSelection={travado ? () => false : true}")
         expect(conferir).toContain("pending={travado}")
         expect(conferir).toMatch(/onRowClick=\{celular && !travado/)

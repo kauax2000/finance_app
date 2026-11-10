@@ -584,9 +584,10 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         return () => window.clearTimeout(t)
     }, [saindo])
     const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")
-    // Na tela cheia, ao lado das Ações e no mesmo peso: fundo, ícone e texto.
+    // Na tela cheia, entre a lupa e as Ações: três pesos — a lupa sem nada, ele sem fundo, as Ações com fundo, na ponta.
     const botaoRecolher = (
-        <Button type="button" variant="secondary" aria-expanded disabled={travado} onClick={alternar}>
+        // Sem `aria-expanded`: no terciário ele é o realce de menu aberto, e o rótulo já diz o estado.
+        <Button type="button" variant="tertiary" disabled={travado} onClick={alternar}>
             {esperando ? <Spinner data-icon="inline-start" /> : <ArrowsPointingInIcon data-icon="inline-start" />}
             <span>Ver menos</span>
         </Button>
@@ -722,12 +723,12 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         </TabsList>
                     </Tabs>
                 </div>
-                {/* Na tela cheia sobra largura: as Ações e o recolher vêm para a linha das abas. */}
+                {/* Na tela cheia sobra largura: a busca, o recolher e as Ações (na ponta) vêm para a linha das abas. */}
                 {imp.expandido ? (
                     <>
                         <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
-                        <AcoesDasVisiveis imp={imp} itens={daTabela} onPorCategoria={setPorCategoria} travado={travado} />
                         {podeExpandir ? botaoRecolher : null}
+                        <AcoesDasVisiveis imp={imp} itens={daTabela} onPorCategoria={setPorCategoria} travado={travado} />
                     </>
                 ) : null}
             </div>
@@ -832,7 +833,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                 size="sm"
                                 // a sobra de 12px à direita do rótulo é invisível e puxava a linha para a esquerda
                                 className="-me-3"
-                                aria-expanded={false}
                                 disabled={travado}
                                 onClick={alternar}
                             >
