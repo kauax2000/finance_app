@@ -1493,7 +1493,22 @@ function FilterToken({
         </span>
       </span>
 
-      {booleano ? null : ops.length > 1 && !token.rascunho ? (
+      {booleano ? null : ops.length === 2 && !token.rascunho ? (
+        // Duas opções e uma já marcada: o clique troca direto, sem menu.
+        <button
+          type="button"
+          data-slot="filter-bar-operator"
+          disabled={disabled}
+          aria-label={`${campo.label}: ${descricao.operador}. Trocar para ${rotuloOperador(ops.find((op) => op !== token.operator) ?? ops[0])}.`}
+          onClick={() => {
+            onOperadorAberto()
+            onOperador(ops.find((op) => op !== token.operator) ?? ops[0])
+          }}
+          className={cn(SEGMENTO, SEGMENTO_TAMANHO[size], SEGMENTO_TOM[tone], APAGADO_TOM[tone], "justify-center")}
+        >
+          {operadorMiolo}
+        </button>
+      ) : ops.length > 1 && !token.rascunho ? (
         <DropdownMenu
           mobile="sheet"
           onOpenChange={(abrir) => {
