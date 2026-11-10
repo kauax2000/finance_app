@@ -168,7 +168,12 @@ describe("a conferência", () => {
 
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {
         expect(conferir).toContain("<DataTable")
-        expect(conferir).toMatch(/toolbar=\{\{ search: "Buscar descrição", end: <VisiveisDaTabela onChange=\{setDaTabela\} \/>/)
+        expect(conferir).not.toMatch(/toolbar=\{\{ search: "Buscar descrição"/)
+        expect(conferir).toContain("toolbar={<VisiveisDaTabela onChange={setDaTabela} />}")
+        expect(conferir).toContain("globalFilter={busca}")
+        expect(conferir).toContain("onGlobalFilterChange={setBusca}")
+        expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela \?\? imp\.visiveis\}[\s\S]*?botaoRecolher/)
+        expect(conferir).toMatch(/if \(de\) setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
         expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela \?\? imp\.visiveis\}[\s\S]*?botaoRecolher/)
         expect(conferir).toContain("enableSelection")

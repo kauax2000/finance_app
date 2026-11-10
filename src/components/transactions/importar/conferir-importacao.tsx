@@ -12,6 +12,7 @@ import {
 import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { BuscaQueAbre } from "./busca-que-abre"
 import { Badge } from "@/components/ui/badge"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
@@ -479,6 +480,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
     // As que o `DataTable` filtrou, na tela cheia; até ele publicar, as da conferência.
     const [daTabela, setDaTabela] = React.useState<ItemImportavel[] | null>(null)
+    // A busca da tela cheia mora na linha das abas e filtra o `DataTable`.
+    const [busca, setBusca] = React.useState("")
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
@@ -507,6 +510,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         }
         startTransition(() => {
             setSaindoDe(null)
+            if (de) setBusca("")
             imp.setExpandido(!de)
         })
     }
@@ -653,6 +657,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 {/* Na tela cheia sobra largura: as Ações e o recolher vêm para a linha das abas. */}
                 {imp.expandido ? (
                     <>
+                        <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
                         <AcoesDasVisiveis imp={imp} itens={daTabela ?? imp.visiveis} onPorCategoria={setPorCategoria} travado={travado} />
                         {podeExpandir ? botaoRecolher : null}
                     </>
@@ -695,7 +700,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         getRowId={(i) => i.clientId}
                         getRowLabel={rotuloDe}
                         pageSize={false}
-                        toolbar={{ search: "Buscar descrição", end: <VisiveisDaTabela onChange={setDaTabela} /> }}
+                        toolbar={<VisiveisDaTabela onChange={setDaTabela} />}
+                        globalFilter={busca}
+                        onGlobalFilterChange={setBusca}
                         onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
                         enableSelection={travado ? () => false : true}
                         pending={travado}
