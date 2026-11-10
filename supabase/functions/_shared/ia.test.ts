@@ -1,15 +1,23 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@1.0.19'
 import { FATIA_FATURA, MAX_TOKENS_CAMPOS, MAX_TOKENS_FATIA } from './ia-config.ts'
+import { sha256Hex } from './token-hash.ts'
 import {
   alinharFatura,
+  type CategoriasPorTipo,
+  categorizar,
   type ContextoIA,
   type ItemParaAlinhar,
+  type ItemParaCategorizar,
   interpretar,
   lerFatura,
   lerImagem,
+  lerPedidoCategorizar,
+  MAX_CATEGORIZAR,
   validarCampos,
+  validarCategorias,
   validarItensFatura,
   validarPares,
+  VERSAO_PROMPT,
 } from './ia.ts'
 
 const HOJE = '2026-10-22'
@@ -520,4 +528,94 @@ Deno.test('alinharFatura recusa mais de 200 itens com fatura_grande', async () =
     assertEquals(pedidos.length, 0)
     assertEquals(f.rpcs.length, 0)
   })
+})
+
+// ---- categorizar ----
+
+const LINHAS: ItemParaCategorizar[] = [
+  { i: 0, descricao: 'COMPRA SUPERMERCADO EXTRA', tipo: 'expense' },
+  { i: 1, descricao: 'PIX RECEBIDO', tipo: 'income' },
+  { i: 2, descricao: 'POSTO SHELL', tipo: 'expense' },
+]
+const CATEGORIAS: CategoriasPorTipo = { expense: ['Mercado', 'Combustível'], income: ['Salário'] }
+
+Deno.test('validarCategorias: outra caixa ou acento vira o nome da lista', () => {
+  assertEquals(
+    validarCategorias({ sugestoes: [{ i: 0, categoria: 'mercado' }, { i: 2, categoria: 'COMBUSTIVEL' }] }, LINHAS, CATEGORIAS),
+    [{ i: 0, categoria: 'Mercado' }, { i: 2, categoria: 'Combustível' }],
+  )
+})
+
+Deno.test('validarCategorias descarta nome inexistente, tipo trocado, i repetido, i fora e nulos', () => {
+  assertEquals(validarCategorias({ sugestoes: [{ i: 0, categoria: 'Lazer' }] }, LINHAS, CATEGORIAS), [])
+  // "Salário" é de receita; a linha 0 é despesa.
+  assertEquals(validarCategorias({ sugestoes: [{ i: 0, categoria: 'Salário' }] }, LINHAS, CATEGORIAS), [])
+  assertEquals(
+    validarCategorias({ sugestoes: [{ i: 0, categoria: 'Mercado' }, { i: 0, categoria: 'Combustível' }] }, LINHAS, CATEGORIAS),
+    [{ i: 0, categoria: 'Mercado' }],
+  )
+  assertEquals(validarCategorias({ sugestoes: [{ i: 9, categoria: 'Mercado' }] }, LINHAS, CATEGORIAS), [])
+  assertEquals(validarCategorias({ sugestoes: [{ i: 1, categoria: null }, null, { i: '0', categoria: 'Mercado' }] }, LINHAS, CATEGORIAS), [])
+  assertEquals(validarCategorias({ sugestoes: 'x' }, LINHAS, CATEGORIAS), null)
+})
+
+Deno.test('categorizar envia só i, descricao e tipo, redigidos, e as listas', async () => {
+  const f = adminFalso()
+  const itens = [
+    { ...LINHAS[0], descricao: 'PIX MARIA SOUZA', valor: 42.9, data: '2026-10-01' } as ItemParaCategorizar,
+    LINHAS[1],
+  ]
+  await comFetch(() => resposta({ sugestoes: [{ i: 0, categoria: 'Mercado' }] }), async (pedidos) => {
+    const r = await categorizar(f.ctx, itens, CATEGORIAS)
+    assert(r.ok)
+    assertEquals(r.dados, [{ i: 0, categoria: 'Mercado' }])
+    const corpo = pedidos[0].body
+    assertFalse(/souza/i.test(corpo), corpo)
+    assertFalse(corpo.includes('valor'), corpo)
+    assertFalse(corpo.includes('data'), corpo)
+    assertFalse(corpo.includes('42.9'), corpo)
+    const entrada = JSON.parse(JSON.parse(corpo).messages[1].content)
+    assertEquals(Object.keys(entrada), ['itens', 'categorias'])
+    assertEquals(entrada.itens.map((x: Record<string, unknown>) => Object.keys(x)), [['i', 'descricao', 'tipo'], ['i', 'descricao', 'tipo']])
+    assertEquals(entrada.categorias, CATEGORIAS)
+    assertEquals(f.upserts[0].chave, await sha256Hex(`categorizar:${VERSAO_PROMPT}:${JSON.stringify(entrada)}`))
+  })
+})
+
+Deno.test('categorizar: sem a lista sugestoes passa ao próximo provedor', async () => {
+  const f = adminFalso()
+  await comFetch((url) => (url.includes('groq') ? resposta({ outra: 1 }) : resposta({ sugestoes: [] })), async () => {
+    const r = await categorizar(f.ctx, LINHAS, CATEGORIAS)
+    assert(r.ok)
+    assertEquals(r.provedor, 'cloudflare')
+    assertEquals(r.dados, [])
+  })
+})
+
+Deno.test('categorizar recusa mais de 200 itens com grande, sem fetch nem cota', async () => {
+  const f = adminFalso()
+  const muitos = Array.from({ length: MAX_CATEGORIZAR + 1 }, (_, i) => ({ ...LINHAS[0], i }))
+  await comFetch(() => resposta({ sugestoes: [] }), async (pedidos) => {
+    assertEquals(await categorizar(f.ctx, muitos, CATEGORIAS), { ok: false, motivo: 'grande' })
+    assertEquals(pedidos.length, 0)
+    assertEquals(f.rpcs.length, 0)
+  })
+})
+
+Deno.test('lerPedidoCategorizar aceita o corpo válido e tira campos a mais', () => {
+  const corpo = { op: 'categorizar', itens: [{ ...LINHAS[0], valor: 10, data: '2026-10-01' }, LINHAS[1]], categorias: CATEGORIAS }
+  assertEquals(lerPedidoCategorizar(corpo), { itens: [LINHAS[0], LINHAS[1]], categorias: CATEGORIAS })
+})
+
+Deno.test('lerPedidoCategorizar recusa descrição longa, tipo ruim, i repetido e 101 categorias', () => {
+  const ok = { itens: LINHAS, categorias: CATEGORIAS }
+  assertEquals(lerPedidoCategorizar({ ...ok, itens: [{ ...LINHAS[0], descricao: 'x'.repeat(201) }] }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, itens: [{ ...LINHAS[0], tipo: 'x' }] }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, itens: [LINHAS[0], { ...LINHAS[1], i: 0 }] }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, itens: [{ ...LINHAS[0], i: -1 }] }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, itens: [] }), null)
+  const muitas = Array.from({ length: 101 }, (_, k) => `Cat ${k}`)
+  assertEquals(lerPedidoCategorizar({ ...ok, categorias: { ...CATEGORIAS, expense: muitas } }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, categorias: { expense: ['x'.repeat(61)], income: [] } }), null)
+  assertEquals(lerPedidoCategorizar({ ...ok, categorias: { expense: ['Mercado'] } }), null)
 })

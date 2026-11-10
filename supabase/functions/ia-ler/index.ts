@@ -14,11 +14,15 @@ import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 import {
   alinharFatura,
+  type CategoriasPorTipo,
+  categorizar,
   ehDataValida,
   interpretar,
   type ItemParaAlinhar,
+  type ItemParaCategorizar,
   lerFatura,
   lerImagem,
+  lerPedidoCategorizar,
   nomesDosMembros,
   type ResultadoIA,
 } from '../_shared/ia.ts'
@@ -52,6 +56,7 @@ type Pedido =
   | { op: 'fatura'; workspaceId: string; texto: string; fechamento: string }
   | { op: 'imagem'; workspaceId: string; bytes: Uint8Array; mime: string }
   | { op: 'alinhar'; workspaceId: string; banco: ItemParaAlinhar[]; app: ItemParaAlinhar[] }
+  | { op: 'categorizar'; workspaceId: string; itens: ItemParaCategorizar[]; categorias: CategoriasPorTipo }
 
 /** Uma lista de `ItemParaAlinhar`, com descrição de até 200 caracteres; null se algum item falhar. */
 function listaParaAlinhar(v: unknown): ItemParaAlinhar[] | null {
@@ -117,6 +122,10 @@ async function atender(req: Request): Promise<Response> {
         const app = listaParaAlinhar(corpo.app)
         if (!banco || !app) return INVALIDO('Itens para alinhar inválidos.')
         pedido = { op, workspaceId: typeof workspaceId === 'string' ? workspaceId : '', banco, app }
+      } else if (op === 'categorizar') {
+        const lido = lerPedidoCategorizar(corpo)
+        if (!lido) return INVALIDO('Lista para categorizar inválida.')
+        pedido = { op, workspaceId: typeof workspaceId === 'string' ? workspaceId : '', ...lido }
       } else {
         if (op !== 'frase' && op !== 'fatura') return INVALIDO('Operação inválida.')
         if (typeof texto !== 'string' || !texto.trim()) {
@@ -156,7 +165,7 @@ async function atender(req: Request): Promise<Response> {
   if (plano !== 'familia') return json(402, { error: 'Sem plano ativo nesta carteira.' })
 
   const hoje = formatYmd(appTodayYmd())
-  const responder = <T>(r: ResultadoIA<T>, chave: 'campos' | 'itens' | 'pares') => {
+  const responder = <T>(r: ResultadoIA<T>, chave: 'campos' | 'itens' | 'pares' | 'sugestoes') => {
     if (r.ok) return json(200, { ok: true, [chave]: r.dados, provedor: r.provedor, modelo: r.modelo })
     // Sem chave é problema de configuração: para a pessoa, a IA só não respondeu.
     if (r.motivo === 'sem_chave') console.error('ia-ler: sem chave de provedor')
@@ -174,5 +183,6 @@ async function atender(req: Request): Promise<Response> {
   const ctx = { admin, userId, hoje, nomes }
   if (pedido.op === 'frase') return responder(await interpretar(ctx, pedido.texto), 'campos')
   if (pedido.op === 'alinhar') return responder(await alinharFatura(ctx, pedido.banco, pedido.app), 'pares')
+  if (pedido.op === 'categorizar') return responder(await categorizar(ctx, pedido.itens, pedido.categorias), 'sugestoes')
   return responder(await lerFatura(ctx, pedido.texto, pedido.fechamento), 'itens')
 }
