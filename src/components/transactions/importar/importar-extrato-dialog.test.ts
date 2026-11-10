@@ -374,28 +374,30 @@ describe("na tela cheia o topo fica parado e só as linhas rolam", () => {
     })
 })
 
-describe("o rótulo da IA mora depois das abas (Bloco 2 no DS)", () => {
-    const rotulo = ler("rotulo-da-ia.tsx")
-
-    it("a faixa do wireframe saiu da conferência", () => {
+describe("a IA mora na aba ✦ Sugeridas, sem botão próprio", () => {
+    it("o botão da IA saiu, e a faixa do wireframe também", () => {
+        expect(existsSync("src/components/transactions/importar/rotulo-da-ia.tsx")).toBe(false)
+        expect(conferir).not.toContain("RotuloDaIa")
         expect(conferir).not.toContain("FaixaDaIaWireframe")
     })
 
-    it("na linha das abas: Tabs, depois o rótulo, depois a busca", () => {
-        const tabs = conferir.indexOf("</Tabs>")
-        const meio = conferir.indexOf("<RotuloDaIa", tabs)
-        expect(tabs).toBeGreaterThan(-1)
-        expect(meio).toBeGreaterThan(tabs)
-        expect(conferir.indexOf("<BuscaQueAbre", meio)).toBeGreaterThan(meio)
+    it("lendo, a aba aparece com o spinner no lugar da contagem", () => {
+        expect(conferir).toContain("(f.ia && iaLendo)")
+        expect(conferir).toMatch(/f\.ia && iaLendo \? \(\s*<Spinner/)
     })
 
-    it("é um link que abre o resumo, com o Desfazer de volta no toast, sem Ver sugeridas", () => {
-        expect(rotulo).toContain('"brandTertiary"')
-        expect(rotulo).toContain("PopoverTitle")
-        expect(rotulo).toContain("toastUndo")
-        expect(rotulo).toContain('"Desfazer as "')
-        expect(rotulo).toContain("tentarIaDeNovo")
-        expect(rotulo).not.toMatch(/Ver (as )?sugeridas/)
+    it("o aviso da aba desfaz todas, com o toast que volta", () => {
+        expect(conferir).toContain("Desfazer todas")
+        expect(conferir).toMatch(/toastUndo\("Sugestões da IA desfeitas", \{ onUndo: imp\.desfazerIa\(ids\) \}\)/)
+    })
+
+    it("a falha é um aviso genérico acima das abas, com Tentar de novo", () => {
+        const inicio = conferir.indexOf('imp.ia.estado === "falhou"')
+        const falha = conferir.slice(inicio, conferir.indexOf("</Alert>", inicio))
+        expect(falha).toContain('tone="warning"')
+        expect(falha).toContain("Não foi possível gerar a categorização automática.")
+        expect(falha).toContain("imp.tentarIaDeNovo")
+        expect(falha).not.toContain("imp.ia.mensagem")
     })
 })
 
@@ -416,7 +418,7 @@ describe("a aba Pela IA agrupada, e o ✦ no campo (Bloco 2 no DS)", () => {
     })
 
     it("a faixa da aba é um Alert com o ícone pelo prop, nunca filho", () => {
-        const alerta = conferir.match(/<Alert\b[\s\S]*?<\/Alert>/)?.[0] ?? ""
+        const alerta = conferir.match(/<Alert\b[^>]*icon=[\s\S]*?<\/Alert>/)?.[0] ?? ""
         expect(alerta).toContain("icon={")
         expect(alerta).not.toContain("<svg")
         expect(alerta).not.toMatch(/<\w*Icon className/)
@@ -433,32 +435,13 @@ describe("as ações do grupo moram no rótulo, e a tabela fica alinhada (corre�
     it("a coluna escondida do telefone não entra no desktop, para o colSpan do grupo bater", () => {
         expect(conferir).toMatch(/\.\.\.\(celular \? \[\{[\s\S]*?id: "categoria-nome"/)
     })
-
-    it("o resumo da IA concorda o número: 1 ficou, N ficaram", () => {
-        const rotulo = ler("rotulo-da-ia.tsx")
-        expect(rotulo).toContain('=== 1 ? "ficou" : "ficaram"')
-        expect(rotulo).not.toMatch(/\)\} ficaram sem categoria/)
-    })
 })
 
-describe("revisão final: grupos contíguos, desfeitas e o popover que não reabre", () => {
+describe("revisão final: grupos contíguos", () => {
     it("o nome empatado desempata pelo id: cada categoria fica num grupo só, e o resto segue a ordem de hoje", () => {
         const cat: Record<string, string> = { a: "o1", b: "o2", c: "o1", d: "m", e: "o2" }
         const nome = (id: string | null) => ({ o1: "Outros", o2: "Outros", m: "Mercado" })[id ?? ""] ?? ""
         expect(ordemPelaIa(["a", "b", "c", "d", "e"], (i) => cat[i], nome)).toEqual(["d", "a", "c", "b", "e"])
         expect(conferir).toContain("ordemPelaIa(imp.visiveis")
-    })
-
-    it("depois do Desfazer as N, o rótulo diz Sugestões desfeitas, e não IA sem sugestões", () => {
-        const rotulo = ler("rotulo-da-ia.tsx")
-        expect(rotulo).toContain("n === 0 && ia.sugeridas > 0")
-        expect(rotulo).toContain('"Sugestões desfeitas"')
-        expect(rotulo).toContain("<PopoverTitle>Sugestões da IA desfeitas</PopoverTitle>")
-        expect(rotulo).toContain("As linhas voltaram para Sem categoria.")
-    })
-
-    it("saindo de pronto/falhou o popover fecha, para não reabrir sozinho", () => {
-        const rotulo = ler("rotulo-da-ia.tsx")
-        expect(rotulo).toMatch(/if \(ia\.estado !== "pronto" && ia\.estado !== "falhou"\) setAberto\(false\)/)
     })
 })

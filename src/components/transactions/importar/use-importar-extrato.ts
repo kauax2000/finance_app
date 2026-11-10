@@ -129,20 +129,6 @@ const semCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
 export const origemDaCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas): OrigemDaCategoria | null =>
     escolhidas.has(i.clientId) ? (escolhidas.get(i.clientId) == null ? null : "pessoa") : i.origem
 
-/** As categorias que a IA usou nas linhas dadas, da mais usada para a menos (empate: id, pt-BR; o nome mora fora). */
-export function porCategoriaDaIa(
-    itens: ItemImportavel[],
-    origemDe: (clientId: string) => OrigemDaCategoria | null,
-    categoriaDe: (clientId: string) => string | null
-): { categoryId: string; n: number }[] {
-    const n = new Map<string, number>()
-    for (const i of itens) {
-        const c = origemDe(i.clientId) === "ia" ? categoriaDe(i.clientId) : null
-        if (c != null) n.set(c, (n.get(c) ?? 0) + 1)
-    }
-    return [...n].map(([categoryId, n]) => ({ categoryId, n })).sort((a, b) => b.n - a.n || a.categoryId.localeCompare(b.categoryId, "pt-BR"))
-}
-
 /** Desfazer a IA: as linhas dadas que ainda são dela viram "Sem categoria" (`null`); devolve também quais foram. */
 export function escolhidasSemIa(itens: ItemImportavel[], escolhidas: CategoriasEscolhidas, clientIds: string[]) {
     const dadas = new Set(clientIds)

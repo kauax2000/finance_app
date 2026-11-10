@@ -14,8 +14,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline"
 
 import { BuscaQueAbre } from "./busca-que-abre"
 import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
-import { RotuloDaIa } from "./rotulo-da-ia"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
@@ -472,6 +471,12 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     const termo = normalizeSearchText(busca.trim())
     const nomeDoId = (id: string | null) => (id ? (imp.previa?.nomeDaCategoria.get(id) ?? "") : "")
     const pelaIa = imp.filtro === "ia"
+    const iaLendo = imp.ia.estado === "lendo"
+    // Todas as da IA de uma vez, com o toast que deixa voltar.
+    const desfazerTodas = () => {
+        const ids = (imp.previa?.itens ?? []).filter((i) => imp.origemDe(i.clientId) === "ia").map((i) => i.clientId)
+        toastUndo("Sugestões da IA desfeitas", { onUndo: imp.desfazerIa(ids) })
+    }
     const linhas = pelaIa ? ordemPelaIa(imp.visiveis, (i) => imp.categoriaDe(i.clientId), nomeDoId) : imp.visiveis
     const daTabela = termo ? linhas.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : linhas
     const porGrupo = new Map<string, number>()
@@ -669,18 +674,24 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
             {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
                 No desktop as abas dividem a linha; no telefone, onde não cabem, a fileira rola de lado. */}
-            {/* No compacto e no telefone as abas ocupam a linha: o rótulo da IA mora logo acima, à esquerda. */}
-            {!imp.expandido || celular ? (
-                <div className={cn("flex empty:hidden", esmaece)}>
-                    <RotuloDaIa imp={imp} travado={travado} />
-                </div>
+            {/* A IA mora na aba "✦ Sugeridas"; acima das abas fica só a falha, com o caminho de volta. */}
+            {imp.ia.estado === "falhou" ? (
+                <Alert size="sm" tone="warning" className={esmaece}>
+                    <AlertDescription>Não foi possível gerar a categorização automática.</AlertDescription>
+                    <AlertActions placement="inline">
+                        <AlertAction disabled={travado} onClick={imp.tentarIaDeNovo}>
+                            Tentar de novo
+                        </AlertAction>
+                    </AlertActions>
+                </Alert>
             ) : null}
             <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
-                <div className={cn("min-w-0", (!imp.expandido || celular) && "flex-1")}>
+                <div className="min-w-0 flex-1">
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
                         {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
                         <TabsList aria-label="Filtro" scrollable={celular} stretch={!imp.expandido}>
-                            {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
+                            {/* A aba da IA aparece já enquanto ela lê, com o spinner no lugar da contagem. */}
+                            {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor || (f.ia && iaLendo)).map((f) => (
                                 <TabsTrigger
                                     key={f.valor}
                                     value={f.valor}
@@ -694,7 +705,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                         requestAnimationFrame(() => aba.scrollIntoView({ block: "nearest", inline: "nearest" }))
                                     }}
                                     count={
-                                        f.aviso && imp.contagens[f.valor] > 0 ? (
+                                        f.ia && iaLendo ? (
+                                            <Spinner size="sm" label="A IA está categorizando" />
+                                        ) : f.aviso && imp.contagens[f.valor] > 0 ? (
                                             <Badge size="xs" tone="warning" className="nums">
                                                 <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
                                             </Badge>
@@ -710,13 +723,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </Tabs>
                 </div>
                 {/* Na tela cheia sobra largura: as Ações e o recolher vêm para a linha das abas. */}
-                {imp.expandido && !celular ? (
-                    <>
-                        <RotuloDaIa imp={imp} travado={travado} />
-                        {/* A sobra fica entre o rótulo e a busca: o resto vai à direita. */}
-                        <div className="flex-1" />
-                    </>
-                ) : null}
                 {imp.expandido ? (
                     <>
                         <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
@@ -755,6 +761,11 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             {pelaIa && imp.visiveis.length > 0 ? (
                 <Alert size="sm" icon={<SparklesIcon />} className={esmaece}>
                     <AlertDescription>A IA sugeriu estas. Troque o que não fizer sentido: a troca vira sua.</AlertDescription>
+                    <AlertActions placement="inline">
+                        <AlertAction disabled={travado} onClick={desfazerTodas}>
+                            Desfazer todas
+                        </AlertAction>
+                    </AlertActions>
                 </Alert>
             ) : null}
             {imp.expandido ? (

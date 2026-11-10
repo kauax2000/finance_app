@@ -18,7 +18,6 @@ import {
     criarVez,
     escolhidasDevolvidas,
     escolhidasSemIa,
-    porCategoriaDaIa,
     contagemDosFiltros,
     filtrarItens,
     idsParaCategoria,
@@ -569,15 +568,6 @@ describe("desfazer a IA", () => {
         ])
     )
     const escolhidas = aplicarCategoria(new Map(), ["d"], "mercado")
-    const origemDe = (id: string) => origemDaCategoria(itens.find((i) => i.clientId === id)!, escolhidas)
-    const categoriaDe = (id: string) => categoriaEfetiva(itens.find((i) => i.clientId === id)!, escolhidas)
-
-    it("porCategoriaDaIa conta só as da IA, da mais usada para a menos", () => {
-        expect(porCategoriaDaIa(itens, origemDe, categoriaDe)).toEqual([
-            { categoryId: "mercado", n: 2 },
-            { categoryId: "lazer", n: 1 },
-        ])
-    })
 
     it("escolhidasSemIa põe as da IA em Sem categoria e não toca na da pessoa", () => {
         const { escolhidas: nova, ids } = escolhidasSemIa(itens, escolhidas, ["a", "c", "d"])
