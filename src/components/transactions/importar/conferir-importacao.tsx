@@ -579,7 +579,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         // saldo): só a lista sumir e o resto pular de lugar lia como tranco. `data-saindo` deixa os
         // passos do cabeçalho esmaecerem no mesmo compasso.
         <div
-            className={cn("flex min-w-0 flex-col gap-2 md:gap-4", saida)}
+            className={cn("flex min-w-0 flex-col gap-2 md:gap-4", imp.expandido && "md:min-h-0 md:flex-1", saida)}
             data-saindo={saindo || undefined}
             onTransitionEnd={sair}
             onTransitionCancel={sair}
@@ -680,8 +680,16 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             ) : null}
             {imp.expandido ? (
                 // A barra e as linhas chegam em escada (teto de 8), a barra junto com a primeira; a moldura e o cabeçalho já estão lá.
-                <div className={ESCADA_DA_TABELA}>
+                // A altura desce até o viewport: o grupo, a moldura e o pai do viewport (o `hidden md:block`, só no desktop) encolhem, e o viewport rola.
+                <div
+                    className={cn(
+                        ESCADA_DA_TABELA,
+                        "md:flex md:min-h-0 md:flex-col md:[&_[data-slot=table-panel-group]]:min-h-0 md:[&_[data-slot=table-panel]]:min-h-0 md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:flex md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:min-h-0 md:[&_[data-slot=table-panel]>div:has(>[data-slot=table-viewport])]:flex-col"
+                    )}
+                >
                     <DataTable
+                        stickyHeader={imp.expandido}
+                        viewportClassName="md:min-h-0"
                         aria-label="Lançamentos do arquivo"
                         columns={colunas}
                         data={daTabela}

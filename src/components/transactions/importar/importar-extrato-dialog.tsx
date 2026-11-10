@@ -199,6 +199,8 @@ export function ImportarExtratoDialog({
                         )}
                     </DialogHeader>
                     <DialogBody
+                        // Na tela cheia do desktop o corpo não rola: quem rola é o viewport da tabela, com as abas e o cabeçalho parados.
+                        className={expandido ? "md:flex md:flex-col md:overflow-hidden" : undefined}
                         onDragOver={arrastando}
                         onDragLeave={(e) => {
                             if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSobre(false)
@@ -355,7 +357,7 @@ export function ImportarExtratoDialog({
                             />
                         ) : imp.passo === "conferir" ? (
                             // Só o esmaecer da chegada: a lista e a tabela já descem em escada por dentro.
-                            <div key="conferir" className={ESMAECE_AO_CHEGAR}>
+                            <div key="conferir" className={cn(ESMAECE_AO_CHEGAR, expandido && "md:flex md:min-h-0 md:flex-1 md:flex-col")}>
                                 <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
                             </div>
                         ) : imp.passo === "feito" && feito ? (

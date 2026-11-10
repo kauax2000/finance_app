@@ -286,9 +286,9 @@ describe("Ver todos e Recolher em três fases", () => {
         expect(conferir).toContain("onTransitionEnd={sair}")
         expect(conferir).toContain('const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")')
         // A vista inteira esmaece (abas, faixa das colunas, saldo), não só a lista: o resto pulava de lugar.
-        expect(conferir).toMatch(/className=\{cn\("flex min-w-0 flex-col gap-2 md:gap-4", saida\)\}\s*data-saindo=\{saindo \|\| undefined\}/)
+        expect(conferir).toMatch(/className=\{cn\("flex min-w-0 flex-col gap-2 md:gap-4", imp\.expandido && "md:min-h-0 md:flex-1", saida\)\}\s*data-saindo=\{saindo \|\| undefined\}/)
         expect(conferir).toContain("cn(esmaece, ESCADA_DA_LISTA)")
-        expect(conferir).toContain("<div className={ESCADA_DA_TABELA}>")
+        expect(conferir).toMatch(/className=\{cn\(\s*ESCADA_DA_TABELA,/)
         expect(dialogo).toContain("className={PASSOS_ACOMPANHAM}")
         // Nada do `menu-content-in` (desfoque de 10px): o dono achou brusco.
         expect(conferir).not.toContain("dialog-step")
@@ -315,7 +315,7 @@ describe("a troca de passo chega em escada", () => {
         expect(dialogo).toContain('<div key="arquivo" className={cn(ESCADA, "flex flex-col gap-4")}>')
         expect(colunas).toContain('<div key="colunas" className={cn(ESCADA, "flex flex-col gap-6")}>')
         expect(dialogo).toContain('<EmptyState key="feito" variant="plain" className={ESCADA}>')
-        expect(dialogo).toMatch(/<div key="conferir" className=\{ESMAECE_AO_CHEGAR\}>\s*<ConferirImportacao/)
+        expect(dialogo).toMatch(/<div key="conferir" className=\{cn\(ESMAECE_AO_CHEGAR, expandido && "md:flex md:min-h-0 md:flex-1 md:flex-col"\)\}>\s*<ConferirImportacao/)
         expect(dialogo).not.toContain("dialog-step")
         expect(colunas).not.toContain("dialog-step")
     })
@@ -346,5 +346,28 @@ describe("a busca que abre da lupa", () => {
         expect(busca).toContain("stopPropagation")
         expect(busca).toMatch(/prefers-reduced-motion|useReducedMotion/)
         expect(busca).toContain("18rem")
+    })
+})
+
+describe("na tela cheia o topo fica parado e só as linhas rolam", () => {
+    it("o DialogBody para de rolar no desktop, só com a tela cheia", () => {
+        expect(dialogo).toMatch(/<DialogBody[\s\S]*?className=\{expandido \? "md:flex md:flex-col md:overflow-hidden" : undefined\}/)
+        expect(dialogo).toMatch(/key="conferir" className=\{cn\(ESMAECE_AO_CHEGAR, expandido && "md:flex md:min-h-0 md:flex-1 md:flex-col"\)\}/)
+    })
+
+    it("o cabeçalho das colunas cola, e a cadeia chega ao pai do viewport por :has", () => {
+        expect(conferir).toContain("stickyHeader={imp.expandido}")
+        expect(conferir).toContain(":has(>[data-slot=table-viewport])")
+        expect(conferir).toContain('imp.expandido && "md:min-h-0 md:flex-1"')
+    })
+
+    it("toda classe nova da cadeia é só do desktop: no telefone o pai do viewport segue hidden", () => {
+        const novas = [dialogo, conferir].flatMap((f) =>
+            [...f.matchAll(/"([^"]*md:min-h-0[^"]*)"/g)].map((m) => m[1])
+        )
+        expect(novas.length).toBeGreaterThan(0)
+        for (const s of novas) {
+            for (const classe of s.split(/\s+/).filter(Boolean)) expect(classe).toMatch(/^md:/)
+        }
     })
 })
