@@ -1,6 +1,6 @@
 # Categorias pela IA no Importar extrato — plano
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** ao chegar na conferência do Importar extrato, as linhas que o histórico não categorizou recebem sozinhas uma categoria sugerida. Primeiro passam pelas regras que o app já tem, sem custo. O que sobrar vai à IA. A pessoa vê o que veio da IA, revisa e troca antes de importar.
 
@@ -96,7 +96,7 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
 - **A resposta da op:** `{ ok: true, sugestoes: Sugestao[], provedor, modelo }`, ou `{ ok: false, motivo }`. O motivo pode ser `cota`, `sem_ia`, `sem_chave` ou `grande`.
 - **Acima de `MAX_CATEGORIZAR`:** `{ ok: false, motivo: 'grande' }`. Quem corta em 200 é o cliente.
 
-- [ ] **Step 1: testes que falham** (`ia.test.ts`):
+- [x] **Step 1: testes que falham** (`ia.test.ts`):
   - `validarCategorias`:
     - um nome válido com outra caixa ou acento (`"mercado"` para `"Mercado"`) vira o nome da lista;
     - descarta um nome inexistente;
@@ -112,16 +112,16 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
   - `lerPedidoCategorizar`:
     - aceita um corpo válido;
     - recusa descrição de 201 caracteres, tipo `"x"`, `i` repetido e 101 categorias.
-- [ ] **Step 2:** `npm run test:edge` → FAIL.
-- [ ] **Step 3: implementar.**
+- [x] **Step 2:** `npm run test:edge` → FAIL.
+- [x] **Step 3: implementar.**
   - O prompt (`PROMPT_CATEGORIZAR`) pede JSON `{"sugestoes":[{"i":0,"categoria":"Mercado"}]}`. Ele manda escolher só nomes da lista do tipo da linha, ou deixar a linha de fora na dúvida. É em português, com dois exemplos curtos sem dado real.
   - Passa por `executar(ctx, 'texto', …, MAX_TOKENS_FATIA, (b) => validarCategorias(b, itens, categorias))`.
   - Em `ia-ler/index.ts`:
     - entra `{ op: 'categorizar'; workspaceId; itens; categorias }` no `Pedido`;
     - a leitura usa `lerPedidoCategorizar` (inválido → `INVALIDO('Lista para categorizar inválida.')`);
     - o despacho faz `responder(await categorizar(ctx, …), 'sugestoes')`.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(ia): a op categorizar na ia-ler, escolhendo só entre as categorias da carteira`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(ia): a op categorizar na ia-ler, escolhendo só entre as categorias da carteira`.
 
 ### Task 2: as regras locais e a parte pura do cliente
 
@@ -147,7 +147,7 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
   ```
 - O `motivo` de `historico` e `palavra` vira origem `"historico"`; o de `nome` e `comum` vira `"regra"`. O `sugerirCategoria` fica sem uso e é apagado junto com o teste dele.
 
-- [ ] **Step 1: testes que falham.**
+- [x] **Step 1: testes que falham.**
   - `prepararItens` com histórico vazio:
     - categoria "Mercado" e descrição "COMPRA MERCADO EXTRA": `categoryId` do Mercado, origem `"regra"`;
     - estorno no cartão: casa com categoria de despesa;
@@ -158,12 +158,12 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
     - a partir da linha 201 (`ficaram` conta as que ficaram de fora).
   - `aplicarSugestoes` ignora um `i` sem `clientId`.
   - `categorizarComIA` mapeia `grande` para "Muitas linhas para a IA. Categorize o resto à mão.".
-- [ ] **Step 2:** `npx vitest run src/lib/import src/lib/ia` → FAIL.
-- [ ] **Step 3:** implementar.
+- [x] **Step 2:** `npx vitest run src/lib/import src/lib/ia` → FAIL.
+- [x] **Step 3:** implementar.
   - No `prepararLote`, passe as categorias e o destino a `prepararItens`, e acrescente `type` ao `select` do histórico.
   - `comCategoriaDaPlanilha` marca origem `"planilha"`. A categoria que ainda não existe e é zerada (`categoryId: null`) fica com origem `null`.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): as regras do lançamento inteligente categorizam antes da IA`.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): as regras do lançamento inteligente categorizam antes da IA`.
 
 ### Task 3: a IA no hook do Importar
 
@@ -195,16 +195,16 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
   - outro erro → `falhou`, com "A IA não respondeu agora. Categorize à mão.".
 - Fechar, `reiniciar` ou voltar ao arquivo invalida a vez.
 
-- [ ] **Step 1: testes que falham.** Use as funções puras, e o hook com o `categorizarComIA` simulado, como o arquivo já faz com o Supabase:
+- [x] **Step 1: testes que falham.** Use as funções puras, e o hook com o `categorizarComIA` simulado, como o arquivo já faz com o Supabase:
   - a resposta não pisa numa categoria da pessoa;
   - uma resposta de vez velha é ignorada;
   - 402 → `indisponivel`;
   - releitura reaplica pela chave;
   - `contagens.ia`.
-- [ ] **Step 2:** rodar → FAIL.
-- [ ] **Step 3:** implementar.
-- [ ] **Step 4:** a Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): a conferência pede à IA as categorias que faltam, sem pisar na escolha da pessoa`.
+- [x] **Step 2:** rodar → FAIL.
+- [x] **Step 3:** implementar.
+- [x] **Step 4:** a Verificação passa.
+- [x] **Step 5:** commit `feat(importar): a conferência pede à IA as categorias que faltam, sem pisar na escolha da pessoa`.
 
 ### Task 4: o wireframe na conferência
 
@@ -228,13 +228,13 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
 - **A marca:** em `Linha` (compacto) e na célula de categoria da tabela, quando `origemDe(id) === "ia"`.
 - **O filtro novo:** `{ valor: "ia", rotulo: "Pela IA", so_com_linhas: true }`, depois de "Sem categoria".
 
-- [ ] **Step 1: testes de fonte que falham.**
+- [x] **Step 1: testes de fonte que falham.**
   - O wireframe tem `WIREFRAME · Bloco 2 · Categorias pela IA` e `border-dashed`, e não importa nada de `@/components/ui/`.
   - `conferir-importacao.tsx` importa `FaixaDaIaWireframe` e `MarcaIaWireframe`, e tem `rotulo: "Pela IA"`.
-- [ ] **Step 2:** rodar → FAIL.
-- [ ] **Step 3:** implementar.
-- [ ] **Step 4:** a Verificação passa. O `ds:audit` ignora `src/components/wireframe/`.
-- [ ] **Step 5:** commit `feat(importar): a faixa e a marca da IA na conferência, em wireframe`.
+- [x] **Step 2:** rodar → FAIL.
+- [x] **Step 3:** implementar.
+- [x] **Step 4:** a Verificação passa. O `ds:audit` ignora `src/components/wireframe/`.
+- [x] **Step 5:** commit `feat(importar): a faixa e a marca da IA na conferência, em wireframe`.
 
 ### Task 5: a jornada e o Atlas
 
@@ -243,14 +243,14 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
 - Modify: `docs/atlas/template.html` (o "Como funciona" do Importar, o apêndice de backend com a op `categorizar` da `ia-ler`, a data e as contagens da capa)
 - Generated: `docs/atlas/atlas-jornadas.html`, via `python3 docs/atlas/build.py`
 
-- [ ] **Step 1:** descrever o passo novo:
+- [x] **Step 1:** descrever o passo novo:
   - as regras primeiro;
   - a IA para o que sobra (op `categorizar` da `ia-ler`, plano Família, uma cota por lote, até 200 linhas);
   - a marca e o filtro "Pela IA";
   - a pessoa vence.
-- [ ] **Step 2:** rodar `python3 docs/atlas/build.py`, sem erro.
-- [ ] **Step 3:** commit `docs(jornadas): a categoria pela IA no Importar`.
-- [ ] **Controlador:** republicar `docs/atlas/atlas-jornadas.html` no mesmo URL do Atlas (https://claude.ai/artifact/1N43LFYP1YSVsWaRMaNTRL) com a ferramenta de Artifact.
+- [x] **Step 2:** rodar `python3 docs/atlas/build.py`, sem erro.
+- [x] **Step 3:** commit `docs(jornadas): a categoria pela IA no Importar`.
+- [x] **Controlador:** republicar `docs/atlas/atlas-jornadas.html` no mesmo URL do Atlas (https://claude.ai/artifact/1N43LFYP1YSVsWaRMaNTRL) com a ferramenta de Artifact.
 
 ### Task 6: deploy e conferência ao vivo (controlador, com o dono)
 
