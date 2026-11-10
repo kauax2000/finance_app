@@ -528,17 +528,11 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         return () => window.clearTimeout(t)
     }, [saindo])
     const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")
-    const botaoExpandir = (
-        <Button
-            type="button"
-            variant="tertiary"
-            size="icon-lg"
-            aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
-            aria-expanded={imp.expandido}
-            disabled={travado}
-            onClick={alternar}
-        >
-            {esperando ? <Spinner /> : imp.expandido ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
+    // Na tela cheia, ao lado das Ações e no mesmo peso: fundo, ícone e texto.
+    const botaoRecolher = (
+        <Button type="button" variant="secondary" aria-expanded disabled={travado} onClick={alternar}>
+            {esperando ? <Spinner data-icon="inline-start" /> : <ArrowsPointingInIcon data-icon="inline-start" />}
+            <span>Ver menos</span>
         </Button>
     )
 
@@ -659,7 +653,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 {imp.expandido ? (
                     <>
                         <AcoesDasVisiveis imp={imp} itens={daTabela ?? imp.visiveis} onPorCategoria={setPorCategoria} travado={travado} />
-                        {podeExpandir ? botaoExpandir : null}
+                        {podeExpandir ? botaoRecolher : null}
                     </>
                 ) : null}
             </div>
