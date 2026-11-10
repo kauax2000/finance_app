@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useMemo, useRef, useState } from "react"
 
 import { useAuth } from "@/components/providers"
+import { categorizarComIA, type Lido } from "@/lib/ia/ler"
+import { aplicarSugestoes, pedidoDaIA } from "@/lib/import/categorizar"
 import { numberBR } from "@/lib/formatters"
 import { type Deducao, deduzirMapeamento, lerCsv, mapearCsv } from "@/lib/import/csv"
 import {
@@ -16,6 +18,7 @@ import {
     type Existente,
     importarLancamentos,
     type ItemImportavel,
+    type OrigemDaCategoria,
     prepararItens,
     tipoDoItem,
 } from "@/lib/import/importar"
@@ -27,14 +30,25 @@ import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data
 import { supabase } from "@/lib/supabase"
 import { toastSuccess } from "@/lib/toast"
 
+import { chavesDasLinhas } from "./chave-da-linha"
+
 export type PassoImportacao = "arquivo" | "colunas" | "conferir" | "feito"
 
 type Categoria = { id: string; name: string; type: "income" | "expense"; color?: string | null; icon?: string | null }
 export type SourceImportacao = "import_statement" | "import_sheet"
-export type FiltroConferencia = "todos" | "saidas" | "entradas" | "existem" | "sem-categoria"
+export type FiltroConferencia = "todos" | "saidas" | "entradas" | "existem" | "sem-categoria" | "ia"
 /** A categoria que a pessoa escolheu por item (`null`: sem categoria, de propósito). */
 export type CategoriasEscolhidas = Map<string, string | null>
 export type CategoriaNova = { nome: string; tipo: "income" | "expense"; clientId: string }
+/** A IA da conferência: `ficaram` são as linhas além do teto, que ficam para a pessoa. */
+export type IaDaConferencia = {
+    estado: "ocioso" | "lendo" | "pronto" | "falhou" | "indisponivel"
+    sugeridas: number
+    ficaram: number
+    mensagem: string | null
+}
+export const IA_OCIOSA: IaDaConferencia = { estado: "ocioso", sugeridas: 0, ficaram: 0, mensagem: null }
+export const FALHA_DA_IA = "A IA não respondeu agora. Categorize à mão."
 
 /** A coluna de cada papel do CSV (`categoria` null: o arquivo não traz). */
 export type MapeamentoColunas = {
@@ -111,6 +125,45 @@ export function quemFicouDeFora(itens: ItemImportavel[], marcadas: Set<string>, 
 const semCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
     categoriaEfetiva(i, escolhidas) == null && !ganhaCategoriaNova(i, escolhidas)
 
+/** De onde veio a categoria da linha: a escolha da pessoa vence (e escolher "sem categoria" é `null`). */
+export const origemDaCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas): OrigemDaCategoria | null =>
+    escolhidas.has(i.clientId) ? (escolhidas.get(i.clientId) == null ? null : "pessoa") : i.origem
+
+/**
+ * A categoria da IA nas linhas que ainda não têm nenhuma, com origem "ia". A linha da planilha cuja
+ * categoria nasce ao gravar fica com a dela; a escolha da pessoa vence pela `categoriaEfetiva`.
+ */
+export const comCategoriasDaIA = (itens: ItemImportavel[], porId: Map<string, string>): ItemImportavel[] =>
+    itens.map((i) => {
+        const c = porId.get(i.clientId)
+        return c && i.categoryId == null && !normalizarDescricao(i.categoria ?? "")
+            ? { ...i, categoryId: c, origem: "ia" as const }
+            : i
+    })
+
+/** As sugestões de uma leitura anterior na leitura nova, pela chave estável da linha e só no tipo dela (o Inverter o troca). */
+export function sugestoesPelaChave(
+    itens: ItemImportavel[],
+    guardadas: Map<string, string>,
+    categorias: Categoria[],
+    destino: DestinoImportacao,
+): Map<string, string> {
+    const tipoDe = new Map(categorias.map((c) => [c.id, c.type]))
+    const chaves = chavesDasLinhas(itens)
+    const out = new Map<string, string>()
+    itens.forEach((i, k) => {
+        const c = guardadas.get(chaves[k])
+        if (c && tipoDe.get(c) === tipoDoItem(i, destino)) out.set(i.clientId, c)
+    })
+    return out
+}
+
+/** A falha da IA na faixa: sem plano não diz nada; a cota diz a dela; o resto, o "categorize à mão". */
+export function iaQueFalhou(r: Extract<Lido<unknown>, { ok: false }>, ficaram: number): IaDaConferencia {
+    if (r.semPlano) return { estado: "indisponivel", sugeridas: 0, ficaram, mensagem: null }
+    return { estado: "falhou", sugeridas: 0, ficaram, mensagem: r.esgotada ? r.mensagem : FALHA_DA_IA }
+}
+
 /** Saídas e entradas são valores positivos, só das marcadas; o período é o do arquivo. */
 export function resumoDaConferencia(
     itens: ItemImportavel[],
@@ -169,7 +222,9 @@ export function filtrarItens(
               ? i.estorno
               : filtro === "existem"
                 ? existentes.has(i.clientId)
-                : semCategoria(i, escolhidas),
+                : filtro === "ia"
+                  ? origemDaCategoria(i, escolhidas) === "ia"
+                  : semCategoria(i, escolhidas),
     )
 }
 
@@ -186,6 +241,7 @@ export function contagemDosFiltros(
         entradas: n("entradas"),
         existem: n("existem"),
         "sem-categoria": n("sem-categoria"),
+        ia: n("ia"),
     }
 }
 
@@ -332,6 +388,8 @@ export function criarVez() {
     let atual = 0
     return {
         nova: () => ++atual,
+        /** A vez de agora, sem abrir outra: um pedido paralelo (a IA) morre com a próxima leitura. */
+        atual: () => atual,
         invalidar: () => {
             atual++
         },
@@ -380,7 +438,10 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     } | null>(null)
     const [pendente, setPendente] = useState<"lendo" | "importar" | "desfazer" | null>(null)
     const [erro, setErro] = useState<string | null>(null)
+    const [ia, setIa] = useState<IaDaConferencia>(IA_OCIOSA)
     const vez = useRef(criarVez()).current
+    // As sugestões da IA pela chave da linha: a releitura do mesmo arquivo (Inverter, Ajustar) as reaplica.
+    const iaPorChave = useRef(new Map<string, string>())
     // O mapeamento ao pedir Ajustar: confirmar sem mudar volta à mesma conferência.
     const ajustando = useRef<MapeamentoColunas | null>(null)
 
@@ -401,6 +462,8 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setExpandido(false)
         setFeito(null)
         setErro(null)
+        setIa(IA_OCIOSA)
+        iaPorChave.current = new Map()
     }
 
     // Sem destino ainda, as colunas já se deduzem (o sinal pela conta) e o sinal se refaz quando ele chega.
@@ -466,6 +529,10 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         const achados = await buscarJaExistentes(supabase, workspaceId, destino, r.lote.itens)
         if (!vez.vale(n)) return
         ajustando.current = null
+        r.lote.itens = comCategoriasDaIA(
+            r.lote.itens,
+            sugestoesPelaChave(r.lote.itens, iaPorChave.current, r.lote.categorias, destino),
+        )
         setLote(r.lote)
         setExistentes(achados ?? new Map())
         setExistentesConferidos(achados !== null)
@@ -474,6 +541,50 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setFiltro("todos")
         setExpandido(false)
         setPasso("conferir")
+        void pedirIa(r.lote, new Map(), n)
+    }
+
+    /**
+     * Uma chamada por lote, com as linhas que ainda estão sem categoria. A resposta só
+     * aterrissa na mesma vez (reiniciar, trocar arquivo, reler ou voltar a invalidam) e não
+     * passa pelas escolhidas: a origem fica "ia", e a escolha da pessoa continua vencendo.
+     */
+    async function pedirIa(l: LoteImportacao, esc: CategoriasEscolhidas, n: number) {
+        if (!workspaceId) return
+        const daLinha = new Map(l.itens.map((i) => [i.clientId, i]))
+        // Escolher "sem categoria" também é escolha: a linha não vai.
+        const pedido = pedidoDaIA(
+            l.itens,
+            (id) => (esc.has(id) ? "pessoa" : (daLinha.get(id)?.categoryId ?? null)),
+            l.categorias,
+            l.destino,
+        )
+        const jaSugeridas = l.itens.filter((i) => i.origem === "ia").length
+        if (pedido.itens.length === 0) {
+            setIa(jaSugeridas ? { estado: "pronto", sugeridas: jaSugeridas, ficaram: 0, mensagem: null } : IA_OCIOSA)
+            return
+        }
+        setIa({ estado: "lendo", sugeridas: 0, ficaram: pedido.ficaram, mensagem: null })
+        const r = await categorizarComIA(workspaceId, pedido.itens, pedido.categorias)
+        if (!vez.vale(n)) return
+        if (!r.ok) {
+            setIa(iaQueFalhou(r, pedido.ficaram))
+            return
+        }
+        const porId = aplicarSugestoes(r.sugestoes, pedido, l.categorias)
+        const chaves = chavesDasLinhas(l.itens)
+        l.itens.forEach((i, k) => {
+            const c = porId.get(i.clientId)
+            if (c) iaPorChave.current.set(chaves[k], c)
+        })
+        const itens = comCategoriasDaIA(l.itens, porId)
+        setLote({ ...l, itens })
+        setIa({
+            estado: "pronto",
+            sugeridas: itens.filter((i) => i.origem === "ia").length,
+            ficaram: pedido.ficaram,
+            mensagem: null,
+        })
     }
 
     /** Roda uma leitura com a trava `lendo`; erro lançado vira o `erro` do passo. */
@@ -540,6 +651,8 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         const m = mapeamento
         if (lote && ajustando.current && mesmoMapeamento(ajustando.current, m)) {
             setPasso("conferir")
+            // A IA que saiu no meio da leitura (o voltar a invalidou) pede de novo.
+            if (ia.estado === "ocioso") void pedirIa(lote, escolhidas, vez.atual())
             return Promise.resolve()
         }
         if (m.data < 0 || m.descricao < 0 || m.valor < 0) {
@@ -551,6 +664,10 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
 
     function voltar() {
         setErro(null)
+        if (passo === "conferir" && ia.estado === "lendo") {
+            vez.invalidar()
+            setIa(IA_OCIOSA)
+        }
         if (passo === "conferir") setPasso(csv && !deducao?.certa ? "colunas" : "arquivo")
         else if (passo === "colunas") setPasso(lote && ajustando.current ? "conferir" : "arquivo")
     }
@@ -709,14 +826,23 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             const i = porId.get(id)
             return i ? categoriaNovaDe(i, escolhidas) : null
         },
+        /** A escolha da pessoa (a origem vira "pessoa"); a IA nunca passa por aqui. */
         setCategoria: (ids: string[], categoryId: string | null) =>
             setEscolhidas((e) => aplicarCategoria(e, ids, categoryId)),
+        origemDe: (id: string) => {
+            const i = porId.get(id)
+            return i ? origemDaCategoria(i, escolhidas) : null
+        },
+        ia,
+        tentarIaDeNovo: () => {
+            if (lote) void pedirIa(lote, escolhidas, vez.atual())
+        },
         filtro,
         setFiltro,
         visiveis: lote ? filtrarItens(lote.itens, filtro, existentes, escolhidas) : [],
         contagens: lote
             ? contagemDosFiltros(lote.itens, existentes, escolhidas)
-            : { todos: 0, saidas: 0, entradas: 0, existem: 0, "sem-categoria": 0 },
+            : { todos: 0, saidas: 0, entradas: 0, existem: 0, "sem-categoria": 0, ia: 0 },
         expandido,
         setExpandido,
         resumo,

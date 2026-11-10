@@ -14,13 +14,16 @@ import {
     aplicarCategoria,
     categoriaEfetiva,
     categoriaNovaDe,
+    comCategoriasDaIA,
     criarVez,
     contagemDosFiltros,
     filtrarItens,
     idsParaCategoria,
     gravarLote,
+    iaQueFalhou,
     loteParaGravar,
     marcadasIniciais,
+    origemDaCategoria,
     passoDepoisDoArquivo,
     periodoPtBr,
     prepararLote,
@@ -30,8 +33,10 @@ import {
     rotuloDasIgnoradas,
     rotulosDasVisiveis,
     sourceDoArquivo,
+    sugestoesPelaChave,
     tipoDoArquivo,
 } from "./use-importar-extrato"
+import { chavesDasLinhas } from "./chave-da-linha"
 
 type Chamada = { tabela: string; op: string; args: unknown[] }
 
@@ -412,6 +417,7 @@ describe("a conferência", () => {
             entradas: 1,
             existem: 1,
             "sem-categoria": 0,
+            ia: 0,
         })
         // Sem categoria escolhida, a "a" volta a ser sem categoria.
         expect(contagemDosFiltros(itens, existentes, new Map())["sem-categoria"]).toBe(1)
@@ -455,5 +461,87 @@ describe("a conferência", () => {
         await gravarLote(db2, ctx, loteParaGravar(r.lote, new Set([mercado.clientId]), new Map()))
         expect(linhasDoUpsert(ch2, "categories")[0][0].client_id).toBe(r.lote.novas[0].clientId)
         expect(linhasDoUpsert(ch2, "transactions")[0][0].category_id).toBe("c-nova")
+    })
+})
+
+describe("a IA na conferência", () => {
+    const conta = { tipo: "conta" as const, paymentMethod: "pix" as const }
+    const cats = [
+        { id: "mercado", name: "Mercado", type: "expense" as const },
+        { id: "salario", name: "Salário", type: "income" as const },
+    ]
+
+    it("a resposta não pisa na categoria da pessoa, nem na da planilha, nem na que já havia", () => {
+        const itens = [
+            item({ clientId: "a" }),
+            item({ clientId: "b" }),
+            item({ clientId: "c", categoryId: "lazer", origem: "regra" }),
+            item({ clientId: "d", categoria: "Feira" }),
+        ]
+        // A pessoa escolheu a "b" enquanto a IA lia.
+        const escolhidas = aplicarCategoria(new Map(), ["b"], "lazer")
+        const ia = new Map(["a", "b", "c", "d"].map((id) => [id, "mercado"]))
+        const depois = comCategoriasDaIA(itens, ia)
+        expect(depois.map((i) => categoriaEfetiva(i, escolhidas))).toEqual(["mercado", "lazer", "lazer", null])
+        expect(depois.map((i) => origemDaCategoria(i, escolhidas))).toEqual(["ia", "pessoa", "regra", null])
+        expect(categoriaNovaDe(depois[3], escolhidas)).toBe("Feira")
+    })
+
+    it("contagens.ia conta só as que ainda são da IA, e trocar a categoria tira a linha", () => {
+        const itens = comCategoriasDaIA([item({ clientId: "a" }), item({ clientId: "b" }), item({ clientId: "c" })], new Map([
+            ["a", "mercado"],
+            ["b", "mercado"],
+        ]))
+        expect(contagemDosFiltros(itens, new Map(), new Map()).ia).toBe(2)
+        const escolhidas = aplicarCategoria(new Map(), ["a"], "lazer")
+        expect(contagemDosFiltros(itens, new Map(), escolhidas).ia).toBe(1)
+        expect(filtrarItens(itens, "ia", new Map(), escolhidas).map((i) => i.clientId)).toEqual(["b"])
+    })
+
+    it("a releitura reaplica pela chave, só no tipo da linha nova", () => {
+        const antes = [item({ clientId: "a1", descricao: "LOJA" }), item({ clientId: "b1", descricao: "PIX" })]
+        const chaves = chavesDasLinhas(antes)
+        const guardadas = new Map([
+            [chaves[0], "mercado"],
+            [chaves[1], "mercado"],
+        ])
+        // O Inverter: clientIds novos, e o PIX virou entrada.
+        const depois = [item({ clientId: "a2", descricao: "LOJA" }), item({ clientId: "b2", descricao: "PIX", estorno: true })]
+        expect([...sugestoesPelaChave(depois, guardadas, cats, conta)]).toEqual([["a2", "mercado"]])
+    })
+
+    it("402 fica indisponível e mudo; a cota diz a dela; o resto, categorize à mão", () => {
+        expect(iaQueFalhou({ ok: false, mensagem: "Sem plano ativo nesta carteira.", semPlano: true }, 0)).toEqual({
+            estado: "indisponivel",
+            sugeridas: 0,
+            ficaram: 0,
+            mensagem: null,
+        })
+        expect(iaQueFalhou({ ok: false, mensagem: "Você usou a IA 30 vezes hoje. Amanhã volta.", esgotada: true }, 3)).toEqual({
+            estado: "falhou",
+            sugeridas: 0,
+            ficaram: 3,
+            mensagem: "Você usou a IA 30 vezes hoje. Amanhã volta.",
+        })
+        expect(iaQueFalhou({ ok: false, mensagem: "Erro" }, 0).mensagem).toBe("A IA não respondeu agora. Categorize à mão.")
+    })
+
+    it("a vez atual não abre outra: a leitura no ar continua valendo", () => {
+        const vez = criarVez()
+        const n = vez.nova()
+        expect(vez.atual()).toBe(n)
+        expect(vez.vale(n)).toBe(true)
+        vez.invalidar()
+        expect(vez.vale(n)).toBe(false)
+    })
+
+    it("no hook: a resposta velha é descartada, a IA não passa pelas escolhidas, e voltar invalida", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
+        const corpo = fonte.slice(fonte.indexOf("async function pedirIa("), fonte.indexOf("async function lendo("))
+        expect(corpo).toMatch(/await categorizarComIA\([^)]*\)\s*if \(!vez\.vale\(n\)\) return/)
+        expect(corpo).not.toContain("setEscolhidas")
+        expect(fonte).toMatch(/setPasso\("conferir"\)\s*void pedirIa\(r\.lote, new Map\(\), n\)/)
+        expect(fonte).toMatch(/function voltar\(\) \{[\s\S]*?vez\.invalidar\(\)/)
+        expect(fonte).toMatch(/function limparLeitura[\s\S]*?setIa\(IA_OCIOSA\)\s*iaPorChave\.current = new Map\(\)/)
     })
 })

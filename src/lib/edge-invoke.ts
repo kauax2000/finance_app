@@ -90,7 +90,8 @@ export async function invokeEdgeJson<T>(
             message += ` Desenvolvimento local: confirme \`supabase start\` e \`supabase functions serve\` (ex.: função "${fnName}").`
         }
 
-        throw new Error(message)
+        // O status vai junto: quem chama distingue, por exemplo, o 402 (carteira sem plano).
+        throw Object.assign(new Error(message), { status: httpStatus })
     }
 
     return data as T

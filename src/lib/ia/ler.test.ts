@@ -38,6 +38,19 @@ describe("categorizarComIA", () => {
     })
 })
 
+describe("sem plano", () => {
+    it("o 402 da Edge vira semPlano, com a mensagem que veio", async () => {
+        invokeEdgeJson.mockRejectedValueOnce(Object.assign(new Error("Sem plano ativo nesta carteira."), { status: 402 }))
+        expect(await categorizarComIA(CARTEIRA, [], { expense: [], income: [] })).toEqual({
+            ok: false,
+            mensagem: "Sem plano ativo nesta carteira.",
+            semPlano: true,
+        })
+        invokeEdgeJson.mockRejectedValueOnce(Object.assign(new Error("Erro"), { status: 500 }))
+        expect(await categorizarComIA(CARTEIRA, [], { expense: [], income: [] })).toEqual({ ok: false, mensagem: "Erro" })
+    })
+})
+
 describe("lerFraseComIA e lerFaturaComIA", () => {
     it("pedem à ia-ler com o corpo da operação e devolvem os campos", async () => {
         invokeEdgeJson.mockResolvedValueOnce({ ok: true, campos: CAMPOS, provedor: "groq", modelo: "m" })

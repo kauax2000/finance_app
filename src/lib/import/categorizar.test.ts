@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { aplicarSugestoes, pedidoDaIA } from "./categorizar"
+import { aplicarSugestoes, MAX_NOMES_POR_TIPO, pedidoDaIA } from "./categorizar"
 import type { ItemImportavel } from "./importar"
 
 const conta = { tipo: "conta", paymentMethod: "pix" } as const
@@ -28,6 +28,19 @@ describe("pedidoDaIA", () => {
         expect(p.clientIds).toEqual(["a"])
         expect(p.categorias).toEqual({ expense: ["Mercado", "Lazer"], income: [] })
         expect(p.ficaram).toBe(0)
+    })
+
+    it("a linha da planilha com categoria que nasce ao gravar não vai à IA", () => {
+        const p = pedidoDaIA([item("a", { categoria: "Feira" }), item("b", { categoria: " " }), item("c")], semCategoria, cats, conta)
+        expect(p.clientIds).toEqual(["b", "c"])
+    })
+
+    it("manda no máximo 100 nomes por tipo, e as linhas do tipo cortado seguem", () => {
+        const muitas = Array.from({ length: 130 }, (_, n) => ({ id: `e${n}`, name: `Cat ${n}`, type: "expense" as const }))
+        const p = pedidoDaIA([item("a")], semCategoria, muitas, conta)
+        expect(p.categorias.expense).toHaveLength(MAX_NOMES_POR_TIPO)
+        expect(MAX_NOMES_POR_TIPO).toBe(100)
+        expect(p.clientIds).toEqual(["a"])
     })
 
     it("corta em 200, e ficaram conta as de fora", () => {

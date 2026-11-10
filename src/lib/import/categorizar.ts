@@ -5,6 +5,8 @@ import { normalizarDescricao } from "./normalizar"
 
 /** Espelha `MAX_CATEGORIZAR` de `supabase/functions/_shared/ia.ts`; aqui, sem puxar o cliente do Supabase. */
 export const MAX_CATEGORIZAR = 200
+/** O teto de nomes por tipo que a `ia-ler` aceita (`lerPedidoCategorizar`); acima, a IA escolhe entre os primeiros. */
+export const MAX_NOMES_POR_TIPO = 100
 
 export type PedidoDaIA = {
     itens: ItemParaCategorizar[]
@@ -15,7 +17,8 @@ export type PedidoDaIA = {
 
 /**
  * As linhas sem categoria, de tipos com pelo menos uma categoria, até `MAX_CATEGORIZAR`,
- * com índice local. Só vão descrição e tipo: nem valor, nem data, nem id.
+ * com índice local. Só vão descrição e tipo: nem valor, nem data, nem id. A linha da planilha
+ * cuja categoria nasce ao gravar não vai: a IA brigaria com a categoria da própria planilha.
  */
 export function pedidoDaIA(
     itens: ItemImportavel[],
@@ -24,12 +27,13 @@ export function pedidoDaIA(
     destino: DestinoImportacao,
 ): PedidoDaIA {
     const nomes: CategoriasPorTipo = {
-        expense: categorias.filter((c) => c.type === "expense").map((c) => c.name),
-        income: categorias.filter((c) => c.type === "income").map((c) => c.name),
+        expense: categorias.filter((c) => c.type === "expense").map((c) => c.name).slice(0, MAX_NOMES_POR_TIPO),
+        income: categorias.filter((c) => c.type === "income").map((c) => c.name).slice(0, MAX_NOMES_POR_TIPO),
     }
     const pedido: PedidoDaIA = { itens: [], categorias: nomes, clientIds: [], ficaram: 0 }
     for (const item of itens) {
         if (categoriaDe(item.clientId) != null) continue
+        if (normalizarDescricao(item.categoria ?? "")) continue
         const tipo = tipoDoItem(item, destino)
         if (!nomes[tipo].length) continue
         if (pedido.itens.length >= MAX_CATEGORIZAR) {

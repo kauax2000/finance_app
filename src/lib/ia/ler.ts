@@ -30,8 +30,10 @@ export type ItemParaCategorizar = { i: number; descricao: string; tipo: "expense
 export type CategoriasPorTipo = { expense: string[]; income: string[] }
 export type Sugestao = { i: number; categoria: string }
 
-/** `esgotada`: a cota do dia acabou (e ficou marcada neste aparelho). */
-export type Lido<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; mensagem: string; esgotada?: true }
+/** `esgotada`: a cota do dia acabou (e ficou marcada neste aparelho). `semPlano`: a `ia-ler` respondeu 402. */
+export type Lido<T> =
+    | ({ ok: true; provedor: string; modelo: string } & T)
+    | { ok: false; mensagem: string; esgotada?: true; semPlano?: true }
 type Resposta<T> = ({ ok: true; provedor: string; modelo: string } & T) | { ok: false; motivo: string }
 
 const MENSAGEM: Record<string, string> = {
@@ -55,6 +57,7 @@ async function pelaEdge<T>(body: Record<string, unknown>, mensagens?: Record<str
         return traduzir(await invokeEdgeJson<Resposta<T>>("ia-ler", { body }), mensagens)
     } catch (e) {
         const mensagem = isEdgeInvokeTransportFailure(e) || !(e instanceof Error) || !e.message ? SEM_CONEXAO : e.message
+        if ((e as { status?: unknown } | null)?.status === 402) return { ok: false, mensagem, semPlano: true }
         return { ok: false, mensagem }
     }
 }
