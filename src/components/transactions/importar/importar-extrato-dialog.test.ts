@@ -123,6 +123,9 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/variant="tertiary" disabled=\{travado\} onClick=\{alternar\}>[\s\S]*?<ArrowsPointingInIcon data-icon="inline-start" \/>\}\s*<span>Ver menos<\/span>/)
         expect(conferir).not.toContain("aria-expanded")
+        // O crédito do cartão diz que é estorno (e por isso leva categoria de despesa), no compacto e na tabela.
+        expect(conferir).toContain('item.estorno && imp.destino?.tipo === "cartao"')
+        expect(conferir.match(/<AvisosDaLinha imp=\{imp\} item=\{(item|i)\} \/>/g)).toHaveLength(2)
     })
 
     it("acessível: a caixa diz a data, a contagem é anunciada, a linha de fora não perde contraste", () => {

@@ -198,6 +198,23 @@ function JaExiste({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel })
     )
 }
 
+/** O crédito do cartão é estorno: abate a despesa da categoria, e por isso pede uma categoria de despesa. */
+const ehEstornoDoCartao = (imp: ImportarExtrato, item: ItemImportavel) => item.estorno && imp.destino?.tipo === "cartao"
+
+/** O que a linha precisa dizer além da data: estorno do cartão e "já existe". */
+function AvisosDaLinha({ imp, item }: { imp: ImportarExtrato; item: ItemImportavel }) {
+    const estorno = ehEstornoDoCartao(imp, item)
+    const existe = imp.existentes.has(item.clientId)
+    if (!estorno && !existe) return null
+    return (
+        <>
+            {estorno ? <Badge size="xs" tone="info">estorno</Badge> : null}
+            {estorno && existe ? " " : null}
+            <JaExiste imp={imp} item={item} />
+        </>
+    )
+}
+
 /** A linha do compacto: caixa (entra ou não), descrição e data, categoria, valor. */
 function Linha({
     imp,
@@ -243,8 +260,8 @@ function Linha({
                             {formatYmdPtBr(item.data).slice(0, 5)} · {nomeDaCategoria(imp, item) ?? "Sem categoria"}
                         </span>
                         <span className="hidden md:inline">{formatYmdPtBr(item.data)}</span>
-                        {imp.existentes.has(item.clientId) ? " · " : null}
-                        <JaExiste imp={imp} item={item} />
+                        {imp.existentes.has(item.clientId) || ehEstornoDoCartao(imp, item) ? " · " : null}
+                        <AvisosDaLinha imp={imp} item={item} />
                     </ItemDescription>
                 </ItemContent>
                 <div className="hidden md:block md:w-44">
@@ -599,7 +616,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             id: "descricao",
             header: "Descrição",
             title: descricaoDe,
-            description: (i) => (imp.existentes.has(i.clientId) ? <JaExiste imp={imp} item={i} /> : null),
+            description: (i) => (imp.existentes.has(i.clientId) || ehEstornoDoCartao(imp, i) ? <AvisosDaLinha imp={imp} item={i} /> : null),
             meta: { label: "Descrição", mobile: "title" },
         }),
         {

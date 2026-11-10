@@ -17,6 +17,10 @@ const nomesPara = (categorias: CategoriaParaCasar[], tipo: "expense" | "income")
         .map((c) => c.name)
         .slice(0, MAX_NOMES_POR_TIPO)
 
+/** A descrição que diz devolução: só ela faz do crédito do cartão um estorno que a IA categoriza. */
+const ESTORNO = /\b(estorno|estornad[oa]|devolucao|devolvid[oa]|reembolso|cancelamento|cancelad[oa]|chargeback)\b/
+export const pareceEstorno = (descricao: string) => ESTORNO.test(normalizarDescricao(descricao))
+
 export type PedidoDaIA = {
     itens: ItemParaCategorizar[]
     categorias: CategoriasPorTipo
@@ -43,6 +47,9 @@ export function pedidoDaIA(
     for (const item of itens) {
         if (categoriaDe(item.clientId) != null) continue
         if (normalizarDescricao(item.categoria ?? "")) continue
+        // No cartão o crédito é estorno e leva categoria de despesa: sem dizer o que devolveu
+        // ("Pix recebido"), a IA poria uma despesa qualquer. A linha fica sem categoria.
+        if (item.estorno && destino.tipo === "cartao" && !pareceEstorno(item.descricao)) continue
         const tipo = tipoDoItem(item, destino)
         if (!nomes[tipo].length) continue
         if (pedido.itens.length >= MAX_CATEGORIZAR) {

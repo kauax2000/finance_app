@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { aplicarSugestoes, MAX_NOMES_POR_TIPO, pedidoDaIA } from "./categorizar"
+import { aplicarSugestoes, MAX_NOMES_POR_TIPO, pareceEstorno, pedidoDaIA } from "./categorizar"
 import type { ItemImportavel } from "./importar"
 
 const conta = { tipo: "conta", paymentMethod: "pix" } as const
@@ -35,6 +35,24 @@ describe("pedidoDaIA", () => {
         expect(p.clientIds).toEqual(["a"])
         expect(p.categorias).toEqual({ expense: ["Mercado", "Lazer"], income: [] })
         expect(p.ficaram).toBe(0)
+    })
+
+    it("no cartão, o crédito só vai à IA quando a descrição diz estorno", () => {
+        const cartao = { tipo: "cartao", cardId: "c1" } as const
+        const itens = [
+            item("pix", { estorno: true, descricao: "Pix recebido" }),
+            item("est", { estorno: true, descricao: "ESTORNO IFOOD" }),
+            item("compra"),
+        ]
+        const p = pedidoDaIA(itens, semCategoria, cats, cartao)
+        expect(p.clientIds).toEqual(["est", "compra"])
+        expect(p.itens[0]).toEqual({ i: 0, descricao: "ESTORNO IFOOD", tipo: "expense" })
+    })
+
+    it("pareceEstorno reconhece devolução, sem acento nem caixa", () => {
+        for (const d of ["Estorno Uber", "DEVOLUÇÃO loja", "Reembolso", "Cancelamento compra", "chargeback", "Crédito de estorno"])
+            expect(pareceEstorno(d)).toBe(true)
+        for (const d of ["Pix recebido", "Pagamento fatura", "Salário", "Restorno"]) expect(pareceEstorno(d)).toBe(false)
     })
 
     it("a linha da planilha com categoria que nasce ao gravar não vai à IA", () => {
