@@ -7,6 +7,7 @@ import {
     CheckIcon,
     ChevronDownIcon,
     NoSymbolIcon,
+    SparklesIcon,
     TagIcon,
 } from "@heroicons/react/16/solid"
 import { FunnelIcon } from "@heroicons/react/24/outline"
@@ -14,7 +15,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline"
 import { BuscaQueAbre } from "./busca-que-abre"
 import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
 import { RotuloDaIa } from "./rotulo-da-ia"
-import { MarcaIaWireframe } from "@/components/wireframe/importar-ia-wireframe"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
@@ -82,6 +83,7 @@ import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
+import { toastUndo } from "@/lib/toast"
 import { TrocaSuave } from "@/lib/troca-suave"
 import { ESCADA_DA_LISTA, ESCADA_DA_TABELA, VISTA_QUE_SAI, VISTA_QUE_SAI_MS } from "./movimento"
 import { cn } from "@/lib/utils"
@@ -138,7 +140,8 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
     const id = imp.categoriaDe(item.clientId)
     const nome = nomeDaCategoria(imp, item)
     const atual = id ? imp.previa?.categorias.find((c) => c.id === id) : undefined
-    const combo = (
+    const daIa = imp.origemDe(item.clientId) === "ia"
+    return (
         <Combobox
             value={id ?? ""}
             onValueChange={(v) => imp.setCategoria([item.clientId], v === SEM ? null : v)}
@@ -147,11 +150,15 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
                 <ComboboxTrigger
                     placeholder="Sem categoria"
                     disabled={travado}
-                    aria-label={`Categoria de ${item.descricao}`}
+                    aria-label={`Categoria de ${item.descricao}${daIa ? " (sugerida pela IA)" : ""}`}
                 >
-                    <ComboboxValue placeholder="Sem categoria" media={atual ? <LadrilhoDaCategoria categoria={atual} /> : undefined}>
-                        {nome}
-                    </ComboboxValue>
+                    {/* O ✦ fica logo depois do nome, sem truncar: o nome é que encolhe. */}
+                    <span className="flex min-w-0 items-center gap-1">
+                        <ComboboxValue placeholder="Sem categoria" media={atual ? <LadrilhoDaCategoria categoria={atual} /> : undefined}>
+                            {nome}
+                        </ComboboxValue>
+                        {daIa ? <SparklesIcon aria-hidden className="size-3.5 shrink-0 text-muted-foreground" /> : null}
+                    </span>
                 </ComboboxTrigger>
             </ComboboxField>
             <ComboboxContent>
@@ -172,13 +179,6 @@ function CategoriaDaLinha({ imp, item, travado }: { imp: ImportarExtrato; item: 
                 </ComboboxList>
             </ComboboxContent>
         </Combobox>
-    )
-    if (imp.origemDe(item.clientId) !== "ia") return combo
-    return (
-        <div className="flex items-center gap-1">
-            <div className="min-w-0 flex-1">{combo}</div>
-            <MarcaIaWireframe />
-        </div>
     )
 }
 
@@ -469,13 +469,69 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     // no `DataTable`: a tabela e as Ações recebem a mesma lista, e a tabela fica sem a barra dela.
     const [busca, setBusca] = React.useState("")
     const termo = normalizeSearchText(busca.trim())
-    const daTabela = termo ? imp.visiveis.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : imp.visiveis
+    const nomeDoId = (id: string | null) => (id ? (imp.previa?.nomeDaCategoria.get(id) ?? "") : "")
+    // Na aba Pela IA as linhas vêm pela categoria sugerida (o sort é estável: dentro dela, a ordem de hoje).
+    const pelaIa = imp.filtro === "ia"
+    const linhas = pelaIa
+        ? [...imp.visiveis].sort((a, b) => nomeDoId(imp.categoriaDe(a.clientId)).localeCompare(nomeDoId(imp.categoriaDe(b.clientId)), "pt-BR"))
+        : imp.visiveis
+    const daTabela = termo ? linhas.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : linhas
+    const porGrupo = new Map<string, number>()
+    if (pelaIa) for (const i of daTabela) {
+        const id = imp.categoriaDe(i.clientId)
+        if (id) porGrupo.set(id, (porGrupo.get(id) ?? 0) + 1)
+    }
+    // Os grupos só valem na aba Pela IA e na ordem dela: ordenada por uma coluna, a tabela volta a ser plana.
+    const grupoDaIa = (i: ItemImportavel, { sorting }: { sorting: unknown[] }) => {
+        const id = pelaIa && sorting.length === 0 ? imp.categoriaDe(i.clientId) : null
+        if (!id) return null
+        const cat = imp.previa?.categorias.find((c) => c.id === id)
+        return {
+            key: id,
+            label: (
+                <span data-grupo-ia={id} className="inline-flex items-center gap-1.5">
+                    {cat ? <LadrilhoDaCategoria categoria={cat} /> : null}
+                    {`${nomeDoId(id)} · ${numberBR(porGrupo.get(id) ?? 0)}`}
+                </span>
+            ),
+        }
+    }
+    function acoesDoGrupo(membros: ItemImportavel[]) {
+        const nome = nomeDoId(imp.categoriaDe(membros[0]?.clientId ?? ""))
+        return (
+            <span className="inline-flex items-center gap-1">
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    size="xs"
+                    disabled={travado}
+                    aria-label={`Trocar a categoria do grupo ${nome}`}
+                    onClick={() => setPorCategoria(membros)}
+                >
+                    {"Trocar o grupo…"}
+                </Button>
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    size="xs"
+                    disabled={travado}
+                    aria-label={`Desfazer as sugestões de ${nome}`}
+                    onClick={() => {
+                        const devolver = imp.desfazerIa(membros.map((m) => m.clientId))
+                        toastUndo("Sugestões da IA desfeitas", { onUndo: devolver })
+                    }}
+                >
+                    Desfazer
+                </Button>
+            </span>
+        )
+    }
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
-    const chavesCompacto = chavesDasLinhas(imp.visiveis.slice(0, LIMITE))
+    const chavesCompacto = chavesDasLinhas(linhas.slice(0, LIMITE))
     const podeExpandir = resumo.total > LIMITE
     // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-base`, `VISTA_QUE_SAI`),
     // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
@@ -691,6 +747,11 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </ItemActions>
                 </Item>
             ) : null}
+            {pelaIa && imp.visiveis.length > 0 ? (
+                <Alert size="sm" icon={<SparklesIcon />} className={esmaece}>
+                    <AlertDescription>A IA sugeriu estas. Troque o que não fizer sentido: a troca vira sua.</AlertDescription>
+                </Alert>
+            ) : null}
             {imp.expandido ? (
                 // A barra e as linhas chegam em escada (teto de 8), a barra junto com a primeira; a moldura e o cabeçalho já estão lá.
                 // A altura desce até o viewport: o grupo, a moldura e o pai do viewport (o `hidden md:block`, só no desktop) encolhem, e o viewport rola.
@@ -708,6 +769,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         data={daTabela}
                         getRowId={(i) => i.clientId}
                         getRowLabel={rotuloDe}
+                        groupBy={grupoDaIa}
+                        groupTotal={pelaIa ? acoesDoGrupo : undefined}
                         pageSize={false}
                         onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
                         enableSelection={travado ? () => false : true}
@@ -728,7 +791,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         aria-busy={lendo}
                     >
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
-                        {imp.visiveis.slice(0, LIMITE).map((i, n) => (
+                        {linhas.slice(0, LIMITE).map((i, n) => (
                             <Linha
                                 // O `clientId` nasce de novo a cada leitura: a chave do conteúdo segura a linha, para o valor trocar no lugar.
                                 key={chavesCompacto[n]}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { existsSync } from "node:fs"
 
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
 import { efeitoDoEsc } from "./busca-que-abre"
@@ -395,5 +396,29 @@ describe("o rótulo da IA mora depois das abas (Bloco 2 no DS)", () => {
         expect(rotulo).toContain('"Desfazer as "')
         expect(rotulo).toContain("tentarIaDeNovo")
         expect(rotulo).not.toMatch(/Ver (as )?sugeridas/)
+    })
+})
+
+describe("a aba Pela IA agrupada, e o ✦ no campo (Bloco 2 no DS)", () => {
+    it("a marca do wireframe saiu, e o arquivo dela não existe", () => {
+        expect(conferir).not.toContain("@/components/wireframe/importar-ia-wireframe")
+        expect(conferir).not.toContain("MarcaIaWireframe")
+        expect(existsSync("src/components/wireframe/importar-ia-wireframe.tsx")).toBe(false)
+    })
+
+    it("agrupa por categoria, com o Trocar e o Desfazer do grupo, e o ✦ dentro do campo", () => {
+        expect(conferir).toContain("groupBy=")
+        expect(conferir).toContain("data-grupo-ia")
+        expect(conferir).toContain('"Trocar o grupo…"')
+        expect(conferir).toContain("SparklesIcon")
+        expect(conferir).toContain("(sugerida pela IA)")
+        expect(conferir).toContain("sorting.length === 0")
+    })
+
+    it("a faixa da aba é um Alert com o ícone pelo prop, nunca filho", () => {
+        const alerta = conferir.match(/<Alert\b[\s\S]*?<\/Alert>/)?.[0] ?? ""
+        expect(alerta).toContain("icon={")
+        expect(alerta).not.toContain("<svg")
+        expect(alerta).not.toMatch(/<\w*Icon className/)
     })
 })
