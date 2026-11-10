@@ -1,6 +1,6 @@
 # A IA do Importar no design system — plano
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** a faixa tracejada "WIREFRAME · Bloco 2 · Categorias pela IA" e a marca "IA" saem. No lugar entram peças do design system:
 - um rótulo ✦ logo depois das abas, que abre um resumo por categoria;
@@ -121,16 +121,16 @@ desfazerIa: (clientIds: string[]) => () => void
 ```
 O tipo do id de categoria é o que `categoriaDe` já devolve no hook. Se for `string`, use `string`.
 
-- [ ] **Step 1:** testes que falham.
+- [x] **Step 1:** testes que falham.
   - `porCategoriaDaIa` com 3 linhas "ia" (Mercado×2, Lazer×1) e 1 linha "pessoa" devolve `[{Mercado,2},{Lazer,1}]`.
   - `desfazerIa` testado pela função pura que o hook usa, no padrão do arquivo de teste. Se o hook só puder ser testado por fonte, extraia a lógica para uma pura (`escolhidasSemIa` / `escolhidasDevolvidas`) e teste-a:
     - ids "ia" viram `null` nas escolhidas;
     - `devolver` apaga essas chaves;
     - um id "pessoa" fica intocado.
-- [ ] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
-- [ ] **Step 3:** implementar.
-- [ ] **Step 4:** Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): desfazer as sugestões da IA, com volta, e o resumo por categoria`.
+- [x] **Step 2:** `npx vitest run src/components/transactions/importar` → FAIL.
+- [x] **Step 3:** implementar.
+- [x] **Step 4:** Verificação passa.
+- [x] **Step 5:** commit `feat(importar): desfazer as sugestões da IA, com volta, e o resumo por categoria`.
 
 ### Task 2: `RotuloDaIa` no lugar da faixa
 
@@ -144,7 +144,7 @@ O tipo do id de categoria é o que `categoriaDe` já devolve no hook. Se for `st
 - Consumes: `porCategoriaDaIa` e `imp.desfazerIa` (Task 1).
 - Produces: `export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: boolean }): React.ReactElement | null`. `LadrilhoDaCategoria` passa a ser exportado de `conferir-importacao.tsx`, ou vai para um arquivo próprio da pasta, para o rótulo usá-lo.
 
-- [ ] **Step 1:** testes de fonte que falham.
+- [x] **Step 1:** testes de fonte que falham.
   - `conferir-importacao.tsx` não contém `FaixaDaIaWireframe`.
   - Na linha das abas, `</Tabs>` vem antes de `<RotuloDaIa`, e este antes de `<BuscaQueAbre`.
   - `rotulo-da-ia.tsx` contém:
@@ -152,10 +152,10 @@ O tipo do id de categoria é o que `categoriaDe` já devolve no hook. Se for `st
     - `"Desfazer as "`;
     - `tentarIaDeNovo`;
     - nada que case `/Ver (as )?sugeridas/`.
-- [ ] **Step 2:** rodar → FAIL.
-- [ ] **Step 3:** implementar "O rótulo" do Comportamento, inclusive o lugar no compacto.
-- [ ] **Step 4:** Verificação passa.
-- [ ] **Step 5:** commit `feat(importar): o rótulo da IA depois das abas, com o resumo por categoria`.
+- [x] **Step 2:** rodar → FAIL.
+- [x] **Step 3:** implementar "O rótulo" do Comportamento, inclusive o lugar no compacto.
+- [x] **Step 4:** Verificação passa.
+- [x] **Step 5:** commit `feat(importar): o rótulo da IA depois das abas, com o resumo por categoria`.
 
 ### Task 3: a aba "Pela IA" agrupada, e o ✦ no campo
 
@@ -166,21 +166,21 @@ O tipo do id de categoria é o que `categoriaDe` já devolve no hook. Se for `st
 
 **Interfaces:** Consumes `imp.desfazerIa`, `setPorCategoria` (já existe).
 
-- [ ] **Step 1:** testes de fonte que falham.
+- [x] **Step 1:** testes de fonte que falham.
   - `conferir-importacao.tsx` não importa nada de `@/components/wireframe/importar-ia-wireframe`, e o arquivo não existe.
   - Contém `groupBy=`, `data-grupo-ia`, `"Trocar o grupo…"`, `SparklesIcon` e `(sugerida pela IA)`.
   - O `Alert` da aba não tem `<svg` nem `Icon className` como filho direto (use `icon={…}`).
-- [ ] **Step 2:** rodar → FAIL.
-- [ ] **Step 3:** implementar "A aba Pela IA (P1)". O `groupBy` devolve `null` com ordenação ativa ou fora do filtro "ia".
-- [ ] **Step 4:** Verificação passa, mais `npm run ds:audit -- src/components/transactions/importar` sem regra nova.
-- [ ] **Step 5:** commit `feat(importar): a aba Pela IA agrupada por categoria, e o ✦ dentro do campo`.
+- [x] **Step 2:** rodar → FAIL.
+- [x] **Step 3:** implementar "A aba Pela IA (P1)". O `groupBy` devolve `null` com ordenação ativa ou fora do filtro "ia".
+- [x] **Step 4:** Verificação passa, mais `npm run ds:audit -- src/components/transactions/importar` sem regra nova.
+- [x] **Step 5:** commit `feat(importar): a aba Pela IA agrupada por categoria, e o ✦ dentro do campo`.
 
 ### Task 4: jornada, Atlas e conferência (controlador)
 
-- [ ] `docs/JORNADAS.md`, na seção do Importar:
+- [x] `docs/JORNADAS.md`, na seção do Importar:
   - a faixa da IA virou o rótulo com popover (resumo, Desfazer com volta, Tentar de novo);
   - a aba "Pela IA" ganhou grupos, com "Trocar o grupo…" e "Desfazer".
   
   Depois `docs/atlas/template.html`, `python3 docs/atlas/build.py`, e republicar o Atlas no mesmo URL.
-- [ ] `graphify update .`
-- [ ] No navegador, com um CSV de teste (só ler; **nunca clicar Importar**), passar pelos cinco pontos do Review Focus. Mandar prints ao dono.
+- [x] `graphify update .`
+- [x] No navegador, com um CSV de teste (só ler; **nunca clicar Importar**), passar pelos cinco pontos do Review Focus. Mandar prints ao dono.
