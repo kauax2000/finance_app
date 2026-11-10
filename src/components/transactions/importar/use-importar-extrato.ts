@@ -592,6 +592,8 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         const n = vez.nova()
         setPendente("lendo")
         setErro(null)
+        // A IA da leitura anterior morreu com a vez; quem diz o estado novo é o `pedirIa` da leitura nova.
+        setIa(IA_OCIOSA)
         try {
             await passoDaLeitura(n)
         } catch {
@@ -651,8 +653,6 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         const m = mapeamento
         if (lote && ajustando.current && mesmoMapeamento(ajustando.current, m)) {
             setPasso("conferir")
-            // A IA que saiu no meio da leitura (o voltar a invalidou) pede de novo.
-            if (ia.estado === "ocioso") void pedirIa(lote, escolhidas, vez.atual())
             return Promise.resolve()
         }
         if (m.data < 0 || m.descricao < 0 || m.valor < 0) {
@@ -698,6 +698,9 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             setErro("Sua sessão não carregou. Recarregue a página e tente de novo.")
             return null
         }
+        // Uma resposta da IA que chegue depois não reescreve o lote que foi gravado.
+        vez.invalidar()
+        setIa(IA_OCIOSA)
         setPendente("importar")
         setErro(null)
         let r: Awaited<ReturnType<typeof gravarLote>>
@@ -835,7 +838,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         },
         ia,
         tentarIaDeNovo: () => {
-            if (lote) void pedirIa(lote, escolhidas, vez.atual())
+            if (lote && ia.estado === "falhou") void pedirIa(lote, escolhidas, vez.atual())
         },
         filtro,
         setFiltro,

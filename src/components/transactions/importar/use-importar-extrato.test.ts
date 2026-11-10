@@ -542,6 +542,14 @@ describe("a IA na conferência", () => {
         expect(corpo).not.toContain("setEscolhidas")
         expect(fonte).toMatch(/setPasso\("conferir"\)\s*void pedirIa\(r\.lote, new Map\(\), n\)/)
         expect(fonte).toMatch(/function voltar\(\) \{[\s\S]*?vez\.invalidar\(\)/)
+        // Toda leitura começa com a IA ociosa: a releitura que falha ou vem vazia não fica em "lendo".
+        expect(fonte).toMatch(/async function lendo\([^)]*\)[^{]*\{\s*const n = vez\.nova\(\)[\s\S]*?setIa\(IA_OCIOSA\)[\s\S]*?await passoDaLeitura\(n\)/)
+        // Importar fecha a vez antes de gravar.
+        const importar = fonte.slice(fonte.indexOf("async function importar("), fonte.indexOf("async function desfazer("))
+        expect(importar.indexOf("vez.invalidar()")).toBeGreaterThan(-1)
+        expect(importar.indexOf("vez.invalidar()")).toBeLessThan(importar.indexOf("gravarLote("))
+        // Tentar de novo só depois de uma falha.
+        expect(fonte).toMatch(/tentarIaDeNovo: \(\) => \{\s*if \(lote && ia\.estado === "falhou"\)/)
         expect(fonte).toMatch(/function limparLeitura[\s\S]*?setIa\(IA_OCIOSA\)\s*iaPorChave\.current = new Map\(\)/)
     })
 })
