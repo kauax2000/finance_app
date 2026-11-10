@@ -532,7 +532,7 @@ export default function FilterBarDoc() {
       </DocNote>
 
       <DocNote title="O Valor tem cinco modos, e cada um mostra só os seus campos">
-        até, a partir de, entre, igual a e por volta de (10% para cada lado). As abas ocupam a linha, cada uma da largura do nome, e uma frase abaixo diz o que entra (&ldquo;Mostra lançamentos de R$ 100 ou menos.&rdquo;). O modo de um campo mostra um campo só; os números ficam guardados ao trocar e voltam. Os atalhos seguem o modo: valores redondos em até e a partir de, faixas em entre. O &ldquo;entre&rdquo; invertido não é aplicado: a frase vira o erro. Na pílula o valor sai curto, &ldquo;R$ 50 – 200&rdquo;. Com dois operadores (é / não é) o clique no operador troca direto, sem menu.
+        até, a partir de, entre, igual a e por volta de (10% para cada lado). As abas ocupam a linha, cada uma da largura do nome, e uma frase abaixo diz o que entra (&ldquo;Mostra lançamentos de R$ 100 ou menos.&rdquo;). O modo de um campo mostra um campo só; os números ficam guardados ao trocar e voltam. Os atalhos seguem o modo: valores redondos em até e a partir de, faixas em entre. O &ldquo;entre&rdquo; invertido não é aplicado: a frase vira o erro. Na pílula o valor sai curto, &ldquo;R$ 50 – 200&rdquo;. Com dois operadores (é / não é) o clique no operador troca direto, sem menu; no Valor o modo não se troca na pílula, só no editor (o valor, à direita), porque o modo novo pode pedir outro campo.
       </DocNote>
 
       <DocNote title="O operador não muda com a contagem">

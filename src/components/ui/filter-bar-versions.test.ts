@@ -171,6 +171,8 @@ describe("o token e os nomes", () => {
     // O `currencyBRL` separa o R$ com espaço inseparável.
     // A pílula sai curta; o nome do botão diz as duas pontas por extenso.
     expect(html).toMatch(/R\$\s50 – 200/)
+    // O modo do Valor não se troca na pílula: o segmento é texto, e quem troca é o editor.
+    expect(html).not.toContain("Valor: entre. Trocar operador.")
     expect(html).toMatch(/Valor: entre R\$\s50,00 a R\$\s200,00\. Editar valor\./)
     expect(html).toContain('aria-label="Remover filtro Categoria"')
   })

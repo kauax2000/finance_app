@@ -1524,7 +1524,8 @@ function FilterToken({
         >
           {operadorMiolo}
         </button>
-      ) : ops.length > 1 && !token.rascunho ? (
+      ) : ops.length > 1 && !token.rascunho && campo.type !== "money" ? (
+        // O Valor não troca o modo na pílula: o modo novo pode pedir outro campo, e quem o escreve é o editor (o valor, à direita).
         <DropdownMenu
           mobile="sheet"
           onOpenChange={(abrir) => {
