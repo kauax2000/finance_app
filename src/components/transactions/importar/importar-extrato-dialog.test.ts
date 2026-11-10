@@ -167,7 +167,9 @@ describe("a conferência", () => {
 
     it("no expandido, o DataTable com busca, seleção (o que entra), soma e o gêmeo do telefone", () => {
         expect(conferir).toContain("<DataTable")
-        expect(conferir).toMatch(/toolbar=\{\{ search: "Buscar descrição", end: <AcoesDaTabela/)
+        expect(conferir).toMatch(/toolbar=\{\{ search: "Buscar descrição", end: <VisiveisDaTabela onChange=\{setDaTabela\} \/>/)
+        // Na tela cheia as Ações e o recolher moram na linha das abas.
+        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela \?\? imp\.visiveis\}[\s\S]*?botaoExpandir/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.

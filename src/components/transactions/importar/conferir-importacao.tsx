@@ -454,14 +454,16 @@ function AcoesDasVisiveis({
     )
 }
 
-/** Na barra do `DataTable`: as visíveis são as que ele filtrou (o filtro da conferência mais a busca). */
-function AcoesDaTabela(props: {
-    imp: ImportarExtrato
-    onPorCategoria: (itens: ItemImportavel[]) => void
-    travado: boolean
-}) {
+/**
+ * Na tela cheia as Ações moram na linha das abas, fora do `DataTable`: daqui ele publica as que
+ * filtrou (o filtro da conferência mais a busca). Só republica quando o conjunto muda.
+ */
+function VisiveisDaTabela({ onChange }: { onChange: (itens: ItemImportavel[]) => void }) {
     const itens = useDataTable().getFilteredRowModel().rows.map((r) => r.original as ItemImportavel)
-    return <AcoesDasVisiveis {...props} itens={itens} />
+    const chave = itens.map((i) => i.clientId).join(" ")
+    const publicar = React.useEffectEvent(() => onChange(itens))
+    React.useEffect(() => publicar(), [chave])
+    return null
 }
 
 /** O esmaecer da vista que sai (`--duration-base`) e uma folga: ele já terminou se o fim não chegou. */
@@ -475,6 +477,8 @@ const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
     const { resumo } = imp
     const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
+    // As que o `DataTable` filtrou, na tela cheia; até ele publicar, as da conferência.
+    const [daTabela, setDaTabela] = React.useState<ItemImportavel[] | null>(null)
     const grande = imp.visiveis.length > LIMITE
     const celular = useIsMobile()
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
@@ -528,7 +532,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         <Button
             type="button"
             variant="tertiary"
-            size="icon-md"
+            size="icon-lg"
             aria-label={imp.expandido ? "Recolher a lista" : "Expandir a lista"}
             aria-expanded={imp.expandido}
             disabled={travado}
@@ -607,13 +611,10 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     ))}
                 </div>
             ) : null}
-            {/* Sem a faixa das Colunas (OFX), as Ações e, na tela cheia, o recolher moram acima da lista. */}
-            {(!imp.csv && !imp.expandido) || (imp.expandido && podeExpandir) ? (
+            {/* Sem a faixa das Colunas (OFX), as Ações moram acima da lista. */}
+            {!imp.csv && !imp.expandido ? (
                 <div className="flex items-center justify-end gap-2">
-                    {imp.expandido || imp.csv ? null : (
-                        <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
-                    )}
-                    {imp.expandido ? botaoExpandir : null}
+                    <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 </div>
             ) : null}
             {!imp.existentesConferidos ? (
@@ -654,6 +655,13 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         </TabsList>
                     </Tabs>
                 </div>
+                {/* Na tela cheia sobra largura: as Ações e o recolher vêm para a linha das abas. */}
+                {imp.expandido ? (
+                    <>
+                        <AcoesDasVisiveis imp={imp} itens={daTabela ?? imp.visiveis} onPorCategoria={setPorCategoria} travado={travado} />
+                        {podeExpandir ? botaoExpandir : null}
+                    </>
+                ) : null}
             </div>
             {/* Como o arquivo foi lido mora logo abaixo do filtro, antes das linhas que ele explica. */}
             {imp.csv && !imp.expandido ? (
@@ -692,7 +700,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         getRowId={(i) => i.clientId}
                         getRowLabel={rotuloDe}
                         pageSize={false}
-                        toolbar={{ search: "Buscar descrição", end: <AcoesDaTabela imp={imp} onPorCategoria={setPorCategoria} travado={travado} /> }}
+                        toolbar={{ search: "Buscar descrição", end: <VisiveisDaTabela onChange={setDaTabela} /> }}
                         onRowClick={celular && !travado ? (i) => setPorCategoria([i]) : undefined}
                         enableSelection={travado ? () => false : true}
                         pending={travado}
