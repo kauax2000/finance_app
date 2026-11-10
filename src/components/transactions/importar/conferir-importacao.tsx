@@ -103,14 +103,15 @@ const LIMITE = 6
 
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
     { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
     { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
-    { valor: "ia", rotulo: "Pela IA", so_com_linhas: true },
+    // O ✦ liga a aba ao botão "IA categorizou N".
+    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true },
 ]
 
 const papeisDe = (m: ImportarExtrato["mapeamento"]) =>
@@ -684,6 +685,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                                     key={f.valor}
                                     value={f.valor}
                                     disabled={travado}
+                                    icon={f.ia ? <SparklesIcon /> : undefined}
                                     // A sobra da linha se divide a partir do rótulo de cada aba, para "Sem categoria" não apertar.
                                     className="flex-auto"
                                     // A fileira rola de lado quando não cabe: a aba escolhida vem inteira à vista.
