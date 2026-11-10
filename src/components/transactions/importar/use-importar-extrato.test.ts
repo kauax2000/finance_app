@@ -16,6 +16,9 @@ import {
     categoriaNovaDe,
     comCategoriasDaIA,
     criarVez,
+    escolhidasDevolvidas,
+    escolhidasSemIa,
+    porCategoriaDaIa,
     contagemDosFiltros,
     filtrarItens,
     idsParaCategoria,
@@ -552,5 +555,46 @@ describe("a IA na conferência", () => {
         // Tentar de novo só depois de uma falha.
         expect(fonte).toMatch(/tentarIaDeNovo: \(\) => \{\s*if \(lote && ia\.estado === "falhou"\)/)
         expect(fonte).toMatch(/function limparLeitura[\s\S]*?setIa\(IA_OCIOSA\)\s*iaPorChave\.current = new Map\(\)/)
+    })
+})
+
+describe("desfazer a IA", () => {
+    const itens = comCategoriasDaIA(
+        [item({ clientId: "a" }), item({ clientId: "b" }), item({ clientId: "c" }), item({ clientId: "d" })],
+        new Map([
+            ["a", "mercado"],
+            ["b", "mercado"],
+            ["c", "lazer"],
+            ["d", "lazer"],
+        ])
+    )
+    const escolhidas = aplicarCategoria(new Map(), ["d"], "mercado")
+    const origemDe = (id: string) => origemDaCategoria(itens.find((i) => i.clientId === id)!, escolhidas)
+    const categoriaDe = (id: string) => categoriaEfetiva(itens.find((i) => i.clientId === id)!, escolhidas)
+
+    it("porCategoriaDaIa conta só as da IA, da mais usada para a menos", () => {
+        expect(porCategoriaDaIa(itens, origemDe, categoriaDe)).toEqual([
+            { categoryId: "mercado", n: 2 },
+            { categoryId: "lazer", n: 1 },
+        ])
+    })
+
+    it("escolhidasSemIa põe as da IA em Sem categoria e não toca na da pessoa", () => {
+        const { escolhidas: nova, ids } = escolhidasSemIa(itens, escolhidas, ["a", "c", "d"])
+        expect(ids).toEqual(["a", "c"])
+        expect(nova.get("a")).toBeNull()
+        expect(nova.get("c")).toBeNull()
+        expect(nova.get("d")).toBe("mercado")
+        expect(origemDaCategoria(itens[0], nova)).toBeNull()
+    })
+
+    it("escolhidasDevolvidas apaga as chaves, e a IA volta; o que a pessoa trocou no meio fica", () => {
+        const { escolhidas: nova, ids } = escolhidasSemIa(itens, escolhidas, ["a", "b", "c"])
+        const trocada = aplicarCategoria(nova, ["b"], "lazer")
+        const volta = escolhidasDevolvidas(trocada, ids)
+        expect(volta.has("a")).toBe(false)
+        expect(volta.has("c")).toBe(false)
+        expect(volta.get("b")).toBe("lazer")
+        expect(origemDaCategoria(itens[0], volta)).toBe("ia")
     })
 })

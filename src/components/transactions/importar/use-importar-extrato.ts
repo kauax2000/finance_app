@@ -129,6 +129,34 @@ const semCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas) =>
 export const origemDaCategoria = (i: ItemImportavel, escolhidas: CategoriasEscolhidas): OrigemDaCategoria | null =>
     escolhidas.has(i.clientId) ? (escolhidas.get(i.clientId) == null ? null : "pessoa") : i.origem
 
+/** As categorias que a IA usou nas linhas dadas, da mais usada para a menos (empate: id, pt-BR; o nome mora fora). */
+export function porCategoriaDaIa(
+    itens: ItemImportavel[],
+    origemDe: (clientId: string) => OrigemDaCategoria | null,
+    categoriaDe: (clientId: string) => string | null
+): { categoryId: string; n: number }[] {
+    const n = new Map<string, number>()
+    for (const i of itens) {
+        const c = origemDe(i.clientId) === "ia" ? categoriaDe(i.clientId) : null
+        if (c != null) n.set(c, (n.get(c) ?? 0) + 1)
+    }
+    return [...n].map(([categoryId, n]) => ({ categoryId, n })).sort((a, b) => b.n - a.n || a.categoryId.localeCompare(b.categoryId, "pt-BR"))
+}
+
+/** Desfazer a IA: as linhas dadas que ainda são dela viram "Sem categoria" (`null`); devolve também quais foram. */
+export function escolhidasSemIa(itens: ItemImportavel[], escolhidas: CategoriasEscolhidas, clientIds: string[]) {
+    const dadas = new Set(clientIds)
+    const ids = itens.filter((i) => dadas.has(i.clientId) && origemDaCategoria(i, escolhidas) === "ia").map((i) => i.clientId)
+    return { ids, escolhidas: aplicarCategoria(escolhidas, ids, null) }
+}
+
+/** A volta: apaga a escolha `null` dessas linhas (a IA reaparece); a que a pessoa trocou depois fica. */
+export function escolhidasDevolvidas(escolhidas: CategoriasEscolhidas, ids: string[]) {
+    const nova = new Map(escolhidas)
+    for (const id of ids) if (nova.has(id) && nova.get(id) == null) nova.delete(id)
+    return nova
+}
+
 /**
  * A categoria da IA nas linhas que ainda não têm nenhuma, com origem "ia". A linha da planilha cuja
  * categoria nasce ao gravar fica com a dela; a escolha da pessoa vence pela `categoriaEfetiva`.
@@ -832,6 +860,12 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         /** A escolha da pessoa (a origem vira "pessoa"); a IA nunca passa por aqui. */
         setCategoria: (ids: string[], categoryId: string | null) =>
             setEscolhidas((e) => aplicarCategoria(e, ids, categoryId)),
+        /** Tira da IA as linhas dadas (só as que ainda são dela); devolve a volta. */
+        desfazerIa: (clientIds: string[]) => {
+            const { ids, escolhidas: nova } = escolhidasSemIa(lote?.itens ?? [], escolhidas, clientIds)
+            setEscolhidas(nova)
+            return () => setEscolhidas((e) => escolhidasDevolvidas(e, ids))
+        },
         origemDe: (id: string) => {
             const i = porId.get(id)
             return i ? origemDaCategoria(i, escolhidas) : null
