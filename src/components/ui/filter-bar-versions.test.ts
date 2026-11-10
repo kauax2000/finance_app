@@ -5,17 +5,20 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   abaInicialDoPeriodo,
+  anosDaGrade,
   mesesDaGrade,
   pedirTotais,
   FilterBar,
   FILTER_PERIOD_DAY_PRESET_IDS,
   FILTER_PERIOD_PRESETS,
+  FILTER_PERIOD_YEAR_PRESET_IDS,
   FilterBarSkeleton,
   filterPeriodRange,
   parseFilters,
   serializeFilters,
   type FilterField,
   tokensQueSaem,
+  totalDoAno,
   excessoDaLinha,
   chaveDaMedida,
   type FilterValue,
@@ -384,7 +387,7 @@ describe("atalhos e rótulo do período", () => {
     expect(filterPeriodRange(["mes-passado"])).toEqual({ from: "2026-10-01", to: "2026-10-31" })
     expect(FILTER_PERIOD_DAY_PRESET_IDS).toEqual(["hoje", "ultimos-7", "ultimos-30", "ultimos-90"])
     expect(FILTER_PERIOD_PRESETS.map((p) => p.id)).toEqual(
-      expect.arrayContaining([...FILTER_PERIOD_DAY_PRESET_IDS, "este-mes", "mes-passado"])
+      expect.arrayContaining([...FILTER_PERIOD_DAY_PRESET_IDS, "este-mes", "mes-passado", "este-ano", "ano-passado", "ultimos-12-meses"])
     )
   })
 
@@ -431,9 +434,37 @@ describe("o período em abas", () => {
     expect(BLOCO).toMatch(/presets=\{ATALHOS_DE_DIAS\}/)
     expect(CODIGO).toMatch(/const ATALHOS_DE_DIAS = FILTER_PERIOD_DAY_PRESET_IDS\.map/)
     expect(BLOCO).not.toMatch(/isMobile \?/)
-    // A lista de anos é escolha única do catálogo, não botões de alternar.
-    expect(BLOCO).toContain("<RadioGroup")
-    expect(BLOCO).not.toContain("aria-pressed")
+    expect(BLOCO).toContain("<GradeDeAnos")
+    expect(CODIGO).toMatch(/function GradeDeAnos[\s\S]*?proximoIntervaloDeMes\(/)
+    expect(CODIGO).toContain('aria-label="Atalhos de ano"')
+    expect(CODIGO).toContain("sem lançamentos")
+  })
+
+  it("os atalhos de ano são ids e resolvem na data de hoje", () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 10, 8, 12))
+    expect(FILTER_PERIOD_YEAR_PRESET_IDS).toEqual(["este-ano", "ano-passado", "ultimos-12-meses"])
+    expect(filterPeriodRange(["este-ano"])).toEqual({ from: "2026-01-01", to: "2026-11-08" })
+    expect(filterPeriodRange(["ano-passado"])).toEqual({ from: "2025-01-01", to: "2025-12-31" })
+    expect(filterPeriodRange(["ultimos-12-meses"])).toEqual({ from: "2025-11-09", to: "2026-11-08" })
+    for (const id of FILTER_PERIOD_YEAR_PRESET_IDS) expect(abaInicialDoPeriodo([id])).toBe("ano")
+    expect(abaInicialDoPeriodo(["2024-01-01", "2026-12-31"])).toBe("ano")
+  })
+
+  it("a grade de anos pinta anos inteiros, um ou vários", () => {
+    expect(anosDaGrade(["2024-01-01", "2026-12-31"])).toEqual({ from: 2024, to: 2026 })
+    expect(anosDaGrade(["2025-01-01", "2025-12-31"])).toEqual({ from: 2025, to: 2025 })
+    expect(anosDaGrade(["ano-passado"])).toBeUndefined()
+    expect(anosDaGrade(["2025-03-01", "2025-12-31"])).toBeUndefined()
+  })
+
+  it("o ano atual soma até o mês de hoje; o passado pede os doze", () => {
+    const hoje = new Date(2026, 10, 8)
+    const atual = [...Array(11).fill(10), null]
+    expect(totalDoAno(atual, 2026, hoje)).toBe(110)
+    expect(totalDoAno([null, ...Array(11).fill(10)], 2026, hoje)).toBeNull()
+    expect(totalDoAno(Array(12).fill(0), 2023, hoje)).toBe(0)
+    expect(totalDoAno([...Array(11).fill(1), null], 2025, hoje)).toBeNull()
+    expect(totalDoAno(undefined, 2025, hoje)).toBeNull()
   })
 
   it("sem valor, os dois meses do desktop terminam no atual", () => {

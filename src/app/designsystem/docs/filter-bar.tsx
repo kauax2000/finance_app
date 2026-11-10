@@ -553,7 +553,7 @@ export default function FilterBarDoc() {
 
       <DocSection
         title="O período em abas"
-        description="Dias, Meses e Ano: a pessoa escolhe na unidade em que pensa, em um ou dois toques. Dias são os atalhos (Hoje, Últimos 7, 30 e 90 dias) e o calendário de intervalo, com os dois meses terminando no atual; Meses é o MonthGrid em intervalo (o primeiro toque grava o mês, o segundo vai até o outro); Ano são os seis últimos, numa escolha única. Embaixo, o resumo: o intervalo por extenso e a duração. Com totals, cada mês e cada ano mostra a despesa."
+        description="Dias, Meses e Ano: a pessoa escolhe na unidade em que pensa, em um ou dois toques. Dias são os atalhos (Hoje, Últimos 7, 30 e 90 dias) e o calendário de intervalo, com os dois meses terminando no atual; Meses é o MonthGrid em intervalo (o primeiro toque grava o mês, o segundo vai até o outro); Ano são três atalhos (Este ano, Ano passado, Últimos 12 meses) e a grade dos seis últimos anos, em intervalo como a de Meses. Embaixo, o resumo: o intervalo por extenso e a duração. Com totals, cada mês e cada ano mostra a despesa."
         code={`{ id: "periodo", label: "Período", type: "period",
   totals: (ano, signal) => despesasPorMes(ano, { signal }) } // 12 posições, null = sem total`}
         previewClassName="bg-background"
@@ -562,11 +562,11 @@ export default function FilterBarDoc() {
       </DocSection>
 
       <DocNote title="A aba que abre é a do valor">
-        Um ano inteiro (1º de janeiro a 31 de dezembro) abre em Ano; meses inteiros (do dia 1 de um mês ao último de outro, ou do mesmo), em Meses; qualquer outro intervalo, ou um atalho de dias, em Dias; o filtro novo, sem valor, em Dias (<code>abaInicialDoPeriodo</code>). Trocar de aba não muda o valor. No desktop o editor tem a largura de Dias nas três abas (o painel de Dias fica montado, sem altura e inerte), e a grade e os anos esticam; o mês que ainda não começou fica sem total. Na gaveta a árvore é a mesma: as abas esticam, os meses e as setas sobem a 44 e os anos são linhas de 44.
+        Anos inteiros (de 1º de janeiro a 31 de dezembro, um ou vários) e os atalhos de ano abrem em Ano; meses inteiros (do dia 1 de um mês ao último de outro, ou do mesmo), em Meses; qualquer outro intervalo, ou um atalho de dias, em Dias; o filtro novo, sem valor, em Dias (<code>abaInicialDoPeriodo</code>). Trocar de aba não muda o valor. No desktop o editor tem a largura de Dias nas três abas (o painel de Dias fica montado, sem altura e inerte), e a grade e os anos esticam; o mês que ainda não começou fica sem total, o ano atual soma até o mês corrente, e um ano passado sem despesa diz sem lançamentos. Na gaveta a árvore é a mesma: as abas esticam, os meses e as setas sobem a 44 e os anos sobem a 44.
       </DocNote>
 
       <DocNote title="Os atalhos e o rótulo falam a unidade">
-        O filtro tem os atalhos do <code>DatePicker</code> mais Hoje e Últimos 90 dias (<code>FILTER_PERIOD_PRESETS</code>), e a aba Dias mostra só os quatro de dias (<code>FILTER_PERIOD_DAY_PRESET_IDS</code>); &ldquo;Este mês&rdquo; e &ldquo;Mês passado&rdquo; continuam valendo numa URL antiga. O token diz a unidade: um atalho pelo nome (&ldquo;Últimos 90 dias&rdquo;), um mês &ldquo;nov 2026&rdquo;, meses &ldquo;ago – out 2026&rdquo; (ou &ldquo;nov 2025 – fev 2026&rdquo;), um ano &ldquo;2025&rdquo;, todos com &ldquo;é&rdquo;; um dia &ldquo;8 nov&rdquo;; o resto, &ldquo;entre 1 ago e 15 ago&rdquo;. Os totais só aparecem com os 12 meses conhecidos: nunca um total errado.
+        O filtro tem os atalhos do <code>DatePicker</code> mais Hoje e Últimos 90 dias (<code>FILTER_PERIOD_PRESETS</code>), e a aba Dias mostra só os quatro de dias (<code>FILTER_PERIOD_DAY_PRESET_IDS</code>); &ldquo;Este mês&rdquo; e &ldquo;Mês passado&rdquo; continuam valendo numa URL antiga. O token diz a unidade: um atalho pelo nome (&ldquo;Últimos 90 dias&rdquo;), um mês &ldquo;nov 2026&rdquo;, meses &ldquo;ago – out 2026&rdquo; (ou &ldquo;nov 2025 – fev 2026&rdquo;), um ano &ldquo;2025&rdquo;, todos com &ldquo;é&rdquo;; um dia &ldquo;8 nov&rdquo;; o resto, &ldquo;entre 1 ago e 15 ago&rdquo;. Os totais só aparecem com os meses que já passaram todos conhecidos: nunca um total errado.
       </DocNote>
 
       <DocSection

@@ -1630,7 +1630,7 @@ declaração de `background-color` no trilho).
   remover); o do editor aberto não sai e, aberto, digitar não remede; "+ Filtro", "Limpar" e a contagem ficam presos fora — é a
   de Transações. **O Enter de dentro dela e dos
   portais dela para nela** — a exceção documentada do `Form`.
-  No `overflow="menu"` o +N leva só o que não cabe: o primeiro que sairia fica encolhido, o valor em reticências, se sobram 7rem (`excessoDaLinha`). `filter-bar-versions.test.ts`.
+  No `overflow="menu"` o +N leva só o que não cabe: o primeiro que sairia fica encolhido, o valor em reticências, se sobram 7rem (`excessoDaLinha`). A aba Ano do período são três atalhos por id (`este-ano`, `ano-passado`, `ultimos-12-meses`) e a grade de anos em intervalo (`GradeDeAnos`), na régua da `MonthGrid`. `filter-bar-versions.test.ts`.
 - **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão e a do
   app desde a rodada 261, **sem vidro**), `sidebar` (a rente), `inset`,
   `plain` (a do catálogo, com

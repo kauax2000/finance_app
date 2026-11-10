@@ -17,7 +17,12 @@ import {
   CommandList,
   CommandLoading,
 } from "@/components/ui/command"
-import { DATE_RANGE_PRESETS, MonthGrid, type DatePickerRangePreset } from "@/components/ui/date-picker"
+import {
+  DATE_RANGE_PRESETS,
+  MonthGrid,
+  proximoIntervaloDeMes,
+  type DatePickerRangePreset,
+} from "@/components/ui/date-picker"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +41,6 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from "@/components/ui/popover"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -49,7 +53,7 @@ import { commandFilter } from "@/lib/command-filter"
 import { mergeParams } from "@/lib/data-table/url-state"
 import { fieldControlHeightClassName, fieldSurfaceClassName } from "@/lib/field-classes"
 import { currencyBRL, currencyCompactBRL, numberBR } from "@/lib/formatters"
-import { classifyPeriod, monthRangeYmd, periodLabel, periodSummary, yearRangeYmd } from "@/lib/period-range"
+import { classifyPeriod, monthRangeYmd, periodLabel, periodSummary, wholeYears } from "@/lib/period-range"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { limparExcesso, quemSai } from "@/lib/overflow"
 import { OverflowMenu, type ItemNoExcesso } from "@/lib/overflow-menu"
@@ -162,11 +166,32 @@ const diasAtras = (n: number) => {
   return d
 }
 
-/** Os atalhos do filtro de período: os do `DatePicker` mais Hoje e Últimos 90 dias (que o `DatePicker` não tem). */
+/** Os atalhos do filtro de período: os do `DatePicker` mais Hoje, Últimos 90 dias e os de ano (que o `DatePicker` não tem). */
 export const FILTER_PERIOD_PRESETS: (DatePickerRangePreset & { id: string })[] = [
   ...DATE_RANGE_PRESETS,
   { id: "hoje", label: "Hoje", range: () => ({ from: hojeLocal(), to: hojeLocal() }) },
   { id: "ultimos-90", label: "Últimos 90 dias", range: () => ({ from: diasAtras(89), to: hojeLocal() }) },
+  {
+    id: "este-ano",
+    label: "Este ano",
+    range: () => ({ from: new Date(hojeLocal().getFullYear(), 0, 1), to: hojeLocal() }),
+  },
+  {
+    id: "ano-passado",
+    label: "Ano passado",
+    range: () => {
+      const y = hojeLocal().getFullYear() - 1
+      return { from: new Date(y, 0, 1), to: new Date(y, 11, 31) }
+    },
+  },
+  {
+    id: "ultimos-12-meses",
+    label: "Últimos 12 meses",
+    range: () => {
+      const h = hojeLocal()
+      return { from: new Date(h.getFullYear() - 1, h.getMonth(), h.getDate() + 1), to: h }
+    },
+  },
 ]
 
 /** Os botões da aba Dias, nessa ordem. */
@@ -176,12 +201,21 @@ const ATALHOS_DE_DIAS = FILTER_PERIOD_DAY_PRESET_IDS.map(
   (id) => FILTER_PERIOD_PRESETS.find((p) => p.id === id)!
 )
 
+/** Os atalhos da aba Ano, nessa ordem. */
+export const FILTER_PERIOD_YEAR_PRESET_IDS = ["este-ano", "ano-passado", "ultimos-12-meses"] as const
+
+const ATALHOS_DE_ANO = FILTER_PERIOD_YEAR_PRESET_IDS.map(
+  (id) => FILTER_PERIOD_PRESETS.find((p) => p.id === id)!
+)
+
 type AbaDoPeriodo = "dias" | "meses" | "ano"
 
 /** A aba que o editor de período abre: a unidade do valor; sem valor, Meses. */
 export function abaInicialDoPeriodo(valores: string[]): AbaDoPeriodo {
+  if (FILTER_PERIOD_YEAR_PRESET_IDS.some((id) => id === valores[0])) return "ano"
   const r = filterPeriodRange(valores)
   if (!r) return "dias"
+  if (wholeYears(r.from, r.to)) return "ano"
   const tipo = classifyPeriod(r.from, r.to).kind
   return tipo === "year" ? "ano" : tipo === "months" ? "meses" : "dias"
 }
@@ -1818,11 +1852,21 @@ function useTotaisPorAno(totals: BuscarTotais | undefined, anos: number[]) {
   return porAno
 }
 
-/** O ano inteiro só tem total com os 12 meses conhecidos — nunca um total errado. */
-const totalDoAno = (meses: (number | null)[] | undefined) =>
-  meses?.length === 12 && meses.every((v) => v != null)
-    ? (meses as number[]).reduce((a, b) => a + b, 0)
-    : null
+/**
+ * O total do ano só com os meses que já passaram todos conhecidos — nunca um
+ * total errado: o passado pede os 12, o atual soma até o mês de hoje, o futuro não tem.
+ */
+export function totalDoAno(meses: (number | null)[] | undefined, ano: number, hoje = new Date()): number | null {
+  if (meses?.length !== 12 || ano > hoje.getFullYear()) return null
+  const ate = meses.slice(0, ano === hoje.getFullYear() ? hoje.getMonth() + 1 : 12)
+  return ate.every((v) => v != null) ? (ate as number[]).reduce((a, b) => a + b, 0) : null
+}
+
+/** Os anos que a grade de anos pinta: só datas de anos inteiros; atalho ou dias não pintam. */
+export function anosDaGrade(valores: string[]): { from: number; to: number } | undefined {
+  const r = valores.length === 2 ? filterPeriodRange(valores) : null
+  return (r && wholeYears(r.from, r.to)) ?? undefined
+}
 
 /** O intervalo que a grade de meses pinta: meses inteiros ou o ano inteiro (Jan–Dez escolhido na grade é um ano); dias não pintam. */
 export function mesesDaGrade(valores: string[]): { from: Date; to: Date } | undefined {
@@ -1838,9 +1882,100 @@ export function mesesDaGrade(valores: string[]): { from: Date; to: Date } | unde
   return undefined
 }
 
+type IntervaloDeAnos = { from: number; to: number }
+
+/**
+ * Os anos em grade de três, em intervalo como a `MonthGrid`: o primeiro toque
+ * grava um ano só e o guarda como âncora, o segundo grava até ele.
+ */
+function GradeDeAnos({
+  anos,
+  value,
+  onChange,
+  legenda,
+}: {
+  anos: number[]
+  value: IntervaloDeAnos | undefined
+  onChange: (r: IntervaloDeAnos) => void
+  legenda: (ano: number) => { texto: string; vazio: boolean } | null
+}) {
+  const anoAtual = new Date().getFullYear()
+  const [ancora, setAncora] = React.useState<Date | null>(null)
+  const chaveDe = (r: IntervaloDeAnos | undefined) => (r ? `${r.from}:${r.to}` : "")
+
+  // Um valor que muda por fora (um atalho, Remover) apaga a âncora; o que esta grade gravou não conta.
+  const chaveDoValor = chaveDe(value)
+  const [visto, setVisto] = React.useState(chaveDoValor)
+  const [emitido, setEmitido] = React.useState<string | null>(null)
+  if (chaveDoValor !== visto) {
+    setVisto(chaveDoValor)
+    if (chaveDoValor !== emitido) setAncora(null)
+  }
+
+  const escolher = (ano: number) => {
+    const proximo = proximoIntervaloDeMes(ancora, new Date(ano, 0, 1))
+    const r = { from: proximo.range.from.getFullYear(), to: proximo.range.to.getFullYear() }
+    setAncora(proximo.ancora)
+    setEmitido(chaveDe(r))
+    onChange(r)
+  }
+
+  const noIntervalo = (ano: number) => {
+    if (!value) return undefined
+    if (ano === value.from && ano === value.to) return "single"
+    if (ano === value.from) return "start"
+    if (ano === value.to) return "end"
+    return ano > value.from && ano < value.to ? "middle" : undefined
+  }
+
+  return (
+    <div role="group" aria-label="Anos" className="grid grid-cols-3 gap-1">
+      {anos.map((ano) => {
+        const posicao = noIntervalo(ano)
+        const escolhido = posicao !== undefined && posicao !== "middle"
+        const atual = ano === anoAtual
+        const nota = legenda(ano)
+        return (
+          <Button
+            key={ano}
+            type="button"
+            size="sm"
+            variant={escolhido ? "primary" : atual && !posicao ? "secondary" : "tertiary"}
+            aria-pressed={escolhido}
+            aria-current={atual ? "date" : undefined}
+            data-range={posicao}
+            className={cn(
+              // A régua da `MonthGrid`: 44 no toque, o atual em negrito, o meio na faixa.
+              "font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+              atual && "font-semibold",
+              posicao === "middle" && "bg-muted text-foreground",
+              nota != null && "h-auto flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11",
+              nota?.vazio && !posicao && "text-muted-foreground"
+            )}
+            onClick={() => escolher(ano)}
+          >
+            <span className="nums">{ano}</span>
+            {nota != null ? (
+              <span
+                data-slot="filter-bar-year-caption"
+                className={cn(
+                  "text-2xs leading-tight nums",
+                  escolhido ? "text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                {nota.texto}
+              </span>
+            ) : null}
+          </Button>
+        )
+      })}
+    </div>
+  )
+}
+
 /**
  * O período em três unidades: Dias (os atalhos de dias e o calendário),
- * Meses (a grade em intervalo) e Ano (os seis últimos). Trocar de aba não muda
+ * Meses (a grade em intervalo) e Ano (três atalhos e a grade dos seis últimos, em intervalo). Trocar de aba não muda
  * o valor; a aba que abre é a do valor (`abaInicialDoPeriodo`). Na gaveta a
  * árvore é a mesma: os alvos de 44 vêm dos componentes.
  */
@@ -1860,7 +1995,6 @@ function EditorDePeriodo({
   dedo: boolean
 }) {
   const periodo = filterPeriodRange(valores)
-  const tipo = periodo ? classifyPeriod(periodo.from, periodo.to) : null
   const [abaInicial] = React.useState(() => abaInicialDoPeriodo(valores))
   const [aba, setAba] = React.useState<AbaDoPeriodo>(abaInicial)
   const valorDaGrade = mesesDaGrade(valores)
@@ -1966,28 +2100,35 @@ function EditorDePeriodo({
       </TabsContent>
 
       <TabsContent value="ano">
-        <div className={cn("pt-2 pb-2", recuo)}>
-          <RadioGroup
-            aria-label="Ano"
-            value={tipo?.kind === "year" ? String(tipo.year) : ""}
-            onValueChange={(v) => {
-              const r = yearRangeYmd(Number(v))
-              onGravar([r.from, r.to])
-            }}
-          >
-            {anos.map((ano) => {
-              const total = totals ? totalDoAno(totais[ano]) : null
-              return (
-                <RadioGroupItem
-                  key={ano}
-                  value={String(ano)}
-                  trailing={total == null ? undefined : currencyCompactBRL(total)}
+        <div className={cn("flex flex-col gap-2 pt-2 pb-2", recuo)}>
+          <ul aria-label="Atalhos de ano" className="grid grid-cols-3 gap-1">
+            {ATALHOS_DE_ANO.map((p) => (
+              <li key={p.id}>
+                <Button
+                  type="button"
+                  size="sm"
+                  // A régua dos atalhos do `Calendar`: o escolhido preenche.
+                  variant={valores[0] === p.id ? "primary" : "outline"}
+                  aria-pressed={valores[0] === p.id}
+                  className="w-full justify-center font-normal pointer-coarse:h-11"
+                  onClick={() => onGravar([p.id])}
                 >
-                  <span className="nums">{ano}</span>
-                </RadioGroupItem>
-              )
-            })}
-          </RadioGroup>
+                  {p.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <GradeDeAnos
+            anos={anos}
+            value={anosDaGrade(valores)}
+            onChange={(r) => onGravar([`${r.from}-01-01`, `${r.to}-12-31`])}
+            legenda={(ano) => {
+              const total = totals ? totalDoAno(totais[ano], ano) : null
+              if (total == null) return null
+              if (total === 0 && ano < anoAtual) return { texto: "sem lançamentos", vazio: true }
+              return { texto: currencyCompactBRL(total), vazio: false }
+            }}
+          />
         </div>
       </TabsContent>
 
