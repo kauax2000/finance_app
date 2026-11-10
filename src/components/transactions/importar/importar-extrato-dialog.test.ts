@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { guiaDaAba, rotuloDePorCategoria } from "./rotulo-por-categoria"
+import { efeitoDoEsc } from "./busca-que-abre"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 const ler = (nome: string) => semComentarios(lerFonte(`src/components/transactions/importar/${nome}`), "tudo")
@@ -320,5 +321,24 @@ describe("a troca de passo chega em escada", () => {
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
         expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
+    })
+})
+
+describe("a busca que abre da lupa", () => {
+    const busca = ler("busca-que-abre.tsx")
+
+    it("o Esc limpa com texto e fecha vazio", () => {
+        expect(efeitoDoEsc("Uber")).toBe("limpar")
+        expect(efeitoDoEsc("")).toBe("fechar")
+    })
+
+    it("é o SearchInput de 36, na mola do palco e na saída, sem o Esc chegar ao diálogo", () => {
+        expect(busca).toContain("SearchInput")
+        expect(busca).toContain('size="lg"')
+        expect(busca).toContain("MOLA_PALCO")
+        expect(busca).toContain("SAIDA")
+        expect(busca).toContain("stopPropagation")
+        expect(busca).toMatch(/prefers-reduced-motion|useReducedMotion/)
+        expect(busca).toContain("18rem")
     })
 })
