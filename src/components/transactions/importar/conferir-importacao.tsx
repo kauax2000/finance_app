@@ -620,7 +620,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
             <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
                 <div className="min-w-0 flex-1">
                     <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
-                        <TabsList aria-label="Filtro" scrollable={celular}>
+                        {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
+                        <TabsList aria-label="Filtro" scrollable={celular} stretch={!imp.expandido}>
                             {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor).map((f) => (
                                 <TabsTrigger
                                     key={f.valor}
