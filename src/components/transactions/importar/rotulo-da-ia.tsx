@@ -44,7 +44,8 @@ export function RotuloDaIa({ imp, travado }: { imp: ImportarExtrato; travado: bo
         <PopoverTrigger asChild>
             <Button
                 type="button"
-                variant="link"
+                // A falha não acende a marca: é um aviso, no terciário.
+                variant={falhou ? "tertiary" : "brandTertiary"}
                 size="sm"
                 disabled={travado}
                 className={cn("shrink-0", falhou && "text-warning-muted-foreground")}

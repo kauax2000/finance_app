@@ -390,7 +390,7 @@ describe("o rótulo da IA mora depois das abas (Bloco 2 no DS)", () => {
     })
 
     it("é um link que abre o resumo, com o Desfazer de volta no toast, sem Ver sugeridas", () => {
-        expect(rotulo).toContain('variant="link"')
+        expect(rotulo).toContain('"brandTertiary"')
         expect(rotulo).toContain("PopoverTitle")
         expect(rotulo).toContain("toastUndo")
         expect(rotulo).toContain('"Desfazer as "')

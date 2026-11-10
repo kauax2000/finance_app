@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
-import { arquivosTsx, blocoCss, lerFonte } from "@/test/fonte"
+import { arquivosTsx, blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 
 import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
@@ -126,8 +126,9 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     const FLOR = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-out)" }
     const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
       brandColorful: FLOR,
+      brandTertiary: FLOR,
     }
-    for (const variant of ["primary", "brandColorful", "secondary", "tertiary", "outline", "floating", "destructive", "link"] as const) {
+    for (const variant of ["primary", "brandColorful", "brandTertiary", "secondary", "tertiary", "outline", "floating", "destructive", "link"] as const) {
       const classes = cn(buttonVariants({ variant }))
       const proprio = RITMO_PROPRIO[variant]
       expect(classes, variant).not.toContain("transition-all")
@@ -263,5 +264,18 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     expect(PRIMARIO.filter((c) => /^(hover:)?(border|ring)-[0-9]/.test(c))).toStrictEqual([])
     expect(claridade(CLARO, "--primary-hover-ring")).toBe(1)
     expect(claridade(ESCURO, "--primary-hover-ring")).toBe(1)
+  })
+
+  it("7. `brandTertiary` em repouso é a tinta do terciário; o véu acende no cursor, no toque e no menu aberto, recortado na cápsula", () => {
+    const classes = buttonVariants({ variant: "brandTertiary" }).split(/\s+/)
+    for (const c of ["button-veil", "brand-rainbow-slide", "text-foreground", "hover:[--button-veil:1]", "active:[--button-veil:1]", "aria-expanded:[--button-veil:1]"]) {
+      expect(classes, c).toContain(c)
+    }
+    expect(classes.some((c) => /^bg-(?!clip)/.test(c))).toBe(false)
+    const css = semComentarios(CSS)
+    const veu = css.slice(css.indexOf("@utility button-veil"), css.indexOf("/* ── O arco-íris como material"))
+    expect(veu).toContain("overflow: hidden")
+    expect(veu).toContain("var(--button-veil-opacity)")
+    expect(veu).toContain("prefers-reduced-motion")
   })
 })

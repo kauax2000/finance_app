@@ -26,6 +26,10 @@ const REALCE_EXPANDIDO = `${REALCE} aria-expanded:[--button-hover:1]`
 const FLORESCER =
   "hover:[--button-bloom:1] active:[--button-bloom:1] aria-expanded:[--button-bloom:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-bloom] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring) aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)"
 
+/** O véu do `brandTertiary`: o mesmo gesto do florescer, em `--button-veil`. */
+const ACENDER_VEU =
+  "hover:[--button-veil:1] active:[--button-veil:1] aria-expanded:[--button-veil:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-veil] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring) aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)"
+
 // O afundar do clique é o `active:translate-y-px` mais o `afundar` (abaixo), que
 // cobre o gatilho de menu do Radix: lá o `:active` não chega a pintar.
 const buttonVariants = cva(
@@ -53,6 +57,11 @@ const buttonVariants = cva(
         // aberto, cinco paradas do arco-íris florescem do centro
         // (`@utility button-colorful`). Um CTA de marca por tela.
         brandColorful: `button-colorful bg-primary text-primary-foreground ${FLORESCER} aria-busy:disabled:opacity-100`,
+        // O terciário da IA: em repouso, só a tinta do `tertiary`; no cursor, no
+        // toque e com o menu aberto, um arco-íris borrado acende por trás do
+        // rótulo, recortado na cápsula, e desliza num laço (`@utility
+        // button-veil`). Um por tela, como toda peça de marca.
+        brandTertiary: `button-veil brand-rainbow-slide text-foreground ${ACENDER_VEU}`,
         // CTA neutro: superfície do `secondary` com o fio do sistema; o
         // arco-íris acende num arco da borda conforme o ponteiro se aproxima
         // (`@utility brand-glow` + `useBrandGlow`). O fundo não muda no cursor:

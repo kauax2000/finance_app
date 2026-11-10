@@ -395,7 +395,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   `success`/`income`/`chart-1` em 152.
 - **O arco-íris mora só na marca**: o wordmark e o símbolo (prop `rainbow`,
   preenchido e **parado**), o campo de marca, `Button variant="brand"`,
-  `brandColorful` e `brandOutline`, `Badge variant="brand"`, os controles de
+  `brandColorful`, `brandOutline` e `brandTertiary`, `Badge variant="brand"`, os controles de
   escolha (`Checkbox`, `Radio` e `Switch variant="brand"`, `RadioGroupItem
   variant="brandCard"`), `Alert variant="brand"`, `AnnouncementBar
   variant="brand"`, `Card variant="brand"`, `ThemeToggle variant="brand"`,
@@ -407,8 +407,10 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   preenchendo um chip: é a invariante 3 violada com sete cores, e sete matizes
   não têm um contraste só. As exceções conscientes, todas com o volume num
   token e nunca nas paradas: o véu da `AnnouncementBar brand`
-  (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) e o
-  `brandColorful` (`--button-colorful-opacity`).
+  (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
+  `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
+  (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
+  mede de 8,7 a 12,5:1 sobre as paradas puras).
 - **As famílias de peça de marca**:
   - **Brilho** (`Alert`, `Card`, `Button brand`, `Badge`, `Checkbox`,
     `Radio`, `RadioGroupItem brandCard`, `Switch`, `ThemeToggle`,
@@ -1001,7 +1003,13 @@ declaração de `background-color` no trilho).
     cursor, `@utility button-colorful` + `@property --button-bloom`; cor sob o
     rótulo, então **o volume se mexe em `--button-colorful-opacity`, nunca nas
     paradas**) e `brandOutline` (o arco-íris só na borda de baixo e um brilho
-    embaixo, num laço de 2s, `@utility brand-rainbow-button`; sempre aceso).
+    embaixo, num laço de 2s, `@utility brand-rainbow-button`; sempre aceso) e
+    `brandTertiary` (o terciário da IA, o rótulo ✦ do Importar: em repouso só a
+    tinta; no cursor, no toque e com o menu aberto o arco-íris borrado acende por
+    trás do rótulo, **recortado na cápsula**, e desliza num laço de 3s — `@utility
+    button-veil` + `@property --button-veil`, o `::after` com `overflow: hidden`
+    como no `brandColorful`; parado com movimento reduzido; o ícone fica na tinta
+    do rótulo).
   - `button-primary.test.ts` e `button-touch-response.test.ts` cobram que a
     lava, o brilho do primário e o disco do `button-fill` não voltem; a
     `@utility button-bloom` é só do `Checkbox`.

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowPathIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, PlusIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -72,10 +72,11 @@ export default function ButtonDoc() {
 
       <DocSection
         title="A marca"
-        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandColorful é a tecla preta em que, no cursor e no toque, cinco paradas do arco-íris florescem do centro, comprimidas e borradas, abrindo até as bordas na mola da casa — o Button Colorful da Kokonut UI, que foi o primário até a rodada 240. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e brilhando embaixo dela — o Rainbow Button da Magic UI —, sempre aceso, para quando a marca não pode depender do ponteiro. Os três: um por tela."
+        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandColorful é a tecla preta em que, no cursor e no toque, cinco paradas do arco-íris florescem do centro, comprimidas e borradas, abrindo até as bordas na mola da casa — o Button Colorful da Kokonut UI, que foi o primário até a rodada 240. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e brilhando embaixo dela — o Rainbow Button da Magic UI —, sempre aceso, para quando a marca não pode depender do ponteiro. brandTertiary é o terciário da IA: em repouso só a tinta, e no cursor e no toque um arco-íris borrado acende atrás do rótulo, recortado na cápsula, deslizando num laço. Os quatro: um por tela."
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="brandColorful" size="xl">continuar</Button>
-<Button variant="brandOutline" size="xl">começar</Button>`}
+<Button variant="brandOutline" size="xl">começar</Button>
+<Button variant="brandTertiary" size="xl"><SparklesIcon data-icon="inline-start" />4 pela IA</Button>`}
         previewClassName="gap-6 py-10"
       >
         <Button variant="brand" size="xl">
@@ -86,6 +87,9 @@ export default function ButtonDoc() {
         </Button>
         <Button variant="brandOutline" size="xl">
           começar
+        </Button>
+        <Button variant="brandTertiary" size="xl">
+          <SparklesIcon data-icon="inline-start" />4 pela IA
         </Button>
       </DocSection>
 
@@ -210,7 +214,7 @@ export default function ButtonDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"primary" | "secondary" | "tertiary" | "outline" | "floating" | "destructive" | "link" | "brand" | "brandColorful" | "brandOutline"',
+            type: '"primary" | "secondary" | "tertiary" | "outline" | "floating" | "destructive" | "link" | "brand" | "brandColorful" | "brandOutline" | "brandTertiary"',
             default: '"primary"',
             description: "O degrau da hierarquia; outline, floating, destructive, link e os dois de marca ficam fora da escada.",
           },
