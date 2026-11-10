@@ -667,7 +667,7 @@ export default function FilterBarDoc() {
         rows={[
           { prop: "id · label · icon", type: "string · string · ReactNode", description: "id vai na URL; icon é 16/solid." },
           { prop: "type", type: '"enum" | "period" | "money" | "text" | "boolean"', description: "Decide os operadores e o editor: a lista, o período em abas (Dias · Meses · Ano), os campos de dinheiro, o texto, ou nenhum (o filtro sem valor)." },
-          { prop: "options", type: "{ value, label, media?, count?, keywords? }[]", description: "enum: as opções, com o ladrilho e a contagem à direita." },
+          { prop: "options", type: "{ value, label, media?, count?, keywords?, exclusive? }[]", description: "enum: as opções, com o ladrilho e a contagem à direita. exclusive vale sozinha (\"Todas\"): marcá-la desmarca as outras, e marcar outra a desmarca." },
           { prop: "loadOptions", type: "(busca, signal) => Promise<FilterOption[]>", description: "enum: a busca no servidor." },
           { prop: "multiple", type: "boolean", default: "true", description: "enum: false é uma escolha só, e o editor fecha ao escolher." },
           { prop: "totals", type: "(year, signal) => Promise<(number | null)[]>", description: "period: a despesa de cada mês do ano (12 posições; null = sem total), carregada por ano e cancelada ao sair. A legenda da grade de meses e o total de cada ano." },

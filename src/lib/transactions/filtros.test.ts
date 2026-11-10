@@ -14,12 +14,12 @@ const B = "22222222-2222-4222-8222-222222222222"
 const X = "33333333-3333-4333-8333-333333333333"
 
 describe("CAMPOS_BASE", () => {
-    it("tem os 14 campos na ordem da spec, plano e assinatura de valor único", () => {
+    it("tem os 13 campos na ordem da spec, e a assinatura de valor único", () => {
         expect(CAMPOS_BASE.map((c) => c.id)).toEqual([
             "periodo", "descricao", "categoria", "pagamento", "cartao", "valor", "conferir",
-            "pessoa", "pagou", "projeto", "parcelada", "plano", "assinatura", "recorrente",
+            "pessoa", "pagou", "projeto", "parcelada", "assinatura", "recorrente",
         ])
-        for (const id of ["plano", "assinatura"]) {
+        for (const id of ["assinatura"]) {
             const c = CAMPOS_BASE.find((f) => f.id === id)
             expect(c && c.type === "enum" && c.multiple).toBe(false)
         }
@@ -69,10 +69,10 @@ describe("lerFiltrosDaUrl", () => {
         expect(ler("max=50").filtros).toContainEqual({ field: "valor", operator: "lte", values: ["50"] })
     })
 
-    it("booleanos, plano, assinatura, pagamento", () => {
+    it("booleanos, parcelada, assinatura, pagamento", () => {
         const f = ler(`inst=1&plan=${A}&sub=${B}&conferir=1&pm=pix,credit_card,xx&card=${X}`).filtros
-        expect(f).toContainEqual({ field: "parcelada", operator: "is", values: [] })
-        expect(f).toContainEqual({ field: "plano", operator: "is", values: [A] })
+        expect(f).toContainEqual({ field: "parcelada", operator: "is", values: ["todas"] })
+        expect(ler(`plan=${A}`).filtros).toEqual([{ field: "parcelada", operator: "is", values: [A] }])
         expect(f).toContainEqual({ field: "assinatura", operator: "is", values: [B] })
         expect(f).toContainEqual({ field: "conferir", operator: "is", values: [] })
         expect(f).toContainEqual({ field: "pagamento", operator: "is", values: ["pix", "credit_card"] })
@@ -83,6 +83,11 @@ describe("lerFiltrosDaUrl", () => {
         const r = ler(`f=categoria:is-not:${A}`)
         expect(r.filtros).toEqual([{ field: "categoria", operator: "is-not", values: [A] }])
         expect(r.migrou).toBe(false)
+    })
+
+    it("os tokens de antes da junção das parceladas ainda abrem", () => {
+        expect(ler("f=parcelada:is").filtros).toEqual([{ field: "parcelada", operator: "is", values: ["todas"] }])
+        expect(ler(`f=plano:is:${A}`).filtros).toEqual([{ field: "parcelada", operator: "is", values: [A] }])
     })
 
     it("f= vazio é explícito: sem filtro, sem padrão, sem migrar", () => {

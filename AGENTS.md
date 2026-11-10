@@ -1618,7 +1618,7 @@ declaração de `background-color` no trilho).
   fora**, pela ordem do código, nunca por `order`.
 - **`FilterBar`**: cada filtro é uma cápsula partida (campo · operador · valor ·
   ×) na superfície de campo; `FilterField` declara os campos; **o operador não segue
-  a contagem** ("é" / "não é" com um valor ou vários; com dois operadores, o clique troca direto, sem menu); o Valor tem cinco modos, trocados só no editor e nunca na pílula (até, a partir de, entre, igual a, por volta de: ±10%, `approxRange`), uma frase que diz o que entra e só os campos do modo; **um popover para a barra inteira** (`virtualRef`); **um token
+  a contagem** ("é" / "não é" com um valor ou vários; com dois operadores, o clique troca direto, sem menu); uma opção `exclusive` (o "Todas" de Compras parceladas) vale sozinha; o Valor tem cinco modos, trocados só no editor e nunca na pílula (até, a partir de, entre, igual a, por volta de: ±10%, `approxRange`), uma frase que diz o que entra e só os campos do modo; **um popover para a barra inteira** (`virtualRef`); **um token
   por campo** e **tudo grava ao vivo** (o incompleto nunca é emitido);
   `serializeFilters`/`parseFilters`, `filterPeriodRange`, `FilterBarSkeleton`;
   `match`, `urlParam` (`history.pushState(null, …)`), `mobile="scroll" |

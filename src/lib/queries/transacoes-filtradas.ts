@@ -2,7 +2,7 @@ import { supabase, type CreditCard, type Transaction } from "@/lib/supabase"
 import { approxRange, filterPeriodRange } from "@/components/ui/filter-bar"
 import { filterRangeEndIso, filterRangeStartIso, transactionCalendarParts } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
-import { SEM_CATEGORIA, type EstadoDaLista } from "@/lib/transactions/filtros"
+import { PARCELADAS_TODAS, SEM_CATEGORIA, type EstadoDaLista } from "@/lib/transactions/filtros"
 import { POSTGREST_MAX_ROWS } from "./fetch-all-rows"
 import { executarComFallbackDeEmbed, PAGE_SIZE } from "./fetch-transactions-list-page"
 
@@ -97,14 +97,19 @@ export function aplicarFiltros<B>(q: B, estado: Pick<EstadoDaLista, "type" | "q"
             case "conferir":
                 b = b.eq("needs_review", true)
                 break
-            case "parcelada":
-                b = b.not("installment_plan_id", "is", null)
+            case "parcelada": {
+                // "Todas" vence as compras escolhidas; "não é" fica com as sem parcela (e as de outra compra).
+                const ids = values.filter((v) => v !== PARCELADAS_TODAS)
+                if (values.includes(PARCELADAS_TODAS))
+                    b = nega ? b.is("installment_plan_id", null) : b.not("installment_plan_id", "is", null)
+                else if (ids.length)
+                    b = nega
+                        ? b.or(`installment_plan_id.is.null,installment_plan_id.not.in.(${ids.join(",")})`)
+                        : b.in("installment_plan_id", ids)
                 break
+            }
             case "recorrente":
                 b = b.eq("is_recurring", true)
-                break
-            case "plano":
-                if (values[0]) b = b.eq("installment_plan_id", values[0])
                 break
             case "assinatura":
                 if (values[0]) b = b.eq("subscription_id", values[0])

@@ -18,7 +18,7 @@ import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useMemberDirectoryQuery, type MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import type { Category, CreditCard, Project } from "@/lib/supabase"
-import { CAMPOS_BASE, SEM_CATEGORIA, type CampoId, type EstadoDaLista } from "@/lib/transactions/filtros"
+import { CAMPOS_BASE, PARCELADAS_TODAS, SEM_CATEGORIA, type CampoId, type EstadoDaLista } from "@/lib/transactions/filtros"
 import { cn, getInitials } from "@/lib/utils"
 
 export type DadosDosCampos = {
@@ -78,7 +78,10 @@ export function montarCampos(d: DadosDosCampos): FilterField[] {
             const ativos = d.projetos.filter((p) => !p.archived_at)
             return ativos.length ? ativos.map((p) => ({ value: p.id, label: p.name })) : null
         })(),
-        plano: d.planos.map((p) => ({ value: p.id, label: p.description?.trim() || "Sem descrição" })),
+        parcelada: [
+            { value: PARCELADAS_TODAS, label: "Todas", exclusive: true },
+            ...d.planos.map((p) => ({ value: p.id, label: p.description?.trim() || "Sem descrição" })),
+        ],
         assinatura: d.assinaturas.map((s) => ({ value: s.id, label: s.name })),
     }
     return CAMPOS_BASE.flatMap((campo) => {

@@ -11,9 +11,10 @@ import { localYmdFromDate } from "@/lib/transaction-date"
 
 export type CampoId =
     | "periodo" | "descricao" | "categoria" | "pagamento" | "cartao" | "valor" | "conferir"
-    | "pessoa" | "pagou" | "projeto" | "parcelada" | "plano" | "assinatura" | "recorrente"
+    | "pessoa" | "pagou" | "projeto" | "parcelada" | "assinatura" | "recorrente"
 
 export const SEM_CATEGORIA = "__none__"
+export const PARCELADAS_TODAS = "todas"
 
 /** Na ordem da spec §5.2; as opções chegam do controlador. */
 export const CAMPOS_BASE: FilterField[] = [
@@ -28,9 +29,8 @@ export const CAMPOS_BASE: FilterField[] = [
     { id: "pessoa", label: "Lançado por", type: "enum" },
     { id: "pagou", label: "Quem pagou", type: "enum" },
     { id: "projeto", label: "Projeto", type: "enum" },
-    { id: "parcelada", label: "Compras parceladas", type: "boolean" },
-    // "Parcelamento" é uma compra só; "Compras parceladas", todas. Os dois nomes não podem quase coincidir.
-    { id: "plano", label: "Parcelamento", type: "enum", multiple: false },
+    // Um campo só: "Todas" (PARCELADAS_TODAS) ou as compras escolhidas; "não é Todas" são as sem parcela.
+    { id: "parcelada", label: "Compras parceladas", type: "enum" },
     { id: "assinatura", label: "Assinatura", type: "enum", multiple: false },
     { id: "recorrente", label: "Recorrente", type: "boolean" },
 ]
@@ -95,18 +95,29 @@ function filtrosAntigos(p: URLSearchParams, hoje: Date): FilterValue[] {
         ...is("cartao", uuids(p.get("card"))),
         ...(valor ? [{ field: "valor", ...valor }] : []),
         ...sim("conferir", p.get("conferir") === "1"),
-        ...sim("parcelada", p.get("inst") === "1"),
-        ...is("plano", uuidUnico(p.get("plan"))),
+        ...is("parcelada", p.get("inst") === "1" ? [PARCELADAS_TODAS] : uuidUnico(p.get("plan"))),
         ...is("assinatura", uuidUnico(p.get("sub"))),
     ]
     return parseFilters(serializeFilters(bruto), CAMPOS_BASE)
+}
+
+/**
+ * Os tokens de antes da junção (10/nov/2026): `parcelada:is` (o interruptor) vira
+ * `parcelada:is:todas`, e `plano:is:<id>` vira `parcelada:is:<id>`.
+ */
+function fDeAntes(f: string | null): string | null {
+    if (!f) return f
+    return f
+        .split(",")
+        .map((t) => (t === "parcelada:is" ? `parcelada:is:${PARCELADAS_TODAS}` : t.replace(/^plano:/, "parcelada:")))
+        .join(",")
 }
 
 export function lerFiltrosDaUrl(
     p: URLSearchParams,
     hoje: Date = new Date()
 ): EstadoDaLista & { migrou: boolean } {
-    const novos = parseFilters(p.get("f"), CAMPOS_BASE)
+    const novos = parseFilters(fDeAntes(p.get("f")), CAMPOS_BASE)
     const antigos = filtrosAntigos(p, hoje).filter((a) => !novos.some((n) => n.field === a.field))
     const filtros = [...novos, ...antigos]
     const temAntigo = PARAMS_ANTIGOS.some((k) => (p.get(k) ?? "").trim() !== "")

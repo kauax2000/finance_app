@@ -94,6 +94,8 @@ export type FilterOption = {
   media?: React.ReactNode
   /** Quantos itens a opção pega — a contagem à direita da linha. */
   count?: number
+  /** Vale sozinha ("Todas"): marcá-la desmarca as outras, e marcar outra a desmarca. */
+  exclusive?: boolean
   keywords?: string[]
 }
 
@@ -2330,10 +2332,9 @@ function EditorDeLista({ campo, operador, valores, opcoes, remoto, onGravar, onC
       onConcluir()
       return
     }
-    onGravar(
-      operador,
-      valores.includes(o.value) ? valores.filter((v) => v !== o.value) : [...valores, o.value]
-    )
+    if (valores.includes(o.value)) return onGravar(operador, valores.filter((v) => v !== o.value))
+    const exclusivas = new Set(opcoes.filter((x) => x.exclusive).map((x) => x.value))
+    onGravar(operador, o.exclusive ? [o.value] : [...valores.filter((v) => !exclusivas.has(v)), o.value])
   }
 
   return (

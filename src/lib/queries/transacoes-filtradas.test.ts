@@ -101,9 +101,13 @@ describe("aplicarFiltros", () => {
         expect(rodar([f("projeto", "is", ["p"])])).toEqual([["in", "project_id", ["p"]]])
         expect(rodar([f("projeto", "is-not", ["p"])])).toEqual([["not", "project_id", "in", "(p)"]])
     })
-    it("parcelada, plano, assinatura, recorrente", () => {
-        expect(rodar([f("parcelada", "is")])).toEqual([["not", "installment_plan_id", "is", null]])
-        expect(rodar([f("plano", "is", ["P"])])).toEqual([["eq", "installment_plan_id", "P"]])
+    it("parcelada (Todas ou as compras), assinatura, recorrente", () => {
+        expect(rodar([f("parcelada", "is", ["todas"])])).toEqual([["not", "installment_plan_id", "is", null]])
+        expect(rodar([f("parcelada", "is-not", ["todas"])])).toEqual([["is", "installment_plan_id", null]])
+        expect(rodar([f("parcelada", "is", ["P", "Q"])])).toEqual([["in", "installment_plan_id", ["P", "Q"]]])
+        expect(rodar([f("parcelada", "is-not", ["P"])])).toEqual([
+            ["or", "installment_plan_id.is.null,installment_plan_id.not.in.(P)"],
+        ])
         expect(rodar([f("assinatura", "is", ["S"])])).toEqual([["eq", "subscription_id", "S"]])
         expect(rodar([f("recorrente", "is")])).toEqual([["eq", "is_recurring", true]])
     })
