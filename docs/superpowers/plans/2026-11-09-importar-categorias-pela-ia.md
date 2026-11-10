@@ -254,11 +254,11 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
 
 ### Task 6: deploy e conferência ao vivo (controlador, com o dono)
 
-- [ ] **Parar e perguntar ao dono** antes do deploy: `supabase functions deploy ia-ler --use-api`, que vai para produção.
-- [ ] Com o ok, abrir o Importar com um CSV de teste gerado no navegador, com descrições genéricas e categorias da carteira (só ler; **nunca clicar Importar**), e conferir:
+- [x] **Parar e perguntar ao dono** antes do deploy: `supabase functions deploy ia-ler --use-api`, que vai para produção.
+- [x] Com o ok, abrir o Importar com um CSV de teste gerado no navegador, com descrições genéricas e categorias da carteira (só ler; **nunca clicar Importar**), e conferir:
   - as regras categorizam "COMPRA MERCADO …";
   - a faixa mostra "lendo" e depois "sugeriu N";
   - a marca "IA" aparece e o filtro "Pela IA" junta as linhas;
   - trocar uma categoria tira a marca;
   - o Inverter não pede tudo de novo (a cota não cai duas vezes, conferir em `ia_eventos` ou no retorno `doCache`).
-- [ ] Mandar prints ao dono.
+- [x] Mandar prints ao dono.
