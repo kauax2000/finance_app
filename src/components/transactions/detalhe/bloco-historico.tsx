@@ -32,14 +32,16 @@ export function BlocoHistorico({
   const nome = descricaoSemParcela(t.description ?? "")
   const ymd = transactionLocalYmd(t.date)
   const ligado = t.type === "expense" && Boolean(nome) && Boolean(ymd)
+  const de = ymd ? addDaysYmd(ymd, -89) : ""
   const consulta = useTransactionsRangeQuery(
     currentWorkspaceId,
-    ymd ? { from: filterRangeStartIso(addDaysYmd(ymd, -89)), to: filterRangeEndIso(ymd) } : { from: "", to: "" },
+    ymd ? { from: filterRangeStartIso(de), to: filterRangeEndIso(ymd) } : { from: "", to: "" },
     { enabled: ligado },
   )
 
   const historico = useMemo(() => {
-    if (!consulta.data) return undefined
+    // Desligado, o cache da mesma janela ainda pode responder: nada de histórico nem de manchete.
+    if (!ligado || !consulta.data) return undefined
     // A RLS já deixa o convidado só com as dele. O alvo entra mesmo se a página o cortou.
     const despesas = consulta.data.filter((x) => x.type === "expense")
     if (!despesas.some((x) => x.id === t.id)) despesas.push(t)
@@ -47,7 +49,7 @@ export function BlocoHistorico({
       { ...t, amount: Number(t.amount) },
       despesas.map((x) => ({ ...x, amount: Number(x.amount) })),
     )
-  }, [consulta.data, t])
+  }, [ligado, consulta.data, t])
 
   useFatiaDaManchete(
     onManchete,
@@ -67,7 +69,10 @@ export function BlocoHistorico({
     <BlocoContexto
       titulo={`${nome} nos últimos 90 dias`}
       link={{
-        href: hrefDaLista([{ field: "descricao", operator: "contains", values: [nome] }]),
+        href: hrefDaLista([
+          { field: "descricao", operator: "contains", values: [nome] },
+          { field: "periodo", operator: "is", values: [de, ymd ?? ""] },
+        ]),
         label: `ver os ${historico.vezes}`,
       }}
     >

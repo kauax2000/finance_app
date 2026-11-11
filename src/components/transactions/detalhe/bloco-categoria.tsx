@@ -72,7 +72,11 @@ export function BlocoCategoria({
           installmentPlans: bundle.installmentPlans,
           subscriptions: bundle.subscriptions,
           creditCards: bundle.creditCards,
-        })[categoryId]?.committedTotal ?? 0)
+        })[categoryId]?.committedTotal ??
+          // A mesma reserva da tela da categoria: sem compromisso no mês, o lançado.
+          bundle.txs
+            .filter((x) => !bundle.category?.type || x.type === bundle.category.type)
+            .reduce((soma, x) => soma + Number(x.amount), 0))
       : null
 
   const nome = bundle?.category?.name ?? t.category?.name ?? "Categoria"

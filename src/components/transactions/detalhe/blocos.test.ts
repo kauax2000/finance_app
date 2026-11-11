@@ -63,6 +63,21 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain('operator: "contains"')
   })
 
+  it("histórico: desligado não calcula nem manda a manchete, mesmo com cache", () => {
+    const fonte = ler("bloco-historico")
+    expect(fonte).toContain("if (!ligado || !consulta.data) return undefined")
+  })
+
+  it("histórico: o link leva a mesma janela de 90 dias que a contagem", () => {
+    const fonte = ler("bloco-historico")
+    expect(fonte).toMatch(/field: "periodo", operator: "is", values: \[de, ymd/)
+    expect(fonte).toContain("addDaysYmd(ymd, -89)")
+  })
+
+  it("categoria: sem compromisso no mês, cai no lançado, como a tela da categoria", () => {
+    expect(ler("bloco-categoria")).not.toMatch(/committedTotal \?\? 0\b/)
+  })
+
   it("parcelada: as casas do plano e o link ?plan=", () => {
     const fonte = ler("bloco-parcelada")
     expect(fonte).toContain("segments={")
