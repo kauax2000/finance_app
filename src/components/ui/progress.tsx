@@ -119,6 +119,11 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
      */
     header?: React.ReactNode
     footer?: React.ReactNode
+    /**
+     * O traço do ritmo (0–100, % da trilha): onde o período está, para a pessoa ler
+     * o gasto contra o tempo. Fora do intervalo não desenha.
+     */
+    marker?: number
   }
 
 /**
@@ -176,6 +181,7 @@ function Progress({
   segments,
   header,
   footer,
+  marker,
   ...props
 }: ProgressProps) {
   const { tone, bands, zones, variant = "default", ...rest } = props as Base & {
@@ -222,6 +228,8 @@ function Progress({
   // chegar nele, então não pode ser da cor do trilho. Com zonas o corte já está
   // pintado e o traço seria o segundo sinal.
   const cesura = bands && !zones && bands[0] > 0 && bands[0] < 100 ? bands[0] : null
+
+  const ritmo = marker != null && marker >= 0 && marker <= 100 ? marker : null
 
   // As casas: cada uma acende quando o valor a cobre inteira (7 de 12 são sete
   // casas); o `1e-9` absorve o erro de ponto flutuante. Acima de 24 a barra volta
@@ -304,6 +312,14 @@ function Progress({
               aria-hidden
               className="absolute inset-y-0 w-px bg-foreground/40"
               style={{ left: `${cesura}%` }}
+            />
+          )}
+          {ritmo !== null && (
+            <span
+              data-slot="progress-marker"
+              aria-hidden
+              className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-foreground/60"
+              style={{ left: `${ritmo}%` }}
             />
           )}
         </>

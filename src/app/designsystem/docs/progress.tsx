@@ -346,6 +346,10 @@ export default function ProgressDoc() {
         Acima do total a barra fica cheia, ganha <code>data-over</code> e o que passou vira uma pastilha à direita, <strong>fora</strong> do trilho — o Assinaturas a 104%, acima. O trilho continua valendo o total sempre, então duas categorias lado a lado continuam comparáveis. A pastilha cresce até 28px e satura por volta de 210%: dali para cima tudo desenha igual, e é por isso que o número ao lado é obrigatório. O anel não tem pastilha: estourado, ele fica cheio e vermelho.
       </DocNote>
 
+      <DocNote title="marker: o traço do ritmo">
+        <code>marker</code> (0–100) desenha um traço de 2px em <code>foreground/60</code> onde o período está, por cima da faixa e convivendo com <code>bands</code>, <code>tone</code> e a cesura: <code>{"<Progress value={82} bands={BUDGET_BANDS} marker={33} />"}</code> mostra 82% gasto com 33% do mês. Fora do intervalo não desenha; nas casas (<code>segments</code>) não vale.
+      </DocNote>
+
       <DocNote title="O valor real continua sendo anunciado">
         O Radix trata <code>value</code> acima de <code>max</code> como indeterminado; o componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>, nos dois formatos. O <code>ProgressValue</code> é visual (<code>aria-hidden</code>) e escreve o mesmo número bruto, 104% e não 100.
       </DocNote>
@@ -366,6 +370,11 @@ export default function ProgressDoc() {
             prop: "bands",
             type: "[number, number]",
             description: "Os dois cortes da escada de cor, em % do total. Deriva o tom. Excludente com tone e variant=\"brand\".",
+          },
+          {
+            prop: "marker",
+            type: "number",
+            description: "O traço do ritmo, em % da trilha (0–100): onde o período está. Fora do intervalo não desenha.",
           },
           {
             prop: "zones",

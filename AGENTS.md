@@ -1149,7 +1149,7 @@ declaração de `background-color` no trilho).
   sangra com `-mx-*` e `w-[calc(…)]` — `separator.test.ts`.
 - **`Progress` — entregue os cortes, não o tom**: `bands={[aviso, perigo]}`
   deriva a cor e o limiar; `tone` é para o que não tem escada de risco; `size`
-  `sm` | `md`. **`tone`, `bands` e `variant="brand"` são excludentes.** Os
+  `sm` | `md`. `marker` (0–100) é o traço do ritmo: onde o período está. **`tone`, `bands` e `variant="brand"` são excludentes.** Os
   cortes do app moram em [`lib/budget-bands`](src/lib/budget-bands.ts)
   (orçamento `[85, 100]`, limite de cartão `[30, 70]`). **O excesso vira uma
   pastilha fora do trilho**, que vale sempre o total. Peças `ProgressHeader` /
