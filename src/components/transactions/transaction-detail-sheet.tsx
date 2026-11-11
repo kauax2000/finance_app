@@ -484,6 +484,7 @@ export function TransactionDetailSheet({
                 // A folha flutuante, solta das bordas, como a das notificações (pedido do dono, 08/11/2026).
                 side="right"
                 size="md"
+                // A rampa do corpo é a da folha de notificações e do Importar (48 em cima, 24 embaixo): a de 24 cortava o ladrilho seco sob os botões.
                 fillMobileViewport={isMobile}
                 onOpenAutoFocus={(e) => {
                     // O foco vai ao título, e não ao primeiro botão (a seta ↑, que abriria a dica).
@@ -495,6 +496,7 @@ export function TransactionDetailSheet({
                 }}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0",
+                    "[--dialog-body-fade-h:--spacing(12)] [--dialog-body-fade-end-h:--spacing(6)]",
                     isMobile && "rounded-t-modal pt-0 sm:max-w-full"
                 )}
             >
