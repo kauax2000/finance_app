@@ -481,3 +481,23 @@ describe("a cascada de abertura não deixa a seta acesa", () => {
   })
 })
 
+
+describe("a rampa encolhe na zona aberta, não desliza (11/nov/2026)", () => {
+  // Deslizando com a altura cheia, com a rolagem menor que a zona a borda caía no meio da
+  // rampa e cortava o conteúdo a ~40%: uma linha seca sob o cabeçalho.
+  it("na casa, as paradas são frações de --scroll-fade-top-z e --scroll-fade-bottom-z", () => {
+    const y = semComentarios(fatia("@utility scroll-fade-y {", "@utility scroll-fade-x {"))
+    expect(y).toContain("--scroll-fade-top-z:")
+    expect(y).toContain("--scroll-fade-bottom-z:")
+    expect(y).toContain("calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z))")
+    expect(y).not.toMatch(/var\(--scroll-fade-top-h\) - var\(--scroll-fade-h\)/)
+    expect(y).not.toMatch(/var\(--scroll-fade-bottom-y\) \+ var\(--scroll-fade-h\)/)
+  })
+
+  it("no corpo do diálogo também", () => {
+    const d = lerFonte("src/components/ui/dialog.tsx")
+    expect(d).toContain("var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*1")
+    expect(d).toContain("var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*1")
+    expect(d).not.toContain("_-_var(--scroll-fade-h)*")
+  })
+})

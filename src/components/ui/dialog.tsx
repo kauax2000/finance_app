@@ -677,7 +677,7 @@ function DialogCloseButton({
  */
 /** A rampa quadrática da dissolução do corpo (ver `DialogBody`). */
 const dialogBodyRampClassName =
-  "[--scroll-fade-ramp:linear-gradient(to_bottom,rgb(0_0_0/0)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*1),rgb(0_0_0/0.016)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.875),rgb(0_0_0/0.06)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.14)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.25)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.39)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.56)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.77)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.125),#000_var(--scroll-fade-top-h),#000_var(--scroll-fade-bottom-y),rgb(0_0_0/0.77)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.125),rgb(0_0_0/0.56)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.25),rgb(0_0_0/0.39)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.375),rgb(0_0_0/0.25)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.5),rgb(0_0_0/0.14)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.625),rgb(0_0_0/0.06)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.75),rgb(0_0_0/0.016)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.875),rgb(0_0_0/0)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*1))]!"
+  "[--scroll-fade-ramp:linear-gradient(to_bottom,rgb(0_0_0/0)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*1),rgb(0_0_0/0.016)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.875),rgb(0_0_0/0.06)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.75),rgb(0_0_0/0.14)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.625),rgb(0_0_0/0.25)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.5),rgb(0_0_0/0.39)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.375),rgb(0_0_0/0.56)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.25),rgb(0_0_0/0.77)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-top-z)*0.125),#000_var(--scroll-fade-top-h),#000_var(--scroll-fade-bottom-y),rgb(0_0_0/0.77)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.125),rgb(0_0_0/0.56)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.25),rgb(0_0_0/0.39)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.375),rgb(0_0_0/0.25)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.5),rgb(0_0_0/0.14)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.625),rgb(0_0_0/0.06)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.75),rgb(0_0_0/0.016)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*0.875),rgb(0_0_0/0)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-bottom-z)*1))]!"
 
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -710,7 +710,9 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
         // de baixo, com a mesma altura, apagava 80px de lista.
         "[--scroll-fade-floor:0] [--scroll-fade-h:var(--dialog-body-fade-h,--spacing(6))]",
         "[--scroll-fade-end-h:var(--dialog-body-fade-end-h,var(--scroll-fade-h))]",
-        "[--scroll-fade-bottom-h:calc(var(--scroll-fade-foot-h,0px)+clamp(0px,var(--scroll-fade-end,0px),var(--scroll-fade-end-h)))]!",
+        // As paradas são frações da zona aberta (`--scroll-fade-top-z` e
+        // `-bottom-z`, de `scroll-fade-y`): a rampa encolhe, não desliza.
+        "[--scroll-fade-bottom-z:clamp(0px,var(--scroll-fade-end,0px),var(--scroll-fade-end-h))]!",
         dialogBodyRampClassName,
         className
       )}

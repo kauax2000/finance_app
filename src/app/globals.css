@@ -3572,14 +3572,17 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 }
 
 @utility scroll-fade-y {
-  --scroll-fade-top-h: calc(
-    var(--scroll-fade-band-h, 0px) +
-      clamp(
-        0px,
-        var(--scroll-fade-start, 0px),
-        var(--scroll-fade-top-max, var(--scroll-fade-h))
-      )
+  /* A zona aberta agora, de cada ponta. A rampa ENCOLHE nela (as paradas são frações
+     da zona), em vez de deslizar com a altura cheia: deslizando, com a rolagem menor que
+     a zona, a borda caía no meio da rampa e o conteúdo era cortado a ~40%, uma linha
+     seca sob o cabeçalho (detalhe do lançamento, 11/nov/2026). Encolhendo, a borda é
+     sempre o piso, e a rampa chega à altura cheia quando a rolagem passa dela. */
+  --scroll-fade-top-z: clamp(
+    0px,
+    var(--scroll-fade-start, 0px),
+    var(--scroll-fade-top-max, var(--scroll-fade-h))
   );
+  --scroll-fade-top-h: calc(var(--scroll-fade-band-h, 0px) + var(--scroll-fade-top-z));
   /* Uma cabeça que gruda no topo de dentro da rolagem (o rótulo de grupo `sticky`,
      que declara `data-scroll-fade-head`) já é a borda: o conteúdo passa por baixo do
      fundo dela. A dissolução de cima se recolhe (o teto da zona vai a zero) para não
@@ -3588,10 +3591,8 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   &:has([data-scroll-fade-head]) {
     --scroll-fade-top-max: 0px;
   }
-  --scroll-fade-bottom-h: calc(
-    var(--scroll-fade-foot-h, 0px) +
-      clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h))
-  );
+  --scroll-fade-bottom-z: clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h));
+  --scroll-fade-bottom-h: calc(var(--scroll-fade-foot-h, 0px) + var(--scroll-fade-bottom-z));
   /* A guarda de cruzamento: numa caixa mais curta que as duas zonas somadas as paradas
      de baixo resolveriam antes das de cima e o *color-stop fixup* deixaria um degrau em
      poucos pixels, sobre conteúdo real. A rampa de baixo cede e a de cima vence. */
@@ -3602,21 +3603,21 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   --scroll-fade-ramp: linear-gradient(
     to bottom,
     rgb(0 0 0 / var(--scroll-fade-floor))
-      calc(var(--scroll-fade-top-h) - var(--scroll-fade-h)),
-    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.82),
-    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.64),
-    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.45),
-    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.27),
-    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.14),
+      calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z)),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z) * 0.82),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z) * 0.64),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z) * 0.45),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z) * 0.27),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-top-h) - var(--scroll-fade-top-z) * 0.14),
     #000 var(--scroll-fade-top-h),
     #000 var(--scroll-fade-bottom-y),
-    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.14),
-    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.27),
-    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.45),
-    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.64),
-    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.82),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z) * 0.14),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z) * 0.27),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z) * 0.45),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z) * 0.64),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z) * 0.82),
     rgb(0 0 0 / var(--scroll-fade-floor))
-      calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h))
+      calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-bottom-z))
   );
   /* A folga de rolagem conta a zona inteira, e não a que está aberta agora, senão um
      `scrollIntoView` deposita o item ativo dentro dela e a navegação por teclado o
