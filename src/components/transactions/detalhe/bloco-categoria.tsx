@@ -89,9 +89,13 @@ export function BlocoCategoria({
 
   const nome = bundle?.category?.name ?? t.category?.name ?? "Categoria"
   const mes = ym ? mesPorExtenso(ym) : ""
+  // Sem categoria (ou convidado, que não vê orçamento) não há para onde levar.
+  const hrefOrcamento = categoryId && !convidado && ym ? categoryDetailPath(categoryId, { month: ym }) : null
   useFatiaDaManchete(
     onManchete,
-    gasto == null || lancado == null ? null : { categoria: { nome, mes, gasto, lancado, orcamento } },
+    gasto == null || lancado == null
+      ? null
+      : { categoria: { nome, mes, gasto, lancado, orcamento, hrefOrcamento } },
   )
 
   if (!categoryId || !ym || atual.isError) return null

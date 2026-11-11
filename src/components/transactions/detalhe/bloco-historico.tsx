@@ -7,11 +7,18 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption, Muted } from "@/components/ui/typography"
 import { descricaoSemParcela, hrefDaLista, rotuloVerOs } from "@/lib/detalhe/blocos"
-import { historicoDe } from "@/lib/detalhe/contexto"
+import { duplicadoDe, historicoDe } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import type { Transaction } from "@/lib/supabase"
-import { addDaysYmd, filterRangeEndIso, filterRangeStartIso, transactionLocalYmd } from "@/lib/transaction-date"
+import {
+  addDaysYmd,
+  filterRangeEndIso,
+  filterRangeStartIso,
+  formatMonthShortPtBr,
+  parseYmdLocal,
+  transactionLocalYmd,
+} from "@/lib/transaction-date"
 import {
   BlocoContexto,
   BlocoContextoEsqueleto,
@@ -39,30 +46,61 @@ export function BlocoHistorico({
   const de = ymd ? addDaysYmd(ymd, -89) : ""
   const consulta = useTransactionsRangeQuery(
     currentWorkspaceId,
-    ymd ? { from: filterRangeStartIso(de), to: filterRangeEndIso(ymd) } : { from: "", to: "" },
+    ymd ? { from: filterRangeStartIso(de), to: filterRangeEndIso(addDaysYmd(ymd, 2)) } : { from: "", to: "" },
     { enabled: ligado },
   )
 
-  const historico = useMemo(() => {
+  const { historico, duplicado } = useMemo(() => {
     // Desligado, o cache da mesma janela ainda pode responder: nada de histórico nem de manchete.
-    if (!ligado || !consulta.data) return undefined
+    if (!ligado || !consulta.data) return { historico: undefined, duplicado: null }
     // A RLS já deixa o convidado só com as dele. O alvo entra mesmo se a página o cortou.
     const despesas = consulta.data.filter((x) => x.type === "expense")
     if (!despesas.some((x) => x.id === t.id)) despesas.push(t)
-    return historicoDe(
-      { ...t, amount: Number(t.amount) },
-      despesas.map((x) => ({ ...x, amount: Number(x.amount) })),
-    )
+    const lista = despesas.map((x) => ({ ...x, amount: Number(x.amount) }))
+    const alvo = { ...t, amount: Number(t.amount) }
+    // A janela passa 2 dias da data (o repetido pode vir depois); o histórico só olha até a data.
+    return { historico: historicoDe(alvo, lista), duplicado: duplicadoDe(alvo, lista) }
   }, [ligado, consulta.data, t])
+
+  const hrefHistorico = hrefDaLista([
+    { field: "descricao", operator: "contains", values: [nome] },
+    { field: "periodo", operator: "is", values: [de, ymd ?? ""] },
+  ])
+  const hrefDuplicado =
+    ymd && nome
+      ? hrefDaLista([
+          { field: "descricao", operator: "contains", values: [nome] },
+          { field: "periodo", operator: "is", values: [addDaysYmd(ymd, -2), addDaysYmd(ymd, 2)] },
+        ])
+      : ""
+  const diaDoDuplicado = duplicado ? transactionLocalYmd(duplicado.date) : null
+  const diaCurto = diaDoDuplicado ? parseYmdLocal(diaDoDuplicado) : null
 
   // Desligado (a edição tirou a descrição) ou com erro, manda o vazio: a fatia velha sai da manchete.
   useFatiaDaManchete(
     onManchete,
     !ligado || consulta.isError
-      ? { historico: null }
+      ? { historico: null, duplicado: null }
       : historico === undefined
         ? null
-        : { historico: historico && { nome, valor: Number(t.amount), media: historico.media } },
+        : {
+            historico: historico && {
+              nome,
+              valor: Number(t.amount),
+              media: historico.media,
+              outros: historico.outros,
+              href: hrefHistorico,
+            },
+            duplicado:
+              duplicado && diaCurto
+                ? {
+                    nome,
+                    valor: Number(t.amount),
+                    dia: `${diaCurto.getDate()} de ${formatMonthShortPtBr(diaCurto)}`,
+                    href: hrefDuplicado,
+                  }
+                : null,
+          },
   )
 
   if (!ligado || consulta.isError) return null
@@ -75,10 +113,7 @@ export function BlocoHistorico({
     <BlocoContexto
       titulo={`${nome} nos últimos 90 dias`}
       link={{
-        href: hrefDaLista([
-          { field: "descricao", operator: "contains", values: [nome] },
-          { field: "periodo", operator: "is", values: [de, ymd ?? ""] },
-        ]),
+        href: hrefHistorico,
         label: rotuloVerOs(historico.vezes, "despesa"),
       }}
     >

@@ -72,7 +72,7 @@ describe("os blocos de contexto do detalhe", () => {
 
   it("histórico: desligado não calcula nem manda a manchete, mesmo com cache", () => {
     const fonte = ler("bloco-historico")
-    expect(fonte).toContain("if (!ligado || !consulta.data) return undefined")
+    expect(fonte).toContain("if (!ligado || !consulta.data) return { historico: undefined, duplicado: null }")
   })
 
   it("histórico: o link leva a mesma janela de 90 dias que a contagem", () => {
@@ -115,5 +115,23 @@ describe("os blocos de contexto do detalhe", () => {
       expect(fonte).toMatch(/MoneyDisplay|currencyBRL/)
       expect(fonte).not.toMatch(/href=\{?["`]\/transactions/)
     }
+  })
+
+  it("as manchetes novas: cada bloco manda a sua fatia, e o vazio quando não vale", () => {
+    const h = ler("bloco-historico")
+    expect(h).toContain("duplicadoDe(")
+    expect(h).toContain("addDaysYmd(ymd, 2)")
+    expect(h).toContain("outros")
+    expect(h).toContain("duplicado:")
+    expect(ler("bloco-categoria")).toContain("hrefOrcamento")
+    const f = ler("bloco-fatura")
+    expect(f).toContain("onManchete")
+    expect(f).toContain("{ fatura: null }")
+    expect(f).toContain("tituloDaFatura(")
+    const r = ler("bloco-receitas")
+    expect(r).toContain("onManchete")
+    expect(r).toContain("{ receitas: null }")
+    expect(ler("bloco-parcelada")).toMatch(/primeira:/)
+    expect(ler("bloco-contexto")).toContain('"duplicado" | "fatura" | "receitas"')
   })
 })

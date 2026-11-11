@@ -42,7 +42,7 @@ import type {
 } from "@/components/transactions/transaction-form-types"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -408,13 +408,20 @@ export function TransactionDetailSheet({
                 {manchete ? (
                     <Alert tone={manchete.tom}>
                         <AlertDescription>{manchete.texto}</AlertDescription>
+                        {manchete.acao ? (
+                            <AlertActions placement="inline">
+                                <AlertAction asChild>
+                                    <Link href={manchete.acao.href}>{manchete.acao.label}</Link>
+                                </AlertAction>
+                            </AlertActions>
+                        ) : null}
                     </Alert>
                 ) : null}
 
                 {/* Os blocos de contexto: cada um decide se aparece, lê o seu e manda a sua fatia da manchete. */}
                 <div className="flex flex-col gap-3 empty:hidden">
                     <BlocoCategoria key={`categoria:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
-                    <BlocoFatura key={`fatura:${chaveDosBlocos}`} transaction={t} />
+                    <BlocoFatura key={`fatura:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
                     <BlocoHistorico key={`historico:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
                     {installmentBlock ? (
                         <BlocoParcelada
@@ -429,7 +436,7 @@ export function TransactionDetailSheet({
                     {installmentBlock && t.installment_plan_id ? (
                         <ImpactoDaParcela planoId={t.installment_plan_id} />
                     ) : null}
-                    <BlocoReceitas key={`receitas:${chaveDosBlocos}`} transaction={t} />
+                    <BlocoReceitas key={`receitas:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
                 </div>
 
                 <DescriptionList>

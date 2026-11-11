@@ -22,6 +22,8 @@ export type Historico = {
   vezes: number
   total: number
   media: number
+  /** Os valores das outras vezes (todas, não só as barras). */
+  outros: number[]
   barras: { valor: number; atual: boolean }[]
 }
 
@@ -41,6 +43,7 @@ export function historicoDe(alvo: Despesa, despesas90: Despesa[]): Historico | n
     vezes: mesmas.length,
     total,
     media: outras.reduce((s, d) => s + d.amount, 0) / outras.length,
+    outros: outras.map((d) => d.amount),
     barras: mesmas.slice(-8).map((d) => ({ valor: d.amount, atual: d.id === alvo.id })),
   }
 }

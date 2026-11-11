@@ -27,10 +27,10 @@ import {
   parseYmdLocal,
   transactionLocalYmd,
 } from "@/lib/transaction-date"
-import { BlocoContexto, BlocoContextoEsqueleto } from "./bloco-contexto"
+import { BlocoContexto, BlocoContextoEsqueleto, useFatiaDaManchete, type AoMudarManchete } from "./bloco-contexto"
 
 /** A fatura em que a compra caiu: o mesmo cálculo de Cartões (despesas − estornos na janela). */
-export function BlocoFatura({ transaction: t }: { transaction: Transaction }) {
+export function BlocoFatura({ transaction: t, onManchete }: { transaction: Transaction; onManchete?: AoMudarManchete }) {
   const { currentWorkspaceId, papel } = useWorkspace()
   const cardId = t.type === "expense" && t.payment_method === "credit_card" ? t.payment_credit_card_id ?? null : null
   const convidado = papel === "guest"
@@ -51,29 +51,45 @@ export function BlocoFatura({ transaction: t }: { transaction: Transaction }) {
   const aux = useTransactionsWorkspaceAuxQuery(currentWorkspaceId, montar)
   const pagas = useMemo(() => chavesDeFaturasPagas(aux.data?.invoicePayments ?? []), [aux.data?.invoicePayments])
 
+  const pronta = Boolean(papel && cartao && janela && linhas.data && aux.data)
+  const rows = linhas.data
+  const total =
+    cartao && janela && rows
+      ? roundCents(
+          sumCreditCardExpensesInWindow(rows, cartao.id, janela.start, janela.end) -
+            sumCreditCardRefundsInWindow(rows, cartao.id, janela.start, janela.end),
+        )
+      : 0
+  const estado = cartao ? creditCardInvoiceBadgeForRow({ ...t, payment_card: cartao }, pagas) : null
+  const rotulo = tituloDaFatura(estado?.dueYmd ?? null, ate)
+
+  // Sem cartão (ou erro), manda o vazio: a fatia velha sai da manchete.
+  useFatiaDaManchete(
+    onManchete,
+    !montar || cartoes.isError || linhas.isError || aux.isError || (cartoes.data && !cartao)
+      ? { fatura: null }
+      : pronta
+        ? { fatura: { rotulo: rotulo.charAt(0).toLowerCase() + rotulo.slice(1), total, valor: Number(t.amount) } }
+        : null,
+  )
+
   if (!montar || cartoes.isError || linhas.isError || aux.isError) return null
-  if (!papel || !cartao || !janela || !linhas.data || !aux.data) {
+  if (!papel || !cartao || !janela || !rows || !aux.data) {
     // Sem o cartão na carteira, não há fatura a mostrar.
     if (cartoes.data && !cartao) return null
     return <BlocoContextoEsqueleto />
   }
 
-  const rows = linhas.data
-  const total = roundCents(
-    sumCreditCardExpensesInWindow(rows, cartao.id, janela.start, janela.end) -
-      sumCreditCardRefundsInWindow(rows, cartao.id, janela.start, janela.end),
-  )
   const emParcelas = sumCreditCardExpensesInWindow(
     rows.filter((r) => r.installment_plan_id),
     cartao.id,
     janela.start,
     janela.end,
   )
-  const estado = creditCardInvoiceBadgeForRow({ ...t, payment_card: cartao }, pagas)
 
   return (
     <BlocoContexto
-      titulo={tituloDaFatura(estado?.dueYmd ?? null, ate)}
+      titulo={rotulo}
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">

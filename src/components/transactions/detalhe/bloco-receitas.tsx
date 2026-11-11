@@ -13,10 +13,10 @@ import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import { expandSubscriptionChargesInYmdRange } from "@/lib/subscription-billing-projection"
 import type { Transaction } from "@/lib/supabase"
 import { filterRangeEndIso, filterRangeStartIso, transactionLocalYmd } from "@/lib/transaction-date"
-import { BlocoContexto, BlocoContextoEsqueleto } from "./bloco-contexto"
+import { BlocoContexto, BlocoContextoEsqueleto, useFatiaDaManchete, type AoMudarManchete } from "./bloco-contexto"
 
 /** O que entrou no mês da receita e, no mês corrente, o que as receitas recorrentes prometem. */
-export function BlocoReceitas({ transaction: t }: { transaction: Transaction }) {
+export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Transaction; onManchete?: AoMudarManchete }) {
   const { currentWorkspaceId } = useWorkspace()
   const ym = (transactionLocalYmd(t.date) ?? "").slice(0, 7)
   const ligado = t.type === "income" && Boolean(ym)
@@ -30,11 +30,10 @@ export function BlocoReceitas({ transaction: t }: { transaction: Transaction }) 
   )
   const assinaturas = useSubscriptionsQuery(ligado && mesCorrente ? currentWorkspaceId : null)
 
-  if (!ligado || mes.isError) return null
-  if (!mes.data || (mesCorrente && assinaturas.isPending)) return <BlocoContextoEsqueleto />
+  const pendente = !mes.data || (mesCorrente && assinaturas.isPending)
 
   // O estorno no cartão é receita no banco, mas abate a fatura: não entra aqui.
-  const receitas = mes.data.filter((x) => x.type === "income" && !ehEstornoNoCartao(x))
+  const receitas = (mes.data ?? []).filter((x) => x.type === "income" && !ehEstornoNoCartao(x))
   const total = roundCents(receitas.reduce((s, x) => s + (Number(x.amount) || 0), 0))
   const esperado =
     mesCorrente && assinaturas.data
@@ -45,6 +44,19 @@ export function BlocoReceitas({ transaction: t }: { transaction: Transaction }) 
             .reduce((s, c) => s + c.amount, 0),
         )
       : 0
+
+  // Só o mês corrente com receita prometida vira manchete; o resto manda o vazio.
+  useFatiaDaManchete(
+    onManchete,
+    !ligado || mes.isError || (!pendente && !(mesCorrente && esperado > 0))
+      ? { receitas: null }
+      : pendente
+        ? null
+        : { receitas: { mes: mesPorExtenso(ym), total, esperado } },
+  )
+
+  if (!ligado || mes.isError) return null
+  if (pendente) return <BlocoContextoEsqueleto />
 
   return (
     <BlocoContexto

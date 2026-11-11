@@ -38,11 +38,13 @@ export function BlocoParcelada({
   const lancadas = linhas?.filter((l) => l.status === "posted").length ?? 0
   const proxima = linhas?.some((l) => l.status === "pending") && plano.is_active ? plano.next_billing_date : null
 
-  useFatiaDaManchete(
-    onManchete,
+  const ultima =
     linhas == null
       ? null
-      : { parcela: ultimaParcela({ ...plano, installment_amount: Number(plano.installment_amount) }, linhas, new Date()) },
+      : ultimaParcela({ ...plano, installment_amount: Number(plano.installment_amount) }, linhas, new Date())
+  useFatiaDaManchete(
+    onManchete,
+    linhas == null ? null : { parcela: ultima && { ...ultima, primeira: kn?.k === 1 && n > 1 ? { n } : null } },
   )
 
   if (!t.installment_plan_id) return null

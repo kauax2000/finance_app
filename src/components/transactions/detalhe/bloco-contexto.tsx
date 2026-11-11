@@ -8,11 +8,15 @@ import type { EntradaDaManchete } from "@/lib/detalhe/contexto"
 
 /**
  * A parte da manchete que cada bloco sabe: Categoria manda `{ categoria }`,
- * Histórico `{ historico }` (null quando não se repete), Parcelada `{ parcela }`.
+ * Histórico `{ historico, duplicado }` (null quando não vale), Parcelada `{ parcela }`,
+ * Fatura `{ fatura }` e Receitas `{ receitas }`.
  * Só chega depois da leitura; carregando ou com erro, o bloco não manda nada. O
  * painel junta as fatias e chama `escolherManchete`.
  */
-export type FatiaDaManchete = Partial<Pick<EntradaDaManchete, "categoria" | "historico" | "parcela">>
+export type FatiaDaManchete = Partial<Pick<
+  EntradaDaManchete,
+  "categoria" | "historico" | "parcela" | "duplicado" | "fatura" | "receitas"
+>>
 export type AoMudarManchete = (fatia: FatiaDaManchete) => void
 
 /** Entrega a fatia quando ela muda de valor (não de identidade); `null` é "ainda não". */

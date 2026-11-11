@@ -185,4 +185,13 @@ describe("fonte do detalhe", () => {
             expect(f).toContain(`key={\`${b}:\${chaveDosBlocos}\`}`)
         }
     })
+
+    it("a manchete desenha a ação, e a Fatura e as Receitas mandam a fatia", () => {
+        const f = fonte(SHEET)
+        expect(f).toContain('<AlertActions placement="inline">')
+        expect(f).toContain("<AlertAction asChild>")
+        expect(f).toContain("manchete.acao")
+        expect(f).toMatch(/<BlocoFatura[^>]*onManchete=\{aoMudarManchete\}/)
+        expect(f).toMatch(/<BlocoReceitas[^>]*onManchete=\{aoMudarManchete\}/)
+    })
 })
