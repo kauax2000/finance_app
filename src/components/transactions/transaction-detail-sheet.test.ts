@@ -107,6 +107,13 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("<DescriptionList>")
     })
 
+    it("o topo é o AB1: a categoria mora nos chips, e não no Detalhes (11/nov/2026)", () => {
+        const f = fonte(SHEET)
+        expect(f).toMatch(/<Badge size="md" tone="neutral">\s*\{t\.category \?/)
+        expect(f).toContain('{t.category?.name ?? "Sem categoria"}')
+        expect(f).not.toContain("<DescriptionTerm>Categoria</DescriptionTerm>")
+    })
+
     it("as props de quem já usa a folha seguem, e as novas são opcionais", () => {
         const f = fonte(SHEET)
         for (const p of ["onDelete: (t: Transaction) => void", "launchInEditMode?: boolean", "onLaunchEditConsumed?: () => void", "subscriptionsHref: string"]) {

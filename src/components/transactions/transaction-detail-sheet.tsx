@@ -67,7 +67,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { formatYearMonth } from "@/lib/budget-month"
@@ -250,7 +250,6 @@ export function TransactionDetailSheet({
         t.payment_method === "credit_card" && paymentCard
             ? `${paymentCard.name} •• ${paymentCard.last_four}`
             : paymentMethodLabel(t.payment_method)
-    const linhaDoTopo = [formatWeekdayDayMonthShortPtBr(t.date), pagamento].filter(Boolean).join(" · ")
 
     const isIncome = t.type === "income"
     const descricaoInteira = t.description?.trim() || t.category?.name || "Sem descrição"
@@ -346,19 +345,27 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                <div className="flex flex-col items-center gap-3 text-center">
-                    <ColorTile size="2xl" color={t.category?.color}>
-                        <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
-                    </ColorTile>
-                    <div className="flex min-w-0 flex-col items-center">
-                        <MoneyDisplay size="2xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
-                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
+                {/* O topo (AB1, 11/nov/2026): o ladrilho com o nome, o valor grande e os fatos em chips — a categoria por último. */}
+                <div className="flex flex-col items-start gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <ColorTile size="2xl" color={t.category?.color}>
+                            <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
+                        </ColorTile>
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                             <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>
                             ) : null}
                         </div>
-                        <Muted>{linhaDoTopo}</Muted>
+                    </div>
+                    <MoneyDisplay size="2xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
+                    <div className="flex flex-wrap gap-2">
+                        <Badge size="md" tone="neutral">{formatWeekdayDayMonthShortPtBr(t.date)}</Badge>
+                        {pagamento ? <Badge size="md" tone="neutral">{pagamento}</Badge> : null}
+                        <Badge size="md" tone="neutral">
+                            {t.category ? <CategoryIconPreview name={normalizeCategoryIcon(t.category.icon)} /> : null}
+                            {t.category?.name ?? "Sem categoria"}
+                        </Badge>
                     </div>
                 </div>
 
@@ -390,21 +397,6 @@ export function TransactionDetailSheet({
                 </div>
 
                 <DescriptionList>
-                    <DescriptionListItem>
-                        <DescriptionTerm>Categoria</DescriptionTerm>
-                        <DescriptionDetails>
-                            {t.category ? (
-                                <span className="inline-flex items-center gap-2">
-                                    <ColorTile size="xs" color={t.category.color}>
-                                        <CategoryIconPreview name={normalizeCategoryIcon(t.category.icon)} />
-                                    </ColorTile>
-                                    {t.category.name}
-                                </span>
-                            ) : (
-                                "Sem categoria"
-                            )}
-                        </DescriptionDetails>
-                    </DescriptionListItem>
                     {t.is_recurring ? (
                         <DescriptionListItem>
                             <DescriptionTerm>Recorrência</DescriptionTerm>
