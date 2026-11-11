@@ -81,7 +81,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).toContain("anterior={tela.detalhe.vizinhos.anterior}")
         expect(f).toContain("seguinte={tela.detalhe.vizinhos.seguinte}")
         expect(f).toMatch(/onNavegar=\{\(t\) => tela\.detalhe\.abrir\(t\)\}/)
-        expect(f).toContain("onDuplicar={duplicar}")
+        expect(f).not.toContain("onDuplicar")
         expect(f).toContain("pending={exclusao.excluindo}")
         expect(f).not.toContain("window.confirm")
     })

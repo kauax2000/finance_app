@@ -15,7 +15,6 @@ import { TransactionFormSurface } from "@/components/transactions/transaction-fo
 import { LancamentoInteligente } from "@/components/transactions/lancamento-inteligente"
 import { useLeituraDoLancamento } from "@/components/transactions/use-leitura-do-lancamento"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
-import type { ValoresDuplicados } from "@/lib/transactions/duplicar"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import type {
     InstallmentPlanFormSavePayload,
@@ -56,8 +55,6 @@ type TransactionFormDialogProps = {
     fraseInicial?: string
     /** Na criação, a foto que a paleta lê ao abrir (o compartilhar do Android). */
     fotoInicial?: File
-    /** Na criação, os campos de uma linha duplicada: abre sempre o formulário. */
-    valoresIniciais?: ValoresDuplicados | null
 }
 
 export function TransactionFormDialog({
@@ -75,7 +72,6 @@ export function TransactionFormDialog({
     onUpdateInstallmentPlan,
     fraseInicial,
     fotoInicial,
-    valoresIniciais = null,
 }: TransactionFormDialogProps) {
     const isMobile = useIsMobile()
 
@@ -93,7 +89,6 @@ export function TransactionFormDialog({
         onUpdateInstallmentPlan,
         closeOnSuccess: true,
         onClose: () => onOpenChange(false),
-        valoresIniciais,
     })
 
     const { handleSubmit, fieldsProps, formTitle, formDescription, showFooter, submitDisabled, isDirty } = form
@@ -112,7 +107,6 @@ export function TransactionFormDialog({
     // hoje, a paleta não teria quem lesse a frase: abre o formulário.
     const usarPaleta =
         !editingTransaction &&
-        !valoresIniciais &&
         isMobile &&
         ((ligado && defaultLaunchKind === "expense") || Boolean(fraseInicial || fotoInicial)) &&
         !usarFormulario &&

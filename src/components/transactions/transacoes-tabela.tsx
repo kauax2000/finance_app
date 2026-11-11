@@ -5,7 +5,6 @@ import Link from "next/link"
 import {
     ArrowRightIcon,
     CheckIcon,
-    DocumentDuplicateIcon,
     PencilIcon,
     TagIcon,
     TrashIcon,
@@ -78,7 +77,6 @@ export type TransacoesTabelaProps = {
     /** Carteira `split`: o avatar é de quem pagou. */
     divide?: boolean
     onEditar: (t: Transaction) => void
-    onDuplicar: (t: Transaction) => void
     onExcluir: (ids: string[]) => void
     /** A barra da tela (abas e filtros), na mesma linha da contagem e do Exibir. */
     barra?: React.ReactNode
@@ -281,7 +279,6 @@ function MenuDaLinha({
     selecionada,
     onAbrir,
     onEditar,
-    onDuplicar,
     onConfirmar,
     onAlternar,
     onLimpar,
@@ -294,7 +291,6 @@ function MenuDaLinha({
     selecionada: boolean
     onAbrir: () => void
     onEditar: () => void
-    onDuplicar: () => void
     onConfirmar: () => void
     onAlternar: () => void
     onLimpar: () => void
@@ -349,10 +345,6 @@ function MenuDaLinha({
                 <PencilIcon aria-hidden />
                 Editar
             </ContextMenuItem>
-            <ContextMenuItem onSelect={onDuplicar}>
-                <DocumentDuplicateIcon aria-hidden />
-                Duplicar
-            </ContextMenuItem>
             {t.needs_review ? (
                 <ContextMenuItem onSelect={onConfirmar}>
                     <CheckIcon aria-hidden />
@@ -378,7 +370,6 @@ export function TransacoesTabela({
     membros,
     divide = false,
     onEditar,
-    onDuplicar,
     onExcluir,
     barra,
     marcadas: marcadasDeFora,
@@ -496,7 +487,6 @@ export function TransacoesTabela({
             onSelect: (t) => conferir([t.id], "Conferido"),
         },
         { label: "Editar", icon: <PencilIcon aria-hidden />, hidden: projetada, onSelect: onEditar },
-        { label: "Duplicar", icon: <DocumentDuplicateIcon aria-hidden />, hidden: projetada, onSelect: onDuplicar },
         {
             label: "Excluir",
             icon: <TrashIcon aria-hidden />,
@@ -608,7 +598,6 @@ export function TransacoesTabela({
                             selecionada={selected}
                             onAbrir={() => tela.detalhe.abrir(t)}
                             onEditar={() => onEditar(t)}
-                            onDuplicar={() => onDuplicar(t)}
                             onConfirmar={() => void conferir([t.id], "Conferido")}
                             onAlternar={() => alternar(t.id)}
                             onLimpar={() => setMarcadas(new Set())}

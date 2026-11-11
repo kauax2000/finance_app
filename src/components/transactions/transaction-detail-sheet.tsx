@@ -5,13 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import {
     ChevronDownIcon,
     ChevronUpIcon,
-    DocumentDuplicateIcon,
     EllipsisHorizontalIcon,
     PencilIcon,
     TrashIcon,
 } from "@heroicons/react/16/solid"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
-import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { AConferirNoDetalhe, temAConferir } from "@/components/transactions/a-conferir-no-detalhe"
 import { AnexosDoLancamento } from "@/components/transactions/anexos-do-lancamento"
 import {
@@ -23,7 +21,6 @@ import {
     rotuloDaOrigem,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
-import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
 import {
@@ -103,8 +100,6 @@ export type TransactionDetailSheetProps = {
     seguinte?: Transaction | null
     /** Troca o lançamento mostrado, sem fechar a folha (setas, ↑/↓ e J/K). */
     onNavegar?: (t: Transaction) => void
-    /** Sem ele, o Duplicar abre o criar da casca (`useDuplicarComoNova`). */
-    onDuplicar?: (t: Transaction) => void
 }
 
 export function TransactionDetailSheet({
@@ -125,7 +120,6 @@ export function TransactionDetailSheet({
     anterior,
     seguinte,
     onNavegar,
-    onDuplicar,
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
@@ -134,9 +128,6 @@ export function TransactionDetailSheet({
 
     const t = transaction
     const membros = useMemberDirectoryQuery(t?.workspace_id ?? null).data ?? []
-    const shell = useGlobalShellDialogsOptional()
-    const duplicarNaCasca = useDuplicarComoNova()
-    const duplicar = onDuplicar ?? (shell ? duplicarNaCasca : undefined)
 
     /* eslint-disable react-hooks/set-state-in-effect -- load/clear installment plan embed when sheet opens */
     useEffect(() => {
@@ -274,12 +265,6 @@ export function TransactionDetailSheet({
 
     const editar = () => setDetailMode("edit")
     const excluir = () => onDelete(t)
-    const duplicarEsta = duplicar
-        ? () => {
-              onOpenChange(false)
-              duplicar(t)
-          }
-        : undefined
 
     const seta = (direcao: "anterior" | "seguinte") => {
         const destino = direcao === "anterior" ? anterior : seguinte
@@ -321,12 +306,6 @@ export function TransactionDetailSheet({
                                         <PencilIcon aria-hidden />
                                         Editar
                                     </DropdownMenuItem>
-                                    {duplicarEsta ? (
-                                        <DropdownMenuItem onClick={duplicarEsta}>
-                                            <DocumentDuplicateIcon aria-hidden />
-                                            Duplicar
-                                        </DropdownMenuItem>
-                                    ) : null}
                                     <DropdownMenuItem variant="destructive" onClick={excluir}>
                                         <TrashIcon aria-hidden />
                                         Excluir
@@ -473,7 +452,6 @@ export function TransactionDetailSheet({
                 <AnexosDoLancamento key={t.id} transaction={t} />
             </DialogBody>
 
-            {/* Três ações: o `TresAcoesContext` sobe o Duplicar a `secondary`. */}
             <DialogFooter
                 start={
                     <Button
@@ -486,11 +464,6 @@ export function TransactionDetailSheet({
                     </Button>
                 }
             >
-                {duplicarEsta ? (
-                    <Button type="button" variant="tertiary" onClick={duplicarEsta}>
-                        Duplicar
-                    </Button>
-                ) : null}
                 <Button type="button" variant="primary" onClick={editar}>
                     Editar
                 </Button>

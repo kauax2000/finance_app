@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
 import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
-import { useDuplicarComoNova } from "@/components/transactions/global-transaction-create-provider"
 import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
 import { MenuMaisAcoes, TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
@@ -46,7 +45,6 @@ export default function TransactionsPageClient() {
     const { currentWorkspaceId, currentWorkspace, papel, loading: workspaceLoading, error: workspaceError } = useWorkspace()
     const convidado = papel === "guest"
     const membros = useMemberDirectoryQuery(currentWorkspaceId).data ?? []
-    const duplicar = useDuplicarComoNova()
     const isMobile = useIsMobile()
     const [exportando, setExportando] = useState(false)
     const [marcadas, setMarcadas] = useState<Set<string>>(() => new Set())
@@ -169,7 +167,6 @@ export default function TransactionsPageClient() {
                 membros={membros}
                 divide={currentWorkspace?.split_mode === "split"}
                 onEditar={(t) => tela.detalhe.abrir(t, { editar: true })}
-                onDuplicar={duplicar}
                 onExcluir={tela.excluir}
                 marcadas={marcadas}
                 onMarcadasChange={setMarcadas}
@@ -195,7 +192,6 @@ export default function TransactionsPageClient() {
                 anterior={tela.detalhe.vizinhos.anterior}
                 seguinte={tela.detalhe.vizinhos.seguinte}
                 onNavegar={(t) => tela.detalhe.abrir(t)}
-                onDuplicar={duplicar}
             />
 
             <ImportarExtratoDialog open={pedidos.importar} onOpenChange={pedidos.setImportar} onRevisar={revisar} />

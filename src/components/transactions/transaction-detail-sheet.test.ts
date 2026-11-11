@@ -98,9 +98,10 @@ describe("fonte do detalhe", () => {
         for (const alvo of ['"input"', '"textarea"', "isContentEditable", "[contenteditable]"]) expect(regras).toContain(alvo)
     })
 
-    it("o rodapé tem as três ações, com o Excluir à esquerda", () => {
+    it("o rodapé tem Excluir à esquerda e Editar, sem o Duplicar (removido em 10/nov/2026)", () => {
         const f = fonte(SHEET)
-        expect(f).toMatch(/<DialogFooter\s+start=\{[\s\S]*?Excluir[\s\S]*?Duplicar[\s\S]*?variant="primary"[\s\S]*?Editar/)
+        expect(f).toMatch(/<DialogFooter\s+start=\{[\s\S]*?Excluir[\s\S]*?variant="primary"[\s\S]*?Editar/)
+        expect(f).not.toContain("Duplicar")
         expect(f).toContain("<DialogCloseButton placement=\"inline\" />")
         expect(f).toContain('<MoneyDisplay size="xl" signed')
         expect(f).toContain("<DescriptionList>")
@@ -111,10 +112,9 @@ describe("fonte do detalhe", () => {
         for (const p of ["onDelete: (t: Transaction) => void", "launchInEditMode?: boolean", "onLaunchEditConsumed?: () => void", "subscriptionsHref: string"]) {
             expect(f).toContain(p)
         }
-        for (const p of ["anterior?: Transaction | null", "seguinte?: Transaction | null", "onNavegar?: (t: Transaction) => void", "onDuplicar?: (t: Transaction) => void"]) {
+        for (const p of ["anterior?: Transaction | null", "seguinte?: Transaction | null", "onNavegar?: (t: Transaction) => void"]) {
             expect(f).toContain(p)
         }
-        expect(f).toContain("useDuplicarComoNova()")
     })
 
     it("as ações do a conferir chegam a 44 no dedo e empilham", () => {
