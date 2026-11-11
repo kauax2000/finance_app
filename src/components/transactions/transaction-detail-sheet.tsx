@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import {
+    BanknotesIcon,
+    CalendarIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    CreditCardIcon,
     EllipsisHorizontalIcon,
     PencilIcon,
     TrashIcon,
@@ -41,7 +44,7 @@ import type {
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -68,6 +71,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption } from "@/components/ui/typography"
+import { tileColorFor } from "@/lib/tile-palette"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { formatYearMonth } from "@/lib/budget-month"
@@ -345,8 +349,12 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                {/* O topo (C1, empilhado, 11/nov/2026): o ladrilho em cima, o nome sobre o valor grande e os fatos em chips — tudo no mesmo eixo, a categoria por último. */}
+                {/* O topo (C1 + D4, 11/nov/2026): a data como sobrancelha, o ladrilho, o nome sobre o valor grande e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
+                    <Caption className="inline-flex items-center gap-1">
+                        <CalendarIcon className="size-3.5" aria-hidden />
+                        {formatWeekdayDayMonthShortPtBr(t.date)}
+                    </Caption>
                     <ColorTile size="2xl" color={t.category?.color}>
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
@@ -360,10 +368,20 @@ export function TransactionDetailSheet({
                         <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
-                        <Badge size="md" tone="neutral">{formatWeekdayDayMonthShortPtBr(t.date)}</Badge>
-                        {pagamento ? <Badge size="md" tone="neutral">{pagamento}</Badge> : null}
-                        <Badge size="md" tone="neutral">
-                            {t.category ? <CategoryIconPreview name={normalizeCategoryIcon(t.category.icon)} /> : null}
+                        {pagamento ? (
+                            <Badge size="md" tone="neutral">
+                                {t.payment_method?.endsWith("_card") ? <CreditCardIcon /> : <BanknotesIcon />}
+                                {pagamento}
+                            </Badge>
+                        ) : null}
+                        {/* O ponto veste a cor da categoria pela mesma régua do ladrilho (`tile-vivid`), nunca crua. */}
+                        <Badge
+                            size="md"
+                            tone="neutral"
+                            className={t.category ? "tile-vivid [--badge-dot:var(--tile-surface)]" : undefined}
+                            style={t.category ? ({ "--tile-color": tileColorFor(t.category.color) ?? "var(--muted-foreground)" } as CSSProperties) : undefined}
+                        >
+                            {t.category ? <BadgeDot /> : null}
                             {t.category?.name ?? "Sem categoria"}
                         </Badge>
                     </div>

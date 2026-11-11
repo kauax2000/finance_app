@@ -107,9 +107,11 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("<DescriptionList>")
     })
 
-    it("o topo é o AB1: a categoria mora nos chips, e não no Detalhes (11/nov/2026)", () => {
+    it("o topo é o C1 + D4: a data em cima, a categoria num chip com o ponto da cor dela (11/nov/2026)", () => {
         const f = fonte(SHEET)
-        expect(f).toMatch(/<Badge size="md" tone="neutral">\s*\{t\.category \?/)
+        expect(f).toMatch(/<Caption[^>]*>\s*<CalendarIcon/)
+        expect(f).toContain('"tile-vivid [--badge-dot:var(--tile-surface)]"')
+        expect(f).toContain("{t.category ? <BadgeDot /> : null}")
         expect(f).toContain('{t.category?.name ?? "Sem categoria"}')
         expect(f).not.toContain("<DescriptionTerm>Categoria</DescriptionTerm>")
     })
