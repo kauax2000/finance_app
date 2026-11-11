@@ -348,13 +348,13 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                <div className="flex flex-col items-start gap-3">
-                    <ColorTile size="md" color={t.category?.color}>
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <ColorTile size="2xl" color={t.category?.color}>
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
-                    <div className="min-w-0">
-                        <MoneyDisplay size="xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex min-w-0 flex-col items-center">
+                        <MoneyDisplay size="2xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
+                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
                             <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>

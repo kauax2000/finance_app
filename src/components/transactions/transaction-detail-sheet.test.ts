@@ -102,7 +102,7 @@ describe("fonte do detalhe", () => {
         expect(f).toMatch(/<DialogFooter\s+start=\{[\s\S]*?Excluir[\s\S]*?variant="primary"[\s\S]*?Editar/)
         expect(f).not.toContain("Duplicar")
         expect(f).toContain("<DialogCloseButton placement=\"inline\" />")
-        expect(f).toContain('<MoneyDisplay size="xl" signed')
+        expect(f).toContain('<MoneyDisplay size="2xl" signed')
         expect(f).toContain("<DescriptionList>")
     })
 
