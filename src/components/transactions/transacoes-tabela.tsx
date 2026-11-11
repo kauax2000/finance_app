@@ -90,6 +90,12 @@ export type TransacoesTabelaProps = {
 const col = dataTableColumns<Transaction>()
 
 const descricaoDe = (t: Transaction) => t.description || t.category?.name || "Sem descrição"
+/**
+ * Na tabela, a parcela perde o "(1/2)" que o banco grava no fim da descrição
+ * (`generate_installment_transaction`): o chip "Parcelada 1/2" já o diz. O banco não muda.
+ */
+const descricaoNaTabela = (t: Transaction) =>
+    t.installment_plan_id ? descricaoDe(t).replace(/ \(\d+\/\d+\)$/, "") : descricaoDe(t)
 /** O nome da linha nos rótulos ("Editar Mercado, 12/03"): a data desempata as homônimas. */
 const rotuloDe = (t: Transaction) => `${descricaoDe(t)}, ${formatTransactionDayPtBr(t.date)}`
 const lancamentos = (n: number) => `${numberBR(n)} ${n === 1 ? "lançamento" : "lançamentos"}`
@@ -131,7 +137,7 @@ function QuemLancou({ t, membros, divide }: { t: Transaction; membros: MemberDir
     )
 }
 
-function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: ReadonlySet<string>) {
+function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: ReadonlySet<string>, comData: boolean) {
     const lista: DataTableColumnDef<Transaction>[] = [
         {
             id: "description",
@@ -145,10 +151,14 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                         {/* O sublinhado do hover mora só no nome: na célula `primary` ele descia aos badges (itens flex herdam o traço). */}
                         <span
                             className="min-w-0 truncate underline-offset-4 decoration-from-font group-hover/table-row:underline group-active/table-row:underline"
-                            title={descricaoDe(t)}
+                            title={descricaoNaTabela(t)}
                         >
-                            {descricaoDe(t)}
+                            {descricaoNaTabela(t)}
                         </span>
+                        {/* A categoria pelo nome, apagada, ao lado (sem descrição o nome dela já é o título). */}
+                        {t.category && t.description ? (
+                            <span className="min-w-0 truncate text-muted-foreground">· {t.category.name}</span>
+                        ) : null}
                         <span className="flex shrink-0 items-center gap-1">
                             {t.needs_review ? (
                                 <Badge tone="info" size="xs">
@@ -224,7 +234,8 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                     <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground max-md:inline">
                         <span className="min-w-0 truncate max-md:whitespace-normal">{pagamentoDe(row.original)}</span>
                         {/* O chip é do desktop: no telefone a legenda diz só "Nubank" ou "Pix". */}
-                        {fatura ? (
+                        {/* "Aberta" é quase toda compra de cartão: só a fatura fechada, paga ou vencida aparece. */}
+                        {fatura && fatura.slot !== "open" ? (
                             <span className="max-md:hidden">
                                 <CreditInvoiceChip badge={fatura} />
                             </span>
@@ -244,9 +255,9 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             meta: { label: "Quem" },
         })
     }
-    // A coluna Data fica sempre: o `DataTable` não aceita `columnVisibility`
-    // controlado, e a spec §6.2 não deixa mexer em `ui/` para isso.
-    lista.push(
+    // A Data sai quando a lista está agrupada por dia: o cabeçalho do grupo já diz o dia.
+    // Ordenada por valor, sem grupos, ela volta (e é por ela que se volta à ordem por data).
+    if (comData) lista.push(
         {
             id: "date",
             accessorFn: (t) => t.date,
@@ -258,8 +269,8 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             ),
             meta: { label: "Data" },
         },
-        col.money({ id: "amount", header: "Valor", accessor: valorComSinal }),
     )
+    lista.push(col.money({ id: "amount", header: "Valor", accessor: valorComSinal }))
     return lista
 }
 
@@ -387,7 +398,11 @@ export function TransacoesTabela({
         () => chavesDeFaturasPagas(tela.workspaceAux?.invoicePayments ?? []),
         [tela.workspaceAux?.invoicePayments],
     )
-    const columns = React.useMemo(() => colunas(membros, divide, faturasPagas), [membros, divide, faturasPagas])
+    const porDia = estado.sort.key === "date"
+    const columns = React.useMemo(
+        () => colunas(membros, divide, faturasPagas, !porDia),
+        [membros, divide, faturasPagas, porDia],
+    )
 
     // Só conta o que está na tela: uma seleção de antes do filtro não leva linhas
     // invisíveis ao lote. As projetadas não são do banco e nunca entram.
