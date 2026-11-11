@@ -1,0 +1,85 @@
+import { describe, expect, it } from "vitest"
+
+import { lerFonte } from "@/test/fonte"
+
+const pasta = "src/components/transactions/detalhe"
+const ler = (nome: string) => lerFonte(`${pasta}/${nome}.tsx`)
+const BLOCOS = ["bloco-categoria", "bloco-fatura", "bloco-historico", "bloco-receitas", "bloco-parcelada"]
+
+describe("os blocos de contexto do detalhe", () => {
+  it("a casca é Card + CardToolbar do design system, com esqueleto", () => {
+    const casca = ler("bloco-contexto")
+    expect(casca).toContain('from "@/components/ui/card"')
+    expect(casca).toContain("<CardToolbar")
+    expect(casca).toContain("CardSkeleton")
+  })
+
+  it.each(BLOCOS)("%s veste a casca, com esqueleto", (nome) => {
+    const fonte = ler(nome)
+    expect(fonte).toContain("<BlocoContexto")
+    expect(fonte).toContain("<BlocoContextoEsqueleto")
+  })
+
+  // A Parcelada lê o resumo que o painel já calculou: não tem consulta para falhar.
+  it.each(BLOCOS.filter((n) => n !== "bloco-parcelada"))("%s some no erro da leitura", (nome) => {
+    expect(ler(nome)).toMatch(/isError[^\n]*\) return null/)
+  })
+
+  it.each(BLOCOS.filter((n) => n !== "bloco-parcelada"))("%s lê pelos hooks de consulta, sem supabase direto", (nome) => {
+    const fonte = ler(nome)
+    expect(fonte).toMatch(/use\w+Query\(/)
+    expect(fonte).not.toContain("supabase.from")
+  })
+
+  it("categoria: o orçamento na régua do sistema, com o traço do ritmo", () => {
+    const fonte = ler("bloco-categoria")
+    expect(fonte).toContain("bands={BUDGET_BANDS}")
+    expect(fonte).toContain("marker={")
+    expect(fonte).toContain("useCategoryDetailBundleQuery")
+    expect(fonte).toContain("categoryDetailPath(")
+    expect(fonte).toContain("hrefDaLista(")
+    expect(fonte).toContain('papel === "guest"')
+  })
+
+  it("fatura: o cálculo de Cartões, e o convidado não a vê", () => {
+    const fonte = ler("bloco-fatura")
+    for (const t of [
+      "invoiceWindowForPurchaseDate",
+      "sumCreditCardExpensesInWindow",
+      "sumCreditCardRefundsInWindow",
+      "creditCardInvoiceBadgeForRow",
+      "chavesDeFaturasPagas",
+      "creditCardDetailPath(",
+      'papel === "guest"',
+    ]) {
+      expect(fonte).toContain(t)
+    }
+  })
+
+  it("histórico: historicoDe e as barras do Chart", () => {
+    const fonte = ler("bloco-historico")
+    expect(fonte).toContain("historicoDe(")
+    expect(fonte).toContain("<ChartBars")
+    expect(fonte).toContain('operator: "contains"')
+  })
+
+  it("parcelada: as casas do plano e o link ?plan=", () => {
+    const fonte = ler("bloco-parcelada")
+    expect(fonte).toContain("segments={")
+    expect(fonte).toContain("?plan=")
+  })
+
+  it("receitas: assinaturas de receita e o link de receitas", () => {
+    const fonte = ler("bloco-receitas")
+    expect(fonte).toContain("useSubscriptionsQuery")
+    expect(fonte).toContain('"income"')
+  })
+
+  it("dinheiro pelo MoneyDisplay ou currencyBRL, links pelos helpers", () => {
+    for (const nome of BLOCOS) {
+      const fonte = ler(nome)
+      expect(fonte).toMatch(/MoneyDisplay|currencyBRL/)
+      expect(fonte).not.toMatch(/href=\{?["`]\/transactions/)
+    }
+  })
+})
