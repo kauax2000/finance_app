@@ -345,8 +345,8 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                {/* O topo (AB1, 11/nov/2026): o ladrilho com o nome, o valor grande e os fatos em chips — a categoria por último. */}
-                <div className="flex flex-col items-start gap-3">
+                {/* O topo (AB1, centrado, 11/nov/2026): o ladrilho com o nome, o valor grande e os fatos em chips — a categoria por último. */}
+                <div className="flex flex-col items-center text-center gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                         <ColorTile size="2xl" color={t.category?.color}>
                             <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
@@ -359,7 +359,7 @@ export function TransactionDetailSheet({
                         </div>
                     </div>
                     <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-center gap-2">
                         <Badge size="md" tone="neutral">{formatWeekdayDayMonthShortPtBr(t.date)}</Badge>
                         {pagamento ? <Badge size="md" tone="neutral">{pagamento}</Badge> : null}
                         <Badge size="md" tone="neutral">
