@@ -41,8 +41,9 @@ export default function MoneyDisplayDoc() {
 <MoneyDisplay value={1234.5} />
 <MoneyDisplay value={1234.5} size="lg" />
 <MoneyDisplay value={1234.5} size="xl" />
-<MoneyDisplay value={1234.5} size="2xl" />`}
-        description="A partir de xl as figuras vão para Geist Mono sozinhas: ali o valor é o assunto da tela, não um dado de linha."
+<MoneyDisplay value={1234.5} size="2xl" />
+<MoneyDisplay value={1234.5} size="3xl" />`}
+        description="A partir de xl as figuras vão para Geist Mono sozinhas: ali o valor é o assunto da tela, não um dado de linha. O 3xl (36px) é o valor que abre um painel de detalhe, como o do lançamento."
         previewClassName="items-baseline"
       >
         <MoneyDisplay value={1234.5} size="sm" />
@@ -50,6 +51,7 @@ export default function MoneyDisplayDoc() {
         <MoneyDisplay value={1234.5} size="lg" />
         <MoneyDisplay value={1234.5} size="xl" />
         <MoneyDisplay value={1234.5} size="2xl" />
+        <MoneyDisplay value={1234.5} size="3xl" />
       </DocSection>
 
       <DocSection
@@ -173,7 +175,7 @@ export default function MoneyDisplayDoc() {
       </DocNote>
 
       <DocNote title="A face muda com o tamanho, e é de propósito">
-        Do <code>sm</code> ao <code>lg</code> o valor é Inter com <code>tabular-nums</code> — dado de linha, que pertence ao texto em volta. Em <code>xl</code> e <code>2xl</code> vira Geist Mono: ali ele é o herói da tela. Mono em todas as linhas de um extrato viraria textura. <strong>Quem decide é o prop <code>size</code>, e não a classe</strong>: um <code>className=&quot;text-2xl&quot;</code> aumenta a letra e deixa a face em Inter.
+        Do <code>sm</code> ao <code>lg</code> o valor é Inter com <code>tabular-nums</code> — dado de linha, que pertence ao texto em volta. Em <code>xl</code>, <code>2xl</code> e <code>3xl</code> vira Geist Mono: ali ele é o herói da tela. Mono em todas as linhas de um extrato viraria textura. <strong>Quem decide é o prop <code>size</code>, e não a classe</strong>: um <code>className=&quot;text-2xl&quot;</code> aumenta a letra e deixa a face em Inter.
       </DocNote>
 
       <DocNote title="Onde o app usa">
@@ -184,10 +186,10 @@ export default function MoneyDisplayDoc() {
         rows={[
           { prop: "value", type: "number | null | undefined", description: "O valor; null e undefined desenham travessão." },
           { prop: "tone", type: '"default" | "income" | "expense" | "muted"', default: '"default"', description: "A cor do valor." },
-          { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl"', default: '"md"', description: "O tamanho do texto." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl" | "3xl"', default: '"md"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },
           { prop: "compact", type: "boolean", default: "false", description: "R$ 1,23 mil em vez de R$ 1.234,50. O valor cheio vai no title e no texto para leitor de tela." },
-          { prop: "mono", type: "boolean", default: "true em xl e 2xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
+          { prop: "mono", type: "boolean", default: "true em xl, 2xl e 3xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
           { prop: "currency", type: "string", default: '"BRL"', description: "O código ISO da moeda. Em pt-BR: US$ 1.234,50." },
           { prop: "minimumFractionDigits / maximumFractionDigits", type: "number", default: "2", description: "As casas decimais. O valor é arredondado a centavos antes, qualquer que seja o número." },
         ]}

@@ -103,7 +103,7 @@ describe("fonte do detalhe", () => {
         expect(f).toMatch(/<DropdownMenuItem onClick=\{editar\}>[\s\S]*?<DropdownMenuItem variant="destructive" onClick=\{excluir\}>/)
         expect(f).not.toContain("Duplicar")
         expect(f).toContain("<DialogCloseButton placement=\"inline\" />")
-        expect(f).toContain('<MoneyDisplay size="2xl" signed')
+        expect(f).toContain('<MoneyDisplay size="3xl" signed')
         expect(f).toContain("<DescriptionList>")
     })
 

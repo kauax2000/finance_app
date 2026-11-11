@@ -25,6 +25,8 @@ const moneyDisplayVariants = cva("nums", {
       lg: "text-base",
       xl: "text-lg font-semibold",
       "2xl": "text-2xl font-semibold",
+      /** O valor que abre um painel de detalhe: a manchete da tela. */
+      "3xl": "text-4xl font-semibold tracking-tight",
     },
   },
   defaultVariants: {
@@ -38,7 +40,7 @@ const moneyDisplayVariants = cva("nums", {
  * Geist Mono por padrão. Nas linhas de lista, Inter com figura tabular.
  * `mono` sobrescreve nos dois sentidos.
  */
-const FIGURE_SIZES = new Set(["xl", "2xl"])
+const FIGURE_SIZES = new Set(["xl", "2xl", "3xl"])
 
 type MoneyDisplayProps = Omit<React.ComponentProps<"span">, "children"> &
   Omit<VariantProps<typeof moneyDisplayVariants>, "mono"> & {

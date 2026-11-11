@@ -358,7 +358,7 @@ export function TransactionDetailSheet({
                             ) : null}
                         </div>
                     </div>
-                    <MoneyDisplay size="2xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
+                    <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                     <div className="flex flex-wrap gap-2">
                         <Badge size="md" tone="neutral">{formatWeekdayDayMonthShortPtBr(t.date)}</Badge>
                         {pagamento ? <Badge size="md" tone="neutral">{pagamento}</Badge> : null}
