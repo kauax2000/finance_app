@@ -345,20 +345,20 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                {/* O topo (AB1, centrado, 11/nov/2026): o ladrilho com o nome, o valor grande e os fatos em chips — a categoria por último. */}
+                {/* O topo (C1, empilhado, 11/nov/2026): o ladrilho em cima, o nome sobre o valor grande e os fatos em chips — tudo no mesmo eixo, a categoria por último. */}
                 <div className="flex flex-col items-center text-center gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <ColorTile size="2xl" color={t.category?.color}>
-                            <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
-                        </ColorTile>
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <ColorTile size="2xl" color={t.category?.color}>
+                        <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
+                    </ColorTile>
+                    <div className="flex min-w-0 flex-col items-center gap-1">
+                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
                             <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>
                             ) : null}
                         </div>
+                        <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                     </div>
-                    <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                     <div className="flex flex-wrap justify-center gap-2">
                         <Badge size="md" tone="neutral">{formatWeekdayDayMonthShortPtBr(t.date)}</Badge>
                         {pagamento ? <Badge size="md" tone="neutral">{pagamento}</Badge> : null}
