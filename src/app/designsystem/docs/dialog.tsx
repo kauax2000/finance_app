@@ -181,7 +181,10 @@ export default function DialogDoc() {
             <code>DialogHeaderRow</code> põe um controle na linha do título sem
             disputar a largura do texto. Título sobre descrição não tem{" "}
             <code>gap</code>: é par de identidade, e quem os separa é a
-            entrelinha.
+            entrelinha. <code>center</code> + <code>centerShown</code> +{" "}
+            <code>useDialogHeaderDock</code>: o resumo que entra na linha do
+            cabeçalho quando o título do corpo passa por baixo dela — o
+            detalhe do lançamento.
           </>
         }
         code={`<DialogHeader>
@@ -190,7 +193,11 @@ export default function DialogDoc() {
   <DialogDescription>…</DialogDescription>
 </DialogHeader>
 
-<DialogHeaderRow endAdornment={<Badge tone="warning">Rascunho</Badge>}>…</DialogHeaderRow>`}
+<DialogHeaderRow endAdornment={<Badge tone="warning">Rascunho</Badge>}>…</DialogHeaderRow>
+
+const [tituloRef, docked] = useDialogHeaderDock<HTMLHeadingElement>()
+<DialogHeaderRow center="Uber · R$ 32,90" centerShown={docked}>…</DialogHeaderRow>
+<DialogBody><h2 ref={tituloRef}>Uber</h2>…</DialogBody>`}
       >
         <CabecalhoDemo />
       </DocSection>

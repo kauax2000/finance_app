@@ -3,13 +3,37 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
+import { DialogFooter, DialogHeader, DialogHeaderRow, DialogMedia, DialogSteps } from "./dialog"
 
 /** As versões do `Dialog`. */
 
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
+  it("o centro do cabeçalho: centrado na placa, escondido até centerShown, fora da leitura", () => {
+    const fechado = renderToStaticMarkup(h(DialogHeaderRow, { center: "Uber" }, null))
+    expect(fechado).toContain('data-slot="dialog-header-center"')
+    expect(fechado).toContain('aria-hidden="true"')
+    expect(fechado).toMatch(/data-slot="dialog-header-center"[^>]*inert/)
+    expect(fechado).not.toContain("data-shown=")
+    const aberto = renderToStaticMarkup(h(DialogHeaderRow, { center: "Uber", centerShown: true }, null))
+    expect(aberto).toContain("data-shown=")
+    expect(aberto).not.toMatch(/data-slot="dialog-header-center"[^>]*inert/)
+    expect(renderToStaticMarkup(h(DialogHeaderRow, {}, null))).not.toContain("dialog-header-center")
+  })
+
+  it("o centro entra como o título que sobe à barra: 6px, do desfoque, sem movimento no reduzido", () => {
+    expect(CODIGO).toContain("translate-y-1.5 opacity-0 blur-xs")
+    expect(CODIGO).toContain("data-shown:translate-y-0 data-shown:opacity-100 data-shown:blur-none")
+    expect(CODIGO).toContain("motion-reduce:translate-y-0 motion-reduce:blur-none")
+  })
+
+  it("useDialogHeaderDock observa contra o corpo do diálogo", () => {
+    expect(CODIGO).toMatch(/function useDialogHeaderDock/)
+    expect(CODIGO).toMatch(/export \{[^}]*useDialogHeaderDock/)
+    expect(CODIGO).toContain('closest<HTMLElement>(\'[data-slot="dialog-body"]\')')
+  })
+
   it("o cabeçalho sem título (só controles) recua 8 embaixo, e não 16", () => {
     expect(CODIGO).toContain('"group-data-[layout=fixed]/dialog-content:pb-4"')
     expect(CODIGO).toContain('"group-data-[layout=fixed]/dialog-content:not-has-[[data-slot$=-title]]:pb-2"')

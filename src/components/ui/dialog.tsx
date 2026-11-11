@@ -535,14 +535,20 @@ function DialogHeaderRow({
   className,
   children,
   endAdornment,
+  center,
+  centerShown = false,
 }: React.ComponentProps<"div"> & {
   endAdornment?: React.ReactNode
+  /** Resumo que entra no meio da linha (o título do corpo passou por baixo dela). */
+  center?: React.ReactNode
+  centerShown?: boolean
 }) {
   return (
     <div
       data-slot="dialog-header-row"
       className={cn(
         "grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3",
+        center != null && "relative",
         className
       )}
     >
@@ -552,8 +558,43 @@ function DialogHeaderRow({
           {endAdornment}
         </div>
       ) : null}
+      {center != null ? (
+        // inset-x-19 (76px): folga igual dos dois lados (setas 32+4+32 = ⋯ × ), o centro é o da placa.
+        <div
+          data-slot="dialog-header-center"
+          aria-hidden="true"
+          inert={!centerShown || undefined}
+          data-shown={centerShown || undefined}
+          className="pointer-events-none absolute inset-y-0 inset-x-19 flex min-w-0 items-center justify-center gap-2 transition-[opacity,translate,filter] duration-(--duration-base) ease-(--ease-out) translate-y-1.5 opacity-0 blur-xs data-shown:translate-y-0 data-shown:opacity-100 data-shown:blur-none motion-reduce:translate-y-0 motion-reduce:blur-none"
+        >
+          {center}
+        </div>
+      ) : null}
     </div>
   )
+}
+
+/** `docked` é true quando o elemento saiu por cima da borda de cima do corpo do diálogo. */
+function useDialogHeaderDock<T extends HTMLElement>(): [(el: T | null) => void, boolean] {
+  const [el, setEl] = React.useState<T | null>(null)
+  const [docked, setDocked] = React.useState(false)
+  React.useEffect(() => {
+    // Sem corpo (ou sem o nó) não há de onde sair: fica falso.
+    const root = el?.closest<HTMLElement>('[data-slot="dialog-body"]')
+    // A janela do nó, e não a global: o catálogo roda dentro de iframe.
+    const Observer = el?.ownerDocument.defaultView?.IntersectionObserver
+    if (!el || !root || !Observer) {
+      setDocked(false)
+      return
+    }
+    const io = new Observer(
+      ([e]) => setDocked(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0)),
+      { root, threshold: 0 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [el])
+  return [setEl, docked]
 }
 
 /**
@@ -950,6 +991,7 @@ export {
   DialogFooter,
   DialogHeader,
   DialogHeaderRow,
+  useDialogHeaderDock,
   DialogMedia,
   DialogOverlay,
   DialogPortal,
