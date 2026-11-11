@@ -5,6 +5,7 @@ import {
   descricaoSemParcela,
   diaMesCurto,
   hrefDaLista,
+  rotuloDoResto,
   rotuloVerOs,
   marcadorDoMes,
   mesPorExtenso,
@@ -98,5 +99,17 @@ describe("ultimaParcela", () => {
 
   it("sem data nem próxima cobrança, não diz nada", () => {
     expect(ultimaParcela({ next_billing_date: null, installment_amount: 10 }, [{ date: null, status: "pending" }], hoje)).toBeNull()
+  })
+})
+
+describe("rotuloDoResto", () => {
+  it("dias que faltam no mês corrente, no singular e no último dia", () => {
+    expect(rotuloDoResto(100, true, 5).replace(/\s/g, " ")).toBe("faltam R$ 100,00 · 5 dias")
+    expect(rotuloDoResto(100, true, 1).replace(/\s/g, " ")).toBe("faltam R$ 100,00 · 1 dia")
+    expect(rotuloDoResto(100, true, 0).replace(/\s/g, " ")).toBe("faltam R$ 100,00 · último dia")
+  })
+  it("mês passado e estouro", () => {
+    expect(rotuloDoResto(100, false, 0).replace(/\s/g, " ")).toBe("sobraram R$ 100,00")
+    expect(rotuloDoResto(-50, true, 3).replace(/\s/g, " ")).toBe("R$ 50,00 acima do orçamento")
   })
 })

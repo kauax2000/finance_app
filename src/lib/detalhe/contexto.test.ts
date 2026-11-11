@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest"
 import { escolherManchete, historicoDe, normalizarDescricao, projecaoDoMes } from "./contexto"
 
 const hoje = new Date(2026, 10, 10)
-const mercado = (gasto: number, orcamento: number | null, mes = "novembro") => ({
+const mercado = (gasto: number, orcamento: number | null, mes = "novembro", lancado = gasto) => ({
   nome: "Mercado",
   mes,
   gasto,
+  lancado,
   orcamento,
 })
 const sp = (s: string) => s.replace(/\s/g, " ")
@@ -44,6 +45,21 @@ describe("escolherManchete", () => {
   it("mês passado", () => {
     const m = escolherManchete({ mesCorrente: false, hoje, categoria: mercado(1240, 1000, "outubro") })
     expect(sp(m!.texto)).toBe("Mercado fechou outubro em R$ 1.240,00, 24% acima do orçamento.")
+  })
+  it("o agendado não entra no ritmo: aluguel do dia 25, nada lançado, não projeta", () => {
+    const aluguel = { nome: "Moradia", mes: "novembro", gasto: 2000, lancado: 0, orcamento: 2100 }
+    expect(escolherManchete({ mesCorrente: true, hoje, categoria: aluguel })).toBeNull()
+  })
+  it("projeta o lançado e soma o agendado", () => {
+    // 300 lançados até o dia 10 → 900 no mês, mais 200 agendados = 1.100.
+    const m = escolherManchete({ mesCorrente: true, hoje, categoria: mercado(500, 1000, "novembro", 300) })
+    expect(sp(m!.texto)).toBe(
+      "No ritmo de agora, Mercado fecha novembro em R$ 1.100,00, R$ 100,00 acima do orçamento."
+    )
+  })
+  it("mês passado por pouco diz 1%, nunca 0%", () => {
+    const m = escolherManchete({ mesCorrente: false, hoje, categoria: mercado(1000.4, 1000, "outubro") })
+    expect(sp(m!.texto)).toBe("Mercado fechou outubro em R$ 1.000,40, 1% acima do orçamento.")
   })
   it("preço fora do normal", () => {
     const m = escolherManchete({ mesCorrente: true, hoje, historico: { nome: "Uber", valor: 43.97, media: 28.8 } })

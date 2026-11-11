@@ -47,7 +47,8 @@ export function historicoDe(alvo: Despesa, despesas90: Despesa[]): Historico | n
 export type EntradaDaManchete = {
   mesCorrente: boolean
   hoje: Date
-  categoria?: { nome: string; mes: string; gasto: number; orcamento: number | null }
+  /** `gasto` é o comprometido (lançado + agendado); `lancado`, só o que já entrou. */
+  categoria?: { nome: string; mes: string; gasto: number; lancado: number; orcamento: number | null }
   historico?: { nome: string; valor: number; media: number } | null
   parcela?: { ultimaNoMes: string; ultimaEhEsteOuProximo: boolean; valorParcela: number } | null
 }
@@ -61,7 +62,8 @@ export function escolherManchete(e: EntradaDaManchete): Manchete | null {
     if (!e.mesCorrente && c.gasto > c.orcamento) {
       return {
         tom: "warning",
-        texto: `${c.nome} fechou ${c.mes} em ${currencyBRL(c.gasto)}, ${pct(c.gasto / c.orcamento - 1)} acima do orçamento.`,
+        // Passou por centavos: "0% acima" contradiz a frase, então o piso é 1%.
+        texto: `${c.nome} fechou ${c.mes} em ${currencyBRL(c.gasto)}, ${Math.max(1, Math.round((c.gasto / c.orcamento - 1) * 100))}% acima do orçamento.`,
       }
     }
     if (e.mesCorrente && c.gasto > c.orcamento) {
@@ -71,7 +73,8 @@ export function escolherManchete(e: EntradaDaManchete): Manchete | null {
       }
     }
     if (e.mesCorrente && e.hoje.getDate() >= 5) {
-      const proj = projecaoDoMes(c.gasto, e.hoje)
+      // O ritmo é do que já entrou; o agendado (parcela, assinatura) entra uma vez, não projetado.
+      const proj = Math.round((projecaoDoMes(c.lancado, e.hoje) + c.gasto - c.lancado) * 100) / 100
       if (proj > c.orcamento) {
         return {
           tom: "warning",

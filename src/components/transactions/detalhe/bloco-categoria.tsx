@@ -15,6 +15,7 @@ import {
   corteDoMesAnterior,
   diasDoMes,
   hrefDaLista,
+  rotuloDoResto,
   rotuloVerOs,
   marcadorDoMes,
   mesPorExtenso,
@@ -65,30 +66,36 @@ export function BlocoCategoria({
     enabled: Boolean(categoryId && ym && bundle && orcamento == null && mesCorrente),
   })
 
-  const gasto =
+  const compromisso =
     bundle && categoryId
-      ? (buildCategoryCommitmentsForMonth({
+      ? buildCategoryCommitmentsForMonth({
           yearMonth: ym,
           transactions: bundle.txs,
           installmentPlans: bundle.installmentPlans,
           subscriptions: bundle.subscriptions,
           creditCards: bundle.creditCards,
-        })[categoryId]?.committedTotal ??
-          // A mesma reserva da tela da categoria: sem compromisso no mês, o lançado.
-          bundle.txs
-            .filter((x) => !bundle.category?.type || x.type === bundle.category.type)
-            .reduce((soma, x) => soma + Number(x.amount), 0))
+        })[categoryId]
+      : undefined
+  // A mesma reserva da tela da categoria: sem compromisso no mês, o lançado.
+  const reserva =
+    bundle && categoryId && !compromisso
+      ? bundle.txs
+          .filter((x) => !bundle.category?.type || x.type === bundle.category.type)
+          .reduce((soma, x) => soma + Number(x.amount), 0)
       : null
+  // `gasto` (lançado + agendado) é a barra e o "passou"; `lancado` é o ritmo e a comparação.
+  const gasto = compromisso?.committedTotal ?? reserva
+  const lancado = compromisso?.postedTotal ?? reserva
 
   const nome = bundle?.category?.name ?? t.category?.name ?? "Categoria"
   const mes = ym ? mesPorExtenso(ym) : ""
   useFatiaDaManchete(
     onManchete,
-    gasto == null ? null : { categoria: { nome, mes, gasto, orcamento } },
+    gasto == null || lancado == null ? null : { categoria: { nome, mes, gasto, lancado, orcamento } },
   )
 
   if (!categoryId || !ym || atual.isError) return null
-  if (!bundle || gasto == null) return <BlocoContextoEsqueleto />
+  if (!bundle || gasto == null || lancado == null) return <BlocoContextoEsqueleto />
 
   const { period_start, period_end } = periodBoundsFromYearMonth(ym)
   const quantos = bundle.txs.filter((x) => x.type === "expense").length
@@ -118,11 +125,7 @@ export function BlocoCategoria({
           marker={mesCorrente ? marcadorDoMes(hoje) : undefined}
           aria-label={`Orçamento de ${nome} em ${mes}`}
         />
-        <Caption>
-          {resto >= 0
-            ? `${mesCorrente ? "faltam" : "sobraram"} ${currencyBRL(resto)}${mesCorrente ? ` · ${diasRestantes} ${diasRestantes === 1 ? "dia" : "dias"}` : ""}`
-            : `${currencyBRL(-resto)} acima do orçamento`}
-        </Caption>
+        <Caption>{rotuloDoResto(resto, mesCorrente, diasRestantes)}</Caption>
       </BlocoContexto>
     )
   }
@@ -134,10 +137,13 @@ export function BlocoCategoria({
       ? totalAteODia(anterior.data.txs, corteDoMesAnterior(ym, hoje.getDate()))
       : null
     : bundle.prevMonthCategoryTotal
-  // Sem gasto no mês anterior, "R$ 0,00" não compara nada: a linha sai.
+  // Sem gasto no mês anterior, "R$ 0,00" não compara nada: a linha sai. No corrente, o lado de cá
+  // também é só o lançado até hoje — o número grande soma o agendado do resto do mês.
   const comparacao =
     anteriorTotal != null && anteriorTotal > 0
-      ? `${mesCorrente ? `${mesAnterior} até dia ${hoje.getDate()}` : mesAnterior}: ${currencyBRL(anteriorTotal)}`
+      ? mesCorrente
+        ? `até dia ${hoje.getDate()}: ${currencyBRL(lancado)} · ${mesAnterior} até dia ${hoje.getDate()}: ${currencyBRL(anteriorTotal)}`
+        : `${mesAnterior}: ${currencyBRL(anteriorTotal)}`
       : null
 
   return (

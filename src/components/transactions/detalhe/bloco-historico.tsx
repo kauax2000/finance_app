@@ -55,11 +55,14 @@ export function BlocoHistorico({
     )
   }, [ligado, consulta.data, t])
 
+  // Desligado (a edição tirou a descrição) ou com erro, manda o vazio: a fatia velha sai da manchete.
   useFatiaDaManchete(
     onManchete,
-    historico === undefined
-      ? null
-      : { historico: historico && { nome, valor: Number(t.amount), media: historico.media } },
+    !ligado || consulta.isError
+      ? { historico: null }
+      : historico === undefined
+        ? null
+        : { historico: historico && { nome, valor: Number(t.amount), media: historico.media } },
   )
 
   if (!ligado || consulta.isError) return null

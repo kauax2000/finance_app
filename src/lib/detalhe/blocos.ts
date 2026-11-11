@@ -3,6 +3,7 @@ import { serializeFilters } from "@/components/ui/filter-bar"
 import { ROUTES } from "@/config/navigation"
 import { formatYearMonth, parseYearMonth, shiftYearMonth } from "@/lib/budget-month"
 import { sinalNaDespesa } from "@/lib/expense-month-attribution"
+import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import {
   formatMonthLongPtBr,
@@ -66,6 +67,14 @@ export function descricaoSemParcela(s: string): string {
 }
 
 /** O rótulo do link da lista: "ver os 3", e no singular "ver o lançamento" / "ver a receita". */
+/** A linha sob a barra do orçamento: o que falta (e os dias), o que sobrou ou o que passou. */
+export function rotuloDoResto(resto: number, mesCorrente: boolean, diasRestantes: number): string {
+  if (resto < 0) return `${currencyBRL(-resto)} acima do orçamento`
+  if (!mesCorrente) return `sobraram ${currencyBRL(resto)}`
+  const dias = diasRestantes === 0 ? "último dia" : `${diasRestantes} ${diasRestantes === 1 ? "dia" : "dias"}`
+  return `faltam ${currencyBRL(resto)} · ${dias}`
+}
+
 export function rotuloVerOs(n: number, tipo: "despesa" | "receita"): string {
   if (tipo === "receita") return n === 1 ? "ver a receita" : `ver as ${n}`
   return n === 1 ? "ver o lançamento" : `ver os ${n}`
