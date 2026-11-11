@@ -59,6 +59,7 @@ import {
     DialogHeader,
     DialogHeaderRow,
     DialogTitle,
+    useDialogHeaderDock,
 } from "@/components/ui/dialog"
 import {
     DropdownMenu,
@@ -130,6 +131,8 @@ export function TransactionDetailSheet({
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const marca = useRef<HTMLDivElement>(null)
+    // H2a/A5 (11/nov/2026): ao rolar, o resumo entra no centro da barra.
+    const [nomeRef, nomeSubiu] = useDialogHeaderDock<HTMLDivElement>()
     // As fatias da manchete que os blocos mandam, só da chave atual dos blocos (a de outra é descartada).
     const [fatias, setFatias] = useState<{ chave: string; fatia: FatiaDaManchete }>({ chave: "", fatia: {} })
 
@@ -316,6 +319,16 @@ export function TransactionDetailSheet({
         <div ref={marca} className="flex min-h-0 flex-1 flex-col">
             <DialogHeader>
                 <DialogHeaderRow
+                    centerShown={nomeSubiu}
+                    center={
+                        <>
+                            <ColorTile size="xs" color={t.category?.color}>
+                                <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
+                            </ColorTile>
+                            <span className="min-w-0 truncate text-sm font-medium">{descricao}</span>
+                            <MoneyDisplay size="md" signed tone="muted" value={valorComSinal(t)} className="shrink-0" />
+                        </>
+                    }
                     endAdornment={
                         <>
                             {/* O ⋯ abre como menu também no telefone, na escala do toque. */}
@@ -359,7 +372,7 @@ export function TransactionDetailSheet({
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
                     <div className="flex min-w-0 flex-col items-center gap-1">
-                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
+                        <div ref={nomeRef} className="flex min-w-0 flex-wrap items-center justify-center gap-2">
                             <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>

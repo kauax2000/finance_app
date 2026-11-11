@@ -79,6 +79,14 @@ describe("as frases do detalhe", () => {
 })
 
 describe("fonte do detalhe", () => {
+  it("ao rolar, o cabeçalho resume o lançamento: ladrilho, nome e valor em cinza (H2a/A5, 11/nov/2026)", () => {
+    const f = fonte(SHEET)
+    expect(f).toContain("useDialogHeaderDock")
+    expect(f).toMatch(/centerShown=\{nomeSubiu\}/)
+    expect(f).toMatch(/<ColorTile size="xs"/)
+    expect(f).toMatch(/<MoneyDisplay[^>]*size="md"[^>]*tone="muted"|<MoneyDisplay[^>]*tone="muted"[^>]*size="md"/)
+  })
+
     it("o a conferir é o do design system, sem wireframe nem window.confirm", () => {
         const f = fonte(SHEET)
         expect(f).not.toContain("@/components/wireframe/a-conferir-wireframe")
