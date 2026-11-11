@@ -4,7 +4,6 @@ import Link from "next/link"
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import {
     BanknotesIcon,
-    CalendarIcon,
     ChevronDownIcon,
     ChevronUpIcon,
     CreditCardIcon,
@@ -70,7 +69,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Caption } from "@/components/ui/typography"
+import { Caption, Muted } from "@/components/ui/typography"
 import { tileColorFor } from "@/lib/tile-palette"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -349,12 +348,8 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                {/* O topo (C1 + D4, 11/nov/2026): a data como sobrancelha, o ladrilho, o nome sobre o valor grande e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
+                {/* O topo (C1 + D4 + E3, 11/nov/2026): o ladrilho, o nome com a data ao lado sobre o valor grande e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
-                    <Caption className="inline-flex items-center gap-1">
-                        <CalendarIcon className="size-3.5" aria-hidden />
-                        {formatWeekdayDayMonthShortPtBr(t.date)}
-                    </Caption>
                     <ColorTile size="2xl" color={t.category?.color}>
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
@@ -364,6 +359,9 @@ export function TransactionDetailSheet({
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>
                             ) : null}
+                            <Muted asChild>
+                                <span>· {formatWeekdayDayMonthShortPtBr(t.date)}</span>
+                            </Muted>
                         </div>
                         <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
                     </div>
