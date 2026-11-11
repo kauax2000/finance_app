@@ -107,9 +107,9 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("<DescriptionList>")
     })
 
-    it("o topo é o C1 + D4 + E3: a data ao lado do nome, a categoria num chip com o ponto da cor dela (11/nov/2026)", () => {
+    it("o topo é o C1 + D4 + E2/E5: a data relativa sob o valor, a categoria num chip com o ponto da cor dela (11/nov/2026)", () => {
         const f = fonte(SHEET)
-        expect(f).toContain("<span>· {formatWeekdayDayMonthShortPtBr(t.date)}</span>")
+        expect(f).toMatch(/<MoneyDisplay size="3xl"[^>]*\/>\s*<Caption>\s*<span className="text-foreground">\{quandoRelativo\}<\/span>/)
         expect(f).toContain('"tile-vivid [--badge-dot:var(--tile-surface)]"')
         expect(f).toContain("{t.category ? <BadgeDot /> : null}")
         expect(f).toContain('{t.category?.name ?? "Sem categoria"}')

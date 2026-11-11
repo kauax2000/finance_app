@@ -69,7 +69,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { tileColorFor } from "@/lib/tile-palette"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -80,7 +80,7 @@ import { paymentMethodLabel } from "@/lib/payment-methods"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import type { Category, CreditCard, Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
-import { formatTransactionDayPtBr, formatWeekdayDayMonthShortPtBr, transactionLocalYmd } from "@/lib/transaction-date"
+import { formatRelativeDayPtBr, formatTransactionDayPtBr, formatWeekdayDayMonthShortPtBr, transactionLocalYmd } from "@/lib/transaction-date"
 import { resolveInstallmentKn } from "@/lib/transaction-installment"
 import { cn } from "@/lib/utils"
 
@@ -255,6 +255,11 @@ export function TransactionDetailSheet({
             : paymentMethodLabel(t.payment_method)
 
     const isIncome = t.type === "income"
+    // "Há 14 dias · qua, 28 de out": o tempo que passou lê primeiro, o dia exato vem apagado.
+    const relativo = formatRelativeDayPtBr(t.date)
+    const quandoRelativo = relativo.charAt(0).toUpperCase() + relativo.slice(1)
+    const exato = formatWeekdayDayMonthShortPtBr(t.date)
+    const quandoExato = exato.charAt(0).toLowerCase() + exato.slice(1)
     const descricaoInteira = t.description?.trim() || t.category?.name || "Sem descrição"
     // A mesma regra da tabela: a parcela perde o "(1/2)" que o banco grava; o chip k/n o diz.
     const descricao = t.installment_plan_id ? descricaoInteira.replace(/ \(\d+\/\d+\)$/, "") : descricaoInteira
@@ -348,7 +353,7 @@ export function TransactionDetailSheet({
             </DialogDescription>
 
             <DialogBody className="flex flex-col gap-6">
-                {/* O topo (C1 + D4 + E3, 11/nov/2026): o ladrilho, o nome com a data ao lado sobre o valor grande e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
+                {/* O topo (C1 + D4 + E2/E5, 11/nov/2026): o ladrilho, o nome sobre o valor grande, a data relativa embaixo dele e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
                     <ColorTile size="2xl" color={t.category?.color}>
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
@@ -359,11 +364,13 @@ export function TransactionDetailSheet({
                             {installmentBlock?.kn ? (
                                 <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>
                             ) : null}
-                            <Muted asChild>
-                                <span>· {formatWeekdayDayMonthShortPtBr(t.date)}</span>
-                            </Muted>
                         </div>
                         <MoneyDisplay size="3xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
+                        <Caption>
+                            <span className="text-foreground">{quandoRelativo}</span>
+                            {" · "}
+                            {quandoExato}
+                        </Caption>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
                         {pagamento ? (
