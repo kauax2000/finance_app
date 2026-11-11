@@ -137,7 +137,7 @@ function QuemLancou({ t, membros, divide }: { t: Transaction; membros: MemberDir
     )
 }
 
-function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: ReadonlySet<string>, comData: boolean) {
+function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: ReadonlySet<string>) {
     const lista: DataTableColumnDef<Transaction>[] = [
         {
             id: "description",
@@ -255,9 +255,9 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
             meta: { label: "Quem" },
         })
     }
-    // A Data sai quando a lista está agrupada por dia: o cabeçalho do grupo já diz o dia.
-    // Ordenada por valor, sem grupos, ela volta (e é por ela que se volta à ordem por data).
-    if (comData) lista.push(
+    // A Data fica sempre, mesmo agrupada por dia: o cabeçalho "Data" diz a ordem e a
+    // inverte, e o dia segue à vista quando o grupo sai da tela (tirá-la foi desfeito em 10/nov/2026).
+    lista.push(
         {
             id: "date",
             accessorFn: (t) => t.date,
@@ -398,11 +398,7 @@ export function TransacoesTabela({
         () => chavesDeFaturasPagas(tela.workspaceAux?.invoicePayments ?? []),
         [tela.workspaceAux?.invoicePayments],
     )
-    const porDia = estado.sort.key === "date"
-    const columns = React.useMemo(
-        () => colunas(membros, divide, faturasPagas, !porDia),
-        [membros, divide, faturasPagas, porDia],
-    )
+    const columns = React.useMemo(() => colunas(membros, divide, faturasPagas), [membros, divide, faturasPagas])
 
     // Só conta o que está na tela: uma seleção de antes do filtro não leva linhas
     // invisíveis ao lote. As projetadas não são do banco e nunca entram.
