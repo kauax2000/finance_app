@@ -116,6 +116,16 @@ export function formatDatePtBr(iso: string | null | undefined): string {
   return parsed.toLocaleDateString("pt-BR")
 }
 
+const DIA_DA_SEMANA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+
+/** "Ter, 10 de nov" — o topo do detalhe do lançamento (sem hora: o lançamento só guarda o dia). */
+export function formatWeekdayDayMonthShortPtBr(isoOrString: string): string {
+  const p = transactionCalendarParts(isoOrString)
+  if (!p) return isoOrString.trim()
+  const d = new Date(p.y, p.mo - 1, p.d)
+  return `${DIA_DA_SEMANA_CURTO[d.getDay()]}, ${p.d} de ${formatMonthShortPtBr(d)}`
+}
+
 /** e.g. "15 de maio de 2025" — from transaction / ISO date. */
 export function formatDateLongPtBr(isoOrString: string): string {
   const p = transactionCalendarParts(isoOrString)

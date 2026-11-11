@@ -47,17 +47,18 @@ export function fraseDaFatura(fecha: Date, vence: Date): string {
 
 const FEMININAS = new Set(["quick_text", "import_pdf", "import_sheet", "recurring"])
 
-/** O rótulo de "Entrou por"; o app é "App". */
-export function rotuloDaOrigem(source: Transaction["source"]): string {
-    return ROTULO_DA_ORIGEM[source] ?? "App"
+/** A nota no fim do detalhe: "Lançado pelo app", "Lançado pela Planilha". */
+export function notaDaOrigem(source: Transaction["source"]): string {
+    const origem = ROTULO_DA_ORIGEM[source]
+    if (!origem) return "Lançado pelo app"
+    return `Lançado ${FEMININAS.has(source) ? "pela" : "pelo"} ${origem}`
 }
 
-/** A linha sob o valor: a data e, com 2 membros ou mais, quem lançou; a origem automática entra com "pelo"/"pela". */
-export function linhaDoHeroi(data: string, autor: string | null, source: Transaction["source"]): string {
-    const origem = ROTULO_DA_ORIGEM[source]
-    const pelo = origem ? `${FEMININAS.has(source) ? "pela" : "pelo"} ${origem}` : null
-    const lancado = autor ? ["lançado por", autor, pelo].filter(Boolean).join(" ") : pelo
-    return lancado ? `${data} · ${lancado}` : data
+/** "Kauã lançou e pagou", "Renata pagou · Kauã lançou"; sem quem pagou, só quem lançou. */
+export function linhaDeQuem(autor: string | null, pagou: string | null, mesmaPessoa: boolean): string | null {
+    if (!autor) return pagou ? `${pagou} pagou` : null
+    if (!pagou) return `${autor} lançou`
+    return mesmaPessoa ? `${autor} lançou e pagou` : `${pagou} pagou · ${autor} lançou`
 }
 
 const RECORRENCIA: Record<"daily" | "weekly" | "monthly", string> = {

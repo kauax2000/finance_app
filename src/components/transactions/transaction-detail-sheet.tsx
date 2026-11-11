@@ -15,16 +15,20 @@ import { AnexosDoLancamento } from "@/components/transactions/anexos-do-lancamen
 import {
     direcaoDaTecla,
     ehCampoDeTexto,
-    fraseDaFatura,
-    linhaDoHeroi,
+    linhaDeQuem,
+    notaDaOrigem,
     podeNavegar,
-    rotuloDaOrigem,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
+import type { FatiaDaManchete } from "@/components/transactions/detalhe/bloco-contexto"
+import { BlocoCategoria } from "@/components/transactions/detalhe/bloco-categoria"
+import { BlocoFatura } from "@/components/transactions/detalhe/bloco-fatura"
+import { BlocoHistorico } from "@/components/transactions/detalhe/bloco-historico"
+import { BlocoParcelada } from "@/components/transactions/detalhe/bloco-parcelada"
+import { BlocoReceitas } from "@/components/transactions/detalhe/bloco-receitas"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
 import {
-    InstallmentPurchaseSection,
     summarizeInstallmentPlan,
     useInstallmentSlices,
 } from "@/components/transactions/installment-purchase-section"
@@ -36,12 +40,12 @@ import type {
 } from "@/components/transactions/transaction-form-types"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
     DescriptionDetails,
-    DescriptionHint,
     DescriptionList,
     DescriptionListItem,
     DescriptionTerm,
@@ -64,19 +68,19 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Muted } from "@/components/ui/typography"
+import { Caption, Muted } from "@/components/ui/typography"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { tertiaryDestructiveClassName } from "@/lib/button-destructive-classes"
-import { creditCardInvoiceHintForPurchase, creditCardInvoiceSlotLabelPt } from "@/lib/credit-card-billing"
+import { formatYearMonth } from "@/lib/budget-month"
+import { escolherManchete } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import type { Category, CreditCard, Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
-import { formatDateLongPtBr, formatTransactionDayPtBr, formatTransactionDmyPtBr } from "@/lib/transaction-date"
+import { formatTransactionDayPtBr, formatWeekdayDayMonthShortPtBr, transactionLocalYmd } from "@/lib/transaction-date"
 import { resolveInstallmentKn } from "@/lib/transaction-installment"
-import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { cn } from "@/lib/utils"
 
 export type TransactionDetailSheetProps = {
@@ -125,6 +129,8 @@ export function TransactionDetailSheet({
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const marca = useRef<HTMLDivElement>(null)
+    // As fatias da manchete que os blocos mandam, deste lançamento só (a de outro id é descartada).
+    const [fatias, setFatias] = useState<{ id: string; fatia: FatiaDaManchete }>({ id: "", fatia: {} })
 
     const t = transaction
     const membros = useMemberDirectoryQuery(t?.workspace_id ?? null).data ?? []
@@ -169,6 +175,7 @@ export function TransactionDetailSheet({
             return null
         }
         return {
+            plan,
             kn: resolveInstallmentKn(t.installment_sequence, t.description, plan),
             summary: summarizeInstallmentPlan(plan, slices, slicesLoading),
         }
@@ -239,29 +246,36 @@ export function TransactionDetailSheet({
         return null
     }
 
-    const paymentCard = t.payment_credit_card_id ? creditCards.find((c) => c.id === t.payment_credit_card_id) : null
-
-    const paymentLine =
-        t.type === "expense" && t.payment_method
-            ? t.payment_method === "credit_card" && paymentCard
-                ? `${paymentMethodLabel(t.payment_method)} · ${paymentCard.name} · •• ${paymentCard.last_four}`
-                : paymentMethodLabel(t.payment_method)
-            : null
-
-    const fatura =
-        t.type === "expense" && t.payment_method === "credit_card" && paymentCard
-            ? creditCardInvoiceHintForPurchase(t.date, paymentCard)
-            : null
+    const paymentCard =
+        t.payment_card ?? (t.payment_credit_card_id ? creditCards.find((c) => c.id === t.payment_credit_card_id) : null)
+    const pagamento =
+        t.payment_method === "credit_card" && paymentCard
+            ? `${paymentCard.name} •• ${paymentCard.last_four}`
+            : paymentMethodLabel(t.payment_method)
+    const linhaDoTopo = [formatWeekdayDayMonthShortPtBr(t.date), pagamento].filter(Boolean).join(" · ")
 
     const isIncome = t.type === "income"
-    const descricao = t.description?.trim() || t.category?.name || "Sem descrição"
+    const descricaoInteira = t.description?.trim() || t.category?.name || "Sem descrição"
+    // A mesma regra da tabela: a parcela perde o "(1/2)" que o banco grava; o chip k/n o diz.
+    const descricao = t.installment_plan_id ? descricaoInteira.replace(/ \(\d+\/\d+\)$/, "") : descricaoInteira
     const nomeDe = (id: string | null | undefined) => {
         const m = id ? membros.find((x) => x.user_id === id) : undefined
         return m ? m.full_name || m.email : null
     }
     const variosMembros = membros.length >= 2
     const autor = variosMembros ? nomeDe(t.user_id) : null
-    const pagou = variosMembros ? nomeDe(t.paid_by) : null
+    const pagou = variosMembros && !isIncome ? nomeDe(t.paid_by) : null
+    const quem = linhaDeQuem(autor, pagou, t.paid_by === t.user_id)
+
+    const tId = t.id
+    const aoMudarManchete = (fatia: FatiaDaManchete) =>
+        setFatias((p) => ({ id: tId, fatia: p.id === tId ? { ...p.fatia, ...fatia } : fatia }))
+    const hoje = new Date()
+    const manchete = escolherManchete({
+        ...(fatias.id === t.id ? fatias.fatia : {}),
+        hoje,
+        mesCorrente: (transactionLocalYmd(t.date) ?? "").slice(0, 7) === formatYearMonth(hoje),
+    })
 
     const editar = () => setDetailMode("edit")
     const excluir = () => onDelete(t)
@@ -334,22 +348,43 @@ export function TransactionDetailSheet({
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
                     <div className="min-w-0">
-                        <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
                         <MoneyDisplay size="xl" signed value={valorComSinal(t)} tone={isIncome ? "income" : undefined} />
-                        <Muted>{linhaDoHeroi(formatDateLongPtBr(t.date), autor, t.source)}</Muted>
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <DialogTitle tabIndex={-1} className="outline-none">{descricao}</DialogTitle>
+                            {installmentBlock?.kn ? (
+                                <Badge size="xs">{`${installmentBlock.kn.k}/${installmentBlock.kn.n}`}</Badge>
+                            ) : null}
+                        </div>
+                        <Muted>{linhaDoTopo}</Muted>
                     </div>
                 </div>
 
-                {temAConferir(t) ? (
-                    <AConferirNoDetalhe
-                        // Confirmado na lista com o detalhe aberto: o bloco remonta, sem "Confirmar" velho.
-                        key={`${t.id}:${t.needs_review}`}
-                        transaction={t}
-                        onFeito={(o) => {
-                            if (o === "desfeito") onOpenChange(false)
-                        }}
-                    />
+                {manchete ? (
+                    <Alert tone={manchete.tom}>
+                        <AlertDescription>{manchete.texto}</AlertDescription>
+                    </Alert>
                 ) : null}
+
+                {/* Os blocos de contexto: cada um decide se aparece, lê o seu e manda a sua fatia da manchete. */}
+                <div className="flex flex-col gap-3 empty:hidden">
+                    <BlocoCategoria key={`categoria:${t.id}`} transaction={t} onManchete={aoMudarManchete} />
+                    <BlocoFatura key={`fatura:${t.id}`} transaction={t} />
+                    <BlocoHistorico key={`historico:${t.id}`} transaction={t} onManchete={aoMudarManchete} />
+                    {installmentBlock ? (
+                        <BlocoParcelada
+                            key={`parcelada:${t.id}`}
+                            transaction={t}
+                            plano={installmentBlock.plan}
+                            resumo={installmentBlock.summary}
+                            kn={installmentBlock.kn}
+                            onManchete={aoMudarManchete}
+                        />
+                    ) : null}
+                    {installmentBlock && t.installment_plan_id ? (
+                        <ImpactoDaParcela planoId={t.installment_plan_id} />
+                    ) : null}
+                    <BlocoReceitas key={`receitas:${t.id}`} transaction={t} />
+                </div>
 
                 <DescriptionList>
                     <DescriptionListItem>
@@ -366,24 +401,6 @@ export function TransactionDetailSheet({
                                 "Sem categoria"
                             )}
                         </DescriptionDetails>
-                    </DescriptionListItem>
-                    {paymentLine ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Pagamento</DescriptionTerm>
-                            <DescriptionDetails>
-                                {paymentLine}
-                                {fatura ? (
-                                    <DescriptionHint className="flex flex-wrap items-center gap-2">
-                                        <Badge size="xs">{creditCardInvoiceSlotLabelPt(fatura.slot)}</Badge>
-                                        {fraseDaFatura(fatura.statementClose, fatura.dueEstimate)}
-                                    </DescriptionHint>
-                                ) : null}
-                            </DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                    <DescriptionListItem>
-                        <DescriptionTerm>Data</DescriptionTerm>
-                        <DescriptionDetails>{formatTransactionDmyPtBr(t.date)}</DescriptionDetails>
                     </DescriptionListItem>
                     {t.is_recurring ? (
                         <DescriptionListItem>
@@ -413,36 +430,23 @@ export function TransactionDetailSheet({
                             </DescriptionDetails>
                         </DescriptionListItem>
                     ) : null}
-                    <DescriptionListItem>
-                        <DescriptionTerm>Entrou por</DescriptionTerm>
-                        <DescriptionDetails>{rotuloDaOrigem(t.source)}</DescriptionDetails>
-                    </DescriptionListItem>
-                    {autor ? (
+                    {quem ? (
                         <DescriptionListItem>
-                            <DescriptionTerm>Lançado por</DescriptionTerm>
-                            <DescriptionDetails>{autor}</DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                    {pagou && !isIncome ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Quem pagou</DescriptionTerm>
-                            <DescriptionDetails>{pagou}</DescriptionDetails>
+                            <DescriptionTerm>Quem</DescriptionTerm>
+                            <DescriptionDetails>{quem}</DescriptionDetails>
                         </DescriptionListItem>
                     ) : null}
                 </DescriptionList>
 
-                {installmentBlock ? (
-                    <InstallmentPurchaseSection
-                        summary={installmentBlock.summary}
-                        kn={installmentBlock.kn}
-                        amount={Number(t.amount)}
-                        isCurrentRow={(row) => row.transactionId === t.id}
-                        currentRowTitle="Esta transação"
-                        warning={INSTALLMENT_DELETE_WARNING}
+                {temAConferir(t) ? (
+                    <AConferirNoDetalhe
+                        // Confirmado na lista com o detalhe aberto: o bloco remonta, sem "Confirmar" velho.
+                        key={`${t.id}:${t.needs_review}`}
+                        transaction={t}
+                        onFeito={(o) => {
+                            if (o === "desfeito") onOpenChange(false)
+                        }}
                     />
-                ) : null}
-                {installmentBlock && t.installment_plan_id ? (
-                    <ImpactoDaParcela planoId={t.installment_plan_id} />
                 ) : null}
 
                 {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
@@ -450,6 +454,8 @@ export function TransactionDetailSheet({
 
                 {/* Com a conta paga por este lançamento, o boleto da instância aparece junto. */}
                 <AnexosDoLancamento key={t.id} transaction={t} />
+
+                <Caption>{notaDaOrigem(t.source)}</Caption>
             </DialogBody>
 
             <DialogFooter

@@ -5,7 +5,8 @@ import {
     direcaoDaTecla,
     ehCampoDeTexto,
     fraseDaFatura,
-    linhaDoHeroi,
+    linhaDeQuem,
+    notaDaOrigem,
     podeNavegar,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
@@ -64,14 +65,17 @@ describe("as frases do detalhe", () => {
         expect(fraseDaFatura(new Date(2026, 10, 12), new Date(2026, 10, 20))).toBe("Fatura que fecha em 12/nov, vence 20/nov")
     })
 
-    it("o herói: a data, e quem lançou só quando há nome", () => {
-        expect(linhaDoHeroi("7 de novembro de 2026", "Kauã", "apple_pay")).toBe(
-            "7 de novembro de 2026 · lançado por Kauã pelo Apple Pay",
-        )
-        expect(linhaDoHeroi("7 de novembro de 2026", null, "app")).toBe("7 de novembro de 2026")
-        expect(linhaDoHeroi("7 de novembro de 2026", "Kauã", "import_sheet")).toBe(
-            "7 de novembro de 2026 · lançado por Kauã pela Planilha",
-        )
+    it("quem: lançou e pagou juntos, ou pagou · lançou", () => {
+        expect(linhaDeQuem("Kauã", "Kauã", true)).toBe("Kauã lançou e pagou")
+        expect(linhaDeQuem("Kauã", "Renata", false)).toBe("Renata pagou · Kauã lançou")
+        expect(linhaDeQuem("Kauã", null, false)).toBe("Kauã lançou")
+        expect(linhaDeQuem(null, null, false)).toBeNull()
+    })
+
+    it("a nota da origem, com pelo/pela", () => {
+        expect(notaDaOrigem("app")).toBe("Lançado pelo app")
+        expect(notaDaOrigem("apple_pay")).toBe("Lançado pelo Apple Pay")
+        expect(notaDaOrigem("import_sheet")).toBe("Lançado pela Planilha")
     })
 
     it("a recorrência", () => {
@@ -142,5 +146,21 @@ describe("fonte do detalhe", () => {
         const f = fonte(SHEET)
         expect(f).toMatch(/onOpenAutoFocus=\{[^}]*preventDefault/)
         expect(f).toMatch(/<DialogTitle[^>]*tabIndex=\{-1\}/)
+    })
+
+    it("o painel novo: a manchete, os cinco blocos e a nota da origem", () => {
+        const f = fonte(SHEET)
+        expect(f).not.toContain("<DescriptionTerm>Data</DescriptionTerm>")
+        expect(f).not.toContain("Entrou por")
+        expect(f).not.toContain("Lançado por")
+        expect(f).not.toContain("<InstallmentPurchaseSection")
+        expect(f).toContain("escolherManchete(")
+        expect(f).toMatch(/<Alert tone=\{manchete\.tom\}/)
+        for (const b of ["<BlocoCategoria", "<BlocoFatura", "<BlocoHistorico", "<BlocoParcelada", "<BlocoReceitas"]) {
+            expect(f).toContain(b)
+        }
+        expect(f).toContain("<ImpactoDaParcela")
+        expect(f).toContain("<Caption>{notaDaOrigem(t.source)}</Caption>")
+        expect(f).toContain("formatWeekdayDayMonthShortPtBr(t.date)")
     })
 })
