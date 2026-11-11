@@ -188,7 +188,7 @@ describe("fonte do detalhe", () => {
 
     it("a manchete desenha a ação, e a Fatura e as Receitas mandam a fatia", () => {
         const f = fonte(SHEET)
-        expect(f).toContain('<AlertActions placement="inline">')
+        expect(f).toContain('<AlertActions placement={manchete.texto.length > 60 ? "block" : "inline"}>')
         expect(f).toContain("<AlertAction asChild>")
         expect(f).toContain("manchete.acao")
         expect(f).toMatch(/<BlocoFatura[^>]*onManchete=\{aoMudarManchete\}/)

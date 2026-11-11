@@ -409,7 +409,8 @@ export function TransactionDetailSheet({
                     <Alert tone={manchete.tom}>
                         <AlertDescription>{manchete.texto}</AlertDescription>
                         {manchete.acao ? (
-                            <AlertActions placement="inline">
+                            // Ao lado, a frase longa quebrava em 4 linhas: passando de 2 linhas na coluna estreita (~60 caracteres), o botão desce.
+                            <AlertActions placement={manchete.texto.length > 60 ? "block" : "inline"}>
                                 <AlertAction asChild>
                                     <Link href={manchete.acao.href}>{manchete.acao.label}</Link>
                                 </AlertAction>
