@@ -97,7 +97,7 @@ export function ultimaParcela(
   plano: { next_billing_date: string | null; installment_amount: number },
   linhas: { date: string | null; status: "posted" | "pending" }[],
   hoje: Date,
-): { ultimaNoMes: string; ultimaEhEsteOuProximo: boolean; valorParcela: number } | null {
+): { ultimaNoMes: string; ultimaComAno: string; ultimaEhEsteOuProximo: boolean; valorParcela: number } | null {
   const ultima = linhas.at(-1)
   if (!ultima) return null
   let ym: string | null = null
@@ -110,6 +110,7 @@ export function ultimaParcela(
   const agora = formatYearMonth(hoje)
   return {
     ultimaNoMes: mesPorExtenso(ym),
+    ultimaComAno: `${mesPorExtenso(ym)} de ${ym.slice(0, 4)}`,
     ultimaEhEsteOuProximo: ym === agora || ym === shiftYearMonth(agora, 1),
     valorParcela: Number(plano.installment_amount),
   }

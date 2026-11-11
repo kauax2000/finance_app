@@ -82,9 +82,15 @@ describe("ultimaParcela", () => {
     ]
     expect(ultimaParcela(plano, linhas, hoje)).toEqual({
       ultimaNoMes: "dezembro",
+      ultimaComAno: "dezembro de 2026",
       ultimaEhEsteOuProximo: true,
       valorParcela: 253.5,
     })
+  })
+
+  it("o ano vem sempre, no mês e no ano", () => {
+    const linhas = [{ date: "2027-10-09", status: "posted" as const }]
+    expect(ultimaParcela(plano, linhas, hoje)?.ultimaComAno).toBe("outubro de 2027")
   })
 
   it("longe do fim não é este nem o próximo", () => {
