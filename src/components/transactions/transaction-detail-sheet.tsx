@@ -54,7 +54,6 @@ import {
     DialogBody,
     DialogCloseButton,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogHeaderRow,
     DialogTitle,
@@ -71,7 +70,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Caption, Muted } from "@/components/ui/typography"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { tertiaryDestructiveClassName } from "@/lib/button-destructive-classes"
 import { formatYearMonth } from "@/lib/budget-month"
 import { escolherManchete } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
@@ -462,23 +460,6 @@ export function TransactionDetailSheet({
 
                 <Caption>{notaDaOrigem(t.source)}</Caption>
             </DialogBody>
-
-            <DialogFooter
-                start={
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        className={tertiaryDestructiveClassName}
-                        onClick={excluir}
-                    >
-                        Excluir
-                    </Button>
-                }
-            >
-                <Button type="button" variant="primary" onClick={editar}>
-                    Editar
-                </Button>
-            </DialogFooter>
         </div>
     )
 

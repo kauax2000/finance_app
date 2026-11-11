@@ -97,9 +97,10 @@ describe("fonte do detalhe", () => {
         for (const alvo of ['"input"', '"textarea"', "isContentEditable", "[contenteditable]"]) expect(regras).toContain(alvo)
     })
 
-    it("o rodapé tem Excluir à esquerda e Editar, sem o Duplicar (removido em 10/nov/2026)", () => {
+    it("sem rodapé na leitura: Editar e Excluir moram só no ⋯ (pedido do dono, 11/nov/2026); sem o Duplicar", () => {
         const f = fonte(SHEET)
-        expect(f).toMatch(/<DialogFooter\s+start=\{[\s\S]*?Excluir[\s\S]*?variant="primary"[\s\S]*?Editar/)
+        expect(f).not.toContain("<DialogFooter")
+        expect(f).toMatch(/<DropdownMenuItem onClick=\{editar\}>[\s\S]*?<DropdownMenuItem variant="destructive" onClick=\{excluir\}>/)
         expect(f).not.toContain("Duplicar")
         expect(f).toContain("<DialogCloseButton placement=\"inline\" />")
         expect(f).toContain('<MoneyDisplay size="2xl" signed')
@@ -129,8 +130,8 @@ describe("fonte do detalhe", () => {
         expect(f).toMatch(/try \{\s*await invalidateWorkspaceData\([^)]*\)\s*\} catch \{/)
     })
 
-    it("o Excluir do rodapé e o Remover limite dividem a tinta destrutiva", () => {
-        for (const arquivo of [SHEET, "src/components/members/limites-secao.tsx"]) {
+    it("o Remover limite veste a tinta destrutiva do terciário", () => {
+        for (const arquivo of ["src/components/members/limites-secao.tsx"]) {
             const f = fonte(arquivo)
             expect(f, arquivo).toContain("className={tertiaryDestructiveClassName}")
             expect(f, arquivo).not.toContain("destructive)_22%")
