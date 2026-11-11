@@ -5,6 +5,7 @@ import {
   descricaoSemParcela,
   diaMesCurto,
   hrefDaLista,
+  rotuloVerOs,
   marcadorDoMes,
   mesPorExtenso,
   tituloDaFatura,
@@ -47,6 +48,13 @@ describe("textos", () => {
   it("a fatura leva o mês do vencimento, e sem ele o do fechamento", () => {
     expect(tituloDaFatura("2026-12-05", "2026-11-26")).toBe("Fatura de dezembro")
     expect(tituloDaFatura(null, "2026-11-26")).toBe("Fatura de novembro")
+  })
+
+  it("o link no singular lê natural; no plural, ver os N", () => {
+    expect(rotuloVerOs(1, "despesa")).toBe("ver o lançamento")
+    expect(rotuloVerOs(3, "despesa")).toBe("ver os 3")
+    expect(rotuloVerOs(1, "receita")).toBe("ver a receita")
+    expect(rotuloVerOs(2, "receita")).toBe("ver as 2")
   })
 
   it("a descrição sai sem o (k/n)", () => {

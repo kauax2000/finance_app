@@ -1,6 +1,5 @@
 import { ROTULO_DA_ORIGEM } from "@/lib/piloto/piloto"
 import type { Transaction } from "@/lib/supabase"
-import { formatMonthShortPtBr } from "@/lib/transaction-date"
 
 /** As regras puras do detalhe (spec §8), fora do componente para o teste em node. */
 
@@ -33,16 +32,6 @@ export function ehCampoDeTexto(evento: EventTarget | Alvo | null): boolean {
     if (tag === "input" || tag === "textarea" || tag === "select") return true
     if (alvo.isContentEditable) return true
     return Boolean(alvo.closest?.('[contenteditable]:not([contenteditable="false"])'))
-}
-
-/** "12/nov" */
-export function diaCurto(d: Date): string {
-    return `${String(d.getDate()).padStart(2, "0")}/${formatMonthShortPtBr(d)}`
-}
-
-/** "Fatura que fecha em 12/nov, vence 20/nov" */
-export function fraseDaFatura(fecha: Date, vence: Date): string {
-    return `Fatura que fecha em ${diaCurto(fecha)}, vence ${diaCurto(vence)}`
 }
 
 const FEMININAS = new Set(["quick_text", "import_pdf", "import_sheet", "recurring"])

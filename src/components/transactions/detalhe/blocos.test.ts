@@ -56,10 +56,17 @@ describe("os blocos de contexto do detalhe", () => {
     }
   })
 
-  it("histórico: historicoDe e as barras do Chart", () => {
+  it("a casca recua o corpo como o título da tira", () => {
+    expect(ler("bloco-contexto")).toMatch(/<CardContent className="[^"]*px-\(--card-strip-px\)/)
+  })
+
+  it("histórico: barras pequenas, sem eixo; as passadas neutras e esta acesa, por token", () => {
     const fonte = ler("bloco-historico")
     expect(fonte).toContain("historicoDe(")
-    expect(fonte).toContain("<ChartBars")
+    expect(fonte).toContain("<ChartContainer")
+    expect(fonte).not.toMatch(/ChartBars|ChartXAxis|ChartYAxis|XAxis|YAxis|--chart-1/)
+    expect(fonte).toContain("<Cell")
+    expect(fonte).toContain('color: "var(--primary-accent)"')
     expect(fonte).toContain('operator: "contains"')
   })
 
@@ -72,6 +79,18 @@ describe("os blocos de contexto do detalhe", () => {
     const fonte = ler("bloco-historico")
     expect(fonte).toMatch(/field: "periodo", operator: "is", values: \[de, ymd/)
     expect(fonte).toContain("addDaysYmd(ymd, -89)")
+  })
+
+  it("categoria: sem gasto no mês anterior, a comparação não aparece", () => {
+    expect(ler("bloco-categoria")).toMatch(/anteriorTotal > 0/)
+  })
+
+  it("os links no singular passam pelo rotuloVerOs", () => {
+    for (const nome of ["bloco-categoria", "bloco-historico", "bloco-receitas"]) {
+      const fonte = ler(nome)
+      expect(fonte, nome).toContain("rotuloVerOs(")
+      expect(fonte, nome).not.toMatch(/`ver (os|as) \$/)
+    }
   })
 
   it("categoria: sem compromisso no mês, cai no lançado, como a tela da categoria", () => {

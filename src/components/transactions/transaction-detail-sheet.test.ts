@@ -4,7 +4,6 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     direcaoDaTecla,
     ehCampoDeTexto,
-    fraseDaFatura,
     linhaDeQuem,
     notaDaOrigem,
     podeNavegar,
@@ -61,10 +60,6 @@ describe("as teclas", () => {
 })
 
 describe("as frases do detalhe", () => {
-    it("a fatura em dia/mês curto", () => {
-        expect(fraseDaFatura(new Date(2026, 10, 12), new Date(2026, 10, 20))).toBe("Fatura que fecha em 12/nov, vence 20/nov")
-    })
-
     it("quem: lançou e pagou juntos, ou pagou · lançou", () => {
         expect(linhaDeQuem("Kauã", "Kauã", true)).toBe("Kauã lançou e pagou")
         expect(linhaDeQuem("Kauã", "Renata", false)).toBe("Renata pagou · Kauã lançou")
@@ -162,5 +157,14 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("<ImpactoDaParcela")
         expect(f).toContain("<Caption>{notaDaOrigem(t.source)}</Caption>")
         expect(f).toContain("formatWeekdayDayMonthShortPtBr(t.date)")
+    })
+
+    it("a manchete e os blocos recomeçam quando muda o que decide os blocos, não só o id", () => {
+        const f = fonte(SHEET)
+        expect(f).toContain("`${t.id}:${t.type}:${t.category_id}:${t.installment_plan_id}`")
+        expect(f).toContain("fatias.chave === chaveDosBlocos")
+        for (const b of ["categoria", "fatura", "historico", "parcelada", "receitas"]) {
+            expect(f).toContain(`key={\`${b}:\${chaveDosBlocos}\`}`)
+        }
     })
 })

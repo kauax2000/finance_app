@@ -65,6 +65,12 @@ export function descricaoSemParcela(s: string): string {
   return s.replace(/\s*\(\d+\/\d+\)\s*$/, "").trim()
 }
 
+/** O rótulo do link da lista: "ver os 3", e no singular "ver o lançamento" / "ver a receita". */
+export function rotuloVerOs(n: number, tipo: "despesa" | "receita"): string {
+  if (tipo === "receita") return n === 1 ? "ver a receita" : `ver as ${n}`
+  return n === 1 ? "ver o lançamento" : `ver os ${n}`
+}
+
 /** Transações com os filtros da barra (`f=`) e, se vier, o tipo. */
 export function hrefDaLista(filtros: FilterValue[], type?: "income" | "expense"): string {
   const p = new URLSearchParams()

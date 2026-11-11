@@ -47,7 +47,7 @@ export function BlocoContexto({
           </Button>
         ) : null}
       </CardToolbar>
-      <CardContent className="grid gap-2 pb-(--card-strip-py)">{children}</CardContent>
+      <CardContent className="grid gap-2 px-(--card-strip-px) pb-(--card-strip-py)">{children}</CardContent>
     </Card>
   )
 }

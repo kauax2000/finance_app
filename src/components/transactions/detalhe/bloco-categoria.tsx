@@ -15,6 +15,7 @@ import {
   corteDoMesAnterior,
   diasDoMes,
   hrefDaLista,
+  rotuloVerOs,
   marcadorDoMes,
   mesPorExtenso,
   totalAteODia,
@@ -97,7 +98,7 @@ export function BlocoCategoria({
           { field: "categoria", operator: "is", values: [categoryId] },
           { field: "periodo", operator: "is", values: [period_start, period_end] },
         ]),
-        label: `ver os ${quantos}`,
+        label: rotuloVerOs(quantos, "despesa"),
       }
     : null
 
@@ -128,11 +129,16 @@ export function BlocoCategoria({
 
   const mesAnterior = mesPorExtenso(shiftYearMonth(ym, -1))
   // Num mês que passou, o mês anterior inteiro; no corrente, até o mesmo dia (sem o bundle, nada).
-  const comparacao = mesCorrente
+  const anteriorTotal = mesCorrente
     ? anterior.data
-      ? `${mesAnterior} até dia ${hoje.getDate()}: ${currencyBRL(totalAteODia(anterior.data.txs, corteDoMesAnterior(ym, hoje.getDate())))}`
+      ? totalAteODia(anterior.data.txs, corteDoMesAnterior(ym, hoje.getDate()))
       : null
-    : `${mesAnterior}: ${currencyBRL(bundle.prevMonthCategoryTotal)}`
+    : bundle.prevMonthCategoryTotal
+  // Sem gasto no mês anterior, "R$ 0,00" não compara nada: a linha sai.
+  const comparacao =
+    anteriorTotal != null && anteriorTotal > 0
+      ? `${mesCorrente ? `${mesAnterior} até dia ${hoje.getDate()}` : mesAnterior}: ${currencyBRL(anteriorTotal)}`
+      : null
 
   return (
     <BlocoContexto titulo={`${nome} em ${mes}`} link={link}>

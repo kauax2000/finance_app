@@ -129,8 +129,8 @@ export function TransactionDetailSheet({
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const marca = useRef<HTMLDivElement>(null)
-    // As fatias da manchete que os blocos mandam, deste lançamento só (a de outro id é descartada).
-    const [fatias, setFatias] = useState<{ id: string; fatia: FatiaDaManchete }>({ id: "", fatia: {} })
+    // As fatias da manchete que os blocos mandam, só da chave atual dos blocos (a de outra é descartada).
+    const [fatias, setFatias] = useState<{ chave: string; fatia: FatiaDaManchete }>({ chave: "", fatia: {} })
 
     const t = transaction
     const membros = useMemberDirectoryQuery(t?.workspace_id ?? null).data ?? []
@@ -267,12 +267,17 @@ export function TransactionDetailSheet({
     const pagou = variosMembros && !isIncome ? nomeDe(t.paid_by) : null
     const quem = linhaDeQuem(autor, pagou, t.paid_by === t.user_id)
 
-    const tId = t.id
+    // O que decide quais blocos valem: mudou (outro lançamento, ou este editado), os blocos remontam
+    // e a manchete recomeça — um bloco que deixou de valer não manda nada, e a fatia velha não fica.
+    const chaveDosBlocos = `${t.id}:${t.type}:${t.category_id}:${t.installment_plan_id}`
     const aoMudarManchete = (fatia: FatiaDaManchete) =>
-        setFatias((p) => ({ id: tId, fatia: p.id === tId ? { ...p.fatia, ...fatia } : fatia }))
+        setFatias((p) => ({
+            chave: chaveDosBlocos,
+            fatia: p.chave === chaveDosBlocos ? { ...p.fatia, ...fatia } : fatia,
+        }))
     const hoje = new Date()
     const manchete = escolherManchete({
-        ...(fatias.id === t.id ? fatias.fatia : {}),
+        ...(fatias.chave === chaveDosBlocos ? fatias.fatia : {}),
         hoje,
         mesCorrente: (transactionLocalYmd(t.date) ?? "").slice(0, 7) === formatYearMonth(hoje),
     })
@@ -367,12 +372,12 @@ export function TransactionDetailSheet({
 
                 {/* Os blocos de contexto: cada um decide se aparece, lê o seu e manda a sua fatia da manchete. */}
                 <div className="flex flex-col gap-3 empty:hidden">
-                    <BlocoCategoria key={`categoria:${t.id}`} transaction={t} onManchete={aoMudarManchete} />
-                    <BlocoFatura key={`fatura:${t.id}`} transaction={t} />
-                    <BlocoHistorico key={`historico:${t.id}`} transaction={t} onManchete={aoMudarManchete} />
+                    <BlocoCategoria key={`categoria:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
+                    <BlocoFatura key={`fatura:${chaveDosBlocos}`} transaction={t} />
+                    <BlocoHistorico key={`historico:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
                     {installmentBlock ? (
                         <BlocoParcelada
-                            key={`parcelada:${t.id}`}
+                            key={`parcelada:${chaveDosBlocos}`}
                             transaction={t}
                             plano={installmentBlock.plan}
                             resumo={installmentBlock.summary}
@@ -383,7 +388,7 @@ export function TransactionDetailSheet({
                     {installmentBlock && t.installment_plan_id ? (
                         <ImpactoDaParcela planoId={t.installment_plan_id} />
                     ) : null}
-                    <BlocoReceitas key={`receitas:${t.id}`} transaction={t} />
+                    <BlocoReceitas key={`receitas:${chaveDosBlocos}`} transaction={t} />
                 </div>
 
                 <DescriptionList>

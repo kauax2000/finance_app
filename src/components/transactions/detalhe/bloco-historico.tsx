@@ -2,10 +2,11 @@
 
 import { useMemo } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
-import { ChartBars, type ChartConfig } from "@/components/ui/chart"
+import { Bar, BarChart, Cell } from "recharts"
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption, Muted } from "@/components/ui/typography"
-import { descricaoSemParcela, hrefDaLista } from "@/lib/detalhe/blocos"
+import { descricaoSemParcela, hrefDaLista, rotuloVerOs } from "@/lib/detalhe/blocos"
 import { historicoDe } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
@@ -18,7 +19,10 @@ import {
   type AoMudarManchete,
 } from "./bloco-contexto"
 
-const CONFIG = { valor: { label: "Valor", color: "var(--chart-1)" } } satisfies ChartConfig
+// Neutro, e não a rampa: a barra é a mesma despesa, e só esta vez acende.
+const CONFIG = { valor: { label: "Valor", color: "var(--primary-accent)" } } satisfies ChartConfig
+/** As outras vezes apagadas, na mesma opacidade do realce dos gráficos (`CHART_HOVER_DIM_OPACITY`). */
+const APAGADA = 0.45
 
 /** A mesma descrição nos 90 dias até esta: aparece com 3 vezes ou mais, contando esta. */
 export function BlocoHistorico({
@@ -62,8 +66,7 @@ export function BlocoHistorico({
   if (historico === undefined) return <BlocoContextoEsqueleto />
   if (historico === null) return null
 
-  const dados = historico.barras.map((b, i) => ({ vez: `${i + 1}ª`, valor: b.valor }))
-  const atual = historico.barras.findIndex((b) => b.atual)
+  const dados = historico.barras.map((b, i) => ({ vez: i, valor: b.valor, atual: b.atual }))
 
   return (
     <BlocoContexto
@@ -73,17 +76,24 @@ export function BlocoHistorico({
           { field: "descricao", operator: "contains", values: [nome] },
           { field: "periodo", operator: "is", values: [de, ymd ?? ""] },
         ]),
-        label: `ver os ${historico.vezes}`,
+        label: rotuloVerOs(historico.vezes, "despesa"),
       }}
     >
-      <ChartBars
+      {/* Barras pequenas, sem eixo nem grade: a forma das últimas vezes, com esta acesa. */}
+      <ChartContainer
         config={CONFIG}
-        data={dados}
-        x="vez"
-        label={`As últimas ${dados.length} vezes de ${nome}`}
-        selected={atual >= 0 ? dados[atual].vez : null}
-        aspect="wide"
-      />
+        aspect="auto"
+        label={`As últimas ${dados.length} vezes de ${nome}, esta destacada`}
+        className="h-12 w-full"
+      >
+        <BarChart data={dados} accessibilityLayer>
+          <Bar dataKey="valor" fill="var(--color-valor)" radius={[3, 3, 0, 0]}>
+            {dados.map((d) => (
+              <Cell key={d.vez} fillOpacity={d.atual ? 1 : APAGADA} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
       <Muted>
         {historico.vezes} vezes · <MoneyDisplay value={historico.total} className="font-medium text-foreground" />
       </Muted>

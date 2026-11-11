@@ -4,7 +4,7 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption } from "@/components/ui/typography"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
-import { hrefDaLista, mesPorExtenso } from "@/lib/detalhe/blocos"
+import { hrefDaLista, mesPorExtenso, rotuloVerOs } from "@/lib/detalhe/blocos"
 import { ehEstornoNoCartao } from "@/lib/expense-month-attribution"
 import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
@@ -53,7 +53,7 @@ export function BlocoReceitas({ transaction: t }: { transaction: Transaction }) 
         receitas.length
           ? {
               href: hrefDaLista([{ field: "periodo", operator: "is", values: [period_start, period_end] }], "income"),
-              label: `ver as ${receitas.length}`,
+              label: rotuloVerOs(receitas.length, "receita"),
             }
           : null
       }
