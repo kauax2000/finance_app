@@ -265,7 +265,6 @@ export function PayBillDialog({
                                     }
                                     max={hoje}
                                     displayStyle="relative"
-                                    presets
                                 />
                             </FieldControl>
                         </Field>

@@ -581,7 +581,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         // "numeric" é o estilo da linha apertada: a Data divide a fileira com a forma
                         // (3fr/2fr) e "Hoje · …" não cabe ali. Receita (largura toda) e telefone ficam no relativo.
                         displayStyle="relative"
-                        presets
                     />
                 </FieldControl>
             )}
