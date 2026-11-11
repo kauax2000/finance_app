@@ -10,6 +10,11 @@ import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
+  it("o cabeçalho sem título (só controles) recua 8 embaixo, e não 16", () => {
+    expect(CODIGO).toContain('"group-data-[layout=fixed]/dialog-content:pb-4"')
+    expect(CODIGO).toContain('"group-data-[layout=fixed]/dialog-content:not-has-[[data-slot$=-title]]:pb-2"')
+  })
+
   it("no layout auto o corpo sangra até o recuo da placa, e o conteúdo alinha com o cabeçalho", () => {
     expect(CODIGO).toContain('"group-data-[layout=auto]/dialog-content:-mx-(--dialog-px)"')
   })

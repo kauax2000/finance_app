@@ -609,6 +609,10 @@ function DialogHeader({
         "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pb-4",
+        // Sem título (só a linha de controles: setas, ⋯, ×), o recuo de baixo
+        // cai a 8: somado à rampa do corpo, os 16 deixavam uma faixa morta
+        // sob os botões (detalhe do lançamento, 11/nov/2026).
+        "group-data-[layout=fixed]/dialog-content:not-has-[[data-slot$=-title]]:pb-2",
         dialogHeaderVariants({ align }),
         className
       )}
