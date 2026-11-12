@@ -1,53 +1,47 @@
 "use client"
 
-import { motion, useReducedMotion } from "motion/react"
-import { useMemo, useRef, useState } from "react"
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Collapsible, CollapsibleContent, CollapsibleRow } from "@/components/ui/collapsible"
 import {
-    DescriptionDetails,
-    DescriptionList,
-    DescriptionListItem,
-    DescriptionTerm,
-} from "@/components/ui/description-list"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Caption } from "@/components/ui/typography"
+    ArrowPathRoundedSquareIcon,
+    BanknotesIcon,
+    CheckIcon,
+    CreditCardIcon,
+    ExclamationTriangleIcon,
+} from "@heroicons/react/16/solid"
+import { useMemo } from "react"
+
+import { BlocoContexto, BlocoContextoEsqueleto } from "@/components/transactions/detalhe/bloco-contexto"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { Progress } from "@/components/ui/progress"
+import { Caption, Muted } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
+import { ROUTES } from "@/config/navigation"
 import { currencyBRL } from "@/lib/formatters"
-import { MOLA_PALCO } from "@/lib/spring"
 import {
     avisoDoImpacto,
+    frasesDoImpacto,
     impactoDaParcela,
     impactoDoPlano,
-    mesCurto,
-    resumoDoImpacto,
+    tituloDoImpacto,
+    type FraseDoImpacto,
     type Impacto,
     type PlanoProposto,
 } from "@/lib/previsao/impacto-parcela"
 import { usePrevisao } from "@/lib/previsao/use-previsao"
-import { formatDatePtBr } from "@/lib/transaction-date"
 
-// O `layout="inline"` só junta termo e valor a partir de `sm`; aqui é telefone, então vai em cada item.
-const LINHA = "flex flex-row items-baseline justify-between gap-3 text-end"
-
-function Linha({ termo, children }: { termo: string; children: React.ReactNode }) {
-    return (
-        <DescriptionListItem className={LINHA}>
-            <DescriptionTerm className="text-start">{termo}</DescriptionTerm>
-            <DescriptionDetails>{children}</DescriptionDetails>
-        </DescriptionListItem>
-    )
+function Icone({ frase: f }: { frase: FraseDoImpacto }) {
+    if (f.icone === "repetir") return <ArrowPathRoundedSquareIcon aria-hidden />
+    if (f.icone === "cartao") return <CreditCardIcon aria-hidden />
+    if (f.icone === "limite") return <BanknotesIcon aria-hidden />
+    return f.tom === "success" ? <CheckIcon aria-hidden /> : <ExclamationTriangleIcon aria-hidden />
 }
 
-/** O aviso à vista e, fechado por padrão, o detalhe do impacto. Sem cartão, nem faturas nem limite. */
-function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
-    const { pico, proximasFaturas, percentualDaRenda, primeiroMesNegativo, limite } = impacto
+/** O aviso à vista e o cartão do mês mais pesado: a barra com a parte desta compra e as frases. */
+function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: boolean }) {
+    const { pico, percentualDaRenda } = impacto
     const aviso = avisoDoImpacto(impacto)
-    const { antes, depois } = primeiroMesNegativo
-    const [aberto, setAberto] = useState(false)
-    const envelope = useRef<HTMLDivElement>(null)
-    const reduzido = useReducedMotion()
+    const desta = Math.max(0, pico.comEsta - pico.semEsta)
     return (
         <div className="flex flex-col gap-2">
             {aviso ? (
@@ -56,61 +50,47 @@ function QuadroDoImpacto({ impacto }: { impacto: Impacto }) {
                     {aviso.descricao ? <AlertDescription>{aviso.descricao}</AlertDescription> : null}
                 </Alert>
             ) : null}
-            {/* A superfície da lista da revisão: sem o fio e o fundo do `Card`. */}
-            <Collapsible
-                variant="card"
-                open={aberto}
-                onOpenChange={setAberto}
-                className="border-0 bg-foreground/5"
+            <BlocoContexto
+                titulo={tituloDoImpacto(impacto)}
+                // O formulário não navega: o link só no detalhe.
+                link={comLink ? { href: ROUTES.PREVISAO, label: "ver previsão" } : null}
             >
-                <CollapsibleRow trailing={<span className="nums">{resumoDoImpacto(impacto)}</span>}>
-                    Impacto da parcela
-                </CollapsibleRow>
-                {/* Uma altura só, na mola: fora a animação de CSS do `Collapsible` (ela vence o
-                    estilo inline) e a subida do conteúdo, e quem contém o quadro não anima de
-                    novo (`data-altura-em-voo`). */}
-                <CollapsibleContent forceMount asChild className="animate-none! overflow-hidden *:animate-none!">
-                    <motion.div
-                        ref={envelope}
-                        inert={!aberto}
-                        initial={false}
-                        animate={{ height: aberto ? "auto" : 0, opacity: aberto ? 1 : 0 }}
-                        transition={reduzido ? { duration: 0 } : MOLA_PALCO}
-                        onAnimationStart={() => envelope.current?.setAttribute("data-altura-em-voo", "")}
-                        onAnimationComplete={() =>
-                            // O último `ResizeObserver` do voo chega depois do fim da animação.
-                            requestAnimationFrame(() =>
-                                requestAnimationFrame(() => envelope.current?.removeAttribute("data-altura-em-voo"))
-                            )
-                        }
-                    >
-                        <DescriptionList divided>
-                            <Linha termo="Parcela">{impacto.parcelaEFim}</Linha>
-                            <Linha termo={`Pico de parcelas (${mesCurto(pico.mes)})`}>
-                                {currencyBRL(pico.semEsta)} → {currencyBRL(pico.comEsta)}
-                            </Linha>
-                            {proximasFaturas?.map((f) => (
-                                <Linha key={f.closeYmd} termo={`Fatura de ${formatDatePtBr(f.closeYmd)}`}>
-                                    {currencyBRL(f.antes)} → {currencyBRL(f.depois)}
-                                </Linha>
-                            ))}
-                            <Linha termo="Da renda recorrente">
-                                {percentualDaRenda != null ? `${percentualDaRenda}% no pico` : "Sem receita recorrente"}
-                            </Linha>
-                            <Linha termo="Seguro para gastar">
-                                {!antes && !depois
-                                    ? "Sem mês negativo"
-                                    : `${antes ? mesCurto(antes) : "nenhum"} → ${depois ? mesCurto(depois) : "nenhum"}`}
-                            </Linha>
-                            {limite.motivo === "sem_limite" ? (
-                                <Linha termo="Limite disponível">Sem limite cadastrado</Linha>
-                            ) : limite.disponivel != null ? (
-                                <Linha termo="Limite disponível">{currencyBRL(limite.disponivel)}</Linha>
-                            ) : null}
-                        </DescriptionList>
-                    </motion.div>
-                </CollapsibleContent>
-            </Collapsible>
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                    <MoneyDisplay value={pico.comEsta} size="lg" />
+                    <Muted>em parcelas no mês</Muted>
+                </div>
+                {/* Sem parcela nenhuma, o máximo seria 0 (o Radix recusa). */}
+                {pico.comEsta > 0 ? (
+                    <Progress
+                        className="[--progress-highlight:var(--color-warning)]"
+                        value={pico.comEsta}
+                        max={pico.comEsta}
+                        highlight={{ from: pico.semEsta, to: pico.comEsta }}
+                        aria-label={`${currencyBRL(pico.comEsta)} em parcelas no mês, ${currencyBRL(desta)} desta compra`}
+                    />
+                ) : null}
+                <Caption>
+                    <span aria-hidden className="inline-block size-2 rounded-full bg-primary" /> outras{" "}
+                    {currencyBRL(pico.semEsta)} ·{" "}
+                    <span aria-hidden className="inline-block size-2 rounded-full bg-warning" /> esta compra{" "}
+                    {currencyBRL(desta)}
+                    {percentualDaRenda != null ? ` · ${percentualDaRenda}% da renda recorrente` : null}
+                </Caption>
+                <ItemGroup>
+                    {frasesDoImpacto(impacto).map((f) => (
+                        <Item key={f.chave} size="sm" className="px-0">
+                            {/* `success` não existe no ladrilho: o positivo fica neutro, com o tique. */}
+                            <ItemMedia variant="tile" tone={f.tom === "success" ? "neutral" : f.tom}>
+                                <Icone frase={f} />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle>{f.titulo}</ItemTitle>
+                                {f.descricao ? <ItemDescription>{f.descricao}</ItemDescription> : null}
+                            </ItemContent>
+                        </Item>
+                    ))}
+                </ItemGroup>
+            </BlocoContexto>
         </div>
     )
 }
@@ -134,8 +114,14 @@ export function ImpactoDaParcela(
 
     // Plano encerrado (ou de outra carteira): não há o que prever.
     if (impacto === undefined) return null
-    if (impacto) return <QuadroDoImpacto impacto={impacto} />
-    if (erro) return <Caption role="status">Não deu para calcular o impacto agora.</Caption>
-    if (carregando) return <Skeleton className="h-8 w-full rounded-row-lg pointer-coarse:h-11" />
+    if (impacto) return <QuadroDoImpacto impacto={impacto} comLink={!proposto} />
+    if (erro) {
+        return (
+            <BlocoContexto titulo="Parcelas">
+                <Caption role="status">Não deu para calcular o impacto agora.</Caption>
+            </BlocoContexto>
+        )
+    }
+    if (carregando) return <BlocoContextoEsqueleto />
     return null
 }

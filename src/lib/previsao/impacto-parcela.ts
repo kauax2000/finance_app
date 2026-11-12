@@ -14,7 +14,7 @@ import {
 import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import type { CreditCard, WorkspaceInstallmentPlan } from "@/lib/supabase"
-import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { formatDatePtBr, formatMonthLongPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { centavos, faturaPrevista, hojeDate } from "./fatura-prevista"
 import { projecaoMensal } from "./fluxo"
 import type { DadosDaPrevisao } from "./tipos"
@@ -30,8 +30,8 @@ export type PlanoProposto = {
 }
 
 export type Impacto = {
-    /** "R$ 300,00 até jun/2027": o mês da última cobrança. */
-    parcelaEFim: string
+    /** O valor da parcela, o `YYYY-MM` da última cobrança e quantas são. */
+    parcela: { valor: number; fim: string | null; meses: number }
     /** A maior soma mensal de parcelas (pelo mês da cobrança) daqui em diante; `mes` é `YYYY-MM`. */
     pico: { semEsta: number; comEsta: number; mes: string }
     /** 3, a partir da fatura que recebe a 1ª parcela (ou da aberta, se aquela já fechou). Só com cartão. */
@@ -69,9 +69,78 @@ export function avisoDoImpacto(i: Impacto): { tom: "destructive" | "warning"; ti
     return null
 }
 
-/** A linha fechada do quadro. */
-export function resumoDoImpacto(i: Impacto): string {
-    return `Pico de ${currencyBRL(i.pico.comEsta)}`
+/** A sobrancelha do quadro: "Parcelas em novembro", o mês mais pesado. */
+export function tituloDoImpacto(i: Impacto): string {
+    const [y, m] = i.pico.mes.split("-").map(Number)
+    return `Parcelas em ${formatMonthLongPtBr(new Date(y, m - 1, 1))}`
+}
+
+export type FraseDoImpacto = {
+    chave: string
+    icone: "repetir" | "cartao" | "seguro" | "limite"
+    tom: "neutral" | "success" | "warning"
+    titulo: string
+    descricao: string | null
+}
+
+/** As frases do quadro, na ordem, só as que têm dado: até quando, as faturas, o seguro e o limite. */
+export function frasesDoImpacto(i: Impacto): FraseDoImpacto[] {
+    const frases: FraseDoImpacto[] = []
+    const { parcela } = i
+    if (parcela.fim) {
+        frases.push({
+            chave: "parcela",
+            icone: "repetir",
+            tom: "neutral",
+            titulo: `${currencyBRL(parcela.valor)} a menos por mês até ${mesCurto(parcela.fim)}`,
+            descricao: `${parcela.meses} ${parcela.meses === 1 ? "mês" : "meses"}`,
+        })
+    }
+    for (const f of i.proximasFaturas ?? []) {
+        frases.push({
+            chave: `fatura:${f.closeYmd}`,
+            icone: "cartao",
+            tom: "neutral",
+            titulo: `Fatura de ${formatDatePtBr(f.closeYmd)} vai a ${currencyBRL(f.depois)}`,
+            descricao: `${currencyBRL(f.antes)} sem esta compra`,
+        })
+    }
+    const { antes, depois } = i.primeiroMesNegativo
+    if (antes) {
+        frases.push({
+            chave: "seguro",
+            icone: "seguro",
+            tom: "warning",
+            titulo: `O seguro para gastar já fica negativo em ${mesCurto(antes)}`,
+            descricao: depois && depois !== antes ? `${mesCurto(depois)} com esta compra` : null,
+        })
+    } else if (depois) {
+        frases.push({
+            chave: "seguro",
+            icone: "seguro",
+            tom: "warning",
+            titulo: `O seguro para gastar fica negativo em ${mesCurto(depois)}`,
+            descricao: null,
+        })
+    } else {
+        frases.push({
+            chave: "seguro",
+            icone: "seguro",
+            tom: "success",
+            titulo: "O seguro para gastar continua positivo",
+            descricao: "nenhum mês fica negativo",
+        })
+    }
+    if (i.limite.disponivel != null) {
+        frases.push({
+            chave: "limite",
+            icone: "limite",
+            tom: "neutral",
+            titulo: `Limite disponível: ${currencyBRL(i.limite.disponivel)}`,
+            descricao: null,
+        })
+    }
+    return frases
 }
 
 const ID_PROPOSTO = "__proposto__"
@@ -166,7 +235,7 @@ export function impactoDaParcela(plano: PlanoProposto, dados: DadosDaPrevisao): 
     const card = plano.cardId ? dados.cartoes.find((c) => c.id === plano.cardId) : undefined
 
     const ultima = expandAllPlanCharges(sintetico).at(-1)
-    const fim = ultima ? mesCurto(localYmdFromDate(ultima.chargeDate).slice(0, 7)) : "—"
+    const fim = ultima ? localYmdFromDate(ultima.chargeDate).slice(0, 7) : null
 
     const sem = picoDasParcelas(dados.planos, mesDeHoje)
     const com = picoDasParcelas(depois.planos, mesDeHoje)
@@ -188,7 +257,7 @@ export function impactoDaParcela(plano: PlanoProposto, dados: DadosDaPrevisao): 
     const disponivel = card?.credit_limit != null ? limiteDisponivel(card, dados) : null
 
     return {
-        parcelaEFim: `${currencyBRL(plano.valorParcela)} até ${fim}`,
+        parcela: { valor: plano.valorParcela, fim, meses: plano.parcelas },
         pico: { semEsta: sem.valor, comEsta: com.valor, mes: com.mes },
         proximasFaturas,
         percentualDaRenda: renda > 0 ? Math.round((centavos(com.valor) / renda) * 1000) / 10 : null,

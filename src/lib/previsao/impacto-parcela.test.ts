@@ -9,7 +9,8 @@ import {
     impactoDaParcela,
     impactoDoPlano,
     mesCurto,
-    resumoDoImpacto,
+    frasesDoImpacto,
+    tituloDoImpacto,
     type Impacto,
     type PlanoProposto,
 } from "./impacto-parcela"
@@ -28,7 +29,7 @@ const dezParcelas: PlanoProposto = {
 describe("impactoDaParcela", () => {
     it("a parcela e o fim: 10x de R$ 300 a partir de nov/2026 vai até ago/2027", () => {
         const i = impactoDaParcela(dezParcelas, dados({ hojeYmd: HOJE, cartoes: [c1] }))
-        expect(i.parcelaEFim).toBe(`${currencyBRL(300)} até ago/2027`)
+        expect(i.parcela).toEqual({ valor: 300, fim: "2027-08", meses: 10 })
         expect(mesCurto("2027-06")).toBe("jun/2027")
     })
 
@@ -160,7 +161,7 @@ describe("impactoDaParcela", () => {
 
     it("a última parcela com a sobra dos centavos entra no fim", () => {
         const i = impactoDaParcela({ ...dezParcelas, cardId: null, parcelas: 3, valorParcela: 33.33, ultimaParcela: 33.34 }, dados({ hojeYmd: HOJE }))
-        expect(i.parcelaEFim).toBe(`${currencyBRL(33.33)} até jan/2027`)
+        expect(i.parcela).toEqual({ valor: 33.33, fim: "2027-01", meses: 3 })
         expect(i.pico.comEsta).toBe(33.34)
     })
 })
@@ -187,7 +188,7 @@ describe("impactoDoPlano — o detalhe de um parcelado que já existe", () => {
             ],
         })
         const i = impactoDoPlano(geladeira, d)
-        expect(i.parcelaEFim).toBe(`${currencyBRL(300)} até jul/2027`)
+        expect(i.parcela).toEqual({ valor: 300, fim: "2027-07", meses: 10 })
         expect(i.pico).toEqual({ semEsta: 0, comEsta: 300, mes: "2026-10" })
         expect(i.proximasFaturas?.[0]).toEqual({ closeYmd: "2026-11-05", antes: 0, depois: 300 })
     })
@@ -203,18 +204,9 @@ describe("onde o quadro aparece", () => {
     })
 })
 
-describe("a abertura do quadro", () => {
-    it("uma altura só: quem contém o quadro não anima a mesma altura de novo", () => {
-        const quadro = lerFonte("src/components/transactions/impacto-da-parcela.tsx")
-        expect(quadro).toContain("setAttribute(\"data-altura-em-voo\"")
-        expect(quadro).toContain('height: aberto ? "auto" : 0')
-        expect(lerFonte("src/hooks/use-altura-animada.ts")).toContain('el.querySelector("[data-altura-em-voo]")')
-    })
-})
-
 describe("o texto do quadro", () => {
     const base: Impacto = {
-        parcelaEFim: "",
+        parcela: { valor: 60, fim: "2027-01", meses: 3 },
         pico: { semEsta: 0, comEsta: 242, mes: "2027-05" },
         proximasFaturas: null,
         percentualDaRenda: 10,
@@ -251,15 +243,69 @@ describe("o texto do quadro", () => {
         expect(avisoDoImpacto(i)?.tom).toBe("destructive")
     })
 
-    it("o resumo da linha fechada", () => {
-        expect(resumoDoImpacto(base)).toBe(`Pico de ${currencyBRL(242)}`)
+    it("o título: o mês mais pesado por extenso", () => {
+        expect(tituloDoImpacto(base)).toBe("Parcelas em maio")
+        expect(tituloDoImpacto(com({ pico: { semEsta: 0, comEsta: 1, mes: "2026-11" } }))).toBe("Parcelas em novembro")
+    })
+
+    const titulos = (i: Impacto) => frasesDoImpacto(i).map((f) => f.titulo)
+
+    it("as frases: até quando, e o seguro positivo; sem fatura nem limite, elas somem", () => {
+        expect(frasesDoImpacto(base)).toEqual([
+            {
+                chave: "parcela",
+                icone: "repetir",
+                tom: "neutral",
+                titulo: `${currencyBRL(60)} a menos por mês até jan/2027`,
+                descricao: "3 meses",
+            },
+            {
+                chave: "seguro",
+                icone: "seguro",
+                tom: "success",
+                titulo: "O seguro para gastar continua positivo",
+                descricao: "nenhum mês fica negativo",
+            },
+        ])
+        expect(frasesDoImpacto(com({ parcela: { valor: 60, fim: "2027-01", meses: 1 } }))[0].descricao).toBe("1 mês")
+    })
+
+    it("o seguro que fica negativo, e o que já era", () => {
+        const fica = frasesDoImpacto(com({ primeiroMesNegativo: { antes: null, depois: "2027-03" } })).at(-1)
+        expect(fica).toMatchObject({ tom: "warning", titulo: "O seguro para gastar fica negativo em mar/2027", descricao: null })
+        const ja = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-03" } })).at(-1)
+        expect(ja).toMatchObject({
+            tom: "warning",
+            titulo: "O seguro para gastar já fica negativo em mai/2027",
+            descricao: "mar/2027 com esta compra",
+        })
+        const igual = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-05" } })).at(-1)
+        expect(igual?.descricao).toBeNull()
+    })
+
+    it("uma frase por fatura, e o limite só com limite cadastrado", () => {
+        const i = com({
+            proximasFaturas: [
+                { closeYmd: "2026-12-05", antes: 100, depois: 160 },
+                { closeYmd: "2027-01-05", antes: 0, depois: 60 },
+            ],
+            limite: { disponivel: 1500, cabe: true, motivo: null },
+        })
+        expect(frasesDoImpacto(i).map((f) => f.icone)).toEqual(["repetir", "cartao", "cartao", "seguro", "limite"])
+        expect(titulos(i)[1]).toBe(`Fatura de 05/12/2026 vai a ${currencyBRL(160)}`)
+        expect(frasesDoImpacto(i)[1].descricao).toBe(`${currencyBRL(100)} sem esta compra`)
+        expect(titulos(i).at(-1)).toBe(`Limite disponível: ${currencyBRL(1500)}`)
+        expect(titulos(com({ limite: { disponivel: null, cabe: null, motivo: "sem_limite" } }))).not.toContainEqual(
+            expect.stringContaining("Limite"),
+        )
     })
 
     it("o quadro é feito de peças do design system, e o wireframe saiu", () => {
         const quadro = semComentarios(lerFonte("src/components/transactions/impacto-da-parcela.tsx"), "tudo")
-        expect(quadro).toContain("<Collapsible")
-        expect(quadro).toContain("<DescriptionList")
-        for (const peca of ["<Alert", "<Skeleton", "<Caption"]) expect(quadro).toContain(peca)
+        expect(quadro).not.toContain("<Collapsible")
+        for (const peca of ["<Alert", "<BlocoContexto", "<Progress", "<MoneyDisplay", "<ItemMedia", "<Caption"]) {
+            expect(quadro).toContain(peca)
+        }
         expect(quadro).not.toContain("WireframeBox")
         for (const f of [
             "src/components/transactions/lancamento-inteligente.tsx",
