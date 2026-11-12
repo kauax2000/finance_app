@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { EllipsisHorizontalIcon, PencilIcon, StopCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import type { InstallmentSummary } from "@/components/transactions/installment-purchase-section"
 import {
@@ -27,11 +28,11 @@ import {
   DialogBody,
   DialogCloseButton,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Item, ItemActions, ItemContent, ItemGroup, ItemLink, ItemTitle } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
@@ -128,7 +129,37 @@ export function FolhaDoPlano({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" size="md" className="flex w-full flex-col gap-0 overflow-hidden p-0">
         <DialogHeader>
-          <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" />}>
+          <DialogHeaderRow
+            endAdornment={
+              <>
+                {/* As ações moram no ⋯, como no detalhe do lançamento: o rodapé de três botões tomava a folha. */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais opções do plano">
+                      <EllipsisHorizontalIcon aria-hidden />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" size="xl">
+                    <DropdownMenuItem onClick={onEditar} disabled={editarDesabilitado}>
+                      <PencilIcon aria-hidden />
+                      Editar plano
+                    </DropdownMenuItem>
+                    {estado === "ativo" ? (
+                      <DropdownMenuItem onClick={() => setConfirmar(true)}>
+                        <StopCircleIcon aria-hidden />
+                        Encerrar parcelamento
+                      </DropdownMenuItem>
+                    ) : null}
+                    <DropdownMenuItem variant="destructive" onClick={onExcluir}>
+                      <TrashIcon aria-hidden />
+                      Excluir compra
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DialogCloseButton placement="inline" />
+              </>
+            }
+          >
             <DialogTitle>Compra parcelada</DialogTitle>
           </DialogHeaderRow>
         </DialogHeader>
@@ -253,24 +284,6 @@ export function FolhaDoPlano({
         </DialogBody>
 
         {/* A folha mede 448: as três ações não cabem lado a lado, e empilham como no telefone. */}
-        <DialogFooter
-          className="sm:flex-col-reverse"
-          start={
-            <Button type="button" variant="tertiary" onClick={onExcluir}>
-              excluir compra
-            </Button>
-          }
-        >
-          {estado === "ativo" ? (
-            <Button type="button" variant="tertiary" onClick={() => setConfirmar(true)}>
-              encerrar parcelamento
-            </Button>
-          ) : null}
-          <Button type="button" variant="primary" onClick={onEditar} disabled={editarDesabilitado}>
-            editar plano
-          </Button>
-        </DialogFooter>
-
         <AlertDialog pending={encerrando} open={confirmar} onOpenChange={setConfirmar}>
           <AlertDialogContent>
             <AlertDialogHeader>

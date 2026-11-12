@@ -132,9 +132,10 @@ describe("os blocos de contexto do detalhe", () => {
       "estadoDoPlano(",
       "encerrarInstallmentPlan(",
       "<AlertDialog",
-      "encerrar parcelamento",
-      "excluir compra",
-      "editar plano",
+      "Encerrar parcelamento",
+      "Excluir compra",
+      "Editar plano",
+      "<DropdownMenu",
       "segments=",
     ]) {
       expect(folha).toContain(t)
