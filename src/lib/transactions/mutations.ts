@@ -209,6 +209,29 @@ export async function updateInstallmentPlan(
     return { ok: true }
 }
 
+/** Para de gerar as parcelas que faltam; as já lançadas ficam. */
+export async function encerrarInstallmentPlan(
+    planId: string
+): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+    const { data, error } = await supabase
+        .from("workspace_installment_plans")
+        .update({ is_active: false })
+        .eq("id", planId)
+        .select("id")
+
+    if (error || !data?.length) {
+        return {
+            ok: false,
+            errorMessage:
+                (error && formatSupabasePostgrestError(error)) ??
+                "Não foi possível encerrar o parcelamento.",
+        }
+    }
+
+    dispatchFinanceTransactionsMutated()
+    return { ok: true }
+}
+
 export async function deleteInstallmentPlanCascade(
     planId: string,
     workspaceId: string
