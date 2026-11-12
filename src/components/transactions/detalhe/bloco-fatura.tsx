@@ -60,6 +60,11 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
             sumCreditCardRefundsInWindow(rows, cartao.id, janela.start, janela.end),
         )
       : 0
+  // A consulta já é a janela da fatura: basta o cartão.
+  const compras =
+    cartao && rows
+      ? rows.filter((r) => r.type === "expense" && r.payment_method === "credit_card" && r.payment_credit_card_id === cartao.id).length
+      : 0
   const estado = cartao ? creditCardInvoiceBadgeForRow({ ...t, payment_card: cartao }, pagas) : null
   const rotulo = tituloDaFatura(estado?.dueYmd ?? null, ate)
 
@@ -69,7 +74,7 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
     !montar || cartoes.isError || linhas.isError || aux.isError || (cartoes.data && !cartao)
       ? { fatura: null }
       : pronta
-        ? { fatura: { rotulo: rotulo.charAt(0).toLowerCase() + rotulo.slice(1), total, valor: Number(t.amount) } }
+        ? { fatura: { rotulo: rotulo.charAt(0).toLowerCase() + rotulo.slice(1), total, valor: Number(t.amount), compras } }
         : null,
   )
 

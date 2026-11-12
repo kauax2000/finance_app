@@ -90,7 +90,7 @@ export type EntradaDaManchete = {
   historico?: { nome: string; valor: number; media: number; outros: number[]; href: string } | null
   /** `dia` ("10 de nov") é do chamador. */
   duplicado?: { nome: string; valor: number; dia: string; href: string } | null
-  fatura?: { rotulo: string; total: number; valor: number } | null
+  fatura?: { rotulo: string; total: number; valor: number; compras: number } | null
   parcela?: {
     ultimaNoMes: string
     ultimaComAno: string
@@ -171,7 +171,8 @@ export function escolherManchete(e: EntradaDaManchete): Manchete | null {
     }
   }
   const f = e.fatura
-  if (f && f.total > 0 && f.valor / f.total >= 0.2) {
+  // Com uma compra só, "100% da fatura" não diz nada.
+  if (f && f.compras >= 2 && f.total > 0 && f.valor / f.total >= 0.2) {
     return {
       tom: "info",
       texto: `Esta compra é ${pct(f.valor / f.total)} da ${f.rotulo} (${currencyBRL(f.total)}).`,

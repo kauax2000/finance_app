@@ -131,7 +131,7 @@ describe("escolherManchete", () => {
 
 describe("manchetes novas", () => {
   const dup = { nome: "Netflix", valor: 55.9, dia: "10 de nov", href: "/transactions?f=x" }
-  const fat = (total: number, valor: number) => ({ rotulo: "fatura de dezembro", total, valor })
+  const fat = (total: number, valor: number, compras = 5) => ({ rotulo: "fatura de dezembro", total, valor, compras })
 
   it("N1 repetido, com ação, vence orçamento estourado", () => {
     const m = escolherManchete({ mesCorrente: true, hoje, duplicado: dup, categoria: mercado(1120, 1000) })
@@ -201,6 +201,7 @@ describe("manchetes novas", () => {
   it("N4 não vale com 19% nem com total 0", () => {
     expect(escolherManchete({ mesCorrente: true, hoje, fatura: fat(1000, 190) })).toBeNull()
     expect(escolherManchete({ mesCorrente: true, hoje, fatura: fat(0, 10) })).toBeNull()
+    expect(escolherManchete({ mesCorrente: true, hoje, fatura: fat(30, 30, 1) })).toBeNull()
   })
   it("4 (acima da média) vence N4", () => {
     const m = escolherManchete({ mesCorrente: true, hoje, fatura: fat(1000, 500), historico: hist(100, 10) })
