@@ -64,8 +64,8 @@ function dataCurta(ymd: string, ano = false): string {
  * dele (o `Sheet` empilha; no telefone vira a gaveta). Lê o plano e o resumo
  * que o detalhe já carregou: nada de consulta nova para a lista.
  */
-/** O ladrilho de cada par (parcela, próxima, termina em): a superfície dos cartões do detalhe (bg-card e o fio), que lê sobre o vidro; rótulo sobre valor. */
-const TILE = "rounded-row-lg border border-border bg-card bg-clip-padding px-2.5 py-2"
+/** O ladrilho de cada par (parcela, próxima, termina em): a superfície, o fio e o canto (rounded-surface) dos cartões do detalhe, que lê sobre o vidro; rótulo sobre valor. */
+const TILE = "rounded-surface border border-border bg-card bg-clip-padding px-3 py-2"
 const VALOR_DO_TILE = "font-medium whitespace-nowrap"
 
 export function FolhaDoPlano({
