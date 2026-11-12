@@ -28998,3 +28998,39 @@ Pedido do dono em 2026-11-09: no desktop a cápsula `[lupa | filtro]` do cabeça
 como meia pílula, com os cantos de dentro achatados. Saíram `morph`, `join` e `CAPSULA_COLA`
 do `TopBarActionGroup`: ele é sempre a cápsula que estica, um vidro no grupo, cada ação num
 círculo e o realce em círculo nos dois apontadores. `trailingKey` fica.
+
+### Rodada 370 — o cabeçalho de vidro das folhas e diálogos
+
+Decisão do dono em 2026-11-12, sobre o protótipo "barra de ponta a ponta" (vidro dos menus,
+sombra grande, sem fio, com a rampa). Vale em toda folha e diálogo onde o corpo rola logo
+abaixo do cabeçalho: `layout="fixed"` (o `Dialog` fixo, o `Sheet`, a gaveta) e o
+`DialogBody` irmão do `DialogHeader` (ou dentro do `form` irmão; uma descrição `sr-only` pode
+ficar entre os dois).
+
+- `@utility dialog-header-glass` (no `globals.css`, depois da `glass-surface`). O
+  `DialogHeader` a veste e mede a própria altura num `ResizeObserver`, publicada no pai como
+  `--dialog-header-h`. O corpo sobe essa medida (`margin-top` negativo) e devolve no recuo de
+  cima (`--dialog-body-pt`, 16 por padrão): em repouso o primeiro conteúdo fica onde estava, e
+  ao rolar ele passa por trás do cabeçalho, borrado.
+- O vidro é o `::before` na caixa do cabeçalho: `--popover` a 60% com o borrão do
+  `glass-surface` (85% sem `backdrop-filter`, cheio com menos transparência). O `::after`
+  desce `--dialog-header-fade-h` (56px) com a tinta e o escurecido (`--dialog-header-shade`,
+  50% de preto no escuro, 8% no claro) se apagando no degradê. Sem fio.
+- Medido no Chrome: dentro da placa (recorte arredondado com `overflow: hidden`) a
+  `mask-image` de um elemento com `backdrop-filter` é descartada, e a rampa mascarada do
+  protótipo virava um retângulo de borda reta a 56px do cabeçalho. Fora da placa a mesma
+  regra funciona; com `border-radius: 0` na placa também. Por isso nenhuma máscara sobre o
+  borrão: o borrão acaba na base do cabeçalho, sob a tinta mais forte da rampa.
+- O `sheet-reveal` passa de `both` a `backwards`: a animação de opacidade presa no fim
+  fazia do invólucro do cabeçalho uma raiz de fundo, e o vidro não enxergava o corpo.
+- A dissolução de cima do corpo sai (`--scroll-fade-top-max: 0`, e a faixa
+  `--scroll-fade-band-h` zerada); a de baixo fica. O `corpoSobAbas` do formulário de
+  lançamento saiu: o vidro já sobe o corpo por trás das abas.
+- O × flutuante ganhou `z-20`, acima do cabeçalho (`z-10`). O `useDialogHeaderDock` mede a
+  borda pela margem negativa do corpo: o resumo acopla quando o título passa sob a base do
+  cabeçalho, e não sob a borda de cima.
+- `glass={false}` no `DialogHeader` é a saída de quem já monta a borda: o painel de
+  notificações, com o dia preso sob as abas. Fica sem vidro: o `layout="auto"` (nada rola
+  por trás) e o meio da gaveta sem `DialogBody`.
+- `dialog-header-glass.test.ts` tranca: a utility no cabeçalho, sem fio, a rampa abaixo dele,
+  o token com par escuro, nenhuma máscara sobre o borrão.

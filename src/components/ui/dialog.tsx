@@ -587,9 +587,14 @@ function useDialogHeaderDock<T extends HTMLElement>(): [(el: T | null) => void, 
       setDocked(false)
       return
     }
+    // O corpo sobe por trás do cabeçalho de vidro: sair de vista é passar por
+    // baixo da base dele, não da borda do corpo.
+    // shortcut: a altura é lida ao montar; se o cabeçalho mudar de altura depois, a borda fica a de antes.
+    // A margem negativa do corpo é a altura que ele sobe (zero sem o vidro).
+    const sob = Math.max(0, -parseFloat(getComputedStyle(root).marginTop) || 0)
     const io = new Observer(
       ([e]) => setDocked(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0)),
-      { root, threshold: 0 }
+      { root, threshold: 0, rootMargin: `${-sob}px 0px 0px 0px` }
     )
     io.observe(el)
     return () => io.disconnect()
@@ -618,21 +623,59 @@ const dialogHeaderVariants = cva("", {
 })
 
 /**
- * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
- * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
- * casco já dá o recuo, então aqui ele é zero.
+ * A altura do cabeçalho, publicada no pai como `--dialog-header-h`: o corpo de
+ * baixo (irmão, ou dentro do `form` irmão, que herda) sobe por trás do vidro
+ * nessa medida (`@utility dialog-header-glass`). Medida antes da pintura, e de
+ * novo a cada mudança de tamanho (o título que quebra, o resumo que acopla).
+ */
+function useAlturaDoCabecalho() {
+  const [el, setEl] = React.useState<HTMLDivElement | null>(null)
+  React.useLayoutEffect(() => {
+    const pai = el?.parentElement
+    const Observer = el?.ownerDocument.defaultView?.ResizeObserver
+    if (!el || !pai || !Observer) return
+    const medir = () => pai.style.setProperty("--dialog-header-h", `${el.offsetHeight}px`)
+    medir()
+    const ob = new Observer(medir)
+    ob.observe(el)
+    return () => {
+      ob.disconnect()
+      pai.style.removeProperty("--dialog-header-h")
+    }
+  }, [el])
+  return setEl
+}
+
+/**
+ * O cabeçalho. Sem fio. Onde o corpo rola logo abaixo (`layout="fixed"`, com o
+ * `DialogBody` em seguida), ele é de vidro e fica por cima: o corpo rola por
+ * trás e aparece borrado (`@utility dialog-header-glass`, decisão do dono,
+ * 12/11/2026). Fora disso, o que o separa do corpo é o respiro. `shrink-0` e o
+ * recuo vêm de fábrica; em `layout="auto"` o casco já dá o recuo, então aqui
+ * ele é zero. `glass={false}` tira o vidro (o painel de notificações, que já
+ * sobe o corpo por trás das abas com o dia preso).
  */
 function DialogHeader({
   className,
   children,
   align,
+  glass = true,
+  ref,
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof dialogHeaderVariants>) {
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof dialogHeaderVariants> & {
+    /** `false`: sem o vidro, para quem já monta a própria borda sobre o corpo. */
+    glass?: boolean
+  }) {
+  const medir = useAlturaDoCabecalho()
   return (
     <div
+      ref={useComposedRefs(ref, medir)}
       data-slot="dialog-header"
+      data-glass={glass ? undefined : "off"}
       data-align={align ?? "start"}
       className={cn(
+        "dialog-header-glass",
         // Sempre à esquerda, nas duas larguras. Sem `gap`: título sobre
         // descrição é par de identidade, separado pela entrelinha do título.
         "flex w-full min-w-0 shrink-0 flex-col text-left",
@@ -644,9 +687,9 @@ function DialogHeader({
         // Incondicionais: sem ícone o cabeçalho é flex, e `col-*` não faz nada.
         "[&>[data-slot$=-title]]:col-start-2",
         "[&>:not([data-slot$=-media]):not([data-slot$=-title])]:col-span-2",
-        // Sem tinta: sobre a placa translúcida, um token opaco no topo da tira
-        // aparece como banda. O corpo é irmão e se mascara sozinho, então o
-        // fundo da tira já é a placa. Sem fio também (regra J).
+        // Sem tinta própria: sobre a placa translúcida, um token opaco no topo
+        // da tira aparece como banda. O vidro do cabeçalho é o `::before` da
+        // `dialog-header-glass`, que se apaga numa rampa. Sem fio (regra J).
         "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pb-4",
@@ -677,7 +720,8 @@ function DialogHeader({
 const dialogCloseButtonVariants = cva("", {
   variants: {
     placement: {
-      floating: "absolute top-2.5 right-2.5",
+      // `z-20`: acima do cabeçalho de vidro (`z-10`), que cobre o canto.
+      floating: "absolute top-2.5 right-2.5 z-20",
       inline: "-me-1.5 -my-0.5",
     },
   },

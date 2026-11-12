@@ -539,6 +539,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 dela: a entrada em cascata o faz contexto de empilhamento, e o `z-10` só das
                 abas não saía dele — o clique em "Todas" caía no link da linha embaixo. */}
             <DialogHeader
+                // A borda dele é própria (o corpo sobe por trás das abas, com o dia
+                // preso): o vidro do cabeçalho esconderia o dia.
+                glass={false}
                 className={cn(
                     (comTrilho || carregando) && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0"
                 )}

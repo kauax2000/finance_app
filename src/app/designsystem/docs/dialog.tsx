@@ -184,7 +184,11 @@ export default function DialogDoc() {
             entrelinha. <code>center</code> + <code>centerShown</code> +{" "}
             <code>useDialogHeaderDock</code>: o resumo que entra na linha do
             cabeçalho quando o título do corpo passa por baixo dela — o
-            detalhe do lançamento.
+            detalhe do lançamento. No <code>layout=&quot;fixed&quot;</code> (e
+            no <code>Sheet</code> e na gaveta), com o <code>DialogBody</code>{" "}
+            logo abaixo, o cabeçalho é de vidro: o corpo rola por trás dele,
+            borrado, e o vidro desce numa rampa que escurece e some, sem fio.
+            <code>glass={"{false}"}</code> o tira.
           </>
         }
         code={`<DialogHeader>

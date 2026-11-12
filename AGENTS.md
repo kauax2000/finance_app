@@ -1213,6 +1213,17 @@ declaração de `background-color` no trilho).
     DOM (`useLinkQueFecha`, `NavegarFechandoContext`; a raiz mais de fora
     responde). Nova aba, modificadoras, `download` e outro domínio seguem o
     navegador. Não escreva `onClick` que fecha o diálogo num link.
+  - **O cabeçalho é de vidro onde o corpo rola** (decisão do dono, 12/11/2026,
+    rodada 370): no `layout="fixed"`, no `Sheet` e na gaveta, com o `DialogBody`
+    logo depois do `DialogHeader` (irmão, no `form` irmão, ou depois de uma
+    descrição `sr-only`), a `@utility dialog-header-glass` sobe o corpo por trás
+    dele (`--dialog-header-h`, medida pelo cabeçalho) e o vidro é a tinta
+    flutuante com o borrão; abaixo dele, uma rampa de 56px com o escurecido
+    (`--dialog-header-shade`, par escuro) se apaga. Sem fio. O recuo de cima do
+    corpo ali é `--dialog-body-pt` (um `pt-*` não vale), e a dissolução de cima
+    sai. **Nenhuma máscara sobre o borrão**: dentro da placa arredondada o Chrome
+    a descarta. O × flutuante fica em `z-20`. `glass={false}` é a saída (o painel
+    de notificações). `dialog-header-glass.test.ts`.
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: a `@utility dialog-step`
     (as peças surgem do desfoque, `menu-content-in`, em ondas por
     `--stagger-base`) é o gesto genérico; no Adicionar limite o dono escolheu o
@@ -1829,7 +1840,10 @@ declaração de `background-color` no trilho).
   dentro).
 - **As tiras de superfície não têm fio nem tinta** (`CardToolbar`, `CardFooter`,
   `CardNote`, `PopoverHeader`, `PopoverFooter`, `DropdownMenuHeader`, as do
-  `Dialog` e da folha); separa o respiro (`--card-strip-py`). Têm fio só os
+  `Dialog` e da folha); separa o respiro (`--card-strip-py`). A exceção é o
+  cabeçalho de vidro do `Dialog` fixo e da folha (rodada 370): sem fio, com a
+  tinta do vidro que se apaga numa rampa, e o `DialogBody` sob ele sem a
+  dissolução de cima. Têm fio só os
   separadores de itens repetidos, as molduras, `TableHeader`/`TableFooter` e o
   slot `header` do painel do `DropdownMenu`. **A regra `J` do auditor** acusa fio
   mais tinta numa tira (exceção nomeada: o `PreviewCode`).

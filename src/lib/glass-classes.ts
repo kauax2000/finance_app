@@ -118,7 +118,9 @@ export const bottomBarTintClassName = [
  * `--background` e não `--popover`: sobre a página velada, `--popover` a 60%
  * compõe bem acima do que está atrás e a placa lê como opaca; `--background`
  * afunda no véu e o borrão é o que a distingue. Nenhuma tira pinta por cima
- * dela — um degradê opaco numa tira vira banda no topo da gaveta.
+ * dela — um degradê opaco numa tira vira banda no topo da gaveta. A exceção é o
+ * cabeçalho de vidro (`@utility dialog-header-glass`): translúcido, e só onde o
+ * corpo rola por trás dele.
  */
 export const modalSurfaceClassName = [
   "bg-background/85 glass-surface",
