@@ -345,10 +345,6 @@
      o véu dos modais, fraco demais para segurar texto. */
   --scrim: oklch(0 0 0 / 0.62);
   --scrim-foreground: oklch(1 0 0);
-  /* O escurecido no fim da rampa do cabeçalho de vidro das folhas e diálogos
-     (`@utility dialog-header-glass`): a "sombra grande" do protótipo aprovado. No
-     claro ele é leve — 50% de preto sobre a placa branca leria como mancha. */
-  --dialog-header-shade: oklch(0 0 0 / 0.08);
   /* A moldura do aparelho desenhado (`DeviceFrame`): quase preta nos dois temas,
      porque um aparelho não muda de cor com o tema; o fio clareia a borda dela. */
   --device-bezel: oklch(0.17 0 0);
@@ -678,8 +674,6 @@
   --overlay: oklch(0 0 0 / 0.4);
   --scrim: oklch(0 0 0 / 0.62);
   --scrim-foreground: oklch(1 0 0);
-  /* A sombra grande do protótipo (12/11/2026): até 50% de preto no fim da rampa. */
-  --dialog-header-shade: oklch(0 0 0 / 0.5);
   /* Mais funda que a tela escura (`--background` 0.145), para a moldura não se
      confundir com ela. */
   --device-bezel: oklch(0.1 0 0);
@@ -2505,11 +2499,8 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 @utility sheet-reveal {
   /* A escada mora no mesmo seletor da animação: num `& > *` à parte ela perdia em
      especificidade para os dois `:not()` e todo filho entrava a 80ms. */
-  /* `backwards`, e não `both`: uma animação de opacidade presa no fim faz do filho
-     uma raiz de fundo (backdrop root), e o vidro do cabeçalho (`dialog-header-glass`) deixava de
-     enxergar o corpo que rola por trás dele. */
   & > :not([data-slot="dialog-close-button"]):not([data-slot="sheet-resize-handle"]) {
-    animation: rise 220ms var(--ease-out) 80ms backwards;
+    animation: rise 220ms var(--ease-out) 80ms both;
     --rise-distance: 3px;
     --stagger-base: 80ms;
     --stagger-step: 30ms;
@@ -3980,99 +3971,6 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   &:is([data-opaque][data-opaque] *) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-  }
-}
-
-/**
- * O cabeçalho de vidro das folhas e diálogos (decisão do dono, 12/11/2026; protótipo
- * "barra de ponta a ponta", vidro dos menus, sombra grande, sem fio). Vale onde o corpo
- * rola: no `layout="fixed"` (o `Dialog` fixo, o `Sheet` e a gaveta declaram
- * `data-layout="fixed"`) e só com o `DialogBody` logo depois do cabeçalho (irmão, ou
- * dentro do `form` irmão; uma descrição `sr-only` pode ficar entre os dois). Ali o corpo sobe por trás do cabeçalho (`--dialog-header-h`,
- * que o `DialogHeader` mede e publica no pai) e aparece borrado através do vidro.
- *
- * O vidro é o `::before`: a tinta flutuante dos menus (`--popover` a 60% com o borrão do
- * `glass-surface`, 85% sem `backdrop-filter`, cheia com menos transparência) na caixa
- * do cabeçalho; o `::after` desce `--dialog-header-fade-h` além dele, com a tinta e o
- * escurecido (`--dialog-header-shade`) se apagando numa rampa. Sem fio e sem borda
- * reta. O recuo de cima do corpo, nesse caso, é `--dialog-body-pt` (um `pt-*` no `DialogBody` não vale ali), e a
- * dissolução de cima sai: quem esconde o conteúdo no topo é o vidro. `glass={false}` no
- * `DialogHeader` (`data-glass="off"`) é a saída de quem já monta a própria borda (o
- * painel de notificações, com o dia preso sob as abas).
- */
-@utility dialog-header-glass {
-  /* O corpo vem logo depois; a descrição só para o leitor de tela (`sr-only`) pode
-     ficar entre os dois, porque não ocupa lugar. */
-  [data-layout="fixed"]
-    &:not([data-glass="off"]):has(
-      + [data-slot="dialog-body"],
-      + form > [data-slot="dialog-body"],
-      + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
-    ) {
-    --dialog-header-fade-h: calc(var(--spacing) * 14);
-    --dialog-header-tint: color-mix(in oklab, var(--popover) 85%, transparent);
-    position: relative;
-    z-index: 10;
-
-    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-      --dialog-header-tint: color-mix(in oklab, var(--popover) 60%, transparent);
-    }
-    @media (prefers-reduced-transparency: reduce) {
-      --dialog-header-tint: var(--popover);
-    }
-
-    /* Duas camadas, e nenhuma máscara sobre o borrão: dentro da placa (recorte
-       arredondado), o Chrome descarta a `mask-image` de quem tem `backdrop-filter`, e
-       o vidro acabava num degrau a 56px do cabeçalho. O `::before` é o vidro na caixa
-       do cabeçalho; o `::after` desce `--dialog-header-fade-h`, sem borrão (em repouso
-       ele cobre o topo do corpo, e o primeiro conteúdo não pode nascer borrado), com a
-       tinta e o escurecido se apagando no próprio degradê. */
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      inset-inline: 0;
-      z-index: -1;
-      pointer-events: none;
-    }
-    &::before {
-      top: 0;
-      height: 100%;
-      background-color: var(--dialog-header-tint);
-      -webkit-backdrop-filter: blur(var(--glass-surface-blur, 24px))
-        saturate(var(--glass-surface-sat, 1.5));
-      backdrop-filter: blur(var(--glass-surface-blur, 24px))
-        saturate(var(--glass-surface-sat, 1.5));
-    }
-    &::after {
-      top: 100%;
-      height: var(--dialog-header-fade-h);
-      background-image:
-        linear-gradient(to bottom, var(--dialog-header-tint), transparent 60%),
-        linear-gradient(to bottom, var(--dialog-header-shade), transparent);
-    }
-    @media (prefers-reduced-transparency: reduce) {
-      &::before {
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-      }
-    }
-
-    & + [data-slot="dialog-body"],
-    & + form > [data-slot="dialog-body"],
-    & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-    & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
-      margin-top: calc(var(--dialog-header-h, 0px) * -1);
-      padding-top: calc(
-        var(--dialog-header-h, 0px) + var(--dialog-body-pt, calc(var(--spacing) * 4))
-      );
-      scroll-padding-block-start: calc(var(--dialog-header-h, 0px) + var(--spacing) * 2);
-      /* A dissolução de cima sai, e com ela a faixa de quem a declarava (o trilho de
-         abas que agora mora no vidro). */
-      --scroll-fade-top-max: 0px;
-      --scroll-fade-band-h: 0px;
-    }
   }
 }
 
