@@ -156,7 +156,7 @@ export function FolhaDoPlano({
                   <MoneyDisplay size="2xl" value={resumo.remaining ?? resumo.totalPurchase} />
                 </div>
                 <Caption>
-                  faltam {n - lancadas} de {n} parcelas · já pago {currencyBRL(resumo.posted ?? 0)} de{" "}
+                  já pago {currencyBRL(resumo.posted ?? 0)} de{" "}
                   {currencyBRL(resumo.totalPurchase)}
                 </Caption>
               </>
