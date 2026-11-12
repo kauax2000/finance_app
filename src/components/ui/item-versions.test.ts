@@ -30,7 +30,7 @@ describe("Item", () => {
     expect(html).toContain('data-tone="warning"')
     expect(html).not.toContain("aria-current")
     const classes = cn(itemVariants({ variant: "flush", tone: "warning" }))
-    expect(classes).toContain("bg-warning-muted")
+    expect(classes).toContain("bg-warning/15")
     expect(classes).toContain("[&_[data-slot=item-title]]:text-warning-muted-foreground")
     expect(classes).toContain("[&_[data-slot=item-title]]:font-semibold")
     expect(classes).not.toContain("border-primary-accent")
@@ -64,7 +64,7 @@ describe("Item · ladrilho, link esticado e rótulo de grupo", () => {
     expect(CODIGO).toContain("tile:")
     for (const t of [
       "bg-info-muted",
-      "bg-warning-muted",
+      "bg-warning/15",
       "bg-destructive-muted",
       "text-info-muted-foreground",
       "text-warning-muted-foreground",

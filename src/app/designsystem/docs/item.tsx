@@ -207,7 +207,7 @@ export default function ItemDoc() {
 
       <DocSection
         title="Tom de atenção"
-        description="tone=&quot;warning&quot; acende a linha que pede atenção sem ser escolhida: a superfície --warning-muted e o título na tinta dela, em negrito. Sem contorno e sem aria-current (não é selected). É a parcela aberta na folha do plano parcelado."
+        description="tone=&quot;warning&quot; acende a linha que pede atenção sem ser escolhida: um véu de 15% do --warning (o vidro passa) e o título na tinta --warning-muted-foreground, em negrito. Sem contorno e sem aria-current (não é selected). É a parcela aberta na folha do plano parcelado."
         code={`<Item variant="flush" size="sm" tone="warning">…</Item>`}
         previewClassName="items-stretch"
       >
@@ -370,7 +370,7 @@ export default function ItemDoc() {
             prop: "tone",
             type: '"warning"',
             default: "—",
-            description: "A linha que pede atenção sem ser escolhida: superfície --warning-muted e o título na tinta dela, em negrito. Sem contorno nem aria-current.",
+            description: "A linha que pede atenção sem ser escolhida: véu de 15% do --warning e o título na tinta --warning-muted-foreground, em negrito. Sem contorno nem aria-current.",
           },
           {
             prop: "size",

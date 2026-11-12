@@ -63,12 +63,12 @@ const itemVariants = cva(
       },
       /**
        * O tom da linha que pede atenção sem ser escolhida: a parcela aberta no
-       * plano parcelado. A superfície `-muted` do tom, e o título na tinta dele,
+       * plano parcelado. Um véu do tom (15%), para o vidro da folha passar, e o título na tinta dele,
        * em negrito; sem contorno (não é `selected`). Só `warning` por ora.
        */
       tone: {
         warning:
-          "bg-warning-muted [&_[data-slot=item-title]]:font-semibold [&_[data-slot=item-title]]:text-warning-muted-foreground",
+          "bg-warning/15 [&_[data-slot=item-title]]:font-semibold [&_[data-slot=item-title]]:text-warning-muted-foreground",
       },
       interactive: {
         true: [
