@@ -31,7 +31,7 @@ export function useFatiaDaManchete(onManchete: AoMudarManchete | undefined, fati
   }, [chave])
 }
 
-/** A casca comum: a sobrancelha com o link à direita e o corpo. */
+/** A casca comum: a sobrancelha com o botão à direita e o corpo. */
 export function BlocoContexto({
   titulo,
   link,
@@ -46,7 +46,7 @@ export function BlocoContexto({
       <CardToolbar>
         <span className="min-w-0 truncate">{titulo}</span>
         {link ? (
-          <Button variant="link" asChild>
+          <Button variant="secondary" size="sm" asChild>
             <Link href={link.href}>{link.label}</Link>
           </Button>
         ) : null}
