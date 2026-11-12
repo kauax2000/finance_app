@@ -124,6 +124,12 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
      * o gasto contra o tempo. Fora do intervalo não desenha.
      */
     marker?: number
+    /**
+     * A fatia acesa do trilho, no mesmo valor do `max`: a parte do total que é de um
+     * item (o lançamento dentro do mês da categoria). A cor vem de
+     * `--progress-highlight` (padrão `--primary-accent`). Não vale nas casas nem na marca.
+     */
+    highlight?: { from: number; to: number }
   }
 
 /**
@@ -182,6 +188,7 @@ function Progress({
   header,
   footer,
   marker,
+  highlight,
   ...props
 }: ProgressProps) {
   const { tone, bands, zones, variant = "default", ...rest } = props as Base & {
@@ -228,6 +235,13 @@ function Progress({
   // chegar nele, então não pode ser da cor do trilho. Com zonas o corte já está
   // pintado e o traço seria o segundo sinal.
   const cesura = bands && !zones && bands[0] > 0 && bands[0] < 100 ? bands[0] : null
+
+  const fatia = (() => {
+    if (!highlight || variant === "brand" || max <= 0) return null
+    const de = Math.min(max, Math.max(0, highlight.from))
+    const ate = Math.min(max, Math.max(0, highlight.to))
+    return ate > de ? { left: (de / max) * 100, width: ((ate - de) / max) * 100 } : null
+  })()
 
   const ritmo = marker != null && marker >= 0 && marker <= 100 ? marker : null
 
@@ -306,6 +320,14 @@ function Progress({
             )}
             style={{ width: `${pct}%`, ...fundoDaMarca }}
           />
+          {fatia && (
+            <span
+              data-slot="progress-highlight"
+              aria-hidden
+              className="absolute inset-y-0 bg-(--progress-highlight,var(--primary-accent))"
+              style={{ left: `${fatia.left}%`, width: `${fatia.width}%` }}
+            />
+          )}
           {cesura !== null && (
             <span
               data-slot="progress-threshold"

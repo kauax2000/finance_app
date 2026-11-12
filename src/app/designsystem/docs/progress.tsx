@@ -350,6 +350,11 @@ export default function ProgressDoc() {
         <code>marker</code> (0–100) desenha um traço de 2px em <code>foreground/60</code> onde o período está, por cima da faixa e convivendo com <code>bands</code>, <code>tone</code> e a cesura: <code>{"<Progress value={82} bands={BUDGET_BANDS} marker={33} />"}</code> mostra 82% gasto com 33% do mês. Fora do intervalo não desenha; nas casas (<code>segments</code>) não vale.
       </DocNote>
 
+      <DocNote title="highlight: a fatia acesa">
+        <code>highlight</code> (<code>{"{ from, to }"}</code>, na mesma unidade do <code>max</code>) acende no trilho a parte do total que é de um item: o lançamento dentro do mês da categoria. A cor vem de <code>--progress-highlight</code> (padrão <code>--primary-accent</code>) e a fatia fica sob o traço do ritmo. <code>{"<Progress value={920} max={1000} bands={BUDGET_BANDS} marker={63} highlight={{ from: 700, to: 920 }} />"}</code>. <code>from</code> e <code>to</code> são limitados ao trilho; sem largura, nas casas (<code>segments</code>) e na <code>brand</code> não desenha.
+        <Progress className="mt-3 max-w-md" value={920} max={1000} bands={BUDGET_BANDS} marker={63} highlight={{ from: 700, to: 920 }} aria-label="Orçamento com a fatia de um lançamento acesa" />
+      </DocNote>
+
       <DocNote title="O valor real continua sendo anunciado">
         O Radix trata <code>value</code> acima de <code>max</code> como indeterminado; o componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>, nos dois formatos. O <code>ProgressValue</code> é visual (<code>aria-hidden</code>) e escreve o mesmo número bruto, 104% e não 100.
       </DocNote>
@@ -375,6 +380,11 @@ export default function ProgressDoc() {
             prop: "marker",
             type: "number",
             description: "O traço do ritmo, em % da trilha (0–100): onde o período está. Fora do intervalo não desenha.",
+          },
+          {
+            prop: "highlight",
+            type: "{ from: number; to: number }",
+            description: "A fatia acesa do trilho, na unidade do max (o lançamento dentro do mês da categoria). Cor em --progress-highlight. Não vale em segments nem na brand.",
           },
           {
             prop: "zones",
