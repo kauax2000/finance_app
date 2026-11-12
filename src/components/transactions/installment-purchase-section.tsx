@@ -56,7 +56,11 @@ export function SectionLabel({
 }
 
 /** As parcelas já lançadas de um plano, carregadas enquanto a folha está aberta. */
-export function useInstallmentSlices(planId: string | null | undefined, open: boolean) {
+export function useInstallmentSlices(
+    planId: string | null | undefined,
+    open: boolean,
+    versao = 0
+) {
     const [slices, setSlices] = useState<InstallmentPlanSliceInput[] | null>(null)
     const [slicesLoading, setSlicesLoading] = useState(false)
 
@@ -99,7 +103,7 @@ export function useInstallmentSlices(planId: string | null | undefined, open: bo
         return () => {
             cancelled = true
         }
-    }, [open, planId])
+    }, [open, planId, versao])
     /* eslint-enable react-hooks/set-state-in-effect */
 
     return { slices, slicesLoading }

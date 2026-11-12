@@ -129,6 +129,8 @@ export function TransactionDetailSheet({
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
+    const [escopoAoEditar, setEscopoAoEditar] = useState<"slice" | "plan">("slice")
+    const [versaoDasParcelas, setVersaoDasParcelas] = useState(0)
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const marca = useRef<HTMLDivElement>(null)
     // H2a/A5 (11/nov/2026): ao rolar, o resumo entra no centro da barra.
@@ -171,7 +173,11 @@ export function TransactionDetailSheet({
     }, [open, t?.installment_plan_id, t?.installment_plan])
     /* eslint-enable react-hooks/set-state-in-effect */
 
-    const { slices, slicesLoading } = useInstallmentSlices(t?.installment_plan_id, open)
+    const { slices, slicesLoading } = useInstallmentSlices(
+        t?.installment_plan_id,
+        open,
+        versaoDasParcelas
+    )
 
     const installmentBlock = useMemo(() => {
         const plan = t?.installment_plan ?? planFallback
@@ -205,8 +211,20 @@ export function TransactionDetailSheet({
         onUpdateInstallmentPlan,
         closeOnSuccess: false,
         onClose: () => setDetailMode("view"),
-        onSuccess: () => setDetailMode("view"),
+        onSuccess: () => {
+            setDetailMode("view")
+            setVersaoDasParcelas((v) => v + 1)
+        },
+        initialInstallmentEditScope: escopoAoEditar,
     })
+
+    // O escopo do plano vale só para a edição em curso: ao sair dela, volta à parcela.
+    useEffect(() => {
+        if (detailMode === "view") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- volta ao escopo da parcela ao sair da edição
+            setEscopoAoEditar("slice")
+        }
+    }, [detailMode])
 
     useEffect(() => {
         if (!open) {
@@ -291,6 +309,10 @@ export function TransactionDetailSheet({
     })
 
     const editar = () => setDetailMode("edit")
+    const editarPlano = () => {
+        setEscopoAoEditar("plan")
+        setDetailMode("edit")
+    }
     const excluir = () => onDelete(t)
 
     const seta = (direcao: "anterior" | "seguinte") => {

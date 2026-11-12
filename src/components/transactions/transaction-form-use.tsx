@@ -186,6 +186,8 @@ export type UseTransactionFormArgs = {
     onClose: () => void
     /** Called after any successful save (before onClose when closeOnSuccess). */
     onSuccess?: () => void
+    /** Escopo com que a edição de parcela abre; `"plan"` já traz os campos do plano. */
+    initialInstallmentEditScope?: "slice" | "plan"
 }
 
 export function useTransactionForm({
@@ -203,6 +205,7 @@ export function useTransactionForm({
     closeOnSuccess = true,
     onClose,
     onSuccess,
+    initialInstallmentEditScope = "slice",
 }: UseTransactionFormArgs) {
     const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
     const [creditCardPopoverOpen, setCreditCardPopoverOpen] = useState(false)
@@ -296,7 +299,8 @@ export function useTransactionForm({
                       ? formatMoneyBrlInput(p.installment_amount)
                       : "",
                   installmentCount: p ? String(p.total_installments) : DEFAULT_INSTALLMENT_COUNT,
-                  installmentEditScope: "slice",
+                  installmentEditScope:
+                      p && initialInstallmentEditScope === "plan" ? "plan" : "slice",
                   projectId: editingTransaction.project_id ?? "",
                   paidBy: "",
                   pesosDaParcelada: null,
@@ -324,6 +328,18 @@ export function useTransactionForm({
                   paidBy: "",
                   pesosDaParcelada: null,
               }
+        // Abrir no plano é o mesmo que alternar o escopo: os campos vêm do plano
+        // (espelha `syncFieldsForInstallmentScope`, declarada depois deste efeito).
+        if (p && v.installmentEditScope === "plan") {
+            v.description = p.description ?? ""
+            v.categoryId = p.category_id ?? ""
+            v.paymentMethod = p.payment_method ?? null
+            v.paymentCreditCardId = p.payment_credit_card_id ?? ""
+            if (p.next_billing_date) {
+                const d = new Date(p.next_billing_date + "T12:00:00")
+                if (!Number.isNaN(d.getTime())) v.date = localYmdFromDate(d)
+            }
+        }
         setFormKind(v.formKind)
         setType(v.type)
         setAmount(v.amount)
@@ -345,7 +361,7 @@ export function useTransactionForm({
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
-    }, [active, editingTransaction, kindInicial])
+    }, [active, editingTransaction, kindInicial, initialInstallmentEditScope])
     /* eslint-enable react-hooks/set-state-in-effect */
 
     /* eslint-disable react-hooks/set-state-in-effect -- sync form type/panels with launch kind and active state */

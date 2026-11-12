@@ -194,4 +194,14 @@ describe("fonte do detalhe", () => {
         expect(f).toMatch(/<BlocoFatura[^>]*onManchete=\{aoMudarManchete\}/)
         expect(f).toMatch(/<BlocoReceitas[^>]*onManchete=\{aoMudarManchete\}/)
     })
+
+    it("o formulário abre no escopo do plano e as parcelas recarregam", () => {
+        expect(fonte("src/components/transactions/transaction-form-use.tsx")).toMatch(/initialInstallmentEditScope/)
+        expect(fonte("src/components/transactions/installment-purchase-section.tsx")).toMatch(
+            /useInstallmentSlices\(\s*planId[^)]*versao/
+        )
+        const f = fonte(SHEET)
+        expect(f).toContain("initialInstallmentEditScope: escopoAoEditar")
+        expect(f).toContain("const editarPlano")
+    })
 })
