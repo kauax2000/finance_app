@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
   DescriptionDetails,
@@ -37,18 +38,25 @@ import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
 import { Caption, Muted } from "@/components/ui/typography"
-import { diaMesCurto, mesPorExtenso } from "@/lib/detalhe/blocos"
-import { estadoDoPlano, fimDoPlano, linhasDoPlano, type LinhaDoPlano } from "@/lib/detalhe/plano"
+import { estadoDoPlano, fimDoPlano, linhasDoPlano, slotDoLancamento, type LinhaDoPlano } from "@/lib/detalhe/plano"
 import { currencyBRL } from "@/lib/formatters"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
+import { formatMonthShortPtBr, parseYmdLocal } from "@/lib/transaction-date"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { encerrarInstallmentPlan } from "@/lib/transactions/mutations"
 
 const ESTADO: Record<LinhaDoPlano["estado"], { rotulo: string; badge: Parameters<typeof Badge>[0] }> = {
-  lancada: { rotulo: "lançada", badge: { tone: "neutral" } },
+  lancada: { rotulo: "lançada", badge: { tone: "info" } },
   prevista: { rotulo: "prevista", badge: { tone: "warning" } },
   "nao-sera-lancada": { rotulo: "não será lançada", badge: { variant: "outline" } },
+}
+
+/** "2026-11-11" → "11 nov"; com `ano`, "nov 2026". */
+function dataCurta(ymd: string, ano = false): string {
+  const d = parseYmdLocal(ymd.slice(0, 10))
+  if (!d) return ymd
+  return ano ? `${formatMonthShortPtBr(d)} ${d.getFullYear()}` : `${d.getDate()} ${formatMonthShortPtBr(d)}`
 }
 
 /**
@@ -56,6 +64,10 @@ const ESTADO: Record<LinhaDoPlano["estado"], { rotulo: string; badge: Parameters
  * dele (o `Sheet` empilha; no telefone vira a gaveta). Lê o plano e o resumo
  * que o detalhe já carregou: nada de consulta nova para a lista.
  */
+/** O ladrilho de cada par (parcela, próxima, termina em): a superfície apagada, rótulo sobre valor. */
+const TILE = "rounded-row-lg bg-muted px-2.5 py-2"
+const VALOR_DO_TILE = "font-medium whitespace-nowrap"
+
 export function FolhaDoPlano({
   open,
   onOpenChange,
@@ -90,7 +102,7 @@ export function FolhaDoPlano({
   const estado = estadoDoPlano(plano)
   const linhas = resumo.scheduleRows ? linhasDoPlano(plano, resumo.scheduleRows) : null
   const lancadas = linhas?.filter((l) => l.estado === "lancada").length ?? 0
-  const slotAberto = linhas?.find((l) => l.transactionId === t.id)?.slot ?? kn?.k ?? null
+  const slotAberto = slotDoLancamento(resumo.scheduleRows, t.id, kn)
   const fim = linhas ? fimDoPlano(linhas) : null
 
   const descricao = (plano.description?.trim() || t.description?.trim() || "Compra parcelada").replace(/ \(\d+\/\d+\)$/, "")
@@ -124,7 +136,7 @@ export function FolhaDoPlano({
           {descricao}, {n} parcelas de {currencyBRL(Number(plano.installment_amount))}.
         </DialogDescription>
 
-        <DialogBody className="flex flex-col gap-6">
+        <DialogBody className="flex flex-col gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <ColorTile size="xl" color={t.category?.color}>
               <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
@@ -138,7 +150,7 @@ export function FolhaDoPlano({
           <div className="flex flex-col gap-1">
             {estado === "ativo" ? (
               <>
-                <MoneyDisplay size="lg" value={resumo.remaining ?? resumo.totalPurchase} />
+                <MoneyDisplay size="2xl" value={resumo.remaining ?? resumo.totalPurchase} />
                 <Caption>
                   faltam {n - lancadas} de {n} · de {currencyBRL(resumo.totalPurchase)}
                 </Caption>
@@ -146,7 +158,8 @@ export function FolhaDoPlano({
             ) : (
               <div className="flex items-center gap-2">
                 <MoneyDisplay
-                  size="lg"
+                  size="2xl"
+                 
                   value={estado === "quitado" ? resumo.totalPurchase : (resumo.posted ?? 0)}
                 />
                 <Badge tone={estado === "quitado" ? "success" : "neutral"}>{estado}</Badge>
@@ -155,6 +168,7 @@ export function FolhaDoPlano({
           </div>
 
           <Progress
+            className="[--progress-highlight:var(--color-warning)]"
             value={lancadas}
             max={n}
             segments={n}
@@ -162,23 +176,23 @@ export function FolhaDoPlano({
             aria-label={`${lancadas} de ${n} parcelas lançadas`}
           />
 
-          <DescriptionList>
-            <DescriptionListItem>
+          <DescriptionList columns={3} className="gap-2">
+            <DescriptionListItem className={TILE}>
               <DescriptionTerm>parcela</DescriptionTerm>
-              <DescriptionDetails>
+              <DescriptionDetails className={VALOR_DO_TILE}>
                 <MoneyDisplay value={Number(plano.installment_amount)} />
               </DescriptionDetails>
             </DescriptionListItem>
             {estado === "ativo" && plano.next_billing_date ? (
-              <DescriptionListItem>
+              <DescriptionListItem className={TILE}>
                 <DescriptionTerm>próxima</DescriptionTerm>
-                <DescriptionDetails>{diaMesCurto(plano.next_billing_date)}</DescriptionDetails>
+                <DescriptionDetails className={VALOR_DO_TILE}>{dataCurta(plano.next_billing_date)}</DescriptionDetails>
               </DescriptionListItem>
             ) : null}
-            <DescriptionListItem>
+            <DescriptionListItem className={TILE}>
               <DescriptionTerm>termina em</DescriptionTerm>
               {/* Ativo sem próxima data: o fim não se sabe, e o "—" não finge que acabou. */}
-              <DescriptionDetails>{fim ? `${mesPorExtenso(fim.slice(0, 7))} de ${fim.slice(0, 4)}` : "—"}</DescriptionDetails>
+              <DescriptionDetails className={VALOR_DO_TILE}>{fim ? dataCurta(fim, true) : "—"}</DescriptionDetails>
             </DescriptionListItem>
           </DescriptionList>
 
@@ -187,37 +201,53 @@ export function FolhaDoPlano({
               <SkeletonText lines={4} />
             </SkeletonGroup>
           ) : (
-            <ItemGroup variant="divided">
-              {linhas.map((l) => {
-                const clicavel = l.estado === "lancada" && l.transactionId != null && onAbrirParcela != null
-                const rotulo = `${l.slot}/${n}`
-                return (
-                  // A lançada abre o detalhe dela: o `ItemLink` estica o botão sobre a linha (sem bloco dentro de botão).
-                  <Item key={l.slot} variant="flush" interactive={clicavel} selected={l.slot === slotAberto}>
-                    <ItemContent>
-                      <ItemTitle className="nums">
-                        {clicavel ? (
-                          <ItemLink onClick={() => onAbrirParcela(l.transactionId!)}>{rotulo}</ItemLink>
-                        ) : (
-                          rotulo
-                        )}
-                      </ItemTitle>
-                      <Caption>{l.data ? diaMesCurto(l.data) : "—"}</Caption>
-                    </ItemContent>
-                    <ItemActions>
-                      <Badge size="xs" {...ESTADO[l.estado].badge}>
-                        {ESTADO[l.estado].rotulo}
-                      </Badge>
-                      <MoneyDisplay value={l.valor} />
-                    </ItemActions>
-                  </Item>
-                )
-              })}
-            </ItemGroup>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <Caption className="font-semibold">Parcelas</Caption>
+                <Caption className="nums font-semibold">{n}</Caption>
+              </div>
+              <Card padding="none" className="overflow-hidden">
+                <ItemGroup variant="divided">
+                  {linhas.map((l) => {
+                    const clicavel = l.estado === "lancada" && l.transactionId != null && onAbrirParcela != null
+                    const rotulo = `${l.slot}/${n}`
+                    const aberta = l.slot === slotAberto
+                    return (
+                      // A lançada abre o detalhe dela: o `ItemLink` estica o botão sobre a linha (sem bloco dentro de botão).
+                      <Item
+                        key={l.slot}
+                        variant="flush"
+                        size="sm"
+                        interactive={clicavel}
+                        tone={aberta ? "warning" : undefined}
+                        aria-current={aberta ? "true" : undefined}
+                      >
+                        <ItemTitle className="nums w-10 shrink-0 font-normal text-muted-foreground">
+                          {clicavel ? (
+                            <ItemLink onClick={() => onAbrirParcela(l.transactionId!)}>{rotulo}</ItemLink>
+                          ) : (
+                            rotulo
+                          )}
+                        </ItemTitle>
+                        <ItemContent className="nums truncate">{l.data ? dataCurta(l.data) : "—"}</ItemContent>
+                        <ItemActions>
+                          <Badge size="xs" {...ESTADO[l.estado].badge}>
+                            {ESTADO[l.estado].rotulo}
+                          </Badge>
+                          <MoneyDisplay value={l.valor} className="font-medium whitespace-nowrap" />
+                        </ItemActions>
+                      </Item>
+                    )
+                  })}
+                </ItemGroup>
+              </Card>
+            </div>
           )}
         </DialogBody>
 
+        {/* A folha mede 448: as três ações não cabem lado a lado, e empilham como no telefone. */}
         <DialogFooter
+          className="sm:flex-col-reverse"
           start={
             <Button type="button" variant="tertiary" onClick={onExcluir}>
               excluir compra

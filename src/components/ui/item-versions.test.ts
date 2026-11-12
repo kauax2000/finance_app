@@ -25,6 +25,18 @@ describe("Item", () => {
     expect(cn(itemVariants({ variant: "outline", selected: true }))).toContain("border-primary-accent/60")
   })
 
+  it("o tom warning pinta a superfície e o título, sem contorno nem aria-current", () => {
+    const html = renderToStaticMarkup(h(Item, { tone: "warning" }))
+    expect(html).toContain('data-tone="warning"')
+    expect(html).not.toContain("aria-current")
+    const classes = cn(itemVariants({ variant: "flush", tone: "warning" }))
+    expect(classes).toContain("bg-warning-muted")
+    expect(classes).toContain("[&_[data-slot=item-title]]:text-warning-muted-foreground")
+    expect(classes).toContain("[&_[data-slot=item-title]]:font-semibold")
+    expect(classes).not.toContain("border-primary-accent")
+    expect(renderToStaticMarkup(h(Item, {}))).not.toContain("data-tone")
+  })
+
   it("só quebra com faixa, e alinha à esquerda de fábrica", () => {
     const base = itemVariants({})
     expect(base).toContain("flex-nowrap")

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import type { InstallmentScheduleRow } from "@/lib/installment-schedule-rows"
 
-import { estadoDoPlano, fimDoPlano, linhasDoPlano } from "./plano"
+import { estadoDoPlano, fimDoPlano, linhasDoPlano, slotDoLancamento } from "./plano"
 
 const row = (
   slot: number,
@@ -73,5 +73,19 @@ describe("encerrarInstallmentPlan", () => {
     const src = readFileSync("src/lib/transactions/mutations.ts", "utf8")
     expect(src).toContain("export async function encerrarInstallmentPlan")
     expect(src).toContain("is_active: false")
+  })
+})
+
+describe("slotDoLancamento", () => {
+  const rows = [row(1, "posted", "2026-06-11"), row(2, "posted", "2026-07-11"), row(3, "pending", null)]
+
+  it("acha a casa pela linha do lançamento", () => {
+    expect(slotDoLancamento(rows, "t2", { k: 9 })).toBe(2)
+  })
+
+  it("sem a linha, cai no k da descrição; sem os dois, null", () => {
+    expect(slotDoLancamento(rows, "outro", { k: 3 })).toBe(3)
+    expect(slotDoLancamento(null, "t1", { k: 1 })).toBe(1)
+    expect(slotDoLancamento(rows, "outro", null)).toBeNull()
   })
 })

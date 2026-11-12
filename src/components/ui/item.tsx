@@ -61,6 +61,15 @@ const itemVariants = cva(
         true: "border-primary-accent/60 bg-primary/5 dark:bg-primary/10",
         false: "",
       },
+      /**
+       * O tom da linha que pede atenção sem ser escolhida: a parcela aberta no
+       * plano parcelado. A superfície `-muted` do tom, e o título na tinta dele,
+       * em negrito; sem contorno (não é `selected`). Só `warning` por ora.
+       */
+      tone: {
+        warning:
+          "bg-warning-muted [&_[data-slot=item-title]]:font-semibold [&_[data-slot=item-title]]:text-warning-muted-foreground",
+      },
       interactive: {
         true: [
           "cursor-pointer hover:bg-muted active:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11",
@@ -154,6 +163,7 @@ function Item({
   size = "md",
   interactive = false,
   selected = false,
+  tone,
   asChild = false,
   ...props
 }: React.ComponentProps<"div"> &
@@ -166,8 +176,9 @@ function Item({
       data-size={size}
       data-interactive={interactive ? "true" : undefined}
       data-selected={selected || undefined}
+      data-tone={tone ?? undefined}
       aria-current={selected ? "true" : undefined}
-      className={cn(itemVariants({ variant, size, interactive, selected, className }))}
+      className={cn(itemVariants({ variant, size, interactive, selected, tone, className }))}
       {...props}
     />
   )

@@ -351,8 +351,9 @@ export default function ProgressDoc() {
       </DocNote>
 
       <DocNote title="highlight: a fatia acesa">
-        <code>highlight</code> (<code>{"{ from, to }"}</code>, na mesma unidade do <code>max</code>) acende no trilho a parte do total que é de um item: o lançamento dentro do mês da categoria. A cor vem de <code>--progress-highlight</code> (padrão <code>--primary-accent</code>) e a fatia fica sob o traço do ritmo. <code>{"<Progress value={920} max={1000} bands={BUDGET_BANDS} marker={63} highlight={{ from: 700, to: 920 }} />"}</code>. <code>from</code> e <code>to</code> são limitados ao trilho; sem largura, nas casas (<code>segments</code>) e na <code>brand</code> não desenha.
+        <code>highlight</code> (<code>{"{ from, to }"}</code>, na mesma unidade do <code>max</code>) acende no trilho a parte do total que é de um item: o lançamento dentro do mês da categoria. A cor vem de <code>--progress-highlight</code> (padrão <code>--primary-accent</code>) e a fatia fica sob o traço do ritmo. <code>{"<Progress value={920} max={1000} bands={BUDGET_BANDS} marker={63} highlight={{ from: 700, to: 920 }} />"}</code>. <code>from</code> e <code>to</code> são limitados ao trilho; sem largura e na <code>brand</code> não desenha. Nas casas (<code>segments</code>), cada casa cujo trecho cruza <code>[from, to]</code> pinta na cor do realce, cheia ou vazia: a parcela aberta de uma compra parcelada, em âmbar (<code>[--progress-highlight:var(--color-warning)]</code>). <code>{"<Progress value={5} max={12} segments={12} highlight={{ from: 5, to: 6 }} />"}</code>.
         <Progress className="mt-3 max-w-md" value={920} max={1000} bands={BUDGET_BANDS} marker={63} highlight={{ from: 700, to: 920 }} aria-label="Orçamento com a fatia de um lançamento acesa" />
+        <Progress className="mt-3 max-w-md [--progress-highlight:var(--color-warning)]" value={5} max={12} segments={12} highlight={{ from: 5, to: 6 }} aria-label="5 de 12 parcelas lançadas, a 6ª aberta" />
       </DocNote>
 
       <DocNote title="O valor real continua sendo anunciado">
@@ -384,7 +385,7 @@ export default function ProgressDoc() {
           {
             prop: "highlight",
             type: "{ from: number; to: number }",
-            description: "A fatia acesa do trilho, na unidade do max (o lançamento dentro do mês da categoria). Cor em --progress-highlight. Não vale em segments nem na brand.",
+            description: "A fatia acesa do trilho, na unidade do max (o lançamento dentro do mês da categoria). Cor em --progress-highlight. Com segments, acende as casas que cruzam o intervalo. Não vale na brand.",
           },
           {
             prop: "zones",

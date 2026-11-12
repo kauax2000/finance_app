@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Caption, Muted } from "@/components/ui/typography"
 import { ROUTES } from "@/config/navigation"
 import { diaMesCurto, ultimaParcela } from "@/lib/detalhe/blocos"
+import { slotDoLancamento } from "@/lib/detalhe/plano"
 import { currencyBRL } from "@/lib/formatters"
 import type { Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
 import {
@@ -39,6 +40,7 @@ export function BlocoParcelada({
   const linhas = resumo.scheduleRows
   const n = plano.total_installments
   const lancadas = linhas?.filter((l) => l.status === "posted").length ?? 0
+  const slot = slotDoLancamento(linhas, t.id, kn)
   const proxima = linhas?.some((l) => l.status === "pending") && plano.is_active ? plano.next_billing_date : null
 
   const ultima =
@@ -66,7 +68,14 @@ export function BlocoParcelada({
         <MoneyDisplay value={resumo.totalPurchase} className="font-medium text-foreground" /> em {n}×
         {resumo.remaining != null && resumo.remaining > 0 ? ` · falta ${currencyBRL(resumo.remaining)}` : ""}
       </Muted>
-      <Progress value={lancadas} max={n} segments={n} aria-label={`${lancadas} de ${n} parcelas lançadas`} />
+      <Progress
+        className="[--progress-highlight:var(--color-warning)]"
+        value={lancadas}
+        max={n}
+        segments={n}
+        highlight={slot != null ? { from: slot - 1, to: slot } : undefined}
+        aria-label={`${lancadas} de ${n} parcelas lançadas`}
+      />
       <Caption>
         {[kn ? `${kn.k} de ${kn.n}` : null, proxima ? `próxima ${diaMesCurto(proxima)}` : null]
           .filter(Boolean)

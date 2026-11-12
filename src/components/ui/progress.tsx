@@ -127,7 +127,8 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
     /**
      * A fatia acesa do trilho, no mesmo valor do `max`: a parte do total que é de um
      * item (o lançamento dentro do mês da categoria). A cor vem de
-     * `--progress-highlight` (padrão `--primary-accent`). Não vale nas casas nem na marca.
+     * `--progress-highlight` (padrão `--primary-accent`). Nas casas (`segments`), cada
+     * casa cujo trecho cruza `[from, to]` pinta nessa cor: a parcela aberta. Não vale na marca.
      */
     highlight?: { from: number; to: number }
   }
@@ -275,14 +276,23 @@ function Progress({
       {casas ? (
         Array.from({ length: casas }, (_, i) => {
           const acesa = i < cheias
+          // A casa i cobre [i, i+1] em unidades de casa; o realce em unidades do `max`.
+          const realce =
+            highlight != null &&
+            variant !== "brand" &&
+            max > 0 &&
+            (highlight.to / max) * casas > i &&
+            (highlight.from / max) * casas < i + 1
           return (
             <span
               key={i}
               data-slot="progress-segment"
               data-filled={acesa ? "" : undefined}
+              data-highlight={realce ? "" : undefined}
               className={cn(
                 "h-full flex-1 rounded-full bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
-                acesa && variant !== "brand" && TOM_FUNDO[tomFinal ?? "default"],
+                acesa && variant !== "brand" && !realce && TOM_FUNDO[tomFinal ?? "default"],
+                realce && "bg-(--progress-highlight,var(--primary-accent))",
                 // Na marca cada casa mostra a sua fatia do arco-íris: o degradê tem a largura
                 // da barra inteira e a posição é a da casa (a conta do `HistogramSlider`).
                 acesa &&

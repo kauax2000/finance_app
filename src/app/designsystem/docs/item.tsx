@@ -206,6 +206,32 @@ export default function ItemDoc() {
       </DocSection>
 
       <DocSection
+        title="Tom de atenção"
+        description="tone=&quot;warning&quot; acende a linha que pede atenção sem ser escolhida: a superfície --warning-muted e o título na tinta dela, em negrito. Sem contorno e sem aria-current (não é selected). É a parcela aberta na folha do plano parcelado."
+        code={`<Item variant="flush" size="sm" tone="warning">…</Item>`}
+        previewClassName="items-stretch"
+      >
+        <Card padding="none" className="w-full overflow-hidden">
+          <ItemGroup variant="divided">
+            {[
+              { k: 5, data: "11 out", estado: "lançada", tone: "info" as const },
+              { k: 6, data: "11 nov", estado: "prevista", tone: "warning" as const, aberta: true },
+              { k: 7, data: "11 dez", estado: "prevista", tone: "warning" as const },
+            ].map((l) => (
+              <Item key={l.k} variant="flush" size="sm" tone={l.aberta ? "warning" : undefined}>
+                <ItemTitle className="nums w-10 shrink-0 font-normal text-muted-foreground">{l.k}/12</ItemTitle>
+                <ItemContent className="nums">{l.data}</ItemContent>
+                <ItemActions>
+                  <Badge size="xs" tone={l.tone}>{l.estado}</Badge>
+                  <MoneyDisplay value={300} className="font-medium" />
+                </ItemActions>
+              </Item>
+            ))}
+          </ItemGroup>
+        </Card>
+      </DocSection>
+
+      <DocSection
         title="Lista espaçada"
         description="O padrão: linhas que são cartões, separadas por respiro — quando cada uma é um objeto, não um registro de série."
         code={`<ItemGroup>
@@ -339,6 +365,12 @@ export default function ItemDoc() {
             type: "boolean",
             default: "false",
             description: "A linha atual ou escolhida, com aria-current.",
+          },
+          {
+            prop: "tone",
+            type: '"warning"',
+            default: "—",
+            description: "A linha que pede atenção sem ser escolhida: superfície --warning-muted e o título na tinta dela, em negrito. Sem contorno nem aria-current.",
           },
           {
             prop: "size",

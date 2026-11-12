@@ -46,3 +46,15 @@ export function fimDoPlano(linhas: LinhaDoPlano[]): string | null {
   const ultima = [...linhas].reverse().find((l) => l.estado !== "nao-sera-lancada")
   return ultima?.data ?? null
 }
+
+/**
+ * A casa deste lançamento no plano: pela linha que é ele (`transactionId`),
+ * senão pelo k do "k/N" da descrição. A folha e o bloco do detalhe a acendem.
+ */
+export function slotDoLancamento(
+  rows: { slot: number; transactionId: string | null }[] | null | undefined,
+  transactionId: string,
+  kn: { k: number } | null
+): number | null {
+  return rows?.find((r) => r.transactionId === transactionId)?.slot ?? kn?.k ?? null
+}
