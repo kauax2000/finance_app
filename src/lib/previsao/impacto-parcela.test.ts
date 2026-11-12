@@ -50,7 +50,7 @@ describe("impactoDaParcela", () => {
             cartoes: [c1],
             transacoes: [noCartao("expense", 100, "2026-11-20", "c1")],
         })
-        expect(impactoDaParcela(dezParcelas, d).proximasFaturas).toEqual([
+        expect(impactoDaParcela(dezParcelas, d).proximasFaturas).toMatchObject([
             { closeYmd: "2026-12-05", antes: 100, depois: 400 },
             { closeYmd: "2027-01-05", antes: 0, depois: 300 },
             { closeYmd: "2027-02-05", antes: 0, depois: 300 },
@@ -190,7 +190,7 @@ describe("impactoDoPlano — o detalhe de um parcelado que já existe", () => {
         const i = impactoDoPlano(geladeira, d)
         expect(i.parcela).toEqual({ valor: 300, fim: "2027-07", meses: 10 })
         expect(i.pico).toEqual({ semEsta: 0, comEsta: 300, mes: "2026-10" })
-        expect(i.proximasFaturas?.[0]).toEqual({ closeYmd: "2026-11-05", antes: 0, depois: 300 })
+        expect(i.proximasFaturas?.[0]).toMatchObject({ closeYmd: "2026-11-05", antes: 0, depois: 300 })
     })
 })
 
@@ -286,21 +286,21 @@ describe("o texto do quadro", () => {
     })
 
     it("a fatura que a compra não muda não vira frase", () => {
-        const i = com({ proximasFaturas: [{ closeYmd: "2027-01-05", antes: 0, depois: 0 }] })
+        const i = com({ proximasFaturas: [{ closeYmd: "2027-01-05", dueYmd: "2027-01-12", antes: 0, depois: 0 }] })
         expect(frasesDoImpacto(i).some((f) => f.icone === "cartao")).toBe(false)
     })
 
     it("uma frase por fatura, e o limite só com limite cadastrado", () => {
         const i = com({
             proximasFaturas: [
-                { closeYmd: "2026-12-05", antes: 100, depois: 160 },
-                { closeYmd: "2027-01-05", antes: 0, depois: 60 },
+                { closeYmd: "2026-12-05", dueYmd: "2026-12-12", antes: 100, depois: 160 },
+                { closeYmd: "2027-01-05", dueYmd: "2027-01-12", antes: 0, depois: 60 },
             ],
             limite: { disponivel: 1500, cabe: true, motivo: null },
         })
         expect(frasesDoImpacto(i).map((f) => f.icone)).toEqual(["repetir", "cartao", "cartao", "seguro", "limite"])
-        expect(titulos(i)[1]).toBe(`Fatura de 05/12/2026 vai a ${currencyBRL(160)}`)
-        expect(frasesDoImpacto(i)[1].descricao).toBe(`${currencyBRL(100)} sem esta compra`)
+        expect(titulos(i)[1]).toBe(`Fatura de dezembro vai a ${currencyBRL(160)}`)
+        expect(frasesDoImpacto(i)[1].descricao).toBe(`vence 12/dez · ${currencyBRL(100)} sem esta compra`)
         expect(titulos(i).at(-1)).toBe(`Limite disponível: ${currencyBRL(1500)}`)
         expect(titulos(com({ limite: { disponivel: null, cabe: null, motivo: "sem_limite" } }))).not.toContainEqual(
             expect.stringContaining("Limite"),

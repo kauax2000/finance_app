@@ -12,9 +12,10 @@ import {
     isProjectedChargeAlreadyPosted,
 } from "@/lib/credit-card-installment-projection"
 import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
+import { diaMesCurto, tituloDaFatura } from "@/lib/detalhe/blocos"
 import { currencyBRL } from "@/lib/formatters"
 import type { CreditCard, WorkspaceInstallmentPlan } from "@/lib/supabase"
-import { formatDatePtBr, formatMonthLongPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { formatMonthLongPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { centavos, faturaPrevista, hojeDate } from "./fatura-prevista"
 import { projecaoMensal } from "./fluxo"
 import type { DadosDaPrevisao } from "./tipos"
@@ -35,7 +36,7 @@ export type Impacto = {
     /** A maior soma mensal de parcelas (pelo mês da cobrança) daqui em diante; `mes` é `YYYY-MM`. */
     pico: { semEsta: number; comEsta: number; mes: string }
     /** 3, a partir da fatura que recebe a 1ª parcela (ou da aberta, se aquela já fechou). Só com cartão. */
-    proximasFaturas: Array<{ closeYmd: string; antes: number; depois: number }> | null
+    proximasFaturas: Array<{ closeYmd: string; dueYmd: string; antes: number; depois: number }> | null
     /** O pico com esta ÷ a receita recorrente mensal, em %; `null` sem receita. */
     percentualDaRenda: number | null
     /** `YYYY-MM` do 1º mês da linha do tempo com sobra negativa. */
@@ -102,8 +103,8 @@ export function frasesDoImpacto(i: Impacto): FraseDoImpacto[] {
             chave: `fatura:${f.closeYmd}`,
             icone: "cartao",
             tom: "neutral",
-            titulo: `Fatura de ${formatDatePtBr(f.closeYmd)} vai a ${currencyBRL(f.depois)}`,
-            descricao: `${currencyBRL(f.antes)} sem esta compra`,
+            titulo: `${tituloDaFatura(f.dueYmd, f.closeYmd)} vai a ${currencyBRL(f.depois)}`,
+            descricao: `vence ${diaMesCurto(f.dueYmd)} · ${currencyBRL(f.antes)} sem esta compra`,
         })
     }
     const { antes, depois } = i.primeiroMesNegativo
@@ -252,7 +253,7 @@ export function impactoDaParcela(plano: PlanoProposto, dados: DadosDaPrevisao): 
         proximasFaturas = [0, 1, 2].map((i) => {
             const ym = shiftYearMonth(inicio, i)
             const antes = faturaPrevista(card, ym, dados)
-            return { closeYmd: antes.closeYmd, antes: antes.total, depois: faturaPrevista(card, ym, depois).total }
+            return { closeYmd: antes.closeYmd, dueYmd: antes.dueYmd, antes: antes.total, depois: faturaPrevista(card, ym, depois).total }
         })
     }
 
