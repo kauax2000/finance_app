@@ -22,7 +22,7 @@ import {
 import { throwIfQueryError } from "@/lib/supabase-errors"
 
 const TX_MONTH_SELECT =
-    "*, category:categories(id,name,color), subscription:workspace_subscriptions!subscription_id(id,name), installment_plan:workspace_installment_plans(id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description)"
+    "*, category:categories(id,name,color), subscription:workspace_subscriptions!subscription_id(id,name), installment_plan:workspace_installment_plans(id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description,category_id,payment_method,payment_credit_card_id)"
 
 const SERIES_SELECT =
     "date,amount,type,category_id,payment_method,payment_credit_card_id"

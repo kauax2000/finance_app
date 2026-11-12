@@ -135,6 +135,7 @@ export function TransactionDetailSheet({
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [escopoAoEditar, setEscopoAoEditar] = useState<"slice" | "plan">("slice")
     const [versaoDasParcelas, setVersaoDasParcelas] = useState(0)
+    const [versaoLida, setVersaoLida] = useState(0)
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const [folhaDoPlano, setFolhaDoPlano] = useState(false)
     const { papel } = useWorkspace()
@@ -168,6 +169,7 @@ export function TransactionDetailSheet({
                 .eq("id", t.installment_plan_id!)
                 .maybeSingle()
             if (cancelled) return
+            setVersaoLida(versaoDasParcelas)
             if (!error && data) {
                 setPlanFallback(data as TransactionInstallmentPlanRef)
             } else {
@@ -187,6 +189,7 @@ export function TransactionDetailSheet({
     )
 
     // A leitura de outro plano (troca de lançamento em curso) não vale para este.
+    const lendoPlano = versaoDasParcelas > 0 && versaoLida !== versaoDasParcelas
     const planoLido = planFallback && planFallback.id === t?.installment_plan_id ? planFallback : null
     const planoAtual = (versaoDasParcelas > 0 ? planoLido : null) ?? t?.installment_plan ?? planoLido
 
@@ -242,8 +245,17 @@ export function TransactionDetailSheet({
             // eslint-disable-next-line react-hooks/set-state-in-effect -- reset edit mode when sheet closes
             setDetailMode("view")
             setFolhaDoPlano(false)
+            setVersaoDasParcelas(0)
+            setVersaoLida(0)
         }
     }, [open])
+
+    // Outro plano (ou outro lançamento) começa do zero: a versão do anterior não vale.
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- zera a versão ao trocar de plano
+        setVersaoDasParcelas(0)
+        setVersaoLida(0)
+    }, [t?.installment_plan_id])
 
     useEffect(() => {
         if (!open || !launchInEditMode) return
@@ -558,6 +570,7 @@ export function TransactionDetailSheet({
                     plano={installmentBlock.plan}
                     resumo={installmentBlock.summary}
                     kn={installmentBlock.kn}
+                    editarDesabilitado={lendoPlano}
                     onEditar={() => {
                         setFolhaDoPlano(false)
                         editarPlano()

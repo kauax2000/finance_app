@@ -205,3 +205,22 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("const editarPlano")
     })
 })
+
+describe("folha do plano: releitura e versão", () => {
+    it("o embed do plano da categoria leva categoria e pagamento", () => {
+        const f = lerFonte("src/lib/queries/fetch-category-detail-bundle.ts")
+        const embed = f.match(/workspace_installment_plans\(([^)]*)\)/)?.[1] ?? ""
+        for (const c of ["category_id", "payment_method", "payment_credit_card_id"]) expect(embed).toContain(c)
+    })
+
+    it("a versão das parcelas zera ao fechar e ao trocar de plano", () => {
+        const f = fonte(SHEET)
+        expect(f).toContain("setVersaoDasParcelas(0)")
+        expect(f).toMatch(/\[t\?\.installment_plan_id\]/)
+    })
+
+    it("editar plano fica desligado enquanto a releitura não volta", () => {
+        expect(fonte(SHEET)).toContain("editarDesabilitado={lendoPlano}")
+        expect(fonte("src/components/transactions/detalhe/folha-do-plano.tsx")).toContain("disabled={editarDesabilitado}")
+    })
+})

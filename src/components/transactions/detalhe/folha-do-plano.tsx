@@ -64,6 +64,7 @@ export function FolhaDoPlano({
   resumo,
   kn,
   onEditar,
+  editarDesabilitado,
   onExcluir,
   onAbrirParcela,
   onEncerrado,
@@ -75,6 +76,8 @@ export function FolhaDoPlano({
   resumo: InstallmentSummary
   kn: { k: number; n: number } | null
   onEditar: () => void
+  /** A releitura do plano ainda não voltou: editar agora zeraria o que for digitado. */
+  editarDesabilitado?: boolean
   onExcluir: () => void
   /** Sem ela, as parcelas lançadas não são clicáveis. */
   onAbrirParcela?: (transactionId: string) => void
@@ -226,7 +229,7 @@ export function FolhaDoPlano({
               encerrar parcelamento
             </Button>
           ) : null}
-          <Button type="button" variant="primary" onClick={onEditar}>
+          <Button type="button" variant="primary" onClick={onEditar} disabled={editarDesabilitado}>
             editar plano
           </Button>
         </DialogFooter>
