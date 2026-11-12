@@ -881,7 +881,7 @@ declaração de `background-color` no trilho).
   `FormPickerPopoverSearch` (o `SearchInput` na superfície `plate`),
   `FormPickerPopoverList`, `FormPickerPopoverItem`, `FormPickerPopoverEmpty`
   (a lista vazia; o texto é de quem chama) e `FormPickerPopoverFooter` +
-  `FormPickerPopoverFooterAction`. Escolha-o quando a lista é longa e pede
+  `FormPickerPopoverFooterAction`. As setas andam pela busca e pelas linhas (↓ da busca entra na primeira, ↑ da primeira volta à busca, Home e End nas pontas, uma letra numa linha volta à busca; `proximaLinhaDoSeletor`, em `lib/picker-keys`). Escolha-o quando a lista é longa e pede
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra. Mora no
   `form.tsx`, e a página dele é a do `Form`; dentro de um `FormField`, o
   `FormControl` vai no gatilho.

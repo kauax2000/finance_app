@@ -46,6 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { SearchInput } from "@/components/ui/search-input"
+import { proximaLinhaDoSeletor } from "@/lib/picker-keys"
 
 /**
  * O formulário do projeto: o `<form>`, a política do Enter e as peças. Compõe
@@ -1006,10 +1007,36 @@ function FormPickerPopoverContent({
   className,
   children,
   onOpenAutoFocus,
+  onKeyDown,
   ...props
 }: React.ComponentProps<typeof PopoverContent>) {
+  // As setas andam pela busca e pelas linhas: ↓ da busca entra na primeira linha,
+  // ↑ da primeira volta à busca, Home e End nas pontas. O Enter na linha é o do
+  // próprio botão. Uma letra digitada numa linha volta à busca e cai nela.
+  const navegar = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(e)
+    if (e.defaultPrevented || e.altKey || e.metaKey || e.ctrlKey) return
+    const casca = e.currentTarget
+    const busca = casca.querySelector<HTMLInputElement>("[data-slot=form-picker-popover-search] input")
+    const linhas = Array.from(
+      casca.querySelectorAll<HTMLButtonElement>("[data-slot=form-picker-popover-item]:not(:disabled)")
+    )
+    const alvo = e.target as HTMLElement
+    const atual = linhas.indexOf(alvo.closest("[data-slot=form-picker-popover-item]") as HTMLButtonElement)
+    if (atual >= 0 && busca && e.key.length === 1 && !e.repeat) {
+      // Digitar numa linha continua a busca, sem engolir a letra.
+      busca.focus()
+      return
+    }
+    const proxima = proximaLinhaDoSeletor(atual, linhas.length, e.key)
+    if (proxima === null) return
+    e.preventDefault()
+    if (proxima < 0) busca?.focus()
+    else linhas[proxima]?.focus()
+  }
   return (
     <PopoverContent
+      onKeyDown={navegar}
       data-slot="form-picker-popover-content"
       side="bottom"
       align="start"
