@@ -93,7 +93,7 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
   }
 
   const cor = t.category?.color
-  const mesDaFatura = mesPorExtenso(ate.slice(0, 7))
+  const mesDaFatura = mesPorExtenso((estado?.dueYmd ?? ate).slice(0, 7))
 
   return (
     <BlocoContexto
@@ -119,8 +119,9 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
         </BarraNaCor>
       ) : null}
       <Caption>
-        <PontoNaCor cor={cor} /> {rotuloDoPesoNaFatura(Number(t.amount), total)} · {cartao.name} · fecha{" "}
-        {diaMesCurto(ate)}
+        {total > 0 ? <PontoNaCor cor={cor} /> : null} {rotuloDoPesoNaFatura(Number(t.amount), total)} ·{" "}
+        {cartao.name}
+        {estado?.slot === "open" ? ` · fecha ${diaMesCurto(ate)}` : null}
       </Caption>
     </BlocoContexto>
   )
