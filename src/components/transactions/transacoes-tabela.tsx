@@ -30,7 +30,7 @@ import {
 } from "@/components/transactions/transactions-table"
 import type { TelaDeTransacoes } from "@/components/transactions/use-transacoes-da-tela"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge, badgeVariants } from "@/components/ui/badge"
+import { tagChipInfo, tagChipNeutral, tagChipWarning, transactionRowChipShell } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -159,29 +159,29 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                         ) : null}
                         <span className="flex shrink-0 items-center gap-1">
                             {t.needs_review ? (
-                                <Badge tone="info" size="xs">
+                                <span className={cn(transactionRowChipShell, tagChipInfo)}>
                                     A conferir
-                                </Badge>
+                                </span>
                             ) : null}
                             {isProjectedTransactionRow(t) ? (
-                                <Badge tone="warning" size="xs">
+                                <span className={cn(transactionRowChipShell, tagChipWarning)}>
                                     Previsto
-                                </Badge>
+                                </span>
                             ) : null}
                             {t.installment_plan_id ? <InstallmentChip transaction={t} comParcela /> : null}
                             {t.subscription_id ? (
                                 <Link
                                     href={ROUTES.SUBSCRIPTIONS}
                                     onClick={stopRowEvent}
-                                    className={badgeVariants({ tone: "neutral", size: "xs" })}
+                                    className={cn(transactionRowChipShell, tagChipNeutral)}
                                 >
                                     Assinatura
                                 </Link>
                             ) : null}
                             {t.is_recurring ? (
-                                <Badge tone="neutral" size="xs">
+                                <span className={cn(transactionRowChipShell, tagChipNeutral)}>
                                     Recorrente
-                                </Badge>
+                                </span>
                             ) : null}
                         </span>
                     </span>
@@ -197,9 +197,9 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                         <>
                             {descricaoDe(t)}
                             {t.needs_review ? (
-                                <Badge tone="info" size="xs" className="ms-1">
+                                <span className={cn(transactionRowChipShell, tagChipInfo, "ms-1")}>
                                     A conferir
-                                </Badge>
+                                </span>
                             ) : null}
                         </>
                     ),
