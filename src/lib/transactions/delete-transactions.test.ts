@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-    hasInstallmentDeleteImpact,
-    partitionTransactionDeletes,
-} from "@/lib/transactions/delete-transactions"
+import { partitionTransactionDeletes } from "@/lib/transactions/delete-transactions"
 
 describe("partitionTransactionDeletes", () => {
     it("routes installment rows to plan cascades and plain rows to single deletes", () => {
@@ -35,25 +32,5 @@ describe("partitionTransactionDeletes", () => {
 
         expect(result.planIds).toEqual([])
         expect(result.plainTransactionIds).toEqual(["tx-1", "tx-2"])
-    })
-})
-
-describe("hasInstallmentDeleteImpact", () => {
-    it("returns true when any row belongs to a compra parcelada", () => {
-        expect(
-            hasInstallmentDeleteImpact([
-                { installment_plan_id: null },
-                { installment_plan_id: "plan-a" },
-            ])
-        ).toBe(true)
-    })
-
-    it("returns false for plain transaction deletes", () => {
-        expect(
-            hasInstallmentDeleteImpact([
-                { installment_plan_id: null },
-                { installment_plan_id: undefined },
-            ])
-        ).toBe(false)
     })
 })

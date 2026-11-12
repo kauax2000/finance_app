@@ -33,24 +33,13 @@ import {
     type DashboardPaymentPreviewModel,
 } from "@/components/dashboard/dashboard-payment-event-preview-sheet"
 import type { PaymentEvent, UpcomingPaymentRow } from "@/components/dashboard/payment-events"
+import { ExcluirLancamentosDialog } from "@/components/transactions/excluir-lancamentos-dialog"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
     TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogList,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { MoneyDisplay } from "@/components/ui/money-display"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
 import type { Transaction } from "@/lib/supabase"
@@ -64,7 +53,6 @@ import {
     persistTransactionSave,
 } from "@/lib/transaction-detail-sheet-mutations"
 import { toastError } from "@/lib/toast"
-import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
 
 const DashboardExpenseCategories = dynamic(
@@ -429,62 +417,15 @@ export default function DashboardPageClient() {
                 categories={d.categories}
             />
 
-            <AlertDialog
+            <ExcluirLancamentosDialog
+                linhas={pendingDelete ? [pendingDelete] : []}
                 pending={deleting}
                 open={pendingDelete !== null}
                 onOpenChange={(open) => {
                     if (!open && !deleting) setPendingDelete(null)
                 }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            <p>Esta ação não pode ser desfeita.</p>
-                            {pendingDelete ? (
-                                <AlertDialogList>
-                                    <li>
-                                        {formatTransactionDayPtBr(
-                                            pendingDelete.date,
-                                        )}{" "}
-                                        —{" "}
-                                        {pendingDelete.description ||
-                                            pendingDelete.category?.name ||
-                                            "Sem descrição"}
-                                    </li>
-                                    <li className="flex flex-wrap items-center gap-1 font-medium">
-                                        {pendingDelete.type === "income"
-                                            ? "Receita"
-                                            : "Despesa"}{" "}
-                                        de{" "}
-                                        <MoneyDisplay
-                                            value={Number(
-                                                pendingDelete.amount,
-                                            )}
-                                            size="sm"
-                                            className="inline font-medium"
-                                        />
-                                    </li>
-                                </AlertDialogList>
-                            ) : null}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>
-                            Cancelar
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            pendingLabel="Excluindo…"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                void confirmDelete()
-                            }}
-                        >
-                            Excluir
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={() => void confirmDelete()}
+            />
         </div>
     )
 }

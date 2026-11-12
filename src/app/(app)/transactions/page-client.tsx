@@ -4,38 +4,24 @@ import { useCallback, useEffect, useState } from "react"
 import { AvisoAConferir } from "@/components/transactions/aviso-a-conferir"
 import { CompartilhadoAviso } from "@/components/transactions/compartilhado-aviso"
 import { ImportarExtratoDialog } from "@/components/transactions/importar/importar-extrato-dialog"
+import { ExcluirLancamentosDialog } from "@/components/transactions/excluir-lancamentos-dialog"
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
 import { MenuMaisAcoes, TransacoesToolbar } from "@/components/transactions/transacoes-toolbar"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
 import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
 import { useWorkspace } from "@/components/workspace-provider"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogList,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Card, CardMessage } from "@/components/ui/card"
-import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { downloadCsv } from "@/lib/data-table/csv"
-import { numberBR } from "@/lib/formatters"
 import { fetchTransacoesParaExportar } from "@/lib/queries/transacoes-filtradas"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { toastError, toastWarning } from "@/lib/toast"
-import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { transacoesParaCsv } from "@/lib/transactions/csv"
 import { SEM_CATEGORIA } from "@/lib/transactions/filtros"
-import { hasInstallmentDeleteImpact, INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { mensagemDaExportacao, nomeDoCsv } from "@/lib/transactions/exportar-csv"
 
 export default function TransactionsPageClient() {
@@ -116,7 +102,6 @@ export default function TransactionsPageClient() {
     if (tela.carregando) return <TransactionsPageSkeleton />
 
     const pendente = exclusao.pendente
-    const umaSo = pendente?.ids.length === 1 ? pendente.linhas[0] : undefined
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-4">
@@ -196,77 +181,15 @@ export default function TransactionsPageClient() {
 
             <ImportarExtratoDialog open={pedidos.importar} onOpenChange={pedidos.setImportar} onRevisar={revisar} />
 
-            <AlertDialog
+            <ExcluirLancamentosDialog
+                linhas={pendente?.linhas ?? []}
                 pending={exclusao.excluindo}
                 open={pendente != null}
                 onOpenChange={(aberto) => {
                     if (!aberto) exclusao.cancelar()
                 }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            {pendente && pendente.ids.length > 1
-                                ? `Excluir ${numberBR(pendente.ids.length)} transações?`
-                                : "Excluir transação?"}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            <p>Esta ação não pode ser desfeita.</p>
-                            {pendente && hasInstallmentDeleteImpact(pendente.linhas) ? (
-                                <p className="text-foreground">{INSTALLMENT_DELETE_WARNING}</p>
-                            ) : null}
-                            {umaSo ? (
-                                <>
-                                    <p className="text-foreground">Esta transação será removida do extrato.</p>
-                                    <AlertDialogList>
-                                        <li>
-                                            {formatTransactionDayPtBr(umaSo.date)} —{" "}
-                                            {umaSo.description || umaSo.category?.name || "Sem descrição"}
-                                        </li>
-                                        <li className="flex flex-wrap items-center gap-1 font-medium">
-                                            {umaSo.type === "income" ? "Receita" : "Despesa"} de{" "}
-                                            <MoneyDisplay value={Number(umaSo.amount)} size="sm" className="inline font-medium" />
-                                        </li>
-                                    </AlertDialogList>
-                                </>
-                            ) : pendente && pendente.ids.length > 1 ? (
-                                <>
-                                    <p className="text-foreground">
-                                        As {numberBR(pendente.ids.length)} transações selecionadas serão removidas do
-                                        extrato.
-                                    </p>
-                                    <AlertDialogList className="max-h-40 overflow-y-auto">
-                                        {pendente.linhas.slice(0, 8).map((t) => (
-                                            <li key={t.id}>
-                                                {formatTransactionDayPtBr(t.date)} —{" "}
-                                                {t.description || t.category?.name || "Sem descrição"}
-                                            </li>
-                                        ))}
-                                        {pendente.ids.length > 8 ? (
-                                            <li className="text-muted-foreground">
-                                                e mais {numberBR(pendente.ids.length - 8)} …
-                                            </li>
-                                        ) : null}
-                                    </AlertDialogList>
-                                </>
-                            ) : null}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            pendingLabel="Excluindo…"
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                void exclusao.confirmar()
-                            }}
-                        >
-                            Excluir
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={() => void exclusao.confirmar()}
+            />
         </div>
     )
 }

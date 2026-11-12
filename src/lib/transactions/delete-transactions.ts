@@ -29,12 +29,3 @@ export function partitionTransactionDeletes(
         plainTransactionIds,
     }
 }
-
-export const INSTALLMENT_DELETE_WARNING =
-    "Esta compra parcelada inteira será cancelada: todas as parcelas já lançadas e as projeções no painel serão removidas."
-
-export function hasInstallmentDeleteImpact(
-    rows: Pick<TransactionDeleteRow, "installment_plan_id">[]
-): boolean {
-    return rows.some((row) => Boolean(row.installment_plan_id))
-}

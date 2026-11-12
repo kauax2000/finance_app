@@ -8,17 +8,11 @@ import {
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { currencyBRL, numberBR } from "@/lib/formatters"
 import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
 import Link from "next/link"
 import { ROUTES } from "@/config/navigation"
-import { formatTransactionDayPtBr } from "@/lib/transaction-date"
-import {
-    hasInstallmentDeleteImpact,
-    INSTALLMENT_DELETE_WARNING,
-} from "@/lib/transactions/delete-transactions"
 import {
     buildTransactionsListSearchParams,
     mergeTransactionsSearchParams,
@@ -33,20 +27,10 @@ import { TransactionsToolbar } from "@/components/transactions/transactions-tool
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
+import { ExcluirLancamentosDialog } from "@/components/transactions/excluir-lancamentos-dialog"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogList,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 const PAGE_SIZE = 100
 
@@ -520,108 +504,21 @@ export function CategoryEmbeddedTransactions({
                         </Card>
                     )}
 
-                    <AlertDialog
+                    <ExcluirLancamentosDialog
+                        linhas={
+                            pendingDelete?.mode === "single"
+                                ? [pendingDelete.transaction]
+                                : pendingDelete?.mode === "bulk"
+                                  ? pendingDelete.ids.flatMap((id) => displayTransactions.find((t) => t.id === id) ?? [])
+                                  : []
+                        }
                         pending={deleting}
                         open={pendingDelete !== null}
                         onOpenChange={(open) => {
                             if (!open && !deleting) setPendingDelete(null)
                         }}
-                    >
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                    {pendingDelete?.mode === "bulk"
-                                        ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
-                                        : "Excluir transação?"}
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    <p>Esta ação não pode ser desfeita.</p>
-                                    {pendingDelete &&
-                                    hasInstallmentDeleteImpact(
-                                        pendingDelete.mode === "single"
-                                            ? [
-                                                  {
-                                                      installment_plan_id:
-                                                          pendingDelete
-                                                              .transaction
-                                                              .installment_plan_id,
-                                                  },
-                                              ]
-                                            : pendingDelete.ids.map((id) => ({
-                                                  installment_plan_id:
-                                                      displayTransactions.find((t) => t.id === id)?.installment_plan_id ??
-                                                      null,
-                                              }))
-                                    ) ? (
-                                        <p className="text-foreground">
-                                            {INSTALLMENT_DELETE_WARNING}
-                                        </p>
-                                    ) : null}
-                                    {pendingDelete?.mode === "single" ? (
-                                        <AlertDialogList>
-                                            <li>
-                                                {formatTransactionDayPtBr(
-                                                    pendingDelete.transaction.date
-                                                )}{" "}
-                                                —{" "}
-                                                {pendingDelete.transaction.description ||
-                                                    pendingDelete.transaction.category?.name ||
-                                                    "Sem descrição"}
-                                            </li>
-                                            <li className="font-medium">
-                                                {pendingDelete.transaction.type === "income"
-                                                    ? "Receita"
-                                                    : "Despesa"}{" "}
-                                                de{" "}
-                                                {currencyBRL(
-                                                    Number(pendingDelete.transaction.amount)
-                                                )}
-                                            </li>
-                                        </AlertDialogList>
-                                    ) : pendingDelete?.mode === "bulk" ? (
-                                        <AlertDialogList className="max-h-40 overflow-y-auto">
-                                            {pendingDelete.ids.slice(0, 8).map((id) => {
-                                                const t = displayTransactions.find((x) => x.id === id)
-                                                if (!t) {
-                                                    return (
-                                                        <li key={id}>{id.slice(0, 8)}…</li>
-                                                    )
-                                                }
-                                                const line =
-                                                    t.description || t.category?.name || "Sem descrição"
-                                                return (
-                                                    <li key={id}>
-                                                        {formatTransactionDayPtBr(t.date)} — {line}
-                                                    </li>
-                                                )
-                                            })}
-                                            {pendingDelete.ids.length > 8 ? (
-                                                <li className="text-muted-foreground">
-                                                    e mais{" "}
-                                                    {numberBR((pendingDelete.ids.length - 8))}{" "}
-                                                    …
-                                                </li>
-                                            ) : null}
-                                        </AlertDialogList>
-                                    ) : null}
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>
-                                    Cancelar
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                    pendingLabel="Excluindo…"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        void confirmDelete()
-                                    }}
-                                >
-                                    Excluir
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                        onConfirm={() => void confirmDelete()}
+                    />
             </div>
         </section>
     )
