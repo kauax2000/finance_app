@@ -289,13 +289,12 @@ export function FolhaDoPlano({
             <AlertDialogHeader>
               <AlertDialogTitle>Encerrar o parcelamento?</AlertDialogTitle>
               <AlertDialogDescription>
-                As {lancadas} parcelas lançadas ficam. As próximas não serão lançadas.
+                {lancadas === 1 ? "A parcela lançada fica." : `As ${lancadas} parcelas lançadas ficam.`} As próximas não serão lançadas.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>cancelar</AlertDialogCancel>
               <AlertDialogAction
-                variant="primary"
                 onClick={(e) => {
                   e.preventDefault()
                   void encerrar()
