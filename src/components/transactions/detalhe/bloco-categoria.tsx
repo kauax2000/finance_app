@@ -218,7 +218,7 @@ export function BlocoCategoria({
         </Caption>
       ) : null}
       {!convidado ? (
-        <Button variant="secondary" size="sm" asChild className="justify-self-start">
+        <Button variant="secondary" size="sm" asChild>
           <Link href={categoryDetailPath(categoryId, { month: ym })}>definir orçamento</Link>
         </Button>
       ) : null}
