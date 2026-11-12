@@ -273,14 +273,16 @@ describe("o texto do quadro", () => {
     it("o seguro que fica negativo, e o que já era", () => {
         const fica = frasesDoImpacto(com({ primeiroMesNegativo: { antes: null, depois: "2027-03" } })).at(-1)
         expect(fica).toMatchObject({ tom: "warning", titulo: "O seguro para gastar fica negativo em mar/2027", descricao: null })
-        const ja = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-03" } })).at(-1)
-        expect(ja).toMatchObject({
+        // A compra antecipa o negativo: a frase diz o mês novo.
+        const antecipa = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-03" } })).at(-1)
+        expect(antecipa).toMatchObject({
             tom: "warning",
-            titulo: "O seguro para gastar já fica negativo em mai/2027",
-            descricao: "mar/2027 com esta compra",
+            titulo: "O seguro para gastar fica negativo em mar/2027",
+            descricao: "sem esta compra, só em mai/2027",
         })
-        const igual = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-05" } })).at(-1)
-        expect(igual?.descricao).toBeNull()
+        // O negativo já existia no mesmo mês sem a compra: não é dela, a frase some.
+        const jaEra = frasesDoImpacto(com({ primeiroMesNegativo: { antes: "2027-05", depois: "2027-05" } }))
+        expect(jaEra.some((f) => f.chave === "seguro")).toBe(false)
     })
 
     it("uma frase por fatura, e o limite só com limite cadastrado", () => {

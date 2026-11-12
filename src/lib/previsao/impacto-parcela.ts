@@ -106,14 +106,17 @@ export function frasesDoImpacto(i: Impacto): FraseDoImpacto[] {
         })
     }
     const { antes, depois } = i.primeiroMesNegativo
+    // O negativo que já existia sem esta compra não é dela: só vale se ela o antecipa.
     if (antes) {
-        frases.push({
-            chave: "seguro",
-            icone: "seguro",
-            tom: "warning",
-            titulo: `O seguro para gastar já fica negativo em ${mesCurto(antes)}`,
-            descricao: depois && depois !== antes ? `${mesCurto(depois)} com esta compra` : null,
-        })
+        if (depois && depois < antes) {
+            frases.push({
+                chave: "seguro",
+                icone: "seguro",
+                tom: "warning",
+                titulo: `O seguro para gastar fica negativo em ${mesCurto(depois)}`,
+                descricao: `sem esta compra, só em ${mesCurto(antes)}`,
+            })
+        }
     } else if (depois) {
         frases.push({
             chave: "seguro",
