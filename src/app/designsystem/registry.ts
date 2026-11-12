@@ -157,6 +157,8 @@ export const REGISTRY: RegistryEntry[] = [
     entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
     /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
     entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
+    /** O mês, o dia e a legenda são anatomia de uma folhinha; o único import de `ui/` é o `Skeleton` do esqueleto. */
+    entry("date-tile", "Date Tile", "A folhinha de calendário: mês, dia grande e uma legenda curta.", ui("date-tile"), "DateTile, DateTileSkeleton"),
     /**
      * Uma casca desenhada: barra, ilha, trilho, abas e barra de status são anatomia da moldura (são partes
      * dela, não peças do sistema). O único import de `ui/` é o `Skeleton` do esqueleto.

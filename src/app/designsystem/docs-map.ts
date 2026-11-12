@@ -29,6 +29,7 @@ import ContainerDoc from "./docs/container"
 import ContextMenuDoc from "./docs/context-menu"
 import DataTableDoc from "./docs/data-table"
 import DatePickerDoc from "./docs/date-picker"
+import DateTileDoc from "./docs/date-tile"
 import DescriptionListDoc from "./docs/description-list"
 import DeviceFrameDoc from "./docs/device-frame"
 import DialogDoc from "./docs/dialog"
@@ -122,6 +123,7 @@ export const DOCS: Record<string, ComponentType> = {
   "context-menu": ContextMenuDoc,
   "data-table": DataTableDoc,
   "date-picker": DatePickerDoc,
+  "date-tile": DateTileDoc,
   "description-list": DescriptionListDoc,
   "device-frame": DeviceFrameDoc,
   "dialog": DialogDoc,

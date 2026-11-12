@@ -2011,6 +2011,15 @@ declaração de `background-color` no trilho).
   (`lib/troca-suave.tsx`), e o pai dela é `relative`. `QrCodeSkeleton` é o osso; sem `value`, ou com um que não
   cabe no maior QR, `QrCode` cai no esqueleto. Fora: escada de tamanho,
   módulos arredondados, símbolo central e legenda. `qr-code-versions.test.ts`.
+- **`DateTile`** (Átomo, rodada 370): a folhinha de calendário — o mês
+  abreviado (`text-2xs`, negrito, maiúsculo), o dia grande e uma legenda curta
+  (`caption`, "vence"), em `bg-muted` com `rounded-row-lg`. `date` é `YYYY-MM-DD`
+  ou `Date`; o mês sai de `formatMonthShortPtBr`. `size` `md` (56) | `lg` (64);
+  `tone="overdue"` pinta **só o mês** em `text-destructive` (no padrão ele fica
+  no `muted-foreground`). O nó é um `<time role="img">` com a data por extenso no
+  nome ("vence em 10 de dezembro") e o desenho `aria-hidden`; data inválida não
+  desenha nada. `DateTileSkeleton` (`size`, `group`). O card da fatura do detalhe
+  do lançamento (G8) é quem usa. `date-tile-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra
   de tempo**. **Nenhuma tela importa o `toast` do sonner**: use `@/lib/toast`
   (`description`, `id` como assunto, `action`, `cancel`, `toastPill`,

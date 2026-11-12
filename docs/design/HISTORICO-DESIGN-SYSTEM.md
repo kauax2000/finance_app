@@ -28998,3 +28998,20 @@ Pedido do dono em 2026-11-09: no desktop a cápsula `[lupa | filtro]` do cabeça
 como meia pílula, com os cantos de dentro achatados. Saíram `morph`, `join` e `CAPSULA_COLA`
 do `TopBarActionGroup`: ele é sempre a cápsula que estica, um vidro no grupo, cada ação num
 círculo e o realce em círculo nos dois apontadores. `trailingKey` fica.
+
+### Rodada 370 — `DateTile`, a folhinha do vencimento
+
+Pedido do dono em 2026-11-12 (mockup G8 do card da fatura): o card da fatura do detalhe do
+lançamento (F1) repetia a forma do card da categoria — número, barra cheia e ponto na cor. A
+G8 tira a barra, o ponto e a porcentagem e põe o vencimento numa folhinha à esquerda.
+
+- Levantamento: nenhuma tela desenhava folhinha; a data do vencimento era texto ("vence 9/dez").
+  Átomo autoral, sem import de `ui/` além do `Skeleton`.
+- Escolhido pelo dono (sem as quatro perguntas): `date`, `caption`, `tone` `default` | `overdue`,
+  `size` `md` | `lg`, `DateTileSkeleton`.
+- Fora do mockup: o raio é `rounded-row-lg` (16) em vez de 14, porque 14 não é degrau da
+  escala; o mês no tom padrão é `muted-foreground` e não vermelho — o vermelho ficou só para o
+  vencido (`text-destructive`), senão ele não diria nada.
+- Na tela: `BlocoFatura` mostra a folhinha (`tone="overdue"` com o vencimento passado e a fatura
+  não paga), o total, a legenda "esta compra R$ … · fecha d/mês" e o selo. Saíram o `Progress`,
+  o `PontoNaCor`/`BarraNaCor` da fatura e o `rotuloDoPesoNaFatura`.
