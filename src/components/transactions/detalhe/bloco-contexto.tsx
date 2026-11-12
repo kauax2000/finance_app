@@ -38,14 +38,19 @@ export function BlocoContexto({
   children,
 }: {
   titulo: ReactNode
-  link?: { href: string; label: string } | null
+  /** O botão terciário da tira: um link, ou uma ação no lugar (a folha do plano). */
+  link?: { href: string; label: string } | { label: string; onClick: () => void } | null
   children: ReactNode
 }) {
   return (
     <Card padding="none" data-slot="bloco-contexto">
       <CardToolbar>
         <span className="min-w-0 truncate">{titulo}</span>
-        {link ? (
+        {link && "onClick" in link ? (
+          <Button type="button" variant="tertiary" size="sm" onClick={link.onClick}>
+            {link.label}
+          </Button>
+        ) : link ? (
           <Button variant="tertiary" size="sm" asChild>
             <Link href={link.href}>{link.label}</Link>
           </Button>

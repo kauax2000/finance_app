@@ -125,6 +125,26 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain("?plan=")
   })
 
+  it("parcelada: a folha do plano", () => {
+    const folha = ler("folha-do-plano")
+    for (const t of [
+      "linhasDoPlano(",
+      "estadoDoPlano(",
+      "encerrarInstallmentPlan(",
+      "<AlertDialog",
+      "encerrar parcelamento",
+      "excluir compra",
+      "editar plano",
+      "segments=",
+    ]) {
+      expect(folha).toContain(t)
+    }
+    expect(ler("bloco-parcelada")).toContain("onVerParcelas")
+    const detalhe = lerFonte("src/components/transactions/transaction-detail-sheet.tsx")
+    expect(detalhe).toContain("<FolhaDoPlano")
+    expect(detalhe).toContain("fetchTransactionForDetailSheet(")
+  })
+
   it("receitas: assinaturas de receita e o link de receitas", () => {
     const fonte = ler("bloco-receitas")
     expect(fonte).toContain("useSubscriptionsQuery")

@@ -28,6 +28,7 @@ import { BlocoFatura } from "@/components/transactions/detalhe/bloco-fatura"
 import { BlocoHistorico } from "@/components/transactions/detalhe/bloco-historico"
 import { BlocoParcelada } from "@/components/transactions/detalhe/bloco-parcelada"
 import { BlocoReceitas } from "@/components/transactions/detalhe/bloco-receitas"
+import { FolhaDoPlano } from "@/components/transactions/detalhe/folha-do-plano"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
 import {
@@ -71,6 +72,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption } from "@/components/ui/typography"
+import { useWorkspace } from "@/components/workspace-provider"
 import { tileColorFor } from "@/lib/tile-palette"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -81,6 +83,8 @@ import { paymentMethodLabel } from "@/lib/payment-methods"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import type { Category, CreditCard, Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
+import { toastError } from "@/lib/toast"
+import { fetchTransactionForDetailSheet } from "@/lib/transactions-detail-sheet-query"
 import { formatRelativeDayPtBr, formatTransactionDayPtBr, formatWeekdayDayMonthShortPtBr, transactionLocalYmd } from "@/lib/transaction-date"
 import { resolveInstallmentKn } from "@/lib/transaction-installment"
 import { cn } from "@/lib/utils"
@@ -132,6 +136,8 @@ export function TransactionDetailSheet({
     const [escopoAoEditar, setEscopoAoEditar] = useState<"slice" | "plan">("slice")
     const [versaoDasParcelas, setVersaoDasParcelas] = useState(0)
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
+    const [folhaDoPlano, setFolhaDoPlano] = useState(false)
+    const { papel } = useWorkspace()
     const marca = useRef<HTMLDivElement>(null)
     // H2a/A5 (11/nov/2026): ao rolar, o resumo entra no centro da barra.
     const [nomeRef, nomeSubiu] = useDialogHeaderDock<HTMLDivElement>()
@@ -147,7 +153,8 @@ export function TransactionDetailSheet({
             setPlanFallback(null)
             return
         }
-        if (t.installment_plan) {
+        // Depois de editar ou encerrar, o plano embutido no lançamento ficou velho: relê.
+        if (t.installment_plan && versaoDasParcelas === 0) {
             setPlanFallback(null)
             return
         }
@@ -156,7 +163,7 @@ export function TransactionDetailSheet({
             const { data, error } = await supabase
                 .from("workspace_installment_plans")
                 .select(
-                    "id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description"
+                    "id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description,category_id,payment_method,payment_credit_card_id"
                 )
                 .eq("id", t.installment_plan_id!)
                 .maybeSingle()
@@ -170,7 +177,7 @@ export function TransactionDetailSheet({
         return () => {
             cancelled = true
         }
-    }, [open, t?.installment_plan_id, t?.installment_plan])
+    }, [open, t?.installment_plan_id, t?.installment_plan, versaoDasParcelas])
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const { slices, slicesLoading } = useInstallmentSlices(
@@ -179,8 +186,12 @@ export function TransactionDetailSheet({
         versaoDasParcelas
     )
 
+    // A leitura de outro plano (troca de lançamento em curso) não vale para este.
+    const planoLido = planFallback && planFallback.id === t?.installment_plan_id ? planFallback : null
+    const planoAtual = (versaoDasParcelas > 0 ? planoLido : null) ?? t?.installment_plan ?? planoLido
+
     const installmentBlock = useMemo(() => {
-        const plan = t?.installment_plan ?? planFallback
+        const plan = planoAtual
         if (!t || t.type !== "expense" || !t.installment_plan_id || !plan) {
             return null
         }
@@ -189,13 +200,13 @@ export function TransactionDetailSheet({
             kn: resolveInstallmentKn(t.installment_sequence, t.description, plan),
             summary: summarizeInstallmentPlan(plan, slices, slicesLoading),
         }
-    }, [t, planFallback, slices, slicesLoading])
+    }, [t, planoAtual, slices, slicesLoading])
 
     const txForForm = useMemo((): Transaction | null => {
         if (!t) return null
-        if (t.installment_plan || !planFallback) return t
-        return { ...t, installment_plan: planFallback }
-    }, [t, planFallback])
+        if (!planoAtual || planoAtual === t.installment_plan) return t
+        return { ...t, installment_plan: planoAtual }
+    }, [t, planoAtual])
 
     const { handleSubmit, fieldsProps, formTitle, formDescription, showFooter, submitDisabled } = useTransactionForm({
         active: open && detailMode === "edit",
@@ -230,6 +241,7 @@ export function TransactionDetailSheet({
         if (!open) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- reset edit mode when sheet closes
             setDetailMode("view")
+            setFolhaDoPlano(false)
         }
     }, [open])
 
@@ -314,6 +326,23 @@ export function TransactionDetailSheet({
         setDetailMode("edit")
     }
     const excluir = () => onDelete(t)
+    // Tocar numa parcela lançada: o dono da folha troca o lançamento mostrado; sem ele, não é clicável.
+    const carteira = t.workspace_id
+    const abrirParcela = onNavegar && carteira
+        ? async (id: string) => {
+              const r = await fetchTransactionForDetailSheet(supabase, {
+                  transactionId: id,
+                  workspaceId: carteira,
+                  creditCards,
+              })
+              if (!r.transaction) {
+                  toastError(r.errorMessage ?? "Não foi possível abrir a parcela.")
+                  return
+              }
+              setFolhaDoPlano(false)
+              onNavegar(r.transaction)
+          }
+        : undefined
 
     const seta = (direcao: "anterior" | "seguinte") => {
         const destino = direcao === "anterior" ? anterior : seguinte
@@ -454,6 +483,8 @@ export function TransactionDetailSheet({
                             resumo={installmentBlock.summary}
                             kn={installmentBlock.kn}
                             onManchete={aoMudarManchete}
+                            // O plano é invisível ao convidado (RLS): ele segue no link da lista.
+                            onVerParcelas={papel === "guest" ? undefined : () => setFolhaDoPlano(true)}
                         />
                     ) : null}
                     {installmentBlock && t.installment_plan_id ? (
@@ -518,6 +549,27 @@ export function TransactionDetailSheet({
 
                 <Caption>{notaDaOrigem(t.source)}</Caption>
             </DialogBody>
+
+            {installmentBlock && papel !== "guest" ? (
+                <FolhaDoPlano
+                    open={open && folhaDoPlano}
+                    onOpenChange={setFolhaDoPlano}
+                    transaction={t}
+                    plano={installmentBlock.plan}
+                    resumo={installmentBlock.summary}
+                    kn={installmentBlock.kn}
+                    onEditar={() => {
+                        setFolhaDoPlano(false)
+                        editarPlano()
+                    }}
+                    onExcluir={() => {
+                        setFolhaDoPlano(false)
+                        excluir()
+                    }}
+                    onAbrirParcela={abrirParcela}
+                    onEncerrado={() => setVersaoDasParcelas((v) => v + 1)}
+                />
+            ) : null}
         </div>
     )
 

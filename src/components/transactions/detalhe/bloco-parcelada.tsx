@@ -26,12 +26,15 @@ export function BlocoParcelada({
   resumo,
   kn,
   onManchete,
+  onVerParcelas,
 }: {
   transaction: Transaction
   plano: TransactionInstallmentPlanRef
   resumo: InstallmentSummary
   kn: { k: number; n: number } | null
   onManchete?: AoMudarManchete
+  /** Abre a folha do plano; sem ela (o convidado), o link para a lista filtrada. */
+  onVerParcelas?: () => void
 }) {
   const linhas = resumo.scheduleRows
   const n = plano.total_installments
@@ -53,7 +56,11 @@ export function BlocoParcelada({
   return (
     <BlocoContexto
       titulo="Compra parcelada"
-      link={{ href: `${ROUTES.TRANSACTIONS}?plan=${encodeURIComponent(t.installment_plan_id)}`, label: "ver parcelas" }}
+      link={
+        onVerParcelas
+          ? { label: "ver parcelas", onClick: onVerParcelas }
+          : { href: `${ROUTES.TRANSACTIONS}?plan=${encodeURIComponent(t.installment_plan_id)}`, label: "ver parcelas" }
+      }
     >
       <Muted>
         <MoneyDisplay value={resumo.totalPurchase} className="font-medium text-foreground" /> em {n}×
