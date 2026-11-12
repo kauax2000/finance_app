@@ -5,16 +5,16 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { creditCardInvoiceBadgeForRow } from "@/components/transactions/transactions-table"
 import { Badge } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Caption } from "@/components/ui/typography"
+import { Progress } from "@/components/ui/progress"
+import { Caption, Muted } from "@/components/ui/typography"
 import { creditCardDetailPath } from "@/config/navigation"
 import {
   invoiceWindowForPurchaseDate,
   sumCreditCardExpensesInWindow,
   sumCreditCardRefundsInWindow,
 } from "@/lib/credit-card-billing"
-import { diaMesCurto, tituloDaFatura } from "@/lib/detalhe/blocos"
+import { diaMesCurto, fatiaDoLancamento, mesPorExtenso, rotuloDoPesoNaFatura, tituloDaFatura } from "@/lib/detalhe/blocos"
 import { chavesDeFaturasPagas } from "@/lib/fatura/total-com-banco"
-import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
@@ -27,7 +27,14 @@ import {
   parseYmdLocal,
   transactionLocalYmd,
 } from "@/lib/transaction-date"
-import { BlocoContexto, BlocoContextoEsqueleto, useFatiaDaManchete, type AoMudarManchete } from "./bloco-contexto"
+import {
+  BarraNaCor,
+  BlocoContexto,
+  BlocoContextoEsqueleto,
+  PontoNaCor,
+  useFatiaDaManchete,
+  type AoMudarManchete,
+} from "./bloco-contexto"
 
 /** A fatura em que a compra caiu: o mesmo cálculo de Cartões (despesas − estornos na janela). */
 export function BlocoFatura({ transaction: t, onManchete }: { transaction: Transaction; onManchete?: AoMudarManchete }) {
@@ -85,12 +92,8 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
     return <BlocoContextoEsqueleto />
   }
 
-  const emParcelas = sumCreditCardExpensesInWindow(
-    rows.filter((r) => r.installment_plan_id),
-    cartao.id,
-    janela.start,
-    janela.end,
-  )
+  const cor = t.category?.color
+  const mesDaFatura = mesPorExtenso(ate.slice(0, 7))
 
   return (
     <BlocoContexto
@@ -98,17 +101,26 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <MoneyDisplay value={total} size="lg" />
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <MoneyDisplay value={total} size="lg" />
+          {estado?.dueYmd ? <Muted>vence {diaMesCurto(estado.dueYmd)}</Muted> : null}
+        </div>
         {estado ? <Badge tone={estado.tone}>{estado.label}</Badge> : null}
       </div>
+      {/* Sem total, o máximo seria 0 (o Radix recusa) e não há fatia para mostrar. */}
+      {total > 0 ? (
+        <BarraNaCor cor={cor}>
+          <Progress
+            value={total}
+            max={total}
+            highlight={fatiaDoLancamento(total, Number(t.amount))}
+            aria-label={`Esta compra na fatura de ${mesDaFatura}`}
+          />
+        </BarraNaCor>
+      ) : null}
       <Caption>
-        {[
-          cartao.name,
-          estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
-          emParcelas > 0 ? `${currencyBRL(emParcelas)} em parcelas` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+        <PontoNaCor cor={cor} /> {rotuloDoPesoNaFatura(Number(t.amount), total)} · {cartao.name} · fecha{" "}
+        {diaMesCurto(ate)}
       </Caption>
     </BlocoContexto>
   )

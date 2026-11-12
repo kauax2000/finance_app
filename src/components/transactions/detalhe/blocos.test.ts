@@ -100,7 +100,7 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain("highlight={fatia}")
     expect(fonte).toMatch(/noMes \? fatiaDoLancamento\(/)
     // Sem orçamento, a barra só existe com gasto: `max={gasto}` nunca chega a 0.
-    expect(fonte).toMatch(/\{gasto > 0\s*\?\s*barraNaCor\(/)
+    expect(fonte).toMatch(/\{gasto > 0\s*\?\s*\(?\s*<BarraNaCor/)
   })
 
   it("categoria: sem gasto no mês anterior, a comparação não aparece", () => {
@@ -176,5 +176,14 @@ describe("os blocos de contexto do detalhe", () => {
     expect(r).toContain("{ receitas: null }")
     expect(ler("bloco-parcelada")).toMatch(/primeira:/)
     expect(ler("bloco-contexto")).toContain('"duplicado" | "fatura" | "receitas"')
+  })
+
+  it("o card da fatura mostra a fatia da compra, e a cor da categoria mora num lugar só", () => {
+    const f = ler("bloco-fatura")
+    expect(f).toContain("rotuloDoPesoNaFatura(")
+    expect(f).toContain("highlight={fatiaDoLancamento(")
+    expect(f).toContain("vence")
+    expect(ler("bloco-contexto")).toContain("tile-vivid")
+    for (const nome of ["bloco-fatura", "bloco-categoria"]) expect(ler(nome)).not.toContain("tile-vivid")
   })
 })

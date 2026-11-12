@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardSkeleton, CardToolbar } from "@/components/ui/card"
 import type { EntradaDaManchete } from "@/lib/detalhe/contexto"
+import { tileColorFor } from "@/lib/tile-palette"
 
 /**
  * A parte da manchete que cada bloco sabe: Categoria manda `{ categoria }`,
@@ -63,4 +64,22 @@ export function BlocoContexto({
 
 export function BlocoContextoEsqueleto() {
   return <CardSkeleton lines={2} />
+}
+
+// A fatia e o ponto vestem a cor da categoria pela régua do ladrilho (`tile-vivid`), nunca crua.
+const corDaCategoria = (cor: string | null | undefined) =>
+  ({ "--tile-color": tileColorFor(cor) ?? "var(--muted-foreground)" }) as CSSProperties
+
+/** A barra na cor da categoria: a cor e o `tile-vivid` no mesmo nó, onde roda a conta do `--tile-surface`. */
+export function BarraNaCor({ cor, children }: { cor: string | null | undefined; children: ReactNode }) {
+  return (
+    <div className="tile-vivid [--progress-highlight:var(--tile-surface)]" style={corDaCategoria(cor)}>
+      {children}
+    </div>
+  )
+}
+
+/** O ponto da legenda, na mesma cor da fatia. */
+export function PontoNaCor({ cor }: { cor: string | null | undefined }) {
+  return <span aria-hidden className="tile-vivid inline-block size-2 rounded-full bg-(--tile-surface)" style={corDaCategoria(cor)} />
 }

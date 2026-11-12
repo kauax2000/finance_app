@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import type { CSSProperties, ReactNode } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -28,11 +27,12 @@ import {
 } from "@/lib/detalhe/blocos"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
 import type { Transaction } from "@/lib/supabase"
-import { tileColorFor } from "@/lib/tile-palette"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 import {
+  BarraNaCor,
   BlocoContexto,
   BlocoContextoEsqueleto,
+  PontoNaCor,
   useFatiaDaManchete,
   type AoMudarManchete,
 } from "./bloco-contexto"
@@ -122,24 +122,12 @@ export function BlocoCategoria({
         ? { href: hrefOrcamento, label: "ver a categoria" }
         : null
 
-  // A fatia e o ponto vestem a cor da categoria pela régua do ladrilho (`tile-vivid`), nunca crua.
-  const corDaCategoria = {
-    "--tile-color": tileColorFor(bundle.category?.color ?? t.category?.color) ?? "var(--muted-foreground)",
-  } as CSSProperties
-  // A cor e o `tile-vivid` no mesmo nó: o `className` do `Progress` vai à casca e o `style` à
-  // barra, e a conta do `--tile-surface` precisa do `--tile-color` onde ela roda.
-  const barraNaCor = (barra: ReactNode) => (
-    <div className="tile-vivid [--progress-highlight:var(--tile-surface)]" style={corDaCategoria}>
-      {barra}
-    </div>
-  )
+  const cor = bundle.category?.color ?? t.category?.color
   // O total conta a compra no cartão no mês do fechamento: fora dele, a fatia e o peso falariam
   // das outras compras.
   const noMes = gasto > 0 && bundle.txs.some((x) => x.id === t.id)
   const fatia = noMes ? fatiaDoLancamento(gasto, Number(t.amount)) : undefined
-  const ponto = (
-    <span aria-hidden className="tile-vivid inline-block size-2 rounded-full bg-(--tile-surface)" style={corDaCategoria} />
-  )
+  const ponto = <PontoNaCor cor={cor} />
   const peso = noMes ? rotuloDoPeso(Number(t.amount), gasto, quantos) : null
 
   if (orcamento != null && orcamento > 0) {
@@ -153,7 +141,7 @@ export function BlocoCategoria({
             de <MoneyDisplay value={orcamento} />
           </Muted>
         </div>
-        {barraNaCor(
+        <BarraNaCor cor={cor}>
           <Progress
             value={gasto}
             max={orcamento}
@@ -161,8 +149,8 @@ export function BlocoCategoria({
             marker={mesCorrente ? marcadorDoMes(hoje) : undefined}
             highlight={fatia}
             aria-label={`Orçamento de ${nome} em ${mes}`}
-          />,
-        )}
+          />
+        </BarraNaCor>
         <Caption>
           {peso ? (
             <>
@@ -203,13 +191,15 @@ export function BlocoCategoria({
       </div>
       {/* Sem gasto, o máximo seria 0 (o Radix recusa) e não há fatia para mostrar. */}
       {gasto > 0
-        ? barraNaCor(
-            <Progress
-              value={gasto}
-              max={gasto}
-              highlight={fatia}
-              aria-label={`Este lançamento no mês de ${nome}`}
-            />,
+        ? (
+            <BarraNaCor cor={cor}>
+              <Progress
+                value={gasto}
+                max={gasto}
+                highlight={fatia}
+                aria-label={`Este lançamento no mês de ${nome}`}
+              />
+            </BarraNaCor>
           )
         : null}
       {peso ? (

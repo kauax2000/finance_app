@@ -8,6 +8,7 @@ import {
   hrefDaLista,
   rotuloDaVariacao,
   rotuloDoPeso,
+  rotuloDoPesoNaFatura,
   rotuloDoResto,
   rotuloVerOs,
   marcadorDoMes,
@@ -142,5 +143,12 @@ describe("C4: a fatia do lançamento no mês", () => {
     expect(rotuloDaVariacao(142, 118, "outubro", 11)).toEqual({ texto: "+20% que outubro até dia 11", bom: false })
     expect(rotuloDaVariacao(10, 0, "outubro", null)).toBeNull()
     expect(rotuloDaVariacao(10, 10, "outubro", null)).toBeNull()
+  })
+
+  it("rotuloDoPesoNaFatura: a fatia da compra no total da fatura", () => {
+    const f = (v: number, t: number) => rotuloDoPesoNaFatura(v, t).replace(/\s/g, " ")
+    expect(f(253.5, 914.08)).toBe("esta compra: R$ 253,50 (28% da fatura)")
+    expect(f(60, 0)).toBe("esta compra: R$ 60,00")
+    expect(f(120, 100)).toBe("esta compra: R$ 120,00 (100% da fatura)")
   })
 })
