@@ -1,5 +1,6 @@
 import type { FilterValue } from "@/components/ui/filter-bar"
 import { serializeFilters } from "@/components/ui/filter-bar"
+import { statCardDelta } from "@/components/ui/stat-card"
 import { ROUTES } from "@/config/navigation"
 import { formatYearMonth, parseYearMonth, shiftYearMonth } from "@/lib/budget-month"
 import { sinalNaDespesa } from "@/lib/expense-month-attribution"
@@ -73,6 +74,33 @@ export function rotuloDoResto(resto: number, mesCorrente: boolean, diasRestantes
   if (!mesCorrente) return `sobraram ${currencyBRL(resto)}`
   const dias = diasRestantes === 0 ? "último dia" : `${diasRestantes} ${diasRestantes === 1 ? "dia" : "dias"}`
   return `faltam ${currencyBRL(resto)} · ${dias}`
+}
+
+/** A fatia do lançamento na barra do mês: termina no gasto e começa o valor dele antes. */
+export function fatiaDoLancamento(gasto: number, valor: number): { from: number; to: number } {
+  return { from: Math.max(0, gasto - valor), to: Math.max(0, gasto) }
+}
+
+/** O peso do lançamento no mês da categoria; sem gasto, a porcentagem não diz nada. */
+export function rotuloDoPeso(valor: number, gasto: number, quantos: number): string {
+  if (quantos === 1) return "este lançamento é o único do mês"
+  const base = `este lançamento: ${currencyBRL(valor)}`
+  return gasto > 0 ? `${base} (${Math.round((valor / gasto) * 100)}% do mês)` : base
+}
+
+/** "−48% que setembro" (no mês corrente, "até dia N"); sem base ou sem mudança, nada. */
+export function rotuloDaVariacao(
+  atual: number,
+  anterior: number,
+  mesAnterior: string,
+  ateODia: number | null,
+): { texto: string; bom: boolean } | null {
+  const d = statCardDelta(atual, anterior, "down")
+  // Abaixo de meio por cento o inteiro diria "0%" com sinal: não é variação.
+  if (d?.kind !== "variou" || Math.round(Math.abs(d.pct)) === 0) return null
+  const pct = `${d.direction === "up" ? "+" : "\u2212"}${Math.round(Math.abs(d.pct))}%`
+  const corte = ateODia != null ? ` até dia ${ateODia}` : ""
+  return { texto: `${pct} que ${mesAnterior}${corte}`, bom: d.good }
 }
 
 export function rotuloVerOs(n: number, tipo: "despesa" | "receita"): string {

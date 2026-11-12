@@ -81,6 +81,19 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain("addDaysYmd(ymd, -89)")
   })
 
+  it("categoria: C4, a fatia do lançamento e o peso", () => {
+    const fonte = ler("bloco-categoria")
+    for (const t of [
+      "highlight={fatiaDoLancamento(",
+      "rotuloDoPeso(",
+      "rotuloDaVariacao(",
+      '"ver a categoria"',
+      'variant="secondary"',
+    ]) {
+      expect(fonte).toContain(t)
+    }
+  })
+
   it("categoria: sem gasto no mês anterior, a comparação não aparece", () => {
     expect(ler("bloco-categoria")).toMatch(/anteriorTotal > 0/)
   })

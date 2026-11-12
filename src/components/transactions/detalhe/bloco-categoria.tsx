@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import type { CSSProperties, ReactNode } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
@@ -14,16 +16,19 @@ import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import {
   corteDoMesAnterior,
   diasDoMes,
+  fatiaDoLancamento,
   hrefDaLista,
+  rotuloDaVariacao,
+  rotuloDoPeso,
   rotuloDoResto,
   rotuloVerOs,
   marcadorDoMes,
   mesPorExtenso,
   totalAteODia,
 } from "@/lib/detalhe/blocos"
-import { currencyBRL } from "@/lib/formatters"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
 import type { Transaction } from "@/lib/supabase"
+import { tileColorFor } from "@/lib/tile-palette"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 import {
   BlocoContexto,
@@ -103,33 +108,60 @@ export function BlocoCategoria({
 
   const { period_start, period_end } = periodBoundsFromYearMonth(ym)
   const quantos = bundle.txs.filter((x) => x.type === "expense").length
-  const link = quantos
-    ? {
-        href: hrefDaLista([
-          { field: "categoria", operator: "is", values: [categoryId] },
-          { field: "periodo", operator: "is", values: [period_start, period_end] },
-        ]),
-        label: rotuloVerOs(quantos, "despesa"),
-      }
-    : null
+  // Com mais de um, a lista do mês; com o único, ele mesmo já está aberto: a categoria no mês.
+  const link =
+    quantos > 1
+      ? {
+          href: hrefDaLista([
+            { field: "categoria", operator: "is", values: [categoryId] },
+            { field: "periodo", operator: "is", values: [period_start, period_end] },
+          ]),
+          label: rotuloVerOs(quantos, "despesa"),
+        }
+      : quantos === 1 && hrefOrcamento
+        ? { href: hrefOrcamento, label: "ver a categoria" }
+        : null
+
+  // A fatia e o ponto vestem a cor da categoria pela régua do ladrilho (`tile-vivid`), nunca crua.
+  const corDaCategoria = {
+    "--tile-color": tileColorFor(bundle.category?.color ?? t.category?.color) ?? "var(--muted-foreground)",
+  } as CSSProperties
+  // A cor e o `tile-vivid` no mesmo nó: o `className` do `Progress` vai à casca e o `style` à
+  // barra, e a conta do `--tile-surface` precisa do `--tile-color` onde ela roda.
+  const barraNaCor = (barra: ReactNode) => (
+    <div className="tile-vivid [--progress-highlight:var(--tile-surface)]" style={corDaCategoria}>
+      {barra}
+    </div>
+  )
+  const ponto = (
+    <span aria-hidden className="tile-vivid inline-block size-2 rounded-full bg-(--tile-surface)" style={corDaCategoria} />
+  )
+  const peso = rotuloDoPeso(Number(t.amount), gasto, quantos)
 
   if (orcamento != null && orcamento > 0) {
     const resto = orcamento - gasto
     const diasRestantes = diasDoMes(ym) - hoje.getDate()
     return (
       <BlocoContexto titulo={`${nome} em ${mes}`} link={link}>
-        <Muted>
-          <MoneyDisplay value={gasto} className="font-medium text-foreground" /> de{" "}
-          <MoneyDisplay value={orcamento} />
-        </Muted>
-        <Progress
-          value={gasto}
-          max={orcamento}
-          bands={BUDGET_BANDS}
-          marker={mesCorrente ? marcadorDoMes(hoje) : undefined}
-          aria-label={`Orçamento de ${nome} em ${mes}`}
-        />
-        <Caption>{rotuloDoResto(resto, mesCorrente, diasRestantes)}</Caption>
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <MoneyDisplay value={gasto} size="lg" />
+          <Muted>
+            de <MoneyDisplay value={orcamento} />
+          </Muted>
+        </div>
+        {barraNaCor(
+          <Progress
+            value={gasto}
+            max={orcamento}
+            bands={BUDGET_BANDS}
+            marker={mesCorrente ? marcadorDoMes(hoje) : undefined}
+            highlight={fatiaDoLancamento(gasto, Number(t.amount))}
+            aria-label={`Orçamento de ${nome} em ${mes}`}
+          />,
+        )}
+        <Caption>
+          {ponto} {peso} · {rotuloDoResto(resto, mesCorrente, diasRestantes)}
+        </Caption>
       </BlocoContexto>
     )
   }
@@ -141,21 +173,36 @@ export function BlocoCategoria({
       ? totalAteODia(anterior.data.txs, corteDoMesAnterior(ym, hoje.getDate()))
       : null
     : bundle.prevMonthCategoryTotal
-  // Sem gasto no mês anterior, "R$ 0,00" não compara nada: a linha sai. No corrente, o lado de cá
+  // Sem gasto no mês anterior, a variação não compara nada: o selo sai. No corrente, o lado de cá
   // também é só o lançado até hoje — o número grande soma o agendado do resto do mês.
-  const comparacao =
+  const variacao =
     anteriorTotal != null && anteriorTotal > 0
-      ? mesCorrente
-        ? `até dia ${hoje.getDate()}: ${currencyBRL(lancado)} · ${mesAnterior} até dia ${hoje.getDate()}: ${currencyBRL(anteriorTotal)}`
-        : `${mesAnterior}: ${currencyBRL(anteriorTotal)}`
+      ? rotuloDaVariacao(mesCorrente ? lancado : gasto, anteriorTotal, mesAnterior, mesCorrente ? hoje.getDate() : null)
       : null
 
   return (
     <BlocoContexto titulo={`${nome} em ${mes}`} link={link}>
-      <MoneyDisplay value={gasto} size="lg" />
-      {comparacao ? <Caption>{comparacao}</Caption> : null}
+      <div className="flex flex-wrap items-center gap-x-2">
+        <MoneyDisplay value={gasto} size="lg" />
+        {variacao ? (
+          <Badge variant="soft" size="sm" tone={variacao.bom ? "success" : "warning"}>
+            {variacao.texto}
+          </Badge>
+        ) : null}
+      </div>
+      {barraNaCor(
+        <Progress
+          value={gasto}
+          max={gasto}
+          highlight={fatiaDoLancamento(gasto, Number(t.amount))}
+          aria-label={`Este lançamento no mês de ${nome}`}
+        />,
+      )}
+      <Caption>
+        {ponto} {peso}
+      </Caption>
       {!convidado ? (
-        <Button variant="link" asChild className="justify-self-start">
+        <Button variant="secondary" size="sm" asChild className="justify-self-start">
           <Link href={categoryDetailPath(categoryId, { month: ym })}>definir orçamento</Link>
         </Button>
       ) : null}

@@ -4,7 +4,10 @@ import {
   corteDoMesAnterior,
   descricaoSemParcela,
   diaMesCurto,
+  fatiaDoLancamento,
   hrefDaLista,
+  rotuloDaVariacao,
+  rotuloDoPeso,
   rotuloDoResto,
   rotuloVerOs,
   marcadorDoMes,
@@ -117,5 +120,25 @@ describe("rotuloDoResto", () => {
   it("mês passado e estouro", () => {
     expect(rotuloDoResto(100, false, 0).replace(/\s/g, " ")).toBe("sobraram R$ 100,00")
     expect(rotuloDoResto(-50, true, 3).replace(/\s/g, " ")).toBe("R$ 50,00 acima do orçamento")
+  })
+})
+
+describe("C4: a fatia do lançamento no mês", () => {
+  it("a fatia termina no gasto e começa o valor antes, sem passar de zero", () => {
+    expect(fatiaDoLancamento(920, 220)).toEqual({ from: 700, to: 920 })
+    expect(fatiaDoLancamento(30.2, 50)).toEqual({ from: 0, to: 30.2 })
+  })
+
+  it("o peso do lançamento no mês", () => {
+    expect(rotuloDoPeso(30.2, 30.2, 1)).toBe("este lançamento é o único do mês")
+    expect(rotuloDoPeso(220, 920, 9).replace(/\s/g, " ")).toBe("este lançamento: R$ 220,00 (24% do mês)")
+    expect(rotuloDoPeso(10, 0, 3).replace(/\s/g, " ")).toBe("este lançamento: R$ 10,00")
+  })
+
+  it("a variação contra o mês anterior, e nada sem base ou sem mudança", () => {
+    expect(rotuloDaVariacao(30.2, 57.6, "setembro", null)).toEqual({ texto: "\u221248% que setembro", bom: true })
+    expect(rotuloDaVariacao(142, 118, "outubro", 11)).toEqual({ texto: "+20% que outubro até dia 11", bom: false })
+    expect(rotuloDaVariacao(10, 0, "outubro", null)).toBeNull()
+    expect(rotuloDaVariacao(10, 10, "outubro", null)).toBeNull()
   })
 })
