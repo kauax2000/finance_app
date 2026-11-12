@@ -178,13 +178,13 @@ describe("os blocos de contexto do detalhe", () => {
     expect(ler("bloco-contexto")).toContain('"duplicado" | "fatura" | "receitas"')
   })
 
-  it("o card da fatura mostra a fatia da compra, e a cor da categoria mora num lugar só", () => {
+  it("o card da fatura é a G8: a folhinha do vencimento, sem barra nem ponto, e a cor da categoria mora num lugar só", () => {
     const f = ler("bloco-fatura")
-    expect(f).toContain("rotuloDoPesoNaFatura(")
-    expect(f).toContain("highlight={fatiaDoLancamento(")
-    expect(f).toMatch(/total > 0\s*\?\s*\(\s*<BarraNaCor/)
-    expect(f).toMatch(/estado\?\.dueYmd \? <Muted>vence/)
+    expect(f).toMatch(/estado\?\.dueYmd \? <DateTile date=\{estado\.dueYmd\} caption="vence"/)
+    expect(f).toContain('tone={vencida ? "overdue" : "default"}')
+    expect(f).toContain("esta compra {currencyBRL(")
     expect(f).toContain('estado?.slot === "open"')
+    for (const fora of ["<Progress", "BarraNaCor", "PontoNaCor", "rotuloDoPesoNaFatura", "% da fatura"]) expect(f).not.toContain(fora)
     expect(ler("bloco-contexto")).toContain("tile-vivid")
     for (const nome of ["bloco-fatura", "bloco-categoria"]) expect(ler(nome)).not.toContain("tile-vivid")
   })

@@ -89,12 +89,6 @@ export function rotuloDoPeso(valor: number, gasto: number, quantos: number): str
   return gasto > 0 ? `${base} (${Math.min(100, Math.round((valor / gasto) * 100))}% do mês)` : base
 }
 
-/** O peso da compra na fatura; com a fatura zerada (só estornos), sem porcentagem. */
-export function rotuloDoPesoNaFatura(valor: number, total: number): string {
-  const base = `esta compra: ${currencyBRL(valor)}`
-  return total > 0 ? `${base} (${Math.min(100, Math.round((valor / total) * 100))}% da fatura)` : base
-}
-
 /** "−48% que setembro" (no mês corrente, "até dia N"); sem base ou sem mudança, nada. */
 export function rotuloDaVariacao(
   atual: number,

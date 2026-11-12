@@ -4,23 +4,25 @@ import { useMemo } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { creditCardInvoiceBadgeForRow } from "@/components/transactions/transactions-table"
 import { Badge } from "@/components/ui/badge"
+import { DateTile } from "@/components/ui/date-tile"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Progress } from "@/components/ui/progress"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { creditCardDetailPath } from "@/config/navigation"
 import {
   invoiceWindowForPurchaseDate,
   sumCreditCardExpensesInWindow,
   sumCreditCardRefundsInWindow,
 } from "@/lib/credit-card-billing"
-import { diaMesCurto, fatiaDoLancamento, mesPorExtenso, rotuloDoPesoNaFatura, tituloDaFatura } from "@/lib/detalhe/blocos"
+import { diaMesCurto, tituloDaFatura } from "@/lib/detalhe/blocos"
 import { chavesDeFaturasPagas } from "@/lib/fatura/total-com-banco"
+import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import type { Transaction } from "@/lib/supabase"
 import {
+  compareYmd,
   filterRangeEndIso,
   filterRangeStartIso,
   localYmdFromDate,
@@ -28,10 +30,8 @@ import {
   transactionLocalYmd,
 } from "@/lib/transaction-date"
 import {
-  BarraNaCor,
   BlocoContexto,
   BlocoContextoEsqueleto,
-  PontoNaCor,
   useFatiaDaManchete,
   type AoMudarManchete,
 } from "./bloco-contexto"
@@ -92,37 +92,25 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
     return <BlocoContextoEsqueleto />
   }
 
-  const cor = t.category?.color
-  const mesDaFatura = mesPorExtenso((estado?.dueYmd ?? ate).slice(0, 7))
+  // Vencida: o vencimento passou e a fatura não está paga (o selo verde é a aberta ou a paga).
+  const vencida = Boolean(estado?.dueYmd && estado.tone !== "success" && compareYmd(estado.dueYmd, localYmdFromDate(new Date())) < 0)
 
   return (
     <BlocoContexto
       titulo={rotulo}
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-baseline gap-x-2">
+      <div className="flex items-center gap-3">
+        {estado?.dueYmd ? <DateTile date={estado.dueYmd} caption="vence" tone={vencida ? "overdue" : "default"} /> : null}
+        <div className="flex min-w-0 flex-1 flex-col items-start">
           <MoneyDisplay value={total} size="lg" />
-          {estado?.dueYmd ? <Muted>vence {diaMesCurto(estado.dueYmd)}</Muted> : null}
+          <Caption>
+            esta compra {currencyBRL(Number(t.amount))}
+            {estado?.slot === "open" ? ` · fecha ${diaMesCurto(ate)}` : null}
+          </Caption>
         </div>
         {estado ? <Badge tone={estado.tone}>{estado.label}</Badge> : null}
       </div>
-      {/* Sem total, o máximo seria 0 (o Radix recusa) e não há fatia para mostrar. */}
-      {total > 0 ? (
-        <BarraNaCor cor={cor}>
-          <Progress
-            value={total}
-            max={total}
-            highlight={fatiaDoLancamento(total, Number(t.amount))}
-            aria-label={`Esta compra na fatura de ${mesDaFatura}`}
-          />
-        </BarraNaCor>
-      ) : null}
-      <Caption>
-        {total > 0 ? <PontoNaCor cor={cor} /> : null} {rotuloDoPesoNaFatura(Number(t.amount), total)} ·{" "}
-        {cartao.name}
-        {estado?.slot === "open" ? ` · fecha ${diaMesCurto(ate)}` : null}
-      </Caption>
     </BlocoContexto>
   )
 }
