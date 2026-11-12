@@ -148,21 +148,28 @@ export function FolhaDoPlano({
           </div>
 
           <div className="flex flex-col gap-1">
+            {/* O número grande é o que ainda vai sair do bolso, e leva o nome em cima: sem rótulo, lia como o já pago. */}
             {estado === "ativo" ? (
               <>
-                <MoneyDisplay size="2xl" value={resumo.remaining ?? resumo.totalPurchase} />
+                <div className="flex flex-col">
+                  <Caption>falta pagar</Caption>
+                  <MoneyDisplay size="2xl" value={resumo.remaining ?? resumo.totalPurchase} />
+                </div>
                 <Caption>
-                  faltam {n - lancadas} de {n} · de {currencyBRL(resumo.totalPurchase)}
+                  faltam {n - lancadas} de {n} parcelas · já pago {currencyBRL(resumo.posted ?? 0)} de{" "}
+                  {currencyBRL(resumo.totalPurchase)}
                 </Caption>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <MoneyDisplay
-                  size="2xl"
-                 
-                  value={estado === "quitado" ? resumo.totalPurchase : (resumo.posted ?? 0)}
-                />
-                <Badge tone={estado === "quitado" ? "success" : "neutral"}>{estado}</Badge>
+              <div className="flex flex-col">
+                <Caption>{estado === "quitado" ? "total pago" : "pago até encerrar"}</Caption>
+                <div className="flex items-center gap-2">
+                  <MoneyDisplay
+                    size="2xl"
+                    value={estado === "quitado" ? resumo.totalPurchase : (resumo.posted ?? 0)}
+                  />
+                  <Badge tone={estado === "quitado" ? "success" : "neutral"}>{estado}</Badge>
+                </div>
               </div>
             )}
           </div>
