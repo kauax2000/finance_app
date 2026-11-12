@@ -285,6 +285,11 @@ describe("o texto do quadro", () => {
         expect(jaEra.some((f) => f.chave === "seguro")).toBe(false)
     })
 
+    it("a fatura que a compra não muda não vira frase", () => {
+        const i = com({ proximasFaturas: [{ closeYmd: "2027-01-05", antes: 0, depois: 0 }] })
+        expect(frasesDoImpacto(i).some((f) => f.icone === "cartao")).toBe(false)
+    })
+
     it("uma frase por fatura, e o limite só com limite cadastrado", () => {
         const i = com({
             proximasFaturas: [

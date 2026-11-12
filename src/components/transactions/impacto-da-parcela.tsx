@@ -76,9 +76,10 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                     {currencyBRL(desta)}
                     {percentualDaRenda != null ? ` · ${percentualDaRenda}% da renda recorrente` : null}
                 </Caption>
-                <ItemGroup>
+                {/* Um respiro só entre as frases (o do grupo): sem o recuo vertical do Item, a frase de uma linha não ganha vão a mais. */}
+                <ItemGroup className="gap-3 pt-1">
                     {frasesDoImpacto(impacto).map((f) => (
-                        <Item key={f.chave} size="sm" className="px-0">
+                        <Item key={f.chave} size="sm" className="p-0">
                             {/* `success` não existe no ladrilho: o positivo fica neutro, com o tique. */}
                             <ItemMedia variant="tile" tone={f.tom === "success" ? "neutral" : f.tom}>
                                 <Icone frase={f} />

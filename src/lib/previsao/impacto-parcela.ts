@@ -96,7 +96,8 @@ export function frasesDoImpacto(i: Impacto): FraseDoImpacto[] {
             descricao: `${parcela.meses} ${parcela.meses === 1 ? "mês" : "meses"}`,
         })
     }
-    for (const f of i.proximasFaturas ?? []) {
+    // A fatura que esta compra não muda (a parcela não cai nela) não diz nada.
+    for (const f of (i.proximasFaturas ?? []).filter((f) => Math.round(f.depois * 100) !== Math.round(f.antes * 100))) {
         frases.push({
             chave: `fatura:${f.closeYmd}`,
             icone: "cartao",
