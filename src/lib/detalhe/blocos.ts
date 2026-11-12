@@ -83,9 +83,10 @@ export function fatiaDoLancamento(gasto: number, valor: number): { from: number;
 
 /** O peso do lançamento no mês da categoria; sem gasto, a porcentagem não diz nada. */
 export function rotuloDoPeso(valor: number, gasto: number, quantos: number): string {
-  if (quantos === 1) return "este lançamento é o único do mês"
+  // "Único" só quando ele é o mês inteiro: um estorno ou o agendado mudam a conta.
+  if (quantos === 1 && valor >= gasto) return "este lançamento é o único do mês"
   const base = `este lançamento: ${currencyBRL(valor)}`
-  return gasto > 0 ? `${base} (${Math.round((valor / gasto) * 100)}% do mês)` : base
+  return gasto > 0 ? `${base} (${Math.min(100, Math.round((valor / gasto) * 100))}% do mês)` : base
 }
 
 /** "−48% que setembro" (no mês corrente, "até dia N"); sem base ou sem mudança, nada. */

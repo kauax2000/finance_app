@@ -133,6 +133,8 @@ describe("C4: a fatia do lançamento no mês", () => {
     expect(rotuloDoPeso(30.2, 30.2, 1)).toBe("este lançamento é o único do mês")
     expect(rotuloDoPeso(220, 920, 9).replace(/\s/g, " ")).toBe("este lançamento: R$ 220,00 (24% do mês)")
     expect(rotuloDoPeso(10, 0, 3).replace(/\s/g, " ")).toBe("este lançamento: R$ 10,00")
+    expect(rotuloDoPeso(30, 90, 1).replace(/\s/g, " ")).toBe("este lançamento: R$ 30,00 (33% do mês)")
+    expect(rotuloDoPeso(150, 100, 2).replace(/\s/g, " ")).toBe("este lançamento: R$ 150,00 (100% do mês)")
   })
 
   it("a variação contra o mês anterior, e nada sem base ou sem mudança", () => {

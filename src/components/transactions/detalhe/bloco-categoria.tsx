@@ -133,10 +133,14 @@ export function BlocoCategoria({
       {barra}
     </div>
   )
+  // O total conta a compra no cartão no mês do fechamento: fora dele, a fatia e o peso falariam
+  // das outras compras.
+  const noMes = gasto > 0 && bundle.txs.some((x) => x.id === t.id)
+  const fatia = noMes ? fatiaDoLancamento(gasto, Number(t.amount)) : undefined
   const ponto = (
     <span aria-hidden className="tile-vivid inline-block size-2 rounded-full bg-(--tile-surface)" style={corDaCategoria} />
   )
-  const peso = rotuloDoPeso(Number(t.amount), gasto, quantos)
+  const peso = noMes ? rotuloDoPeso(Number(t.amount), gasto, quantos) : null
 
   if (orcamento != null && orcamento > 0) {
     const resto = orcamento - gasto
@@ -155,12 +159,19 @@ export function BlocoCategoria({
             max={orcamento}
             bands={BUDGET_BANDS}
             marker={mesCorrente ? marcadorDoMes(hoje) : undefined}
-            highlight={fatiaDoLancamento(gasto, Number(t.amount))}
+            highlight={fatia}
             aria-label={`Orçamento de ${nome} em ${mes}`}
           />,
         )}
         <Caption>
-          {ponto} {peso} · {rotuloDoResto(resto, mesCorrente, diasRestantes)}
+          {peso ? (
+            <>
+              {/* A fatia toda além do orçamento não aparece na barra: o ponto não teria par. */}
+              {fatia && fatia.from < orcamento ? <>{ponto} </> : null}
+              {peso} ·{" "}
+            </>
+          ) : null}
+          {rotuloDoResto(resto, mesCorrente, diasRestantes)}
         </Caption>
       </BlocoContexto>
     )
@@ -190,17 +201,22 @@ export function BlocoCategoria({
           </Badge>
         ) : null}
       </div>
-      {barraNaCor(
-        <Progress
-          value={gasto}
-          max={gasto}
-          highlight={fatiaDoLancamento(gasto, Number(t.amount))}
-          aria-label={`Este lançamento no mês de ${nome}`}
-        />,
-      )}
-      <Caption>
-        {ponto} {peso}
-      </Caption>
+      {/* Sem gasto, o máximo seria 0 (o Radix recusa) e não há fatia para mostrar. */}
+      {gasto > 0
+        ? barraNaCor(
+            <Progress
+              value={gasto}
+              max={gasto}
+              highlight={fatia}
+              aria-label={`Este lançamento no mês de ${nome}`}
+            />,
+          )
+        : null}
+      {peso ? (
+        <Caption>
+          {ponto} {peso}
+        </Caption>
+      ) : null}
       {!convidado ? (
         <Button variant="secondary" size="sm" asChild className="justify-self-start">
           <Link href={categoryDetailPath(categoryId, { month: ym })}>definir orçamento</Link>

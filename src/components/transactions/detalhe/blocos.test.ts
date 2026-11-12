@@ -84,7 +84,7 @@ describe("os blocos de contexto do detalhe", () => {
   it("categoria: C4, a fatia do lançamento e o peso", () => {
     const fonte = ler("bloco-categoria")
     for (const t of [
-      "highlight={fatiaDoLancamento(",
+      "fatiaDoLancamento(",
       "rotuloDoPeso(",
       "rotuloDaVariacao(",
       '"ver a categoria"',
@@ -92,6 +92,15 @@ describe("os blocos de contexto do detalhe", () => {
     ]) {
       expect(fonte).toContain(t)
     }
+  })
+
+  it("categoria: a fatia e o peso só com o lançamento no mês (o cartão conta no fechamento)", () => {
+    const fonte = ler("bloco-categoria")
+    expect(fonte).toMatch(/const noMes = gasto > 0 && bundle\.txs\.some\(\(x\) => x\.id === t\.id\)/)
+    expect(fonte).toContain("highlight={fatia}")
+    expect(fonte).toMatch(/noMes \? fatiaDoLancamento\(/)
+    // Sem orçamento, a barra só existe com gasto: `max={gasto}` nunca chega a 0.
+    expect(fonte).toMatch(/\{gasto > 0\s*\?\s*barraNaCor\(/)
   })
 
   it("categoria: sem gasto no mês anterior, a comparação não aparece", () => {
