@@ -1219,6 +1219,10 @@ declaração de `background-color` no trilho).
     DOM (`useLinkQueFecha`, `NavegarFechandoContext`; a raiz mais de fora
     responde). Nova aba, modificadoras, `download` e outro domínio seguem o
     navegador. Não escreva `onClick` que fecha o diálogo num link.
+  - **`DialogHeader translucent`** (opt-in; hoje só o detalhe do lançamento): o corpo rola
+    por trás do cabeçalho, a placa a 75% com 2px de desfoque e a borda descendo num degradê
+    de 40px, sem linha reta (`@utility dialog-header-translucent`, 13/11/2026). O vidro de
+    24px em todas as folhas (12/11) foi recusado.
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: a `@utility dialog-step`
     (as peças surgem do desfoque, `menu-content-in`, em ondas por
     `--stagger-base`) é o gesto genérico; no Adicionar limite o dono escolheu o

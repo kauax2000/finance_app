@@ -2500,7 +2500,9 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   /* A escada mora no mesmo seletor da animação: num `& > *` à parte ela perdia em
      especificidade para os dois `:not()` e todo filho entrava a 80ms. */
   & > :not([data-slot="dialog-close-button"]):not([data-slot="sheet-resize-handle"]) {
-    animation: rise 220ms var(--ease-out) 80ms both;
+    /* `backwards`, e não `both`: uma animação de opacidade presa no fim faz do filho
+       uma raiz de fundo, e o cabeçalho translúcido deixava de enxergar o corpo atrás dele. */
+    animation: rise 220ms var(--ease-out) 80ms backwards;
     --rise-distance: 3px;
     --stagger-base: 80ms;
     --stagger-step: 30ms;
@@ -4116,5 +4118,73 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   animation: seal-sway 7s var(--ease-in-out) infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+}
+
+/**
+ * O cabeçalho translúcido de folha (`DialogHeader translucent`, o B3 do detalhe do
+ * lançamento, 13/11/2026): o corpo rola por trás dele (`--dialog-header-h`, que o
+ * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 75% com
+ * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 40px além dele, sem
+ * desfoque, num degradê suave até sumir — sem linha reta. O desfoque fica fraco de
+ * propósito: o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
+ */
+@utility dialog-header-translucent {
+  /* A descrição só para o leitor de tela (`sr-only`) pode ficar entre os dois. */
+  [data-layout="fixed"]
+    &:has(
+      + [data-slot="dialog-body"],
+      + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"]
+    ) {
+    --dialog-header-tint: color-mix(in oklab, var(--popover) 75%, transparent);
+    --dialog-header-fade-h: calc(var(--spacing) * 10);
+    position: relative;
+    z-index: 10;
+
+    @media (prefers-reduced-transparency: reduce) {
+      --dialog-header-tint: var(--popover);
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+    &::before {
+      top: 0;
+      height: 100%;
+      background-color: var(--dialog-header-tint);
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+    }
+    &::after {
+      top: 100%;
+      height: var(--dialog-header-fade-h);
+      background-image: linear-gradient(
+        to bottom,
+        var(--dialog-header-tint),
+        color-mix(in oklab, var(--dialog-header-tint) 60%, transparent) 40%,
+        color-mix(in oklab, var(--dialog-header-tint) 22%, transparent) 72%,
+        transparent
+      );
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      &::before {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+    }
+
+    & + [data-slot="dialog-body"],
+    & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"] {
+      margin-top: calc(var(--dialog-header-h, 0px) * -1);
+      padding-top: calc(var(--dialog-header-h, 0px) + var(--dialog-body-pt, calc(var(--spacing) * 4)));
+      scroll-padding-block-start: calc(var(--dialog-header-h, 0px) + var(--spacing) * 2);
+      /* Quem esconde o conteúdo no topo é o cabeçalho: a dissolução de cima sai. */
+      --scroll-fade-top-max: 0px;
+    }
   }
 }

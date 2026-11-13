@@ -587,9 +587,13 @@ function useDialogHeaderDock<T extends HTMLElement>(): [(el: T | null) => void, 
       setDocked(false)
       return
     }
+    // Com o cabeçalho translúcido, o corpo sobe por trás dele: sair de vista é
+    // passar por baixo da base do cabeçalho, não da borda do corpo. A margem
+    // negativa do corpo é a altura que ele sobe (zero sem o `translucent`).
+    const sob = Math.max(0, -parseFloat(getComputedStyle(root).marginTop) || 0)
     const io = new Observer(
       ([e]) => setDocked(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0)),
-      { root, threshold: 0 }
+      { root, threshold: 0, rootMargin: `${-sob}px 0px 0px 0px` }
     )
     io.observe(el)
     return () => io.disconnect()
@@ -622,17 +626,55 @@ const dialogHeaderVariants = cva("", {
  * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
  * casco já dá o recuo, então aqui ele é zero.
  */
+/**
+ * A altura do cabeçalho, publicada no pai como `--dialog-header-h`: com
+ * `translucent`, o corpo irmão sobe por trás dele nessa medida
+ * (`@utility dialog-header-translucent`). Medida antes da pintura e a cada
+ * mudança de tamanho.
+ */
+function useAlturaDoCabecalho(ligado: boolean) {
+  const [el, setEl] = React.useState<HTMLDivElement | null>(null)
+  React.useLayoutEffect(() => {
+    const pai = el?.parentElement
+    const Observer = el?.ownerDocument.defaultView?.ResizeObserver
+    if (!ligado || !el || !pai || !Observer) return
+    const medir = () => pai.style.setProperty("--dialog-header-h", `${el.offsetHeight}px`)
+    medir()
+    const ob = new Observer(medir)
+    ob.observe(el)
+    return () => {
+      ob.disconnect()
+      pai.style.removeProperty("--dialog-header-h")
+    }
+  }, [el, ligado])
+  return setEl
+}
+
 function DialogHeader({
   className,
   children,
   align,
+  translucent = false,
+  ref,
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof dialogHeaderVariants>) {
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof dialogHeaderVariants> & {
+    /**
+     * O corpo rola por trás do cabeçalho, que fica levemente translúcido e
+     * desce num degradê longo, sem linha reta (o B3 do detalhe do lançamento,
+     * 13/11/2026). Só no `layout="fixed"` com o `DialogBody` logo depois.
+     */
+    translucent?: boolean
+  }) {
+  const medir = useAlturaDoCabecalho(translucent)
   return (
     <div
+      ref={useComposedRefs(ref, medir)}
       data-slot="dialog-header"
       data-align={align ?? "start"}
+      data-translucent={translucent || undefined}
       className={cn(
+        translucent && "dialog-header-translucent",
         // Sempre à esquerda, nas duas larguras. Sem `gap`: título sobre
         // descrição é par de identidade, separado pela entrelinha do título.
         "flex w-full min-w-0 shrink-0 flex-col text-left",
