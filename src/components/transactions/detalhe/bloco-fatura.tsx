@@ -4,7 +4,6 @@ import { useMemo } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { creditCardInvoiceBadgeForRow } from "@/components/transactions/transactions-table"
 import { Badge } from "@/components/ui/badge"
-import { DateTile } from "@/components/ui/date-tile"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption } from "@/components/ui/typography"
 import { creditCardDetailPath } from "@/config/navigation"
@@ -22,7 +21,6 @@ import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import type { Transaction } from "@/lib/supabase"
 import {
-  compareYmd,
   filterRangeEndIso,
   filterRangeStartIso,
   localYmdFromDate,
@@ -92,20 +90,16 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
     return <BlocoContextoEsqueleto />
   }
 
-  // Vencida: o vencimento passou e a fatura não está paga (o selo verde é a aberta ou a paga).
-  const vencida = Boolean(estado?.dueYmd && estado.tone !== "success" && compareYmd(estado.dueYmd, localYmdFromDate(new Date())) < 0)
-
   return (
     <BlocoContexto
       titulo={rotulo}
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
       <div className="flex items-center gap-3">
-        {estado?.dueYmd ? <DateTile date={estado.dueYmd} caption="vence" tone={vencida ? "overdue" : "default"} /> : null}
         <div className="flex min-w-0 flex-1 flex-col items-start">
           <MoneyDisplay value={total} size="lg" />
           <Caption>
-            esta compra {currencyBRL(Number(t.amount))}
+            {estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)} · ` : null}esta compra {currencyBRL(Number(t.amount))}
             {estado?.slot === "open" ? ` · fecha ${diaMesCurto(ate)}` : null}
           </Caption>
         </div>

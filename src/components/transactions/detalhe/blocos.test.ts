@@ -178,10 +178,10 @@ describe("os blocos de contexto do detalhe", () => {
     expect(ler("bloco-contexto")).toContain('"duplicado" | "fatura" | "receitas"')
   })
 
-  it("o card da fatura é a G8: a folhinha do vencimento, sem barra nem ponto, e a cor da categoria mora num lugar só", () => {
+  it("o card da fatura: o total, vence e esta compra numa linha, sem folhinha, barra nem ponto, e a cor da categoria mora num lugar só", () => {
     const f = ler("bloco-fatura")
-    expect(f).toMatch(/estado\?\.dueYmd \? <DateTile date=\{estado\.dueYmd\} caption="vence"/)
-    expect(f).toContain('tone={vencida ? "overdue" : "default"}')
+    expect(f).toContain("vence ${diaMesCurto(estado.dueYmd)}")
+    expect(f).not.toContain("DateTile")
     expect(f).toContain("esta compra {currencyBRL(")
     expect(f).toContain('estado?.slot === "open"')
     for (const fora of ["<Progress", "BarraNaCor", "PontoNaCor", "rotuloDoPesoNaFatura", "% da fatura"]) expect(f).not.toContain(fora)
