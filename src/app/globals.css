@@ -4191,4 +4191,41 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       --scroll-fade-top-max: 0px;
     }
   }
+
+  /* O degradê só aparece ao rolar (13/11): invisível no topo, liga nos primeiros 24px do corpo.
+     Cabeçalho e corpo são irmãos (ou o corpo está num `form`), então a linha do tempo é
+     publicada pela folha, o ancestral comum. Sem suporte, o degradê fica sempre à vista. */
+  @supports (animation-timeline: scroll()) {
+    [data-layout="fixed"]:has(&) {
+      timeline-scope: --dialog-body-scroll;
+    }
+    [data-layout="fixed"]
+      &:has(
+        + [data-slot="dialog-body"],
+        + form > [data-slot="dialog-body"],
+        + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
+      ) {
+      &::after {
+        animation: dialog-header-fade-in linear both;
+        animation-timeline: --dialog-body-scroll;
+        animation-range: 0 24px;
+      }
+      & + [data-slot="dialog-body"],
+      & + form > [data-slot="dialog-body"],
+      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
+        scroll-timeline: --dialog-body-scroll block;
+      }
+    }
+  }
+}
+
+@keyframes dialog-header-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

@@ -24,4 +24,14 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("margin-top: calc(var(--dialog-header-h, 0px) * -1)")
     expect(u).toContain("--scroll-fade-top-max: 0px")
   })
+
+  it("o degradê só aparece ao rolar: invisível no topo, liga nos primeiros 24px", () => {
+    const u = blocoCss(CSS, "@utility dialog-header-translucent")
+    expect(u).toContain("@supports (animation-timeline: scroll())")
+    expect(u).toContain("timeline-scope: --dialog-body-scroll")
+    expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
+    expect(u).toContain("animation-timeline: --dialog-body-scroll")
+    expect(u).toContain("animation-range: 0 24px")
+    expect(CSS).toMatch(/@keyframes dialog-header-fade-in \{\s*from \{\s*opacity: 0;?\s*\}/)
+  })
 })
