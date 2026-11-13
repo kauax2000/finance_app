@@ -103,23 +103,22 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
           <MoneyDisplay value={total} size="lg" />
-          {/* O valor da compra já está no topo do detalhe: aqui só as datas da fatura, e o selo à direita delas. */}
-          <div className="flex items-center justify-between gap-2">
-            <Caption>
-              {[
-                estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)}` : null,
-                estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </Caption>
-            {estado ? (
-              <Badge tone={estado.tone} size="sm">
-                {estado.label}
-              </Badge>
-            ) : null}
-          </div>
+          {/* O valor da compra já está no topo do detalhe: aqui só as datas da fatura. */}
+          <Caption>
+            {[
+              estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)}` : null,
+              estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </Caption>
         </div>
+        {/* O selo à direita, no centro da altura do total e das datas. */}
+        {estado ? (
+          <Badge tone={estado.tone} size="sm">
+            {estado.label}
+          </Badge>
+        ) : null}
       </div>
     </BlocoContexto>
   )
