@@ -13,7 +13,9 @@ import {
   CardMessage,
   CardSkeleton,
   CardTitle,
+  CardToolbar,
 } from "./card"
+import { Button } from "./button"
 
 /** As versões do `Card`. */
 
@@ -97,3 +99,10 @@ describe("o fio das superfícies", () => {
   })
 })
 
+
+describe("CardToolbar dá o degrau aos botões", () => {
+  it("o botão da tira nasce sm (28), sem declarar size, como o da PageSection", () => {
+    const out = html(h(CardToolbar, null, "Título", h(Button, { variant: "tertiary" }, "ver os 3")))
+    expect(out).toContain('data-size="sm"')
+  })
+})

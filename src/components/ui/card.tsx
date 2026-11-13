@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { composeRefs } from "radix-ui/internal"
 import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Muted } from "@/components/ui/typography"
+import { ButtonSizeContext } from "@/components/ui/button"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 
 /**
@@ -329,6 +330,7 @@ const cardToolbarVariants = cva(
 function CardToolbar({
   className,
   variant,
+  children,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof cardToolbarVariants>) {
   return (
@@ -337,7 +339,10 @@ function CardToolbar({
       data-variant={variant ?? "label"}
       className={cn(cardToolbarVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {/* A ação da tira não declara `size`: é o `sm` (28), como a da `PageSection`. */}
+      <ButtonSizeContext value="sm">{children}</ButtonSizeContext>
+    </div>
   )
 }
 

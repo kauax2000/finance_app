@@ -1081,6 +1081,8 @@ declaração de `background-color` no trilho).
     `CardNote` sangram até a borda e o casco recolhe o respiro: não escreva
     `rounded-t-xl`, `pt-0` nem `border-b bg-muted/30`. `CardHeader` não é a
     barra.
+  - **A ação da `CardToolbar` não declara `size`**: a tira a dá `sm` (28)
+    pelo `ButtonSizeContext`, como a `PageSection` ("Ver os 3", "Ver fatura").
   - **Cartão clicável é o link**: `interactive` + `asChild` com um `<Link>`.
     Com ações dentro, é `CardLink` (o link esticado; o casco ergue os botões a
     `z-10`).

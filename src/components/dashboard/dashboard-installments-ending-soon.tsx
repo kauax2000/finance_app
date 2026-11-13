@@ -172,10 +172,9 @@ export function DashboardInstallmentsEndingSoon({
                         asChild
                         type="button"
                         variant="outline"
-                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-11"
                     >
                         <Link href={transactionsHref}>
-                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <ArrowTopRightOnSquareIcon />
                             <span className="truncate">Ver em transações</span>
                         </Link>
                     </Button>
