@@ -93,16 +93,7 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
   return (
     <BlocoContexto
       // O selo sobe ao título (H5): a direita do corpo fica livre e o estado lê junto do nome da fatura.
-      titulo={
-        <span className="inline-flex items-center gap-2">
-          {rotulo}
-          {estado ? (
-            <Badge tone={estado.tone} size="xs">
-              {estado.label}
-            </Badge>
-          ) : null}
-        </span>
-      }
+      titulo={rotulo}
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
       <div className="flex items-center gap-3">
@@ -110,17 +101,24 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
         <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-row bg-muted text-muted-foreground">
           <CreditCardIcon className="size-5" />
         </span>
-        <div className="flex min-w-0 flex-1 flex-col items-start">
+        <div className="flex min-w-0 flex-1 flex-col">
           <MoneyDisplay value={total} size="lg" />
-          {/* O valor da compra já está no topo do detalhe: aqui só as datas da fatura. */}
-          <Caption>
-            {[
-              estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)}` : null,
-              estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </Caption>
+          {/* O valor da compra já está no topo do detalhe: aqui só as datas da fatura, e o selo à direita delas. */}
+          <div className="flex items-center justify-between gap-2">
+            <Caption>
+              {[
+                estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)}` : null,
+                estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Caption>
+            {estado ? (
+              <Badge tone={estado.tone} size="sm">
+                {estado.label}
+              </Badge>
+            ) : null}
+          </div>
         </div>
       </div>
     </BlocoContexto>
