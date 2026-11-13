@@ -340,7 +340,7 @@ describe("o texto do quadro", () => {
     it("o quadro é feito de peças do design system, e o wireframe saiu", () => {
         const quadro = semComentarios(lerFonte("src/components/transactions/impacto-da-parcela.tsx"), "tudo")
         expect(quadro).not.toContain("<Collapsible")
-        for (const peca of ["<Alert", "<BlocoContexto", "<Progress", "<MoneyDisplay", "<ItemMedia", "<Caption"]) {
+        for (const peca of ["<Alert", "<BlocoContexto", "<MoneyDisplay", "<ItemMedia", "<Caption"]) {
             expect(quadro).toContain(peca)
         }
         expect(quadro).not.toContain("WireframeBox")

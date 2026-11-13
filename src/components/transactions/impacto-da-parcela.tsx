@@ -13,17 +13,17 @@ import { BlocoContexto, BlocoContextoEsqueleto } from "@/components/transactions
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Progress } from "@/components/ui/progress"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { ROUTES } from "@/config/navigation"
 import { currencyBRL } from "@/lib/formatters"
+import { formatMonthLongPtBr, formatMonthShortPtBr } from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 import {
     avisoDoImpacto,
     frasesDoImpacto,
     impactoDaParcela,
     impactoDoPlano,
-    tituloDoImpacto,
     type FraseDoImpacto,
     type Impacto,
     type PlanoProposto,
@@ -37,11 +37,12 @@ function Icone({ frase: f }: { frase: FraseDoImpacto }) {
     return f.tom === "success" ? <CheckIcon aria-hidden /> : <ExclamationTriangleIcon aria-hidden />
 }
 
-/** O aviso à vista e o cartão do mês mais pesado: a barra com a parte desta compra e as frases. */
+const dataDoMes = (mes: string) => new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)) - 1, 1)
+
+/** O aviso à vista e o cartão do mês mais pesado: os quatro meses com o pico marcado e as frases. */
 function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: boolean }) {
     const { pico, percentualDaRenda } = impacto
     const aviso = avisoDoImpacto(impacto)
-    const desta = Math.max(0, pico.comEsta - pico.semEsta)
     return (
         <div className="flex flex-col gap-2">
             {aviso ? (
@@ -51,31 +52,40 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                 </Alert>
             ) : null}
             <BlocoContexto
-                titulo={tituloDoImpacto(impacto)}
+                titulo="Parcelas mês a mês"
                 // O formulário não navega: o link só no detalhe.
                 link={comLink ? { href: ROUTES.PREVISAO, label: "ver previsão" } : null}
             >
-                <div className="flex flex-wrap items-baseline gap-x-2">
-                    <MoneyDisplay value={pico.comEsta} size="lg" />
-                    <Muted>em parcelas no mês</Muted>
+                <div role="list" className="grid grid-cols-4 gap-1.5">
+                    {impacto.meses.map((m, i) => {
+                        const desta = m.comEsta - m.semEsta
+                        const ehPico = m.mes === pico.mes
+                        const data = dataDoMes(m.mes)
+                        return (
+                            <div
+                                key={m.mes}
+                                role="listitem"
+                                aria-label={`${formatMonthLongPtBr(data)}: ${currencyBRL(m.comEsta)} em parcelas, ${currencyBRL(desta)} desta compra`}
+                                className={cn(
+                                    "flex flex-col rounded-row-lg bg-muted px-2.5 py-2",
+                                    i === 0
+                                        ? "inset-ring-1 inset-ring-warning/60"
+                                        : ehPico && "inset-ring-1 inset-ring-foreground/35",
+                                )}
+                            >
+                                <Caption>
+                                    {formatMonthShortPtBr(data)}
+                                    {ehPico ? " · pico" : null}
+                                </Caption>
+                                <MoneyDisplay value={m.comEsta} className="font-medium" />
+                                <Caption className={desta > 0 ? "text-warning" : undefined}>
+                                    {desta > 0 ? `+ ${currencyBRL(desta)} esta` : "sem esta"}
+                                </Caption>
+                            </div>
+                        )
+                    })}
                 </div>
-                {/* Sem parcela nenhuma, o máximo seria 0 (o Radix recusa). */}
-                {pico.comEsta > 0 ? (
-                    <Progress
-                        className="[--progress-highlight:var(--color-warning)]"
-                        value={pico.comEsta}
-                        max={pico.comEsta}
-                        highlight={{ from: pico.semEsta, to: pico.comEsta }}
-                        aria-label={`${currencyBRL(pico.comEsta)} em parcelas no mês, ${currencyBRL(desta)} desta compra`}
-                    />
-                ) : null}
-                <Caption>
-                    <span aria-hidden className="inline-block size-2 rounded-full bg-primary" /> outras{" "}
-                    {currencyBRL(pico.semEsta)} ·{" "}
-                    <span aria-hidden className="inline-block size-2 rounded-full bg-warning" /> esta compra{" "}
-                    {currencyBRL(desta)}
-                    {percentualDaRenda != null ? ` · ${percentualDaRenda}% da renda recorrente` : null}
-                </Caption>
+                {percentualDaRenda != null ? <Caption>{percentualDaRenda}% da renda recorrente</Caption> : null}
                 {/* Um respiro só entre as frases (o do grupo): sem o recuo vertical do Item, a frase de uma linha não ganha vão a mais. */}
                 <ItemGroup className="gap-3 pt-1">
                     {frasesDoImpacto(impacto).map((f) => (
