@@ -4124,7 +4124,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 /**
  * O cabeçalho translúcido das folhas (`DialogHeader`, o B3 do detalhe do lançamento,
  * 13/11/2026, levado a todas as folhas): o corpo rola por trás dele (`--dialog-header-h`, que o
- * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 75% com
+ * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 88% com
  * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 40px além dele, sem
  * desfoque, num degradê suave até sumir — sem linha reta. O desfoque fica fraco de
  * propósito: o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
@@ -4138,7 +4138,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
       + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
     ) {
-    --dialog-header-tint: color-mix(in oklab, var(--popover) 75%, transparent);
+    --dialog-header-tint: color-mix(in oklab, var(--popover) 88%, transparent);
     --dialog-header-fade-h: calc(var(--spacing) * 10);
     position: relative;
     z-index: 10;
