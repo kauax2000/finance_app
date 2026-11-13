@@ -4125,7 +4125,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
  * O cabeçalho translúcido das folhas (`DialogHeader`, o B3 do detalhe do lançamento,
  * 13/11/2026, levado a todas as folhas): o corpo rola por trás dele (`--dialog-header-h`, que o
  * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 95% com
- * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 40px além dele, sem
+ * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 56px além dele, sem
  * desfoque, num degradê suave até sumir — sem linha reta. O desfoque fica fraco de
  * propósito: o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
  */
@@ -4139,7 +4139,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
     ) {
     --dialog-header-tint: color-mix(in oklab, var(--popover) 95%, transparent);
-    --dialog-header-fade-h: calc(var(--spacing) * 10);
+    --dialog-header-fade-h: calc(var(--spacing) * 14);
     position: relative;
     z-index: 10;
 
@@ -4165,11 +4165,18 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
     &::after {
       top: 100%;
       height: var(--dialog-header-fade-h);
+      /* Uma curva suave (mais paradas, a queda espalhada), e não três retas: a borda
+         não aparece como degrau. */
       background-image: linear-gradient(
         to bottom,
-        var(--dialog-header-tint),
-        color-mix(in oklab, var(--dialog-header-tint) 60%, transparent) 40%,
-        color-mix(in oklab, var(--dialog-header-tint) 22%, transparent) 72%,
+        color-mix(in oklab, var(--dialog-header-tint) 100%, transparent) 0%,
+        color-mix(in oklab, var(--dialog-header-tint) 91%, transparent) 12%,
+        color-mix(in oklab, var(--dialog-header-tint) 78%, transparent) 25%,
+        color-mix(in oklab, var(--dialog-header-tint) 62%, transparent) 38%,
+        color-mix(in oklab, var(--dialog-header-tint) 47%, transparent) 50%,
+        color-mix(in oklab, var(--dialog-header-tint) 33%, transparent) 62%,
+        color-mix(in oklab, var(--dialog-header-tint) 19%, transparent) 75%,
+        color-mix(in oklab, var(--dialog-header-tint) 8%, transparent) 88%,
         transparent
       );
     }

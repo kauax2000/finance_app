@@ -10,12 +10,13 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(DIALOG).toContain('translucent && "dialog-header-translucent"')
   })
 
-  it("placa a 95% com desfoque de 2px, e a borda desce num degradê de 40px, sem linha", () => {
+  it("placa a 95% com desfoque de 2px, e a borda desce num degradê de 56px, sem linha", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
     expect(u).toContain("var(--popover) 95%")
     expect(u).toContain("blur(2px)")
-    expect(u).toContain("calc(var(--spacing) * 10)")
-    expect(u).toMatch(/linear-gradient\(\s*to bottom,\s*var\(--dialog-header-tint\)/)
+    expect(u).toContain("calc(var(--spacing) * 14)")
+    // A curva tem oito paradas, da placa cheia ao transparente: sem degrau na borda.
+    expect(u.match(/var\(--dialog-header-tint\) \d+%, transparent\) \d+%/g)).toHaveLength(8)
   })
 
   it("o corpo sobe por trás pela altura medida, e a dissolução de cima sai", () => {
