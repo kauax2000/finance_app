@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { DocumentIcon, EllipsisHorizontalIcon, PaperClipIcon, PhotoIcon } from "@heroicons/react/16/solid"
+import { DocumentIcon, EllipsisHorizontalIcon, PaperClipIcon, PhotoIcon, PlusIcon } from "@heroicons/react/16/solid"
 
 import {
     AlertDialog,
@@ -103,7 +103,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                         aria-busy={enviando || undefined}
                         onClick={() => input.current?.click()}
                     >
-                        {enviando ? <Spinner /> : <PaperClipIcon aria-hidden />}
+                        {enviando ? <Spinner /> : <PlusIcon aria-hidden />}
                         Adicionar
                     </Button>
                 }
