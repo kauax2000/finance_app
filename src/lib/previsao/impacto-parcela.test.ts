@@ -33,6 +33,35 @@ describe("impactoDaParcela", () => {
         expect(mesCurto("2027-06")).toBe("jun/2027")
     })
 
+    it("meses: 4 meses a partir da 1ª parcela, sem e com a compra", () => {
+        const i = impactoDaParcela(dezParcelas, dados({ hojeYmd: HOJE, cartoes: [c1] }))
+        expect(i.meses.map((m) => m.mes)).toEqual(["2026-11", "2026-12", "2027-01", "2027-02"])
+        expect(i.meses[0]).toEqual({ mes: "2026-11", semEsta: 0, comEsta: 300 })
+    })
+
+    it("meses: depois do fim da compra, com e sem são iguais", () => {
+        const duas: PlanoProposto = { ...dezParcelas, parcelas: 2 }
+        const i = impactoDaParcela(duas, dados({ hojeYmd: HOJE, cartoes: [c1] }))
+        expect(i.meses.map((m) => m.comEsta)).toEqual([300, 300, 0, 0])
+        expect(i.meses[2].comEsta).toBe(i.meses[2].semEsta)
+    })
+
+    it("meses: começa no mês de hoje quando a 1ª parcela já passou", () => {
+        const antiga: PlanoProposto = { ...dezParcelas, primeiraYmd: "2026-08-10" }
+        const i = impactoDaParcela(antiga, dados({ hojeYmd: HOJE, cartoes: [c1] }))
+        expect(i.meses[0].mes).toBe("2026-10")
+    })
+
+    it("meses: soma em centavos, sem erro de ponto flutuante", () => {
+        const d = dados({
+            hojeYmd: HOJE,
+            cartoes: [c1],
+            planos: [plano({ id: "p", total_installments: 3, installment_amount: 0.1, final_installment_amount: 0.1, next_billing_date: "2026-11-01" })],
+        })
+        const i = impactoDaParcela({ ...dezParcelas, valorParcela: 0.2 }, d)
+        expect(i.meses[0].comEsta).toBe(0.3)
+    })
+
     it("o pico: a maior soma mensal de parcelas, sem e com a compra", () => {
         const d = dados({
             hojeYmd: HOJE,

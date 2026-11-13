@@ -35,6 +35,8 @@ export type Impacto = {
     parcela: { valor: number; fim: string | null; meses: number }
     /** A maior soma mensal de parcelas (pelo mês da cobrança) daqui em diante; `mes` é `YYYY-MM`. */
     pico: { semEsta: number; comEsta: number; mes: string }
+    /** 4 meses de cobrança a partir da 1ª parcela (ou de hoje, se já passou): a soma das parcelas sem e com esta compra. */
+    meses: Array<{ mes: string; semEsta: number; comEsta: number }>
     /** 3, a partir da fatura que recebe a 1ª parcela (ou da aberta, se aquela já fechou). Só com cartão. */
     proximasFaturas: Array<{ closeYmd: string; dueYmd: string; antes: number; depois: number }> | null
     /** O pico com esta ÷ a receita recorrente mensal, em %; `null` sem receita. */
@@ -176,8 +178,8 @@ function planoSintetico(p: PlanoProposto): WorkspaceInstallmentPlan {
 const ymDoFechamento = (ymd: string, card: CreditCard) =>
     localYmdFromDate(firstCloseOnOrAfter(parseYmdLocal(ymd)!, card.closing_day)).slice(0, 7)
 
-/** Por mês de cobrança, de hoje em diante: a soma das parcelas dos planos ativos. */
-function picoDasParcelas(planos: WorkspaceInstallmentPlan[], mesDeHoje: string): { valor: number; mes: string } {
+/** Por mês de cobrança, de hoje em diante: a soma (em centavos) das parcelas dos planos ativos. */
+function parcelasPorMes(planos: WorkspaceInstallmentPlan[], mesDeHoje: string): Map<string, number> {
     const porMes = new Map<string, number>()
     for (const p of planos) {
         for (const c of expandAllPlanCharges(p)) {
@@ -186,6 +188,10 @@ function picoDasParcelas(planos: WorkspaceInstallmentPlan[], mesDeHoje: string):
             porMes.set(ym, (porMes.get(ym) ?? 0) + centavos(c.amount))
         }
     }
+    return porMes
+}
+
+function picoDasParcelas(porMes: Map<string, number>, mesDeHoje: string): { valor: number; mes: string } {
     let pico = { valor: 0, mes: mesDeHoje }
     for (const [mes, v] of [...porMes].sort(([a], [b]) => a.localeCompare(b))) {
         if (v > pico.valor) pico = { valor: v, mes }
@@ -242,8 +248,17 @@ export function impactoDaParcela(plano: PlanoProposto, dados: DadosDaPrevisao): 
     const ultima = expandAllPlanCharges(sintetico).at(-1)
     const fim = ultima ? localYmdFromDate(ultima.chargeDate).slice(0, 7) : null
 
-    const sem = picoDasParcelas(dados.planos, mesDeHoje)
-    const com = picoDasParcelas(depois.planos, mesDeHoje)
+    const porMesSem = parcelasPorMes(dados.planos, mesDeHoje)
+    const porMesCom = parcelasPorMes(depois.planos, mesDeHoje)
+    const sem = picoDasParcelas(porMesSem, mesDeHoje)
+    const com = picoDasParcelas(porMesCom, mesDeHoje)
+    // A janela abre no maior entre hoje e a 1ª cobrança desta compra.
+    const primeiroMes = plano.primeiraYmd.slice(0, 7)
+    const inicioMeses = primeiroMes > mesDeHoje ? primeiroMes : mesDeHoje
+    const meses = [0, 1, 2, 3].map((i) => {
+        const mes = shiftYearMonth(inicioMeses, i)
+        return { mes, semEsta: (porMesSem.get(mes) ?? 0) / 100, comEsta: (porMesCom.get(mes) ?? 0) / 100 }
+    })
 
     let proximasFaturas: Impacto["proximasFaturas"] = null
     if (card) {
@@ -264,6 +279,7 @@ export function impactoDaParcela(plano: PlanoProposto, dados: DadosDaPrevisao): 
     return {
         parcela: { valor: plano.valorParcela, fim, meses: plano.parcelas },
         pico: { semEsta: sem.valor, comEsta: com.valor, mes: com.mes },
+        meses,
         proximasFaturas,
         percentualDaRenda: renda > 0 ? Math.round((centavos(com.valor) / renda) * 1000) / 10 : null,
         primeiroMesNegativo: {
