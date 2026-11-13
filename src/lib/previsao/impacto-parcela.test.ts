@@ -237,6 +237,7 @@ describe("o texto do quadro", () => {
     const base: Impacto = {
         parcela: { valor: 60, fim: "2027-01", meses: 3 },
         pico: { semEsta: 0, comEsta: 242, mes: "2027-05" },
+        meses: [],
         proximasFaturas: null,
         percentualDaRenda: 10,
         primeiroMesNegativo: { antes: null, depois: null },
