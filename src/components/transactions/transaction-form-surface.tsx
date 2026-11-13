@@ -76,15 +76,9 @@ export function TransactionFormSurface({
         </div>
     ) : null
     const headerClassName = cn(temSegmento && "group-data-[layout=fixed]/dialog-content:pb-0")
-    // E o corpo sobe por trás do trilho (opaco): o que rola passa sob as
-    // abas e se dissolve ali, em vez de sumir antes delas. O respiro de cima
-    // cresce na mesma medida, e o primeiro campo fica onde estava. O trilho é a
-    // faixa da dissolução (`--scroll-fade-band-h`), como o rodapé é a do pé: a
-    // rampa desliza com a rolagem na mesma regra das duas pontas, presa ao trilho.
-    // A faixa é a altura do trilho: 36 no mouse, 40 no dedo.
-    const corpoSobAbas =
-        temSegmento &&
-        "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)]"
+    // O corpo sobe por trás do cabeçalho inteiro (abas incluídas) pelo
+    // `DialogHeader` translúcido (`@utility dialog-header-translucent`): o que
+    // rola passa sob as abas de leve, e o primeiro campo fica 16px abaixo delas.
 
     const formPickersOpen =
         fieldsProps.categoryPopoverOpen || fieldsProps.creditCardPopoverOpen
@@ -94,7 +88,6 @@ export function TransactionFormSurface({
     // deste formulário: com um seletor aberto o corpo para de rolar, para o
     // gesto não vazar para a lista atrás.
     const fieldsScrollClass = cn(
-        corpoSobAbas,
         variant === "dialog-mobile" && formPickersOpen && "overflow-hidden",
         variant === "dialog-desktop" && "scrollbar-thin",
         scrollClassName

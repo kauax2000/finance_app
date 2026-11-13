@@ -382,7 +382,7 @@ export function TransactionDetailSheet({
 
     const viewBody = (
         <div ref={marca} className="flex min-h-0 flex-1 flex-col">
-            <DialogHeader translucent>
+            <DialogHeader>
                 <DialogHeaderRow
                     centerShown={nomeSubiu}
                     center={

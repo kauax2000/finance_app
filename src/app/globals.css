@@ -4122,8 +4122,8 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 }
 
 /**
- * O cabeçalho translúcido de folha (`DialogHeader translucent`, o B3 do detalhe do
- * lançamento, 13/11/2026): o corpo rola por trás dele (`--dialog-header-h`, que o
+ * O cabeçalho translúcido das folhas (`DialogHeader`, o B3 do detalhe do lançamento,
+ * 13/11/2026, levado a todas as folhas): o corpo rola por trás dele (`--dialog-header-h`, que o
  * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 75% com
  * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 40px além dele, sem
  * desfoque, num degradê suave até sumir — sem linha reta. O desfoque fica fraco de
@@ -4134,7 +4134,9 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   [data-layout="fixed"]
     &:has(
       + [data-slot="dialog-body"],
-      + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"]
+      + form > [data-slot="dialog-body"],
+      + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+      + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
     ) {
     --dialog-header-tint: color-mix(in oklab, var(--popover) 75%, transparent);
     --dialog-header-fade-h: calc(var(--spacing) * 10);
@@ -4179,7 +4181,9 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
     }
 
     & + [data-slot="dialog-body"],
-    & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"] {
+    & + form > [data-slot="dialog-body"],
+    & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+    & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
       margin-top: calc(var(--dialog-header-h, 0px) * -1);
       padding-top: calc(var(--dialog-header-h, 0px) + var(--dialog-body-pt, calc(var(--spacing) * 4)));
       scroll-padding-block-start: calc(var(--dialog-header-h, 0px) + var(--spacing) * 2);

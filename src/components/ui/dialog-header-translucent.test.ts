@@ -4,9 +4,9 @@ import { blocoCss, lerFonte } from "@/test/fonte"
 const CSS = lerFonte("src/app/globals.css")
 const DIALOG = lerFonte("src/components/ui/dialog.tsx")
 
-describe("DialogHeader translucent (B3, 13/11/2026)", () => {
-  it("é opt-in: sem a prop, o cabeçalho não ganha a utility", () => {
-    expect(DIALOG).toContain("translucent = false")
+describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
+  it("vale em todas as folhas: ligado por padrão, `translucent={false}` é a saída", () => {
+    expect(DIALOG).toContain("translucent = true")
     expect(DIALOG).toContain('translucent && "dialog-header-translucent"')
   })
 

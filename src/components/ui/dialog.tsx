@@ -654,15 +654,17 @@ function DialogHeader({
   className,
   children,
   align,
-  translucent = false,
+  translucent = true,
   ref,
   ...props
 }: React.ComponentProps<"div"> &
   VariantProps<typeof dialogHeaderVariants> & {
     /**
      * O corpo rola por trás do cabeçalho, que fica levemente translúcido e
-     * desce num degradê longo, sem linha reta (o B3 do detalhe do lançamento,
-     * 13/11/2026). Só no `layout="fixed"` com o `DialogBody` logo depois.
+     * desce num degradê longo, sem linha reta (o B3, 13/11/2026, em todas as
+     * folhas). Vale no `layout="fixed"` com o `DialogBody` logo depois (irmão
+     * ou dentro do `form` irmão). `false` é a saída de quem monta a própria
+     * borda (o painel de notificações, com o dia preso sob as abas).
      */
     translucent?: boolean
   }) {
