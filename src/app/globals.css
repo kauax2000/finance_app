@@ -4206,8 +4206,12 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
         + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
         + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
       ) {
+      /* A placa e o degradê juntos: em repouso o cabeçalho não tem tinta nenhuma (a placa
+         mais escura que a folha marcava uma faixa sobre o topo, 13/11), e os dois acendem
+         nos primeiros 24px de rolagem. Sem rolagem a linha do tempo fica inativa: a base
+         invisível mantém os dois apagados. */
+      &::before,
       &::after {
-        /* Sem rolagem a linha do tempo fica inativa: a base invisível mantém o degradê apagado. */
         opacity: 0;
         animation: dialog-header-fade-in linear both;
         animation-timeline: --dialog-body-scroll;
