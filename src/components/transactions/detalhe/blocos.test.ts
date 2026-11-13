@@ -68,6 +68,9 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain("<Cell")
     expect(fonte).toContain('<ChartReferenceLine y={historico.media} tone="average"')
     expect(fonte).toContain("contraAMedia(valor, historico.media)")
+    // O selo mora no canto da tira, no lugar do "Ver os N".
+    expect(fonte).toContain("canto={")
+    expect(fonte).not.toContain("rotuloVerOs(")
     expect(fonte).toContain('color: "var(--primary-accent)"')
     expect(fonte).toContain('operator: "contains"')
   })
@@ -110,7 +113,7 @@ describe("os blocos de contexto do detalhe", () => {
   })
 
   it("os links no singular passam pelo rotuloVerOs", () => {
-    for (const nome of ["bloco-categoria", "bloco-historico", "bloco-receitas"]) {
+    for (const nome of ["bloco-categoria", "bloco-receitas"]) {
       const fonte = ler(nome)
       expect(fonte, nome).toContain("rotuloVerOs(")
       expect(fonte, nome).not.toMatch(/`ver (os|as) \$/)

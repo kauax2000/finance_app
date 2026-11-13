@@ -6,9 +6,8 @@ import { Bar, BarChart, Cell } from "recharts"
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { ChartContainer, ChartReferenceLine, type ChartConfig } from "@/components/ui/chart"
-import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption } from "@/components/ui/typography"
-import { descricaoSemParcela, hrefDaLista, rotuloVerOs } from "@/lib/detalhe/blocos"
+import { descricaoSemParcela, hrefDaLista } from "@/lib/detalhe/blocos"
 import { contraAMedia, duplicadoDe, historicoDe } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
@@ -118,23 +117,17 @@ export function BlocoHistorico({
   return (
     <BlocoContexto
       titulo={`${nome} nos últimos 90 dias`}
-      link={{
-        href: hrefHistorico,
-        label: rotuloVerOs(historico.vezes, "despesa"),
-      }}
-    >
-      {/* A pergunta da tela: esta saiu mais cara ou mais barata que o normal? */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <MoneyDisplay value={valor} className="text-base font-medium" />
-        {contra.direcao === "na" ? (
+      canto={
+        contra.direcao === "na" ? (
           <Badge tone="neutral">na média</Badge>
         ) : (
           <Badge tone={contra.direcao === "abaixo" ? "success" : "warning"}>
             {contra.direcao === "abaixo" ? <ArrowDownIcon aria-hidden /> : <ArrowUpIcon aria-hidden />}
             {currencyBRL(contra.diferenca)} {contra.direcao} da média
           </Badge>
-        )}
-      </div>
+        )
+      }
+    >
       {/* Barras pequenas com a régua da média: a forma das últimas vezes, com esta acesa. */}
       <ChartContainer
         config={CONFIG}

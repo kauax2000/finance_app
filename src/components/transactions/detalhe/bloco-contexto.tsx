@@ -36,9 +36,12 @@ export function useFatiaDaManchete(onManchete: AoMudarManchete | undefined, fati
 export function BlocoContexto({
   titulo,
   link,
+  canto,
   children,
 }: {
   titulo: ReactNode
+  /** Um selo no canto da tira, no lugar do link. */
+  canto?: ReactNode
   /** O botão terciário da tira: um link, ou uma ação no lugar (a folha do plano). */
   link?: { href: string; label: string } | { label: string; onClick: () => void } | null
   children: ReactNode
@@ -55,7 +58,9 @@ export function BlocoContexto({
           <Button variant="tertiary" asChild>
             <Link href={link.href}>{link.label}</Link>
           </Button>
-        ) : null}
+        ) : (
+          canto ?? null
+        )}
       </CardToolbar>
       <CardContent className="grid gap-2 px-(--card-strip-px) pb-(--card-strip-py)">{children}</CardContent>
     </Card>
