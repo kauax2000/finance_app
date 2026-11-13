@@ -46,6 +46,7 @@ import type { Transaction, TransactionInstallmentPlanRef } from "@/lib/supabase"
 import { formatMonthShortPtBr, parseYmdLocal } from "@/lib/transaction-date"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { encerrarInstallmentPlan } from "@/lib/transactions/mutations"
+import { cn } from "@/lib/utils"
 
 const ESTADO: Record<LinhaDoPlano["estado"], { rotulo: string; badge: Parameters<typeof Badge>[0] }> = {
   lancada: { rotulo: "lançada", badge: { tone: "info" } },
@@ -257,17 +258,21 @@ export function FolhaDoPlano({
                         variant="flush"
                         size="sm"
                         interactive={clicavel}
-                        tone={aberta ? "warning" : undefined}
                         aria-current={aberta ? "true" : undefined}
                       >
-                        <ItemTitle className="nums w-10 shrink-0 font-normal text-muted-foreground">
+                        <ItemTitle
+                          className={cn(
+                            "nums w-10 shrink-0",
+                            aberta ? "font-semibold text-warning" : "font-normal text-muted-foreground"
+                          )}
+                        >
                           {clicavel ? (
                             <ItemLink onClick={() => onAbrirParcela(l.transactionId!)}>{rotulo}</ItemLink>
                           ) : (
                             rotulo
                           )}
                         </ItemTitle>
-                        <ItemContent className="nums truncate">{l.data ? dataCurta(l.data) : "—"}</ItemContent>
+                        <ItemContent className={cn("nums truncate", aberta && "font-medium text-warning")}>{l.data ? dataCurta(l.data) : "—"}</ItemContent>
                         <ItemActions>
                           <Badge size="sm" {...ESTADO[l.estado].badge}>
                             {ESTADO[l.estado].rotulo}
