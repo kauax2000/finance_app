@@ -4207,6 +4207,8 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
         + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
       ) {
       &::after {
+        /* Sem rolagem a linha do tempo fica inativa: a base invisível mantém o degradê apagado. */
+        opacity: 0;
         animation: dialog-header-fade-in linear both;
         animation-timeline: --dialog-body-scroll;
         animation-range: 0 24px;

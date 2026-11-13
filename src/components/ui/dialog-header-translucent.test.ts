@@ -32,6 +32,7 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
     expect(u).toContain("animation-timeline: --dialog-body-scroll")
     expect(u).toContain("animation-range: 0 24px")
+    expect(u).toMatch(/&::after \{\s*\/\*[^*]*\*\/\s*opacity: 0;/)
     expect(CSS).toMatch(/@keyframes dialog-header-fade-in \{\s*from \{\s*opacity: 0;?\s*\}/)
   })
 })
