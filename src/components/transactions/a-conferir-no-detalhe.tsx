@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Alert, AlertAction, AlertActions, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,6 +15,9 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
+import { DescriptionDetails, DescriptionList, DescriptionListItem, DescriptionTerm } from "@/components/ui/description-list"
+import { Caption, Muted } from "@/components/ui/typography"
 import {
     ALIAS_MAX,
     confirmarLancamento,
@@ -27,12 +29,27 @@ import {
 } from "@/lib/captura/a-conferir-acoes"
 import { invalidateWorkspaceData, type WorkspaceDataDomain } from "@/lib/queries/invalidate-workspace-data"
 import { supabase, type Transaction } from "@/lib/supabase"
+import { formatWeekdayDayMonthShortPtBr } from "@/lib/transaction-date"
 
 type Props = {
     transaction: Pick<
         Transaction,
-        "id" | "workspace_id" | "needs_review" | "import_batch_id" | "source" | "capture_meta" | "payment_credit_card_id"
+        | "id"
+        | "workspace_id"
+        | "needs_review"
+        | "import_batch_id"
+        | "source"
+        | "capture_meta"
+        | "payment_credit_card_id"
+        | "payment_method"
+        | "description"
+        | "date"
+        | "category"
     >
+    /** O pagamento como o topo do detalhe o escreve ("Nubank •• 1111", "Pix"). */
+    pagamento?: string
+    /** Abre o modo de edição do próprio detalhe. */
+    onEditar?: () => void
     /** "desfeito": o lançamento não existe mais, e quem mostra o detalhe o fecha. */
     onFeito?: (o: "confirmado" | "desfeito") => void
 }
@@ -40,6 +57,15 @@ type Props = {
 /** O bloco cabe: a conferir, importado, ou Apple Pay com o nome da Wallet. */
 export function temAConferir(t: Props["transaction"]): boolean {
     return Boolean(t.needs_review || t.import_batch_id || (t.source === "apple_pay" && t.capture_meta?.walletCard))
+}
+
+/** Quem leu o que chegou: a IA, a importação, o Apple Pay, uma IA conectada ou o Atalho. */
+function quemLeu(t: Props["transaction"]): string {
+    if (t.capture_meta?.ia) return "lido pela IA"
+    if (t.import_batch_id) return "importação"
+    if (t.source === "apple_pay") return "Apple Pay"
+    if (t.capture_meta?.via === "mcp") return "IA conectada"
+    return "Atalho"
 }
 
 const mensagem = (e: unknown, padrao: string) => (e instanceof Error && e.message ? e.message : padrao)
@@ -52,11 +78,13 @@ function tituloDoDesfazer(n: number | undefined): string {
 }
 
 /**
- * "A conferir" no detalhe (spec §8.3): Confirmar tira o `needs_review`;
+ * "A conferir" no detalhe (spec §8.3; versão K2c, 13/11/2026): o card "Como
+ * chegou" com o original entre aspas, os campos que o app preencheu e
+ * Confirmar + Editar. Confirmar tira o `needs_review`;
  * Lembrar grava o nome da Wallet como `wallet_alias` do cartão escolhido, e a
  * próxima captura casa; Desfazer importação apaga o lote inteiro.
  */
-export function AConferirNoDetalhe({ transaction: t, onFeito }: Props) {
+export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeito }: Props) {
     const queryClient = useQueryClient()
     const [confirmado, setConfirmado] = React.useState(!t.needs_review)
     const [lembrado, setLembrado] = React.useState(false)
@@ -149,85 +177,129 @@ export function AConferirNoDetalhe({ transaction: t, onFeito }: Props) {
     if (soLembrar && podeLembrar && aliasAtual.isPending) return null
 
     const conferido = confirmado || soLembrar
-    const titulo = conferido
-        ? t.import_batch_id
-            ? "Importado · conferido"
-            : "Conferido"
-        : t.import_batch_id
-          ? "Importado · a conferir"
-          : t.source === "apple_pay"
-            ? "Capturado pelo Apple Pay · a conferir"
-            : "Capturado · a conferir"
-
     const mostraConfirmar = !conferido
     const mostraLembrar = podeLembrar && !lembrado && !jaNoBanco && !aliasAtual.isPending
     const mostraDesfazer = Boolean(t.import_batch_id)
 
+    // Conferido e sem nada a fazer (nem lembrar, nem desfazer, nem o recado do que acabou de ser feito): o card sai.
+    if (conferido && !mostraLembrar && !mostraDesfazer && !lembrado && !erro) return null
+
     const avisos: string[] = []
-    if (longoDemais) avisos.push("Nome da Wallet longo demais para lembrar.")
-    if (walletCard && !longoDemais && !cartaoId) avisos.push(`Escolha o cartão do lançamento para lembrar "${walletCard}".`)
-    if (!lembrado && jaNoBanco) avisos.push("Cartão já lembrado.")
+    if (mostraConfirmar || mostraLembrar) {
+        if (longoDemais) avisos.push("Nome da Wallet longo demais para lembrar.")
+        if (walletCard && !longoDemais && !cartaoId) avisos.push(`Escolha o cartão do lançamento para lembrar "${walletCard}".`)
+        if (!lembrado && jaNoBanco) avisos.push("Cartão já lembrado.")
+    }
+
+    const descricao = t.description?.trim()
+    const textoOriginal = t.capture_meta?.texto?.trim()
+    // O original, como chegou: a frase digitada; no Apple Pay, a notificação; na importação, a linha do extrato.
+    const original = textoOriginal
+        ? `“${textoOriginal}”`
+        : t.source === "apple_pay" && descricao
+          ? `“${[descricao, walletCard].filter(Boolean).join(" · ")}”`
+          : t.import_batch_id && descricao
+            ? `“${descricao}” · extrato`
+            : null
 
     return (
-        <Alert tone={conferido ? "success" : "info"} size="sm">
-            <AlertTitle>{titulo}</AlertTitle>
-            {avisos.map((a) => (
-                <AlertDescription key={a}>{a}</AlertDescription>
-            ))}
-            {lembrado ? (
-                <AlertDescription role="status">{`Cartão lembrado: a próxima compra com "${walletCard}" já casa.`}</AlertDescription>
-            ) : null}
-            {erro ? <AlertDescription role="alert">{erro}</AlertDescription> : null}
-            {mostraConfirmar || mostraLembrar || mostraDesfazer ? (
-                <AlertActions className="pointer-coarse:flex-col pointer-coarse:items-stretch">
-                    {mostraConfirmar ? (
-                        <Button type="button" variant="primary" size="md" disabled={pendente} onClick={() => void confirmar()}>
-                            Confirmar
+        // shrink-0: na coluna flex do corpo, o overflow-hidden do Card o deixava encolher até a tira.
+        <Card padding="none" data-slot="a-conferir" className="shrink-0">
+            <CardToolbar>
+                <span className="min-w-0 truncate">Como chegou</span>
+                <span className="shrink-0">{quemLeu(t)}</span>
+            </CardToolbar>
+            <CardContent className="grid gap-3 px-(--card-strip-px) pb-(--card-strip-py)">
+                {original ? (
+                    <Muted asChild className="border-s-2 border-border ps-3 italic">
+                        <blockquote>{original}</blockquote>
+                    </Muted>
+                ) : null}
+                {mostraConfirmar ? (
+                    <DescriptionList layout="inline" size="sm" divided>
+                        <DescriptionListItem>
+                            <DescriptionTerm>Categoria</DescriptionTerm>
+                            <DescriptionDetails>{t.category?.name ?? "sem categoria"}</DescriptionDetails>
+                        </DescriptionListItem>
+                        {pagamento ? (
+                            <DescriptionListItem>
+                                <DescriptionTerm>{t.payment_method?.endsWith("_card") ? "Cartão" : "Pagamento"}</DescriptionTerm>
+                                <DescriptionDetails>{pagamento}</DescriptionDetails>
+                            </DescriptionListItem>
+                        ) : null}
+                        <DescriptionListItem>
+                            <DescriptionTerm>Data</DescriptionTerm>
+                            <DescriptionDetails>{formatWeekdayDayMonthShortPtBr(t.date)}</DescriptionDetails>
+                        </DescriptionListItem>
+                    </DescriptionList>
+                ) : null}
+                {avisos.map((a) => (
+                    <Caption key={a}>{a}</Caption>
+                ))}
+                {lembrado ? (
+                    <Caption role="status">{`Cartão lembrado: a próxima compra com "${walletCard}" já casa.`}</Caption>
+                ) : null}
+                {erro ? (
+                    <Caption role="alert" className="text-destructive">
+                        {erro}
+                    </Caption>
+                ) : null}
+                {mostraConfirmar ? (
+                    <div className="flex gap-2 pointer-coarse:flex-col pointer-coarse:items-stretch">
+                        <Button type="button" variant="primary" size="md" className="grow" disabled={pendente} onClick={() => void confirmar()}>
+                            confirmar
                         </Button>
-                    ) : null}
-                    {mostraLembrar ? (
-                        <Button type="button" variant="secondary" size="md" disabled={pendente} onClick={() => void lembrar()}>
-                            {aliasAtual.data
-                                ? `Trocar "${aliasAtual.data}" por "${walletCard}"`
-                                : `Lembrar "${walletCard}" como este cartão`}
-                        </Button>
-                    ) : null}
-                    {mostraDesfazer ? (
-                        <AlertDialog
-                            open={perguntando}
-                            onOpenChange={(aberto) => {
-                                setPerguntando(aberto)
-                                if (!aberto) setErroDoDesfazer(null)
-                            }}
-                            pending={pendente}
-                        >
-                            <AlertDialogTrigger asChild>
-                                <AlertAction disabled={pendente}>Desfazer importação</AlertAction>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>{tituloDoDesfazer(lote.data)}</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Todos os lançamentos que entraram com ela são apagados. Não dá para desfazer.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                {erroDoDesfazer ? <AlertDialogError>{erroDoDesfazer}</AlertDialogError> : null}
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            void desfazer()
-                                        }}
-                                    >
-                                        Apagar
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    ) : null}
-                </AlertActions>
-            ) : null}
-        </Alert>
+                        {onEditar ? (
+                            <Button type="button" variant="tertiary" size="md" disabled={pendente} onClick={onEditar}>
+                                editar
+                            </Button>
+                        ) : null}
+                    </div>
+                ) : null}
+                {mostraLembrar ? (
+                    <Button type="button" variant="link" size="md" className="self-center" disabled={pendente} onClick={() => void lembrar()}>
+                        {aliasAtual.data
+                            ? `Trocar "${aliasAtual.data}" por "${walletCard}"`
+                            : `Lembrar "${walletCard}" como este cartão`}
+                    </Button>
+                ) : null}
+                {mostraDesfazer ? (
+                    <AlertDialog
+                        open={perguntando}
+                        onOpenChange={(aberto) => {
+                            setPerguntando(aberto)
+                            if (!aberto) setErroDoDesfazer(null)
+                        }}
+                        pending={pendente}
+                    >
+                        <AlertDialogTrigger asChild>
+                            <Button type="button" variant="link" size="md" className="self-center" disabled={pendente}>
+                                desfazer importação
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{tituloDoDesfazer(lote.data)}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Todos os lançamentos que entraram com ela são apagados. Não dá para desfazer.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            {erroDoDesfazer ? <AlertDialogError>{erroDoDesfazer}</AlertDialogError> : null}
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        void desfazer()
+                                    }}
+                                >
+                                    Apagar
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                ) : null}
+            </CardContent>
+        </Card>
     )
 }

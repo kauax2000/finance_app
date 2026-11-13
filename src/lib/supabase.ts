@@ -307,6 +307,8 @@ export interface TransactionCaptureMeta {
     texto?: string
     /** O provedor e o modelo, quando a IA leu a foto ou a frase (Bloco 3B). */
     ia?: { provedor: string; modelo: string }
+    /** "mcp": chegou por uma IA conectada (o servidor MCP). */
+    via?: "mcp"
 }
 
 export interface Transaction {

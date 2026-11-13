@@ -137,9 +137,28 @@ describe("fonte do detalhe", () => {
     it("as ações do a conferir chegam a 44 no dedo e empilham", () => {
         const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
         expect(f).toContain('<Button type="button" variant="primary" size="md"')
-        expect(f).toContain('<Button type="button" variant="secondary" size="md"')
+        expect(f).toContain('<Button type="button" variant="tertiary" size="md"')
         expect(f).not.toMatch(/<Button[^>]*size="sm"/)
-        expect(f).toContain('<AlertActions className="pointer-coarse:flex-col pointer-coarse:items-stretch">')
+        expect(f).toContain('<div className="flex gap-2 pointer-coarse:flex-col pointer-coarse:items-stretch">')
+    })
+
+    it("o a conferir K2c: selo no topo, o card Como chegou antes da manchete, Confirmar + Editar e o link embaixo", () => {
+        const sheet = fonte(SHEET)
+        expect(sheet).toMatch(/t\.needs_review && conferidoNaFolha !== t\.id \? \(\s*<Badge size="md" tone="info">\s*A conferir/)
+        expect(sheet).toContain('if (o === "confirmado") setConferidoNaFolha(t.id)')
+        expect(sheet).toContain("onEditar={editar}")
+        // O card sobe: vem antes da manchete e dos blocos de contexto.
+        expect(sheet.indexOf("<AConferirNoDetalhe")).toBeLessThan(sheet.indexOf("{manchete ? ("))
+        const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+        expect(f).not.toContain("@/components/ui/alert\"")
+        expect(f).toContain("Como chegou")
+        expect(f).toContain("<blockquote>{original}</blockquote>")
+        for (const q of ['"lido pela IA"', '"importação"', '"Apple Pay"', '"IA conectada"', '"Atalho"']) expect(f).toContain(q)
+        expect(f).toMatch(/variant="primary" size="md" className="grow"[\s\S]*?>\s*confirmar\s*</)
+        expect(f).toMatch(/variant="tertiary" size="md"[^>]*onClick=\{onEditar\}>\s*editar/)
+        expect(f).toMatch(/variant="link" size="md" className="self-center"[^>]*onClick=\{\(\) => void lembrar\(\)\}/)
+        expect(f).toMatch(/<AlertDialogTrigger asChild>\s*<Button type="button" variant="link" size="md" className="self-center"/)
+        expect(f).toContain('<Caption role="alert"')
     })
 
     it("a recarga das listas não vira erro da ação", () => {

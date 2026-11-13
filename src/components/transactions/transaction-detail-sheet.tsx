@@ -138,6 +138,8 @@ export function TransactionDetailSheet({
     const [versaoLida, setVersaoLida] = useState(0)
     const [planFallback, setPlanFallback] = useState<TransactionInstallmentPlanRef | null>(null)
     const [folhaDoPlano, setFolhaDoPlano] = useState(false)
+    // Confirmado nesta folha: o selo "A conferir" do topo some antes de a lista recarregar.
+    const [conferidoNaFolha, setConferidoNaFolha] = useState<string | null>(null)
     const { papel } = useWorkspace()
     const marca = useRef<HTMLDivElement>(null)
     // H2a/A5 (11/nov/2026): ao rolar, o resumo entra no centro da barra.
@@ -449,6 +451,11 @@ export function TransactionDetailSheet({
                         </Caption>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
+                        {t.needs_review && conferidoNaFolha !== t.id ? (
+                            <Badge size="md" tone="info">
+                                A conferir
+                            </Badge>
+                        ) : null}
                         {pagamento ? (
                             <Badge size="md" tone="neutral">
                                 {t.payment_method?.endsWith("_card") ? <CreditCardIcon /> : <BanknotesIcon />}
@@ -467,6 +474,21 @@ export function TransactionDetailSheet({
                         </Badge>
                     </div>
                 </div>
+
+                {/* O a conferir (K2c, 13/11/2026) sobe para logo abaixo do topo, antes da manchete: o selo e o card que o resolve ficam juntos. */}
+                {temAConferir(t) ? (
+                    <AConferirNoDetalhe
+                        // Confirmado na lista com o detalhe aberto: o bloco remonta, sem "Confirmar" velho.
+                        key={`${t.id}:${t.needs_review}`}
+                        transaction={t}
+                        pagamento={pagamento}
+                        onEditar={editar}
+                        onFeito={(o) => {
+                            if (o === "confirmado") setConferidoNaFolha(t.id)
+                            if (o === "desfeito") onOpenChange(false)
+                        }}
+                    />
+                ) : null}
 
                 {manchete ? (
                     <Alert tone={manchete.tom}>
@@ -541,17 +563,6 @@ export function TransactionDetailSheet({
                         </DescriptionListItem>
                     ) : null}
                 </DescriptionList>
-
-                {temAConferir(t) ? (
-                    <AConferirNoDetalhe
-                        // Confirmado na lista com o detalhe aberto: o bloco remonta, sem "Confirmar" velho.
-                        key={`${t.id}:${t.needs_review}`}
-                        transaction={t}
-                        onFeito={(o) => {
-                            if (o === "desfeito") onOpenChange(false)
-                        }}
-                    />
-                ) : null}
 
                 {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
                 <PartesDaDespesa transaction={t} />

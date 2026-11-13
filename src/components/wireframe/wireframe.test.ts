@@ -179,7 +179,7 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
 
   it("a conferir: confirma e desfaz o lote com a confirmação do AlertDialog", () => {
     const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
-    expect(f).toContain("Importado · a conferir")
+    expect(f).toContain("Como chegou")
     expect(f).toContain("confirmarLancamento(supabase, t.id)")
     expect(f).toContain("desfazerLote(supabase, workspaceId, t.import_batch_id)")
     expect(f).toContain("<AlertDialog")
@@ -278,7 +278,7 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     // Fora de lote e conferido, só o bloco do lembrar.
     expect(f).toContain("const conferido = confirmado || soLembrar")
     expect(f).toContain("const mostraConfirmar = !conferido")
-    expect(f).toContain("Capturado · a conferir")
+    expect(f).toContain("const mostraConfirmar = !conferido")
     // Zero linhas atualizadas não é sucesso; o apelido novo vai direto ao cache.
     expect(acoes).toMatch(/\.update\(\{ wallet_alias: valor \}\)\s*\.eq\("id", cardId\)\s*\.select\("id"\)/)
     expect(acoes).toContain("data?.length !== 1")
