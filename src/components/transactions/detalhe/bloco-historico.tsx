@@ -113,6 +113,7 @@ export function BlocoHistorico({
   const contra = contraAMedia(valor, historico.media)
   const primeira = historico.barras[0] ? transactionLocalYmd(historico.barras[0].data) : null
   const diaDaPrimeira = primeira ? parseYmdLocal(primeira) : null
+  const diaDesta = ymd ? parseYmdLocal(ymd) : null
 
   return (
     <BlocoContexto
@@ -146,7 +147,8 @@ export function BlocoHistorico({
       </ChartContainer>
       <div className="flex justify-between">
         <Caption>{diaDaPrimeira ? `${diaDaPrimeira.getDate()} ${formatMonthShortPtBr(diaDaPrimeira)}` : null}</Caption>
-        <Caption>esta</Caption>
+        {/* A ponta direita é esta vez: a data dela, acesa como a barra. */}
+        <Caption className="font-medium text-foreground">{diaDesta ? `${diaDesta.getDate()} ${formatMonthShortPtBr(diaDesta)}` : null}</Caption>
       </div>
       <Caption className="nums">
         {historico.vezes} vezes · {currencyBRL(historico.total)} no total · média {currencyBRL(historico.media)}
