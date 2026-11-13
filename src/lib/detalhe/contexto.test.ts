@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { duplicadoDe, escolherManchete, historicoDe, normalizarDescricao, projecaoDoMes } from "./contexto"
+import { duplicadoDe, escolherManchete, contraAMedia, historicoDe, normalizarDescricao, projecaoDoMes } from "./contexto"
 
 const hoje = new Date(2026, 10, 10)
 const mercado = (gasto: number, orcamento: number | null, mes = "novembro", lancado = gasto) => ({
@@ -314,6 +314,16 @@ describe("historicoDe", () => {
     const h = historicoDe(alvo, [alvo, ...outras, d("f", "2026-11-20", 500)])
     expect(h!.barras).toHaveLength(8)
     expect(h!.vezes).toBe(11)
-    expect(h!.barras.at(-1)).toEqual({ valor: 40, atual: true })
+    expect(h!.barras.at(-1)).toEqual({ valor: 40, atual: true, data: "2026-11-09" })
+    expect(h!.barras[0].data).toBe("2026-10-04")
+  })
+})
+
+describe("contraAMedia", () => {
+  it("abaixo, acima e na média (até 5%)", () => {
+    expect(contraAMedia(15, 31.33)).toEqual({ direcao: "abaixo", diferenca: 16.33 })
+    expect(contraAMedia(40, 31.33).direcao).toBe("acima")
+    expect(contraAMedia(32, 31.33)).toEqual({ direcao: "na", diferenca: 0 })
+    expect(contraAMedia(10, 0).direcao).toBe("na")
   })
 })

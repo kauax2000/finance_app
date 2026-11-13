@@ -24,7 +24,8 @@ export type Historico = {
   media: number
   /** Os valores das outras vezes (todas, não só as barras). */
   outros: number[]
-  barras: { valor: number; atual: boolean }[]
+  /** As últimas 8 vezes, a mais antiga primeiro; `data` é a do lançamento. */
+  barras: { valor: number; atual: boolean; data: string }[]
 }
 
 export function historicoDe(alvo: Despesa, despesas90: Despesa[]): Historico | null {
@@ -44,7 +45,7 @@ export function historicoDe(alvo: Despesa, despesas90: Despesa[]): Historico | n
     total,
     media: outras.reduce((s, d) => s + d.amount, 0) / outras.length,
     outros: outras.map((d) => d.amount),
-    barras: mesmas.slice(-8).map((d) => ({ valor: d.amount, atual: d.id === alvo.id })),
+    barras: mesmas.slice(-8).map((d) => ({ valor: d.amount, atual: d.id === alvo.id, data: d.date })),
   }
 }
 
@@ -204,4 +205,13 @@ export function escolherManchete(e: EntradaDaManchete): Manchete | null {
     }
   }
   return null
+}
+
+export type ContraAMedia = { direcao: "abaixo" | "acima" | "na"; diferenca: number }
+
+/** Esta vez contra a média das outras: a até 5% dela conta como "na média". */
+export function contraAMedia(valor: number, media: number): ContraAMedia {
+  const diferenca = Math.abs(valor - media)
+  if (media <= 0 || diferenca <= media * 0.05) return { direcao: "na", diferenca: 0 }
+  return { direcao: valor < media ? "abaixo" : "acima", diferenca }
 }

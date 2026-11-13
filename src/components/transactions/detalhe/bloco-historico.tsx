@@ -3,11 +3,13 @@
 import { useMemo } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Bar, BarChart, Cell } from "recharts"
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
+import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/16/solid"
+import { Badge } from "@/components/ui/badge"
+import { ChartContainer, ChartReferenceLine, type ChartConfig } from "@/components/ui/chart"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Caption, Muted } from "@/components/ui/typography"
+import { Caption } from "@/components/ui/typography"
 import { descricaoSemParcela, hrefDaLista, rotuloVerOs } from "@/lib/detalhe/blocos"
-import { duplicadoDe, historicoDe } from "@/lib/detalhe/contexto"
+import { contraAMedia, duplicadoDe, historicoDe } from "@/lib/detalhe/contexto"
 import { currencyBRL } from "@/lib/formatters"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import type { Transaction } from "@/lib/supabase"
@@ -108,6 +110,10 @@ export function BlocoHistorico({
   if (historico === null) return null
 
   const dados = historico.barras.map((b, i) => ({ vez: i, valor: b.valor, atual: b.atual }))
+  const valor = Number(t.amount)
+  const contra = contraAMedia(valor, historico.media)
+  const primeira = historico.barras[0] ? transactionLocalYmd(historico.barras[0].data) : null
+  const diaDaPrimeira = primeira ? parseYmdLocal(primeira) : null
 
   return (
     <BlocoContexto
@@ -117,12 +123,24 @@ export function BlocoHistorico({
         label: rotuloVerOs(historico.vezes, "despesa"),
       }}
     >
-      {/* Barras pequenas, sem eixo nem grade: a forma das últimas vezes, com esta acesa. */}
+      {/* A pergunta da tela: esta saiu mais cara ou mais barata que o normal? */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <MoneyDisplay value={valor} className="text-base font-medium" />
+        {contra.direcao === "na" ? (
+          <Badge tone="neutral">na média</Badge>
+        ) : (
+          <Badge tone={contra.direcao === "abaixo" ? "success" : "warning"}>
+            {contra.direcao === "abaixo" ? <ArrowDownIcon aria-hidden /> : <ArrowUpIcon aria-hidden />}
+            {currencyBRL(contra.diferenca)} {contra.direcao} da média
+          </Badge>
+        )}
+      </div>
+      {/* Barras pequenas com a régua da média: a forma das últimas vezes, com esta acesa. */}
       <ChartContainer
         config={CONFIG}
         aspect="auto"
-        label={`As últimas ${dados.length} vezes de ${nome}, esta destacada`}
-        className="h-12 w-full"
+        label={`As últimas ${dados.length} vezes de ${nome}, esta destacada, com a média de ${currencyBRL(historico.media)}`}
+        className="h-14 w-full"
       >
         <BarChart data={dados} accessibilityLayer>
           <Bar dataKey="valor" fill="var(--color-valor)" radius={[3, 3, 0, 0]}>
@@ -130,12 +148,16 @@ export function BlocoHistorico({
               <Cell key={d.vez} fillOpacity={d.atual ? 1 : APAGADA} />
             ))}
           </Bar>
+          <ChartReferenceLine y={historico.media} tone="average" ifOverflow="extendDomain" />
         </BarChart>
       </ChartContainer>
-      <Muted>
-        {historico.vezes} vezes · <MoneyDisplay value={historico.total} className="font-medium text-foreground" />
-      </Muted>
-      <Caption>média {currencyBRL(historico.media)}</Caption>
+      <div className="flex justify-between">
+        <Caption>{diaDaPrimeira ? `${diaDaPrimeira.getDate()} ${formatMonthShortPtBr(diaDaPrimeira)}` : null}</Caption>
+        <Caption>esta</Caption>
+      </div>
+      <Caption className="nums">
+        {historico.vezes} vezes · {currencyBRL(historico.total)} no total · média {currencyBRL(historico.media)}
+      </Caption>
     </BlocoContexto>
   )
 }

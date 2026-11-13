@@ -60,12 +60,14 @@ describe("os blocos de contexto do detalhe", () => {
     expect(ler("bloco-contexto")).toMatch(/<CardContent className="[^"]*px-\(--card-strip-px\)/)
   })
 
-  it("histórico: barras pequenas, sem eixo; as passadas neutras e esta acesa, por token", () => {
+  it("histórico (U1): esta contra a média no selo, barras sem eixo com a régua da média, esta acesa", () => {
     const fonte = ler("bloco-historico")
     expect(fonte).toContain("historicoDe(")
     expect(fonte).toContain("<ChartContainer")
     expect(fonte).not.toMatch(/ChartBars|ChartXAxis|ChartYAxis|XAxis|YAxis|--chart-1/)
     expect(fonte).toContain("<Cell")
+    expect(fonte).toContain('<ChartReferenceLine y={historico.media} tone="average"')
+    expect(fonte).toContain("contraAMedia(valor, historico.media)")
     expect(fonte).toContain('color: "var(--primary-accent)"')
     expect(fonte).toContain('operator: "contains"')
   })
