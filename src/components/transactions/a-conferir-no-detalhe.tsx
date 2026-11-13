@@ -255,18 +255,18 @@ export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeit
                 ) : null}
                 {mostraConfirmar ? (
                     <div className="flex gap-2 pointer-coarse:flex-col pointer-coarse:items-stretch">
-                        <Button type="button" variant="primary" size="md" className="grow" disabled={pendente} onClick={() => void confirmar()}>
+                        <Button type="button" variant="primary" className="grow" disabled={pendente} onClick={() => void confirmar()}>
                             confirmar
                         </Button>
                         {onEditar ? (
-                            <Button type="button" variant="tertiary" size="md" disabled={pendente} onClick={onEditar}>
+                            <Button type="button" variant="tertiary" disabled={pendente} onClick={onEditar}>
                                 editar
                             </Button>
                         ) : null}
                     </div>
                 ) : null}
                 {mostraLembrar ? (
-                    <Button type="button" variant="link" size="md" className="self-center" disabled={pendente} onClick={() => void lembrar()}>
+                    <Button type="button" variant="link" className="self-center" disabled={pendente} onClick={() => void lembrar()}>
                         {aliasAtual.data
                             ? `Trocar "${aliasAtual.data}" por "${walletCard}"`
                             : `Lembrar "${walletCard}" como este cartão`}
@@ -282,7 +282,7 @@ export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeit
                         pending={pendente}
                     >
                         <AlertDialogTrigger asChild>
-                            <Button type="button" variant="link" size="md" className="self-center" disabled={pendente}>
+                            <Button type="button" variant="link" className="self-center" disabled={pendente}>
                                 desfazer importação
                             </Button>
                         </AlertDialogTrigger>

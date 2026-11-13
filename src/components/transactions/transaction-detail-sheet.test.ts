@@ -136,8 +136,9 @@ describe("fonte do detalhe", () => {
 
     it("as ações do a conferir chegam a 44 no dedo e empilham", () => {
         const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
-        expect(f).toContain('<Button type="button" variant="primary" size="md"')
-        expect(f).toContain('<Button type="button" variant="tertiary" size="md"')
+        expect(f).toContain('<Button type="button" variant="primary"')
+        expect(f).toContain('<Button type="button" variant="tertiary"')
+        expect(f).not.toMatch(/<Button[^>]*size=/)
         expect(f).not.toMatch(/<Button[^>]*size="sm"/)
         expect(f).toContain('<div className="flex gap-2 pointer-coarse:flex-col pointer-coarse:items-stretch">')
     })
@@ -154,10 +155,10 @@ describe("fonte do detalhe", () => {
         expect(f).toContain("Como chegou")
         expect(f).toContain("<blockquote>{original}</blockquote>")
         for (const q of ['"lido pela IA"', '"importação"', '"Apple Pay"', '"IA conectada"', '"Atalho"']) expect(f).toContain(q)
-        expect(f).toMatch(/variant="primary" size="md" className="grow"[\s\S]*?>\s*confirmar\s*</)
-        expect(f).toMatch(/variant="tertiary" size="md"[^>]*onClick=\{onEditar\}>\s*editar/)
-        expect(f).toMatch(/variant="link" size="md" className="self-center"[^>]*onClick=\{\(\) => void lembrar\(\)\}/)
-        expect(f).toMatch(/<AlertDialogTrigger asChild>\s*<Button type="button" variant="link" size="md" className="self-center"/)
+        expect(f).toMatch(/variant="primary" className="grow"[\s\S]*?>\s*confirmar\s*</)
+        expect(f).toMatch(/variant="tertiary"[^>]*onClick=\{onEditar\}>\s*editar/)
+        expect(f).toMatch(/variant="link" className="self-center"[^>]*onClick=\{\(\) => void lembrar\(\)\}/)
+        expect(f).toMatch(/<AlertDialogTrigger asChild>\s*<Button type="button" variant="link" className="self-center"/)
         expect(f).toContain('<Caption role="alert"')
     })
 
