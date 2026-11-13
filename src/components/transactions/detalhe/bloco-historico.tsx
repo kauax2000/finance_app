@@ -151,7 +151,10 @@ export function BlocoHistorico({
         <Caption className="font-medium text-foreground">{diaDesta ? `${diaDesta.getDate()} ${formatMonthShortPtBr(diaDesta)}` : null}</Caption>
       </div>
       <Caption className="nums">
-        {historico.vezes} vezes · {currencyBRL(historico.total)} no total · média {currencyBRL(historico.media)}
+        {/* Os números em branco, os rótulos no cinza da legenda: o olho acha os valores primeiro. */}
+        <span className="font-medium text-foreground">{historico.vezes}</span> vezes ·{" "}
+        <span className="font-medium text-foreground">{currencyBRL(historico.total)}</span> no total · média{" "}
+        <span className="font-medium text-foreground">{currencyBRL(historico.media)}</span>
       </Caption>
     </BlocoContexto>
   )
