@@ -4124,10 +4124,10 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 /**
  * O cabeçalho translúcido das folhas (`DialogHeader`, o B3 do detalhe do lançamento,
  * 13/11/2026, levado a todas as folhas): o corpo rola por trás dele (`--dialog-header-h`, que o
- * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 95% com
- * um desfoque de 2px na caixa do cabeçalho; o `::after` desce 56px além dele, sem
- * desfoque, num degradê suave até sumir — sem linha reta. O desfoque fica fraco de
- * propósito: o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
+ * cabeçalho mede e publica no pai) e aparece de leve. O `::before` é a placa a 95%, sem
+ * desfoque, na caixa do cabeçalho; o `::after` desce 56px além dele, sem
+ * desfoque, num degradê suave até sumir — sem linha reta. Sem desfoque por pedido do dono
+ * (13/11): o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
  */
 @utility dialog-header-translucent {
   /* A descrição só para o leitor de tela (`sr-only`) pode ficar entre os dois. */
@@ -4159,8 +4159,6 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       top: 0;
       height: 100%;
       background-color: var(--dialog-header-tint);
-      -webkit-backdrop-filter: blur(2px);
-      backdrop-filter: blur(2px);
     }
     &::after {
       top: 100%;
@@ -4179,12 +4177,6 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
         color-mix(in oklab, var(--dialog-header-tint) 8%, transparent) 88%,
         transparent
       );
-    }
-    @media (prefers-reduced-transparency: reduce) {
-      &::before {
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-      }
     }
 
     & + [data-slot="dialog-body"],
