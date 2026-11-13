@@ -144,7 +144,7 @@ describe("fonte do detalhe", () => {
 
     it("o a conferir K2c: selo no topo, o card Como chegou antes da manchete, Confirmar + Editar e o link embaixo", () => {
         const sheet = fonte(SHEET)
-        expect(sheet).toMatch(/t\.needs_review && conferidoNaFolha !== t\.id \? \(\s*<Badge size="md" tone="info">\s*A conferir/)
+        expect(sheet).toMatch(/t\.needs_review && conferidoNaFolha !== t\.id \? \(\s*<Badge size="md" tone="info">\s*<BadgeDot \/>\s*A conferir/)
         expect(sheet).toContain('if (o === "confirmado") setConferidoNaFolha(t.id)')
         expect(sheet).toContain("onEditar={editar}")
         // O card sobe: vem antes da manchete e dos blocos de contexto.

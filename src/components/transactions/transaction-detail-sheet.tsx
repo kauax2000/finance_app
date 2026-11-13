@@ -453,6 +453,7 @@ export function TransactionDetailSheet({
                     <div className="flex flex-wrap justify-center gap-2">
                         {t.needs_review && conferidoNaFolha !== t.id ? (
                             <Badge size="md" tone="info">
+                                <BadgeDot />
                                 A conferir
                             </Badge>
                         ) : null}

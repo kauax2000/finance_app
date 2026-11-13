@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { ArrowDownTrayIcon, BoltIcon, CheckIcon, DevicePhoneMobileIcon, SparklesIcon } from "@heroicons/react/16/solid"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
     AlertDialog,
@@ -60,12 +61,12 @@ export function temAConferir(t: Props["transaction"]): boolean {
 }
 
 /** Quem leu o que chegou: a IA, a importação, o Apple Pay, uma IA conectada ou o Atalho. */
-function quemLeu(t: Props["transaction"]): string {
-    if (t.capture_meta?.ia) return "lido pela IA"
-    if (t.import_batch_id) return "importação"
-    if (t.source === "apple_pay") return "Apple Pay"
-    if (t.capture_meta?.via === "mcp") return "IA conectada"
-    return "Atalho"
+function quemLeu(t: Props["transaction"]): { rotulo: string; Icone: typeof BoltIcon } {
+    if (t.capture_meta?.ia) return { rotulo: "lido pela IA", Icone: SparklesIcon }
+    if (t.import_batch_id) return { rotulo: "importação", Icone: ArrowDownTrayIcon }
+    if (t.source === "apple_pay") return { rotulo: "Apple Pay", Icone: DevicePhoneMobileIcon }
+    if (t.capture_meta?.via === "mcp") return { rotulo: "IA conectada", Icone: SparklesIcon }
+    return { rotulo: "Atalho", Icone: BoltIcon }
 }
 
 const mensagem = (e: unknown, padrao: string) => (e instanceof Error && e.message ? e.message : padrao)
@@ -202,12 +203,18 @@ export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeit
             ? `“${descricao}” · extrato`
             : null
 
+    const origem = quemLeu(t)
+
     return (
         // shrink-0: na coluna flex do corpo, o overflow-hidden do Card o deixava encolher até a tira.
         <Card padding="none" data-slot="a-conferir" className="shrink-0">
             <CardToolbar>
                 <span className="min-w-0 truncate">Como chegou</span>
-                <span className="shrink-0">{quemLeu(t)}</span>
+                {/* A origem com o ícone dela: o canal se lê de relance. */}
+                <span className="inline-flex shrink-0 items-center gap-1">
+                    <origem.Icone aria-hidden className="size-3.5" />
+                    {origem.rotulo}
+                </span>
             </CardToolbar>
             <CardContent className="grid gap-3 px-(--card-strip-px) pb-(--card-strip-py)">
                 {original ? (
@@ -247,6 +254,7 @@ export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeit
                 {mostraConfirmar ? (
                     <div className="flex gap-2 pointer-coarse:flex-col pointer-coarse:items-stretch">
                         <Button type="button" variant="primary" size="md" className="grow" disabled={pendente} onClick={() => void confirmar()}>
+                            <CheckIcon data-icon="inline-start" aria-hidden />
                             confirmar
                         </Button>
                         {onEditar ? (
