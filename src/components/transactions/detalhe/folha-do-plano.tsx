@@ -269,7 +269,7 @@ export function FolhaDoPlano({
                         </ItemTitle>
                         <ItemContent className="nums truncate">{l.data ? dataCurta(l.data) : "—"}</ItemContent>
                         <ItemActions>
-                          <Badge size="xs" {...ESTADO[l.estado].badge}>
+                          <Badge {...ESTADO[l.estado].badge}>
                             {ESTADO[l.estado].rotulo}
                           </Badge>
                           <MoneyDisplay value={l.valor} className="font-medium whitespace-nowrap" />
