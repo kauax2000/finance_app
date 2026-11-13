@@ -208,7 +208,7 @@ export function BlocoCategoria({
         </Caption>
       ) : null}
       {!convidado ? (
-        <Button variant="secondary" size="sm" asChild>
+        <Button variant="secondary" size="md" asChild>
           <Link href={categoryDetailPath(categoryId, { month: ym })}>definir orçamento</Link>
         </Button>
       ) : null}
