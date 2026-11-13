@@ -451,12 +451,6 @@ export function TransactionDetailSheet({
                         </Caption>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
-                        {t.needs_review && conferidoNaFolha !== t.id ? (
-                            <Badge size="md" tone="info">
-                                <BadgeDot />
-                                A conferir
-                            </Badge>
-                        ) : null}
                         {pagamento ? (
                             <Badge size="md" tone="neutral">
                                 {t.payment_method?.endsWith("_card") ? <CreditCardIcon /> : <BanknotesIcon />}
@@ -473,6 +467,13 @@ export function TransactionDetailSheet({
                             {t.category ? <BadgeDot /> : null}
                             {t.category?.name ?? "Sem categoria"}
                         </Badge>
+                        {/* O estado fecha a fileira, depois de pagamento e categoria. */}
+                        {t.needs_review && conferidoNaFolha !== t.id ? (
+                            <Badge size="md" tone="info">
+                                <BadgeDot />
+                                A conferir
+                            </Badge>
+                        ) : null}
                     </div>
                 </div>
 
