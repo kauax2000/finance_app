@@ -107,7 +107,6 @@ export function DashboardRecentTransactions({
                         asChild
                         type="button"
                         variant="outline"
-                        size="sm"
                         className="h-8 gap-2 px-2 text-xs pointer-coarse:h-11"
                     >
                         <Link href={viewAllHref}>
@@ -353,7 +352,6 @@ export function DashboardRecentTransactions({
                     </p>
                     <Button
                         variant="link"
-                        size="sm"
                         className="h-auto p-0 text-xs font-medium"
                         asChild
                     >

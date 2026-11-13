@@ -166,7 +166,7 @@ describe("o a conferir no detalhe (redesenho de Transações)", () => {
         expect(sheet).toMatch(/import\s*\{[^}]*\bAConferirNoDetalhe\b[^}]*\}\s*from\s*["']@\/components\/transactions\/a-conferir-no-detalhe["']/)
         expect(sheet).not.toContain("a-conferir-wireframe")
         const bloco = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
-        expect(bloco).toContain('<Card padding="none" data-slot="a-conferir" className="shrink-0">')
+        expect(bloco).toContain('<Card padding="none" data-slot="a-conferir" className="shrink-0" tone={mostraConfirmar ? "info" : undefined}>')
         expect(bloco).toContain("`Apagar os ${n} lançamentos desta importação?`")
         expect(bloco).toContain("Como chegou")
         expect(bloco).not.toContain("window.confirm")

@@ -294,7 +294,6 @@ export function BillsToolbar({
                                                       ? "secondary"
                                                       : "outline"
                                               }
-                                              size="sm"
                                               className="h-10 justify-start text-sm"
                                               onClick={() =>
                                                   onPendingFilterChange(f.value)
@@ -312,7 +311,6 @@ export function BillsToolbar({
                                                       ? "secondary"
                                                       : "outline"
                                               }
-                                              size="sm"
                                               className="h-10 justify-start text-sm"
                                               onClick={() =>
                                                   onModelFilterChange(f.value)
@@ -337,7 +335,6 @@ export function BillsToolbar({
                                                 ? "secondary"
                                                 : "outline"
                                         }
-                                        size="sm"
                                         className="h-10 justify-start text-sm"
                                         onClick={() => onSortChange(k, d)}
                                     >
@@ -347,8 +344,7 @@ export function BillsToolbar({
                             </div>
                         </div>
                         <Button
-                            type="button"
-                            size="xl" className="w-full"
+                            type="button" className="w-full"
                             onClick={() => setSheetOpen(false)}
                         >
                             Concluir

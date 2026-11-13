@@ -299,7 +299,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                             <Button
                                 type="button"
                                 variant="secondary"
-                                size="sm"
                                 disabled={exportando || workspaces.length === 0}
                                 aria-busy={exportando || undefined}
                                 onClick={() => void handleExport()}

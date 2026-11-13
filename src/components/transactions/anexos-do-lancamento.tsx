@@ -156,7 +156,6 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                                         <Button
                                             type="button"
                                             variant="tertiary"
-                                            size="md"
                                             aria-label={`Abrir ${descricaoDoAnexo(a)}`}
                                             onClick={() => void abrir(a)}
                                         >

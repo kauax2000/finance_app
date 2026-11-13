@@ -84,7 +84,6 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="tertiary"
-                size="sm"
                 className={cn(
                     "shrink-0 text-muted-foreground",
                     inBar
@@ -171,7 +170,6 @@ function MonthNavArrowControls({
                                 <Button
                                     type="button"
                                     variant="tertiary"
-                                    size="sm"
                                     className="h-8 w-full text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                     onClick={() => {
                                         onJump()
@@ -244,7 +242,6 @@ function MonthNavPanel({
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="sm"
                     className="h-8 px-2 text-xs text-muted-foreground pointer-coarse:h-11 pointer-coarse:px-4 pointer-coarse:text-base"
                     onClick={() => {
                         onJump()

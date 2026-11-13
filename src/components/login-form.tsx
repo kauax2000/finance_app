@@ -195,7 +195,7 @@ export function LoginForm() {
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
                         <div className="flex justify-end">
-                            <Button asChild variant="link" size="sm">
+                            <Button asChild variant="link">
                                 <Link href={forgotHref}>Esqueceu a senha?</Link>
                             </Button>
                         </div>

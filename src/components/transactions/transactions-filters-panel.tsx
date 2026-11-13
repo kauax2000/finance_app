@@ -331,7 +331,6 @@ export function TransactionsFiltersPanel({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="xl"
                                 className="w-full justify-between gap-2 px-3 font-normal"
                             >
                                 <span className="truncate text-left">

@@ -366,7 +366,6 @@ export function BillDetailSheet({
                                     </div>
                                     <Button
                                         type="button"
-                                        size="sm"
                                         className="mt-3 w-full md:w-auto"
                                         onClick={() =>
                                             onPay({
@@ -462,7 +461,6 @@ export function BillDetailSheet({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 className="w-full sm:w-auto"
                                 onClick={onEditBill}
                             >
@@ -471,7 +469,6 @@ export function BillDetailSheet({
                             <Button
                                 type="button"
                                 variant="destructive"
-                                size="sm"
                                 className="w-full sm:w-auto"
                                 onClick={onAskDelete}
                             >

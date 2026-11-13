@@ -760,7 +760,6 @@ export default function BillsPageClient() {
                         <Button
                             type="button"
                             variant="outline"
-                            size="sm"
                             onClick={() => handleModeChange("bills")}
                         >
                             Ver contas

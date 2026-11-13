@@ -508,7 +508,6 @@ export function CategoriesOnboardingWizard({
         <Button
             type="button"
             variant="link"
-            size="xs"
             className="text-muted-foreground hover:text-foreground active:text-foreground"
             disabled={busy}
             onClick={() => void completeOnboarding(false)}
@@ -760,7 +759,6 @@ export function CategoriesOnboardingWizard({
                                     <Button
                                         type="button"
                                         variant="tertiary"
-                                        size="sm"
                                         className="w-full sm:me-auto sm:w-auto"
                                         disabled={busy || crudBusy}
                                         onClick={() => void irParaPasso(0)}
@@ -769,7 +767,6 @@ export function CategoriesOnboardingWizard({
                                     </Button>
                                     <Button
                                         type="submit"
-                                        size="sm"
                                         className="w-full sm:w-auto"
                                         disabled={
                                             busy || crudBusy || expenseCategories.length === 0
@@ -789,7 +786,6 @@ export function CategoriesOnboardingWizard({
                                 <Button
                                     type="button"
                                     variant="tertiary"
-                                    size="sm"
                                     className="w-full sm:me-auto sm:w-auto"
                                     disabled={busy}
                                     onClick={() => void irParaPasso(1)}
@@ -851,7 +847,6 @@ export function CategoriesOnboardingWizard({
                                 <Button
                                     type="button"
                                     variant="secondary"
-                                    size="sm"
                                     className="h-8 flex-1 text-xs sm:flex-none"
                                     disabled={busy || crudBusy}
                                     onClick={() => openAddDialog()}
@@ -862,7 +857,6 @@ export function CategoriesOnboardingWizard({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="sm"
                                     className="h-8 flex-1 text-xs sm:flex-none"
                                     disabled={busy || crudBusy}
                                     onClick={applyIncomeSuggestions}

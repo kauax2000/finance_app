@@ -178,7 +178,7 @@ export function SignupForm() {
                         if (error) throw new Error(error.message)
                     }}
                 />
-                <Button variant="tertiary" size="xl" className="w-full" onClick={() => setSuccess(false)}>
+                <Button variant="tertiary" className="w-full" onClick={() => setSuccess(false)}>
                     Usar outro e-mail
                 </Button>
             </AuthShell>

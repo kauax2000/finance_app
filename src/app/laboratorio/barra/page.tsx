@@ -65,7 +65,6 @@ export default function Page() {
                                 <Small>{NOMES[versao]}</Small>
                                 <Button
                                     variant="tertiary"
-                                    size="sm"
                                     onClick={() => setAmpliada(sozinha ? null : versao)}
                                 >
                                     {sozinha ? <ArrowsPointingInIcon aria-hidden /> : <ArrowsPointingOutIcon aria-hidden />}

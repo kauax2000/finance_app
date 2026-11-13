@@ -39,7 +39,7 @@ export function SidebarUserProfile() {
         return (
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <Button asChild variant="outline" size="sm" className="w-full justify-center">
+                    <Button asChild variant="outline" className="w-full justify-center">
                         <Link href={ROUTES.LOGIN}>Entrar</Link>
                     </Button>
                 </SidebarMenuItem>

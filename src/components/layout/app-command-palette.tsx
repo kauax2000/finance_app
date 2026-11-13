@@ -496,7 +496,6 @@ function PaletteBody({ close }: { close: () => void }) {
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                size="sm"
                                 onClick={() => setQuery("")}
                             >
                                 Limpar busca

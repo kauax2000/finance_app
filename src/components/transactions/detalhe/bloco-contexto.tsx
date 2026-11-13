@@ -48,11 +48,11 @@ export function BlocoContexto({
       <CardToolbar>
         <span className="min-w-0 truncate">{titulo}</span>
         {link && "onClick" in link ? (
-          <Button type="button" variant="tertiary" size="sm" onClick={link.onClick}>
+          <Button type="button" variant="tertiary" onClick={link.onClick}>
             {link.label}
           </Button>
         ) : link ? (
-          <Button variant="tertiary" size="sm" asChild>
+          <Button variant="tertiary" asChild>
             <Link href={link.href}>{link.label}</Link>
           </Button>
         ) : null}

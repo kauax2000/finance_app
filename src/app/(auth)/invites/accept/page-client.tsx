@@ -135,10 +135,10 @@ export default function AcceptInvitePageClient() {
                         aba, use o mesmo link do e-mail.
                     </AlertDescription>
                 </Alert>
-                <Button asChild size="xl" className="w-full">
+                <Button asChild className="w-full">
                     <Link href={loginHref}>Entrar</Link>
                 </Button>
-                <Button asChild variant="tertiary" size="xl" className="w-full">
+                <Button asChild variant="tertiary" className="w-full">
                     <Link href={signupHref}>Criar conta</Link>
                 </Button>
             </AuthShell>
@@ -152,7 +152,7 @@ export default function AcceptInvitePageClient() {
                     <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
-                    <Button asChild variant="tertiary" size="xl" className="w-full">
+                    <Button asChild variant="tertiary" className="w-full">
                         <Link href={loginHref}>Tentar depois de entrar</Link>
                     </Button>
                 </div>
@@ -182,7 +182,7 @@ export default function AcceptInvitePageClient() {
                     )
                 }
             >
-                <Button asChild size="xl" className="w-full">
+                <Button asChild className="w-full">
                     <Link href={ROUTES.DASHBOARD}>Abrir a carteira</Link>
                 </Button>
             </AuthShell>

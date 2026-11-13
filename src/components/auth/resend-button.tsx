@@ -53,7 +53,6 @@ export function ResendButton({
             ) : null}
             <Button
                 variant="tertiary"
-                size="xl"
                 className="w-full"
                 disabled={remaining > 0 || pending}
                 aria-busy={pending || undefined}

@@ -288,7 +288,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="sm"
                                     className="gap-1.5"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
@@ -298,7 +297,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                 <Button
                                     type="button"
                                     variant="destructive"
-                                    size="sm"
                                     className="gap-1.5"
                                     onClick={handleRemovePhoto}
                                 >
@@ -312,7 +310,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         <Button
                             type="button"
                             variant="outline"
-                            size="sm"
                             className="gap-2"
                             onClick={() => fileInputRef.current?.click()}
                         >

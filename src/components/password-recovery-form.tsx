@@ -271,7 +271,6 @@ export function PasswordRecoveryForm({
                 />
                 <Button
                     variant="tertiary"
-                    size="xl"
                     className="w-full"
                     onClick={() => {
                         setStep("email")
@@ -321,7 +320,7 @@ export function PasswordRecoveryForm({
                         </SplitShellFooter>
                     }
                 >
-                    <Button asChild size="xl" className="w-full">
+                    <Button asChild className="w-full">
                         <Link href={links.forgot}>Pedir novo link</Link>
                     </Button>
                 </AuthShell>
@@ -357,7 +356,7 @@ export function PasswordRecoveryForm({
             description="Entre com a senha nova. Levando você ao login…"
             step="done"
         >
-            <Button asChild size="xl" className="w-full">
+            <Button asChild className="w-full">
                 <Link href={links.loginUpdated}>Entrar agora</Link>
             </Button>
         </AuthShell>

@@ -252,7 +252,6 @@ export function BillPendingCard({
             <CardFooter className="justify-end">
                 <Button
                     type="button"
-                    size="sm"
                     className="h-8 min-w-22 text-xs"
                     onClick={(e) => {
                         e.stopPropagation()

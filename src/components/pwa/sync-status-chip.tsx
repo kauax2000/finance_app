@@ -23,7 +23,6 @@ export function SyncStatusChip({ className }: SyncStatusChipProps) {
             <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 disabled={!shell.isOnline || shell.isSyncing}
                 onClick={() => void shell.syncNow()}
                 className="h-8 gap-1.5"

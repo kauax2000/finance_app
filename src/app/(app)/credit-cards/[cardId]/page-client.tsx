@@ -741,7 +741,7 @@ export default function CreditCardDetailPageClient() {
                         </CardDescription>
                     </CardHeader>
                 </Card>
-                <Button type="button" variant="outline" size="sm" asChild>
+                <Button type="button" variant="outline" asChild>
                     <Link href={ROUTES.CREDIT_CARDS}>Voltar aos cartões</Link>
                 </Button>
             </div>

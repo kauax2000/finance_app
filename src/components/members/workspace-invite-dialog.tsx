@@ -497,7 +497,6 @@ export function WorkspaceInviteDialog({
 aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                 type="button"
                                                                 variant="outline"
-                                                                size="sm"
                                                                 disabled={
                                                                     busyResendInviteId ===
                                                                         invite.id ||
@@ -520,7 +519,6 @@ aria-label={`Reenviar convite para ${invite.invited_email}`}
 aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                 type="button"
                                                                 variant="destructive"
-                                                                size="sm"
                                                                 disabled={
                                                                     busyInviteId === invite.id
                                                                 }

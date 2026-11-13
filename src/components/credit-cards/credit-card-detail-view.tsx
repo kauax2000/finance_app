@@ -145,7 +145,6 @@ export function CreditCardDetailView({
                 </div>
                 <Button
                     variant="outline"
-                    size="sm"
                     className="h-8 gap-2"
                     asChild
                 >
@@ -305,7 +304,6 @@ export function CreditCardDetailView({
                     <Button
                         type="button"
                         variant="tertiary"
-                        size="sm"
                         className={cn(
                             "h-8 min-h-8 w-full justify-center gap-1.5 px-3 text-xs font-medium text-muted-foreground hover:text-foreground",
                             fichaExpanded && "mt-3"

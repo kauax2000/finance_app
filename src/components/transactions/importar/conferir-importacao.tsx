@@ -528,7 +528,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="xs"
                     disabled={travado}
                     aria-label={`Trocar a categoria do grupo ${nome}`}
                     onClick={() => setPorCategoria(membros)}
@@ -538,7 +537,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="xs"
                     disabled={travado}
                     aria-label={`Desfazer as sugestões de ${nome}`}
                     onClick={() => {
@@ -759,14 +757,13 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </ItemContent>
                     <ItemActions>
                         {/* O sinal ao contrário do destino é o engano mais comum: um toque refaz a leitura. */}
-                        <Button type="button" variant="tertiary" size="sm" disabled={travado || lendo} onClick={() => void imp.inverterSinal()}>
+                        <Button type="button" variant="tertiary" disabled={travado || lendo} onClick={() => void imp.inverterSinal()}>
                             {lendo ? <Spinner data-icon="inline-start" /> : null}
                             Inverter
                         </Button>
                         <Button
                             type="button"
                             variant="tertiary"
-                            size="sm"
                             disabled={travado}
                             onClick={imp.ajustarColunas}
                         >
@@ -847,7 +844,6 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                size="sm"
                                 // a sobra de 12px à direita do rótulo é invisível e puxava a linha para a esquerda
                                 className="-me-3"
                                 disabled={travado}

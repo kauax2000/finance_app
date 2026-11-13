@@ -216,7 +216,6 @@ function InvoiceFaturaHeaderStatus({
                     <Button
                         type="button"
                         variant="outline"
-                        size="xs"
                         disabled={paymentSaving}
                         className={invoiceMenuTriggerButtonClass}
                         title="Abrir ações da fatura. Fatura marcada como paga."
@@ -275,7 +274,6 @@ function InvoiceFaturaHeaderStatus({
                 <Button
                     type="button"
                     variant="outline"
-                    size="xs"
                     disabled={paymentSaving}
                     className={invoiceMenuTriggerButtonClass}
                     title={`Abrir ações da fatura. ${unpaidTitle}`}

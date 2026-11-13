@@ -81,7 +81,6 @@ export function DashboardExpenseCategories({
                         asChild
                         type="button"
                         variant="outline"
-                        size="sm"
                         className="h-8 gap-2 px-2 text-xs pointer-coarse:h-11"
                     >
                         <Link href={ROUTES.DASHBOARD_CATEGORIES}>

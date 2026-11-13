@@ -540,7 +540,7 @@ export function TransactionDetailSheet({
                         <DescriptionListItem>
                             <DescriptionTerm>Assinatura</DescriptionTerm>
                             <DescriptionDetails>
-                                <Button asChild variant="link" size="sm">
+                                <Button asChild variant="link">
                                     <Link href={`${subscriptionsHref}?sub=${encodeURIComponent(t.subscription_id)}`}>
                                         {t.subscription?.name ?? "Ver assinatura"}
                                     </Link>
@@ -552,7 +552,7 @@ export function TransactionDetailSheet({
                         <DescriptionListItem>
                             <DescriptionTerm>Projeto</DescriptionTerm>
                             <DescriptionDetails>
-                                <Button asChild variant="link" size="sm">
+                                <Button asChild variant="link">
                                     <Link href={projetoDetailPath(t.project_id)}>Ver projeto</Link>
                                 </Button>
                             </DescriptionDetails>
