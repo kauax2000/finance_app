@@ -34,7 +34,7 @@ export function RodapeDaOrigem({ transaction: t }: { transaction: Pick<Transacti
     const momento = momentoDoRegistro(t.created_at)
     const edicao = linhaDaEdicao(t.created_at, t.updated_at)
     return (
-        <footer data-slot="rodape-da-origem" className="grid justify-items-center pt-4 text-center">
+        <footer data-slot="rodape-da-origem" className="grid justify-items-center text-center">
             <Caption className="inline-flex items-center gap-1.5">
                 <Icone aria-hidden className="size-3.5 shrink-0" />
                 {momento ? `${notaDaOrigem(t.source)} · ${momento}` : notaDaOrigem(t.source)}
