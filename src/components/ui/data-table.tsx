@@ -72,7 +72,7 @@ import { formatDatePtBr } from "@/lib/transaction-date"
 import { numberBR } from "@/lib/formatters"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, ButtonSizeContext } from "@/components/ui/button"
 import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -232,6 +232,7 @@ function TablePanel({
  */
 function TablePanelToolbar({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof CardToolbar>) {
   const naMoldura = React.useContext(TablePanelFrameContext)
@@ -246,7 +247,10 @@ function TablePanelToolbar({
       // A barra fica fora da moldura e ocupa a largura dela inteira, sem o recuo do cartão (pedido do dono, 07/11/2026).
       className={cn("min-h-7 px-0 py-0", className)}
       {...props}
-    />
+    >
+      {/* A barra da tabela tem filtros e ações de verdade: não herda o `sm` da tira do cartão. */}
+      <ButtonSizeContext value={undefined}>{children}</ButtonSizeContext>
+    </CardToolbar>
   )
 }
 
