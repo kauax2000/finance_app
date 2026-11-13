@@ -12,7 +12,7 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
 
   it("placa a 95% sem desfoque, e a borda desce num degradê de 56px, sem linha", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    expect(u).toContain("var(--popover) 95%")
+    expect(u).toContain("var(--background) 95%")
     expect(u).not.toContain("backdrop-filter")
     expect(u).toContain("calc(var(--spacing) * 14)")
     // A curva tem oito paradas, da placa cheia ao transparente: sem degrau na borda.

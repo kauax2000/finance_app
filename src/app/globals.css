@@ -4138,13 +4138,14 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
       + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
     ) {
-    --dialog-header-tint: color-mix(in oklab, var(--popover) 95%, transparent);
+    /* O fundo da página, um degrau abaixo da placa: o cabeçalho lê mais escuro (13/11). */
+    --dialog-header-tint: color-mix(in oklab, var(--background) 95%, transparent);
     --dialog-header-fade-h: calc(var(--spacing) * 14);
     position: relative;
     z-index: 10;
 
     @media (prefers-reduced-transparency: reduce) {
-      --dialog-header-tint: var(--popover);
+      --dialog-header-tint: var(--background);
     }
 
     &::before,
