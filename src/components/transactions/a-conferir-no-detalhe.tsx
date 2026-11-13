@@ -14,6 +14,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { DescriptionDetails, DescriptionList, DescriptionListItem, DescriptionTerm } from "@/components/ui/description-list"
@@ -204,9 +205,17 @@ export function AConferirNoDetalhe({ transaction: t, pagamento, onEditar, onFeit
 
     return (
         // shrink-0: na coluna flex do corpo, o overflow-hidden do Card o deixava encolher até a tira.
-        <Card padding="none" data-slot="a-conferir" className="shrink-0">
+        // A conferir (B2, 13/11/2026): a borda info e o ponto do selo do topo ligam o card a ele; conferido, volta ao neutro.
+        <Card padding="none" data-slot="a-conferir" className="shrink-0" tone={mostraConfirmar ? "info" : undefined}>
             <CardToolbar>
-                <span className="min-w-0 truncate">Como chegou</span>
+                {mostraConfirmar ? (
+                    <span className="flex min-w-0 items-center gap-1.5">
+                        <BadgeDot className="[--badge-dot:var(--info)]" />
+                        <span className="truncate">A conferir · como chegou</span>
+                    </span>
+                ) : (
+                    <span className="min-w-0 truncate">Como chegou</span>
+                )}
                 <span className="shrink-0">{quemLeu(t)}</span>
             </CardToolbar>
             <CardContent className="grid gap-3 px-(--card-strip-px) pb-(--card-strip-py)">

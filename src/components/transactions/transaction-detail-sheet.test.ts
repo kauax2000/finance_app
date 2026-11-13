@@ -161,6 +161,13 @@ describe("fonte do detalhe", () => {
         expect(f).toContain('<Caption role="alert"')
     })
 
+    it("a conferir B2: o card leva tone=\"info\" e o ponto do selo só enquanto pede Confirmar", () => {
+        const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
+        expect(f).toContain('tone={mostraConfirmar ? "info" : undefined}')
+        expect(f).toMatch(/\{mostraConfirmar \? \(\s*<span[^>]*>\s*<BadgeDot className="\[--badge-dot:var\(--info\)\]" \/>\s*<span className="truncate">A conferir · como chegou<\/span>/)
+        expect(f).toMatch(/\) : \(\s*<span className="min-w-0 truncate">Como chegou<\/span>/)
+    })
+
     it("a recarga das listas não vira erro da ação", () => {
         const f = fonte("src/components/transactions/a-conferir-no-detalhe.tsx")
         expect(f).toMatch(/try \{\s*await invalidateWorkspaceData\([^)]*\)\s*\} catch \{/)

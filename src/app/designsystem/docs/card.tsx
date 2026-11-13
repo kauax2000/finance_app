@@ -15,7 +15,7 @@ import {
 import Link from "next/link"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -41,6 +41,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** Três cores da paleta de categoria, para os ladrilhos das demonstrações. */
@@ -371,6 +372,47 @@ export default function CardDoc() {
       </DocSection>
 
       <DocSection
+        title="Tom: pede ação"
+        description="tone=&quot;info&quot; marca o cartão que espera uma ação da pessoa: só a borda vai ao --info a 45%; fundo, raio e sombra seguem a variant. No app é o “a conferir” do detalhe do lançamento — o título ganha o mesmo ponto do selo do topo e, conferido, o cartão volta ao neutro. Sem tone, nada muda."
+        code={`<Card padding="none" tone="info">
+  <CardToolbar>
+    <span className="flex items-center gap-1.5">
+      <BadgeDot className="[--badge-dot:var(--info)]" />A conferir · como chegou
+    </span>
+    lido pela IA
+  </CardToolbar>
+  …
+</Card>`}
+        previewClassName="grid grid-cols-1 items-start gap-4 bg-background sm:grid-cols-2"
+      >
+        {([true, false] as const).map((pede) => (
+          <Card key={String(pede)} padding="none" tone={pede ? "info" : undefined}>
+            <CardToolbar>
+              {pede ? (
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <BadgeDot className="[--badge-dot:var(--info)]" />
+                  <span className="truncate">A conferir · como chegou</span>
+                </span>
+              ) : (
+                <span className="min-w-0 truncate">Como chegou</span>
+              )}
+              <span className="shrink-0">lido pela IA</span>
+            </CardToolbar>
+            <CardContent className="grid gap-3 px-(--card-strip-px) pb-(--card-strip-py)">
+              <Muted asChild className="border-s-2 border-border ps-3 italic">
+                <blockquote>“farmácia 87,50 no débito”</blockquote>
+              </Muted>
+              {pede ? (
+                <Button type="button" variant="primary" size="md">
+                  confirmar
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
+        ))}
+      </DocSection>
+
+      <DocSection
         title="Horizontal"
         description="orientation=&quot;horizontal&quot; põe a mídia à esquerda e o CardBody à direita, a partir de sm; abaixo, empilha. O casco perde o respiro vertical ao deitar, e o CardBody o devolve, para a capa sangrar de cima a baixo."
         code={`<Card orientation="horizontal">
@@ -674,6 +716,12 @@ export default function CardDoc() {
             type: "boolean",
             default: "false",
             description: "inactive recua o cartão; selected é o contorno de escolha. O Badge e o papel ARIA são de quem chama.",
+          },
+          {
+            prop: "tone",
+            type: '"info"',
+            default: "—",
+            description: "O cartão que pede ação: só a borda vai ao --info a 45%. Sem tone, nada muda.",
           },
           {
             prop: "orientation",

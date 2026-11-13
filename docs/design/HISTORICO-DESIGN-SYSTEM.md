@@ -29015,3 +29015,21 @@ G8 tira a barra, o ponto e a porcentagem e põe o vencimento numa folhinha à es
 - Na tela: `BlocoFatura` mostra a folhinha (`tone="overdue"` com o vencimento passado e a fatura
   não paga), o total, a legenda "esta compra R$ … · fecha d/mês" e o selo. Saíram o `Progress`,
   o `PontoNaCor`/`BarraNaCor` da fatura e o `rotuloDoPesoNaFatura`.
+
+### Rodada 371 — `Card tone="info"`, o cartão que pede ação
+
+Pedido do dono em 2026-11-13 (mockup B2, "Borda azul + ponto no título"): o card "Como chegou"
+do detalhe do lançamento ficava solto do selo "A conferir" do topo. A B2 liga os dois pela cor
+do info, sem pintar o cartão.
+
+- API: `tone?: "info"`, um eixo novo do `cardVariants` (só a classe `border-info/45`, que o
+  `tailwind-merge` põe no lugar do `border-border` da `variant`) e `data-tone` no casco. Só
+  `info` por ora; sem `tone`, nenhuma classe muda. Fundo, raio e sombra seguem a `variant`.
+- Token: nenhum novo — `--info` já tem o par escuro. Medido (borda recortada no `padding-box`,
+  composta sobre a página): claro 2,02:1 contra o `--card` e 1,93:1 contra o `--background`;
+  escuro 2,21:1 e 2,44:1. Abaixo dos 3:1 da 1.4.11 de propósito: a borda é reforço, e quem diz
+  o estado é o texto "A conferir" com o ponto (o `--border` neutro do claro mede 1,44:1).
+- Na tela: `AConferirNoDetalhe` usa `tone="info"` e o título "A conferir · como chegou" com o
+  `BadgeDot` (`[--badge-dot:var(--info)]`) enquanto mostra Confirmar; conferido (só lembrar ou
+  desfazer), volta a "Como chegou", sem ponto nem tom.
+- `card-versions.test.ts` tranca o eixo; `transaction-detail-sheet.test.ts`, o uso.

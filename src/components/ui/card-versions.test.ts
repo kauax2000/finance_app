@@ -30,6 +30,18 @@ describe("as versões do Card", () => {
     expect(casco({ variant: "dashed" })).toMatch(/border-dashed/)
   })
 
+  it("tone=\"info\" troca só a borda; sem tone, nada muda", () => {
+    const neutro = casco({})
+    expect(neutro).not.toContain("data-tone")
+    expect(neutro).not.toContain("border-info")
+    expect(neutro).toMatch(/border-border/)
+    const info = casco({ tone: "info" })
+    expect(info).toContain('data-tone="info"')
+    expect(info).toMatch(/border-info\/45/)
+    expect(info).not.toMatch(/(^|\s)border-border(\s|")/)
+    expect(info).toMatch(/bg-card/)
+  })
+
   it("o título nasce md e a mídia do cabeçalho ocupa a primeira coluna", () => {
     expect(html(h(CardTitle, null, "t"))).toContain('data-size="md"')
     const cabecalho = html(

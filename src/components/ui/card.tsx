@@ -15,7 +15,7 @@ import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
  * superfície, `padding` o ritmo interno (`none` é o painel, que sangra de borda
  * a borda). Peças: `CardField` (ladrilho rótulo/valor), `CardHeader media`,
  * `CardLink` (link esticado), `CardTitle size`, `inactive`, `selected`,
- * `orientation`, `CardMessage` e `CardSkeleton`.
+ * `tone`, `orientation`, `CardMessage` e `CardSkeleton`.
  */
 const cardVariants = cva(
   [
@@ -104,6 +104,14 @@ const cardVariants = cva(
         false: "",
       },
       /**
+       * O cartão que pede ação (o "a conferir" do detalhe do lançamento): só a
+       * borda vai ao `--info` a 45%; fundo, raio e sombra ficam os da
+       * `variant`. Sem `tone`, nada muda.
+       */
+      tone: {
+        info: "border-info/45",
+      },
+      /**
        * Horizontal: a mídia à esquerda e o `CardBody` à direita a partir de
        * `sm`; abaixo, empilha. O casco perde o respiro vertical, que o
        * `CardBody` devolve.
@@ -143,6 +151,7 @@ function Card({
   interactive,
   inactive,
   selected,
+  tone,
   orientation,
   asChild = false,
   ref,
@@ -163,9 +172,10 @@ function Card({
       data-interactive={interactive ? "" : undefined}
       data-inactive={inactive ? "" : undefined}
       data-selected={selected ? "" : undefined}
+      data-tone={tone ?? undefined}
       data-orientation={orientation ?? "vertical"}
       className={cn(
-        cardVariants({ variant, padding, interactive, inactive, selected, orientation }),
+        cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation }),
         className
       )}
       {...props}

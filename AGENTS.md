@@ -1071,8 +1071,12 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `plain`, `dashed` — o vazio ou o "adicionar" —, `brand`, uma por
   tela); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
-  é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existem
-  `size` nem `tone`**: aviso é `Alert`, tom de número é `StatCard`.
+  é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
+  `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
+  `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada
+  muda (o "a conferir" do detalhe do lançamento, com o `BadgeDot` do selo no
+  título; conferido, volta ao neutro — rodada 371). Aviso continua `Alert`, tom
+  de número `StatCard`.
   - As tiras `CardToolbar` (`variant` `label` | `title`), `CardFooter` e
     `CardNote` sangram até a borda e o casco recolhe o respiro: não escreva
     `rounded-t-xl`, `pt-0` nem `border-b bg-muted/30`. `CardHeader` não é a

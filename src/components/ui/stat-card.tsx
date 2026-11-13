@@ -90,7 +90,7 @@ function StatCard({
   interactive,
   asChild,
   ...props
-}: React.ComponentProps<typeof Card> & VariantProps<typeof statCardVariants>) {
+}: Omit<React.ComponentProps<typeof Card>, "tone"> & VariantProps<typeof statCardVariants>) {
   const contexto = React.useMemo(() => ({ tone: tone ?? "default" }), [tone])
   return (
     <StatCardContext.Provider value={contexto}>
