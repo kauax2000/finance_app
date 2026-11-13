@@ -108,7 +108,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                     </Button>
                 }
             >
-                <PageSectionTitle>Anexos</PageSectionTitle>
+                <PageSectionTitle icon={<PaperClipIcon />}>Anexos</PageSectionTitle>
             </PageSectionHeader>
             <Input
                 ref={input}

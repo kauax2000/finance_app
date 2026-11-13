@@ -53,9 +53,12 @@ const emptyStateVariants = cva(
       layout: {
         stack: "",
         inline: [
-          "grid items-start justify-stretch gap-x-3 gap-y-0.5 p-3 text-left [--empty-state-icon:--spacing(8)] [--empty-state-tile-r:var(--radius-md)]",
+          // O ícone atravessa as linhas declaradas (uma por filho de texto), e cada peça se centra
+          // na sua: uma linha ou duas de descrição ficam no meio do ícone, e não presas no topo.
+          "grid items-center justify-stretch gap-x-3 gap-y-0.5 p-3 text-left [--empty-state-icon:--spacing(8)] [--empty-state-tile-r:var(--radius-md)]",
           "has-[>[data-slot=empty-state-icon]]:grid-cols-[auto_1fr]",
-          "[&>[data-slot=empty-state-icon]]:row-span-3",
+          "grid-rows-[auto] has-[>:nth-child(3)]:grid-rows-[auto_auto] has-[>:nth-child(4)]:grid-rows-[auto_auto_auto]",
+          "[&>[data-slot=empty-state-icon]]:row-span-full",
           "has-[>[data-slot=empty-state-icon]]:[&>:not([data-slot=empty-state-icon])]:col-start-2",
         ].join(" "),
       },
