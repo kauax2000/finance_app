@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import { CreditCardIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { creditCardInvoiceBadgeForRow } from "@/components/transactions/transactions-table"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +15,6 @@ import {
 } from "@/lib/credit-card-billing"
 import { diaMesCurto, tituloDaFatura } from "@/lib/detalhe/blocos"
 import { chavesDeFaturasPagas } from "@/lib/fatura/total-com-banco"
-import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
@@ -92,18 +92,36 @@ export function BlocoFatura({ transaction: t, onManchete }: { transaction: Trans
 
   return (
     <BlocoContexto
-      titulo={rotulo}
+      // O selo sobe ao título (H5): a direita do corpo fica livre e o estado lê junto do nome da fatura.
+      titulo={
+        <span className="inline-flex items-center gap-2">
+          {rotulo}
+          {estado ? (
+            <Badge tone={estado.tone} size="xs">
+              {estado.label}
+            </Badge>
+          ) : null}
+        </span>
+      }
       link={{ href: creditCardDetailPath(cartao.id), label: "ver fatura" }}
     >
       <div className="flex items-center gap-3">
+        {/* O ícone de cartão no ladrilho neutro (cor do tema, não da pessoa: `bg-muted`, não `ColorTile`). */}
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-row bg-muted text-muted-foreground">
+          <CreditCardIcon className="size-5" />
+        </span>
         <div className="flex min-w-0 flex-1 flex-col items-start">
           <MoneyDisplay value={total} size="lg" />
+          {/* O valor da compra já está no topo do detalhe: aqui só as datas da fatura. */}
           <Caption>
-            {estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)} · ` : null}esta compra {currencyBRL(Number(t.amount))}
-            {estado?.slot === "open" ? ` · fecha ${diaMesCurto(ate)}` : null}
+            {[
+              estado?.dueYmd ? `vence ${diaMesCurto(estado.dueYmd)}` : null,
+              estado?.slot === "open" ? `fecha ${diaMesCurto(ate)}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </Caption>
         </div>
-        {estado ? <Badge tone={estado.tone}>{estado.label}</Badge> : null}
       </div>
     </BlocoContexto>
   )
