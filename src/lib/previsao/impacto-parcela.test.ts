@@ -10,7 +10,6 @@ import {
     impactoDoPlano,
     mesCurto,
     frasesDoImpacto,
-    tituloDoImpacto,
     type Impacto,
     type PlanoProposto,
 } from "./impacto-parcela"
@@ -271,11 +270,6 @@ describe("o texto do quadro", () => {
             primeiroMesNegativo: { antes: null, depois: "2027-03" },
         })
         expect(avisoDoImpacto(i)?.tom).toBe("destructive")
-    })
-
-    it("o título: o mês mais pesado por extenso", () => {
-        expect(tituloDoImpacto(base)).toBe("Parcelas em maio")
-        expect(tituloDoImpacto(com({ pico: { semEsta: 0, comEsta: 1, mes: "2026-11" } }))).toBe("Parcelas em novembro")
     })
 
     const titulos = (i: Impacto) => frasesDoImpacto(i).map((f) => f.titulo)

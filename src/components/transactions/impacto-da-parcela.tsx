@@ -85,7 +85,17 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                         )
                     })}
                 </div>
-                {percentualDaRenda != null ? <Caption>{percentualDaRenda}% da renda recorrente</Caption> : null}
+                {/* O "+" laranja é a parte desta compra; o % é do mês mais pesado, nomeado quando não é um ladrilho. */}
+                <Caption>
+                    <span className="text-warning">+</span> desta compra
+                    {percentualDaRenda != null
+                        ? ` · ${percentualDaRenda}% da renda recorrente no pico${
+                              impacto.meses.some((m) => m.mes === pico.mes)
+                                  ? ""
+                                  : ` (${formatMonthShortPtBr(new Date(Number(pico.mes.slice(0, 4)), Number(pico.mes.slice(5, 7)) - 1, 1))})`
+                          }`
+                        : null}
+                </Caption>
                 {/* Um respiro só entre as frases (o do grupo): sem o recuo vertical do Item, a frase de uma linha não ganha vão a mais. */}
                 <ItemGroup className="gap-3 pt-1">
                     {frasesDoImpacto(impacto).map((f) => (

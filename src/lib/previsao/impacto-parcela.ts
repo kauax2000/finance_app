@@ -15,7 +15,7 @@ import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatur
 import { diaMesCurto, tituloDaFatura } from "@/lib/detalhe/blocos"
 import { currencyBRL } from "@/lib/formatters"
 import type { CreditCard, WorkspaceInstallmentPlan } from "@/lib/supabase"
-import { formatMonthLongPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { centavos, faturaPrevista, hojeDate } from "./fatura-prevista"
 import { projecaoMensal } from "./fluxo"
 import type { DadosDaPrevisao } from "./tipos"
@@ -72,11 +72,6 @@ export function avisoDoImpacto(i: Impacto): { tom: "destructive" | "warning"; ti
     return null
 }
 
-/** A sobrancelha do quadro: "Parcelas em novembro", o mês mais pesado. */
-export function tituloDoImpacto(i: Impacto): string {
-    const [y, m] = i.pico.mes.split("-").map(Number)
-    return `Parcelas em ${formatMonthLongPtBr(new Date(y, m - 1, 1))}`
-}
 
 export type FraseDoImpacto = {
     chave: string
