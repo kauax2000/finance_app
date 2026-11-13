@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { DocumentIcon, EllipsisHorizontalIcon, PaperClipIcon, PhotoIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { DocumentIcon, EllipsisHorizontalIcon, FolderOpenIcon, PaperClipIcon, PhotoIcon, PlusIcon } from "@heroicons/react/16/solid"
 
 import {
     AlertDialog,
@@ -130,7 +130,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
             ) : anexos.length === 0 ? (
                 <EmptyState size="sm" layout="inline">
                     <EmptyStateIcon>
-                        <PaperClipIcon aria-hidden />
+                        <FolderOpenIcon aria-hidden />
                     </EmptyStateIcon>
                     <EmptyStateDescription>Sem anexos. Guarde o recibo ou o boleto aqui.</EmptyStateDescription>
                 </EmptyState>
