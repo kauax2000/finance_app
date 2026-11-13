@@ -50,3 +50,13 @@ export function resolveInstallmentKn(
     }
     return parsed
 }
+
+/** O que ainda falta pagar depois da parcela `k` (a última leva o `final_installment_amount`). */
+export function faltaDepoisDaParcela(
+    plan: { total_installments: number; installment_amount: number; final_installment_amount: number },
+    k: number
+): number {
+    const n = plan.total_installments
+    if (k >= n) return 0
+    return Number(plan.installment_amount) * (n - k - 1) + Number(plan.final_installment_amount)
+}

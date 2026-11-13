@@ -36,7 +36,8 @@ import {
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
-import { resolveInstallmentKn, totalPurchaseFromPlan } from "@/lib/transaction-installment"
+import { faltaDepoisDaParcela, resolveInstallmentKn, totalPurchaseFromPlan } from "@/lib/transaction-installment"
+import { Progress } from "@/components/ui/progress"
 import {
     DescriptionDetails,
     DescriptionList,
@@ -268,8 +269,11 @@ export function InstallmentChip({
         transaction.description,
         plan
     )
-    const sinal = transaction.type === "income" ? 1 : -1
-    const tone = transaction.type === "income" ? "income" : "expense"
+    // O título é a compra, sem o "(k/n)" que o chip já mostra.
+    const nomeDaCompra =
+        plan?.description?.trim() ||
+        (transaction.description ?? "").replace(/\s*\(\d+\/\d+\)\s*$/, "").trim() ||
+        "Compra parcelada"
     const total = plan ? totalPurchaseFromPlan(plan) : null
     const ultima = kn != null && kn.k >= kn.n
     const termina =
@@ -294,45 +298,45 @@ export function InstallmentChip({
                 onContextMenu={stopRowEvent}
             >
                 <HoverCardHeader>
-                    <HoverCardTitle>
-                        {kn ? `Parcela ${kn.k} de ${kn.n}` : "Compra parcelada"}
-                    </HoverCardTitle>
-                    {kn ? (
-                        <HoverCardDescription>
-                            {ultima ? "Última parcela" : "Compra parcelada"}
-                        </HoverCardDescription>
+                    <HoverCardTitle>{nomeDaCompra}</HoverCardTitle>
+                    {ultima ? (
+                        <HoverCardDescription>Termina com esta parcela</HoverCardDescription>
+                    ) : termina ? (
+                        <HoverCardDescription>Termina em {termina}</HoverCardDescription>
                     ) : null}
                 </HoverCardHeader>
-                <HoverCardBody>
+                <HoverCardBody className="grid gap-3">
+                    {kn && kn.n > 1 ? (
+                        <Progress
+                            className="[--progress-highlight:var(--color-warning)]"
+                            value={kn.k}
+                            max={kn.n}
+                            segments={kn.n}
+                            highlight={{ from: kn.k - 1, to: kn.k }}
+                            aria-label={`Parcela ${kn.k} de ${kn.n}`}
+                        />
+                    ) : null}
                     <DescriptionList layout="inline" className="gap-1">
                         <DescriptionListItem>
-                            <DescriptionTerm>Parcela</DescriptionTerm>
+                            <DescriptionTerm>Esta parcela{kn ? ` (${kn.k} de ${kn.n})` : ""}</DescriptionTerm>
                             <DescriptionDetails>
-                                <MoneyDisplay
-                                    value={sinal * Number(transaction.amount)}
-                                    signed
-                                    tone={tone}
-                                    size="sm"
-                                />
+                                <MoneyDisplay value={Number(transaction.amount)} size="sm" />
                             </DescriptionDetails>
                         </DescriptionListItem>
                         {total != null && Number.isFinite(total) ? (
                             <DescriptionListItem>
                                 <DescriptionTerm>Total da compra</DescriptionTerm>
                                 <DescriptionDetails>
-                                    <MoneyDisplay
-                                        value={sinal * total}
-                                        signed
-                                        tone={tone}
-                                        size="sm"
-                                    />
+                                    <MoneyDisplay value={total} size="sm" />
                                 </DescriptionDetails>
                             </DescriptionListItem>
                         ) : null}
-                        {termina ? (
+                        {plan && kn ? (
                             <DescriptionListItem>
-                                <DescriptionTerm>Última parcela</DescriptionTerm>
-                                <DescriptionDetails>{termina}</DescriptionDetails>
+                                <DescriptionTerm>Falta pagar</DescriptionTerm>
+                                <DescriptionDetails>
+                                    <MoneyDisplay value={faltaDepoisDaParcela(plan, kn.k)} size="sm" />
+                                </DescriptionDetails>
                             </DescriptionListItem>
                         ) : null}
                     </DescriptionList>
