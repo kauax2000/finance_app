@@ -78,8 +78,8 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                                     {ehPico ? " · pico" : null}
                                 </Caption>
                                 <MoneyDisplay value={m.comEsta} className="font-medium" />
-                                <Caption className={desta > 0 ? "text-warning" : undefined}>
-                                    {desta > 0 ? `+ ${currencyBRL(desta)} esta` : "sem esta"}
+                                <Caption className={cn("whitespace-nowrap", desta > 0 && "text-warning")}>
+                                    {desta > 0 ? `+ ${currencyBRL(desta)}` : "sem esta"}
                                 </Caption>
                             </div>
                         )
