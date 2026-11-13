@@ -6,6 +6,8 @@ import {
     ehCampoDeTexto,
     linhaDeQuem,
     notaDaOrigem,
+    momentoDoRegistro,
+    linhaDaEdicao,
     podeNavegar,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
@@ -71,6 +73,26 @@ describe("as frases do detalhe", () => {
         expect(notaDaOrigem("app")).toBe("Lançado pelo app")
         expect(notaDaOrigem("apple_pay")).toBe("Lançado pelo Apple Pay")
         expect(notaDaOrigem("import_sheet")).toBe("Lançado pela Planilha")
+    })
+
+    it("o momento do registro: hoje, ontem, dia do mês e o ano só se for outro", () => {
+        const agora = new Date(2026, 10, 13, 18, 0)
+        expect(momentoDoRegistro(new Date(2026, 10, 13, 9, 5).toISOString(), agora)).toBe("hoje, 09:05")
+        expect(momentoDoRegistro(new Date(2026, 10, 12, 23, 59).toISOString(), agora)).toBe("ontem, 23:59")
+        expect(momentoDoRegistro(new Date(2026, 10, 11, 14, 32).toISOString(), agora)).toBe("11 nov, 14:32")
+        expect(momentoDoRegistro(new Date(2025, 0, 2, 8, 0).toISOString(), agora)).toBe("2 jan 2025, 08:00")
+        expect(momentoDoRegistro("lixo", agora)).toBeNull()
+    })
+
+    it("a edição só aparece depois de um minuto da criação", () => {
+        const agora = new Date(2026, 10, 13, 18, 0)
+        const criado = new Date(2026, 10, 11, 14, 32).toISOString()
+        expect(linhaDaEdicao(criado, criado, agora)).toBeNull()
+        expect(linhaDaEdicao(criado, new Date(2026, 10, 11, 14, 32, 40).toISOString(), agora)).toBeNull()
+        expect(linhaDaEdicao(criado, null, agora)).toBeNull()
+        expect(linhaDaEdicao(criado, new Date(2026, 10, 13, 9, 10).toISOString(), agora)).toBe("Editado hoje às 09:10")
+        expect(linhaDaEdicao(criado, new Date(2026, 10, 12, 9, 10).toISOString(), agora)).toBe("Editado ontem às 09:10")
+        expect(linhaDaEdicao(criado, new Date(2026, 10, 11, 20, 0).toISOString(), agora)).toBe("Editado em 11 nov às 20:00")
     })
 
     it("a recorrência", () => {
@@ -200,7 +222,7 @@ describe("fonte do detalhe", () => {
             expect(f).toContain(b)
         }
         expect(f).toContain("<ImpactoDaParcela")
-        expect(f).toContain("<Caption>{notaDaOrigem(t.source)}</Caption>")
+        expect(f).toContain("<RodapeDaOrigem transaction={t} />")
         expect(f).toContain("formatWeekdayDayMonthShortPtBr(t.date)")
     })
 

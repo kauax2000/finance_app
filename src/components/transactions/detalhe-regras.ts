@@ -1,5 +1,6 @@
 import { ROTULO_DA_ORIGEM } from "@/lib/piloto/piloto"
 import type { Transaction } from "@/lib/supabase"
+import { formatMonthShortPtBr } from "@/lib/transaction-date"
 
 /** As regras puras do detalhe (spec §8), fora do componente para o teste em node. */
 
@@ -58,4 +59,33 @@ const RECORRENCIA: Record<"daily" | "weekly" | "monthly", string> = {
 
 export function rotuloDaRecorrencia(intervalo: Transaction["recurring_interval"]): string {
     return intervalo ? RECORRENCIA[intervalo] : "Recorrente"
+}
+
+const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+
+/** "hoje", "ontem", "11 nov" ou "11 nov 2025": o dia de um instante no fuso local. */
+function diaDoInstante(d: Date, agora: Date): string {
+    const zero = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+    const dias = Math.round((zero(agora) - zero(d)) / 86_400_000)
+    if (dias === 0) return "hoje"
+    if (dias === 1) return "ontem"
+    const dia = `${d.getDate()} ${formatMonthShortPtBr(d)}`
+    return d.getFullYear() === agora.getFullYear() ? dia : `${dia} ${d.getFullYear()}`
+}
+
+/** O rodapé do detalhe: quando o lançamento entrou ("11 nov, 14:32", "hoje, 09:10"). */
+export function momentoDoRegistro(iso: string, agora: Date = new Date()): string | null {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    return `${diaDoInstante(d, agora)}, ${hora(d)}`
+}
+
+/** "Editado hoje às 09:10", só quando a última mudança veio mais de um minuto depois de criar. */
+export function linhaDaEdicao(criado: string, editado: string | null | undefined, agora: Date = new Date()): string | null {
+    if (!editado) return null
+    const c = new Date(criado)
+    const e = new Date(editado)
+    if (Number.isNaN(c.getTime()) || Number.isNaN(e.getTime()) || e.getTime() - c.getTime() < 60_000) return null
+    const dia = diaDoInstante(e, agora)
+    return `Editado ${dia === "hoje" || dia === "ontem" ? dia : `em ${dia}`} às ${hora(e)}`
 }

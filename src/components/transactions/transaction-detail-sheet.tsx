@@ -18,7 +18,6 @@ import {
     direcaoDaTecla,
     ehCampoDeTexto,
     linhaDeQuem,
-    notaDaOrigem,
     podeNavegar,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
@@ -28,6 +27,7 @@ import { BlocoFatura } from "@/components/transactions/detalhe/bloco-fatura"
 import { BlocoHistorico } from "@/components/transactions/detalhe/bloco-historico"
 import { BlocoParcelada } from "@/components/transactions/detalhe/bloco-parcelada"
 import { BlocoReceitas } from "@/components/transactions/detalhe/bloco-receitas"
+import { RodapeDaOrigem } from "@/components/transactions/detalhe/rodape-da-origem"
 import { FolhaDoPlano } from "@/components/transactions/detalhe/folha-do-plano"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
@@ -572,7 +572,7 @@ export function TransactionDetailSheet({
                 {/* Com a conta paga por este lançamento, o boleto da instância aparece junto. */}
                 <AnexosDoLancamento key={t.id} transaction={t} />
 
-                <Caption>{notaDaOrigem(t.source)}</Caption>
+                <RodapeDaOrigem transaction={t} />
             </DialogBody>
 
             {installmentBlock && papel !== "guest" ? (
