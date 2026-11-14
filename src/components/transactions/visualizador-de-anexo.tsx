@@ -27,7 +27,12 @@ export function VisualizadorDeAnexo({
     const urls = useQuery({
         // A chave segue o mostrado: fechando, as URLs do cache ficam; abrindo outro, não reaparecem as do anterior.
         queryKey: ["anexo-url", mostrado?.path],
-        queryFn: () => urlsDoAnexo(supabase, mostrado!.path),
+        // Sem URL é erro, não sucesso: senão o `null` ficaria 50 min no cache e reabrir não tentaria de novo.
+        queryFn: async () => {
+            const r = await urlsDoAnexo(supabase, mostrado!.path)
+            if (!r) throw new Error("Sem URL assinada")
+            return r
+        },
         enabled: anexo != null,
         // A URL assinada vale 1 h: 50 min de folga antes de pedir outra.
         staleTime: 50 * 60 * 1000,
@@ -46,7 +51,7 @@ export function VisualizadorDeAnexo({
                     </DialogDescription>
                 </DialogHeader>
                 <DialogBody>
-                    {urls.isPending ? (
+                    {urls.isPending || (urls.isFetching && !urls.data) ? (
                         <Skeleton className="h-96 w-full" />
                     ) : !prontas ? (
                         <Card padding="none">
