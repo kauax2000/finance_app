@@ -4,7 +4,7 @@ import { lerFonte } from "@/test/fonte"
 
 const pasta = "src/components/transactions/detalhe"
 const ler = (nome: string) => lerFonte(`${pasta}/${nome}.tsx`)
-const BLOCOS = ["bloco-categoria", "bloco-fatura", "bloco-historico", "bloco-receitas", "bloco-parcelada"]
+const BLOCOS = ["bloco-categoria", "bloco-fatura", "bloco-historico", "bloco-receitas", "bloco-parcelada", "bloco-saldo-do-mes"]
 
 describe("os blocos de contexto do detalhe", () => {
   it("a casca é Card + CardToolbar do design system, com esqueleto", () => {
@@ -201,5 +201,13 @@ describe("os blocos de contexto do detalhe", () => {
     for (const fora of ["<Progress", "BarraNaCor", "PontoNaCor", "rotuloDoPesoNaFatura", "% da fatura"]) expect(f).not.toContain(fora)
     expect(ler("bloco-contexto")).toContain("tile-vivid")
     for (const nome of ["bloco-fatura", "bloco-categoria"]) expect(ler(nome)).not.toContain("tile-vivid")
+  })
+
+  it("o saldo do mês: as contas do Painel, entrou, saiu e sobra, e o link do mês", () => {
+    const s = ler("bloco-saldo-do-mes")
+    for (const t of ["aggregateIncomeExpenseForMonth", "buildCreditCardClosingLookup", "useCreditCardsQuery", '"Saldo de "', '"entrou"', '"saiu"', '"sobra"', '"Ver o mês"'])
+      expect(s).toContain(t)
+    expect(s).not.toMatch(/tone="(success|destructive)"/)
+    expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<BlocoSaldoDoMes")
   })
 })

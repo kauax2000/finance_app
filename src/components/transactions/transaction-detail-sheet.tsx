@@ -27,6 +27,7 @@ import { BlocoFatura } from "@/components/transactions/detalhe/bloco-fatura"
 import { BlocoHistorico } from "@/components/transactions/detalhe/bloco-historico"
 import { BlocoParcelada } from "@/components/transactions/detalhe/bloco-parcelada"
 import { BlocoReceitas } from "@/components/transactions/detalhe/bloco-receitas"
+import { BlocoSaldoDoMes } from "@/components/transactions/detalhe/bloco-saldo-do-mes"
 import { RodapeDaOrigem } from "@/components/transactions/detalhe/rodape-da-origem"
 import { FolhaDoPlano } from "@/components/transactions/detalhe/folha-do-plano"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
@@ -527,6 +528,7 @@ export function TransactionDetailSheet({
                         <ImpactoDaParcela planoId={t.installment_plan_id} />
                     ) : null}
                     <BlocoReceitas key={`receitas:${chaveDosBlocos}`} transaction={t} onManchete={aoMudarManchete} />
+                    <BlocoSaldoDoMes key={`saldo:${chaveDosBlocos}`} transaction={t} />
                 </div>
 
                 <DescriptionList>
