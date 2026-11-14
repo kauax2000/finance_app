@@ -16,7 +16,7 @@ import { BlocoContexto, BlocoContextoEsqueleto } from "./bloco-contexto"
 export function BlocoSaldoDoMes({ transaction: t }: { transaction: Transaction }) {
   const { currentWorkspaceId } = useWorkspace()
   const ym = (transactionLocalYmd(t.date) ?? "").slice(0, 7)
-  const ligado = t.type === "income" && Boolean(ym)
+  const ligado = t.type === "income" && t.payment_method !== "credit_card" && Boolean(ym)
   const { period_start, period_end } = ym ? periodBoundsFromYearMonth(ym) : { period_start: "", period_end: "" }
 
   // A janela do Painel: um mês de cada lado, porque a compra no cartão cai no mês da fatura.

@@ -1,7 +1,6 @@
 import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import type { Transaction } from "@/lib/supabase"
-import { ehEstornoNoCartao } from "@/lib/expense-month-attribution"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 
 /** O texto depois de "Esta, R$ X · ". */
@@ -36,7 +35,8 @@ export function receitasPorMes(
 ): Array<{ ym: string; total: number }> {
   const soma = new Map(meses.map((m) => [m, 0]))
   for (const t of txs) {
-    if (t.type !== "income" || ehEstornoNoCartao(t)) continue
+    // A mesma regra do Painel (`aggregateIncomeExpenseForMonth`): receita no cartão é estorno, com ou sem cartão ligado.
+    if (t.type !== "income" || t.payment_method === "credit_card") continue
     const ym = transactionLocalYmd(t.date)?.slice(0, 7)
     if (ym && soma.has(ym)) soma.set(ym, roundCents(soma.get(ym)! + Number(t.amount)))
   }

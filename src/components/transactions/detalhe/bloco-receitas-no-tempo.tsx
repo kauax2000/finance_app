@@ -34,7 +34,7 @@ const mesCurto = (ym: string) => {
 export function BlocoReceitasNoTempo({ transaction: t }: { transaction: Transaction }) {
   const { currentWorkspaceId } = useWorkspace()
   const ym = (transactionLocalYmd(t.date) ?? "").slice(0, 7)
-  const ligado = t.type === "income" && Boolean(ym)
+  const ligado = t.type === "income" && t.payment_method !== "credit_card" && Boolean(ym)
   const meses = useMemo(() => (ym ? [-5, -4, -3, -2, -1, 0].map((d) => shiftYearMonth(ym, d)) : []), [ym])
   const janela = ym
     ? {
@@ -78,7 +78,7 @@ export function BlocoReceitasNoTempo({ transaction: t }: { transaction: Transact
         <BarChart data={dados} accessibilityLayer>
           <Bar dataKey="total" fill="var(--color-total)" radius={[3, 3, 0, 0]}>
             {dados.map((d) => (
-              <Cell key={d.ym} fill={d.atual ? "var(--chart-income)" : undefined} fillOpacity={d.atual ? 1 : APAGADA} />
+              <Cell key={d.ym} fill={d.atual ? "var(--chart-income)" : "var(--color-total)"} fillOpacity={d.atual ? 1 : APAGADA} />
             ))}
           </Bar>
         </BarChart>

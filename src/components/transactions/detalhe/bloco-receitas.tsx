@@ -7,7 +7,6 @@ import { Caption, Muted } from "@/components/ui/typography"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { hrefDaLista, mesPorExtenso, rotuloVerOs } from "@/lib/detalhe/blocos"
 import { legendaDaReceita, maximoDaBarra } from "@/lib/detalhe/receitas"
-import { ehEstornoNoCartao } from "@/lib/expense-month-attribution"
 import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
@@ -21,7 +20,8 @@ import { BlocoContexto, BlocoContextoEsqueleto, useFatiaDaManchete, type AoMudar
 export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Transaction; onManchete?: AoMudarManchete }) {
   const { currentWorkspaceId } = useWorkspace()
   const ym = (transactionLocalYmd(t.date) ?? "").slice(0, 7)
-  const ligado = t.type === "income" && Boolean(ym)
+  // O estorno no cartão é receita no banco, mas abate a fatura: não tem card de receitas.
+  const ligado = t.type === "income" && t.payment_method !== "credit_card" && Boolean(ym)
   const mesCorrente = ym === formatYearMonth(new Date())
   const { period_start, period_end } = ym ? periodBoundsFromYearMonth(ym) : { period_start: "", period_end: "" }
 
@@ -34,8 +34,8 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
 
   const pendente = !mes.data || (mesCorrente && assinaturas.isPending)
 
-  // O estorno no cartão é receita no banco, mas abate a fatura: não entra aqui.
-  const receitas = (mes.data ?? []).filter((x) => x.type === "income" && !ehEstornoNoCartao(x))
+  // O estorno no cartão é receita no banco, mas abate a fatura: não entra aqui (a regra do Painel).
+  const receitas = (mes.data ?? []).filter((x) => x.type === "income" && x.payment_method !== "credit_card")
   const total = roundCents(receitas.reduce((s, x) => s + (Number(x.amount) || 0), 0))
   const esperado =
     mesCorrente && assinaturas.data
@@ -57,12 +57,13 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
         : { receitas: { mes: mesPorExtenso(ym), total, esperado } },
   )
 
-  // A fatia desta receita começa onde as anteriores do mês (por data) terminam; fora da lista, do fim.
+  // A fatia desta receita começa onde as anteriores do mês (por data) terminam; fora da lista (ainda não
+  // relida), não há fatia nem "Esta": adivinhar acenderia o dinheiro de outra receita.
   const valor = Number(t.amount) || 0
   const ordem = [...receitas].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
   const i = ordem.findIndex((x) => x.id === t.id)
-  const antes = i >= 0 ? roundCents(ordem.slice(0, i).reduce((s, x) => s + (Number(x.amount) || 0), 0)) : total - valor
-  const fatia = { from: antes, to: roundCents(antes + valor) }
+  const antes = i >= 0 ? roundCents(ordem.slice(0, i).reduce((s, x) => s + (Number(x.amount) || 0), 0)) : null
+  const fatia = antes != null ? { from: antes, to: roundCents(antes + valor) } : undefined
 
   if (!ligado || mes.isError) return null
   if (pendente) return <BlocoContextoEsqueleto />
@@ -93,7 +94,7 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
           />
         </div>
       ) : null}
-      {total > 0 ? (
+      {total > 0 && fatia ? (
         <Caption>
           <span aria-hidden className="inline-block size-2 rounded-full bg-income" /> Esta, {currencyBRL(valor)} ·{" "}
           {legendaDaReceita({ valor, total, esperado, mesCorrente, mes: mesPorExtenso(ym) })}
