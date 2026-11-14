@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-import { abrirAnexo, descricaoDoAnexo, dimensoesAlvo, validarArquivo } from "./anexos"
+import { descricaoDoAnexo, dimensoesAlvo, urlsDoAnexo, validarArquivo } from "./anexos"
 
 const MB = 1024 * 1024
 const COTA = 26214400
@@ -101,31 +101,34 @@ describe("fonte", () => {
     })
 })
 
-describe("abrirAnexo", () => {
-    const supabase = (url: string | null) =>
-        ({
-            storage: { from: () => ({ createSignedUrl: async () => ({ data: url ? { signedUrl: url } : null }) }) },
-        }) as unknown as Parameters<typeof abrirAnexo>[0]
+describe("urlsDoAnexo", () => {
+    const fake = (url: string | null) => {
+        const chamadas: unknown[][] = []
+        const supabase = {
+            storage: {
+                from: () => ({
+                    createSignedUrl: async (...args: unknown[]) => {
+                        chamadas.push(args)
+                        const baixar = (args[2] as { download?: boolean } | undefined)?.download
+                        return { data: url ? { signedUrl: baixar ? `${url}?download=` : url } : null }
+                    },
+                }),
+            },
+        } as unknown as Parameters<typeof urlsDoAnexo>[0]
+        return { supabase, chamadas }
+    }
 
-    it("abre a aba no clique e põe a URL nela", async () => {
-        const aba = { opener: {} as unknown, location: { href: "" }, close: () => {} }
-        const open = vi.fn(() => aba)
-        vi.stubGlobal("window", { open })
-        expect(await abrirAnexo(supabase("https://x/a"), "w/a.pdf")).toEqual({ estado: "aberta" })
-        expect(open).toHaveBeenCalledWith("about:blank", "_blank")
-        expect(aba.location.href).toBe("https://x/a")
-        expect(aba.opener).toBeNull()
-        vi.unstubAllGlobals()
+    it("devolve a URL de ver e a de baixar", async () => {
+        const { supabase, chamadas } = fake("https://x/a")
+        expect(await urlsDoAnexo(supabase, "w/a.pdf")).toEqual({ ver: "https://x/a", baixar: "https://x/a?download=" })
+        expect(chamadas).toEqual([
+            ["w/a.pdf", 3600],
+            ["w/a.pdf", 3600, { download: true }],
+        ])
     })
 
-    it("popup bloqueado devolve a URL para o link; sem URL, fecha a aba e dá erro", async () => {
-        vi.stubGlobal("window", { open: () => null })
-        expect(await abrirAnexo(supabase("https://x/a"), "w/a.pdf")).toEqual({ estado: "bloqueada", url: "https://x/a" })
-        const close = vi.fn()
-        vi.stubGlobal("window", { open: () => ({ close }) })
-        expect(await abrirAnexo(supabase(null), "w/a.pdf")).toEqual({ estado: "erro" })
-        expect(close).toHaveBeenCalled()
-        vi.unstubAllGlobals()
+    it("devolve null quando uma URL falha", async () => {
+        expect(await urlsDoAnexo(fake(null).supabase, "w/a.pdf")).toBeNull()
     })
 
     it("descreve tipo, tamanho e dia", () => {

@@ -5,12 +5,13 @@ import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import {
-    abrirAnexo,
     apagarAnexo,
     descricaoDoAnexo as descricao,
     enviarAnexo,
     listarAnexos,
     podeApagarAnexo,
+    type UrlsDoAnexo,
+    urlsDoAnexo,
     type VinculoAnexo,
 } from "@/lib/anexos"
 import { supabase, type Attachment } from "@/lib/supabase"
@@ -41,8 +42,7 @@ export function AnexosWireframe({
     })
     const [pendente, setPendente] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
-    /** A URL assinada que o popup bloqueado não abriu: vira um link para tocar. */
-    const [link, setLink] = useState<{ url: string; rotulo: string } | null>(null)
+    const [aberto, setAberto] = useState<{ id: string; urls: UrlsDoAnexo } | null>(null)
 
     async function enviar(arquivo: File | undefined) {
         if (!arquivo) return
@@ -59,10 +59,16 @@ export function AnexosWireframe({
 
     async function abrir(anexo: Attachment) {
         setErro(null)
-        setLink(null)
-        const r = await abrirAnexo(supabase, anexo.path)
-        if (r.estado === "erro") setErro("Não foi possível abrir o anexo.")
-        if (r.estado === "bloqueada") setLink({ url: r.url, rotulo: descricao(anexo) })
+        if (aberto?.id === anexo.id) {
+            setAberto(null)
+            return
+        }
+        const urls = await urlsDoAnexo(supabase, anexo.path)
+        if (!urls) {
+            setErro("Não foi possível abrir o anexo.")
+            return
+        }
+        setAberto({ id: anexo.id, urls })
     }
 
     async function apagar(id: string, path: string) {
@@ -92,7 +98,7 @@ export function AnexosWireframe({
                         <li key={a.id} className="flex flex-wrap items-center gap-2">
                             <span className="text-foreground">{descricao(a)}</span>
                             <button type="button" className={botao} onClick={() => void abrir(a)}>
-                                Abrir
+                                {aberto?.id === a.id ? "Fechar" : "Abrir"}
                             </button>
                             {somenteLeitura || !podeApagarAnexo(a, vinculo) ? null : (
                                 <button
@@ -104,18 +110,27 @@ export function AnexosWireframe({
                                     {pendente === a.id ? "Apagando…" : "Apagar"}
                                 </button>
                             )}
+                            {aberto?.id === a.id ? (
+                                <div className="w-full space-y-1">
+                                    {a.mime === "application/pdf" ? (
+                                        <iframe
+                                            title={descricao(a)}
+                                            src={aberto.urls.ver}
+                                            className="h-96 w-full border border-muted-foreground/60"
+                                        />
+                                    ) : (
+                                        // eslint-disable-next-line @next/next/no-img-element -- URL assinada temporária
+                                        <img alt={descricao(a)} src={aberto.urls.ver} className="max-h-96 max-w-full object-contain" />
+                                    )}
+                                    <a href={aberto.urls.ver} target="_blank" rel="noopener" className={botao}>
+                                        Abrir em nova aba
+                                    </a>
+                                </div>
+                            ) : null}
                         </li>
                     ))}
                 </ul>
             ) : null}
-            {/* A região existe antes do link, para o leitor de tela anunciar quando ele chega. */}
-            <p aria-live="polite">
-                {link ? (
-                    <a href={link.url} target="_blank" rel="noopener" className={botao} onClick={() => setLink(null)}>
-                        Abrir anexo ({link.rotulo})
-                    </a>
-                ) : null}
-            </p>
             {somenteLeitura ? null : (
                 <label className="flex flex-wrap items-center gap-2">
                     Anexar foto ou PDF (até 10 MB)

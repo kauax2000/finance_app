@@ -152,11 +152,6 @@ export async function listarAnexos(supabase: SupabaseClient, vinculo: VinculoAne
     return (data ?? []) as Attachment[]
 }
 
-export async function urlAssinada(supabase: SupabaseClient, path: string): Promise<string | null> {
-    const { data } = await supabase.storage.from(BUCKET_ANEXOS).createSignedUrl(path, URL_ASSINADA_SEGUNDOS)
-    return data?.signedUrl ?? null
-}
-
 export const tamanhoDoAnexo = (bytes: number) =>
     bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
 
@@ -164,25 +159,17 @@ export const tamanhoDoAnexo = (bytes: number) =>
 export const descricaoDoAnexo = (a: Pick<Attachment, "mime" | "size_bytes" | "created_at">) =>
     `${a.mime === "application/pdf" ? "PDF" : "Foto"} · ${tamanhoDoAnexo(a.size_bytes)} · ${new Date(a.created_at).toLocaleDateString("pt-BR")}`
 
-export type AberturaDoAnexo = { estado: "aberta" } | { estado: "erro" } | { estado: "bloqueada"; url: string }
+export type UrlsDoAnexo = { ver: string; baixar: string }
 
-/**
- * Abre o anexo numa aba nascida no clique: chame direto do handler, porque o
- * `window.open` roda antes do primeiro `await` (depois dele, o Safari o
- * bloquearia). Com o popup bloqueado, devolve a URL para virar um link: abrir na
- * mesma janela tiraria a pessoa do app.
- */
-export async function abrirAnexo(supabase: SupabaseClient, path: string): Promise<AberturaDoAnexo> {
-    const aba = window.open("about:blank", "_blank")
-    const url = await urlAssinada(supabase, path)
-    if (!url) {
-        aba?.close()
-        return { estado: "erro" }
-    }
-    if (!aba) return { estado: "bloqueada", url }
-    aba.opener = null
-    aba.location.href = url
-    return { estado: "aberta" }
+/** As duas URLs assinadas do anexo: `ver` abre no navegador, `baixar` força o download. */
+export async function urlsDoAnexo(supabase: SupabaseClient, path: string): Promise<UrlsDoAnexo | null> {
+    const storage = supabase.storage.from(BUCKET_ANEXOS)
+    const [ver, baixar] = await Promise.all([
+        storage.createSignedUrl(path, URL_ASSINADA_SEGUNDOS),
+        storage.createSignedUrl(path, URL_ASSINADA_SEGUNDOS, { download: true }),
+    ])
+    if (!ver.data || !baixar.data) return null
+    return { ver: ver.data.signedUrl, baixar: baixar.data.signedUrl }
 }
 
 /**
