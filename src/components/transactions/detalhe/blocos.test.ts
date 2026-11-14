@@ -157,6 +157,14 @@ describe("os blocos de contexto do detalhe", () => {
     expect(fonte).toContain('"income"')
   })
 
+  it("receitas: a barra com a fatia desta receita e a legenda", () => {
+    const fonte = ler("bloco-receitas")
+    expect(fonte).toContain("legendaDaReceita(")
+    expect(fonte).toContain("maximoDaBarra(")
+    expect(fonte).toMatch(/<Progress[\s\S]*?highlight=/)
+    expect(fonte).toContain("Esta, ")
+  })
+
   it("dinheiro pelo MoneyDisplay ou currencyBRL, links pelos helpers", () => {
     for (const nome of BLOCOS) {
       const fonte = ler(nome)

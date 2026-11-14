@@ -2,9 +2,11 @@
 
 import { useWorkspace } from "@/components/workspace-provider"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Caption } from "@/components/ui/typography"
+import { Progress } from "@/components/ui/progress"
+import { Caption, Muted } from "@/components/ui/typography"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { hrefDaLista, mesPorExtenso, rotuloVerOs } from "@/lib/detalhe/blocos"
+import { legendaDaReceita, maximoDaBarra } from "@/lib/detalhe/receitas"
 import { ehEstornoNoCartao } from "@/lib/expense-month-attribution"
 import { currencyBRL } from "@/lib/formatters"
 import { roundCents } from "@/lib/money-brl"
@@ -55,6 +57,13 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
         : { receitas: { mes: mesPorExtenso(ym), total, esperado } },
   )
 
+  // A fatia desta receita começa onde as anteriores do mês (por data) terminam; fora da lista, do fim.
+  const valor = Number(t.amount) || 0
+  const ordem = [...receitas].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
+  const i = ordem.findIndex((x) => x.id === t.id)
+  const antes = i >= 0 ? roundCents(ordem.slice(0, i).reduce((s, x) => s + (Number(x.amount) || 0), 0)) : total - valor
+  const fatia = { from: antes, to: roundCents(antes + valor) }
+
   if (!ligado || mes.isError) return null
   if (pendente) return <BlocoContextoEsqueleto />
 
@@ -70,8 +79,26 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
           : null
       }
     >
-      <MoneyDisplay value={total} size="lg" tone="income" />
-      {esperado > 0 ? <Caption>de {currencyBRL(esperado)} esperados</Caption> : null}
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <MoneyDisplay value={total} size="lg" tone="income" />
+        {mesCorrente && esperado > 0 ? <Muted>de {currencyBRL(esperado)}</Muted> : null}
+      </div>
+      {total > 0 ? (
+        <div className="[--progress-highlight:var(--color-income)]">
+          <Progress
+            value={total}
+            max={maximoDaBarra(total, esperado)}
+            highlight={fatia}
+            aria-label={`Receitas de ${mesPorExtenso(ym)}`}
+          />
+        </div>
+      ) : null}
+      {total > 0 ? (
+        <Caption>
+          <span aria-hidden className="inline-block size-2 rounded-full bg-income" /> Esta, {currencyBRL(valor)} ·{" "}
+          {legendaDaReceita({ valor, total, esperado, mesCorrente, mes: mesPorExtenso(ym) })}
+        </Caption>
+      ) : null}
     </BlocoContexto>
   )
 }
