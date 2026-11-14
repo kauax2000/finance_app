@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { DocumentIcon, EllipsisHorizontalIcon, FolderOpenIcon, PaperClipIcon, PhotoIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { DocumentIcon, EllipsisHorizontalIcon, FolderOpenIcon, PaperClipIcon, PhotoIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import {
     AlertDialog,
@@ -172,6 +172,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                                                             setApagando(a)
                                                         }}
                                                     >
+                                                        <TrashIcon aria-hidden />
                                                         Apagar
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
