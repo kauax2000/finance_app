@@ -212,6 +212,14 @@ export function useTransactionForm({
 
     const [formKind, setFormKind] = useState<TransactionFormKind>("expense")
     const [type, setType] = useState<"income" | "expense">("expense")
+    // Ao abrir a edição, o tipo vem do lançamento já no render, antes da primeira pintura: pelo
+    // efeito de baixo o segmento nascia em Despesa e o marcador viajava até Receita.
+    const chaveDoTipo = active && editingTransaction ? `${editingTransaction.id}:${editingTransaction.type}` : null
+    const [tipoSincronizado, setTipoSincronizado] = useState<string | null>(null)
+    if (chaveDoTipo !== tipoSincronizado) {
+        setTipoSincronizado(chaveDoTipo)
+        if (editingTransaction && chaveDoTipo) setType(editingTransaction.type === "income" ? "income" : "expense")
+    }
     const [amount, setAmount] = useState("")
     const [description, setDescription] = useState("")
     const [categoryId, setCategoryId] = useState("")
