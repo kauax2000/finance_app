@@ -4129,7 +4129,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
  * desfoque, num degradê suave até sumir — sem linha reta. Sem desfoque por pedido do dono
  * (13/11): o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
  */
-/* O cabeçalho das folhas na barra do topo (`TopBar surface="fade"`, em teste): a
+/* O cabeçalho das folhas na barra do topo (`TopBar surface="fade"` e o desktop do `adaptive`): a
    placa a 95% e o degradê de 56px, sem borrão, acesos só com a página rolada. */
 @utility top-bar-fade {
   --top-bar-fade-tint: color-mix(in oklab, var(--background) 95%, transparent);
