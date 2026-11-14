@@ -1700,7 +1700,7 @@ declaração de `background-color` no trilho).
   status é translúcida (`statusBarStyle: "black-translucent"`) e o iOS 26+
   borra o topo da página por cima de tudo, botões inclusive; a barra fica na
   área segura mesmo assim, como a nativa (o vão de 30px da rodada 331 saiu na
-  333). **`surface="edge"`** (a do app) é a borda
+  333). **A barra do app é `surface="adaptive"`** (14/11): `edge` abaixo do `md` e, do `md` para cima, `fade` — a borda das folhas, sem borrão: em repouso não pinta, e rolada acende a placa de `--background` a 95% com o degradê de 56px (`@utility top-bar-fade`). **`surface="edge"`** é a borda
   do iOS: sem tinta chapada nem fio, três camadas de borrão (4, 12 e 24px)
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
