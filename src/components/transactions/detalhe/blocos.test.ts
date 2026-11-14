@@ -213,7 +213,7 @@ describe("os blocos de contexto do detalhe", () => {
 
   it("as receitas nos últimos 6 meses: as somas por mês, o selo contra o anterior e as barras", () => {
     const f = ler("bloco-receitas-no-tempo")
-    for (const t of ["receitasPorMes(", "seloContraOAnterior(", "<ChartContainer", '"Receitas nos últimos 6 meses"', "var(--income)", "canto={"])
+    for (const t of ["receitasPorMes(", "seloContraOAnterior(", "<ChartContainer", '"Receitas nos últimos 6 meses"', "var(--chart-income)", "canto={"])
       expect(f).toContain(t)
     expect(f).not.toMatch(/var\(--success\)/)
     expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<BlocoReceitasNoTempo")
