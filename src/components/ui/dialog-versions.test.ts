@@ -10,6 +10,12 @@ import { DialogFooter, DialogHeader, DialogHeaderRow, DialogMedia, DialogSteps }
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
+  it("aberto de dentro de uma folha, o diálogo (véu e placa) sobe à camada dela", () => {
+    expect(CODIGO).toMatch(/const dentroDeFolha = React\.useContext\(DrawerRaizContext\) != null/)
+    expect(CODIGO).toContain('<DialogOverlay className={dentroDeFolha ? "z-(--z-sheet)" : undefined} />')
+    expect(CODIGO).toContain('dentroDeFolha && "z-(--z-sheet)"')
+  })
+
   it("o centro do cabeçalho: centrado na placa, escondido até centerShown, fora da leitura", () => {
     const fechado = renderToStaticMarkup(h(DialogHeaderRow, { center: "Uber" }, null))
     expect(fechado).toContain('data-slot="dialog-header-center"')

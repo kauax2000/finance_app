@@ -25,7 +25,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { overlayClassName } from "@/components/ui/drawer"
+import { DrawerRaizContext, overlayClassName } from "@/components/ui/drawer"
 import { ignorarToqueNoToast } from "@/lib/toast-interact"
 
 /**
@@ -467,6 +467,10 @@ function DialogContent({
   // em vez de saltar: a placa cresce e encolhe pelos dois lados, centrada.
   const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
   const placaRef = useComposedRefs(ref, alturaAnimada)
+  // Aberto de dentro de uma folha, o diálogo sobe à camada dela (`--z-sheet`):
+  // em `--z-modal` ele ficaria atrás da folha que o abriu. Portalizado depois,
+  // empata na camada e vence pela ordem do DOM.
+  const dentroDeFolha = React.useContext(DrawerRaizContext) != null
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
   // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
@@ -497,7 +501,7 @@ function DialogContent({
 
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={dentroDeFolha ? "z-(--z-sheet)" : undefined} />
       <DialogPrimitive.Content
         ref={placaRef}
         onClickCapture={aoClicarLink}
@@ -514,6 +518,7 @@ function DialogContent({
           showCloseButton && "[--dialog-close:--spacing(11)]",
           // Um `DialogCloseButton` composto também reserva, como no `Sheet`.
           "has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
+          dentroDeFolha && "z-(--z-sheet)",
           className
         )}
         {...props}
