@@ -4129,6 +4129,47 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
  * desfoque, num degradê suave até sumir — sem linha reta. Sem desfoque por pedido do dono
  * (13/11): o de 24px (a tentativa de 12/11, recusada) deixava a quina do borrão à vista.
  */
+/* O cabeçalho das folhas na barra do topo (`TopBar surface="fade"`, em teste): a
+   placa a 95% e o degradê de 56px, sem borrão, acesos só com a página rolada. */
+@utility top-bar-fade {
+  --top-bar-fade-tint: color-mix(in oklab, var(--background) 95%, transparent);
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background-color: var(--top-bar-fade-tint);
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+
+  [data-scrolled="true"] > & {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    --top-bar-fade-tint: var(--background);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: calc(var(--spacing) * 14);
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--top-bar-fade-tint) 100%, transparent) 0%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 91%, transparent) 12%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 78%, transparent) 25%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 62%, transparent) 38%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 47%, transparent) 50%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 33%, transparent) 62%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 19%, transparent) 75%,
+      color-mix(in oklab, var(--top-bar-fade-tint) 8%, transparent) 88%,
+      transparent
+    );
+  }
+}
+
 @utility dialog-header-translucent {
   /* A descrição só para o leitor de tela (`sr-only`) pode ficar entre os dois. */
   [data-layout="fixed"]

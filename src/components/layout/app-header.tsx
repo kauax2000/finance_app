@@ -184,7 +184,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         )
 
     return (
-        <TopBar position="auto" surface="edge">
+        <TopBar position="auto" surface="fade">
             {/* O botão de recolher mora aqui, à esquerda, nos dois estados
                 (`toggle="header"`): a pílula da placa, 36 como o sino, e a 16px da
                 placa como o sino está da borda direita (o recuo de 16 da barra

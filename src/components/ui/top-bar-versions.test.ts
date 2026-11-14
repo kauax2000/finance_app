@@ -267,7 +267,8 @@ describe("os comportamentos", () => {
       expect(barEdgeLayerClassNames).toHaveLength(3)
       expect(barEdgeLayerBaseClassName).toContain("h-[calc(100%+--spacing(6))]")
       expect(barEdgeLayerBaseClassName).toContain("reduced-transparency:hidden")
-      expect(fonte("src/components/layout/app-header.tsx")).toContain('surface="edge"')
+      // Em teste (14/11): a barra do app veste o `fade`, o cabeçalho das folhas sem borrão.
+      expect(fonte("src/components/layout/app-header.tsx")).toContain('surface="fade"')
     })
 
     it("7. `scroll` escolhe entre as duas pinturas inteiras, e nada é montado", () => {

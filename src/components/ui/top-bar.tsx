@@ -111,6 +111,12 @@ const topBarVariants = cva(
           "border-b-0 bg-background supports-backdrop-filter:bg-transparent reduced-transparency:bg-background",
           "[--top-bar-edge-tint:color-mix(in_oklab,var(--background)_30%,transparent)]",
         ].join(" "),
+        /**
+         * O cabeçalho das folhas, na barra (em teste, 14/11): sem borrão. Em repouso não
+         * pinta nada; rolou, a placa de `--background` a 95% acende com o degradê de 56px
+         * embaixo (`@utility top-bar-fade`, a curva do `dialog-header-translucent`).
+         */
+        fade: "border-b-0 bg-transparent",
       },
       /**
        * A flutuante: a pílula solta da casa (a placa, o anel de 1px e a sombra, a 8px
@@ -152,7 +158,7 @@ const topBarVariants = cva(
   }
 )
 
-type TopBarSurface = "solid" | "glass" | "scroll" | "edge"
+type TopBarSurface = "solid" | "glass" | "scroll" | "edge" | "fade"
 
 /**
  * O que acontece na rolagem: se o conteúdo saiu do topo (o vidro e o fio do
@@ -233,7 +239,7 @@ function TopBar({
     hideOnScroll?: boolean
   }) {
   const ref = React.useRef<HTMLElement>(null)
-  const { rolou, escondida } = useRolagem(ref, surface === "scroll", hideOnScroll)
+  const { rolou, escondida } = useRolagem(ref, surface === "scroll" || surface === "fade", hideOnScroll)
   // Escolhe entre duas strings inteiras que o `cva` já tem — nunca monta classe.
   const pintura = surface === "scroll" ? (rolou ? "glass" : "solid") : surface
   const contexto = React.useMemo(() => ({ titleAlign }), [titleAlign])
@@ -246,7 +252,7 @@ function TopBar({
         data-size={size ?? "sm"}
         data-variant={variant ?? "bar"}
         data-surface={surface}
-        data-scrolled={surface === "scroll" ? rolou : undefined}
+        data-scrolled={surface === "scroll" || surface === "fade" ? rolou : undefined}
         data-title-align={titleAlign}
         data-hidden={escondida || undefined}
         className={cn(
@@ -263,6 +269,7 @@ function TopBar({
               <span key={i} aria-hidden data-slot="top-bar-edge" className={cn(barEdgeLayerBaseClassName, camada)} />
             ))
           : null}
+        {surface === "fade" ? <span aria-hidden data-slot="top-bar-fade" className="top-bar-fade" /> : null}
         {children}
       </header>
     </TopBarContext>
