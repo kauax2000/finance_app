@@ -78,7 +78,7 @@ export function BlocoReceitasNoTempo({ transaction: t }: { transaction: Transact
         <BarChart data={dados} accessibilityLayer>
           <Bar dataKey="total" fill="var(--color-total)" radius={[3, 3, 0, 0]}>
             {dados.map((d) => (
-              <Cell key={d.ym} fill={d.atual ? "var(--income)" : undefined} fillOpacity={d.atual ? 1 : APAGADA} />
+              <Cell key={d.ym} fill={d.atual ? "var(--chart-income)" : undefined} fillOpacity={d.atual ? 1 : APAGADA} />
             ))}
           </Bar>
         </BarChart>
