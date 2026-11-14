@@ -72,7 +72,8 @@ export function BlocoReceitas({ transaction: t, onManchete }: { transaction: Tra
     <BlocoContexto
       titulo={`Receitas de ${mesPorExtenso(ym)}`}
       link={
-        receitas.length
+        // Com a única receita do mês, ela mesma já está aberta: a lista não acrescenta nada.
+        receitas.length > 1
           ? {
               href: hrefDaLista([{ field: "periodo", operator: "is", values: [period_start, period_end] }], "income"),
               label: rotuloVerOs(receitas.length, "receita"),

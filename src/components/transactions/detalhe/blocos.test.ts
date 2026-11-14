@@ -218,4 +218,9 @@ describe("os blocos de contexto do detalhe", () => {
     expect(f).not.toMatch(/var\(--success\)/)
     expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<BlocoReceitasNoTempo")
   })
+
+  it("o card das receitas só leva à lista com mais de uma receita no mês", () => {
+    const f = lerFonte("src/components/transactions/detalhe/bloco-receitas.tsx")
+    expect(f).toContain("receitas.length > 1")
+  })
 })
