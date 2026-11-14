@@ -11,6 +11,10 @@ describe("VisualizadorDeAnexo", () => {
         expect(fonte).toContain("open={anexo != null}")
     })
 
+    it("as duas ações abrem em nova aba, para o app não sair de si", () => {
+        expect(fonte.match(/target="_blank"/g)).toHaveLength(2)
+    })
+
     it("tem as duas ações e o erro", () => {
         expect(fonte).toContain("Abrir em nova aba")
         expect(fonte).toContain("Baixar")

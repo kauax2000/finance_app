@@ -71,7 +71,10 @@ export function VisualizadorDeAnexo({
                             </a>
                         </Button>
                         <Button variant="primary" asChild>
-                            <a href={prontas.baixar}>Baixar</a>
+                            {/* Nova aba também: na mesma janela, o app instalado saía para o arquivo. */}
+                            <a href={prontas.baixar} target="_blank" rel="noopener" download>
+                                Baixar
+                            </a>
                         </Button>
                     </DialogFooter>
                 ) : null}
