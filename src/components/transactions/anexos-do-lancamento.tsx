@@ -208,10 +208,24 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apagar este anexo?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {apagando ? descricaoDoAnexo(apagando) : null}. Não dá para desfazer.
-                        </AlertDialogDescription>
+                        <AlertDialogDescription>Não dá para desfazer.</AlertDialogDescription>
                     </AlertDialogHeader>
+                    {/* O que sai, como na lista e no Excluir lançamentos: a linha num cartão no meio. */}
+                    {apagando ? (
+                        <Card padding="none" className="overflow-hidden">
+                            <Item variant="flush" size="md">
+                                <ItemMedia variant="tile">
+                                    {apagando.mime === "application/pdf" ? <DocumentIcon aria-hidden /> : <PhotoIcon aria-hidden />}
+                                </ItemMedia>
+                                <ItemContent className="min-w-0">
+                                    <ItemTitle className="truncate">{apagando.mime === "application/pdf" ? "PDF" : "Foto"}</ItemTitle>
+                                    <ItemDescription className="truncate">
+                                        {tamanhoDoAnexo(apagando.size_bytes)} · {formatDatePtBr(apagando.created_at)}
+                                    </ItemDescription>
+                                </ItemContent>
+                            </Item>
+                        </Card>
+                    ) : null}
                     {erroDoApagar ? <AlertDialogError>{erroDoApagar}</AlertDialogError> : null}
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
