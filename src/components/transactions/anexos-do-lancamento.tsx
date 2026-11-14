@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { PageSection, PageSectionHeader, PageSectionSkeleton, PageSectionTitle } from "@/components/ui/page-section"
 import { Spinner } from "@/components/ui/spinner"
+import { VisualizadorDeAnexo } from "@/components/transactions/visualizador-de-anexo"
 import {
     apagarAnexo,
     descricaoDoAnexo,
@@ -35,8 +36,6 @@ import {
 import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
 import { supabase, type Attachment, type Transaction } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
-
-import { VisualizadorDeAnexo } from "@/components/transactions/visualizador-de-anexo"
 
 /**
  * Nota, recibo ou boleto do lançamento (spec §9.4), privados e abertos por URL

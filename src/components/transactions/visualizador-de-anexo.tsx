@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- a foto vem de uma URL assinada do Storage, fora do otimizador */
 "use client"
 
+import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
@@ -19,14 +20,20 @@ export function VisualizadorDeAnexo({
     anexo: Attachment | null
     onOpenChange: (open: boolean) => void
 }) {
+    // Ao fechar, `anexo` vira null mas o diálogo ainda sai animando: ele segue mostrando o último.
+    const [ultimo, setUltimo] = React.useState(anexo)
+    if (anexo && anexo !== ultimo) setUltimo(anexo)
+    const mostrado = anexo ?? ultimo
     const urls = useQuery({
-        queryKey: ["anexo-url", anexo?.path],
-        queryFn: () => urlsDoAnexo(supabase, anexo!.path),
+        // A chave segue o mostrado: fechando, as URLs do cache ficam; abrindo outro, não reaparecem as do anterior.
+        queryKey: ["anexo-url", mostrado?.path],
+        queryFn: () => urlsDoAnexo(supabase, mostrado!.path),
         enabled: anexo != null,
         // A URL assinada vale 1 h: 50 min de folga antes de pedir outra.
         staleTime: 50 * 60 * 1000,
+        retry: false,
     })
-    const pdf = anexo?.mime === "application/pdf"
+    const pdf = mostrado?.mime === "application/pdf"
     const prontas = urls.data ?? null
 
     return (
@@ -35,7 +42,7 @@ export function VisualizadorDeAnexo({
                 <DialogHeader>
                     <DialogTitle>{pdf ? "PDF" : "Foto"}</DialogTitle>
                     <DialogDescription>
-                        {anexo ? `${tamanhoDoAnexo(anexo.size_bytes)} · ${formatDatePtBr(anexo.created_at)}` : null}
+                        {mostrado ? `${tamanhoDoAnexo(mostrado.size_bytes)} · ${formatDatePtBr(mostrado.created_at)}` : null}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogBody>
@@ -46,9 +53,9 @@ export function VisualizadorDeAnexo({
                             <CardMessage tone="destructive">Não foi possível abrir o anexo.</CardMessage>
                         </Card>
                     ) : pdf ? (
-                        <iframe src={prontas.ver} title={descricaoDoAnexo(anexo!)} className="h-[70dvh] w-full rounded-row-lg" />
+                        <iframe src={prontas.ver} title={descricaoDoAnexo(mostrado!)} className="h-[70dvh] w-full rounded-row-lg" />
                     ) : (
-                        <img src={prontas.ver} alt={descricaoDoAnexo(anexo!)} className="w-full rounded-row-lg object-contain" />
+                        <img src={prontas.ver} alt={descricaoDoAnexo(mostrado!)} className="w-full rounded-row-lg object-contain" />
                     )}
                 </DialogBody>
                 {prontas ? (

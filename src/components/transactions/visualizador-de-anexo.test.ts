@@ -22,8 +22,9 @@ describe("VisualizadorDeAnexo", () => {
         expect(fonte).toMatch(/<img[^>]*alt=/)
     })
 
-    it("guarda as URLs pelo caminho do anexo", () => {
-        expect(fonte).toMatch(/queryKey:[^\n]*anexo(\?)?\.path/)
+    it("guarda as URLs pelo caminho do anexo mostrado", () => {
+        expect(fonte).toMatch(/queryKey:[^\n]*mostrado\?\.path/)
+        expect(fonte).toContain("retry: false")
     })
 
     it("o detalhe usa o visualizador, sem o link do popup", () => {
