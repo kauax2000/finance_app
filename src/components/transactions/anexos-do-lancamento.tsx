@@ -25,7 +25,6 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { PageSection, PageSectionHeader, PageSectionSkeleton, PageSectionTitle } from "@/components/ui/page-section"
 import { Spinner } from "@/components/ui/spinner"
 import {
-    abrirAnexo,
     apagarAnexo,
     descricaoDoAnexo,
     enviarAnexo,
@@ -36,6 +35,8 @@ import {
 import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
 import { supabase, type Attachment, type Transaction } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
+
+import { VisualizadorDeAnexo } from "@/components/transactions/visualizador-de-anexo"
 
 /**
  * Nota, recibo ou boleto do lançamento (spec §9.4), privados e abertos por URL
@@ -53,8 +54,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
     const input = React.useRef<HTMLInputElement>(null)
     const [enviando, setEnviando] = React.useState(false)
     const [erro, setErro] = React.useState<string | null>(null)
-    /** A URL assinada que o popup bloqueado não abriu: vira um link para tocar. */
-    const [link, setLink] = React.useState<string | null>(null)
+    const [aberto, setAberto] = React.useState<Attachment | null>(null)
     const [apagando, setApagando] = React.useState<Attachment | null>(null)
     const [apagandoPendente, setApagandoPendente] = React.useState(false)
     const [erroDoApagar, setErroDoApagar] = React.useState<string | null>(null)
@@ -67,14 +67,6 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
         setEnviando(false)
         if (!r.ok) return setErro(r.erro)
         await lista.refetch()
-    }
-
-    async function abrir(anexo: Attachment) {
-        setErro(null)
-        setLink(null)
-        const r = await abrirAnexo(supabase, anexo.path)
-        if (r.estado === "erro") setErro("Não foi possível abrir o anexo.")
-        if (r.estado === "bloqueada") setLink(r.url)
     }
 
     async function apagar() {
@@ -157,7 +149,7 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                                             type="button"
                                             variant="tertiary"
                                             aria-label={`Abrir ${descricaoDoAnexo(a)}`}
-                                            onClick={() => void abrir(a)}
+                                            onClick={() => setAberto(a)}
                                         >
                                             Abrir
                                         </Button>
@@ -194,16 +186,12 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                 </Card>
             )}
 
-            {/* A região existe antes do link, para o leitor de tela anunciar quando ele chega. */}
-            <div aria-live="polite">
-                {link ? (
-                    <Button variant="link" asChild>
-                        <a href={link} target="_blank" rel="noopener" onClick={() => setLink(null)}>
-                            Abrir anexo
-                        </a>
-                    </Button>
-                ) : null}
-            </div>
+            <VisualizadorDeAnexo
+                anexo={aberto}
+                onOpenChange={(o) => {
+                    if (!o) setAberto(null)
+                }}
+            />
             {erro ? (
                 <Card padding="none">
                     <CardMessage tone="destructive">{erro}</CardMessage>
