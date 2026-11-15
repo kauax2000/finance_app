@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest"
 
 import { dados as dadosDaPrevisao, tx } from "@/lib/previsao/dados-de-teste"
 import { seguroParaGastar } from "@/lib/previsao/fluxo"
@@ -112,6 +112,10 @@ describe("virarAssinatura", () => {
 
 describe("virarConta", () => {
     it("a próxima pendente é o mês seguinte ao último lançamento, no dia escolhido", async () => {
+        // Hoje fixo: a próxima nunca cai no passado, e com o relógio real o teste vencia em 10/11.
+        vi.useFakeTimers({ toFake: ["Date"] })
+        vi.setSystemTime(new Date(2026, 10, 1, 12))
+        onTestFinished(() => vi.useRealTimers())
         db.state.results = [
             {
                 data: [
