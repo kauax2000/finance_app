@@ -208,8 +208,8 @@ describe("projecaoMensal", () => {
         expect(p.meses.map((m) => m.fimDeParcelamentos)).toEqual([
             [],
             [],
-            [{ planoId: "curso", descricao: "Curso" }],
-            [{ planoId: "tv", descricao: "TV" }],
+            [{ planoId: "curso", descricao: "Curso", valor: 400 }],
+            [{ planoId: "tv", descricao: "TV", valor: 6000 }],
             [],
             [],
         ])
@@ -236,7 +236,7 @@ describe("projecaoMensal", () => {
         // Compra em 05/11, fecha em 25/11, vence em 05/12.
         expect(projecaoMensal(d, 2).meses.map((m) => m.fimDeParcelamentos)).toEqual([
             [],
-            [{ planoId: "fone", descricao: "Fone" }],
+            [{ planoId: "fone", descricao: "Fone", valor: 100 }],
         ])
     })
 })

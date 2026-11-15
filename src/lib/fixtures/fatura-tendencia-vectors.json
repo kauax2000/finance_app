@@ -1,5 +1,5 @@
 {
-  "_doc": "Alerta de fatura alta (cc_invoice_trending_high). `parcelas`: as parcelas projetadas na janela da fatura; o esperado é o sumProjectedCreditCardInstallmentsInWindow do cliente (src/lib/credit-card-installment-projection.ts), e o mesmo JSON trava parcelasProjetadasNaJanela (supabase/functions/_shared/fatura-tendencia.ts) no Deno e no Vitest. `tendencia`: avaliarTendencia, só no Deno (o cliente não tem par).",
+  "_doc": "Alerta de fatura alta (cc_invoice_trending_high). `parcelas`: as parcelas projetadas na janela da fatura; o esperado é o sumProjectedCreditCardInstallmentsInWindow do cliente (src/lib/credit-card-installment-projection.ts), e o mesmo JSON trava parcelasProjetadasNaJanela (supabase/functions/_shared/fatura-tendencia.ts) no Deno e no Vitest. `tendencia`: avaliarTendencia, no Deno e no par do cliente (src/lib/previsao/fatura-alta.ts, Vitest).",
   "parcelas": [
     {
       "name": "a parcela ainda não lançada entra",

@@ -189,7 +189,10 @@ export function projecaoMensal(dados: DadosDaPrevisao, meses = 6): Projecao {
             ? estimatedDueDateForClose(firstCloseOnOrAfter(ultima.chargeDate, card.closing_day), card.due_day)
             : ultima.chargeDate
         const ym = localYmdFromDate(saida).slice(0, 7)
-        fins.set(ym, [...(fins.get(ym) ?? []), { planoId: p.id, descricao: p.description?.trim() || "Parcelada" }])
+        fins.set(ym, [
+            ...(fins.get(ym) ?? []),
+            { planoId: p.id, descricao: p.description?.trim() || "Parcelada", valor: Number(p.installment_amount) },
+        ])
     }
     const inicio = dados.hojeYmd.slice(0, 7)
     const linha: MesDaLinha[] = Array.from({ length: meses }, (_, i) => {

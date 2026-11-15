@@ -65,7 +65,7 @@ export type Seguro = FluxoDoMes & {
 }
 
 export type MesDaLinha = FluxoDoMes & {
-    fimDeParcelamentos: Array<{ planoId: string; descricao: string }>
+    fimDeParcelamentos: Array<{ planoId: string; descricao: string; valor: number }>
 }
 
 export type Projecao = { meses: MesDaLinha[]; primeiroMesNegativo: string | null }
