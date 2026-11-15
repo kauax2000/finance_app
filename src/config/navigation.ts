@@ -48,6 +48,10 @@ export function creditCardDetailPath(id: string): string {
     return `${ROUTES.CREDIT_CARDS}/${encodeURIComponent(id)}`
 }
 
+export function creditCardInvoicePath(id: string, closeYmd: string): string {
+    return `${creditCardDetailPath(id)}?fatura=${closeYmd}`
+}
+
 /** `/credit-cards/{id}` detail route (not list or settings). */
 export function isCreditCardDetailPath(pathname: string): boolean {
     return /^\/credit-cards\/[^/]+$/.test(pathname)
