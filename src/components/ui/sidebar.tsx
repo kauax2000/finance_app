@@ -686,7 +686,7 @@ function SidebarTriggerButton({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button> & { naBarra?: boolean }) {
-  const { toggleSidebar, state, isMobile, openMobile, gatilhoId } = useSidebar()
+  const { toggleSidebar, state, isMobile, openMobile, gatilhoId, toggle } = useSidebar()
   const espia = React.useContext(SidebarPeekContext)
   const reduzido = useReducedMotion()
   // O rótulo diz o que o clique vai fazer. O ícone é um só nos dois estados.
@@ -718,7 +718,10 @@ function SidebarTriggerButton({
   // recolhida ela fica, como a de todo ícone do trilho, e mostra o atalho (⌘B / Ctrl+B).
   return (
     <motion.span
-      layoutId={gatilhoId}
+      // Só o `topbar` viaja. Nos outros lugares o botão não sai do lugar, e um
+      // `layoutId` ligado animava qualquer salto do cabeçalho numa troca de rota (o
+      // botão caía e subia na mola).
+      layoutId={toggle === "topbar" ? gatilhoId : undefined}
       transition={reduzido ? { duration: 0 } : MOLA_DO_GATILHO}
       className={naBarra && espia ? "flex w-full" : "inline-flex"}
     >

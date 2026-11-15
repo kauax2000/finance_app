@@ -97,7 +97,7 @@ describe("as versões do Sidebar", () => {
 
   it("recolhida em ícone no floating, o gatilho viaja para a barra", () => {
     // Um botão, dois lugares, o mesmo `layoutId`: o motion o leva na mola.
-    expect([...CODIGO.matchAll(/layoutId=\{gatilhoId\}/g)]).toHaveLength(1)
+    expect([...CODIGO.matchAll(/layoutId=\{toggle === "topbar" \? gatilhoId : undefined\}/g)]).toHaveLength(1)
     expect(CODIGO).toContain('{ type: "spring", duration: 0.45, bounce: 0.15 }')
     expect(CODIGO).toMatch(/gatilhoNaBarra:\s*toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile/)
     expect(CODIGO).toContain('value={variant === "floating" && collapsible === "icon"}')
@@ -622,5 +622,9 @@ describe("o lugar do botão de recolher (toggle)", () => {
     const fonteBarra = lerFonte("src/components/ui/sidebar.tsx")
     expect(fonteBarra).toContain('toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile')
     expect(fonteBarra).toContain('if (toggle !== "topbar" && toggle !== "header" && !isMobile) return null')
+  })
+
+  it("só o topbar viaja: fora dele o gatilho não tem layoutId (senão cai e sobe na troca de rota)", () => {
+    expect(CODIGO).toContain('layoutId={toggle === "topbar" ? gatilhoId : undefined}')
   })
 })
