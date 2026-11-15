@@ -6,6 +6,8 @@ import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ArrowRightIcon, CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import type { CreditCard, Transaction } from "@/lib/supabase"
 import {
+    formatMonthLongPtBr,
+    formatRelativeDayPtBr,
     formatTransactionDayPtBr,
     formatTransactionMonthYearPtBr,
     formatYmdPtBr,
@@ -15,7 +17,8 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { ROUTES, creditCardDetailPath } from "@/config/navigation"
+import { ROUTES, creditCardDetailPath, creditCardInvoicePath } from "@/config/navigation"
+import { estadoDaFatura, tomDoVencimento, verboDoVencimento } from "@/lib/credit-card-invoice-preview"
 import {
     DataTable,
     dataTableColumns,
@@ -24,12 +27,11 @@ import {
     type DataTableColumnDef,
 } from "@/components/ui/data-table"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Badge, tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
+import { BadgeDot, tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import {
     classifyTransactionInvoiceSlot,
     estimatedDueDateForClose,
-    isEstimatedDuePastForClose,
     statementCloseYmdForPurchaseDate,
     type CreditCardInvoiceSlot,
 } from "@/lib/credit-card-billing"
@@ -57,7 +59,6 @@ import {
     HoverCardTitle,
     HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { Caption } from "@/components/ui/typography"
 import {
     ContextMenuContent,
     ContextMenuHeader,
@@ -82,10 +83,10 @@ export type InvoiceBadge = {
     slot: CreditCardInvoiceSlot
     label: string
     chipClass: string
-    /** O mesmo estado no `Badge` da prévia — a cor do chip, pelo nome do tom. */
+    /** O tom do chip, que também colore o ponto de estado da prévia. */
     tone: "success" | "warning" | "destructive"
-    /** O que o chip não diz (paga ou não, vencimento passado); a prévia mostra. */
-    note: string | null
+    /** Fatura marcada como paga; a prévia diz o estado a partir disso. */
+    paid: boolean
     card: CreditCard
     cardId: string
     closeYmd: string | null
@@ -129,27 +130,15 @@ export function creditCardInvoiceBadgeForRow(
                   ? ("warning" as const)
                   : ("destructive" as const),
     }
-    const paid = { label: "Paga", chipClass: tagChipSuccess, tone: "success" as const }
+    const paidChip = { label: "Paga", chipClass: tagChipSuccess, tone: "success" as const }
 
     if (slot === "open") {
-        return { ...base, ...bySlot, note: null }
+        return { ...base, ...bySlot, paid: false }
     }
 
-    if (slot === "last_closed") {
-        if (invoicePaid) {
-            return { ...base, ...paid, note: "Fatura fechada — marcada como paga" }
-        }
-        let note = "Fatura fechada — ainda não marcada como paga"
-        if (closeDate && dueValid && isEstimatedDuePastForClose(closeDate, card.due_day)) {
-            note += " — vencimento estimado já passou"
-        }
-        return { ...base, ...bySlot, note }
-    }
-
-    if (invoicePaid) {
-        return { ...base, ...paid, note: "Fatura anterior — marcada como paga" }
-    }
-    return { ...base, ...bySlot, note: "Fatura anterior — ainda não marcada como paga" }
+    return invoicePaid
+        ? { ...base, ...paidChip, paid: true }
+        : { ...base, ...bySlot, paid: false }
 }
 
 /**
@@ -168,8 +157,36 @@ export const stopRowEvent = (e: React.SyntheticEvent) => e.stopPropagation()
 const rowChipTriggerClassName =
     "cursor-default outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
+const invoiceDotClassName = {
+    success: "[--badge-dot:var(--success)]",
+    warning: "[--badge-dot:var(--warning)]",
+    destructive: "[--badge-dot:var(--destructive)]",
+} as const
+
+const invoiceDueToneClassName = {
+    neutral: "",
+    warning: "text-warning",
+    destructive: "text-destructive",
+} as const
+
 /** O chip de fatura e a prévia dela: cartão, estado, fechamento e vencimento. */
 export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
+    const today = new Date()
+    const { closeYmd, dueYmd } = badge
+    const fechada = badge.slot !== "open"
+    const estado = fechada
+        ? estadoDaFatura({ slot: badge.slot as "last_closed" | "earlier", paid: badge.paid, dueYmd, today })
+        : null
+    const dotTone = badge.paid
+        ? "success"
+        : estado === "Vencida, não paga"
+          ? "destructive"
+          : badge.tone
+    const closeDate = closeYmd ? parseYmdLocal(closeYmd) : undefined
+    const mes = closeDate ? formatMonthLongPtBr(closeDate).toLowerCase() : null
+    const dueTone = dueYmd
+        ? tomDoVencimento({ paid: badge.paid, dueYmd, today })
+        : "neutral"
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
@@ -190,49 +207,60 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
                 onClick={stopRowEvent}
                 onContextMenu={stopRowEvent}
             >
-                <HoverCardHeader
-                    endAdornment={
-                        <Badge tone={badge.tone} size="xs">
-                            {badge.label}
-                        </Badge>
-                    }
-                >
+                <HoverCardHeader>
                     <HoverCardTitle>{badge.card.name}</HoverCardTitle>
                     <HoverCardDescription>
-                        {creditCardIdentitySubtitle(badge.card)}
+                        {mes ? `Fatura de ${mes}` : creditCardIdentitySubtitle(badge.card)}
                     </HoverCardDescription>
                 </HoverCardHeader>
                 <HoverCardBody>
-                    {badge.note ? <Caption>{badge.note}</Caption> : null}
-                    {badge.closeYmd || badge.dueYmd ? (
+                    {estado ? (
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                            <BadgeDot className={invoiceDotClassName[dotTone]} />
+                            {estado}
+                        </p>
+                    ) : null}
+                    {closeYmd || dueYmd ? (
                         <DescriptionList layout="inline" className="gap-1">
-                            {badge.closeYmd ? (
+                            {closeYmd ? (
                                 <DescriptionListItem>
-                                    <DescriptionTerm>Fecha</DescriptionTerm>
+                                    <DescriptionTerm>{fechada ? "Fechou" : "Fecha"}</DescriptionTerm>
                                     <DescriptionDetails className="nums">
-                                        {formatYmdPtBr(badge.closeYmd)}
+                                        {formatYmdPtBr(closeYmd)}
+                                        {fechada ? ` · ${formatRelativeDayPtBr(closeYmd)}` : null}
                                     </DescriptionDetails>
                                 </DescriptionListItem>
                             ) : null}
-                            {badge.dueYmd ? (
+                            {dueYmd ? (
                                 <DescriptionListItem>
-                                    <DescriptionTerm>Vence</DescriptionTerm>
+                                    <DescriptionTerm>
+                                        {fechada ? verboDoVencimento(dueYmd, today) : "Vence"}
+                                    </DescriptionTerm>
                                     <DescriptionDetails className="nums">
-                                        {formatYmdPtBr(badge.dueYmd)}
+                                        {formatYmdPtBr(dueYmd)}
+                                        {fechada ? (
+                                            <>
+                                                {" · "}
+                                                <span className={invoiceDueToneClassName[dueTone]}>
+                                                    {formatRelativeDayPtBr(dueYmd)}
+                                                </span>
+                                            </>
+                                        ) : null}
                                     </DescriptionDetails>
                                 </DescriptionListItem>
                             ) : null}
                         </DescriptionList>
                     ) : null}
                 </HoverCardBody>
-                {/* A página do cartão abre no ciclo atual — não há parâmetro
-                    que leve a uma fatura específica —, por isso o link diz
-                    "cartão" e não "fatura". */}
                 <HoverCardFooter>
                     <HoverCardLink asChild>
-                        <Link href={creditCardDetailPath(badge.cardId)}>
-                            Ver cartão
-                        </Link>
+                        {closeYmd && mes ? (
+                            <Link href={creditCardInvoicePath(badge.cardId, closeYmd)}>
+                                Ver fatura de {mes}
+                            </Link>
+                        ) : (
+                            <Link href={creditCardDetailPath(badge.cardId)}>Ver cartão</Link>
+                        )}
                     </HoverCardLink>
                 </HoverCardFooter>
                 <HoverCardArrow />

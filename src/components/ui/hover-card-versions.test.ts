@@ -72,6 +72,16 @@ describe("as versões do HoverCard", () => {
     expect(chip).not.toContain("onClick=")
   })
 
+  it("a prévia da fatura diz o estado e leva à fatura, sem Badge repetido", () => {
+    const i = TABELA.indexOf("function CreditInvoiceChip")
+    const chip = TABELA.slice(i, TABELA.indexOf("function installmentLastMonthLabel"))
+    for (const t of ["estadoDaFatura", "formatRelativeDayPtBr", "creditCardInvoicePath", '"Ver fatura de "'.slice(1, -1)]) {
+      expect(chip).toContain(t)
+    }
+    expect(chip).not.toContain("<Badge ")
+    expect(chip).not.toContain("badge.note")
+  })
+
   it("a casca não rola: quem rola é o viewport, e a seta fica fora do recorte", () => {
     const casca = CODIGO.match(/const hoverCardContentVariants = cva\(([\s\S]*?)\n\)/)?.[1] ?? ""
     expect(casca).not.toMatch(/overflow-y-auto|(^|[ "])p-2\.5/)
