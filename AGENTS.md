@@ -612,7 +612,8 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   - **A exceção é o que não é ícone**: marca (o logo, a marca escrita, as
     bandeiras de cartão) e primitivo desenhado (a roda do `Spinner`). A lista
     vive em `DRAWN_SVG_FILES`, no auditor; para entrar nela, o arquivo desenha
-    uma marca ou um movimento.
+    uma marca ou um movimento. A lista também leva o pictograma que o Heroicons
+    não tem, por decisão do dono (a barra lateral e o filtro do iOS).
   - **O conjunto muda com o tamanho**: `size-6`+ usa
     `@heroicons/react/24/outline`; `size-5` usa o mini (`20/solid`); `size-4`
     e abaixo usam o micro (`16/solid`), o que inclui todo ícone sem classe de

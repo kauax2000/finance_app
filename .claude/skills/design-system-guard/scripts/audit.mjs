@@ -127,10 +127,11 @@ const FOREIGN_ICON_PACKAGES = new RegExp(
  * pergunta é se ele desenha uma marca ou um movimento; qualquer outra coisa é
  * um ícone, e ícone vem do Heroicons.
  *
- * A única exceção a essa pergunta é `sidebar-toggle-icon`, por decisão do
- * dono: o Heroicons não tem o pictograma de barra lateral, e o gatilho dela
- * usa um desenho próprio na grade do `16/solid`. É um arquivo só, com um
- * ícone só — o próximo ícone próprio pede a mesma decisão explícita.
+ * As únicas exceções a essa pergunta são `sidebar-toggle-icon` e
+ * `filter-lines-icon`, por decisão do dono: o Heroicons não tem o pictograma
+ * de barra lateral nem o filtro do iOS, e cada um usa um desenho próprio na
+ * grade do `16/solid`. É um ícone por arquivo — o próximo ícone próprio pede
+ * a mesma decisão explícita.
  */
 const DRAWN_SVG_FILES = [
   "app-logo",
@@ -142,6 +143,8 @@ const DRAWN_SVG_FILES = [
   // O anel do `ProgressRing`: a geometria do traço é o valor.
   "components/ui/progress",
   "sidebar-toggle-icon",
+  // O filtro do iOS (line.3.horizontal.decrease): o Heroicons não tem; decisão do dono (15/11/2026).
+  "filter-lines-icon",
   // Os logos do Claude e do ChatGPT (Simple Icons, CC0): marca de outra
   // pessoa, sem par no Heroicons.
   "marcas-de-ia",

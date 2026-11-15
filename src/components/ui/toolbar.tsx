@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/16/solid"
+import { FilterLinesIcon } from "@/components/icons/filter-lines-icon"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, ButtonSizeContext } from "@/components/ui/button"
@@ -504,7 +505,7 @@ function ToolbarFilterButton({
   count = 0,
   active,
   label = "Filtros",
-  icon = <AdjustmentsHorizontalIcon aria-hidden />,
+  icon = <FilterLinesIcon aria-hidden />,
   className,
   ...props
 }: Omit<React.ComponentProps<typeof ToolbarButton>, "label" | "icon" | "collapse"> & {

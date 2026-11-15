@@ -3,7 +3,8 @@
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellButton, useUnreadBellCount } from "@/components/layout/notification-bell-link"
-import { AdjustmentsHorizontalIcon, CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { FilterLinesIcon } from "@/components/icons/filter-lines-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PageHeaderBack } from "@/components/ui/page-header"
 import { ToolbarFilterIndicator } from "@/components/ui/toolbar"
@@ -166,7 +167,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             {filtro.icon === "month" ? (
                 <CalendarIcon className="size-4" />
             ) : (
-                <AdjustmentsHorizontalIcon className="size-4" />
+                <FilterLinesIcon className="size-4" />
             )}
             {filtro.active ? <ToolbarFilterIndicator className="top-2 right-2" /> : null}
         </TopBarAction>

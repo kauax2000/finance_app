@@ -221,7 +221,7 @@ export default function IconographyDoc() {
       </DocNote>
 
       <DocNote title="A exceção é o que não é ícone">
-        Marca — o logo, o wordmark, as bandeiras de cartão — e primitivo desenhado, como a roda do <code>Spinner</code>, cuja geometria é o comportamento. A lista é <code>DRAWN_SVG_FILES</code>, no auditor, e a pergunta para entrar nela é se o arquivo desenha uma marca ou um movimento. Ícone bonito de outro lugar não entra.
+        Marca — o logo, o wordmark, as bandeiras de cartão — e primitivo desenhado, como a roda do <code>Spinner</code>, cuja geometria é o comportamento. A lista é <code>DRAWN_SVG_FILES</code>, no auditor, e a pergunta para entrar nela é se o arquivo desenha uma marca ou um movimento. Ela também leva o pictograma que o Heroicons não tem, por decisão do dono (a barra lateral e o filtro do iOS). Ícone bonito de outro lugar não entra.
       </DocNote>
 
       <DocNote title="Círculo puro não é ícone">
