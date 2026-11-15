@@ -1298,7 +1298,12 @@ function FilterBar({
       className={cn("@container/filter-bar min-w-0", className)}
       {...props}
     >
-      <div
+      {/* `layoutRoot`: o deslize dos tokens, das ações e da contagem é medido contra a
+          barra, e não contra a página. Sem ele, um aviso que some acima dela movia a
+          barra inteira, e o "+ Filtro" atravessava a distância na mola enquanto as
+          abas ao lado pulavam. */}
+      <motion.div
+        layoutRoot
         className={cn(
           "flex items-center gap-3",
           !menu && "@max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2"
@@ -1334,7 +1339,7 @@ function FilterBar({
             )}
           </motion.span>
         ) : null}
-      </div>
+      </motion.div>
 
       <Popover
         mobile="sheet"

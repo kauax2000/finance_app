@@ -723,3 +723,9 @@ describe("OverflowMenu", () => {
     expect(html).toContain("data-overflow-more")
   })
 })
+
+describe("o deslize da barra é medido contra ela", () => {
+  it("o miolo é layoutRoot: um salto da página não faz o \"+ Filtro\" atravessar na mola", () => {
+    expect(CODIGO).toMatch(/<motion\.div\s+layoutRoot\b/)
+  })
+})
