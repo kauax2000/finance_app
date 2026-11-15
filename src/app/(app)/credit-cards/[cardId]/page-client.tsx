@@ -1,8 +1,8 @@
 "use client"
 
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
 import { useAuth } from "@/components/providers"
@@ -76,6 +76,7 @@ import {
     cycleOffsetBoundsForCard,
     shiftRefDateByCycles,
 } from "@/lib/credit-card-billing"
+import { cycleOffsetForCloseYmd } from "@/lib/credit-card-invoice-preview"
 import {
     buildCreditCardInvoiceAnalytics,
     filterCardExpensesInWindow,
@@ -104,6 +105,7 @@ import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 export default function CreditCardDetailPageClient() {
     const router = useRouter()
     const rawParams = useParams()
+    const faturaParam = useSearchParams().get("fatura")
     const cardIdParam = rawParams.cardId
     const cardId =
         typeof cardIdParam === "string"
@@ -481,6 +483,17 @@ export default function CreditCardDetailPageClient() {
             Math.min(cycleOffsetBounds.max, Math.max(cycleOffsetBounds.min, o))
         )
     }, [cycleOffsetBounds.min, cycleOffsetBounds.max])
+
+    // ?fatura= (data de fechamento) abre o ciclo uma vez por cartão, com os limites já completos.
+    const faturaAplicadaPara = useRef<string | null>(null)
+    useEffect(() => {
+        if (loading || !card || faturaAplicadaPara.current === cardId) return
+        faturaAplicadaPara.current = cardId
+        if (!faturaParam) return
+        const o = cycleOffsetForCloseYmd(card, todayAnchor, faturaParam, cycleOffsetBounds)
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- open the cycle named by ?fatura= once
+        if (o != null) setCycleOffset(o)
+    }, [loading, card, cardId, faturaParam, todayAnchor, cycleOffsetBounds])
 
     const refDate = useMemo(
         () =>
