@@ -105,7 +105,7 @@ export default function TransactionsPageClient() {
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-4">
-            {/* No telefone o título é o da casca (`TituloDaTela`), e Importar e Exportar moram no ⋯ da barra. */}
+            {/* No telefone a tela de aba não tem título, e Importar e Exportar moram no ⋯ da barra. */}
             {isMobile ? null : (
                 <PageHeader collapse>
                     <PageHeaderTitleRow>

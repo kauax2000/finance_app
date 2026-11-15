@@ -10,7 +10,7 @@ export default function NotificacoesPage() {
 
     return (
         <div className="min-w-0 space-y-8">
-            {/* No telefone o título é o da casca (`TituloDaTela`). */}
+            {/* No telefone o nome fica fixo na barra (`TituloDaTela`). */}
             {isMobile ? null : (
                 <PageHeader collapse>
                     <PageHeaderTitle asChild>

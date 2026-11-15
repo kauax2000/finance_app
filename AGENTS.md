@@ -745,12 +745,12 @@ declaração de `background-color` no trilho).
   **576** · 672 · 1280 · sem teto, e a calha (`gutter`) é **opt-in**, porque
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
-  `PageSectionContent`. **No telefone as telas de aba abrem com o título grande, e quem o escreve é a casca; a página Você não o tem, e a subpágina (toda rota com voltar) também não: o nome dela só aparece no centro da barra depois de rolar — menos nas três telas de configuração da Você (`ROTAS_DE_VOCE_EM_SETTINGS`) e em Membros (`ROTAS_COM_TITULO_NA_BARRA`), que já abrem com ele lá e escondem o título da seção (`SecaoSozinha`)**
-  (`TituloDaTela`, em `components/layout/`, um `PageHeader collapse` com o título da rota ou o de
-  `usePageChromeSlot`, para aparecer no clique; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. Ela segura a tela velha até a nova ficar pronta, sem esqueleto à vista, com teto de 1,2s. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
+  `PageSectionContent`. **No telefone as telas de aba não têm título (15/11/2026: a aba acesa na barra de baixo diz onde se está, e nada sobe à barra ao rolar); a página Você também não, e a subpágina (toda rota com voltar) também não: o nome dela só aparece no centro da barra depois de rolar — menos nas três telas de configuração da Você (`ROTAS_DE_VOCE_EM_SETTINGS`) e em Membros (`ROTAS_COM_TITULO_NA_BARRA`), que já abrem com ele lá e escondem o título da seção (`SecaoSozinha`)**
+  (`TituloDaTela`, em `components/layout/`, que só publica na barra o nome da subpágina, o da rota ou o de
+  `usePageChromeSlot`; a tela não escreve o seu). A transição de subpágina também é da casca (`TransicaoDeSubpagina`): só de subpágina, só no telefone, e nenhuma tela marca link. Ela segura a tela velha até a nova ficar pronta, sem esqueleto à vista, com teto de 1,2s. No desktop, toda tela revisada abre com o `PageHeader collapse` (ao sair de vista, o
   título sobe para a barra, à direita do botão de recolher), com
   `PageHeaderTitle asChild` e `<p aria-hidden="true">`, porque o `<h1>` da página é o escondido da barra do topo (ela não mostra o nome da tela;
-  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, ao rolar o título sobe e toma o lugar dela, menos no Painel, onde o seletor fica, com o sino à esquerda e
+  no telefone o título visível é a carteira, no centro — menos em `/me` e nas telas dela, subrotas incluídas (`isVoceTabActive`), sem seletor —, nas telas de aba ela fica ao rolar, com o sino à esquerda e
   a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
   telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
   Membros, Planos e pagamentos (`/plans`), Política de privacidade, IAs conectadas, Preferências de notificação e Lançar pelo iPhone (`/settings/privacidade`, `/settings/ias`, `/settings/notificacoes`, `/settings/lancar-pelo-iphone`) voltam a ela, e uma aba que saiu da barra

@@ -39,7 +39,7 @@ export function PrevisaoTela() {
     const isMobile = useIsMobile()
     return (
         <div className="min-w-0 space-y-8">
-            {/* No telefone o título é o da casca (`TituloDaTela`). */}
+            {/* No telefone a tela de aba não tem título. */}
             {isMobile ? null : (
                 <PageHeader collapse>
                     <PageHeaderTitle asChild>

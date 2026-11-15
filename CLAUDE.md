@@ -16,7 +16,7 @@ Rules:
 - For plans that change this app's screens, use indicative wireframes that deliberately differ from the design system and default look, so the user can spot needed elements later.
 - Do not merge or push finance-app-2.0 to main until all planned blocks are finished.
 - Add a header to every page in the app from now on.
-- Use the collapsing large-title header animation (centered name appears under the top bar) on all mobile screens, not only Settings.
+- On mobile, tab screens have no page title (the active bottom-bar tab says where you are); only subpages show their name centered in the top bar after scrolling.
 - Apply the same page transition to every subpage in the app; switching between main menu sections is not a page change and needs no transition.
 - On mobile, keep drawer headers fixed when forms rise; scroll form content beneath the header, not the whole drawer.
 - When positioning content above the keyboard, account for the toolbar bar above the keyboard too, so content never sits behind it.

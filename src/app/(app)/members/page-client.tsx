@@ -331,7 +331,7 @@ export default function MembersPage() {
             </AlertDialog>
 
             {isMobile ? (
-                // No telefone o título é o da casca (`TituloDaTela`); a tela abre com a
+                // No telefone o nome fica fixo na barra (`TituloDaTela`); a tela abre com a
                 // carteira, que a barra lateral não mostra, e o convite mora nela.
                 currentWorkspace ? (
                     <CarteiraNoTopo
