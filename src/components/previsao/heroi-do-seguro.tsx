@@ -61,7 +61,8 @@ export function HeroiDoSeguro({
     return (
         <StatCard size="lg" tone={seguro.seguro < 0 ? "expense" : "default"}>
             <StatCardHeader>
-                <StatCardLabel>Seguro para gastar em {mes}</StatCardLabel>
+                {/* Uma string só: o rótulo embrulha cada texto num `span` de um flex com `gap`. */}
+                <StatCardLabel>{`Seguro para gastar em ${mes}`}</StatCardLabel>
             </StatCardHeader>
             <StatCardValue>
                 <MoneyDisplay value={seguro.seguro} tone={seguro.seguro < 0 ? "expense" : "default"} />

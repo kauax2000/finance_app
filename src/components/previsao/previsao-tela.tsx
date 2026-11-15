@@ -13,7 +13,7 @@ import { ProximosMeses } from "@/components/previsao/proximos-meses"
 import { ReservaDialog } from "@/components/previsao/reserva-dialog"
 import { SimuladorDeParcela } from "@/components/previsao/simulador-de-parcela"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import {
     EmptyState,
     EmptyStateActions,
@@ -97,9 +97,18 @@ function Conteudo() {
         )
     }
 
-    if (carregandoCarteira || carregando || (currentWorkspaceId && !contas)) return <PrevisaoSkeleton />
-    // Sem carteira a casca já diz o que fazer: a tela não tem o que mostrar.
-    if (!dados || !contas) return null
+    if (carregandoCarteira || carregando) return <PrevisaoSkeleton />
+    // O vazio das telas sem carteira (o mesmo de Categorias).
+    if (!currentWorkspaceId) {
+        return (
+            <Card>
+                <CardMessage>
+                    Nenhuma carteira selecionada. Escolha uma carteira no menu lateral para continuar.
+                </CardMessage>
+            </Card>
+        )
+    }
+    if (!dados || !contas) return <PrevisaoSkeleton />
 
     if (semNada(dados)) {
         return (

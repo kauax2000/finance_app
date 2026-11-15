@@ -47,6 +47,8 @@ describe("a tela de Previsão no design system", () => {
         expect(fonte).toContain("dashed: true")
         expect(fonte).toContain("Sem receita prevista neste mês")
         expect(fonte).toContain("useQuickCreateSubscription")
+        // Uma string só no rótulo: dois nós de texto viram dois `span` com vão entre eles.
+        expect(fonte).toContain("{`Seguro para gastar em ${mes}`}")
     })
 
     it("de onde vem: a lista de termo e valor, a sobra e a nota do regime", () => {
@@ -109,6 +111,7 @@ describe("a tela de Previsão no design system", () => {
         expect(fonte).toContain("Tentar de novo")
         expect(fonte).toContain("Ainda não há o que prever")
         expect(fonte).toContain("Adicionar lançamento")
+        expect(fonte).toContain("Nenhuma carteira selecionada. Escolha uma carteira no menu lateral para continuar.")
         expect(fonte).toContain("<ReservaDialog")
         expect(fonte).toContain("onEditarReserva={() => setReservaAberta(true)}")
         expect(fonte).toContain("lg:grid-cols-2")
