@@ -1,4 +1,5 @@
-/** Sem esqueleto: o wireframe mostra o próprio "Carregando…". */
+import { PrevisaoSkeleton } from "@/components/previsao/previsao-skeleton"
+
 export default function Loading() {
-    return null
+    return <PrevisaoSkeleton />
 }
