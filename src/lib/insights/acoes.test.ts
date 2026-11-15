@@ -115,7 +115,7 @@ describe("virarConta", () => {
         // Hoje fixo: a próxima nunca cai no passado, e com o relógio real o teste vencia em 10/11.
         vi.useFakeTimers({ toFake: ["Date"] })
         vi.setSystemTime(new Date(2026, 10, 1, 12))
-        onTestFinished(() => vi.useRealTimers())
+        onTestFinished(() => { vi.useRealTimers() })
         db.state.results = [
             {
                 data: [
