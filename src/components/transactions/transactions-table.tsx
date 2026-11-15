@@ -177,11 +177,6 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
     const estado = fechada
         ? estadoDaFatura({ slot: badge.slot as "last_closed" | "earlier", paid: badge.paid, dueYmd, today })
         : null
-    const dotTone = badge.paid
-        ? "success"
-        : estado === "Vencida, não paga"
-          ? "destructive"
-          : badge.tone
     const closeDate = closeYmd ? parseYmdLocal(closeYmd) : undefined
     const mes = closeDate ? formatMonthLongPtBr(closeDate).toLowerCase() : null
     const dueTone = dueYmd
@@ -216,7 +211,7 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
                 <HoverCardBody>
                     {estado ? (
                         <p className="flex items-center gap-2 text-sm font-medium">
-                            <BadgeDot className={invoiceDotClassName[dotTone]} />
+                            <BadgeDot className={invoiceDotClassName[badge.tone]} />
                             {estado}
                         </p>
                     ) : null}
