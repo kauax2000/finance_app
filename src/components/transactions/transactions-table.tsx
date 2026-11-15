@@ -249,7 +249,7 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
                     ) : null}
                 </HoverCardBody>
                 <HoverCardFooter>
-                    <HoverCardLink asChild>
+                    <HoverCardLink variant="tertiary" className="px-3" asChild>
                         {closeYmd && mes ? (
                             <Link href={creditCardInvoicePath(badge.cardId, closeYmd)}>
                                 {`Ver fatura de ${mes}`}
