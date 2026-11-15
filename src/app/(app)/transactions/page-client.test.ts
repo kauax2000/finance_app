@@ -74,6 +74,14 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(barra).toContain('querySelector<HTMLButtonElement>("[data-slot=filter-bar-add]")?.click()')
     })
 
+    it("no telefone o ⋯ veste a pele das abas (floating); no desktop segue terciário", () => {
+        const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
+        expect(barra).toMatch(/variant = "tertiary"/)
+        expect(barra).toMatch(/<Button type="button" variant=\{variant\} size="icon-md" aria-label="Mais ações">/)
+        expect(barra).toMatch(/<MenuMaisAcoes[^>]*variant="floating"/)
+        expect(f).not.toMatch(/<MenuMaisAcoes[^>]*variant=/)
+    })
+
     it("Revisar aplica o token conferir, por data, sem os outros tokens (e Sem categoria só quando o fim da importação pede)", () => {
         expect(f).toMatch(
             /setEstado\(\{\s*filtros:\s*\[\s*\{\s*field:\s*"conferir",\s*operator:\s*"is",\s*values:\s*\[\]\s*\},\s*\.\.\.\(o\?\.semCategoria === true \? \[\{ field: "categoria", operator: "is" as const, values: \[SEM_CATEGORIA\] \}\] : \[\]\),\s*\],\s*sort:\s*\{\s*key:\s*"date",\s*dir:\s*"desc"\s*\}/,

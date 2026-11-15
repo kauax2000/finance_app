@@ -69,7 +69,8 @@ export function TransacoesToolbar({
                     Pela janela, e não pela linha: pela linha, a 768–1000px ele duplicaria o do cabeçalho. */}
                 {onImportar || onExportar ? (
                     <div className="hidden shrink-0 max-md:flex">
-                        <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} />
+                        {/* No telefone o ⋯ veste a pele das abas ao lado. */}
+                        <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} variant="floating" />
                     </div>
                 ) : null}
                 <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
@@ -94,15 +95,17 @@ export function MenuMaisAcoes({
     onImportar,
     onExportar,
     exportando = false,
+    variant = "tertiary",
 }: {
     onImportar?: () => void
     onExportar?: () => void
     exportando?: boolean
+    variant?: "tertiary" | "floating"
 }) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações">
+                <Button type="button" variant={variant} size="icon-md" aria-label="Mais ações">
                     <EllipsisHorizontalIcon aria-hidden />
                 </Button>
             </DropdownMenuTrigger>
