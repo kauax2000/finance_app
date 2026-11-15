@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { ROUTES } from "@/config/navigation"
+import { ArrowTrendingUpIcon } from "@heroicons/react/24/outline"
+import { MAIN_NAVIGATION, ROUTES } from "@/config/navigation"
 import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
@@ -9,7 +10,7 @@ describe("a página Você", () => {
     it("dois grupos: a carteira e a conta (Planos primeiro e Política de privacidade por último), sem Configurações", () => {
         const [carteira, conta] = getVoceGroups([], "owner")
         expect(carteira.id).toBe("carteira")
-        expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS, ROUTES.BILLS, ROUTES.SUBSCRIPTIONS, ROUTES.PROJETOS, ROUTES.MEMBERS])
+        expect(hrefs(carteira)).toEqual([ROUTES.PREVISAO, ROUTES.CREDIT_CARDS, ROUTES.BILLS, ROUTES.SUBSCRIPTIONS, ROUTES.PROJETOS, ROUTES.MEMBERS])
         expect(hrefs(conta)).toEqual([ROUTES.PLANS, ROUTES.SETTINGS_IAS, ROUTES.SETTINGS_NOTIFICACOES, ROUTES.SETTINGS_PRIVACIDADE])
     })
     it("as quatro telas de configuração do telefone acendem Você e voltam a ela", () => {
@@ -30,6 +31,7 @@ describe("a página Você", () => {
         expect(isVoceTabActive(ROUTES.PLANS, [])).toBe(true)
         expect(isVoceTabActive(`${ROUTES.CREDIT_CARDS}/abc`, [])).toBe(true)
         expect(isVoceTabActive(`${ROUTES.PROJETOS}/abc`, [])).toBe(true)
+        expect(isVoceTabActive(ROUTES.PREVISAO, [])).toBe(true)
         expect(isVoceTabActive(ROUTES.TRANSACTIONS, [])).toBe(false)
         expect(isVoceTabActive(ROUTES.DASHBOARD_CATEGORIES, [])).toBe(false)
         expect(isVoceTabActive(`${ROUTES.DASHBOARD_CATEGORIES}/x`, [ROUTES.DASHBOARD_CATEGORIES])).toBe(true)
@@ -44,8 +46,15 @@ describe("a página Você", () => {
 
     it("o voltar do telefone leva a Você só das telas que ela lista", () => {
         expect(voceBackHref(ROUTES.SUBSCRIPTIONS)).toBe(ROUTES.ME)
+        expect(voceBackHref(ROUTES.PREVISAO)).toBe(ROUTES.ME)
         expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
         expect(voceBackHref(ROUTES.DASHBOARD_CATEGORIES)).toBeUndefined()
+    })
+})
+
+describe("a Previsão na navegação", () => {
+    it("é a segunda da barra lateral, com o ícone de tendência", () => {
+        expect(MAIN_NAVIGATION[1]).toEqual({ name: "Previsão", href: ROUTES.PREVISAO, icon: ArrowTrendingUpIcon })
     })
 })
 

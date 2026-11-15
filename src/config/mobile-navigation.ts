@@ -1,5 +1,6 @@
 import {
     ArrowPathRoundedSquareIcon,
+    ArrowTrendingUpIcon,
     BellIcon,
     RectangleStackIcon,
     ClipboardDocumentCheckIcon,
@@ -15,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareSolid,
+    ArrowTrendingUpIcon as ArrowTrendingUpSolid,
     RectangleStackIcon as RectangleStackSolid,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckSolid,
     Cog6ToothIcon as Cog6ToothSolid,
@@ -28,6 +30,7 @@ import {
 } from "@heroicons/react/24/solid"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareMicro,
+    ArrowTrendingUpIcon as ArrowTrendingUpMicro,
     RectangleStackIcon as RectangleStackMicro,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckMicro,
     Cog6ToothIcon as Cog6ToothMicro,
@@ -41,6 +44,7 @@ import {
 } from "@heroicons/react/16/solid"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareMini,
+    ArrowTrendingUpIcon as ArrowTrendingUpMini,
     BellIcon as BellMini,
     RectangleStackIcon as RectangleStackMini,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckMini,
@@ -88,6 +92,7 @@ const ICONE_SOLIDO = new Map<HeroIcon, HeroIcon>([
     [TagIcon, TagSolid],
     [RectangleStackIcon, RectangleStackSolid],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareSolid],
+    [ArrowTrendingUpIcon, ArrowTrendingUpSolid],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckSolid],
     [CreditCardIcon, CreditCardSolid],
     [FolderIcon, FolderSolid],
@@ -111,6 +116,7 @@ const ICONE_MICRO = new Map<HeroIcon, HeroIcon>([
     [TagIcon, TagMicro],
     [RectangleStackIcon, RectangleStackMicro],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareMicro],
+    [ArrowTrendingUpIcon, ArrowTrendingUpMicro],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckMicro],
     [CreditCardIcon, CreditCardMicro],
     [FolderIcon, FolderMicro],
@@ -134,6 +140,7 @@ const ICONE_MINI = new Map<HeroIcon, HeroIcon>([
     [TagIcon, TagMini],
     [RectangleStackIcon, RectangleStackMini],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareMini],
+    [ArrowTrendingUpIcon, ArrowTrendingUpMini],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckMini],
     [CreditCardIcon, CreditCardMini],
     [FolderIcon, FolderMini],
@@ -203,6 +210,7 @@ export function getMobileAccountMenuNavItems(): MobileAccountMenuNavItem[] {
 
 /** A ordem da carteira na página Você: o que se abre mais vezes vem antes. */
 const ORDEM_DA_CARTEIRA: readonly string[] = [
+    ROUTES.PREVISAO,
     ROUTES.CREDIT_CARDS,
     ROUTES.BILLS,
     ROUTES.SUBSCRIPTIONS,

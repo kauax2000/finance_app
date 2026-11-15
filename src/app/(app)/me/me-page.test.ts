@@ -54,7 +54,7 @@ describe("a página Você", () => {
     it("Conta sem Cofre aberto, e Cartões abre a carteira", () => {
         expect(PAGINA).toContain("item.description")
         const grupos = getVoceGroups([], "owner")
-        expect(grupos[0].items.map((i) => i.name)).toEqual(["Cartões", "Contas a pagar", "Assinaturas", "Projetos", "Membros e convidados"])
+        expect(grupos[0].items.map((i) => i.name)).toEqual(["Previsão", "Cartões", "Contas a pagar", "Assinaturas", "Projetos", "Membros e convidados"])
         expect(grupos[1].items.map((i) => i.name)).not.toContain("Cofre aberto")
     })
     it("Neste celular: título, e o ladrilho só no ícone do app", () => {
