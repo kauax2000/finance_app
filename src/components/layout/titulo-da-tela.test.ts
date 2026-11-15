@@ -4,20 +4,20 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 const TITULO = semComentarios(lerFonte("src/components/layout/titulo-da-tela.tsx"))
 const CASCA = semComentarios(lerFonte("src/components/layout/sidebar-app-shell.tsx"))
 
-describe("o título grande do telefone", () => {
+describe("o nome da tela no telefone", () => {
     it("mora na casca, acima da página, para aparecer no clique", () => {
         expect(CASCA.indexOf("<TituloDaTela")).toBeGreaterThan(CASCA.indexOf("data-workspace-content"))
         expect(CASCA.indexOf("<TituloDaTela")).toBeLessThan(CASCA.indexOf("{children}"))
     })
 
-    it("só existe no telefone, menos na página Você, sobe para a barra e não abre um segundo h1", () => {
-                expect(TITULO).toContain("<PageHeader key={pathname} collapse>")
-        expect(TITULO).toContain('<p aria-hidden="true">{titulo}</p>')
+    it("as telas de aba não têm título: nenhum PageHeader na casca do telefone", () => {
+        expect(TITULO).not.toContain("<PageHeader")
+        expect(TITULO).not.toContain("<PageHeaderTitle")
+        expect(TITULO).toMatch(/return null\s*\}\s*$/)
     })
 
     it("subpágina não tem título grande: o nome só vai à barra depois de rolar", () => {
         expect(CASCA).toContain("subpagina={Boolean(defaultMobileBackHref(pathname))}")
-        expect(TITULO).toContain("if (!isMobile || subpagina || pathname === ROUTES.ME) return null")
         expect(TITULO).toContain("docked: fixo || window.scrollY > ROLAGEM_MINIMA")
         expect(TITULO).toContain('window.addEventListener("scroll", publicar, { passive: true })')
         expect(TITULO).toContain("publishPageTitle(document, null)")

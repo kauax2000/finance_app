@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { usePageChromeState } from "@/components/layout/page-chrome-provider"
-import { PageHeader, PageHeaderTitle } from "@/components/ui/page-header"
 import { ROTAS_COM_TITULO_NA_BARRA } from "@/config/mobile-navigation"
 import { APP_PAGE_TITLES, DASHBOARD_PAGE_TITLES, ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -42,11 +41,10 @@ type TituloDaTelaProps = {
 }
 
 /**
- * O título grande das telas de aba no telefone: mora na casca, e não em cada página,
- * para aparecer no clique, antes do `AdiarMontagem`. O `<h1>` é o da barra do topo.
- * A página Você não o tem: quem a abre é a identidade da pessoa. A subpágina também
- * não: o nome dela sobe à barra ao rolar. No desktop cada tela revisada escreve o
- * próprio `PageHeader`.
+ * No telefone as telas de aba não têm título: a aba acesa na barra de baixo já diz
+ * onde a pessoa está, e o conteúdo começa logo abaixo da barra do topo. Este componente
+ * só publica o nome da subpágina na barra (ao rolar, ou fixo em `ROTAS_COM_TITULO_NA_BARRA`).
+ * No desktop cada tela revisada escreve o próprio `PageHeader`.
  */
 export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaProps) {
     const chrome = usePageChromeState()
@@ -67,12 +65,5 @@ export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaPro
         }
     }, [isMobile, subpagina, titulo, pathname])
 
-    if (!isMobile || subpagina || pathname === ROUTES.ME) return null
-    return (
-        <PageHeader key={pathname} collapse>
-            <PageHeaderTitle asChild>
-                <p aria-hidden="true">{titulo}</p>
-            </PageHeaderTitle>
-        </PageHeader>
-    )
+    return null
 }
