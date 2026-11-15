@@ -961,7 +961,7 @@ flowchart TD
     newCard -->|"Cancelar"| list
     newCard -.->|"só o dono: titular do cartão"| G17(("G17 Titular do cartão"))
     tiles -->|"cartão"| detail["/credit-cards/id"]
-    G5 -.->|"chip da fatura: Ver fatura de mês, ?fatura=AAAA-MM-DD"| detail
+    G5(("G5 /transactions?card=id&preset=last30")) -.->|"chip da fatura: Ver fatura de mês, ?fatura=AAAA-MM-DD"| detail
 
     detail --> found{"Cartão existe?"}
     found -->|"não"| missing(["Ver todos os cartões"]) --> list
