@@ -28,8 +28,9 @@ export function cycleOffsetForCloseYmd(
 }
 
 /** Dias de hoje até `ymd` (negativo = já passou), por data local ao meio-dia. */
-function daysUntil(ymd: string, today: Date): number {
-    const d = parseYmdLocal(ymd)!
+function daysUntil(ymd: string, today: Date): number | null {
+    const d = parseYmdLocal(ymd)
+    if (!d || Number.isNaN(d.getTime())) return null
     const t = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     return Math.round((d.getTime() - t.getTime()) / 86_400_000)
 }
@@ -41,7 +42,7 @@ export function estadoDaFatura(args: {
     today: Date
 }): string {
     if (args.paid) return "Paga"
-    if (args.dueYmd && daysUntil(args.dueYmd, args.today) < 0) {
+    if (args.dueYmd && (daysUntil(args.dueYmd, args.today) ?? 0) < 0) {
         return "Vencida, não paga"
     }
     return args.slot === "last_closed" ? "Fechada, não paga" : "Anterior, não paga"
@@ -54,10 +55,11 @@ export function tomDoVencimento(args: {
 }): "neutral" | "warning" | "destructive" {
     if (args.paid) return "neutral"
     const dias = daysUntil(args.dueYmd, args.today)
+    if (dias === null) return "neutral"
     if (dias < 0) return "destructive"
     return dias <= 3 ? "warning" : "neutral"
 }
 
 export function verboDoVencimento(dueYmd: string, today: Date): "Vence" | "Venceu" {
-    return daysUntil(dueYmd, today) < 0 ? "Venceu" : "Vence"
+    return (daysUntil(dueYmd, today) ?? 0) < 0 ? "Venceu" : "Vence"
 }

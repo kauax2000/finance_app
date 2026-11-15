@@ -69,6 +69,11 @@ describe("tomDoVencimento / verboDoVencimento", () => {
         expect(t("2026-11-18")).toBe("neutral")
         expect(t("2026-11-10", true)).toBe("neutral")
     })
+    it("data inválida não vence nem quebra", () => {
+        expect(tomDoVencimento({ paid: false, dueYmd: "abc", today })).toBe("neutral")
+        expect(verboDoVencimento("abc", today)).toBe("Vence")
+        expect(estadoDaFatura({ slot: "last_closed", paid: false, dueYmd: "abc", today })).toBe("Fechada, não paga")
+    })
     it("verbo", () => {
         expect(verboDoVencimento("2026-11-14", today)).toBe("Vence")
         expect(verboDoVencimento("2026-11-13", today)).toBe("Venceu")

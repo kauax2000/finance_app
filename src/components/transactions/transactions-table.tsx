@@ -65,6 +65,7 @@ import {
     ContextMenuItem,
     ContextMenuSeparator,
 } from "@/components/ui/context-menu"
+import { P } from "@/components/ui/typography"
 
 export type TransactionsTableSortKey = TransactionsListSortKey
 
@@ -210,10 +211,10 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
                 </HoverCardHeader>
                 <HoverCardBody>
                     {estado ? (
-                        <p className="flex items-center gap-2 text-sm font-medium">
+                        <P className="flex items-center gap-2 font-medium">
                             <BadgeDot className={invoiceDotClassName[badge.tone]} />
                             {estado}
-                        </p>
+                        </P>
                     ) : null}
                     {closeYmd || dueYmd ? (
                         <DescriptionList layout="inline" className="gap-1">
@@ -251,7 +252,7 @@ export function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
                     <HoverCardLink asChild>
                         {closeYmd && mes ? (
                             <Link href={creditCardInvoicePath(badge.cardId, closeYmd)}>
-                                Ver fatura de {mes}
+                                {`Ver fatura de ${mes}`}
                             </Link>
                         ) : (
                             <Link href={creditCardDetailPath(badge.cardId)}>Ver cartão</Link>
