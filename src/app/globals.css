@@ -2293,6 +2293,18 @@
 .workspace-switch [data-sidebar="header"] [data-slot="color-tile"] {
   view-transition-name: workspace-mark;
 }
+/* Com nome, a foto do conteúdo sobe acima da raiz, e com ela o cabeçalho: com a tabela
+   rolada até a metade, as linhas passavam por cima da barra do topo durante a troca. As
+   barras ganham o mesmo nome da troca de subpágina (paradas, por cima, `z-index` 100). */
+.workspace-switch [data-slot="top-bar"] {
+  view-transition-name: barra-do-topo;
+}
+.workspace-switch [data-slot="bottom-bar"] {
+  view-transition-name: barra-de-baixo;
+}
+.workspace-switch [data-slot="bottom-bar-tabs"] {
+  background-color: var(--bottom-bar-surface);
+}
 .workspace-switch::view-transition-old(workspace-content),
 .workspace-switch::view-transition-old(workspace-mark) {
   animation: var(--duration-fast) var(--ease-out) both workspace-switch-out;
