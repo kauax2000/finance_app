@@ -51,6 +51,26 @@ describe("a tela de Previsão no design system", () => {
         expect(fonte).toContain("{`Seguro para gastar em ${mes}`}")
     })
 
+    it("o herói: 1 dia no singular, o ponto do dia 1 e a receita recorrente abrindo como receita", () => {
+        const fonte = ler("heroi-do-seguro")
+        expect(fonte).toContain('seguro.diasRestantes === 1 ? "1 dia"')
+        expect(fonte).toContain('marker={gasto.length === 1 ? "last" : undefined}')
+        expect(fonte).toContain('criarAssinatura("income")')
+        expect(fonte).not.toContain("onClick={criarAssinatura}")
+    })
+
+    it("o atalho de assinatura abre em despesa por padrão e leva o tipo até o formulário", () => {
+        const atalho = semComentarios(lerFonte("src/components/layout/quick-actions.tsx"))
+        expect(atalho).toContain('(kind: SubscriptionKind = "expense")')
+        expect(atalho).toContain("shell.openSubscriptionCreate(kind)")
+        const casca = semComentarios(lerFonte("src/components/layout/global-shell-dialogs-provider.tsx"))
+        expect(casca).toContain('(kind: SubscriptionKind = "expense")')
+        expect(casca).toContain("initialKind={subscriptionKind}")
+        const form = semComentarios(lerFonte("src/components/subscriptions/use-subscription-form.ts"))
+        expect(form).toContain('initialKind = "expense"')
+        expect(form).toContain("setKind(initialKind)")
+    })
+
     it("de onde vem: a lista de termo e valor, a sobra e a nota do regime", () => {
         const fonte = ler("de-onde-vem")
         expect(fonte).toContain("<DescriptionList")
@@ -67,6 +87,8 @@ describe("a tela de Previsão no design system", () => {
         expect(fonte).toContain("monthly_savings_target")
         expect(fonte).toContain('surface="auto"')
         expect(fonte).toContain("Só quem é dono da carteira altera a reserva.")
+        // Uma falha de rede não pode rejeitar sem aviso.
+        expect(fonte).toMatch(/\} catch \(err\) \{\s*setErro\(formatSupabasePostgrestError\(err\) \?\? "Não foi possível salvar a reserva\."\)/)
     })
 
     it("os 6 meses: a sobra em barras pelo sinal, os acontecimentos e a tabela recolhida", () => {

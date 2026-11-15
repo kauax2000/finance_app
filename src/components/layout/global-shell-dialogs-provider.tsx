@@ -19,7 +19,7 @@ import { CreditCardCreateDialog } from "@/components/credit-cards/credit-card-cr
 import { CategoryCreateDialog } from "@/components/categories/category-create-dialog"
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { ROUTES } from "@/config/navigation"
-import { supabase } from "@/lib/supabase"
+import { supabase, type SubscriptionKind } from "@/lib/supabase"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { persistTransactionSave } from "@/lib/transaction-detail-sheet-mutations"
@@ -40,7 +40,8 @@ export type GlobalShellDialogsContextValue = {
         opts?: { frase?: string; fotoInicial?: File }
     ) => void
     openCategoryCreate: () => void
-    openSubscriptionCreate: () => void
+    /** `kind` abre o formulário já em despesa (o padrão) ou em receita. */
+    openSubscriptionCreate: (kind?: SubscriptionKind) => void
     openCreditCardCreate: () => void
     openMemberInvite: () => void
 }
@@ -81,6 +82,7 @@ export function GlobalShellDialogsProvider({
 
     const [subscriptionOpen, setSubscriptionOpen] = React.useState(false)
     const [subscriptionSaving, setSubscriptionSaving] = React.useState(false)
+    const [subscriptionKind, setSubscriptionKind] = React.useState<SubscriptionKind>("expense")
 
     const [creditCardOpen, setCreditCardOpen] = React.useState(false)
 
@@ -158,7 +160,8 @@ export function GlobalShellDialogsProvider({
         [user, currentWorkspaceId, afterTxMutation]
     )
 
-    const openSubscriptionCreate = React.useCallback(() => {
+    const openSubscriptionCreate = React.useCallback((kind: SubscriptionKind = "expense") => {
+        setSubscriptionKind(kind)
         setSubscriptionOpen(true)
     }, [])
 
@@ -269,6 +272,7 @@ export function GlobalShellDialogsProvider({
                 open={subscriptionOpen}
                 onOpenChange={handleSubscriptionOpenChange}
                 editingSubscription={null}
+                initialKind={subscriptionKind}
                 expenseCategories={expenseCategories}
                 incomeCategories={incomeCategories}
                 categoriesHref={ROUTES.DASHBOARD_CATEGORIES}

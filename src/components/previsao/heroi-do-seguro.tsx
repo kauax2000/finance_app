@@ -69,7 +69,7 @@ export function HeroiDoSeguro({
             </StatCardValue>
             <StatCardFooter>
                 {seguro.seguro > 0
-                    ? `${currencyBRL(seguro.porDia)} por dia · ${seguro.diasRestantes} dias, contando hoje`
+                    ? `${currencyBRL(seguro.porDia)} por dia · ${seguro.diasRestantes === 1 ? "1 dia" : `${seguro.diasRestantes} dias`}, contando hoje`
                     : "Sem folga até o fim do mês"}
             </StatCardFooter>
             <div className="mt-5 grid gap-1">
@@ -80,6 +80,8 @@ export function HeroiDoSeguro({
                     x="dia"
                     legend
                     aspect="auto"
+                    // Um ponto só (dia 1) não traça linha: o marcador do último ponto o mostra.
+                    marker={gasto.length === 1 ? "last" : undefined}
                     label={`Gasto de ${mes} pela data da compra contra o ritmo até o fim do mês`}
                     description={descricao}
                     className="h-48 w-full"
@@ -91,7 +93,7 @@ export function HeroiDoSeguro({
             {temReceitaRecorrente ? null : (
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Muted>Cadastre o salário para prever os próximos meses</Muted>
-                    <Button type="button" variant="secondary" onClick={criarAssinatura}>
+                    <Button type="button" variant="secondary" onClick={() => criarAssinatura("income")}>
                         Adicionar receita recorrente
                     </Button>
                 </div>

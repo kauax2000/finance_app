@@ -83,6 +83,8 @@ function CampoDaReserva({
                 await refreshWorkspaces()
                 onSalvo()
             }
+        } catch (err) {
+            setErro(formatSupabasePostgrestError(err) ?? "Não foi possível salvar a reserva.")
         } finally {
             onSalvando(false)
         }

@@ -10,6 +10,7 @@ import { ROUTES } from "@/config/navigation"
 import { BottomBarAction } from "@/components/ui/bottom-bar"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { SubscriptionKind } from "@/lib/supabase"
 
 /**
  * As duas portas do "+ Adicionar": o formulário global da casca, ou a tela com
@@ -44,11 +45,12 @@ export function useQuickCreateSubscription() {
     const shell = useGlobalShellDialogsOptional()
     const router = useRouter()
 
-    return React.useCallback(() => {
+    return React.useCallback((kind: SubscriptionKind = "expense") => {
         if (shell) {
-            shell.openSubscriptionCreate()
+            shell.openSubscriptionCreate(kind)
             return
         }
+        // shortcut: a tela de assinaturas só lê `?new=1` (despesa); sem a casca, a receita abre como despesa.
         router.push(`${ROUTES.SUBSCRIPTIONS}?new=1`)
     }, [shell, router])
 }

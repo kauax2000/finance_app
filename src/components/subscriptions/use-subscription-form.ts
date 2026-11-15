@@ -26,6 +26,8 @@ export type UseSubscriptionFormArgs = {
     active: boolean
     saving: boolean
     editingSubscription: WorkspaceSubscription | null
+    /** O tipo com que uma assinatura nova abre; sem ele, despesa. */
+    initialKind?: SubscriptionKind
     expenseCategories: ExpenseCategoryOption[]
     incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
@@ -44,6 +46,7 @@ export function useSubscriptionForm({
     active,
     saving,
     editingSubscription,
+    initialKind = "expense",
     expenseCategories,
     incomeCategories,
     categoriesHref,
@@ -101,9 +104,9 @@ export function useSubscriptionForm({
             setNotes("")
             setPaymentMethod(null)
             setPaymentCreditCardId("")
-            setKind("expense")
+            setKind(initialKind)
         }
-    }, [active, editingSubscription])
+    }, [active, editingSubscription, initialKind])
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent) => {

@@ -1,6 +1,6 @@
 "use client"
 
-import type { CreditCard, WorkspaceSubscription } from "@/lib/supabase"
+import type { CreditCard, SubscriptionKind, WorkspaceSubscription } from "@/lib/supabase"
 import {
     Dialog,
     DialogContent,
@@ -14,6 +14,8 @@ type SubscriptionFormDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     editingSubscription: WorkspaceSubscription | null
+    /** O tipo com que uma assinatura nova abre; sem ele, despesa. */
+    initialKind?: SubscriptionKind
     expenseCategories: ExpenseCategoryOption[]
     incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
@@ -30,6 +32,7 @@ export function SubscriptionFormDialog({
     open,
     onOpenChange,
     editingSubscription,
+    initialKind,
     expenseCategories,
     incomeCategories,
     categoriesHref,
@@ -50,6 +53,7 @@ export function SubscriptionFormDialog({
         active: open,
         saving,
         editingSubscription,
+        initialKind,
         expenseCategories,
         incomeCategories,
         categoriesHref,
