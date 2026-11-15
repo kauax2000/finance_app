@@ -35,8 +35,8 @@ describe("usePrevisao", () => {
         expect(previsao.match(/queryKey\s*:/g)).toHaveLength(1)
     })
 
-    it("a janela parte de dois meses antes (a fatura que vence no mês fechou no anterior) e vai 6 à frente", () => {
-        expect(previsao).toContain("shiftYearMonth(mes, -2)")
+    it("a janela parte de quatro meses antes (as 3 fechadas da fatura acima do normal) e vai 6 à frente", () => {
+        expect(previsao).toContain("shiftYearMonth(mes, -4)")
         expect(previsao).toContain("shiftYearMonth(mes, 6)")
     })
 

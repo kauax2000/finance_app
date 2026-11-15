@@ -44,7 +44,7 @@ function useContasDaPrevisaoQuery(workspaceId: string | null) {
 export function janelaDaPrevisao(hojeYmd: string): TransactionsRangeKey {
     const mes = hojeYmd.slice(0, 7)
     return {
-        from: filterRangeStartIso(periodBoundsFromYearMonth(shiftYearMonth(mes, -2)).period_start),
+        from: filterRangeStartIso(periodBoundsFromYearMonth(shiftYearMonth(mes, -4)).period_start),
         to: filterRangeEndIso(periodBoundsFromYearMonth(shiftYearMonth(mes, 6)).period_end),
     }
 }
@@ -52,8 +52,9 @@ export function janelaDaPrevisao(hojeYmd: string): TransactionsRangeKey {
 /**
  * Tudo o que `fluxoDoMes`, `seguroParaGastar` e `projecaoMensal` leem, pelos mesmos hooks (e
  * `queryKey`) do Painel, mais as contas (`useContasDaPrevisaoQuery`). As transações pedem uma janela própria (outra chave do mesmo helper):
- * do dia 1 de dois meses atrás, porque a fatura que vence neste mês fechou no anterior e a janela
- * dela começa antes, até o fim do sexto mês à frente, o último da linha do tempo.
+ * do dia 1 de quatro meses atrás, porque a fatura acima do normal compara a aberta com as 3 últimas
+ * fechadas, e a janela da mais antiga começa até quatro meses antes, até o fim do sexto mês à
+ * frente, o último da linha do tempo.
  */
 export function usePrevisao(workspaceId: string | null): {
     dados: DadosDaPrevisao | null

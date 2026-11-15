@@ -3,7 +3,7 @@ process.env.TZ = "America/Sao_Paulo"
 
 import { describe, expect, it } from "vitest"
 import vectors from "@/lib/fixtures/fatura-tendencia-vectors.json"
-import { cartao, dados, noCartao, plano, totalDoBanco } from "./dados-de-teste"
+import { assinatura, cartao, dados, noCartao, plano, totalDoBanco } from "./dados-de-teste"
 import { avaliarTendencia, faturasAcimaDoNormal } from "./fatura-alta"
 
 describe("avaliarTendencia (paridade com o cron)", () => {
@@ -70,6 +70,25 @@ describe("faturasAcimaDoNormal", () => {
             ],
         })
         expect(faturasAcimaDoNormal(d)).toMatchObject([{ prevista: 130, percentual: 30 }])
+    })
+
+    it("a assinatura do cartão ainda não lançada não entra na aberta, como no cron", () => {
+        // 115 lançados + 20 da assinatura dariam 135 (> 120%); o cron vê só os 115.
+        const d = dados({
+            hojeYmd: "2026-11-14",
+            cartoes: [c],
+            transacoes: [...fechadas, noCartao("expense", 115, "2026-11-12", "c")],
+            assinaturas: [
+                assinatura({
+                    id: "streaming",
+                    amount: 20,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "c",
+                    next_billing_date: "2026-11-25",
+                }),
+            ],
+        })
+        expect(faturasAcimaDoNormal(d)).toEqual([])
     })
 
     it("o cartão inativo não entra", () => {

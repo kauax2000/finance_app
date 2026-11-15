@@ -1,7 +1,7 @@
 /**
  * A fatura acima do normal no cliente, a mesma regra do aviso `cc_invoice_trending_high` do cron
  * (`supabase/functions/credit-card-calendar-alerts/index.ts`): a fatura aberta, com as parcelas que
- * ainda caem nela, contra as 3 últimas fechadas. `avaliarTendencia` é o par de
+ * ainda caem nela (sem as assinaturas não lançadas, como o cron), contra as 3 últimas fechadas. `avaliarTendencia` é o par de
  * `supabase/functions/_shared/fatura-tendencia.ts`, travado pelos vetores `tendencia` de
  * `src/lib/fixtures/fatura-tendencia-vectors.json`.
  */
@@ -13,7 +13,7 @@ import {
 } from "@/lib/credit-card-billing"
 import { bancoTotalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { localYmdFromDate } from "@/lib/transaction-date"
-import { faturaPrevista, hojeDate } from "./fatura-prevista"
+import { centavos, hojeDate } from "./fatura-prevista"
 import type { DadosDaPrevisao } from "./tipos"
 
 /**
@@ -55,7 +55,16 @@ export function faturasAcimaDoNormal(dados: DadosDaPrevisao): Array<{
         if (!dia || dia < 1 || dia > 31) continue
         // Como o cron: fechou hoje já é fechada, e a aberta é a do próximo fechamento.
         const ultima = statementCloseOnOrBefore(hoje, dia)
-        const aberta = faturaPrevista(card, localYmdFromDate(nextCloseAfter(ultima, dia)).slice(0, 7), dados)
+        // A aberta é a do cron: lançado mais as parcelas projetadas na janela (o snapshot com os
+        // planos), sem as assinaturas ainda não lançadas, que `faturaPrevista` somaria.
+        const snap = buildCardMonthlyInvoiceSnapshot(
+            card,
+            dados.transacoes,
+            localYmdFromDate(nextCloseAfter(ultima, dia)).slice(0, 7),
+            hoje,
+            { installmentPlans: dados.planos },
+        )
+        const prevista = centavos(snap.committedTotal) / 100
 
         const fechadas: number[] = []
         for (let close = ultima, i = 0; i < 3; i++, close = previousStatementCloseBefore(close, dia)) {
@@ -68,16 +77,16 @@ export function faturasAcimaDoNormal(dados: DadosDaPrevisao): Array<{
         }
         // A fatura sem movimento (o cartão novo) e a negativa (só estorno) não contam: baixariam a média.
         const t = avaliarTendencia(
-            aberta.total,
+            prevista,
             fechadas.filter((v) => v > 0),
         )
         if (!t.dispara) continue
         out.push({
             cardId: card.id,
             nome: card.name,
-            closeYmd: aberta.closeYmd,
-            dueYmd: aberta.dueYmd,
-            prevista: aberta.total,
+            closeYmd: localYmdFromDate(snap.close),
+            dueYmd: localYmdFromDate(snap.dueEstimate),
+            prevista,
             media: t.media,
             percentual: t.percentual,
         })
