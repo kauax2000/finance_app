@@ -144,6 +144,7 @@ import {
   type TableSkeletonColumn,
 } from "@/components/ui/table"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 /* -------------------------------------------------------------------------- */
 /* A moldura: o TablePanel                                                     */
@@ -1467,19 +1468,23 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
   return (
     <>
       {avista.map((a) => (
-        <Button
-          key={a.label}
-          type="button"
-          variant={a.variant === "destructive" ? "destructive" : "tertiary"}
-          size="icon-md"
-          aria-label={`${a.label} ${label}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            void a.onSelect(row)
-          }}
-        >
-          {a.icon}
-        </Button>
+        <Tooltip key={a.label}>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant={a.variant === "destructive" ? "destructive" : "tertiary"}
+              size="icon-md"
+              aria-label={`${a.label} ${label}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                void a.onSelect(row)
+              }}
+            >
+              {a.icon}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{a.label}</TooltipContent>
+        </Tooltip>
       ))}
       {resto.length ? (
         <DropdownMenu>
