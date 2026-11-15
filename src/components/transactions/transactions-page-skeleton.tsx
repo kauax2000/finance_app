@@ -30,7 +30,7 @@ const DIAS_DO_TELEFONE = [5, 3]
 /**
  * A página que espera, na forma da tela: o cabeçalho (só no desktop; no
  * telefone o título é da casca), as abas e o "+ Filtro" na linha da
- * `TransacoesToolbar`, e a tabela no desktop ou a lista agrupada por dia no
+ * `TransacoesToolbar` (no telefone o "+ Filtro" some, e o osso dele também), e a tabela no desktop ou a lista agrupada por dia no
  * telefone (`mobileRow="compact"`: sem caixa nem ⋯).
  */
 export function TransactionsPageSkeleton({ rowCount = DEFAULT_ROW_COUNT }: TransactionsPageSkeletonProps) {
@@ -43,7 +43,7 @@ export function TransactionsPageSkeleton({ rowCount = DEFAULT_ROW_COUNT }: Trans
                 <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
                     <Skeleton className="h-9 w-60 shrink-0 rounded-full pointer-coarse:h-11 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
                     <Skeleton className="hidden size-8 shrink-0 rounded-full max-md:block pointer-coarse:size-11" />
-                    <div className="min-w-0 flex-1 @max-3xl/transacoes:basis-full">
+                    <div className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
                         <FilterBarSkeleton tokens={0} group={false} />
                     </div>
                 </div>

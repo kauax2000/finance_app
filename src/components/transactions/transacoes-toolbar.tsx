@@ -56,6 +56,8 @@ export function TransacoesToolbar({
         // presos na ponta) no resto. Estreita, a própria linha (não a janela) parte em duas fixas:
         // abas esticadas (com o ⋯ no telefone) em cima, a FilterBar inteira embaixo.
         // 48rem (@max-3xl): abaixo disso, ao lado das abas, a barra ficaria sob os 28rem do degrau estreito dela.
+        // Abaixo de 48rem a faixa de filtros fica escondida (max-md:hidden) e fica montada: o botão do
+        // cabeçalho (usePageChromeFilter) clica no "+ Filtro" dela e abre a gaveta.
         <div className="@container/transacoes min-w-0 flex-1">
             <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
                 <TransactionTypeSegment
@@ -70,7 +72,7 @@ export function TransacoesToolbar({
                         <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} />
                     </div>
                 ) : null}
-                <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-3xl/transacoes:basis-full">
+                <div ref={raizDosFiltros} className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
                     <FilterBar
                         fields={campos}
                         value={estado.filtros}

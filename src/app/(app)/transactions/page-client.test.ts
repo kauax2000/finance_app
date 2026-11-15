@@ -68,6 +68,12 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(aviso).toMatch(/\{ativo && !podeConfirmarTodos \? null : \(\s*<AlertActions/)
     })
 
+    it("no telefone a linha de filtros some, montada para o atalho do cabeçalho", () => {
+        const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
+        expect(barra).toMatch(/<div ref=\{raizDosFiltros\} className="[^"]*\bmax-md:hidden\b[^"]*">\s*<FilterBar\b/)
+        expect(barra).toContain('querySelector<HTMLButtonElement>("[data-slot=filter-bar-add]")?.click()')
+    })
+
     it("Revisar aplica o token conferir, por data, sem os outros tokens (e Sem categoria só quando o fim da importação pede)", () => {
         expect(f).toMatch(
             /setEstado\(\{\s*filtros:\s*\[\s*\{\s*field:\s*"conferir",\s*operator:\s*"is",\s*values:\s*\[\]\s*\},\s*\.\.\.\(o\?\.semCategoria === true \? \[\{ field: "categoria", operator: "is" as const, values: \[SEM_CATEGORIA\] \}\] : \[\]\),\s*\],\s*sort:\s*\{\s*key:\s*"date",\s*dir:\s*"desc"\s*\}/,
@@ -128,5 +134,9 @@ describe("o esqueleto da página (spec §6.5)", () => {
         expect(esqueleto).toContain("<FilterBarSkeleton")
         expect(esqueleto).toMatch(/<TableSkeleton[\s\S]*group=\{false\}/)
         expect([...esqueleto.matchAll(/function\s+([A-Z]\w*)/g)].map((m) => m[1])).toEqual(["TransactionsPageSkeleton"])
+    })
+
+    it("o osso da linha de filtros some no telefone", () => {
+        expect(esqueleto).toMatch(/<div className="[^"]*\bmax-md:hidden\b[^"]*">\s*<FilterBarSkeleton\b/)
     })
 })
