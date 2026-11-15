@@ -12,6 +12,6 @@ describe("?fatura= na página do cartão", () => {
 
   it("aplica uma vez por cartão, só com os dados carregados", () => {
     expect(fonte).toContain("faturaAplicadaPara")
-    expect(fonte).toMatch(/if \(loading \|\| !card \|\| faturaAplicadaPara/)
+    expect(fonte).toMatch(/if \(loading \|\| !card \|\| card\.id !== cardId \|\| faturaAplicadaPara/)
   })
 })

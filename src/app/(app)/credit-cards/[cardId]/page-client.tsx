@@ -487,7 +487,8 @@ export default function CreditCardDetailPageClient() {
     // ?fatura= (data de fechamento) abre o ciclo uma vez por cartão, com os limites já completos.
     const faturaAplicadaPara = useRef<string | null>(null)
     useEffect(() => {
-        if (loading || !card || faturaAplicadaPara.current === cardId) return
+        // card.id: na troca A→B o card de A ainda está no estado
+        if (loading || !card || card.id !== cardId || faturaAplicadaPara.current === cardId) return
         faturaAplicadaPara.current = cardId
         if (!faturaParam) return
         const o = cycleOffsetForCloseYmd(card, todayAnchor, faturaParam, cycleOffsetBounds)
