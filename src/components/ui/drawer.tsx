@@ -487,8 +487,13 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     const coberto = cobertoMax
     if (!el.style.getPropertyValue("--drawer-teclado")) {
       el.style.setProperty("--drawer-teclado", "1")
-      el.style.setProperty("height", `${altura || el.getBoundingClientRect().height}px`)
+      altura = altura || el.getBoundingClientRect().height
     }
+    // A gaveta alta fica presa na altura de antes; a curta (o editor de um filtro)
+    // cresce até o conteúdo assentar logo acima do teclado, senão o teclado a cobria
+    // inteira. O teto é o da gaveta alta (`max-height`) e, sem ele, a janela.
+    const teto = parseFloat(janela.getComputedStyle(el).maxHeight) || janelaInteira
+    el.style.setProperty("height", `${Math.max(altura, Math.min(altura + coberto, teto))}px`)
     // A gaveta guarda embaixo o lugar do teclado: o meio encolhe, o rodapé
     // assenta logo acima dele, e o cabeçalho não sai do lugar.
     el.style.setProperty("padding-bottom", `${coberto}px`)
