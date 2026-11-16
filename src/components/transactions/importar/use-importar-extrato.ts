@@ -519,8 +519,25 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             setErro("Use um arquivo .csv ou .ofx.")
             return
         }
-        setArquivo(f)
-        void deduzir(f, destino)
+        if (!f || tipoDoArquivo(f.name) !== "csv") {
+            setArquivo(f)
+            return
+        }
+        // O CSV entra lido: o cartão chega já com a contagem e a linha das colunas, numa
+        // altura só. Com o arquivo antes e a leitura depois, a gaveta descia (a área de soltar
+        // dava lugar ao cartão curto) e subia de novo (a contagem e as colunas chegando).
+        const n = vez.nova()
+        void (async () => {
+            let linhas: string[][] | null = null
+            try {
+                linhas = lerCsv(await f.text())
+            } catch {
+                // Só a prévia da dedução: o Continuar relê o arquivo e mostra o erro.
+            }
+            if (!vez.vale(n)) return
+            setArquivo(f)
+            if (linhas) aplicarDeducao(linhas, destino)
+        })()
     }
 
     /** `n`: a vez do pedido; a resposta de um pedido velho é descartada. */

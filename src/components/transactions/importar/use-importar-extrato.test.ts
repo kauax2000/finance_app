@@ -588,3 +588,12 @@ describe("desfazer a IA", () => {
         expect(origemDaCategoria(itens[0], volta)).toBe("ia")
     })
 })
+
+describe("escolher o arquivo", () => {
+    it("o CSV entra já lido: o cartão chega com a contagem e as colunas numa altura só", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/importar/use-importar-extrato.ts"), "tudo")
+        const corpo = fonte.slice(fonte.indexOf("function escolherArquivo"))
+        // O setArquivo do CSV vem depois da leitura, junto da dedução, e não antes dela.
+        expect(corpo).toMatch(/linhas = lerCsv\(await f\.text\(\)\)[\s\S]{0,200}setArquivo\(f\)\s*if \(linhas\) aplicarDeducao\(linhas, destino\)/)
+    })
+})
