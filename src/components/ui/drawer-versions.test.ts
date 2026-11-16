@@ -132,6 +132,8 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).toContain("if (janela.scrollY !== rolagem) janela.scrollTo(0, rolagem)")
     // A curta cresce até o conteúdo ficar acima do teclado; a alta fica presa (o teto).
     expect(fonte).toContain("Math.max(altura, Math.min(altura - recuo + coberto, teto))")
+    // Só a curta cresce: a alta, que ainda mostra um campo acima do teclado, fica parada.
+    expect(fonte).toContain("const curta = altura - recuo - coberto < VISIVEL_MIN")
     // A gaveta guarda o lugar do teclado embaixo: o rodapé assenta logo acima dele.
     expect(fonte).toContain('el.style.setProperty("padding-bottom", `${coberto}px`)')
     // O teclado conta a barra de setas e ✓: mede contra a janela de antes dele.
@@ -143,6 +145,9 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).toContain('el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })')
     expect(fonte).toMatch(/if \(el && !degraus\) return rolarSobOTeclado\(el\)/)
     expect(fonte).toContain('el.style.getPropertyValue("--drawer-teclado")')
+    // O campo focado não assenta atrás do cabeçalho translúcido e do puxador: o topo lê o `scroll-padding`.
+    expect(fonte).toContain("parseFloat(janela.getComputedStyle(rolavel).scrollPaddingTop)")
+    expect(fonte).toContain("else if (campo.top < caixa.top + topo)")
   })
 
 })

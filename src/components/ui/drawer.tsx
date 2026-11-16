@@ -436,6 +436,9 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
 /** O quanto o viewport visual precisa encolher para contar como teclado (a barra do Safari mexe menos). */
 const TECLADO_MIN = 80
 
+/** Quanto da gaveta precisa ficar à vista acima do teclado (cabeçalho e um campo) para ela não crescer. */
+const VISIVEL_MIN = 160
+
 
 /**
  * Com o teclado do iOS aberto, a gaveta não muda de tamanho nem de lugar: ela
@@ -502,7 +505,10 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     // cresce até o conteúdo assentar logo acima do teclado (sem o recuo de baixo, que o
     // teclado substitui), senão o teclado a cobria inteira. O teto é o da gaveta alta (`max-height`) e, sem ele, a janela.
     const teto = parseFloat(janela.getComputedStyle(el).maxHeight) || janelaInteira
-    el.style.setProperty("height", `${Math.max(altura, Math.min(altura - recuo + coberto, teto))}px`)
+    // Só a curta cresce: a alta (o Editar perfil) que ainda mostra um campo acima
+    // do teclado fica parada; crescida até o teto, o título ia para baixo da barra de status.
+    const curta = altura - recuo - coberto < VISIVEL_MIN
+    el.style.setProperty("height", `${curta ? Math.max(altura, Math.min(altura - recuo + coberto, teto)) : altura}px`)
     // A gaveta guarda embaixo o lugar do teclado: o meio encolhe, o rodapé
     // assenta logo acima dele, e o cabeçalho não sai do lugar.
     el.style.setProperty("padding-bottom", `${coberto}px`)
@@ -519,8 +525,11 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     const campo = (foco as HTMLElement).getBoundingClientRect()
     const caixa = rolavel.getBoundingClientRect()
     const respiro = 16
+    // Em cima, o corpo passa por trás do cabeçalho translúcido e do puxador: o
+    // `scroll-padding` dele diz quanto fica coberto, e o campo assenta abaixo disso.
+    const topo = Math.max(respiro, parseFloat(janela.getComputedStyle(rolavel).scrollPaddingTop) || 0)
     if (campo.bottom > caixa.bottom - respiro) rolavel.scrollTop += campo.bottom - caixa.bottom + respiro
-    else if (campo.top < caixa.top + respiro) rolavel.scrollTop -= caixa.top + respiro - campo.top
+    else if (campo.top < caixa.top + topo) rolavel.scrollTop -= caixa.top + topo - campo.top
   }
   // O iOS centraliza o campo focado rolando a página, e a gaveta inteira pularia
   // antes de o `scroll` acima desfazer. Com o campo empurrado 2000px para cima
