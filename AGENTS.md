@@ -1590,7 +1590,7 @@ declaração de `background-color` no trilho).
   de `@/components/ui/data-table`) faz ordenação, busca, facetas (`arrHas`),
   seleção e barra flutuante (`selectionSummary` põe a soma na barra, depois de
   "N selecionadas ·", e no anúncio), grupo, detalhe, ações, menu de contexto, **o gêmeo
-  do telefone** (`meta.mobile`; `mobileRow="compact"` tira a caixa e o ⋯ da linha
+  do telefone** (`meta.mobile`; abaixo do `md`, sem linhas, o vazio sai do cartão e da tabela; `emptyPhone` troca o conteúdo do telefone; `mobileRow="compact"` tira a caixa e o ⋯ da linha
   até haver seleção, e as ações vão ao toque longo — Transações usa), teclado, URL, virtualização, CSV e edição
   (`role="grid"`); dados do servidor, `manual`. A barra e o rodapé ficam **fora**
   da moldura (`toolbar`, `footer`). Peça de lugar certo entra por prop, nunca

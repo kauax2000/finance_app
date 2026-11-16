@@ -598,6 +598,7 @@ col.money({ … })        // trailing, de fábrica`}
         rows={[
           { prop: "toolbar", type: "{ search, facets, view, export, start, end } | ReactNode", description: "A barra de cima, montada ou à mão (com useDataTable)." },
           { prop: "density / striped / dividers / headerVariant / stickyHeader", type: "os eixos da Table", description: "A densidade também se troca no menu Exibir." },
+          { prop: "emptyPhone", type: "ReactNode", description: "Só com gêmeo. Abaixo do md, sem linhas, o vazio sai do cartão e da tabela e aparece solto; emptyPhone troca o conteúdo do telefone (sem ele vale empty)." },
           { prop: "loading / pending / error / empty", type: "boolean / boolean / { message, onRetry } / ReactNode", description: "O esqueleto, a recarga, a falha e o vazio." },
           { prop: "footer", type: "(rows, { columns }) => ReactNode", description: "A linha de totais, das linhas filtradas; os colSpan somam columns (as colunas à vista)." },
           { prop: "mobile / motion / virtualize / editable / panel", type: "…", description: "O gêmeo, a cascata e o deslizar, a virtualização (só as linhas à vista), a grade de edição e a moldura." },

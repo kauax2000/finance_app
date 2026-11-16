@@ -172,11 +172,14 @@ const TablePanelFrameContext = React.createContext(false)
  */
 function TablePanel({
   className,
+  cardClassName,
   toolbar,
   footer,
   children,
   ...props
 }: React.ComponentProps<typeof Card> & {
+  /** Interna do `DataTable`: classe do `Card` (o telefone sem linhas o esconde). */
+  cardClassName?: string
   /** A barra de topo, acima da moldura. Passe uma `TablePanelToolbar`. */
   toolbar?: React.ReactNode
   /** O rodapé de paginação, abaixo da moldura. Passe um `TablePanelFooter`. */
@@ -208,7 +211,8 @@ function TablePanel({
             "[clip-path:inset(0_round_var(--radius-surface))]",
             // O raio de dentro da moldura, para o véu do rodapé não pintar
             // sobre o arco da borda nos cantos de baixo.
-            "[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]"
+            "[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]",
+            cardClassName
           )}
           {...props}
         >
@@ -552,6 +556,8 @@ export type DataTableProps<T extends RowData> = {
   pending?: boolean
   error?: { message?: React.ReactNode; onRetry?: () => void | Promise<unknown> } | null
   empty?: React.ReactNode
+  /** O vazio do telefone, solto fora do cartão (só com gêmeo); sem ele vale `empty`. */
+  emptyPhone?: React.ReactNode
   /** A linha de totais no `<tfoot>`. Soma os `colSpan` a `columns`: um número cravado passa da conta com caixa de seleção ou coluna escondida. */
   footer?: (rows: T[], info: { columns: number }) => React.ReactNode
   /** A contagem no rodapé ("12 assinaturas"); com ela o rodapé aparece numa página só, sem ela só quando há mais de uma. */
@@ -618,6 +624,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     pending = false,
     error,
     empty,
+    emptyPhone,
     footer,
     countLabel,
     motion: comMovimento = true,
@@ -1246,6 +1253,28 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     !editable
 
   const vazio = linhas.length === 0
+  const vazioFora = temGemeo && vazio && !loading && !error
+
+  const vazioPadrao =
+    empty ??
+    (filtrado ? (
+      <div className="flex flex-col items-center gap-3">
+        <span className="text-sm text-muted-foreground">Nenhuma linha com esses filtros.</span>
+        <Button
+          type="button"
+          variant="tertiary"
+          size="sm"
+          onClick={() => {
+            table.setGlobalFilter("")
+            table.resetColumnFilters()
+          }}
+        >
+          limpar filtros
+        </Button>
+      </div>
+    ) : (
+      "Nenhuma linha por aqui."
+    ))
 
   const tabela = loading ? (
     <TableSkeleton columns={colunasDoEsqueleto} rows={Math.min(pagination.pageSize, 8)} size={density} />
@@ -1302,25 +1331,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
           </TableError>
         ) : vazio ? (
           <TableEmpty colSpan={nColunas}>
-            {empty ??
-              (filtrado ? (
-                <div className="flex flex-col items-center gap-3">
-                  <span className="text-sm text-muted-foreground">Nenhuma linha com esses filtros.</span>
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    size="sm"
-                    onClick={() => {
-                      table.setGlobalFilter("")
-                      table.resetColumnFilters()
-                    }}
-                  >
-                    limpar filtros
-                  </Button>
-                </div>
-              ) : (
-                "Nenhuma linha por aqui."
-              ))}
+            {vazioPadrao}
           </TableEmpty>
         ) : animar ? (
           <AnimatePresence initial={false}>{corpo()}</AnimatePresence>
@@ -1374,7 +1385,17 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
 
   // Sem linhas (carregando, vazio, falha) o gêmeo não tem o que mostrar, e a
   // tabela serve as duas larguras — montá-la duas vezes duplicaria os ids.
-  const miolo = gemeo ? (
+  const miolo = vazioFora ? (
+    <>
+      <div className="hidden md:block">{tabela}</div>
+      <div
+        data-slot="data-table-empty-phone"
+        className="md:hidden flex flex-col items-center justify-center py-20"
+      >
+        {emptyPhone ?? vazioPadrao}
+      </div>
+    </>
+  ) : gemeo ? (
     <>
       <div className="hidden md:block">{tabela}</div>
       <div className="md:hidden">{gemeo}</div>
@@ -1389,6 +1410,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         {panel ? (
           <TablePanel
             className="w-full"
+            cardClassName={vazioFora ? "max-md:hidden" : undefined}
             toolbar={barra ? <TablePanelToolbar className="gap-2">{barra}</TablePanelToolbar> : undefined}
             footer={rodape}
           >
