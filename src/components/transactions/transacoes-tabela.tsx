@@ -595,7 +595,9 @@ export function TransacoesTabela({
                 getRowLabel={rotuloDe}
                 // A barra da tela (abas e filtros) abre a linha; a contagem do FilterBar e o Exibir ficam na ponta.
                 // Sem o "Exibir": as colunas são uma só, a padrão.
-                toolbar={{ start: vazioPorFiltro ? <div className="contents max-md:hidden">{barra}</div> : barra }}
+                // O embrulho é sempre o mesmo nó (só a classe liga): trocar `barra` por `<div>{barra}</div>` remontava o
+                // FilterBar a cada busca (carregando ↔ vazio) e fechava a gaveta do filtro a cada letra.
+                toolbar={{ start: <div className={cn("contents", vazioPorFiltro && "max-md:hidden")}>{barra}</div> }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {

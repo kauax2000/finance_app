@@ -45,7 +45,7 @@ describe("fonte da tabela", () => {
         expect(fonte).toContain('label: "Confirmar"')
         expect(fonte).toContain('id="transactions"')
         expect(fonte).toContain("{barra}")
-        expect(fonte).toMatch(/toolbar=\{\{ start: .*barra \}\}/)
+        expect(fonte).toMatch(/toolbar=\{\{ start: .*\{barra\}.* \}\}/)
         expect(fonte).toContain("Selecione só despesas ou só receitas")
     })
     it("a Categoria é só o nome; a cor fica no ladrilho da Descrição", () => {
