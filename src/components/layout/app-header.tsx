@@ -170,8 +170,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             ) : (
                 <FilterLinesIcon className="size-4" />
             )}
+            {/* A contagem na cor do ponto que ela substitui (`--primary-accent`): o chip neutro sumia no vidro. */}
             {filtro.count ? (
-                <Badge aria-hidden size="xs" className="nums absolute top-0.5 right-0.5">
+                <Badge aria-hidden size="xs" className="nums absolute top-0.5 right-0.5 bg-primary-accent text-background">
                     {filtro.count}
                 </Badge>
             ) : filtro.active ? (
