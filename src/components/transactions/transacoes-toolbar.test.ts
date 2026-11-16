@@ -26,7 +26,8 @@ describe("transacoes-toolbar (fonte)", () => {
     })
 
     it("é uma árvore só", () => {
-        expect(TOOLBAR).not.toContain("md:hidden")
+        // O `md:hidden` solto (o par de árvores); o `max-md:hidden` da faixa de filtros, montada e escondida no telefone, é outra coisa.
+        expect(TOOLBAR).not.toMatch(/(?<![\w-])md:hidden/)
     })
 
     it("a FilterBar é a linha com o +N (overflow=\"menu\"), sem mobile=", () => {
