@@ -175,6 +175,8 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).toContain('alvo.style.transform = "translateY(-2000px)"')
     expect(fonte).toContain('el.addEventListener("touchend", aoSoltarDedo, { passive: false, capture: true })')
     expect(fonte).toMatch(/if \(el && !degraus\) return rolarSobOTeclado\(el\)/)
+    // A caixa nunca rola (só o meio): a rolagem que o foco faz nela volta a zero.
+    expect(fonte).toContain("if (el.scrollTop !== 0) el.scrollTop = 0")
     expect(fonte).toContain('el.style.getPropertyValue("--drawer-teclado")')
     // O campo focado não assenta atrás do cabeçalho translúcido e do puxador: o topo lê o `scroll-padding`.
     expect(fonte).toContain("parseFloat(janela.getComputedStyle(rolavel).scrollPaddingTop)")

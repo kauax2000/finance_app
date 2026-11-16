@@ -667,6 +667,17 @@ function DrawerContent({
   React.useEffect(() => {
     if (el && !degraus) return rolarSobOTeclado(el)
   }, [el, degraus])
+  // A gaveta nunca rola, quem rola é o meio. O navegador rola a caixa mesmo com
+  // `overflow: hidden` para pôr um campo focado à vista enquanto ela ainda anda até
+  // a altura nova (o Continuar do Importar), e o puxador e o título sumiam por cima.
+  React.useEffect(() => {
+    if (!el) return
+    const zerar = () => {
+      if (el.scrollTop !== 0) el.scrollTop = 0
+    }
+    el.addEventListener("scroll", zerar)
+    return () => el.removeEventListener("scroll", zerar)
+  }, [el])
   const dissolver = useScrollFade()
   // Marca o meio e repete a busca quando filhos entram ou saem, tirando a marca
   // e a dissolução do antigo.
