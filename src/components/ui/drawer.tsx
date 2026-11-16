@@ -423,10 +423,10 @@ function viagemDa(el: HTMLElement) {
  * A altura acompanha o conteúdo: quando ele muda, a gaveta anima da altura de
  * antes até a nova em vez de saltar. O `ResizeObserver` dispara antes da
  * pintura, então a altura nova nunca aparece de estalo.
- * Durante a viagem ele dispara a cada quadro: a animação sai por um instante
- * para medir a altura natural. Se ela é o destino, a mesma viagem volta no
- * mesmo ponto (`currentTime`); se o conteúdo mudou no meio, uma viagem só
- * parte da altura de agora até a nova — nunca uma segunda depois da primeira.
+ * Durante a viagem ele dispara a cada quadro (a animação mexe na altura), e o
+ * callback só marca `pendente`: mexer no tamanho ali dentro dá o aviso de laço
+ * do `ResizeObserver`. No fim da viagem a altura natural é medida uma vez; se o
+ * conteúdo mudou no meio, uma viagem só segue do destino até a nova.
  */
 function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
   React.useEffect(() => {
@@ -436,39 +436,42 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
     ).matches
     let anterior = el.getBoundingClientRect().height
     let animando: Animation | null = null
-    let viagem = { de: 0, para: 0, opcoes: VIAGEM_CURTA }
-    const viajar = (de: number, para: number, opcoes: typeof VIAGEM_CURTA, tempo: CSSNumberish | null = null) => {
-      viagem = { de, para, opcoes }
-      const a = el.animate([{ height: `${de}px` }, { height: `${para}px` }], opcoes)
-      if (tempo != null) a.currentTime = tempo
-      a.onfinish = () => {
-        if (animando === a) animando = null
+    let pendente = false
+    // Com o teclado a altura segue o viewport visual na hora: animada, o meio
+    // rolaria o campo para um lugar que ainda vai mudar.
+    const parado = () =>
+      reduzido || el.style.getPropertyValue("--drawer-teclado") !== ""
+    const viajar = (de: number, para: number) => {
+      const quadros = [{ height: `${de}px` }, { height: `${para}px` }]
+      let a: Animation
+      try {
+        a = el.animate(quadros, viagemDa(el))
+      } catch {
+        // Uma curva inválida no token não pode derrubar o observador.
+        a = el.animate(quadros, VIAGEM_CURTA)
       }
+      pendente = false
       animando = a
+      a.onfinish = () => {
+        if (animando !== a) return
+        animando = null
+        if (!pendente) return
+        pendente = false
+        const natural = el.getBoundingClientRect().height
+        anterior = natural
+        if (Math.abs(natural - para) >= 1 && !parado()) viajar(para, natural)
+      }
     }
     const ro = new ResizeObserver(() => {
-      let agora: number | null = null
       if (animando) {
-        const a = animando
-        agora = el.getBoundingClientRect().height
-        const tempo = a.currentTime
-        animando = null
-        a.cancel()
-        const natural = el.getBoundingClientRect().height
-        // A medida é da própria animação: ela volta no mesmo ponto.
-        if (Math.abs(natural - viagem.para) < 1) {
-          viajar(viagem.de, viagem.para, viagem.opcoes, tempo)
-          return
-        }
+        pendente = true
+        return
       }
       const atual = el.getBoundingClientRect().height
-      // Com o teclado a altura segue o viewport visual na hora: animada, o meio
-      // rolaria o campo para um lugar que ainda vai mudar.
-      const teclado = el.style.getPropertyValue("--drawer-teclado") !== ""
-      const de = agora ?? anterior
+      const de = anterior
       anterior = atual
-      if (Math.abs(atual - de) < 1 || reduzido || de === 0 || teclado) return
-      viajar(de, atual, viagemDa(el))
+      if (Math.abs(atual - de) < 1 || de === 0 || parado()) return
+      viajar(de, atual)
     })
     ro.observe(el)
     return () => {

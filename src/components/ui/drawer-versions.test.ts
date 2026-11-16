@@ -44,22 +44,25 @@ describe("as versões do Drawer", () => {
     expect(viagem).toContain('"--ease-emphasized"')
     expect(fonte).toContain('const VIAGEM_CURTA = { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }')
     const gancho = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
-    expect(gancho).toContain("viajar(de, atual, viagemDa(el))")
+    expect(gancho).toContain("a = el.animate(quadros, viagemDa(el))")
     expect(gancho).not.toContain("duration: 300")
     expect(gancho).not.toContain("cubic-bezier(")
   })
 
-  it("conteúdo que muda no meio da viagem vira uma viagem só, da altura de agora até a nova", () => {
-    // Uma segunda viagem depois da primeira (sobe e depois desce) foi recusada.
+  it("conteúdo que muda no meio da viagem vira uma viagem só, depois do fim, sem mexer no tamanho dentro do observador", () => {
+    // Cancelar e medir a cada quadro custava layout forçado e dava o aviso de
+    // laço do ResizeObserver; uma segunda viagem só sai se o conteúdo mudou.
     const fonte = semComentarios(CODIGO)
     const gancho = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
-    expect(gancho).not.toMatch(/if \(animando\) return/)
-    // Mede a altura animada, tira a animação e mede a natural.
-    expect(gancho).toMatch(/agora = el\.getBoundingClientRect\(\)\.height\s*const tempo = a\.currentTime\s*animando = null\s*a\.cancel\(\)\s*const natural = el\.getBoundingClientRect\(\)\.height/)
-    // A natural é o destino: a mesma viagem volta no mesmo ponto.
-    expect(gancho).toMatch(/if \(Math\.abs\(natural - viagem\.para\) < 1\) \{\s*viajar\(viagem\.de, viagem\.para, viagem\.opcoes, tempo\)/)
-    // Mudou: parte da altura de agora.
-    expect(gancho).toContain("const de = agora ?? anterior")
+    const observador = gancho.slice(gancho.indexOf("new ResizeObserver"))
+    expect(observador).toMatch(/if \(animando\) \{\s*pendente = true\s*return\s*\}/)
+    expect(observador).not.toContain(".cancel()")
+    expect(gancho).not.toContain("currentTime")
+    // No fim: mede a natural uma vez e segue do destino até ela.
+    expect(gancho).toMatch(/if \(!pendente\) return\s*pendente = false\s*const natural = el\.getBoundingClientRect\(\)\.height/)
+    expect(gancho).toContain("if (Math.abs(natural - para) >= 1 && !parado()) viajar(para, natural)")
+    // Uma curva inválida cai na curta, sem derrubar o observador.
+    expect(gancho).toMatch(/try \{\s*a = el\.animate\(quadros, viagemDa\(el\)\)\s*\} catch \{\s*a = el\.animate\(quadros, VIAGEM_CURTA\)/)
   })
 
   it("o meio que rola está escrito por extenso — classe montada não existe no CSS", () => {
