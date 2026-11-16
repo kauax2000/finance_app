@@ -393,6 +393,16 @@ function acharMeio(el: HTMLElement): HTMLElement | null {
   return null
 }
 
+// Reserva da curva quando os tokens faltam (o `--duration-gentle` e o
+// `--ease-emphasized` do `globals.css`).
+const VIAGEM_RESERVA = { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+
+/** "700ms" ou "0.7s" em milissegundos; `NaN` para o que não é tempo. */
+function emMs(valor: string) {
+  const n = Number.parseFloat(valor)
+  return valor.trim().endsWith("ms") ? n : n * 1000
+}
+
 /**
  * A altura acompanha o conteúdo: quando ele muda, a gaveta anima da altura de
  * antes até a nova em vez de saltar. O `ResizeObserver` dispara antes da
@@ -420,9 +430,17 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
       }
       const de = anterior
       anterior = atual
+      // A curva é a da viagem longa do diálogo do desktop (`useAlturaAnimada`):
+      // o `Element.animate` não lê `var()`, então os tokens vêm computados.
+      const estilo = getComputedStyle(el)
+      const duracao = emMs(estilo.getPropertyValue("--duration-gentle"))
+      const curva = estilo.getPropertyValue("--ease-emphasized").trim()
       animando = el.animate(
         [{ height: `${de}px` }, { height: `${atual}px` }],
-        { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+        {
+          duration: Number.isFinite(duracao) ? duracao : VIAGEM_RESERVA.duration,
+          easing: curva || VIAGEM_RESERVA.easing,
+        }
       )
       animando.onfinish = animando.oncancel = () => {
         animando = null

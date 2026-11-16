@@ -34,6 +34,16 @@ describe("as versões do Drawer", () => {
     expect(CODIGO).toMatch(/return \(\) => ro\.disconnect\(\)\s*\}, \[el, ativo\]\)/)
   })
 
+  it("a altura anda na curva da viagem longa do diálogo do desktop, lida dos tokens", () => {
+    // O `Element.animate` não lê `var()`: os tokens são lidos computados no elemento.
+    const fonte = semComentarios(CODIGO)
+    const corpo = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
+    expect(corpo).toContain('"--duration-gentle"')
+    expect(corpo).toContain('"--ease-emphasized"')
+    expect(corpo).not.toContain("duration: 300")
+    expect(corpo).not.toContain("cubic-bezier(0.16, 1, 0.3, 1)")
+  })
+
   it("o meio que rola está escrito por extenso — classe montada não existe no CSS", () => {
     expect(CODIGO).not.toMatch(/\$\{MEIO\}/)
     for (const classe of ["min-h-0", "overflow-y-auto", "overscroll-contain", "scroll-fade-y", "[--scroll-fade-floor:0]"]) {

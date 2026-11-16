@@ -473,8 +473,10 @@ function DialogContent({
   const dentroDeFolha = React.useContext(DrawerRaizContext) != null
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
-  // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
-  // porque só o DOM sabe que há passos).
+  // do formulário (`fixed`) e a da tela cheia; com passos, só no `fixed` ela
+  // trava na altura alta (por classe, porque só o DOM sabe que há passos). No
+  // `auto` a gaveta com passos mede cada passo e anda entre eles, como a placa
+  // do desktop.
   if (gaveta) {
     return (
       <SheetContent
@@ -488,7 +490,7 @@ function DialogContent({
         }}
         aria-busy={pending || undefined}
         className={cn(
-          "has-[[data-slot=dialog-steps]]:h-(--drawer-h)",
+          layout === "fixed" && "has-[[data-slot=dialog-steps]]:h-(--drawer-h)",
           className
         )}
         {...props}

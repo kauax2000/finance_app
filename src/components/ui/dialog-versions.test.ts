@@ -1,7 +1,7 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { DialogFooter, DialogHeader, DialogHeaderRow, DialogMedia, DialogSteps } from "./dialog"
 
@@ -96,6 +96,14 @@ describe("as versões do Dialog", () => {
     expect(CODIGO).toContain("has-[[data-slot=dialog-steps]]:h-(--dialog-max-h) has-[[data-slot=dialog-steps]]:[--dialog-max-h:min(90dvh,36rem)]")
     // Sem passos, o teto é a janela: o diálogo só rola com conteúdo maior que a tela.
     expect(CODIGO).toContain("[--dialog-max-h:calc(100dvh-4rem)]")
+  })
+
+  it("no telefone, a gaveta com passos só trava na altura alta no fixed", () => {
+    // No `auto` a gaveta mede cada passo e anda entre eles, como a placa do desktop
+    // (o Importar extrato); no `fixed` ela fica na altura alta e não pula.
+    const fonte = semComentarios(CODIGO)
+    expect(fonte).toContain('layout === "fixed" && "has-[[data-slot=dialog-steps]]:h-(--drawer-h)"')
+    expect(fonte.split("has-[[data-slot=dialog-steps]]:h-(--drawer-h)")).toHaveLength(2)
   })
 
   it("o cabeçalho centrado: align, o poço com o tom e os passos em pontos, opcionais", () => {
