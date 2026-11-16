@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
@@ -186,7 +187,10 @@ export function useTransacoesDaTela() {
 
     // --- Consultas
     // Só os campos do estado: o `migrou` da leitura não entra na chave.
-    const estadoDaChave: EstadoDaLista = { type: estado.type, q: estado.q, filtros: estado.filtros, sort: estado.sort, page: estado.page }
+    // A consulta espera a pessoa parar de mexer no filtro e na busca, como a paleta; a lista filtra ao vivo.
+    const filtrosDaChave = useDebouncedValue(estado.filtros, 250)
+    const qDaChave = useDebouncedValue(estado.q, 250)
+    const estadoDaChave: EstadoDaLista = { type: estado.type, q: qDaChave, filtros: filtrosDaChave, sort: estado.sort, page: estado.page }
 
     const paginaQuery = useQuery({
         queryKey: transacoesKeys.pagina(workspaceId ?? "__none__", estadoDaChave),
