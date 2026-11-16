@@ -144,7 +144,7 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
     const pathname = usePathname()
     const ref = React.useRef(filter)
     ref.current = filter
-    const { label, active, disabled, icon } = filter
+    const { label, active, count, disabled, icon } = filter
     const temPopover = Boolean(filter.popover)
 
     React.useLayoutEffect(() => {
@@ -158,6 +158,7 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
             filter: {
                 label,
                 active,
+                count,
                 disabled,
                 icon,
                 onOpen: () => ref.current.onOpen?.(),
@@ -165,5 +166,5 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
             },
         })
         return () => setFilter(null)
-    }, [setFilter, pathname, enabled, label, active, disabled, icon, temPopover])
+    }, [setFilter, pathname, enabled, label, active, count, disabled, icon, temPopover])
 }

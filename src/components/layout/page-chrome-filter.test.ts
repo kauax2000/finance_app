@@ -47,6 +47,11 @@ describe("usePageChromeFilter", () => {
         expect(fonte).not.toContain("return () => setFilter({")
     })
 
+    it("a publicação leva a contagem, e ela refaz o efeito", () => {
+        expect(fonte).toMatch(/filter: \{[^}]*\bcount,/)
+        expect(fonte).toMatch(/\], \[?[^\n]*\bcount\b[^\n]*temPopover\]|label, active, count, disabled/)
+    })
+
     it("com enabled falso, publica o null com o pathname", () => {
         expect(fonte).toContain("if (!enabled) {\n            setFilter({ pathname, filter: null })")
     })
