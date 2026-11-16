@@ -1136,7 +1136,7 @@ declaração de `background-color` no trilho).
   `currentColor`.
 - **`EmptyState` — a forma diz a situação**: primeiro uso é `EmptyStateGhost`
   (fantasmas neutros, **sem arco-íris**, props de **forma**: `leading`,
-  `trailing`); filtro ou lista vazia é `EmptyStateIcon variant="stack"`; boa
+  `trailing`); filtro ou lista vazia é `EmptyStateIcon variant="stack"` (`tint="vivid"` pinta o leque com coral, azul e violeta da paleta de ladrilhos, e as cartas se abrem ao montar); boa
   notícia é `variant="done"`; não encontrado é `size="page"` + `EmptyStateCode`
   (o numeral na Ledger com o arco-íris, `aria-hidden` — **o arco-íris mora só
   ali**), e o erro é o mesmo com "Ops!". No `page` o título nasce `<h1>` (não o

@@ -7,6 +7,7 @@ import { Slot } from "radix-ui"
 import { CheckIcon } from "@heroicons/react/24/outline"
 
 import { cn } from "@/lib/utils"
+import { TILE_PALETTE } from "@/lib/tile-palette"
 import { ButtonSizeContext, type ButtonSize } from "@/components/ui/button"
 import { H1, H4, Muted } from "@/components/ui/typography"
 
@@ -171,16 +172,26 @@ const TILE_POSICAO = [
   "-ms-3 rotate-8 translate-y-1 group-hover/empty-state:rotate-14 group-hover/empty-state:translate-x-2 group-active/empty-state:rotate-14 group-active/empty-state:translate-x-2",
 ] as const
 
+/** As cores das três cartas do leque colorido: coral, azul e violeta da paleta de ladrilhos. */
+const TILE_VIVID = ["coral", "azul", "violeta"].map(
+  (n) => TILE_PALETTE.find((p) => p.nome === n)!.hex
+)
+
 function EmptyStateIcon({
   className,
   variant,
   tone,
+  tint,
   children,
   ...props
 }: React.ComponentProps<"div"> &
-  VariantProps<typeof emptyStateIconVariants>) {
+  VariantProps<typeof emptyStateIconVariants> & {
+    /** `vivid` pinta o leque com coral, azul e violeta; vale só com `variant="stack"`. */
+    tint?: "vivid"
+  }) {
   const leque = variant === "stack"
   const feito = variant === "done"
+  const vivo = leque && tint === "vivid"
   // Boa notícia é verde por padrão; quem quiser outro tom passa `tone`.
   const tom = tone ?? (feito ? "success" : "default")
   return (
@@ -199,10 +210,16 @@ function EmptyStateIcon({
               <span
                 key={i}
                 data-slot="empty-state-icon-tile"
+                style={vivo ? ({ "--tile-color": TILE_VIVID[i] } as React.CSSProperties) : undefined}
                 className={cn(
                   // O canto é o degrau da escada (8 · 10 · 12) pelo degrau do vazio.
-                  "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r) border border-border bg-card bg-clip-padding shadow-sm",
+                  "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r)",
+                  vivo
+                    ? "tile-vivid bg-(--tile-surface) text-(--tile-ink) shadow-md"
+                    : "border border-border bg-card bg-clip-padding shadow-sm",
                   "transition-[rotate,translate] duration-(--duration-spring) ease-(--ease-spring)",
+                  // As cartas se abrem ao montar (só com movimento permitido).
+                  "motion-safe:starting:translate-x-0 motion-safe:starting:translate-y-0 motion-safe:starting:rotate-0",
                   TILE_POSICAO[i]
                 )}
               >

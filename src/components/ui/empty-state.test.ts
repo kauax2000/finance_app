@@ -2,7 +2,8 @@ import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { arquivosTsx, lerFonte } from "@/test/fonte"
+import { TILE_PALETTE } from "@/lib/tile-palette"
+import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   EmptyState,
@@ -14,6 +15,29 @@ import {
 
 /** A forma diz a situação, e o arco-íris nunca fica sob o texto. */
 describe("EmptyState", () => {
+  it("o leque colorido pinta as três cartas com coral, azul e violeta", () => {
+    const html = renderToStaticMarkup(
+      h(EmptyStateIcon, { variant: "stack", tint: "vivid" }, h("i"), h("i"), h("i"))
+    )
+    expect(html.match(/tile-vivid/g)?.length).toBe(3)
+    const cor = (n: string) => TILE_PALETTE.find((p) => p.nome === n)!.hex
+    const ordem = [cor("coral"), cor("azul"), cor("violeta")].map((c) => html.indexOf(`--tile-color:${c}`))
+    expect(ordem.every((i) => i >= 0)).toBe(true)
+    expect([...ordem].sort((a, b) => a - b)).toEqual(ordem)
+    expect(html).not.toMatch(/brand|rainbow/)
+  })
+
+  it("sem tint o leque segue neutro", () => {
+    const html = renderToStaticMarkup(h(EmptyStateIcon, { variant: "stack" }, h("i"), h("i"), h("i")))
+    expect(html).not.toContain("tile-vivid")
+    expect(html).toContain("bg-card")
+  })
+
+  it("as cartas se abrem ao montar só com movimento permitido", () => {
+    const src = semComentarios(lerFonte("src/components/ui/empty-state.tsx"))
+    expect(src).toMatch(/motion-safe:starting:/)
+  })
+
   it("o primeiro uso não tem arco-íris", () => {
     // A marca fica só no numeral das páginas de erro (atrás dos fantasmas e no contorno, não).
     const html = renderToStaticMarkup(h(EmptyState, { variant: "plain", size: "lg" }, h(EmptyStateGhost)))

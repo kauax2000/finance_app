@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import {
   CreditCardIcon,
   FunnelIcon,
@@ -19,7 +20,36 @@ import {
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
+
+function DemoLeque() {
+  const [colorido, setColorido] = React.useState(false)
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="empty-state-colorido" rotulo="colorido" valor={colorido} onChange={setColorido} />
+          </Interruptores>
+        }
+      />
+      <EmptyState variant="plain" size="lg" className="w-full">
+        <EmptyStateIcon key={String(colorido)} variant="stack" tint={colorido ? "vivid" : undefined}>
+          <MagnifyingGlassIcon aria-hidden />
+          <ReceiptPercentIcon aria-hidden />
+          <FunnelIcon aria-hidden />
+        </EmptyStateIcon>
+        <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
+        <EmptyStateDescription>
+            Nenhuma transação entre 1 e 7 de março na categoria Mercado.
+        </EmptyStateDescription>
+        <EmptyStateActions>
+          <Button variant="outline">Limpar filtros</Button>
+        </EmptyStateActions>
+      </EmptyState>
+    </div>
+  )
+}
 
 export default function EmptyStateDoc() {
   return (
@@ -79,23 +109,13 @@ export default function EmptyStateDoc() {
   <MagnifyingGlassIcon />
   <ReceiptPercentIcon />
   <FunnelIcon />
-</EmptyStateIcon>`}
+</EmptyStateIcon>
+
+{/* colorido: coral, azul e violeta, e as cartas se abrem ao montar */}
+<EmptyStateIcon variant="stack" tint="vivid">…</EmptyStateIcon>`}
         previewClassName="items-stretch"
       >
-        <EmptyState variant="plain" size="lg" className="w-full">
-          <EmptyStateIcon variant="stack">
-            <MagnifyingGlassIcon aria-hidden />
-            <ReceiptPercentIcon aria-hidden />
-            <FunnelIcon aria-hidden />
-          </EmptyStateIcon>
-          <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
-          <EmptyStateDescription>
-              Nenhuma transação entre 1 e 7 de março na categoria Mercado.
-          </EmptyStateDescription>
-          <EmptyStateActions>
-            <Button variant="outline">Limpar filtros</Button>
-          </EmptyStateActions>
-        </EmptyState>
+        <DemoLeque />
       </DocSection>
 
       <DocSection
@@ -305,10 +325,10 @@ return <Lista itens={itens} />`}
         rows={[
           {
             prop: "EmptyStateIcon",
-            type: 'variant: "circle" | "stack" | "done"; tone: "default" | "info" | "success" | "warning" | "destructive"',
+            type: 'variant: "circle" | "stack" | "done"; tint: "vivid"; tone: "default" | "info" | "success" | "warning" | "destructive"',
             default: '"circle", "default"',
             description:
-              "stack põe até três filhos em ladrilhos, em leque; done é o tique que se desenha, em success. A medida vem do size do bloco.",
+              "stack põe até três filhos em ladrilhos, em leque; tint vivid (só no stack) pinta as cartas com coral, azul e violeta da paleta de ladrilhos e as abre ao montar; done é o tique que se desenha, em success. A medida vem do size do bloco.",
           },
           {
             prop: "EmptyStateGhost",
