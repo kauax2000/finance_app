@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react"
 
 import { tagChipSuccess } from "@/components/ui/badge"
@@ -376,6 +376,18 @@ function descrever(
     case "boolean":
       return { operador: "", rotulo: "", falado: "", resto: 0 }
   }
+}
+
+/** O valor de um filtro como a lista "Filtrar por…" o mostra: o rótulo do token, com "+N" se há mais. */
+export function valorNaLista(
+  campo: FilterField,
+  f: Pick<FilterValue, "operator" | "values">,
+  opcao: (valor: string) => FilterOption | undefined
+): string {
+  if (campo.type === "boolean") return "Ligado"
+  const d = descrever(campo, f, opcao)
+  const base = campo.type === "text" ? d.falado : d.rotulo
+  return d.resto > 0 ? `${base} +${d.resto}` : base
 }
 
 /* ── As classes, por extenso ────────────────────────────────────────────
@@ -1386,6 +1398,15 @@ function FilterBar({
             <ListaDeCampos
               fields={fields}
               usados={tokens.map((t) => t.field)}
+              valorDe={(id) => {
+                const campo = fields.find((x) => x.id === id)
+                const t = tokens.find((x) => x.field === id)
+                return campo && t ? valorNaLista(campo, t, (v) => opcaoDe(campo, v)) : undefined
+              }}
+              onLimparTudo={() => {
+                setRascunho(null)
+                emitir([])
+              }}
               onEscolher={escolherCampo}
             />
           ) : campoAberto && tokenAberto ? (
@@ -1636,10 +1657,14 @@ function FilterToken({
 function ListaDeCampos({
   fields,
   usados,
+  valorDe,
+  onLimparTudo,
   onEscolher,
 }: {
   fields: FilterField[]
   usados: string[]
+  valorDe: (campoId: string) => string | undefined
+  onLimparTudo: () => void
   onEscolher: (campo: FilterField) => void
 }) {
   const naGaveta = useIsMobile()
@@ -1661,11 +1686,21 @@ function ListaDeCampos({
               {f.icon}
               <span className="min-w-0 truncate">{f.label}</span>
               {usados.includes(f.id) ? (
-                <CommandItemMeta className="text-xs text-muted-foreground">editar</CommandItemMeta>
+                <CommandItemMeta className="text-xs text-muted-foreground">
+                  {naGaveta ? <span className="max-w-40 truncate">{valorDe(f.id)}</span> : "editar"}
+                </CommandItemMeta>
               ) : null}
+              {naGaveta ? <ChevronRightIcon aria-hidden className="shrink-0" /> : null}
             </CommandItem>
           ))}
       </CommandList>
+      {naGaveta && usados.length > 0 ? (
+        <div className="flex justify-end px-2 pb-2">
+          <Button type="button" variant="tertiary" onClick={onLimparTudo}>
+            Limpar tudo
+          </Button>
+        </div>
+      ) : null}
     </Command>
   )
 }
