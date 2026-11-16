@@ -7,7 +7,6 @@ import { CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { FilterLinesIcon } from "@/components/icons/filter-lines-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PageHeaderBack } from "@/components/ui/page-header"
-import { Badge } from "@/components/ui/badge"
 import { ToolbarFilterIndicator } from "@/components/ui/toolbar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
@@ -158,6 +157,8 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             type="button"
             label={filtro.label}
             plate
+            count={filtro.count}
+            countLabel={filtro.count === 1 ? "1 ativo" : `${filtro.count} ativos`}
             tooltip={false}
             aria-haspopup="dialog"
             aria-expanded={filtro.popover ? filtroAberto : undefined}
@@ -170,14 +171,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             ) : (
                 <FilterLinesIcon className="size-4" />
             )}
-            {/* A contagem na cor do ponto que ela substitui (`--primary-accent`): o chip neutro sumia no vidro. */}
-            {filtro.count ? (
-                <Badge aria-hidden size="xs" className="nums absolute top-0.5 right-0.5 bg-primary-accent text-background">
-                    {filtro.count}
-                </Badge>
-            ) : filtro.active ? (
-                <ToolbarFilterIndicator className="top-2 right-2" />
-            ) : null}
+            {filtro.active && !filtro.count ? <ToolbarFilterIndicator className="top-2 right-2" /> : null}
         </TopBarAction>
     ) : null
     const filtroNoCabecalho =

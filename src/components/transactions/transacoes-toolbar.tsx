@@ -39,7 +39,7 @@ export function TransacoesToolbar({
     const n = estado.filtros.length
 
     usePageChromeFilter({
-        label: n ? `Filtros: ${n} ${n === 1 ? "ativo" : "ativos"}` : "Filtros",
+        label: "Filtros",
         active: n > 0,
         count: n,
         disabled: desligado,
