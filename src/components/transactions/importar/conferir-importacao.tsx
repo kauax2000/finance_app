@@ -256,9 +256,8 @@ function Linha({
                         <span className="truncate">{descricaoDe(item)}</span>
                     </ItemTitle>
                     <ItemDescription className="truncate">
-                        <span className="md:hidden">
-                            {formatYmdPtBr(item.data).slice(0, 5)} · {nomeDaCategoria(imp, item) ?? "Sem categoria"}
-                        </span>
+                        {/* No telefone, a mesma linha da tabela: a categoria aqui, a data embaixo do valor. */}
+                        <span className="md:hidden">{nomeDaCategoria(imp, item) ?? "Sem categoria"}</span>
                         <span className="hidden md:inline">{formatYmdPtBr(item.data)}</span>
                         {imp.existentes.has(item.clientId) || ehEstornoDoCartao(imp, item) ? " · " : null}
                         <AvisosDaLinha imp={imp} item={item} />
@@ -268,11 +267,14 @@ function Linha({
                     <CategoriaDaLinha imp={imp} item={item} travado={travado} />
                 </div>
                 {/* Largura mínima no desktop: a categoria fica alinhada em coluna, qualquer que seja o valor. A troca de sinal (Inverter) vira no lugar. */}
-                <span className="relative ms-auto text-end md:min-w-24">
-                    <TrocaSuave forma="texto" chave={`${item.estorno}:${valorDe(item)}`} atraso={Math.min(posicao, 5) * 0.04}>
-                        <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
-                    </TrocaSuave>
-                </span>
+                <div className="ms-auto flex flex-col items-end text-end md:min-w-24">
+                    <span className="relative">
+                        <TrocaSuave forma="texto" chave={`${item.estorno}:${valorDe(item)}`} atraso={Math.min(posicao, 5) * 0.04}>
+                            <MoneyDisplay value={valorDe(item)} signed tone={item.estorno ? "income" : "expense"} />
+                        </TrocaSuave>
+                    </span>
+                    <span className="nums text-xs text-muted-foreground md:hidden">{formatYmdPtBr(item.data).slice(0, 5)}</span>
+                </div>
             </div>
         </Item>
     )
@@ -610,7 +612,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             </span>
         )
     }
-    const grande = imp.visiveis.length > LIMITE
+    const grande = daTabela.length > LIMITE
     const celular = useIsMobile()
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
@@ -638,7 +640,11 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         }
         startTransition(() => {
             setSaindoDe(null)
-            if (de) setBusca("")
+            // Recolher limpa a busca; no telefone a linha dela fecha junto, para não ficar um campo vazio aberto.
+            if (de) {
+                setBusca("")
+                conf.setBuscaAberta(false)
+            }
             imp.setExpandido(!de)
         })
     }
@@ -670,12 +676,14 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
     )
 
     const colunas: DataTableColumnDef<ItemImportavel>[] = [
-        col.date({ id: "data", header: "Data", accessor: (i) => i.data }),
+        // No gêmeo do telefone a data é a linha miúda sob o valor (`meta`), em dd/mm, como no resumo.
+        { ...col.date({ id: "data", header: "Data", accessor: (i) => i.data }), ...(celular ? { cell: ({ row }) => formatYmdPtBr(row.original.data).slice(0, 5) } : {}) },
         col.identity({
             id: "descricao",
             header: "Descrição",
             title: descricaoDe,
-            description: (i) => (imp.existentes.has(i.clientId) || ehEstornoDoCartao(imp, i) ? <AvisosDaLinha imp={imp} item={i} /> : null),
+            // No telefone a legenda é a coluna da categoria, com o aviso depois dela.
+            description: celular ? undefined : (i) => (imp.existentes.has(i.clientId) || ehEstornoDoCartao(imp, i) ? <AvisosDaLinha imp={imp} item={i} /> : null),
             meta: { label: "Descrição", mobile: "title" },
         }),
         {
@@ -691,7 +699,13 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             id: "categoria-nome",
             header: "Categoria",
             enableSorting: false,
-            cell: ({ row }) => nomeDaCategoria(imp, row.original) ?? "Sem categoria",
+            cell: ({ row }) => (
+                <>
+                    {nomeDaCategoria(imp, row.original) ?? "Sem categoria"}
+                    {imp.existentes.has(row.original.clientId) || ehEstornoDoCartao(imp, row.original) ? " · " : null}
+                    <AvisosDaLinha imp={imp} item={row.original} />
+                </>
+            ),
             meta: { label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden", csv: false },
         } satisfies DataTableColumnDef<ItemImportavel>] : []),
         col.money({ id: "valor", header: "Valor", accessor: valorDe }),
@@ -711,8 +725,49 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             <EmptyStateIcon variant="circle">
                 <FunnelIcon />
             </EmptyStateIcon>
-            <EmptyStateTitle>Nenhum lançamento neste filtro</EmptyStateTitle>
+            <EmptyStateTitle>{busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"}</EmptyStateTitle>
         </EmptyState>
+    )
+
+    const resumoDoSaldo = (
+        <Collapsible>
+            <CollapsibleRow
+                className="[&_[data-slot=collapsible-row-label]]:no-underline"
+                trailing={
+                    <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
+                        <ContagemQueAnda value={resumo.entradas - resumo.saidas} formatar={signedCurrencyBRL} />
+                    </span>
+                }
+            >
+                {celular ? "Total" : "Saldo"}
+            </CollapsibleRow>
+            <CollapsibleContent>
+                <DescriptionList layout="inline" size="sm" className="pt-1">
+                    <DescriptionListItem>
+                        <DescriptionTerm>Entram</DescriptionTerm>
+                        <DescriptionDetails>
+                            {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                        </DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    {resumo.semCategoria > 0 ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Sem categoria</DescriptionTerm>
+                            <DescriptionDetails className="text-warning-muted-foreground">
+                                {numberBR(resumo.semCategoria)}
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                </DescriptionList>
+            </CollapsibleContent>
+        </Collapsible>
     )
 
     return (
@@ -878,6 +933,8 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     )}
                 >
                     <DataTable
+                        // No telefone, sem a moldura de tabela: o gêmeo fica igual à lista do resumo.
+                        panel={!celular}
                         stickyHeader={imp.expandido}
                         viewportClassName="md:min-h-0"
                         aria-label="Lançamentos do arquivo"
@@ -923,7 +980,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     {podeExpandir ? (
                         <div className="flex items-center justify-center gap-1">
                             {grande ? (
-                                <Caption className="text-control-sm leading-5">{`Mostrando ${numberBR(LIMITE)} de ${numberBR(imp.visiveis.length)} ·`}</Caption>
+                                <Caption className="text-control-sm leading-5">{`Mostrando ${numberBR(LIMITE)} de ${numberBR(daTabela.length)} ·`}</Caption>
                             ) : null}
                             <Button
                                 type="button"
@@ -941,49 +998,17 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                 </>
             )}
             {/* O resumo é um recibo recolhido: a linha mostra o saldo, e abrir mostra quantas entram,
-                cada tipo com a quantidade e o que ficou sem categoria. O diálogo não cresce sem pedir. */}
-            <Item variant="muted" size="sm" className={cn("rounded-surface", esmaece)} role="status" aria-busy={lendo}>
-                <ItemContent>
-                    <Collapsible>
-                        <CollapsibleRow
-                            className="[&_[data-slot=collapsible-row-label]]:no-underline"
-                            trailing={
-                                <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
-                                    <ContagemQueAnda value={resumo.entradas - resumo.saidas} formatar={signedCurrencyBRL} />
-                                </span>
-                            }
-                        >
-                            Saldo
-                        </CollapsibleRow>
-                        <CollapsibleContent>
-                            <DescriptionList layout="inline" size="sm" className="pt-1">
-                                <DescriptionListItem>
-                                    <DescriptionTerm>Entram</DescriptionTerm>
-                                    <DescriptionDetails>
-                                        {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                                    </DescriptionDetails>
-                                </DescriptionListItem>
-                                <DescriptionListItem>
-                                    <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
-                                    <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
-                                </DescriptionListItem>
-                                <DescriptionListItem>
-                                    <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
-                                    <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
-                                </DescriptionListItem>
-                                {resumo.semCategoria > 0 ? (
-                                    <DescriptionListItem>
-                                        <DescriptionTerm>Sem categoria</DescriptionTerm>
-                                        <DescriptionDetails className="text-warning-muted-foreground">
-                                            {numberBR(resumo.semCategoria)}
-                                        </DescriptionDetails>
-                                    </DescriptionListItem>
-                                ) : null}
-                            </DescriptionList>
-                        </CollapsibleContent>
-                    </Collapsible>
-                </ItemContent>
-            </Item>
+                cada tipo com a quantidade e o que ficou sem categoria. O diálogo não cresce sem pedir.
+                No telefone é a linha "Total", sem caixa, logo acima do botão, nas duas vistas. */}
+            {celular ? (
+                <div role="status" aria-busy={lendo} className={esmaece}>
+                    {resumoDoSaldo}
+                </div>
+            ) : (
+                <Item variant="muted" size="sm" className={cn("rounded-surface", esmaece)} role="status" aria-busy={lendo}>
+                    <ItemContent>{resumoDoSaldo}</ItemContent>
+                </Item>
+            )}
             <PorCategoria imp={imp} itens={porCategoria} onClose={() => setPorCategoria([])} />
         </div>
     )

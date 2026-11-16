@@ -109,7 +109,7 @@ describe("a conferência", () => {
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
         expect(conferir).toContain('<div className="hidden md:block md:w-44">')
-        expect(conferir).toMatch(/<span className="md:hidden">\s*\{formatYmdPtBr\(item\.data\)\.slice\(0, 5\)\} · \{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}/)
+        expect(conferir).toMatch(/<span className="md:hidden">\{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}<\/span>/)
         expect(conferir).not.toContain("order-last basis-full")
         // Trocar a de uma linha no telefone: marcar e usar o Pôr categoria, que o aviso diz.
         // A categoria de uma linha no telefone: tocar no corpo da linha (a caixa só diz se entra).
@@ -119,8 +119,8 @@ describe("a conferência", () => {
         expect(conferir).not.toContain("Marque e use")
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
-        expect(conferir).toContain("const grande = imp.visiveis.length > LIMITE")
-        expect(conferir).toMatch(/grande \? \(\s*<Caption className="text-control-sm leading-5">\{`Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(imp\.visiveis\.length\)\} ·`[\s\S]*?<span>Ver todos<\/span>/)
+        expect(conferir).toContain("const grande = daTabela.length > LIMITE")
+        expect(conferir).toMatch(/grande \? \(\s*<Caption className="text-control-sm leading-5">\{`Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(daTabela\.length\)\} ·`[\s\S]*?<span>Ver todos<\/span>/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/variant="tertiary" disabled=\{travado\} onClick=\{alternar\}>[\s\S]*?<ArrowsPointingInIcon data-icon="inline-start" \/>\}\s*<span>Ver menos<\/span>/)
         expect(conferir).not.toContain("aria-expanded")
@@ -133,7 +133,8 @@ describe("a conferência", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
         // O resumo é um recibo recolhido: a linha é o saldo, e abrir mostra entram, cada tipo e sem categoria.
-        expect(conferir).toMatch(/role="status"[^>]*>[\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
+        expect(conferir).toMatch(/const resumoDoSaldo = \(\s*<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
+        expect(conferir.match(/role="status"[^>]*>\s*(<ItemContent>)?\{resumoDoSaldo\}/g)).toHaveLength(2)
         expect(dialogo).not.toContain("Vão entrar")
         // A linha de fora não esmaece por opacidade; só a espera da releitura (lendo) usa 60%.
         expect(conferir.match(/opacity-60/g)).toHaveLength(1)
@@ -180,7 +181,7 @@ describe("a conferência", () => {
         expect(conferir).not.toContain("toolbar=")
         expect(conferir).not.toContain("globalFilter")
         expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
-        expect(conferir).toMatch(/if \(de\) setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
+        expect(conferir).toMatch(/if \(de\) \{\s*setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
         expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido && !celular \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toContain("enableSelection")
@@ -491,5 +492,42 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
         // O Ver menos vai ao pé da lista, onde fica o Ver todos.
         expect(conferir).toMatch(/<DataTable[\s\S]*?\{celular && podeExpandir \? <div[^>]*>\{botaoRecolher\}/)
         expect(conferir).toContain('scrollable={celular}')
+    })
+})
+
+describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total (opção B, tarefa 2)", () => {
+    it("a busca aberta é uma linha abaixo das abas, nas duas vistas", () => {
+        expect(conferir).toMatch(/<\/Tabs>[\s\S]*?\{celular && conf\.buscaAberta \? \(\s*<SearchInput/)
+        // Recolher limpa a busca e fecha a linha: nada de campo vazio aberto.
+        expect(conferir).toMatch(/if \(de\) \{\s*setBusca\(""\)\s*conf\.setBuscaAberta\(false\)/)
+    })
+
+    it("a linha do resumo: título e 'categoria · estorno' à esquerda, valor e data (dd/mm) à direita", () => {
+        expect(conferir).toMatch(/<span className="md:hidden">\{nomeDaCategoria\(imp, item\) \?\? "Sem categoria"\}<\/span>/)
+        expect(conferir).toMatch(/<MoneyDisplay value=\{valorDe\(item\)\}[\s\S]*?<span className="nums text-xs text-muted-foreground md:hidden">\{formatYmdPtBr\(item\.data\)\.slice\(0, 5\)\}<\/span>/)
+    })
+
+    it("a tabela no telefone põe a data embaixo do valor e fica sem a moldura de tabela", () => {
+        // A data é o `meta` do gêmeo (a linha miúda sob o valor), em dd/mm.
+        expect(conferir).toMatch(/col\.date\(\{ id: "data"[\s\S]*?celular \? \{ cell: \(\{ row \}\) => formatYmdPtBr\(row\.original\.data\)\.slice\(0, 5\) \}/)
+        // A legenda é a categoria e depois o aviso; a da identidade fica só no desktop.
+        expect(conferir).toMatch(/description: celular \? undefined :/)
+        expect(conferir).toMatch(/id: "categoria-nome"[\s\S]*?nomeDaCategoria\(imp, row\.original\) \?\? "Sem categoria"[\s\S]*?<AvisosDaLinha imp=\{imp\} item=\{row\.original\} \/>/)
+        expect(conferir).toContain("panel={!celular}")
+    })
+
+    it("no telefone o Saldo vira a linha Total, sem caixa, também na tela cheia", () => {
+        expect(conferir).toMatch(/\{celular \? "Total" : "Saldo"\}/)
+        expect(conferir).toMatch(/\{celular \? \(\s*<div role="status"[\s\S]*?\{resumoDoSaldo\}[\s\S]*?\) : \(\s*<Item variant="muted"/)
+        // Fora do `imp.expandido ?`: aparece nas duas vistas.
+        expect(conferir).toMatch(/<\/ItemGroup>[\s\S]*?\{celular \? \(\s*<div role="status"/)
+    })
+
+    it("a contagem e o vazio seguem a busca", () => {
+        expect(conferir).toContain("const grande = daTabela.length > LIMITE")
+        expect(conferir).toContain("`Mostrando ${numberBR(LIMITE)} de ${numberBR(daTabela.length)} ·`")
+        expect(conferir).toContain('busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"')
+        // Ajustar colunas no ⋯ espera a releitura, como o Inverter.
+        expect(dialogo).toMatch(/<DropdownMenuItem disabled=\{imp\.pendente === "lendo"\} onSelect=\{imp\.ajustarColunas\}>/)
     })
 })

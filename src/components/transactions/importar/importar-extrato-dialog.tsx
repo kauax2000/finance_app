@@ -242,7 +242,8 @@ export function ImportarExtratoDialog({
                                                     <ArrowsRightLeftIcon />
                                                     Inverter sinal
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onSelect={imp.ajustarColunas}>
+                                                {/* Ajustar no meio da releitura deixaria a resposta cair no passo trocado: espera, como o Inverter. */}
+                                                <DropdownMenuItem disabled={imp.pendente === "lendo"} onSelect={imp.ajustarColunas}>
                                                     <TableCellsIcon />
                                                     Ajustar colunas
                                                 </DropdownMenuItem>
