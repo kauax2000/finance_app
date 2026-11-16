@@ -452,6 +452,14 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
       }
       pendente = false
       animando = a
+      // Cancelada por fora (o vaul, uma troca de tema), a viagem também acaba: sem isto
+      // `animando` ficava preso e toda mudança de altura depois era ignorada.
+      a.oncancel = () => {
+        if (animando !== a) return
+        animando = null
+        pendente = false
+        anterior = el.getBoundingClientRect().height
+      }
       a.onfinish = () => {
         if (animando !== a) return
         animando = null
