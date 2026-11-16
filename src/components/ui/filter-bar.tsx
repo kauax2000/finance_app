@@ -1906,7 +1906,7 @@ function EditorDeValor(props: EditorProps) {
 
       {existia && naGaveta ? (
         <div className={cn("pb-3", recuo)}>
-          <Button type="button" variant="tertiary" className="w-full text-destructive" onClick={onRemover}>
+          <Button type="button" variant="destructive" className="w-full" onClick={onRemover}>
             Remover filtro
           </Button>
         </div>
