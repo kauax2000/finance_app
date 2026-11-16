@@ -1421,6 +1421,8 @@ function FilterBar({
                 setRascunho(null)
                 emitir([])
               }}
+              verLabel={rotuloVerResultados(count, noun)}
+              onVer={fechar}
               onEscolher={escolherCampo}
             />
           ) : campoAberto && tokenAberto ? (
@@ -1670,22 +1672,37 @@ function FilterToken({
 
 /* ── O "+ Filtro" ─────────────────────────────────────────────────────── */
 
+/** O rótulo do "Ver" do rodapé da gaveta: sem número (carregando), "Ver resultados". */
+export function rotuloVerResultados(count?: number, noun: [string, string] = ["resultado", "resultados"]): string {
+  if (count == null) return "Ver resultados"
+  return `Ver ${numberBR(count)} ${count === 1 ? noun[0] : noun[1]}`
+}
+
 function ListaDeCampos({
   fields,
   usados,
   valorDe,
   onLimparTudo,
+  verLabel,
+  onVer,
   onEscolher,
 }: {
   fields: FilterField[]
   usados: string[]
   valorDe: (campoId: string) => string | undefined
   onLimparTudo: () => void
+  verLabel: string
+  onVer: () => void
   onEscolher: (campo: FilterField) => void
 }) {
   const naGaveta = useIsMobile()
   return (
     <Command filter={commandFilter} className={cn(naGaveta && LISTA_NA_GAVETA)}>
+      {naGaveta ? (
+        <PopoverHeader className="grid grid-cols-[1fr_minmax(0,auto)_1fr] items-center gap-2 px-2 pt-1 pb-1">
+          <PopoverTitle className="col-start-2 truncate text-base">Filtros</PopoverTitle>
+        </PopoverHeader>
+      ) : null}
       <CommandInput surface="plate" touchFloor placeholder="Filtrar por…" autoFocus={!noDedo()} />
       <CommandList arrows className="px-2 pt-(--scroll-fade-band-h) pb-2">
         <CommandEmpty>Nenhum campo.</CommandEmpty>
@@ -1713,10 +1730,15 @@ function ListaDeCampos({
             </CommandItem>
           ))}
       </CommandList>
-      {naGaveta && usados.length > 0 ? (
-        <div className="flex justify-end px-2 pb-2">
-          <Button type="button" variant="tertiary" onClick={onLimparTudo}>
-            Limpar tudo
+      {naGaveta ? (
+        <div className="flex gap-2 px-2 pb-2">
+          {usados.length > 0 ? (
+            <Button type="button" variant="tertiary" className="flex-1" onClick={onLimparTudo}>
+              Limpar tudo
+            </Button>
+          ) : null}
+          <Button type="button" variant="primary" className="flex-1" onClick={() => onVer()}>
+            {verLabel}
           </Button>
         </div>
       ) : null}

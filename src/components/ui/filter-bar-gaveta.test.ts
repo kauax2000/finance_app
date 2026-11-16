@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { FILTER_PERIOD_PRESETS, valorNaLista, type FilterField } from "./filter-bar"
+import { FILTER_PERIOD_PRESETS, rotuloVerResultados, valorNaLista, type FilterField } from "./filter-bar"
 
 const enumCampo = {
   id: "cat",
@@ -67,5 +67,22 @@ describe("a lista da gaveta", () => {
   })
   it("o título do editor encolhe no telefone", () => {
     expect(src).toContain("grid-cols-[1fr_minmax(0,auto)_1fr]")
+  })
+})
+
+describe("o cabeçalho e o rodapé da lista na gaveta", () => {
+  const src = semComentarios(lerFonte("src/components/ui/filter-bar.tsx"))
+  it("rótulo do Ver", () => {
+    const n: [string, string] = ["lançamento", "lançamentos"]
+    expect(rotuloVerResultados(undefined)).toBe("Ver resultados")
+    expect(rotuloVerResultados(1, n)).toBe("Ver 1 lançamento")
+    expect(rotuloVerResultados(12, n)).toBe("Ver 12 lançamentos")
+    expect(rotuloVerResultados(3, undefined)).toBe("Ver 3 resultados")
+  })
+  it("título Filtros, Ver primary e Limpar tudo tertiary na mesma linha; o Limpar solto sumiu", () => {
+    expect(src).toMatch(/<PopoverTitle[^>]*>Filtros<\/PopoverTitle>/)
+    expect(src).toMatch(/<div className="flex gap-2 px-2 pb-2">\s*\{usados\.length > 0 \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{onLimparTudo\}>\s*Limpar tudo[\s\S]{0,120}<Button[^>]*variant="primary"[\s\S]{0,80}\{verLabel\}/)
+    expect(src).toContain("verLabel={rotuloVerResultados(count, noun)}")
+    expect(src).not.toContain('<div className="flex justify-end px-2 pb-2">')
   })
 })
