@@ -9,6 +9,7 @@ const ler = (nome: string) => semComentarios(lerFonte(`src/components/transactio
 const dialogo = ler("importar-extrato-dialog.tsx")
 const conferir = ler("conferir-importacao.tsx")
 const colunas = ler("mapear-colunas.tsx")
+const movimento = ler("movimento.ts")
 
 describe("o diálogo de importar, versão C", () => {
     it("é o diálogo dos passos, na gaveta do telefone, com pending, dirty e o desfazer no AlertDialog", () => {
@@ -133,8 +134,10 @@ describe("a conferência", () => {
         expect(conferir).toContain("aria-label={`Trazer ${rotuloDe(item)}`}")
         expect(conferir).toContain("getRowLabel={rotuloDe}")
         // O resumo é um recibo recolhido: a linha é o saldo, e abrir mostra entram, cada tipo e sem categoria.
-        expect(conferir).toMatch(/const resumoDoSaldo = \(\s*<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?Saldo[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
-        expect(conferir.match(/role="status"[^>]*>\s*(<ItemContent>)?\{resumoDoSaldo\}/g)).toHaveLength(2)
+        expect(conferir).toMatch(/function ResumoDoSaldo\([\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?\{rotulo\}[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
+        // Anunciado nos dois lugares: a caixa do desktop (no corpo) e a linha do telefone (no rodapé).
+        expect(conferir).toMatch(/role="status"[^>]*>\s*<ItemContent>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Saldo"/)
+        expect(dialogo).toMatch(/role="status"[^>]*>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Total"/)
         expect(dialogo).not.toContain("Vão entrar")
         // A linha de fora não esmaece por opacidade; só a espera da releitura (lendo) usa 60%.
         expect(conferir.match(/opacity-60/g)).toHaveLength(1)
@@ -497,7 +500,7 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
 
 describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total (opção B, tarefa 2)", () => {
     it("a busca aberta é uma linha abaixo das abas, nas duas vistas", () => {
-        expect(conferir).toMatch(/<\/Tabs>[\s\S]*?\{celular && conf\.buscaAberta \? \(\s*<SearchInput/)
+        expect(conferir).toMatch(/<\/Tabs>[\s\S]*?\{celular && \(conf\.buscaAberta \|\| buscaNaTela\) \? \(\s*<div[\s\S]*?<SearchInput/)
         // Recolher limpa a busca e fecha a linha: nada de campo vazio aberto.
         expect(conferir).toMatch(/if \(de\) \{\s*setBusca\(""\)\s*conf\.setBuscaAberta\(false\)/)
     })
@@ -517,10 +520,11 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
     })
 
     it("no telefone o Saldo vira a linha Total, sem caixa, também na tela cheia", () => {
-        expect(conferir).toMatch(/\{celular \? "Total" : "Saldo"\}/)
-        expect(conferir).toMatch(/\{celular \? \(\s*<div role="status"[\s\S]*?\{resumoDoSaldo\}[\s\S]*?\) : \(\s*<Item variant="muted"/)
-        // Fora do `imp.expandido ?`: aparece nas duas vistas.
-        expect(conferir).toMatch(/<\/ItemGroup>[\s\S]*?\{celular \? \(\s*<div role="status"/)
+        expect(conferir).toContain("export function ResumoDoSaldo(")
+        // No desktop o Saldo segue no corpo, na caixa; no telefone o corpo não o tem.
+        expect(conferir).toMatch(/<\/ItemGroup>[\s\S]*?\{celular \? null : \(\s*<Item variant="muted"[\s\S]*?<ResumoDoSaldo imp=\{imp\} rotulo="Saldo" \/>/)
+        // O Total mora no rodapé, fora da vista que rola: aparece nas duas vistas.
+        expect(dialogo).toMatch(/<DialogFooter>[\s\S]*?\{celular && imp\.passo === "conferir" \? \(\s*<div role="status"[^>]*>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Total" \/>[\s\S]*?<\/DialogFooter>/)
     })
 
     it("a contagem e o vazio seguem a busca", () => {
@@ -529,5 +533,26 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
         expect(conferir).toContain('busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"')
         // Ajustar colunas no ⋯ espera a releitura, como o Inverter.
         expect(dialogo).toMatch(/<DropdownMenuItem disabled=\{imp\.pendente === "lendo"\} onSelect=\{imp\.ajustarColunas\}>/)
+    })
+})
+
+describe("no telefone, as transições da conferência (opção B, tarefa 3)", () => {
+    it("trocar de aba remonta a lista do resumo, que chega em escada", () => {
+        expect(conferir).toMatch(/<ItemGroup\s+key=\{imp\.filtro\}[\s\S]*?className=\{cn\(esmaece, ESCADA_DA_LISTA\)\}/)
+    })
+
+    it("a busca brota da linha das abas e volta a ela ao fechar, sem movimento com movimento reduzido", () => {
+        expect(conferir).toMatch(/data-state=\{conf\.buscaAberta \? "open" : "closed"\}[\s\S]*?className="field-bloom origin-top motion-reduce:animate-none!"[\s\S]*?<SearchInput/)
+        // Fica montada enquanto o `menu-unmorph` corre, e sai na hora com movimento reduzido.
+        expect(conferir).toMatch(/\{celular && \(conf\.buscaAberta \|\| buscaNaTela\) \? \(/)
+        expect(conferir).toContain("reduzido ? 0 : BUSCA_QUE_SAI_MS")
+    })
+
+    it("o Ver todos e o Ver menos esmaecem a vista e chegam em escada, também no gêmeo do telefone", () => {
+        expect(conferir).toContain('const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")')
+        expect(conferir).toMatch(/className=\{cn\(\s*ESCADA_DA_TABELA,/)
+        expect(movimento).toContain("[&_[data-slot=data-table-mobile]>*]:animate-in")
+        expect(movimento).toContain("[&_[data-slot=data-table-mobile]>*]:stagger-ladder")
+        expect(movimento).toContain("motion-reduce:[&_[data-slot=data-table-mobile]>*]:animate-none")
     })
 })

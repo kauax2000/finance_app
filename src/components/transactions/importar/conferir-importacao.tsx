@@ -536,6 +536,58 @@ export function pelaBusca(itens: ItemImportavel[], busca: string) {
     return termo ? itens.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : itens
 }
 
+/**
+ * O saldo do lote, recolhido: a linha mostra o saldo, e abrir mostra quantas entram, cada tipo
+ * com a quantidade e o que ficou sem categoria. No desktop mora no corpo ("Saldo"); no telefone,
+ * no rodapé, logo acima do botão ("Total"), parado nas duas vistas enquanto a lista rola.
+ */
+export function ResumoDoSaldo({ imp, rotulo }: { imp: ImportarExtrato; rotulo: string }) {
+    const { resumo } = imp
+    return (
+        <Collapsible>
+            <CollapsibleRow
+                className="[&_[data-slot=collapsible-row-label]]:no-underline"
+                trailing={
+                    <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
+                        <ContagemQueAnda value={resumo.entradas - resumo.saidas} formatar={signedCurrencyBRL} />
+                    </span>
+                }
+            >
+                {rotulo}
+            </CollapsibleRow>
+            <CollapsibleContent>
+                <DescriptionList layout="inline" size="sm" className="pt-1">
+                    <DescriptionListItem>
+                        <DescriptionTerm>Entram</DescriptionTerm>
+                        <DescriptionDetails>
+                            {numberBR(resumo.entram)} de {numberBR(resumo.total)}
+                        </DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    <DescriptionListItem>
+                        <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
+                        <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
+                    </DescriptionListItem>
+                    {resumo.semCategoria > 0 ? (
+                        <DescriptionListItem>
+                            <DescriptionTerm>Sem categoria</DescriptionTerm>
+                            <DescriptionDetails className="text-warning-muted-foreground">
+                                {numberBR(resumo.semCategoria)}
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    ) : null}
+                </DescriptionList>
+            </CollapsibleContent>
+        </Collapsible>
+    )
+}
+
+/** O `menu-unmorph` do `field-bloom` dura 210ms; a folga cobre o último quadro. */
+const BUSCA_QUE_SAI_MS = 260
+
 /** O esmaecer da vista que sai (`--duration-base`) e uma folga: ele já terminou se o fim não chegou. */
 const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 
@@ -666,6 +718,15 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         return () => window.clearTimeout(t)
     }, [saindo])
     const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")
+    // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
+    const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
+    if (conf.buscaAberta && !buscaNaTela) setBuscaNaTela(true)
+    React.useEffect(() => {
+        if (conf.buscaAberta || !buscaNaTela) return
+        const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        const t = window.setTimeout(() => setBuscaNaTela(false), reduzido ? 0 : BUSCA_QUE_SAI_MS)
+        return () => window.clearTimeout(t)
+    }, [conf.buscaAberta, buscaNaTela])
     // Na tela cheia, entre a lupa e as Ações: três pesos — a lupa sem nada, ele sem fundo, as Ações com fundo, na ponta.
     const botaoRecolher = (
         // Sem `aria-expanded`: no terciário ele é o realce de menu aberto, e o rótulo já diz o estado.
@@ -727,47 +788,6 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             </EmptyStateIcon>
             <EmptyStateTitle>{busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"}</EmptyStateTitle>
         </EmptyState>
-    )
-
-    const resumoDoSaldo = (
-        <Collapsible>
-            <CollapsibleRow
-                className="[&_[data-slot=collapsible-row-label]]:no-underline"
-                trailing={
-                    <span className={cn("nums text-base font-medium", resumo.entradas - resumo.saidas < 0 ? "text-expense" : "text-income")}>
-                        <ContagemQueAnda value={resumo.entradas - resumo.saidas} formatar={signedCurrencyBRL} />
-                    </span>
-                }
-            >
-                {celular ? "Total" : "Saldo"}
-            </CollapsibleRow>
-            <CollapsibleContent>
-                <DescriptionList layout="inline" size="sm" className="pt-1">
-                    <DescriptionListItem>
-                        <DescriptionTerm>Entram</DescriptionTerm>
-                        <DescriptionDetails>
-                            {numberBR(resumo.entram)} de {numberBR(resumo.total)}
-                        </DescriptionDetails>
-                    </DescriptionListItem>
-                    <DescriptionListItem>
-                        <DescriptionTerm>{`Saídas · ${numberBR(resumo.nSaidas)}`}</DescriptionTerm>
-                        <DescriptionDetails className="text-expense">{signedCurrencyBRL(-resumo.saidas)}</DescriptionDetails>
-                    </DescriptionListItem>
-                    <DescriptionListItem>
-                        <DescriptionTerm>{`Entradas · ${numberBR(resumo.nEntradas)}`}</DescriptionTerm>
-                        <DescriptionDetails className="text-income">{signedCurrencyBRL(resumo.entradas)}</DescriptionDetails>
-                    </DescriptionListItem>
-                    {resumo.semCategoria > 0 ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Sem categoria</DescriptionTerm>
-                            <DescriptionDetails className="text-warning-muted-foreground">
-                                {numberBR(resumo.semCategoria)}
-                            </DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                </DescriptionList>
-            </CollapsibleContent>
-        </Collapsible>
     )
 
     return (
@@ -866,24 +886,31 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                 ) : null}
             </div>
             {/* No telefone o Buscar do ⋯ abre a busca logo abaixo das abas, nas duas vistas; o × a fecha. */}
-            {celular && conf.buscaAberta ? (
-                <SearchInput
-                    id={conf.idDaBusca}
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    onClear={() => {
-                        setBusca("")
-                        conf.setBuscaAberta(false)
-                    }}
-                    clearLabel="Fechar busca"
-                    placeholder="Buscar descrição"
-                    aria-label="Buscar descrição"
-                    disabled={travado}
-                    // Vazia, sair do campo a fecha: o × só aparece com texto.
-                    onBlur={() => {
-                        if (!busca) conf.setBuscaAberta(false)
-                    }}
-                />
+            {celular && (conf.buscaAberta || buscaNaTela) ? (
+                // Brota da linha das abas (o `field-bloom`, o gesto do campo que abre) e volta a ela ao fechar.
+                <div
+                    data-state={conf.buscaAberta ? "open" : "closed"}
+                    inert={!conf.buscaAberta}
+                    className="field-bloom origin-top motion-reduce:animate-none!"
+                >
+                    <SearchInput
+                        id={conf.idDaBusca}
+                        value={busca}
+                        onChange={(e) => setBusca(e.target.value)}
+                        onClear={() => {
+                            setBusca("")
+                            conf.setBuscaAberta(false)
+                        }}
+                        clearLabel="Fechar busca"
+                        placeholder="Buscar descrição"
+                        aria-label="Buscar descrição"
+                        disabled={travado}
+                        // Vazia, sair do campo a fecha: o × só aparece com texto.
+                        onBlur={() => {
+                            if (!busca) conf.setBuscaAberta(false)
+                        }}
+                    />
+                </div>
             ) : null}
             {/* Como o arquivo foi lido mora logo abaixo do filtro, antes das linhas que ele explica. */}
             {imp.csv && !imp.expandido && !celular ? (
@@ -959,6 +986,8 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ItemGroup
+                        // Trocar de aba remonta a lista: as linhas da aba nova chegam na escada.
+                        key={imp.filtro}
                         variant="divided"
                         className={cn(esmaece, ESCADA_DA_LISTA)}
                         aria-busy={lendo}
@@ -999,14 +1028,12 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             )}
             {/* O resumo é um recibo recolhido: a linha mostra o saldo, e abrir mostra quantas entram,
                 cada tipo com a quantidade e o que ficou sem categoria. O diálogo não cresce sem pedir.
-                No telefone é a linha "Total", sem caixa, logo acima do botão, nas duas vistas. */}
-            {celular ? (
-                <div role="status" aria-busy={lendo} className={esmaece}>
-                    {resumoDoSaldo}
-                </div>
-            ) : (
+                No telefone é a linha "Total", sem caixa, no rodapé do diálogo (`ResumoDoSaldo`), parada nas duas vistas. */}
+            {celular ? null : (
                 <Item variant="muted" size="sm" className={cn("rounded-surface", esmaece)} role="status" aria-busy={lendo}>
-                    <ItemContent>{resumoDoSaldo}</ItemContent>
+                    <ItemContent>
+                        <ResumoDoSaldo imp={imp} rotulo="Saldo" />
+                    </ItemContent>
                 </Item>
             )}
             <PorCategoria imp={imp} itens={porCategoria} onClose={() => setPorCategoria([])} />

@@ -74,7 +74,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao, ItensDasVisiveis, pelaBusca, useConferencia } from "./conferir-importacao"
+import { ConferirImportacao, ItensDasVisiveis, pelaBusca, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -537,6 +537,13 @@ export function ImportarExtratoDialog({
                             >
                                 {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : "Continuar"}
                             </FormSubmit>
+                            {/* No telefone o Total fica parado acima do botão, nas duas vistas: com o
+                                `flex-col-reverse` do rodapé, o último filho sobe para cima dos botões. */}
+                            {celular && imp.passo === "conferir" ? (
+                                <div role="status" aria-busy={imp.pendente === "lendo"} className="sm:order-first sm:me-auto sm:flex-1">
+                                    <ResumoDoSaldo imp={imp} rotulo="Total" />
+                                </div>
+                            ) : null}
                         </DialogFooter>
                     )}
                 </Form>
