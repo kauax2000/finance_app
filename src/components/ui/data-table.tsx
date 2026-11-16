@@ -173,6 +173,7 @@ const TablePanelFrameContext = React.createContext(false)
 function TablePanel({
   className,
   cardClassName,
+  outside,
   toolbar,
   footer,
   children,
@@ -180,6 +181,8 @@ function TablePanel({
 }: React.ComponentProps<typeof Card> & {
   /** Interna do `DataTable`: classe do `Card` (o telefone sem linhas o esconde). */
   cardClassName?: string
+  /** Interna do `DataTable`: irmão do `Card`, fora dele (o vazio solto do telefone). */
+  outside?: React.ReactNode
   /** A barra de topo, acima da moldura. Passe uma `TablePanelToolbar`. */
   toolbar?: React.ReactNode
   /** O rodapé de paginação, abaixo da moldura. Passe um `TablePanelFooter`. */
@@ -220,6 +223,7 @@ function TablePanel({
             {children}
           </TablePanelFrameContext.Provider>
         </Card>
+        {outside}
         {footer}
       </div>
     </TableSizeContext.Provider>
@@ -1385,16 +1389,17 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
 
   // Sem linhas (carregando, vazio, falha) o gêmeo não tem o que mostrar, e a
   // tabela serve as duas larguras — montá-la duas vezes duplicaria os ids.
+  // O vazio do telefone mora fora do `Card` (que some abaixo do md): irmão dele.
+  const vazioSolto = vazioFora ? (
+    <div
+      data-slot="data-table-empty-phone"
+      className="md:hidden flex flex-col items-center justify-center py-20"
+    >
+      {emptyPhone ?? vazioPadrao}
+    </div>
+  ) : null
   const miolo = vazioFora ? (
-    <>
-      <div className="hidden md:block">{tabela}</div>
-      <div
-        data-slot="data-table-empty-phone"
-        className="md:hidden flex flex-col items-center justify-center py-20"
-      >
-        {emptyPhone ?? vazioPadrao}
-      </div>
-    </>
+    panel ? tabela : <div className="hidden md:block">{tabela}</div>
   ) : gemeo ? (
     <>
       <div className="hidden md:block">{tabela}</div>
@@ -1411,6 +1416,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
           <TablePanel
             className="w-full"
             cardClassName={vazioFora ? "max-md:hidden" : undefined}
+            outside={vazioSolto}
             toolbar={barra ? <TablePanelToolbar className="gap-2">{barra}</TablePanelToolbar> : undefined}
             footer={rodape}
           >
@@ -1420,6 +1426,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
           <div data-slot="data-table" className="flex w-full min-w-0 flex-col gap-(--space-inline)">
             {barra}
             {miolo}
+            {vazioSolto}
             {rodape}
           </div>
         )}

@@ -13,6 +13,14 @@ it("vazio com gêmeo: o telefone ganha o vazio solto e o cartão some abaixo do 
   expect(html).toMatch(/data-slot="data-table-empty-phone"[^>]*md:hidden/)
   expect(html).toContain("telefone")
   expect(html).toMatch(/data-slot="table-panel"[^>]*max-md:hidden/)
+  // O vazio é irmão do cartão: fica depois dele, nunca dentro.
+  const painel = html.indexOf('data-slot="table-panel"')
+  const solto = html.indexOf('data-slot="data-table-empty-phone"')
+  // Contenção: contando as tags de div a partir do cartão, o cartão já fechou quando o vazio abre.
+  const abre = html.lastIndexOf("<div", painel)
+  let prof = 0
+  for (const m of html.slice(abre, html.lastIndexOf("<div", solto)).matchAll(/<div|<\/div>/g)) prof += m[0] === "<div" ? 1 : -1
+  expect(prof).toBe(0)
 })
 
 it("sem gêmeo nada muda", () => {
