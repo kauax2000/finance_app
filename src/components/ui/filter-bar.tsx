@@ -41,6 +41,7 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -1948,6 +1949,7 @@ function EditorDeDinheiro({
   onFaixa: (de: string, ate: string, op: FilterOperator) => void
   onEnter: (e: React.KeyboardEvent) => void
 }) {
+  const naGaveta = useIsMobile()
   const x = parseMoneyBrl(de)
   const y = parseMoneyBrl(ate)
   const erro = operador === "between" && x != null && y != null && x > y
@@ -1974,21 +1976,32 @@ function EditorDeDinheiro({
   return (
     <div className="w-104 max-w-full">
       <div className={cn("pt-2", recuo)}>
-        <ToggleGroup
-          type="single"
-          variant="floating"
-          size="sm"
-          className="w-full"
-          value={operador}
-          onValueChange={(op) => op && onModo(op as FilterOperator)}
-          aria-label="Modo"
-        >
-          {OPERADORES.money.map((op) => (
-            <ToggleGroupItem key={op} value={op} className="flex-auto px-1.5">
-              {rotuloOperador(op)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        {naGaveta ? (
+          // No telefone cinco modos não cabem num trilho: fichas que quebram linha.
+          <RadioGroup variant="chip" value={operador} onValueChange={(op) => onModo(op as FilterOperator)} aria-label="Modo">
+            {OPERADORES.money.map((op) => (
+              <RadioGroupItem key={op} value={op}>
+                {rotuloOperador(op)}
+              </RadioGroupItem>
+            ))}
+          </RadioGroup>
+        ) : (
+          <ToggleGroup
+            type="single"
+            variant="floating"
+            size="sm"
+            className="w-full"
+            value={operador}
+            onValueChange={(op) => op && onModo(op as FilterOperator)}
+            aria-label="Modo"
+          >
+            {OPERADORES.money.map((op) => (
+              <ToggleGroupItem key={op} value={op} className="flex-auto px-1.5">
+                {rotuloOperador(op)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
       </div>
       <p aria-live="polite" className={cn("pt-2 text-xs", erro ? "text-destructive" : "text-muted-foreground", recuo)}>
         {frase}

@@ -61,6 +61,10 @@ describe("a lista da gaveta", () => {
     expect(src).toMatch(/naGaveta \|\| !\(f\.type === "boolean" && usados\.includes\(f\.id\)\)/)
     expect(src).toMatch(/!usados\.includes\(f\.id\) && "ms-auto"/)
   })
+  it("na gaveta os modos do Valor são chips de rádio que quebram linha; no desktop, o trilho", () => {
+    expect(src).toMatch(/naGaveta \? \(\s*<RadioGroup variant="chip"[\s\S]{0,200}aria-label="Modo"/)
+    expect(src).toMatch(/<ToggleGroup[\s\S]{0,120}variant="floating"[\s\S]{0,200}aria-label="Modo"/)
+  })
   it("o título do editor encolhe no telefone", () => {
     expect(src).toContain("grid-cols-[1fr_minmax(0,auto)_1fr]")
   })
