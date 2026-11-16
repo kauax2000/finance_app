@@ -572,7 +572,7 @@ function useTrocas(texto: string) {
 /** O teto da lista na gaveta: o do `Command` (288) é do popover e mostrava cinco dos oito campos; 55% da altura (até 480) mostra os oito num iPhone de 815. */
 const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))]"
 
-/** No dedo, nenhum editor foca ao abrir: o teclado do telefone cobriria a lista. */
+/** No dedo, só a lista e os editores do popover não focam ao abrir (o teclado cobriria a lista); na gaveta, Descrição e Valor focam. */
 const noDedo = () =>
   typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches
 
@@ -1688,7 +1688,8 @@ function ListaDeCampos({
       <CommandList arrows className="px-2 pt-(--scroll-fade-band-h) pb-2">
         <CommandEmpty>Nenhum campo.</CommandEmpty>
         {fields
-          .filter((f) => !(f.type === "boolean" && usados.includes(f.id)))
+          // Na gaveta a barra some: o booleano ligado fica na lista para dar para desligar.
+          .filter((f) => naGaveta || !(f.type === "boolean" && usados.includes(f.id)))
           .map((f) => (
             <CommandItem
               key={f.id}
@@ -1704,7 +1705,9 @@ function ListaDeCampos({
                   {naGaveta ? <span className="max-w-40 truncate">{valorDe(f.id)}</span> : "editar"}
                 </CommandItemMeta>
               ) : null}
-              {naGaveta ? <ChevronRightIcon aria-hidden className="shrink-0" /> : null}
+              {naGaveta ? (
+                <ChevronRightIcon aria-hidden className={cn("shrink-0", !usados.includes(f.id) && "ms-auto")} />
+              ) : null}
             </CommandItem>
           ))}
       </CommandList>
@@ -1785,14 +1788,14 @@ function EditorDeValor(props: EditorProps) {
     <>
       {naGaveta ? (
         // A gaveta é uma pilha: voltar à lista, o campo no meio, e o Pronto que fecha.
-        <PopoverHeader className={cn("grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-1 pb-1", recuo)}>
+        <PopoverHeader className={cn("grid grid-cols-[1fr_minmax(0,auto)_1fr] items-center gap-2 pt-1 pb-1", recuo)}>
           <Button type="button" variant="tertiary" className="justify-self-start -ms-3" onClick={onVoltar}>
             <ChevronLeftIcon aria-hidden />
             Filtros
           </Button>
-          <PopoverTitle className="flex items-center gap-1.5 text-base [&>svg]:size-4 [&>svg]:text-muted-foreground">
+          <PopoverTitle className="flex min-w-0 items-center gap-1.5 text-base [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
             {campo.icon}
-            {campo.label}
+            <span className="truncate">{campo.label}</span>
           </PopoverTitle>
           <Button type="button" variant="tertiary" className="justify-self-end -me-3" onClick={() => onConcluir()}>
             Pronto
@@ -1802,7 +1805,7 @@ function EditorDeValor(props: EditorProps) {
         <PopoverHeader className={cn("flex-row items-center justify-between gap-2 pt-3 pb-1", recuo)}>
           <PopoverTitle className="flex items-center gap-1.5 text-sm [&>svg]:size-4 [&>svg]:text-muted-foreground">
             {campo.icon}
-            {`Editar ${campo.label.toLocaleLowerCase("pt-BR")}`}
+            Editar {campo.label.toLocaleLowerCase("pt-BR")}
           </PopoverTitle>
           <Button
             type="button"

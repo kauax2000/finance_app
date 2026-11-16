@@ -520,7 +520,9 @@ export function TransacoesTabela({
             <EmptyStateTitle>Nada por aqui</EmptyStateTitle>
             <EmptyStateDescription>
                 {nFiltros > 0
-                    ? `Nenhum lançamento com ${nFiltros} ${nFiltros === 1 ? "filtro ligado" : "filtros ligados"}.`
+                    ? nFiltros === 1
+                        ? "Nenhum lançamento com o filtro ligado."
+                        : `Nenhum lançamento com os ${nFiltros} filtros ligados.`
                     : "Nenhum lançamento para essa busca."}
             </EmptyStateDescription>
             <EmptyStateActions>

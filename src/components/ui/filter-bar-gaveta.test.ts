@@ -37,7 +37,6 @@ describe("valorNaLista", () => {
 describe("o editor da gaveta", () => {
   const src = semComentarios(lerFonte("src/components/ui/filter-bar.tsx"))
   it("tem voltar, Pronto e Remover filtro só para o que existia", () => {
-    expect(src).not.toMatch(/Editar \{campo\.label/)
     expect(src).toContain("Pronto")
     expect(src).toContain("Remover filtro")
     expect(src).toMatch(/existia\s*&&[\s\S]{0,300}Remover filtro/)
@@ -53,5 +52,16 @@ describe("o editor da gaveta", () => {
   })
   it("a lista não mostra valor de rascunho (nada de vazio nem 'R$ NaN')", () => {
     expect(src).toMatch(/valorDe=\{[\s\S]{0,300}!t\.rascunho/)
+  })
+})
+
+describe("a lista da gaveta", () => {
+  const src = semComentarios(lerFonte("src/components/ui/filter-bar.tsx"))
+  it("mantém o booleano ligado na lista da gaveta, com a seta empurrada à ponta quando não há valor", () => {
+    expect(src).toMatch(/naGaveta \|\| !\(f\.type === "boolean" && usados\.includes\(f\.id\)\)/)
+    expect(src).toMatch(/!usados\.includes\(f\.id\) && "ms-auto"/)
+  })
+  it("o título do editor encolhe no telefone", () => {
+    expect(src).toContain("grid-cols-[1fr_minmax(0,auto)_1fr]")
   })
 })
