@@ -33,3 +33,25 @@ describe("valorNaLista", () => {
     expect(src).toContain("Limpar tudo")
   })
 })
+
+describe("o editor da gaveta", () => {
+  const src = semComentarios(lerFonte("src/components/ui/filter-bar.tsx"))
+  it("tem voltar, Pronto e Remover filtro só para o que existia", () => {
+    expect(src).not.toMatch(/Editar \{campo\.label/)
+    expect(src).toContain("Pronto")
+    expect(src).toContain("Remover filtro")
+    expect(src).toMatch(/existia\s*&&[\s\S]{0,300}Remover filtro/)
+    expect(src).toMatch(/onVoltar/)
+  })
+  it("Descrição e Valor pedem o teclado na gaveta", () => {
+    expect(src).toMatch(/enterKeyHint="search"/)
+    expect(src).toMatch(/enterKeyHint="done"/)
+    expect(src).toMatch(/autoFocus=\{[^}]*naGaveta/)
+  })
+  it("voltar com rascunho não deixa filtro vazio", () => {
+    expect(src).toMatch(/onVoltar[\s\S]{0,400}setRascunho\(null\)|const voltar[\s\S]{0,400}setRascunho\(null\)/)
+  })
+  it("a lista não mostra valor de rascunho (nada de vazio nem 'R$ NaN')", () => {
+    expect(src).toMatch(/valorDe=\{[\s\S]{0,300}!t\.rascunho/)
+  })
+})

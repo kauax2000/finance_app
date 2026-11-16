@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react"
 
 import { tagChipSuccess } from "@/components/ui/badge"
@@ -577,7 +577,8 @@ const noDedo = () =>
   typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches
 
 type Token = FilterValue & { rascunho: boolean }
-type Aberto = { tipo: "campos" } | { tipo: "valor"; field: string } | null
+// `existia`: o token já era um filtro quando o editor abriu (e não um rascunho).
+type Aberto = { tipo: "campos" } | { tipo: "valor"; field: string; existia: boolean } | null
 type Ancora = { getBoundingClientRect: () => DOMRect; contextElement?: Element }
 
 type FilterBarProps = Omit<React.ComponentProps<"div">, "defaultValue" | "onChange"> & {
@@ -822,13 +823,24 @@ function FilterBar({
   /* ── O editor ─────────────────────────────────────────────────────────── */
 
   const sessao = React.useRef<"push" | "replace">("push")
+  /** Devolve o filtro que uma troca de operador desfez. */
+  const devolverAnterior = () => {
+    if (!rascunho?.anterior) return
+    const lista = [...valores]
+    lista.splice(Math.min(rascunho.index, lista.length), 0, rascunho.anterior)
+    emitir(lista)
+  }
   const fechar = (devolver = true) => {
-    if (devolver && rascunho?.anterior) {
-      const lista = [...valores]
-      lista.splice(Math.min(rascunho.index, lista.length), 0, rascunho.anterior)
-      emitir(lista)
-    }
+    if (devolver) devolverAnterior()
     setAberto(null)
+    setRascunho(null)
+    sessao.current = "push"
+  }
+  // Só na gaveta: volta à lista sem fechar (fechar e reabrir desceria e subiria a
+  // gaveta), e o rascunho sai como no `fechar`, sem filtro vazio na URL.
+  const voltar = () => {
+    devolverAnterior()
+    setAberto({ tipo: "campos" })
     setRascunho(null)
     sessao.current = "push"
   }
@@ -837,7 +849,7 @@ function FilterBar({
     if (aberto?.tipo === "valor" && aberto.field === field) return fechar()
     focoDepois.current = field
     clicouFora.current = false
-    setAberto({ tipo: "valor", field })
+    setAberto({ tipo: "valor", field, existia: tokens.some((t) => t.field === field && !t.rascunho) })
   }
 
   const abrirCampos = () => {
@@ -883,7 +895,7 @@ function FilterBar({
     }
     setRascunho({ field: campo.id, operator: OPERADORES[campo.type][0], index: valores.length, values: [] })
     focoDepois.current = campo.id
-    setAberto({ tipo: "valor", field: campo.id })
+    setAberto({ tipo: "valor", field: campo.id, existia: false })
   }
 
   /** O operador trocado no token. Se ele deixa o filtro incompleto, o editor abre. */
@@ -903,7 +915,7 @@ function FilterBar({
     gravar(field, op, values, { guardar: true })
     if (!normalizar(campo, op, values)) {
       focoDepois.current = field
-      setAberto({ tipo: "valor", field })
+      setAberto({ tipo: "valor", field, existia: !t.rascunho })
     }
   }
 
@@ -1401,7 +1413,7 @@ function FilterBar({
               valorDe={(id) => {
                 const campo = fields.find((x) => x.id === id)
                 const t = tokens.find((x) => x.field === id)
-                return campo && t ? valorNaLista(campo, t, (v) => opcaoDe(campo, v)) : undefined
+                return campo && t && !t.rascunho ? valorNaLista(campo, t, (v) => opcaoDe(campo, v)) : undefined
               }}
               onLimparTudo={() => {
                 setRascunho(null)
@@ -1420,6 +1432,8 @@ function FilterBar({
               onConhecer={(o) => conhecer(campoAberto.id, o)}
               onRemover={() => remover(campoAberto.id)}
               onConcluir={fechar}
+              existia={aberto?.tipo === "valor" && aberto.existia}
+              onVoltar={voltar}
             />
           ) : null}
         </PopoverContent>
@@ -1716,6 +1730,10 @@ type EditorProps = {
   onConhecer: (opcao: FilterOption) => void
   onRemover: () => void
   onConcluir: () => void
+  /** O filtro já existia ao abrir: só ele ganha o "Remover filtro" da gaveta. */
+  existia?: boolean
+  /** O "‹ Filtros" da gaveta. */
+  onVoltar?: () => void
 }
 
 /** O valor de dinheiro mascarado, a partir do decimal guardado. */
@@ -1723,7 +1741,7 @@ const mascarar = (v: string | undefined) =>
   v != null && v !== "" && Number.isFinite(Number(v)) ? formatMoneyBrlInput(Number(v)) : ""
 
 function EditorDeValor(props: EditorProps) {
-  const { campo, operador, valores, onGravar, onRemover, onConcluir } = props
+  const { campo, operador, valores, onGravar, onRemover, onConcluir, existia, onVoltar } = props
   const ops = OPERADORES[campo.type]
   const dedo = noDedo()
   // A mesma pergunta do `Popover mobile="sheet"`: é ela que decide a gaveta.
@@ -1765,22 +1783,39 @@ function EditorDeValor(props: EditorProps) {
 
   return (
     <>
-      <PopoverHeader className={cn("flex-row items-center justify-between gap-2 pt-3 pb-1", recuo)}>
-        <PopoverTitle className="flex items-center gap-1.5 text-sm [&>svg]:size-4 [&>svg]:text-muted-foreground">
-          {campo.icon}
-          Editar {campo.label.toLocaleLowerCase("pt-BR")}
-        </PopoverTitle>
-        <Button
-          type="button"
-          variant="tertiary"
-          size="xs"
-          // No dedo o botão cresce de verdade, a 40 (a régua do "+ Filtro", do "Limpar" e do rodapé dos diálogos).
-          className="-me-1.5 pointer-coarse:-me-3 pointer-coarse:h-11 pointer-coarse:px-3 pointer-coarse:text-sm"
-          onClick={onRemover}
-        >
-          remover
-        </Button>
-      </PopoverHeader>
+      {naGaveta ? (
+        // A gaveta é uma pilha: voltar à lista, o campo no meio, e o Pronto que fecha.
+        <PopoverHeader className={cn("grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-1 pb-1", recuo)}>
+          <Button type="button" variant="tertiary" className="justify-self-start -ms-3" onClick={onVoltar}>
+            <ChevronLeftIcon aria-hidden />
+            Filtros
+          </Button>
+          <PopoverTitle className="flex items-center gap-1.5 text-base [&>svg]:size-4 [&>svg]:text-muted-foreground">
+            {campo.icon}
+            {campo.label}
+          </PopoverTitle>
+          <Button type="button" variant="tertiary" className="justify-self-end -me-3" onClick={() => onConcluir()}>
+            Pronto
+          </Button>
+        </PopoverHeader>
+      ) : (
+        <PopoverHeader className={cn("flex-row items-center justify-between gap-2 pt-3 pb-1", recuo)}>
+          <PopoverTitle className="flex items-center gap-1.5 text-sm [&>svg]:size-4 [&>svg]:text-muted-foreground">
+            {campo.icon}
+            {`Editar ${campo.label.toLocaleLowerCase("pt-BR")}`}
+          </PopoverTitle>
+          <Button
+            type="button"
+            variant="tertiary"
+            size="xs"
+            // No dedo o botão cresce de verdade, a 40 (a régua do "+ Filtro", do "Limpar" e do rodapé dos diálogos).
+            className="-me-1.5 pointer-coarse:-me-3 pointer-coarse:h-11 pointer-coarse:px-3 pointer-coarse:text-sm"
+            onClick={onRemover}
+          >
+            remover
+          </Button>
+        </PopoverHeader>
+      )}
 
       {campo.type === "money" ? (
         <EditorDeDinheiro
@@ -1788,7 +1823,7 @@ function EditorDeValor(props: EditorProps) {
           de={de}
           ate={ate}
           recuo={recuo}
-          dedo={dedo}
+          focar={!dedo || naGaveta}
           onModo={trocarOperador}
           onDe={(raw, op = operador) => {
             setDe(raw)
@@ -1853,7 +1888,8 @@ function EditorDeValor(props: EditorProps) {
           <Input
             aria-label={`${campo.label} contém`}
             placeholder="Contém…"
-            autoFocus={!dedo}
+            autoFocus={!dedo || naGaveta}
+            enterKeyHint="search"
             value={texto}
             onChange={(e) => {
               setTexto(e.target.value)
@@ -1861,6 +1897,14 @@ function EditorDeValor(props: EditorProps) {
             }}
             onKeyDown={concluirNoEnter}
           />
+        </div>
+      ) : null}
+
+      {existia && naGaveta ? (
+        <div className={cn("pb-3", recuo)}>
+          <Button type="button" variant="tertiary" className="w-full text-destructive" onClick={onRemover}>
+            Remover filtro
+          </Button>
         </div>
       ) : null}
     </>
@@ -1882,7 +1926,7 @@ function EditorDeDinheiro({
   de,
   ate,
   recuo,
-  dedo,
+  focar,
   onModo,
   onDe,
   onAte,
@@ -1893,7 +1937,7 @@ function EditorDeDinheiro({
   de: string
   ate: string
   recuo: string
-  dedo: boolean
+  focar: boolean
   onModo: (op: FilterOperator) => void
   onDe: (raw: string, op?: FilterOperator) => void
   onAte: (raw: string, op?: FilterOperator) => void
@@ -1919,7 +1963,7 @@ function EditorDeDinheiro({
   const campo = (rotulo: string, valor: string, mudar: (raw: string) => void, foco: boolean) => (
     <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted-foreground">
       {rotulo}
-      <Input money size="md" placeholder="0,00" autoFocus={foco} value={valor} onValueChange={mudar} onKeyDown={onEnter} />
+      <Input money size="md" placeholder="0,00" autoFocus={foco} enterKeyHint="done" value={valor} onValueChange={mudar} onKeyDown={onEnter} />
     </label>
   )
 
@@ -1949,14 +1993,14 @@ function EditorDeDinheiro({
       <div className={cn("flex items-end gap-2 pt-3", operador === "eq" || operador === "approx" ? "pb-3" : "", recuo)}>
         {operador === "between" ? (
           <>
-            {campo("Mínimo", de, onDe, !dedo)}
+            {campo("Mínimo", de, onDe, focar)}
             <span className="pb-2 text-sm text-muted-foreground">–</span>
             {campo("Máximo", ate, onAte, false)}
           </>
         ) : usaMaximo(operador) ? (
-          campo("Valor máximo", ate, onAte, !dedo)
+          campo("Valor máximo", ate, onAte, focar)
         ) : (
-          campo(operador === "gte" ? "Valor mínimo" : "Valor", de, onDe, !dedo)
+          campo(operador === "gte" ? "Valor mínimo" : "Valor", de, onDe, focar)
         )}
       </div>
 
