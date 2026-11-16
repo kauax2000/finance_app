@@ -1675,9 +1675,11 @@ function FilterToken({
 
 /* ── O "+ Filtro" ─────────────────────────────────────────────────────── */
 
-/** O rótulo do "Ver" do rodapé da gaveta: sem número (carregando), "Ver resultados". */
+/** O rótulo do "Ver" do rodapé da gaveta: sem número (carregando), "Ver resultados"; com zero, "Nenhum lançamento". */
 export function rotuloVerResultados(count?: number, noun: [string, string] = ["resultado", "resultados"]): string {
   if (count == null) return "Ver resultados"
+  // shortcut: "Nenhum" é masculino; um `noun` feminino (conta) pediria "Nenhuma" — trocar por um campo de gênero quando aparecer.
+  if (count === 0) return `Nenhum ${noun[0]}`
   return `Ver ${numberBR(count)} ${count === 1 ? noun[0] : noun[1]}`
 }
 

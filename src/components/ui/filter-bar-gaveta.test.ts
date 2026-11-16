@@ -75,6 +75,8 @@ describe("o cabeçalho e o rodapé da lista na gaveta", () => {
   it("rótulo do Ver", () => {
     const n: [string, string] = ["lançamento", "lançamentos"]
     expect(rotuloVerResultados(undefined)).toBe("Ver resultados")
+    expect(rotuloVerResultados(0, n)).toBe("Nenhum lançamento")
+    expect(rotuloVerResultados(0)).toBe("Nenhum resultado")
     expect(rotuloVerResultados(1, n)).toBe("Ver 1 lançamento")
     expect(rotuloVerResultados(12, n)).toBe("Ver 12 lançamentos")
     expect(rotuloVerResultados(3, undefined)).toBe("Ver 3 resultados")
