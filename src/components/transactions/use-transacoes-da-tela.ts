@@ -187,10 +187,11 @@ export function useTransacoesDaTela() {
 
     // --- Consultas
     // Só os campos do estado: o `migrou` da leitura não entra na chave.
-    // A consulta espera a pessoa parar de mexer no filtro e na busca, como a paleta; a lista filtra ao vivo.
-    const filtrosDaChave = useDebouncedValue(estado.filtros, 250)
-    const qDaChave = useDebouncedValue(estado.q, 250)
-    const estadoDaChave: EstadoDaLista = { type: estado.type, q: qDaChave, filtros: filtrosDaChave, sort: estado.sort, page: estado.page }
+    // Com filtro ou busca pendentes a chave fica no último retrato coerente (sem pedido misto); página, ordem e tipo valem na hora.
+    const estadoAtrasado = useDebouncedValue(estado, 250)
+    const esperando = estadoAtrasado.filtros !== estado.filtros || estadoAtrasado.q !== estado.q
+    const base = esperando ? estadoAtrasado : estado
+    const estadoDaChave: EstadoDaLista = { type: base.type, q: base.q, filtros: base.filtros, sort: base.sort, page: base.page }
 
     const paginaQuery = useQuery({
         queryKey: transacoesKeys.pagina(workspaceId ?? "__none__", estadoDaChave),

@@ -8,7 +8,8 @@ describe("consulta de transações com pausa", () => {
         expect(HOOK).toContain('from "@/hooks/use-debounced-value"')
         expect(HOOK).toMatch(/useDebouncedValue\([^)]*,\s*250\)/)
     })
-    it("a chave da consulta lê o valor atrasado", () => {
+    it("a chave é escolhida pela checagem de pendência", () => {
+        expect(HOOK).toMatch(/esperando \? estadoAtrasado : estado/)
         expect(HOOK).not.toMatch(/estadoDaChave[^=]*=\s*\{[^}]*filtros:\s*estado\.filtros/)
     })
 })
