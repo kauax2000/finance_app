@@ -131,7 +131,7 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).not.toContain('setProperty("margin-bottom"')
     expect(fonte).toContain("if (janela.scrollY !== rolagem) janela.scrollTo(0, rolagem)")
     // A curta cresce até o conteúdo ficar acima do teclado; a alta fica presa (o teto).
-    expect(fonte).toContain("Math.max(altura, Math.min(altura + coberto, teto))")
+    expect(fonte).toContain("Math.max(altura, Math.min(altura - recuo + coberto, teto))")
     // A gaveta guarda o lugar do teclado embaixo: o rodapé assenta logo acima dele.
     expect(fonte).toContain('el.style.setProperty("padding-bottom", `${coberto}px`)')
     // O teclado conta a barra de setas e ✓: mede contra a janela de antes dele.

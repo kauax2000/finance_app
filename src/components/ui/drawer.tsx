@@ -460,6 +460,8 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
   const rolagem = janela.scrollY
   // A altura da gaveta sem teclado: medida antes, porque o iOS também encolhe a janela.
   let altura = 0
+  // O recuo de baixo sem teclado (24 + área segura): com ele aberto, quem guarda o pé é o teclado.
+  let recuo = 0
   // A janela sem teclado: com ele o iOS às vezes também encolhe o `innerHeight`
   // (956 → 918 no iPhone 18 Pro Max), e a conta perderia a barra de setas e ✓
   // que fica acima do teclado — o rodapé assentaria atrás dela.
@@ -481,6 +483,7 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
       soltar()
       janelaInteira = janela.innerHeight
       altura = el.getBoundingClientRect().height
+      recuo = parseFloat(janela.getComputedStyle(el).paddingBottom) || 0
       return
     }
     cobertoMax = Math.max(cobertoMax, medido)
@@ -490,10 +493,10 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
       altura = altura || el.getBoundingClientRect().height
     }
     // A gaveta alta fica presa na altura de antes; a curta (o editor de um filtro)
-    // cresce até o conteúdo assentar logo acima do teclado, senão o teclado a cobria
-    // inteira. O teto é o da gaveta alta (`max-height`) e, sem ele, a janela.
+    // cresce até o conteúdo assentar logo acima do teclado (sem o recuo de baixo, que o
+    // teclado substitui), senão o teclado a cobria inteira. O teto é o da gaveta alta (`max-height`) e, sem ele, a janela.
     const teto = parseFloat(janela.getComputedStyle(el).maxHeight) || janelaInteira
-    el.style.setProperty("height", `${Math.max(altura, Math.min(altura + coberto, teto))}px`)
+    el.style.setProperty("height", `${Math.max(altura, Math.min(altura - recuo + coberto, teto))}px`)
     // A gaveta guarda embaixo o lugar do teclado: o meio encolhe, o rodapé
     // assenta logo acima dele, e o cabeçalho não sai do lugar.
     el.style.setProperty("padding-bottom", `${coberto}px`)
