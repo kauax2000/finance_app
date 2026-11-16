@@ -4247,8 +4247,10 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
     /* Na gaveta o puxador vem antes (16/11/2026): a placa sobe e cobre a faixa dele, e o
        corpo sobe junto até a borda da gaveta, com o recuo somando a mesma altura, então a
        primeira linha fica onde estava. O puxador (`z-20`) fica por cima. Na gaveta de cima o
-       puxador é a borda de baixo (`order-last`), e nada muda. */
-    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + & {
+       puxador é a borda de baixo (`order-last`), e nada muda. O cabeçalho pode vir dentro do
+       `form` que segue o puxador (o Importar): o primeiro filho dele conta igual. */
+    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + &,
+    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + form > &:first-child {
       &::before {
         top: calc(var(--drawer-handle-h) * -1);
         height: calc(100% + var(--drawer-handle-h));
