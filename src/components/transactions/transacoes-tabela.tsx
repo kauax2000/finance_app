@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
     ArrowRightIcon,
     CheckIcon,
@@ -13,6 +14,7 @@ import {
 import { FunnelIcon, InboxStackIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { useWorkspace } from "@/components/workspace-provider"
+import { usePageChromeFilterFor } from "@/components/layout/page-chrome-provider"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import { CategorizarEmLoteDialog } from "@/components/transactions/categorizar-em-lote-dialog"
 import {
@@ -379,6 +381,8 @@ export function TransacoesTabela({
     const { papel, currentWorkspaceId } = useWorkspace()
     const convidado = papel === "guest"
     const { estado, setEstado, pagina } = tela
+    // O "Editar filtros" do vazio abre o mesmo filtro que o cabeçalho do telefone publicou.
+    const filtroPublicado = usePageChromeFilterFor(usePathname())
     const transacoes = pagina.transactions
     const [marcadasProprias, setMarcadasProprias] = React.useState<Set<string>>(() => new Set())
     const marcadas = marcadasDeFora ?? marcadasProprias
@@ -497,8 +501,40 @@ export function TransacoesTabela({
     ]
 
     const comConferir = estado.filtros.some((f) => f.field === "conferir")
+    const semLancamentos = tela.workspaceAux?.workspaceHasTransactions === false
+    const vazioPorFiltro =
+        !semLancamentos &&
+        !comConferir &&
+        !pagina.isLoading &&
+        !pagina.error &&
+        pagina.totalCount === 0 &&
+        (estado.filtros.length > 0 || Boolean(estado.q))
+    const nFiltros = estado.filtros.length
+    const emptyPhone = vazioPorFiltro ? (
+        <EmptyState variant="plain">
+            <EmptyStateIcon variant="stack" tint="vivid">
+                <MagnifyingGlassIcon aria-hidden />
+                <InboxStackIcon aria-hidden />
+                <FunnelIcon aria-hidden />
+            </EmptyStateIcon>
+            <EmptyStateTitle>Nada por aqui</EmptyStateTitle>
+            <EmptyStateDescription>
+                {nFiltros > 0
+                    ? `Nenhum lançamento com ${nFiltros} ${nFiltros === 1 ? "filtro ligado" : "filtros ligados"}.`
+                    : "Nenhum lançamento para essa busca."}
+            </EmptyStateDescription>
+            <EmptyStateActions>
+                <Button type="button" variant="primary" onClick={() => setEstado({ filtros: [], q: "" })}>
+                    Limpar filtros
+                </Button>
+                <Button type="button" variant="tertiary" onClick={() => filtroPublicado?.onOpen?.()}>
+                    Editar filtros
+                </Button>
+            </EmptyStateActions>
+        </EmptyState>
+    ) : undefined
     const vazio =
-        tela.workspaceAux?.workspaceHasTransactions === false ? (
+        semLancamentos ? (
             <EmptyState variant="plain" size="lg">
                 <EmptyStateGhost />
                 <EmptyStateTitle>Seu primeiro lançamento</EmptyStateTitle>
@@ -557,7 +593,7 @@ export function TransacoesTabela({
                 getRowLabel={rotuloDe}
                 // A barra da tela (abas e filtros) abre a linha; a contagem do FilterBar e o Exibir ficam na ponta.
                 // Sem o "Exibir": as colunas são uma só, a padrão.
-                toolbar={{ start: barra }}
+                toolbar={{ start: vazioPorFiltro ? <div className="contents max-md:hidden">{barra}</div> : barra }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {
@@ -577,6 +613,7 @@ export function TransacoesTabela({
                 countLabel={(n) => lancamentos(n)}
                 stickyHeader
                 empty={vazio}
+                emptyPhone={emptyPhone}
                 enableSelection={(t) => !projetada(t)}
                 rowSelection={rowSelection}
                 onRowSelectionChange={(next) => setMarcadas(new Set(Object.keys(next).filter((id) => next[id])))}
