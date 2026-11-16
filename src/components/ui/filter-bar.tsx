@@ -571,8 +571,7 @@ function useTrocas(texto: string) {
 
 /** O teto da lista na gaveta: o do `Command` (288) é do popover e mostrava cinco dos oito campos; 55% da altura (até 480) mostra os oito num iPhone de 815. */
 // A linha do menu é concêntrica à placa (22 − 8 = 14, a do `DropdownMenu` e da paleta), não à gaveta (28 − 16 = 12).
-const LISTA_NA_GAVETA =
-  "[--command-list-max-h:min(55dvh,--spacing(120))] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]"
+const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]"
 
 /** No dedo, só a lista e os editores do popover não focam ao abrir (o teclado cobriria a lista); na gaveta, Descrição e Valor focam. */
 const noDedo = () =>

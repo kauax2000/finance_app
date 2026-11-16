@@ -106,7 +106,9 @@ describe("a escada e as superfícies", () => {
   })
 
   it("na gaveta a lista é mais alta que o teto de 288 do popover", () => {
-    expect(CODIGO).toContain('const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))]"')
+    expect(CODIGO).toContain('const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))]')
+    // A linha concêntrica à placa (14), como nos menus, e não à gaveta (12).
+    expect(CODIGO).toContain("[--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]")
     expect(CODIGO.match(/naGaveta && LISTA_NA_GAVETA/g)).toHaveLength(2)
   })
 
