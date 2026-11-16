@@ -2,7 +2,15 @@
 
 import { useRef, useState } from "react"
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline"
-import { CheckIcon, DocumentTextIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowsRightLeftIcon,
+    CheckIcon,
+    DocumentTextIcon,
+    EllipsisHorizontalIcon,
+    MagnifyingGlassIcon,
+    TableCellsIcon,
+    XMarkIcon,
+} from "@heroicons/react/16/solid"
 
 import { useWorkspace } from "@/components/workspace-provider"
 import {
@@ -22,13 +30,22 @@ import {
     Dialog,
     DialogBody,
     DialogClose,
+    DialogCloseButton,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
+    DialogHeaderRow,
     DialogSteps,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
     EmptyState,
     EmptyStateActions,
@@ -49,6 +66,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Caption } from "@/components/ui/typography"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { numberBR } from "@/lib/formatters"
 import { TrocaSuave } from "@/lib/troca-suave"
 import { cn } from "@/lib/utils"
@@ -56,7 +74,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao } from "./conferir-importacao"
+import { ConferirImportacao, ItensDasVisiveis, pelaBusca, useConferencia } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -103,6 +121,8 @@ export function ImportarExtratoDialog({
     const [sobre, setSobre] = useState(false)
     const [variosArquivos, setVariosArquivos] = useState(false)
     const entrada = useRef<HTMLInputElement>(null)
+    const celular = useIsMobile()
+    const conf = useConferencia(imp.passo === "conferir")
 
     function mudarAberto(aberto: boolean) {
         if (!aberto) {
@@ -129,6 +149,36 @@ export function ImportarExtratoDialog({
         : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.em ?? "")
     const titulo = imp.passo === "conferir" && nomeDoDestino ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}` : "Importar extrato"
     const periodo = imp.resumo.periodo
+    // No telefone as ações da conferência moram no ⋯ do cabeçalho, ao lado do ✕; as abas ficam com a linha delas.
+    const comMenu = celular && imp.passo === "conferir"
+    const travadoAoImportar = imp.pendente === "importar"
+
+    const tituloEDescricao = (
+        <>
+            <DialogTitle className="relative">
+                {/* Um título só para o leitor: o que sai da cena é decoração. */}
+                <span aria-hidden="true">
+                    <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
+                </span>
+                <span className="sr-only">{titulo}</span>
+            </DialogTitle>
+            <DialogDescription>
+                {imp.passo === "feito"
+                    ? "Os lançamentos já estão na lista."
+                    : imp.passo === "conferir"
+                      ? (
+                        <>
+                            {periodo ? `De ${periodoPtBr(periodo)}. ` : ""}
+                            {/* No telefone a gaveta guarda a linha para a lista; o "Vão entrar" já diz o que conta. */}
+                            <span className="hidden md:inline">Desmarque o que não quer trazer.</span>
+                        </>
+                    )
+                      : imp.passo === "colunas"
+                        ? "Diga o que é cada coluna do arquivo."
+                        : "CSV ou OFX do seu banco, ou uma planilha sua."}
+            </DialogDescription>
+        </>
+    )
 
     function enviar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -163,31 +213,58 @@ export function ImportarExtratoDialog({
             dirty={imp.dirty}
             confirmDiscard
         >
-            <DialogContent size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"} layout={expandido ? "fixed" : "auto"}>
+            <DialogContent
+                size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"}
+                layout={expandido ? "fixed" : "auto"}
+                // Com o ⋯, o ✕ desce à linha do título, ao lado dele (como no painel de notificações).
+                showCloseButton={!comMenu}
+            >
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
-                        <DialogTitle className="relative">
-                            {/* Um título só para o leitor: o que sai da cena é decoração. */}
-                            <span aria-hidden="true">
-                                <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
-                            </span>
-                            <span className="sr-only">{titulo}</span>
-                        </DialogTitle>
-                        <DialogDescription>
-                            {imp.passo === "feito"
-                                ? "Os lançamentos já estão na lista."
-                                : imp.passo === "conferir"
-                                  ? (
-                                    <>
-                                        {periodo ? `De ${periodoPtBr(periodo)}. ` : ""}
-                                        {/* No telefone a gaveta guarda a linha para a lista; o "Vão entrar" já diz o que conta. */}
-                                        <span className="hidden md:inline">Desmarque o que não quer trazer.</span>
-                                    </>
-                                )
-                                  : imp.passo === "colunas"
-                                    ? "Diga o que é cada coluna do arquivo."
-                                    : "CSV ou OFX do seu banco, ou uma planilha sua."}
-                        </DialogDescription>
+                        {comMenu ? (
+                            <DialogHeaderRow endAdornment={
+                                <>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações" disabled={travadoAoImportar}>
+                                            <EllipsisHorizontalIcon />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" onCloseAutoFocus={conf.focoAoFecharMenu}>
+                                        <DropdownMenuItem onSelect={conf.abrirBusca}>
+                                            <MagnifyingGlassIcon />
+                                            Buscar
+                                        </DropdownMenuItem>
+                                        {/* O jeito de ler o arquivo só existe no CSV: o OFX já diz o sinal e as colunas. */}
+                                        {imp.csv ? (
+                                            <>
+                                                <DropdownMenuItem disabled={imp.pendente === "lendo"} onSelect={() => void imp.inverterSinal()}>
+                                                    <ArrowsRightLeftIcon />
+                                                    Inverter sinal
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={imp.ajustarColunas}>
+                                                    <TableCellsIcon />
+                                                    Ajustar colunas
+                                                </DropdownMenuItem>
+                                            </>
+                                        ) : null}
+                                        <DropdownMenuSeparator />
+                                        {/* As visíveis são as da aba e da busca, como no Ações do desktop. */}
+                                        <ItensDasVisiveis
+                                            imp={imp}
+                                            itens={pelaBusca(imp.visiveis, conf.busca)}
+                                            onPorCategoria={conf.setPorCategoria}
+                                        />
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <DialogCloseButton placement="inline" />
+                                </>
+                            }>
+                                {tituloEDescricao}
+                            </DialogHeaderRow>
+                        ) : (
+                            tituloEDescricao
+                        )}
                         {imp.passo === "feito" || expandido ? null : (
                             // Esmaece junto com a conferência no Ver todos, em vez de sumir seca e puxar tudo para cima.
                             <DialogSteps
@@ -358,7 +435,7 @@ export function ImportarExtratoDialog({
                         ) : imp.passo === "conferir" ? (
                             // Só o esmaecer da chegada: a lista e a tabela já descem em escada por dentro.
                             <div key="conferir" className={cn(ESMAECE_AO_CHEGAR, expandido && "md:flex md:min-h-0 md:flex-1 md:flex-col")}>
-                                <ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />
+                                <ConferirImportacao imp={imp} conf={conf} travado={travadoAoImportar} />
                             </div>
                         ) : imp.passo === "feito" && feito ? (
                             <EmptyState key="feito" variant="plain" className={ESCADA}>

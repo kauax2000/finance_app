@@ -437,8 +437,6 @@ function AcoesDasVisiveis({
     size?: "xs" | "sm"
     travado: boolean
 }) {
-    const rotulos = rotulosDasVisiveis(itens.length)
-    const ids = itens.map((i) => i.clientId)
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -448,27 +446,92 @@ function AcoesDasVisiveis({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => onPorCategoria(itens)}>
+                <ItensDasVisiveis imp={imp} itens={itens} onPorCategoria={onPorCategoria} />
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
+/** Os itens das ações em massa: os do menu Ações do desktop e os do ⋯ do cabeçalho no telefone. */
+export function ItensDasVisiveis({
+    imp,
+    itens,
+    onPorCategoria,
+    disabled = false,
+}: {
+    imp: ImportarExtrato
+    itens: ItemImportavel[]
+    onPorCategoria: (itens: ItemImportavel[]) => void
+    disabled?: boolean
+}) {
+    const rotulos = rotulosDasVisiveis(itens.length)
+    const ids = itens.map((i) => i.clientId)
+    const sem = disabled || itens.length === 0
+    return (
+        <>
+                <DropdownMenuItem disabled={sem} onSelect={() => onPorCategoria(itens)}>
                     <TagIcon />
                     {rotulos.categoria}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                    disabled={!itens.some((i) => imp.marcadas.has(i.clientId))}
+                    disabled={sem || !itens.some((i) => imp.marcadas.has(i.clientId))}
                     onSelect={() => imp.marcarVarias(ids, false)}
                 >
                     <NoSymbolIcon />
                     {rotulos.fora}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                    disabled={itens.every((i) => imp.marcadas.has(i.clientId))}
+                    disabled={sem || itens.every((i) => imp.marcadas.has(i.clientId))}
                     onSelect={() => imp.marcarVarias(ids, true)}
                 >
                     <CheckIcon />
                     {rotulos.trazer}
                 </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        </>
     )
+}
+
+/**
+ * O estado da conferência que o cabeçalho também usa: a busca (o ⋯ do telefone a
+ * abre) e as linhas do Pôr categoria (o ⋯ o pede). Mora no diálogo, e sair do
+ * passo Conferir o limpa, como quando ele morava na conferência e desmontava.
+ */
+export function useConferencia(ativa: boolean) {
+    const [busca, setBusca] = React.useState("")
+    const [buscaAberta, setBuscaAberta] = React.useState(false)
+    const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
+    // Pelo id, e não por ref: o objeto da conferência atravessa o render do diálogo e da lista.
+    const idDaBusca = React.useId()
+    const focarBusca = React.useRef(false)
+    const [ativaAntes, setAtivaAntes] = React.useState(ativa)
+    if (ativa !== ativaAntes) {
+        setAtivaAntes(ativa)
+        if (!ativa) {
+            setBusca("")
+            setBuscaAberta(false)
+            setPorCategoria([])
+        }
+    }
+    function abrirBusca() {
+        focarBusca.current = true
+        setBuscaAberta(true)
+    }
+    // O menu devolve o foco ao ⋯ ao fechar: aberta pelo Buscar, a busca o fica.
+    function focoAoFecharMenu(e: Event) {
+        if (!focarBusca.current) return
+        focarBusca.current = false
+        e.preventDefault()
+        document.getElementById(idDaBusca)?.focus()
+    }
+    return { busca, setBusca, buscaAberta, setBuscaAberta, abrirBusca, idDaBusca, focoAoFecharMenu, porCategoria, setPorCategoria }
+}
+
+export type Conferencia = ReturnType<typeof useConferencia>
+
+/** As linhas que a busca deixa à vista: pela descrição, sem acento. */
+export function pelaBusca(itens: ItemImportavel[], busca: string) {
+    const termo = normalizeSearchText(busca.trim())
+    return termo ? itens.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : itens
 }
 
 /** O esmaecer da vista que sai (`--duration-base`) e uma folga: ele já terminou se o fim não chegou. */
@@ -479,13 +542,11 @@ const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
  * linhas (a última dissolve) e "Ver os N"; expandida, o mesmo diálogo em tela
  * cheia com o `DataTable` (busca, ordenação, seleção = o que entra, soma).
  */
-export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
+export function ConferirImportacao({ imp, conf, travado = false }: { imp: ImportarExtrato; conf: Conferencia; travado?: boolean }) {
     const { resumo } = imp
-    const [porCategoria, setPorCategoria] = React.useState<ItemImportavel[]>([])
-    // A busca da tela cheia mora na linha das abas. Ela filtra aqui, pela descrição e sem acento, e não
-    // no `DataTable`: a tabela e as Ações recebem a mesma lista, e a tabela fica sem a barra dela.
-    const [busca, setBusca] = React.useState("")
-    const termo = normalizeSearchText(busca.trim())
+    const { porCategoria, setPorCategoria, busca, setBusca } = conf
+    // A busca mora na linha das abas (no telefone, abaixo dela, aberta pelo ⋯). Ela filtra aqui, pela
+    // descrição e sem acento, e não no `DataTable`: a tabela e as Ações recebem a mesma lista.
     const nomeDoId = (id: string | null) => (id ? (imp.previa?.nomeDaCategoria.get(id) ?? "") : "")
     const pelaIa = imp.filtro === "ia"
     const iaLendo = imp.ia.estado === "lendo"
@@ -495,7 +556,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
         toastUndo("Sugestões da IA desfeitas", { onUndo: imp.desfazerIa(ids) })
     }
     const linhas = pelaIa ? ordemPelaIa(imp.visiveis, (i) => imp.categoriaDe(i.clientId), nomeDoId) : imp.visiveis
-    const daTabela = termo ? linhas.filter((i) => normalizeSearchText(descricaoDe(i)).includes(termo)) : linhas
+    const daTabela = pelaBusca(linhas, busca)
     const porGrupo = new Map<string, number>()
     if (pelaIa) for (const i of daTabela) {
         const id = imp.categoriaDe(i.clientId)
@@ -554,7 +615,7 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
-    const chavesCompacto = chavesDasLinhas(linhas.slice(0, LIMITE))
+    const chavesCompacto = chavesDasLinhas(daTabela.slice(0, LIMITE))
     const podeExpandir = resumo.total > LIMITE
     // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-base`, `VISTA_QUE_SAI`),
     // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
@@ -679,7 +740,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                 </div>
             ) : null}
             {/* Sem a faixa das Colunas (OFX), as Ações moram acima da lista. */}
-            {!imp.csv && !imp.expandido ? (
+            {/* No telefone elas moram no ⋯ do cabeçalho. */}
+            {!imp.csv && !imp.expandido && !celular ? (
                 <div className="flex items-center justify-end gap-2">
                     <AcoesDasVisiveis imp={imp} itens={imp.visiveis} onPorCategoria={setPorCategoria} size="xs" travado={travado} />
                 </div>
@@ -739,7 +801,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </Tabs>
                 </div>
                 {/* Na tela cheia sobra largura: a busca, o recolher e as Ações (na ponta) vêm para a linha das abas. */}
-                {imp.expandido ? (
+                {/* No telefone a linha é só das abas: a busca e as Ações moram no ⋯, e o Ver menos no pé da lista. */}
+                {imp.expandido && !celular ? (
                     <>
                         <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
                         {podeExpandir ? botaoRecolher : null}
@@ -747,8 +810,28 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                     </>
                 ) : null}
             </div>
+            {/* No telefone o Buscar do ⋯ abre a busca logo abaixo das abas, nas duas vistas; o × a fecha. */}
+            {celular && conf.buscaAberta ? (
+                <SearchInput
+                    id={conf.idDaBusca}
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    onClear={() => {
+                        setBusca("")
+                        conf.setBuscaAberta(false)
+                    }}
+                    clearLabel="Fechar busca"
+                    placeholder="Buscar descrição"
+                    aria-label="Buscar descrição"
+                    disabled={travado}
+                    // Vazia, sair do campo a fecha: o × só aparece com texto.
+                    onBlur={() => {
+                        if (!busca) conf.setBuscaAberta(false)
+                    }}
+                />
+            ) : null}
             {/* Como o arquivo foi lido mora logo abaixo do filtro, antes das linhas que ele explica. */}
-            {imp.csv && !imp.expandido ? (
+            {imp.csv && !imp.expandido && !celular ? (
                 <Item variant="muted" size="sm" className="rounded-surface" /* cápsulas a 8px da borda: o canto acompanha, no degrau da superfície */>
                     <ItemContent>
                         <ItemDescription>
@@ -811,8 +894,9 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         onRowSelectionChange={mudarSelecao}
                         empty={vazio}
                     />
+                    {celular && podeExpandir ? <div className="flex justify-center pt-2">{botaoRecolher}</div> : null}
                 </div>
-            ) : imp.visiveis.length === 0 ? (
+            ) : daTabela.length === 0 ? (
                 vazio
             ) : (
                 <>
@@ -822,8 +906,8 @@ export function ConferirImportacao({ imp, travado = false }: { imp: ImportarExtr
                         className={cn(esmaece, ESCADA_DA_LISTA)}
                         aria-busy={lendo}
                     >
-                        {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. */}
-                        {linhas.slice(0, LIMITE).map((i, n) => (
+                        {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. No telefone a busca também filtra aqui. */}
+                        {daTabela.slice(0, LIMITE).map((i, n) => (
                             <Linha
                                 // O `clientId` nasce de novo a cada leitura: a chave do conteúdo segura a linha, para o valor trocar no lugar.
                                 key={chavesCompacto[n]}

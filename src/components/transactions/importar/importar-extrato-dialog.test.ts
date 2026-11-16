@@ -97,7 +97,8 @@ describe("o diálogo de importar, versão C", () => {
     })
 
     it("importando, a conferência trava", () => {
-        expect(dialogo).toContain('<ConferirImportacao imp={imp} travado={imp.pendente === "importar"} />')
+        expect(dialogo).toContain('<ConferirImportacao imp={imp} conf={conf} travado={travadoAoImportar} />')
+        expect(dialogo).toContain('const travadoAoImportar = imp.pendente === "importar"')
     })
 })
 
@@ -181,7 +182,7 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toMatch(/if \(de\) setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
-        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
+        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido && !celular \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.
@@ -225,7 +226,7 @@ describe("a conferência", () => {
     })
 
     it("travado, nenhum controle da conferência muda o lote", () => {
-        expect(conferir).toContain("export function ConferirImportacao({ imp, travado = false }")
+        expect(conferir).toContain("export function ConferirImportacao({ imp, conf, travado = false }")
         expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Trazer/)
         expect(conferir).toMatch(/disabled=\{travado\}\s*aria-label=\{`Categoria de/)
         expect(conferir).toMatch(/<TabsTrigger[\s\S]*?disabled=\{travado\}/)
@@ -446,5 +447,49 @@ describe("revisão final: grupos contíguos", () => {
         const nome = (id: string | null) => ({ o1: "Outros", o2: "Outros", m: "Mercado" })[id ?? ""] ?? ""
         expect(ordemPelaIa(["a", "b", "c", "d", "e"], (i) => cat[i], nome)).toEqual(["d", "a", "c", "b", "e"])
         expect(conferir).toContain("ordemPelaIa(imp.visiveis")
+    })
+})
+
+describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho (opção B, tarefa 1)", () => {
+    it("o cabeçalho põe o ⋯ ao lado do ✕ só no telefone e só no passo Conferir", () => {
+        expect(dialogo).toContain("useIsMobile()")
+        expect(dialogo).toMatch(/const comMenu = celular && imp\.passo === "conferir"/)
+        // O ✕ desce à linha do título, ao lado do ⋯; o do canto sai.
+        expect(dialogo).toContain("showCloseButton={!comMenu}")
+        expect(dialogo).toMatch(/<\/DropdownMenu>\s*<DialogCloseButton placement="inline" \/>/)
+        expect(dialogo).toMatch(/<DialogHeaderRow endAdornment=\{[\s\S]*?<DropdownMenu>[\s\S]*?aria-label="Mais ações"/)
+        // O gatilho do ⋯ é o da regra: terciário, icon-md, sem size-* nem ícone com tamanho.
+        expect(dialogo).toMatch(/<Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações" disabled=\{travadoAoImportar\}>\s*<EllipsisHorizontalIcon \/>/)
+    })
+
+    it("o menu traz Buscar, Inverter e Ajustar (os dois só com CSV) e as ações das visíveis", () => {
+        const menu = dialogo.match(/<DropdownMenuContent[\s\S]*?<\/DropdownMenuContent>/)?.[0] ?? ""
+        expect(menu).toContain("Buscar")
+        // Aberta pelo Buscar, a busca recebe o foco (o menu o devolveria ao ⋯).
+        expect(menu).toContain("onSelect={conf.abrirBusca}")
+        expect(dialogo).toContain("onCloseAutoFocus={conf.focoAoFecharMenu}")
+        expect(conferir).toContain("id={conf.idDaBusca}")
+        expect(menu).toMatch(/\{imp\.csv \? \([\s\S]*?Inverter sinal[\s\S]*?Ajustar colunas[\s\S]*?\) : null\}/)
+        expect(menu).toContain("<DropdownMenuSeparator />")
+        expect(menu).toContain("<ItensDasVisiveis")
+        // Os itens das visíveis são um componente só, do ⋯ e do menu Ações do desktop.
+        expect(conferir).toMatch(/function AcoesDasVisiveis[\s\S]*?<ItensDasVisiveis/)
+        expect(conferir).toContain("export function ItensDasVisiveis")
+    })
+
+    it("a busca e o Pôr categoria sobem para o diálogo, que os passa à conferência", () => {
+        expect(dialogo).toContain("const conf = useConferencia(imp.passo === \"conferir\")")
+        expect(dialogo).toContain("<ConferirImportacao imp={imp} conf={conf}")
+        expect(conferir).toContain("export function useConferencia(")
+        expect(conferir).not.toMatch(/const \[busca, setBusca\] = React\.useState\(""\)\s*const termo/)
+    })
+
+    it("no telefone a barra Colunas, a lupa, as Ações e o Ver menos saem da linha das abas", () => {
+        expect(conferir).toMatch(/\{imp\.csv && !imp\.expandido && !celular \? \(/)
+        expect(conferir).toMatch(/\{!imp\.csv && !imp\.expandido && !celular \? \(/)
+        expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*<>\s*<BuscaQueAbre/)
+        // O Ver menos vai ao pé da lista, onde fica o Ver todos.
+        expect(conferir).toMatch(/<DataTable[\s\S]*?\{celular && podeExpandir \? <div[^>]*>\{botaoRecolher\}/)
+        expect(conferir).toContain('scrollable={celular}')
     })
 })
