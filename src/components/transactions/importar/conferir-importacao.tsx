@@ -84,7 +84,7 @@ import { type ItemImportavel, tipoDoItem } from "@/lib/import/importar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import { toastUndo } from "@/lib/toast"
 import { TrocaSuave } from "@/lib/troca-suave"
-import { ESCADA_DA_LISTA, ESCADA_DA_TABELA, VISTA_QUE_SAI, VISTA_QUE_SAI_MS } from "./movimento"
+import { ESCADA, ESCADA_DA_LISTA, ESCADA_DA_TABELA, VISTA_QUE_SAI, VISTA_QUE_SAI_MS } from "./movimento"
 import { cn } from "@/lib/utils"
 import { chavesDasLinhas } from "./chave-da-linha"
 import { ContagemQueAnda } from "./contagem-que-anda"
@@ -702,6 +702,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
     }
     function alternar() {
         if (esperando) return
+        setTrocouDeAba(false)
         pedido.current = imp.expandido
         // Com movimento reduzido não há esmaecer, nem o `transitionend` que o encerra: troca na hora.
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return trocar()
@@ -718,6 +719,15 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         return () => window.clearTimeout(t)
     }, [saindo])
     const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")
+    // A aba trocada não tem vista que sai: a escada começa na hora (`ESCADA`, teto 6 = LIMITE). A volta
+    // do Ver menos espera o esmaecer (`ESCADA_DA_LISTA`). Só no telefone; o desktop segue como era.
+    const [filtroVisto, setFiltroVisto] = React.useState(imp.filtro)
+    const [trocouDeAba, setTrocouDeAba] = React.useState(false)
+    if (imp.filtro !== filtroVisto) {
+        setFiltroVisto(imp.filtro)
+        setTrocouDeAba(true)
+    }
+    const escadaDaLista = celular && trocouDeAba ? ESCADA : ESCADA_DA_LISTA
     // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
     const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
     if (conf.buscaAberta && !buscaNaTela) setBuscaNaTela(true)
@@ -986,10 +996,10 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                 <>
                     <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
                     <ItemGroup
-                        // Trocar de aba remonta a lista: as linhas da aba nova chegam na escada.
-                        key={imp.filtro}
+                        // No telefone, trocar de aba remonta a lista: as linhas da aba nova chegam na escada.
+                        key={celular ? imp.filtro : undefined}
                         variant="divided"
-                        className={cn(esmaece, ESCADA_DA_LISTA)}
+                        className={cn(esmaece, escadaDaLista)}
                         aria-busy={lendo}
                     >
                         {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. No telefone a busca também filtra aqui. */}

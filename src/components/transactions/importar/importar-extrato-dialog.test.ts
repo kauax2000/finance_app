@@ -297,7 +297,8 @@ describe("Ver todos e Recolher em três fases", () => {
         expect(conferir).toContain('const saida = cn(VISTA_QUE_SAI, saindo && "opacity-0")')
         // A vista inteira esmaece (abas, faixa das colunas, saldo), não só a lista: o resto pulava de lugar.
         expect(conferir).toMatch(/className=\{cn\("flex min-w-0 flex-col gap-2 md:gap-4", imp\.expandido && "md:min-h-0 md:flex-1", saida\)\}\s*data-saindo=\{saindo \|\| undefined\}/)
-        expect(conferir).toContain("cn(esmaece, ESCADA_DA_LISTA)")
+        expect(conferir).toContain("cn(esmaece, escadaDaLista)")
+        expect(conferir).toContain(": ESCADA_DA_LISTA")
         expect(conferir).toMatch(/className=\{cn\(\s*ESCADA_DA_TABELA,/)
         expect(dialogo).toContain("className={PASSOS_ACOMPANHAM}")
         // Nada do `menu-content-in` (desfoque de 10px): o dono achou brusco.
@@ -538,7 +539,11 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
 
 describe("no telefone, as transições da conferência (opção B, tarefa 3)", () => {
     it("trocar de aba remonta a lista do resumo, que chega em escada", () => {
-        expect(conferir).toMatch(/<ItemGroup\s+key=\{imp\.filtro\}[\s\S]*?className=\{cn\(esmaece, ESCADA_DA_LISTA\)\}/)
+        // Só no telefone: no desktop a lista não remonta e a escada é a de antes.
+        expect(conferir).toMatch(/<ItemGroup\s+key=\{celular \? imp\.filtro : undefined\}[\s\S]*?className=\{cn\(esmaece, escadaDaLista\)\}/)
+        // A aba trocada não tem vista que sai: ESCADA (sem espera); a volta do Ver menos espera o esmaecer.
+        expect(conferir).toContain("const escadaDaLista = celular && trocouDeAba ? ESCADA : ESCADA_DA_LISTA")
+        expect(conferir).toMatch(/function alternar\(\) \{\s*if \(esperando\) return\s*setTrocouDeAba\(false\)/)
     })
 
     it("a busca brota da linha das abas e volta a ela ao fechar, sem movimento com movimento reduzido", () => {
