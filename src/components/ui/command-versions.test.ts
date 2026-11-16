@@ -616,4 +616,10 @@ describe("as versões do Command", () => {
     expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/brota do flanco/)
     expect(lerFonte("src/app/designsystem/docs/command.tsx")).toMatch(/pinga/)
   })
+
+  it("antes da medida a lista é da altura do conteúdo, não do teto (a gaveta não sobe e desce)", () => {
+    const src = semComentarios(lerFonte("src/components/ui/command.tsx"), "tudo")
+    expect(src).toContain("not-data-medido:h-auto")
+    expect(src).toMatch(/getPropertyValue\("--cmdk-list-height"\)/)
+  })
 })

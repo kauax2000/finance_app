@@ -32,6 +32,7 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
 import { Dialog as DialogPrimitive } from "radix-ui"
+import { useComposedRefs } from "radix-ui/internal"
 import {
   Dialog,
   DialogCloseButton,
@@ -1361,9 +1362,13 @@ function CommandScope({
  * O teto e a transição são da casca: `--command-list-ceiling` cai no
  * `--command-list-max-h` e `--command-list-transition` em `0s` quando ninguém
  * diz nada (o `CommandDialog` sobrescreve as duas). A transição não vale na
- * primeira pintura: a variável do cmdk só existe depois de dois quadros, e sem
- * a espera a lista deslizaria do teto até o tamanho certo (dois
- * `requestAnimationFrame` encadeados, como no `ThemeToggle`).
+ * primeira pintura: a variável do cmdk só existe depois de alguns quadros, e
+ * sem a espera a lista deslizaria do teto até o tamanho certo. Por isso, antes
+ * da medida (`data-medido` ausente) a altura é a natural (`h-auto`, limitada
+ * por `max-h`): com o teto como altura, a gaveta do filtro subia ao teto e
+ * descia ao abrir uma lista curta. O laço de `requestAnimationFrame` liga
+ * `medido` quando a variável aparece no elemento, ou após 10 quadros (lista
+ * vazia: o cmdk nunca a publica).
  */
 function CommandList({
   className,
@@ -1375,16 +1380,19 @@ function CommandList({
   arrows?: boolean
 }) {
   const [medido, setMedido] = React.useState(false)
+  const listaRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
-    let segundo: number | null = null
-    const primeiro = requestAnimationFrame(() => {
-      segundo = requestAnimationFrame(() => setMedido(true))
-    })
-    return () => {
-      cancelAnimationFrame(primeiro)
-      if (segundo !== null) cancelAnimationFrame(segundo)
+    // Liga quando o cmdk publica a variável; sem ela (lista vazia), liga após 10 quadros.
+    let quadro = 0
+    let id = 0
+    const esperar = () => {
+      const publicada = listaRef.current?.style.getPropertyValue("--cmdk-list-height")
+      if (publicada || ++quadro > 10) setMedido(true)
+      else id = requestAnimationFrame(esperar)
     }
+    id = requestAnimationFrame(esperar)
+    return () => cancelAnimationFrame(id)
   }, [])
 
   const pilha = React.useContext(CommandStackContext)
@@ -1394,9 +1402,10 @@ function CommandList({
   // As setas só na pilha pousam na placa (o pai `relative); o `Combobox` as pede por `arrows`.
   const setas = arrows ?? naPilha
   const fadeRef = useScrollFade({ arrows: setas })
+  const refDaLista = useComposedRefs<HTMLDivElement>(fadeRef, listaRef)
   const lista = (
     <CommandPrimitive.List
-      ref={fadeRef}
+      ref={refDaLista}
       data-slot="command-list"
       data-medido={medido || undefined}
       className={cn(
@@ -1417,6 +1426,8 @@ function CommandList({
         // venceria a herdada e a casca nunca mandaria. O `_-_` do `calc()`: o
         // Tailwind não normaliza espaço em torno de `-`.
         "h-[min(calc(var(--cmdk-list-height,var(--command-list-ceiling,var(--command-list-max-h)))_+_var(--scroll-fade-band-h)_+_var(--scroll-fade-foot-h)_+_--spacing(2)),var(--command-list-ceiling,var(--command-list-max-h)))]",
+        // Antes da medida a lista é da altura do conteúdo, não do teto (ver o cabeçalho).
+        "not-data-medido:h-auto",
         // Só transiciona depois da primeira medida (ver o cabeçalho).
         "data-medido:transition-[height] data-medido:duration-[var(--command-list-transition,0s)] data-medido:ease-(--ease-out)",
         // Na pilha a placa recua 8px dos lados, para a linha acesa alinhar com as bordas da pílula.
