@@ -51,3 +51,13 @@ describe("usePageChromeFilter", () => {
         expect(fonte).toContain("if (!enabled) {\n            setFilter({ pathname, filter: null })")
     })
 })
+
+describe("a contagem no ícone do filtro", () => {
+    it("com contagem o canto mostra o número, e sem ela o ponto", () => {
+        const src = semComentarios(lerFonte("src/components/layout/app-header.tsx"))
+        expect(src).toMatch(/filtro\.count/)
+        expect(src).toMatch(/<Badge[^>]*aria-hidden/)
+        const barra = semComentarios(lerFonte("src/components/transactions/transacoes-toolbar.tsx"))
+        expect(barra).toMatch(/count:\s*n\b/)
+    })
+})

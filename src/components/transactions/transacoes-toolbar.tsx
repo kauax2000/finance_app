@@ -41,6 +41,7 @@ export function TransacoesToolbar({
     usePageChromeFilter({
         label: n ? `Filtros: ${n} ${n === 1 ? "ativo" : "ativos"}` : "Filtros",
         active: n > 0,
+        count: n,
         disabled: desligado,
         onOpen: () => {
             window.scrollTo({ top: 0 })

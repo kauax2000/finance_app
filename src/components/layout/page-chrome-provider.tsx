@@ -21,6 +21,8 @@ export type PageChromeFilter = {
     label: string
     /** Há filtro fora do padrão: o ponto no canto. */
     active: boolean
+    /** Quantos filtros ligados; com ele, o número no canto no lugar do ponto. */
+    count?: number
     /** Desligado de verdade: esmaece (a tela publica, como Contas sem tabela). */
     disabled?: boolean
     /**
