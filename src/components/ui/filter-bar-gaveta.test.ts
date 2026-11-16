@@ -85,4 +85,7 @@ describe("o cabeçalho e o rodapé da lista na gaveta", () => {
     expect(src).toContain("verLabel={rotuloVerResultados(count, noun)}")
     expect(src).not.toContain('<div className="flex justify-end px-2 pb-2">')
   })
+  it("um título só: o label 'Adicionar filtro' some na gaveta, onde o 'Filtros' visível é o título", () => {
+    expect(src).toContain('label={aberto?.tipo === "campos" && !listaNaGaveta ? "Adicionar filtro" : undefined}')
+  })
 })

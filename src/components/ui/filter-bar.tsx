@@ -807,6 +807,9 @@ function FilterBar({
     if (left !== null) linha.scrollTo({ left, behavior: reduzir ? "auto" : "smooth" })
   }
 
+  // Na gaveta a lista tem o "Filtros" visível como título; um label aqui seria um segundo título.
+  const listaNaGaveta = useIsMobile()
+
   const focarDestino = () => {
     const destino = focoDepois.current
     const token =
@@ -1390,7 +1393,7 @@ function FilterBar({
             : campoAberto?.type === "enum" ? "lg"
             : "md"
           }
-          label={aberto?.tipo === "campos" ? "Adicionar filtro" : undefined}
+          label={aberto?.tipo === "campos" && !listaNaGaveta ? "Adicionar filtro" : undefined}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => {
             // Um clique num token ou no "+ Filtro" não dispensa, troca o editor;
