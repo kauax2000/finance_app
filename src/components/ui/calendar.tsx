@@ -495,9 +495,10 @@ function Calendar({
         ),
         today: cn(
           // Na agenda o hoje é o número na pastilha (`DiaConteudo`), não a célula acesa.
+          // Hoje na ponta de um intervalo é a bolinha: a célula não pinta, quem liga à faixa é a ponte.
           agenda
             ? "text-foreground"
-            : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none has-data-[selected-single=true]:bg-transparent",
+            : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none has-data-[selected-single=true]:bg-transparent has-data-[range-start=true]:bg-transparent has-data-[range-end=true]:bg-transparent",
           defaultClassNames.today
         ),
         outside: cn(
