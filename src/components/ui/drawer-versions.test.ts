@@ -31,17 +31,35 @@ describe("as versões do Drawer", () => {
   it("a altura acompanha com um observador só: o elemento mora em estado, não numa ref de função", () => {
     expect(CODIGO).toContain("const [el, setEl] = React.useState<HTMLDivElement | null>(null)")
     expect(CODIGO).toContain("useAlturaQueAcompanha(el, !alta)")
-    expect(CODIGO).toMatch(/return \(\) => ro\.disconnect\(\)\s*\}, \[el, ativo\]\)/)
+    expect(CODIGO).toMatch(/return \(\) => \{\s*ro\.disconnect\(\)\s*animando\?\.cancel\(\)\s*\}\s*\}, \[el, ativo\]\)/)
   })
 
-  it("a altura anda na curva da viagem longa do diálogo do desktop, lida dos tokens", () => {
+  it("só a gaveta com passos anda na viagem longa do desktop; as outras ficam na curta", () => {
     // O `Element.animate` não lê `var()`: os tokens são lidos computados no elemento.
+    // A curta é a do editor de filtro, afinada à parte: a longa não pode vazar para ela.
     const fonte = semComentarios(CODIGO)
-    const corpo = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
-    expect(corpo).toContain('"--duration-gentle"')
-    expect(corpo).toContain('"--ease-emphasized"')
-    expect(corpo).not.toContain("duration: 300")
-    expect(corpo).not.toContain("cubic-bezier(0.16, 1, 0.3, 1)")
+    const viagem = fonte.slice(fonte.indexOf("function viagemDa"), fonte.indexOf("function useAlturaQueAcompanha"))
+    expect(viagem).toMatch(/if \(!el\.querySelector\('\[data-slot="dialog-steps"\]'\)\) return VIAGEM_CURTA/)
+    expect(viagem).toContain('"--duration-gentle"')
+    expect(viagem).toContain('"--ease-emphasized"')
+    expect(fonte).toContain('const VIAGEM_CURTA = { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }')
+    const gancho = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
+    expect(gancho).toContain("viajar(de, atual, viagemDa(el))")
+    expect(gancho).not.toContain("duration: 300")
+    expect(gancho).not.toContain("cubic-bezier(")
+  })
+
+  it("conteúdo que muda no meio da viagem vira uma viagem só, da altura de agora até a nova", () => {
+    // Uma segunda viagem depois da primeira (sobe e depois desce) foi recusada.
+    const fonte = semComentarios(CODIGO)
+    const gancho = fonte.slice(fonte.indexOf("function useAlturaQueAcompanha"), fonte.indexOf("ro.observe(el)"))
+    expect(gancho).not.toMatch(/if \(animando\) return/)
+    // Mede a altura animada, tira a animação e mede a natural.
+    expect(gancho).toMatch(/agora = el\.getBoundingClientRect\(\)\.height\s*const tempo = a\.currentTime\s*animando = null\s*a\.cancel\(\)\s*const natural = el\.getBoundingClientRect\(\)\.height/)
+    // A natural é o destino: a mesma viagem volta no mesmo ponto.
+    expect(gancho).toMatch(/if \(Math\.abs\(natural - viagem\.para\) < 1\) \{\s*viajar\(viagem\.de, viagem\.para, viagem\.opcoes, tempo\)/)
+    // Mudou: parte da altura de agora.
+    expect(gancho).toContain("const de = agora ?? anterior")
   })
 
   it("o meio que rola está escrito por extenso — classe montada não existe no CSS", () => {

@@ -393,9 +393,8 @@ function acharMeio(el: HTMLElement): HTMLElement | null {
   return null
 }
 
-// Reserva da curva quando os tokens faltam (o `--duration-gentle` e o
-// `--ease-emphasized` do `globals.css`).
-const VIAGEM_RESERVA = { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+// A viagem curta: a de toda gaveta que muda de altura (o editor de um filtro).
+const VIAGEM_CURTA = { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
 
 /** "700ms" ou "0.7s" em milissegundos; `NaN` para o que não é tempo. */
 function emMs(valor: string) {
@@ -404,10 +403,30 @@ function emMs(valor: string) {
 }
 
 /**
+ * A gaveta com passos anda na viagem longa do diálogo do desktop
+ * (`useAlturaAnimada`, o Importar extrato); as outras, na curta. O
+ * `Element.animate` não lê `var()`, então os tokens vêm computados, com a
+ * curta de reserva.
+ */
+function viagemDa(el: HTMLElement) {
+  if (!el.querySelector('[data-slot="dialog-steps"]')) return VIAGEM_CURTA
+  const estilo = getComputedStyle(el)
+  const duracao = emMs(estilo.getPropertyValue("--duration-gentle"))
+  const curva = estilo.getPropertyValue("--ease-emphasized").trim()
+  return {
+    duration: Number.isFinite(duracao) ? duracao : VIAGEM_CURTA.duration,
+    easing: curva || VIAGEM_CURTA.easing,
+  }
+}
+
+/**
  * A altura acompanha o conteúdo: quando ele muda, a gaveta anima da altura de
  * antes até a nova em vez de saltar. O `ResizeObserver` dispara antes da
- * pintura, então a altura nova nunca aparece de estalo; as medidas da própria
- * animação são ignoradas.
+ * pintura, então a altura nova nunca aparece de estalo.
+ * Durante a viagem ele dispara a cada quadro: a animação sai por um instante
+ * para medir a altura natural. Se ela é o destino, a mesma viagem volta no
+ * mesmo ponto (`currentTime`); se o conteúdo mudou no meio, uma viagem só
+ * parte da altura de agora até a nova — nunca uma segunda depois da primeira.
  */
 function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
   React.useEffect(() => {
@@ -417,37 +436,45 @@ function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
     ).matches
     let anterior = el.getBoundingClientRect().height
     let animando: Animation | null = null
+    let viagem = { de: 0, para: 0, opcoes: VIAGEM_CURTA }
+    const viajar = (de: number, para: number, opcoes: typeof VIAGEM_CURTA, tempo: CSSNumberish | null = null) => {
+      viagem = { de, para, opcoes }
+      const a = el.animate([{ height: `${de}px` }, { height: `${para}px` }], opcoes)
+      if (tempo != null) a.currentTime = tempo
+      a.onfinish = () => {
+        if (animando === a) animando = null
+      }
+      animando = a
+    }
     const ro = new ResizeObserver(() => {
-      // As medidas da própria animação não contam: ela mexe na altura a cada quadro.
-      if (animando) return
+      let agora: number | null = null
+      if (animando) {
+        const a = animando
+        agora = el.getBoundingClientRect().height
+        const tempo = a.currentTime
+        animando = null
+        a.cancel()
+        const natural = el.getBoundingClientRect().height
+        // A medida é da própria animação: ela volta no mesmo ponto.
+        if (Math.abs(natural - viagem.para) < 1) {
+          viajar(viagem.de, viagem.para, viagem.opcoes, tempo)
+          return
+        }
+      }
       const atual = el.getBoundingClientRect().height
       // Com o teclado a altura segue o viewport visual na hora: animada, o meio
       // rolaria o campo para um lugar que ainda vai mudar.
       const teclado = el.style.getPropertyValue("--drawer-teclado") !== ""
-      if (Math.abs(atual - anterior) < 1 || reduzido || anterior === 0 || teclado) {
-        anterior = atual
-        return
-      }
-      const de = anterior
+      const de = agora ?? anterior
       anterior = atual
-      // A curva é a da viagem longa do diálogo do desktop (`useAlturaAnimada`):
-      // o `Element.animate` não lê `var()`, então os tokens vêm computados.
-      const estilo = getComputedStyle(el)
-      const duracao = emMs(estilo.getPropertyValue("--duration-gentle"))
-      const curva = estilo.getPropertyValue("--ease-emphasized").trim()
-      animando = el.animate(
-        [{ height: `${de}px` }, { height: `${atual}px` }],
-        {
-          duration: Number.isFinite(duracao) ? duracao : VIAGEM_RESERVA.duration,
-          easing: curva || VIAGEM_RESERVA.easing,
-        }
-      )
-      animando.onfinish = animando.oncancel = () => {
-        animando = null
-      }
+      if (Math.abs(atual - de) < 1 || reduzido || de === 0 || teclado) return
+      viajar(de, atual, viagemDa(el))
     })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => {
+      ro.disconnect()
+      animando?.cancel()
+    }
   }, [el, ativo])
 }
 
