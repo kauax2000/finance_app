@@ -161,7 +161,7 @@ function DemoNaTela() {
   const [striped, setStriped] = React.useState(false)
   const [agrupar, setAgrupar] = React.useState(true)
   const [somaDaSelecao, setSomaDaSelecao] = React.useState(true)
-  const [linhaCompacta, setLinhaCompacta] = React.useState(false)
+  const [linhaNoTelefone, setLinhaNoTelefone] = React.useState<"full" | "compact" | "flush">("full")
   const [ultima, setUltima] = React.useState("Clique numa linha, marque, ordene, filtre.")
 
   return (
@@ -171,6 +171,7 @@ function DemoNaTela() {
           <>
             <Eixo rotulo="Fios" valores={["rows", "none", "grid"] as const} valor={dividers} onChange={setDividers} />
             <Eixo rotulo="Cabeçalho" valores={["muted", "plain"] as const} valor={cabecalho} onChange={setCabecalho} />
+            <Eixo rotulo="Linha no telefone" valores={["full", "compact", "flush"] as const} valor={linhaNoTelefone} onChange={setLinhaNoTelefone} />
           </>
         }
         fim={
@@ -178,7 +179,6 @@ function DemoNaTela() {
             <Interruptor id="ds-dt-striped" rotulo="striped" valor={striped} onChange={setStriped} />
             <Interruptor id="ds-dt-grupo" rotulo="groupBy" valor={agrupar} onChange={setAgrupar} />
             <Interruptor id="ds-dt-soma" rotulo="Soma da seleção" valor={somaDaSelecao} onChange={setSomaDaSelecao} />
-            <Interruptor id="ds-dt-compacta" rotulo="Linha compacta no telefone" valor={linhaCompacta} onChange={setLinhaCompacta} />
           </Interruptores>
         }
       />
@@ -210,7 +210,7 @@ function DemoNaTela() {
         ]}
         rowActions={ACOES(setUltima)}
         rowContextMenu
-        mobileRow={linhaCompacta ? "compact" : "full"}
+        mobileRow={linhaNoTelefone}
         onRowClick={(l) => setUltima(`Abrir ${l.descricao}`)}
         rowState={(l) => (l.status === "prevista" ? "pending" : undefined)}
         groupBy={
@@ -416,7 +416,14 @@ function DemoEdicao() {
 }
 
 function DemoTelefone() {
+  const [linha, setLinha] = React.useState<"full" | "flush">("full")
+  const [selecao, setSelecao] = React.useState<Record<string, true>>(() =>
+    Object.fromEntries(LANCAMENTOS.slice(0, 6).map((l) => [l.id, true] as const))
+  )
   return (
+    <div className="flex w-full flex-col items-center gap-4">
+    {/* `flush`: a lista em que marcar é "esta entra" (a conferência do Importar) — quase tudo marcado, nenhuma linha em caixa. */}
+    <Controles inicio={<Eixo rotulo="Linha" valores={["full", "flush"] as const} valor={linha} onChange={setLinha} />} />
     <IphoneFrame title="Lançamentos num iPhone">
       {/* O topo desce da ilha do iPhone, como a página de Touch & safe area. */}
       <div className="h-full overflow-y-auto bg-background px-4 pt-16 pb-8">
@@ -428,12 +435,16 @@ function DemoTelefone() {
           getRowLabel={(l) => l.descricao}
           pageSize={false}
           enableSelection
+          rowSelection={selecao}
+          onRowSelectionChange={setSelecao}
+          mobileRow={linha}
           rowState={(l) => (l.status === "prevista" ? "pending" : undefined)}
           rowActions={ACOES(() => undefined)}
           onRowClick={() => undefined}
         />
       </div>
     </IphoneFrame>
+    </div>
   )
 }
 
@@ -589,7 +600,7 @@ col.money({ … })        // trailing, de fábrica`}
           { prop: "enableSelection", type: "boolean | (row) => boolean", description: "A coluna de caixas; a função diz quais linhas se marcam." },
           { prop: "bulkActions / onSelectAllMatching", type: "DataTableBulkAction[] / () => void", description: "As ações da barra flutuante; marcar todas além da página." },
           { prop: "rowActions / rowContextMenu", type: "DataTableAction[] / boolean", description: "primary fica à vista, o resto vai para o ⋯; o botão direito repete." },
-          { prop: "mobileRow", type: '"full" | "compact"', description: "A linha do gêmeo. compact: a caixa só aparece com uma seleção em curso (e o toque marca), e as ações moram no toque longo; sem menu de contexto, o ⋯ volta." },
+          { prop: "mobileRow", type: '"full" | "compact" | "flush"', default: '"full"', description: "A linha do gêmeo. compact: a caixa só aparece com uma seleção em curso (e o toque marca), e as ações moram no toque longo; sem menu de contexto, o ⋯ volta. flush: o full sem a caixa de selected e no degrau sm — para a lista em que marcar é \"esta entra\" e quase tudo está marcado (o Importar)." },
         ]}
       />
 

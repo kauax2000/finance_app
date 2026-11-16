@@ -569,8 +569,8 @@ export type DataTableProps<T extends RowData> = {
 
   /** O gêmeo do telefone, das colunas com `meta.mobile`. Ligado se houver título. */
   mobile?: boolean
-  /** A linha do gêmeo. `full` (o padrão): caixa de seleção e ⋯ sempre à vista. `compact`: a caixa só aparece com uma seleção em curso (e aí o toque marca em vez de abrir), e as ações moram no toque longo — o mesmo menu do botão direito; sem menu, o ⋯ volta. */
-  mobileRow?: "full" | "compact"
+  /** A linha do gêmeo. `full` (o padrão): caixa de seleção e ⋯ sempre à vista. `compact`: a caixa só aparece com uma seleção em curso (e aí o toque marca em vez de abrir), e as ações moram no toque longo — o mesmo menu do botão direito; sem menu, o ⋯ volta. `flush`: o `full` de linha rasa — sem o contorno nem o fundo de `selected` (a caixa já diz quem está marcado) e no degrau `sm`, como a lista do resumo do Importar, onde marcar é "esta entra" e quase toda linha está marcada. */
+  mobileRow?: "full" | "compact" | "flush"
   /** As linhas que entram em cascata e deslizam ao reordenar. */
   motion?: boolean
   virtualize?: { estimateSize?: number; overscan?: number }
@@ -1361,6 +1361,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       enableSelection={Boolean(enableSelection)}
       FlexRender={table.FlexRender}
       compacta={mobileRow === "compact"}
+      rasa={mobileRow === "flush"}
       marcando={marcadas.length > 0}
       menuDe={menuDaLinha}
     />
@@ -1563,6 +1564,7 @@ function GemeoDoTelefone<T extends RowData>({
   enableSelection,
   FlexRender,
   compacta = false,
+  rasa = false,
   marcando = false,
   menuDe,
 }: {
@@ -1578,6 +1580,8 @@ function GemeoDoTelefone<T extends RowData>({
   FlexRender: ReactTable<DataTableFeatures, T>["FlexRender"]
   /** `mobileRow="compact"`: caixa só marcando, ações no toque longo. */
   compacta?: boolean
+  /** `mobileRow="flush"`: só o visual — sem a caixa de `selected`, no degrau `sm`. */
+  rasa?: boolean
   /** Alguma linha marcada: na linha compacta, o toque marca em vez de abrir. */
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
@@ -1620,7 +1624,7 @@ function GemeoDoTelefone<T extends RowData>({
         const item = (
           <Item
             variant="flush"
-            size="lg"
+            size={rasa ? "sm" : "lg"}
             // O mesmo estado da linha da tabela: a prevista apaga texto e cor; a de agora só leva `aria-current`.
             data-row-state={estado}
             aria-current={estado === "current" ? "true" : undefined}
@@ -1630,7 +1634,7 @@ function GemeoDoTelefone<T extends RowData>({
                 "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=money-display]]:opacity-50"
             )}
             interactive={clicavel || marcaNoToque}
-            selected={row.getIsSelected()}
+            selected={!rasa && row.getIsSelected()}
             onClick={
               marcaNoToque
                 ? () => row.toggleSelected()

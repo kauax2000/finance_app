@@ -200,6 +200,23 @@ describe("o DataTable", () => {
     expect(cheio).toContain('aria-label="Mais ações para Mercado"')
   })
 
+  it('`mobileRow="flush"`: no gêmeo, a linha marcada não ganha a caixa de `selected` e desce ao `sm`', () => {
+    const gemeo = (html: string) => html.slice(html.indexOf('data-slot="data-table-mobile"'))
+    const comum = { ...base, enableSelection: true, rowSelection: { a: true as const, b: true as const } }
+
+    const rasa = gemeo(renderToStaticMarkup(h(DataTable<L>, { ...comum, mobileRow: "flush" as const })))
+    expect(rasa).not.toContain("data-selected")
+    expect(rasa).toContain('data-size="sm"')
+    expect(rasa).not.toContain('data-size="lg"')
+    // O resto é o `full`: a caixa à vista, marcada.
+    expect(rasa).toContain('aria-label="Selecionar Mercado"')
+
+    // O padrão segue em caixa e no `lg`.
+    const cheio = gemeo(renderToStaticMarkup(h(DataTable<L>, comum)))
+    expect(cheio).toContain("data-selected")
+    expect(cheio).toContain('data-size="lg"')
+  })
+
   it("marca com o nome da linha, o indeterminado no cabeçalho, e a tabela de leitura não é grade", () => {
     const html = renderToStaticMarkup(h(DataTable<L>, { ...base, enableSelection: true, rowSelection: { a: true } }))
     expect(html).toContain('aria-label="Selecionar Mercado"')

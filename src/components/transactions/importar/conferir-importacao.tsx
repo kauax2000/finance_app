@@ -972,6 +972,8 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     <DataTable
                         // No telefone, sem a moldura de tabela: o gêmeo fica igual à lista do resumo.
                         panel={!celular}
+                        // Marcar aqui é "esta entra" e quase tudo vem marcado: no telefone a linha fica rasa e no `sm`, como a do resumo (só o gêmeo lê isso; a tabela do desktop não muda).
+                        mobileRow="flush"
                         stickyHeader={imp.expandido}
                         viewportClassName="md:min-h-0"
                         aria-label="Lançamentos do arquivo"

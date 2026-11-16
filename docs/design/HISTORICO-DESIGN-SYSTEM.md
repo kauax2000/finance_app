@@ -29046,3 +29046,18 @@ cartão vazio em volta de um estado pequeno.
 - Na tela: Transações esconde abas e ⋯ nesse caso; o vazio traz "Limpar filtros" (tira filtros e
   busca, mantém a aba) e "Editar filtros" (abre a gaveta do filtro). O botão do cabeçalho mostra a
   contagem em vez do ponto (`PageChromeFilter.count`). Jornada e Atlas atualizados.
+
+### Rodada 373 — `mobileRow="flush"`, a linha rasa do gêmeo do `DataTable`
+
+Pedido do dono em 2026-11-16: no telefone, o "Ver todos" do Importar extrato mostrava quase toda
+linha numa caixa (o `selected` do `Item`: contorno `--primary-accent` a 60% e fundo `primary/5`) e
+mais alta que a linha do resumo, porque lá marcar quer dizer "esta entra" e quase tudo vem marcado.
+
+- `DataTable mobileRow="flush"`: o gêmeo passa `selected={false}` ao `Item` e desce ao degrau `sm`
+  (`flush` + `sm` = `px-4 py-2`), como a `Linha` do resumo. A caixa de seleção já diz quem está
+  marcado; `aria-current` não muda (a linha já o sobrescrevia com o estado dela).
+- Decisão: só o visual. Caixa sempre à vista, ⋯ e `onRowClick` seguem o `full` — nada do toque
+  longo do `compact`. O piso de 44 no toque continua pelo `interactive` do `Item`.
+- Página: o eixo "Linha no telefone" (`full` · `compact` · `flush`) em "Na tela" e o eixo "Linha"
+  no iPhone, com seis linhas marcadas. `table-versions.test.ts` tranca.
+- Na tela: a conferência do Importar passa `mobileRow="flush"` (só o gêmeo a lê; o desktop não muda).
