@@ -1733,13 +1733,12 @@ function ListaDeCampos({
             </CommandItem>
           ))}
       </CommandList>
-      {naGaveta ? (
+      {/* Sem filtro ligado não há rodapé: o "Ver" só fecharia sobre a mesma lista (fecha-se arrastando). */}
+      {naGaveta && usados.length > 0 ? (
         <div className="flex gap-2 px-2 pb-2">
-          {usados.length > 0 ? (
-            <Button type="button" variant="tertiary" className="flex-1" onClick={onLimparTudo}>
-              Limpar tudo
-            </Button>
-          ) : null}
+          <Button type="button" variant="tertiary" className="flex-1" onClick={onLimparTudo}>
+            Limpar tudo
+          </Button>
           <Button type="button" variant="primary" className="flex-1" onClick={() => onVer()}>
             {verLabel}
           </Button>

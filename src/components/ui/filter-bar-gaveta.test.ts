@@ -81,7 +81,8 @@ describe("o cabeçalho e o rodapé da lista na gaveta", () => {
   })
   it("título Filtros, Ver primary e Limpar tudo tertiary na mesma linha; o Limpar solto sumiu", () => {
     expect(src).toMatch(/<PopoverTitle[^>]*>Filtros<\/PopoverTitle>/)
-    expect(src).toMatch(/<div className="flex gap-2 px-2 pb-2">\s*\{usados\.length > 0 \? \(\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{onLimparTudo\}>\s*Limpar tudo[\s\S]{0,120}<Button[^>]*variant="primary"[\s\S]{0,80}\{verLabel\}/)
+    // Sem filtro ligado, nada de rodapé: o "Ver" só fecharia sobre a mesma lista.
+    expect(src).toMatch(/\{naGaveta && usados\.length > 0 \? \(\s*<div className="flex gap-2 px-2 pb-2">\s*<Button[^>]*variant="tertiary"[^>]*onClick=\{onLimparTudo\}>\s*Limpar tudo[\s\S]{0,120}<Button[^>]*variant="primary"[\s\S]{0,80}\{verLabel\}/)
     expect(src).toContain("verLabel={rotuloVerResultados(count, noun)}")
     expect(src).not.toContain('<div className="flex justify-end px-2 pb-2">')
   })
