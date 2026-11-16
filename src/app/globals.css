@@ -4243,6 +4243,30 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
       /* Quem esconde o conteúdo no topo é o cabeçalho: a dissolução de cima sai. */
       --scroll-fade-top-max: 0px;
     }
+
+    /* Na gaveta o puxador vem antes (16/11/2026): a placa sobe e cobre a faixa dele, e o
+       corpo sobe junto até a borda da gaveta, com o recuo somando a mesma altura, então a
+       primeira linha fica onde estava. O puxador (`z-20`) fica por cima. Na gaveta de cima o
+       puxador é a borda de baixo (`order-last`), e nada muda. */
+    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + & {
+      &::before {
+        top: calc(var(--drawer-handle-h) * -1);
+        height: calc(100% + var(--drawer-handle-h));
+      }
+      & + [data-slot="dialog-body"],
+      & + form > [data-slot="dialog-body"],
+      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
+        margin-top: calc((var(--dialog-header-h, 0px) + var(--drawer-handle-h)) * -1);
+        padding-top: calc(
+          var(--dialog-header-h, 0px) + var(--drawer-handle-h) +
+            var(--dialog-body-pt, calc(var(--spacing) * 4))
+        );
+        scroll-padding-block-start: calc(
+          var(--dialog-header-h, 0px) + var(--drawer-handle-h) + var(--spacing) * 2
+        );
+      }
+    }
   }
 
   /* O degradê só aparece ao rolar (13/11): invisível no topo, liga nos primeiros 24px do corpo.

@@ -77,6 +77,9 @@ const dragHandleClassName = cn(
   // lateral, altura, largura, raio) e eles precisam vencer a folha dele.
   "!mx-auto my-2.5 shrink-0",
   "!h-1.5 !w-12 !rounded-full",
+  // Por cima da placa do cabeçalho translúcido (`z-10`), que sobe até a borda da
+  // gaveta e cobre esta faixa. O `relative` o vaul já declara; o `z` não.
+  "relative z-20",
   // A tinta. `!opacity-100` tira o fator 0,7 do vaul de cima do alfa.
   "!opacity-100 !bg-muted-foreground/75",
   "hover:!bg-muted-foreground/90 active:!bg-muted-foreground/90",
@@ -137,6 +140,9 @@ const drawerContentVariants = cva(
     // O teto é a gaveta alta (`--drawer-h`): com espaço em cima ela cresce até lá
     // antes de o meio rolar; o meio só rola quando o conteúdo passa da tela.
     "[--drawer-max-h:var(--drawer-h)]",
+    // A faixa do puxador, para o cabeçalho translúcido cobri-la: `!h-1.5` (6) mais o
+    // `my-2.5` dos dois lados (20) do `dragHandleClassName`. Mudou um, muda o outro.
+    "[--drawer-handle-h:calc(var(--spacing)*6.5)]",
     // A área segura é da superfície, com a mesma conta da gaveta do `Sheet`:
     // 24px de respiro mais a barra de gestos.
     "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)",

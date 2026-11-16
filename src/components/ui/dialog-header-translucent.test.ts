@@ -3,6 +3,7 @@ import { blocoCss, lerFonte } from "@/test/fonte"
 
 const CSS = lerFonte("src/app/globals.css")
 const DIALOG = lerFonte("src/components/ui/dialog.tsx")
+const DRAWER = lerFonte("src/components/ui/drawer.tsx")
 
 describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
   it("vale em todas as folhas: ligado por padrão, `translucent={false}` é a saída", () => {
@@ -39,5 +40,22 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
     const sup = u.slice(u.indexOf("@supports (animation-timeline: scroll())"))
     expect(sup).toMatch(/&::before,\s*&::after \{\s*opacity: 0;/)
+  })
+
+  it("na gaveta, a placa cobre o puxador e o corpo sobe até a borda (16/11/2026)", () => {
+    const u = blocoCss(CSS, "@utility dialog-header-translucent")
+    const i = u.indexOf('[data-slot="drag-handle"] + &')
+    expect(i).toBeGreaterThan(-1)
+    const puxador = u.slice(i)
+    expect(puxador).toMatch(/&::before \{[^}]*var\(--drawer-handle-h\)/)
+    expect(puxador).toMatch(/margin-top: calc\([^;]*var\(--drawer-handle-h\)/)
+    expect(puxador).toMatch(/padding-top: calc\([^;]*var\(--drawer-handle-h\)/)
+    expect(puxador).toMatch(/scroll-padding-block-start: calc\([^;]*var\(--drawer-handle-h\)/)
+    // A variável é a soma do puxador: `h-1.5` (6) + `my-2.5` dos dois lados (20) = 26.
+    expect(DRAWER).toContain("[--drawer-handle-h:calc(var(--spacing)*6.5)]")
+    expect(DRAWER).toContain('"!mx-auto my-2.5 shrink-0"')
+    expect(DRAWER).toContain('"!h-1.5 !w-12 !rounded-full"')
+    // O puxador fica por cima da placa (o cabeçalho é `z-10`).
+    expect(DRAWER).toMatch(/dragHandleClassName = cn\([\s\S]*"relative z-20"/)
   })
 })
