@@ -29033,3 +29033,16 @@ do info, sem pintar o cartão.
   `BadgeDot` (`[--badge-dot:var(--info)]`) enquanto mostra Confirmar; conferido (só lembrar ou
   desfazer), volta a "Como chegou", sem ponto nem tom.
 - `card-versions.test.ts` tranca o eixo; `transaction-detail-sheet.test.ts`, o uso.
+
+### Rodada 372 — leque colorido e o vazio solto do `DataTable` no telefone
+
+Pedido do dono em 2026-11-16: no telefone, filtro sem resultado em Transações deixava as abas e o
+cartão vazio em volta de um estado pequeno.
+
+- `EmptyStateIcon tint="vivid"`: o leque de ícones do vazio usa a tinta cheia (coral, azul, violeta)
+  e abre ao montar. Nada de arco-íris: são matizes de identidade, não a marca.
+- `DataTable`: abaixo do `md`, com gêmeo do telefone e sem linhas, o vazio aparece sozinho, fora do
+  cartão (vale para todo `DataTable` com gêmeo); prop nova `emptyPhone` para o conteúdo dele.
+- Na tela: Transações esconde abas e ⋯ nesse caso; o vazio traz "Limpar filtros" (tira filtros e
+  busca, mantém a aba) e "Editar filtros" (abre a gaveta do filtro). O botão do cabeçalho mostra a
+  contagem em vez do ponto (`PageChromeFilter.count`). Jornada e Atlas atualizados.
