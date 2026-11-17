@@ -523,7 +523,7 @@ describe("no telefone, abas de tipo e as pendências no ⋯", () => {
 
     it("as abas e a busca ficam fixas no cabeçalho do telefone", () => {
         expect(conferir).toContain("export function FiltrosDaConferencia(")
-        const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader>"), dialogo.indexOf("</DialogHeader>"))
+        const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader className={subtela"), dialogo.indexOf("</DialogHeader>"))
         expect(cabecalho).toMatch(/<DialogSteps[\s\S]*?\{comMenu \? <FiltrosDaConferencia/)
         // No corpo, só no desktop.
         expect(conferir).toMatch(/\{!celular \? \(\s*<div[^>]*>\s*<div className="min-w-0 flex-1">\s*<FiltrosDaConferencia/)
