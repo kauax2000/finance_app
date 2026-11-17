@@ -15,7 +15,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline"
 import { BuscaQueAbre } from "./busca-que-abre"
 import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
 import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
 import { Separator } from "@/components/ui/separator"
@@ -629,7 +629,16 @@ export function PendenciasNoMenu({ imp, travado = false }: { imp: ImportarExtrat
                     closeOnSelect
                     disabled={travado}
                     onCheckedChange={() => imp.setFiltro(imp.filtro === f.valor ? "todos" : f.valor)}
+                    // O ligado é um ponto azul à esquerda do nome, no lugar do ✓ do fim (dono, 16/11).
+                    // O primeiro filho é a casa do ✓; some, e a linha devolve o recuo dela.
+                    className="pr-2 [&>span:first-child]:hidden"
                 >
+                    {/* Ligada, o ponto azul cheio; desligada, o mesmo ponto vazado, que diz que ela pode ser ligada. */}
+                    {imp.filtro === f.valor ? (
+                        <BadgeDot className="size-2 [--badge-dot:var(--info)]" />
+                    ) : (
+                        <span aria-hidden className="size-2 shrink-0 rounded-full border-[1.5px] border-muted-foreground" />
+                    )}
                     {f.ia ? <SparklesIcon /> : null}
                     {f.rotulo}
                     {f.ia && iaLendo ? (

@@ -506,6 +506,12 @@ describe("no telefone, abas de tipo e as pendências no ⋯", () => {
         expect(conferir).toContain("celular ? !f.so_com_linhas :")
     })
 
+    it("no menu, a pendência ligada é um ponto azul cheio à esquerda, e a desligada o mesmo ponto vazado; sem o ✓", () => {
+        expect(conferir).toContain('className="pr-2 [&>span:first-child]:hidden"')
+        expect(conferir).toMatch(/imp\.filtro === f\.valor \? \(\s*<BadgeDot className="size-2 \[--badge-dot:var\(--info\)\]" \/>/)
+        expect(conferir).toContain("rounded-full border-[1.5px] border-muted-foreground")
+    })
+
     it("as pendências são itens marcáveis do ⋯, que ligam e desligam o filtro", () => {
         expect(conferir).toContain("export function PendenciasNoMenu(")
         expect(conferir).toMatch(/<DropdownMenuCheckboxItem[\s\S]*?checked=\{imp\.filtro === f\.valor\}/)
