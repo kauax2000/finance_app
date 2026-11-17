@@ -292,7 +292,8 @@ export function ImportarExtratoDialog({
                     </DialogHeader>
                     <DialogBody
                         // Na tela cheia do desktop o corpo não rola: quem rola é o viewport da tabela, com as abas e o cabeçalho parados.
-                        className={expandido ? "md:flex md:flex-col md:overflow-hidden" : undefined}
+                        // No telefone as abas moram no cabeçalho: o respiro dele (16) já separa a legenda, e o do topo do corpo dobraria o vão.
+                        className={cn(expandido && "md:flex md:flex-col md:overflow-hidden", comMenu && "[--dialog-body-pt:0px]")}
                         onDragOver={arrastando}
                         onDragLeave={(e) => {
                             if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSobre(false)
