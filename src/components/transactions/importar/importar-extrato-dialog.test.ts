@@ -501,25 +501,21 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
     })
 })
 
-describe("no telefone, abas de tipo e pílulas de pendência", () => {
+describe("no telefone, abas de tipo e as pendências no ⋯", () => {
     it("o TabsList do telefone leva só as três abas de tipo", () => {
         expect(conferir).toContain("celular ? !f.so_com_linhas :")
     })
 
-    it("as pendências são pílulas Toggle chip, que ligam e desligam o filtro", () => {
-        expect(conferir).toMatch(/<Toggle[\s\S]*?variant="chip"[\s\S]*?pressed=\{imp\.filtro === f\.valor\}/)
+    it("as pendências são itens marcáveis do ⋯, que ligam e desligam o filtro", () => {
+        expect(conferir).toContain("export function PendenciasNoMenu(")
+        expect(conferir).toMatch(/<DropdownMenuCheckboxItem[\s\S]*?checked=\{imp\.filtro === f\.valor\}/)
         expect(conferir).toMatch(/imp\.setFiltro\(imp\.filtro === f\.valor \? "todos" : f\.valor\)/)
-        expect(conferir).toMatch(/\{pilulas\.length > 0 \? \(\s*<div className="flex flex-wrap gap-2">/)
+        expect(conferir).not.toContain("<Toggle")
+        const menu = dialogo.slice(dialogo.indexOf("<DropdownMenuContent"), dialogo.indexOf("</DropdownMenuContent>"))
+        expect(menu).toContain("<PendenciasNoMenu imp={imp}")
     })
 
-    it("a pílula diz a contagem e o nome curto, em minúscula", () => {
-        expect(conferir).toContain('curto: "sem categoria"')
-        expect(conferir).toContain('curto: "já existem"')
-        expect(conferir).toContain('curto: "sugeridas"')
-        expect(conferir).not.toMatch(/rotulo\.toLowerCase\(\)/)
-    })
-
-    it("as abas, as pílulas e a busca ficam fixas no cabeçalho do telefone", () => {
+    it("as abas e a busca ficam fixas no cabeçalho do telefone", () => {
         expect(conferir).toContain("export function FiltrosDaConferencia(")
         const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader>"), dialogo.indexOf("</DialogHeader>"))
         expect(cabecalho).toMatch(/<DialogSteps[\s\S]*?\{comMenu \? <FiltrosDaConferencia/)

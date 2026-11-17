@@ -74,7 +74,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
+import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -249,6 +249,8 @@ export function ImportarExtratoDialog({
                                                 </DropdownMenuItem>
                                             </>
                                         ) : null}
+                                        {/* As pendências filtram por aqui no telefone: as três abas de tipo ficam sozinhas na linha. */}
+                                        <PendenciasNoMenu imp={imp} travado={travadoAoImportar} />
                                         <DropdownMenuSeparator />
                                         {/* As visíveis são as da aba e da busca, como no Ações do desktop. */}
                                         <ItensDasVisiveis

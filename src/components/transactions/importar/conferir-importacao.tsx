@@ -57,8 +57,11 @@ import {
 } from "@/components/ui/dialog"
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EmptyState, EmptyStateIcon, EmptyStateTitle } from "@/components/ui/empty-state"
@@ -75,7 +78,6 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Toggle } from "@/components/ui/toggle"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
@@ -103,16 +105,15 @@ const LIMITE = 6
 
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string; curto?: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
-    // `curto` é o nome na pílula do telefone, depois da contagem ("15 sem categoria").
-    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true, curto: "já existem" },
-    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true, curto: "sem categoria" },
+    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
+    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
     // O ✦ liga a aba ao botão "IA categorizou N".
-    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true, curto: "sugeridas" },
+    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true },
 ]
 
 /** A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista. */
@@ -601,6 +602,44 @@ const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
  * busca que o ⋯ abre. No telefone o diálogo a monta no cabeçalho, que já é fixo e
  * translúcido; no desktop ela fica no corpo, na linha das abas.
  */
+/**
+ * No telefone, as pendências (Já existem, Sem categoria, Sugeridas) são itens marcáveis do ⋯:
+ * marcar mostra só elas, e desmarcar volta a Todos. Com uma ligada, nenhuma aba acende.
+ */
+export function PendenciasNoMenu({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
+    const iaLendo = imp.ia.estado === "lendo"
+    const pendencias = FILTROS.filter(
+        (f) => f.so_com_linhas && (imp.contagens[f.valor] > 0 || imp.filtro === f.valor || Boolean(f.ia && iaLendo))
+    )
+    if (pendencias.length === 0) return null
+    return (
+        <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Mostrar só</DropdownMenuLabel>
+            {pendencias.map((f) => (
+                <DropdownMenuCheckboxItem
+                    key={f.valor}
+                    checked={imp.filtro === f.valor}
+                    // A lista troca por baixo: o menu fecha para ela aparecer.
+                    closeOnSelect
+                    disabled={travado}
+                    onCheckedChange={() => imp.setFiltro(imp.filtro === f.valor ? "todos" : f.valor)}
+                >
+                    {f.ia ? <SparklesIcon /> : null}
+                    {f.rotulo}
+                    {f.ia && iaLendo ? (
+                        <Spinner size="sm" label="A IA está categorizando" className="ms-auto" />
+                    ) : (
+                        <Badge size="xs" tone={f.aviso ? "warning" : "neutral"} className="nums ms-auto">
+                            {numberBR(imp.contagens[f.valor])}
+                        </Badge>
+                    )}
+                </DropdownMenuCheckboxItem>
+            ))}
+        </>
+    )
+}
+
 export function FiltrosDaConferencia({ imp, conf, travado = false }: { imp: ImportarExtrato; conf: Conferencia; travado?: boolean }) {
     const celular = useIsMobile()
     const { busca, setBusca } = conf
@@ -609,9 +648,8 @@ export function FiltrosDaConferencia({ imp, conf, travado = false }: { imp: Impo
     const esmaece = esmaecido(lendo)
     // A ligada continua à vista mesmo zerada, para o toque a desligar; a da IA aparece já enquanto ela lê.
     const aVista = (f: (typeof FILTROS)[number]) => imp.contagens[f.valor] > 0 || imp.filtro === f.valor || Boolean(f.ia && iaLendo)
-    // No telefone o TabsList leva só os três de tipo, que sempre cabem; as pendências viram pílulas abaixo.
+    // No telefone o TabsList leva só os três de tipo, que sempre cabem; as pendências moram no ⋯ (`PendenciasNoMenu`).
     const abas = FILTROS.filter((f) => (celular ? !f.so_com_linhas : !f.so_com_linhas || aVista(f)))
-    const pilulas = celular ? FILTROS.filter((f) => f.so_com_linhas && aVista(f)) : []
     // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
     const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
     if (conf.buscaAberta && !buscaNaTela) setBuscaNaTela(true)
@@ -659,35 +697,6 @@ export function FiltrosDaConferencia({ imp, conf, travado = false }: { imp: Impo
                     ))}
                 </TabsList>
             </Tabs>
-            {/* Com uma pílula ligada, o valor do Tabs não casa com aba nenhuma, e nenhuma acende. */}
-            {pilulas.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                    {pilulas.map((f) => (
-                        <Toggle
-                            key={f.valor}
-                            variant="chip"
-                            size="sm"
-                            pressed={imp.filtro === f.valor}
-                            // Tocar de novo desliga e volta a Todos.
-                            onPressedChange={() => imp.setFiltro(imp.filtro === f.valor ? "todos" : f.valor)}
-                            disabled={travado}
-                            icon={f.ia ? SparklesIcon : undefined}
-                        >
-                            {/* O Toggle não tem tom de aviso: a contagem leva o Badge de aviso, como na aba. */}
-                            {f.ia && iaLendo ? (
-                                <Spinner size="sm" label="A IA está categorizando" />
-                            ) : f.aviso && imp.contagens[f.valor] > 0 ? (
-                                <Badge size="xs" tone="warning" className="nums">
-                                    <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
-                                </Badge>
-                            ) : (
-                                <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
-                            )}
-                            {` ${f.curto}`}
-                        </Toggle>
-                    ))}
-                </div>
-            ) : null}
             {/* No telefone o Buscar do ⋯ abre a busca logo abaixo das abas, nas duas vistas; o × a fecha. */}
             {celular && (conf.buscaAberta || buscaNaTela) ? (
                 // Brota da linha das abas (o `field-bloom`, o gesto do campo que abre) e volta a ela ao fechar.
