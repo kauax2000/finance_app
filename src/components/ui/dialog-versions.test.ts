@@ -228,12 +228,19 @@ describe("o ✕ flutuante fica por cima do cabeçalho translúcido", () => {
   })
 })
 
-describe("na gaveta, as ações do DialogHeaderRow sobem à linha do ✕", () => {
+describe("na gaveta, o cabeçalho é a barra das folhas do iOS", () => {
   const fonte = semComentarios(CODIGO)
-  it("a linha sobe à altura do ✕ do canto, e o título desce para a de baixo", () => {
+  it("o DialogHeaderRow sobe à linha do ✕, com o título no centro entre duas reservas iguais", () => {
     expect(fonte).toContain('endAdornment != null && "max-md:-mt-8"')
-    expect(fonte).toContain("max-md:has-[[data-slot=dialog-title]]:grid-cols-1 max-md:has-[[data-slot=dialog-title]]:gap-2")
-    expect(fonte).toContain("max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-2")
-    expect(fonte).toContain("max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end")
+    expect(fonte).toContain("max-md:has-[[data-slot=dialog-title]]:grid-cols-[5.75rem_minmax(0,1fr)_5.75rem]")
+    expect(fonte).toContain("max-md:[&_[data-slot=dialog-title]]:col-start-2 max-md:[&_[data-slot=dialog-title]]:row-start-1 max-md:[&_[data-slot=dialog-title]]:truncate max-md:[&_[data-slot=dialog-title]]:text-center")
+    expect(fonte).toContain("max-md:[&_[data-slot=dialog-description]]:col-span-full max-md:[&_[data-slot=dialog-description]]:row-start-2")
+    expect(fonte).toContain("max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:contents")
+  })
+  it("o título solto no cabeçalho da gaveta também sobe ao centro da linha do ✕", () => {
+    expect(fonte).toContain("max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:-mt-8 max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:px-13")
+  })
+  it("os botões da barra ficam sem fundo (o dono recusou o círculo cinza)", () => {
+    expect(fonte).not.toContain("bg-secondary")
   })
 })

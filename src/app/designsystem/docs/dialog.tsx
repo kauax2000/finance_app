@@ -184,9 +184,9 @@ export default function DialogDoc() {
             entrelinha. <code>center</code> + <code>centerShown</code> +{" "}
             <code>useDialogHeaderDock</code>: o resumo que entra na linha do
             cabeçalho quando o título do corpo passa por baixo dela — o
-            detalhe do lançamento. Na gaveta (abaixo de 768px), as ações do{" "}
-            <code>DialogHeaderRow</code> sobem à linha do × do canto, e o
-            título desce para a linha de baixo, 8px abaixo delas.
+            detalhe do lançamento. Na gaveta (abaixo de 768px), o cabeçalho é a barra das folhas
+            do iOS: o título sobe à linha do × do canto e fica no centro dela,
+            numa linha só, e a descrição desce para baixo da barra.
           </>
         }
         code={`<DialogHeader>

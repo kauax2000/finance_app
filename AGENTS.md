@@ -1237,14 +1237,18 @@ declaração de `background-color` no trilho).
     `FormCancel` e `FormSubmit`. `DialogHeader align="center"`, `DialogMedia
     variant="well" tone` e `DialogSteps variant="dots"` (depois da descrição)
     são o cabeçalho centrado de uma confirmação que pausa (Excluir conta).
-  - **Na gaveta, as ações do `DialogHeaderRow` moram na linha do × do canto**
-    (17/11/2026): abaixo de 768px a linha sobe (`-mt-8`) à altura do ×
-    flutuante (`top-2.5`), e, com `DialogTitle` dentro, o título desce para a
-    segunda linha, 8px abaixo do ⋯ e do ×. Sem título (as setas do detalhe), a
-    linha inteira sobe. No desktop nada muda. O ‹ de uma subtela espelha o ×
-    no canto esquerdo. Para a linha subir sem ser recortada, **o invólucro que
-    embrulha `DialogBody` (formulário ou `div`) não é o meio da gaveta**: só
-    repassa a coluna, e quem rola é o corpo (`acharMeio`).
+  - **Na gaveta, o cabeçalho é a barra das folhas do iOS** (17/11/2026): abaixo de
+    768px o título sobe à linha do × do canto (`top-2.5`) e fica **no centro dela**,
+    numa linha só (`truncate`), em `font-semibold`; a descrição desce para baixo da
+    barra, à esquerda. Com `DialogHeaderRow`, a linha sobe (`-mt-8`), o invólucro dos
+    filhos vira `contents` e a grade tem duas reservas iguais de 92px (⋯ + ×); sem
+    título (as setas do detalhe), a linha sobe inteira. O título solto no cabeçalho
+    sobe com `-mt-8` e reserva 52px de cada lado. **Os botões da barra ficam sem
+    fundo**: o círculo cinza foi recusado. Título longo corta com "…": a tela encurta
+    o título no telefone (o Importar leva o destino à descrição). O ‹ de uma subtela
+    espelha o × no canto esquerdo. No desktop nada muda. Para a linha subir sem ser
+    recortada, **o invólucro que embrulha `DialogBody` (formulário ou `div`) não é o
+    meio da gaveta**: só repassa a coluna, e quem rola é o corpo (`acharMeio`).
   - O cabeçalho é alinhado à esquerda e sem `gap`; o × não reserva lugar (o
     título desvia dele só quando ele existe). O rodapé sangra por
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem

@@ -155,7 +155,16 @@ export function ImportarExtratoDialog({
     const nomeDoDestino = cartao
         ? `para o ${cartao.name}`
         : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.em ?? "")
-    const titulo = subtela ? "Ajustar colunas" : imp.passo === "conferir" && nomeDoDestino ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}` : "Importar extrato"
+    // No telefone o título mora no centro da barra, entre o ⋯ e o ✕ (a barra das folhas do iOS): o destino
+    // desce para a descrição, senão "2 lançamentos em Outro" cortava.
+    const destinoNaDescricao = celular && imp.passo === "conferir" && Boolean(nomeDoDestino)
+    const titulo = subtela
+        ? "Ajustar colunas"
+        : imp.passo === "conferir" && nomeDoDestino
+          ? destinoNaDescricao
+              ? lancamentos(imp.resumo.total)
+              : `${lancamentos(imp.resumo.total)} ${nomeDoDestino}`
+          : "Importar extrato"
     const periodo = imp.resumo.periodo
     // No telefone as ações da conferência moram no ⋯ do cabeçalho, ao lado do ✕; as abas ficam com a linha delas.
     const comMenu = celular && imp.passo === "conferir"
@@ -176,7 +185,7 @@ export function ImportarExtratoDialog({
                     : imp.passo === "conferir"
                       ? (
                         <>
-                            {periodo ? `De ${periodoPtBr(periodo)}. ` : ""}
+                            {destinoNaDescricao ? `${nomeDoDestino[0].toUpperCase()}${nomeDoDestino.slice(1)}${periodo ? `, de ${periodoPtBr(periodo)}` : ""}. ` : periodo ? `De ${periodoPtBr(periodo)}. ` : ""}
                             {/* No telefone a gaveta guarda a linha para a lista; o "Vão entrar" já diz o que conta. */}
                             <span className="hidden md:inline">Desmarque o que não quer trazer.</span>
                         </>
@@ -228,9 +237,7 @@ export function ImportarExtratoDialog({
                 showCloseButton={!comMenu}
             >
                 <Form layout="none" data-subtela-conteudo="" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
-                    {/* Na subtela, o título desce para baixo da linha do ‹ e do ✕ (8px abaixo do botão). O `!` vence o
-                        `pt-(--dialog-px)` que o layout `fixed` impõe ao cabeçalho com seletor mais forte. */}
-                    <DialogHeader className={subtela ? "pt-6! pointer-coarse:pt-9!" : undefined}>
+                    <DialogHeader>
                         {comMenu ? (
                             <DialogHeaderRow endAdornment={
                                 <>

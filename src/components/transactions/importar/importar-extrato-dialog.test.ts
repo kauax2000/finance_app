@@ -523,7 +523,7 @@ describe("no telefone, abas de tipo e as pendências no ⋯", () => {
 
     it("as abas e a busca ficam fixas no cabeçalho do telefone", () => {
         expect(conferir).toContain("export function FiltrosDaConferencia(")
-        const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader className={subtela"), dialogo.indexOf("</DialogHeader>"))
+        const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader>"), dialogo.indexOf("</DialogHeader>"))
         expect(cabecalho).toMatch(/<DialogSteps[\s\S]*?\{comMenu \? <FiltrosDaConferencia/)
         // No corpo, só no desktop.
         expect(conferir).toMatch(/\{!celular \? \(\s*<div[^>]*>\s*<div className="min-w-0 flex-1">\s*<FiltrosDaConferencia/)
@@ -645,9 +645,9 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
 
     it("a subtela troca os passos pelo ‹ e o rodapé por um Pronto só", () => {
         expect(dialogo).toContain("const subtela = imp.ajustandoColunas")
-        expect(dialogo).toContain('const titulo = subtela ? "Ajustar colunas"')
-        // O título desce para baixo da linha do ‹ e do ✕ (16px abaixo do ‹ de 44 no telefone).
-        expect(dialogo).toContain('<DialogHeader className={subtela ? "pt-6! pointer-coarse:pt-9!" : undefined}>')
+        expect(dialogo).toMatch(/const titulo = subtela\s*\? "Ajustar colunas"/)
+        // No telefone o título fica no centro da barra, e o destino desce para a descrição.
+        expect(dialogo).toContain("const destinoNaDescricao = celular && imp.passo === \"conferir\" && Boolean(nomeDoDestino)")
         // O ‹ espelha o ✕ (\`absolute top-2.5 right-2.5 z-20\`) no canto esquerdo, fora do formulário.
         expect(dialogo).toMatch(/<\/Form>[\s{}]*\{subtela \? \(\s*<Button[\s\S]*?aria-label="Voltar à conferência"[\s\S]*?className="absolute top-2\.5 left-2\.5 z-20"/)
         expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela ? null : (")

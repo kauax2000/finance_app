@@ -555,24 +555,30 @@ function DialogHeaderRow({
       data-slot="dialog-header-row"
       className={cn(
         "group/dialog-header-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3",
-        // Na gaveta (abaixo de 768px) as ações sobem à linha do ✕ do canto (`top-2.5`), como
-        // a subtela do Importar, e, com título, o título desce para a linha de baixo, 8px abaixo
-        // delas. Sem título (as setas do detalhe), a linha inteira sobe junto (dono, 17/11/2026).
+        // Na gaveta (abaixo de 768px) é a barra das folhas do iOS (dono, 17/11/2026): a linha
+        // sobe à altura do ✕ do canto (`top-2.5`), o título fica no centro dela, numa linha só,
+        // entre duas reservas iguais (as ações à direita, 44 + 4 + 44), e a descrição desce
+        // para baixo da barra, à esquerda. Sem título (as setas do detalhe), a linha sobe inteira.
         endAdornment != null && "max-md:-mt-8",
         endAdornment != null &&
-          "max-md:has-[[data-slot=dialog-title]]:grid-cols-1 max-md:has-[[data-slot=dialog-title]]:gap-2",
+          "max-md:has-[[data-slot=dialog-title]]:grid-cols-[5.75rem_minmax(0,1fr)_5.75rem] max-md:has-[[data-slot=dialog-title]]:gap-x-0 max-md:has-[[data-slot=dialog-title]]:gap-y-2 max-md:has-[[data-slot=dialog-title]]:items-center",
+        endAdornment != null &&
+          "max-md:[&_[data-slot=dialog-title]]:col-start-2 max-md:[&_[data-slot=dialog-title]]:row-start-1 max-md:[&_[data-slot=dialog-title]]:truncate max-md:[&_[data-slot=dialog-title]]:text-center max-md:[&_[data-slot=dialog-title]]:font-semibold",
+        endAdornment != null &&
+          "max-md:[&_[data-slot=dialog-description]]:col-span-full max-md:[&_[data-slot=dialog-description]]:row-start-2",
         center != null && "relative",
         className
       )}
     >
-      <div className="min-w-0 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-2">
+      {/* Com título, na gaveta, o invólucro some (`contents`): título e descrição viram itens da grade. */}
+      <div className="min-w-0 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:contents">
         {children}
       </div>
       {endAdornment != null ? (
         <div
           className={cn(
             "-my-0.75 flex shrink-0 items-center gap-1 max-md:my-0",
-            "max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end",
+            "max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:col-start-3 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end",
             DIALOG_CLOSE_RESERVE
           )}
         >
@@ -898,7 +904,10 @@ const dialogTitleClassName = cn(
   // sempre termina a `--dialog-px` da borda; sobra o que o × avança além disso.
   DIALOG_CLOSE_RESERVE,
   // Dentro de `DialogHeaderRow` quem reserva é a coluna do adorno.
-  "in-data-[slot=dialog-header-row]:pe-0"
+  "in-data-[slot=dialog-header-row]:pe-0",
+  // Na gaveta, o título solto no cabeçalho (sem `DialogHeaderRow`) sobe à linha do ✕ do
+  // canto e fica no centro dela, numa linha só, com 52px livres de cada lado (dono, 17/11/2026).
+  "max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:-mt-8 max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:px-13 max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:leading-11 max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:truncate max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:text-center max-md:[[data-slot=sheet-content]_[data-slot=dialog-header]>&]:font-semibold"
 )
 
 function DialogTitle({

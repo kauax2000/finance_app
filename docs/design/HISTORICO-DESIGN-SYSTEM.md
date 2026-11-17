@@ -29126,3 +29126,19 @@ Ao subir, o ⋯ do detalhe ficava cortado 16px em cima. O `div` que embrulha o c
 direto só repassa a coluna (`[&>*:has(>[data-slot=dialog-body])]`), e quem rola é o corpo.
 O resumo que entra no topo do detalhe continua lendo a rolagem do `DialogBody`.
 `drawer-versions.test.ts`.
+
+### Rodada 379 — a gaveta ganha a barra das folhas do iOS
+
+A rodada 378 deixava o título abaixo da linha do ⋯ e do ×, e o cabeçalho crescia cerca de 36px no
+telefone. O dono viu três formas de pôr o título no centro (artefato "Título no centro") e escolheu
+a C, sem o círculo de fundo nos botões. Abaixo de 768px, numa gaveta, o título fica no centro da
+linha do × do canto, numa linha só (`truncate`, `font-semibold`), e a descrição desce para baixo
+da barra, à esquerda. No `DialogHeaderRow`, o invólucro dos filhos vira `contents`, e a grade é
+`[5.75rem_minmax(0,1fr)_5.75rem]`, com o título na coluna do meio e as ações na da direita. O
+título solto num cabeçalho de gaveta (seletor `[data-slot=sheet-content] [data-slot=dialog-header]
+> título`) sobe com `-mt-8`, reserva 52px de cada lado e mede 44 de altura de linha. A barra
+ganha de volta os 36px que a rodada 378 tinha custado. O título longo corta: o Importar, no
+telefone, deixa "2 lançamentos" no título e leva "Em Outro, de 1 a 2 de outubro" para a descrição.
+A subtela Ajustar colunas perdeu os ajustes de `pt` à mão, porque o título dela agora vai ao
+centro entre o ‹ e o ×. O círculo cinza nos botões (`bg-secondary`) chegou a ser feito e foi
+recusado. Medido a 375px: o ‹, o título e o × na mesma linha (y igual), e o título centrado.
