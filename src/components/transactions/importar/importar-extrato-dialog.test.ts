@@ -685,3 +685,9 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
         expect(css).toMatch(/html\[data-subtela="entra"\]::view-transition-new\(subtela-conteudo\) \{\s*animation: var\(--duration-slow\) var\(--ease-out\) both subpagina-direita;/)
     })
 })
+
+describe("no passo Arquivo, a descrição não repete a área de soltar", () => {
+    it("fica só para o leitor de tela", () => {
+        expect(dialogo).toContain('<DialogDescription className={imp.passo === "arquivo" ? "sr-only" : undefined}>')
+    })
+})

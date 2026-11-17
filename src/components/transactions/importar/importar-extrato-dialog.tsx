@@ -180,7 +180,8 @@ export function ImportarExtratoDialog({
                 </span>
                 <span className="sr-only">{titulo}</span>
             </DialogTitle>
-            <DialogDescription>
+            {/* No passo Arquivo a descrição fica só para o leitor de tela: a área de soltar já diz "CSV ou OFX". */}
+            <DialogDescription className={imp.passo === "arquivo" ? "sr-only" : undefined}>
                 {imp.passo === "feito"
                     ? "Os lançamentos já estão na lista."
                     : imp.passo === "conferir"
