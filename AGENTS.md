@@ -1232,15 +1232,18 @@ declaração de `background-color` no trilho).
     `form` seguinte, o `DialogBody` precisa ser o primeiro filho (`:first-child`). Busca, abas ou
     filtros fixos moram **dentro** do `DialogHeader`, como no Importar e no Pôr categoria. Fora
     dele, o corpo subia por cima dessas peças.
-  - **O `DialogHeader` é translúcido em todas as folhas** (`translucent`, ligado; `false` é a
-    saída, que o painel de notificações usa): o corpo rola por trás do cabeçalho, a placa a 95%, sem desfoque e a borda descendo num degradê
-    de 56px, sem linha reta (`@utility dialog-header-translucent`, 13/11/2026). O vidro de
-    24px em todas as folhas (12/11) foi recusado. **O `DialogFooter` é o espelho** (`translucent`,
-    ligado; rodada 382, 17/11/2026): o corpo rola por trás do rodapé, a mesma placa a 95% e o
-    degradê de 56px subindo, que some nos últimos 24px da rolagem; na gaveta de baixo a placa
-    desce sobre a área segura (`@utility dialog-footer-translucent`, `--dialog-footer-h`). **A
-    regra geral**: o que fica preso na borda de uma área que rola (cabeçalho, rodapé) deixa o
-    conteúdo passar por trás, com a placa a 95% e o degradê de 56px, sem desfoque.
+  - **O `DialogHeader` e o `DialogFooter` deixam o corpo passar por trás** (`translucent`,
+    ligado; `false` é a saída, que o painel de notificações usa; `@utility
+    dialog-header-translucent` e `dialog-footer-translucent`, com `--dialog-header-h` e
+    `--dialog-footer-h` medidos). **Sem tinta nenhuma** (rodada 384, 17/11/2026, o dono): quem
+    esconde o que passa por baixo é a máscara do próprio corpo. A faixa do cabeçalho é
+    `--scroll-fade-band-h` (somando o puxador, na gaveta), a do rodapé é `--scroll-fade-foot-h`,
+    e a borda se dissolve numa rampa de até 56px (`--scroll-fade-top-max` e
+    `--scroll-fade-bottom-max`) que cresce com a rolagem. O que se vê sob o cabeçalho e o
+    rodapé é a própria gaveta, da mesma cor. A placa a 95% (13/11 e 17/11) escurecia a faixa ao
+    rolar e foi recusada, e o vidro de 24px (12/11) também. **A regra geral**: o que fica preso
+    na borda de uma área que rola deixa o conteúdo passar por trás, dissolvido pela máscara, sem
+    placa e sem desfoque.
   - **Aberto de dentro de uma folha, o diálogo sobe à camada dela**: o `DialogContent` lê o `DrawerRaizContext` e, dentro de um `SheetContent`, véu e placa vão a `--z-sheet` (em `--z-modal` ficavam atrás da folha). Abrir um arquivo do detalhe é o caso (`VisualizadorDeAnexo`).
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: a `@utility dialog-step`
     (as peças surgem do desfoque, `menu-content-in`, em ondas por

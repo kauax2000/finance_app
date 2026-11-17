@@ -4299,7 +4299,10 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
 
     &::before,
     &::after {
-      content: "";
+      /* Sem tinta (rodada 384, 17/11/2026, o dono): a placa mais escura que a gaveta marcava uma
+         faixa ao rolar. Quem esconde o conteúdo sob o cabeçalho é a máscara do corpo (a faixa
+         `--scroll-fade-band-h`, logo abaixo), e o que se vê ali é a própria gaveta. */
+      content: none;
       position: absolute;
       inset-inline: 0;
       z-index: -1;
@@ -4336,8 +4339,10 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
       margin-top: calc(var(--dialog-header-h, 0px) * -1);
       padding-top: calc(var(--dialog-header-h, 0px) + var(--dialog-body-pt, calc(var(--spacing) * 4)));
       scroll-padding-block-start: calc(var(--dialog-header-h, 0px) + var(--spacing) * 2);
-      /* Quem esconde o conteúdo no topo é o cabeçalho: a dissolução de cima sai. */
-      --scroll-fade-top-max: 0px;
+      /* A máscara do corpo esconde o que passa sob o cabeçalho (a faixa) e dissolve a borda
+         em 56px conforme a lista rola. */
+      --scroll-fade-band-h: var(--dialog-header-h, 0px);
+      --scroll-fade-top-max: calc(var(--spacing) * 14);
     }
 
     /* Na gaveta o puxador vem antes (16/11/2026): a placa sobe e cobre a faixa dele, e o
@@ -4363,56 +4368,14 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         scroll-padding-block-start: calc(
           var(--dialog-header-h, 0px) + var(--drawer-handle-h) + var(--spacing) * 2
         );
+        --scroll-fade-band-h: calc(var(--dialog-header-h, 0px) + var(--drawer-handle-h));
       }
     }
-  }
-
-  /* O degradê só aparece ao rolar (13/11): invisível no topo, liga nos primeiros 24px do corpo.
-     Cabeçalho e corpo são irmãos (ou o corpo está num `form`), então a linha do tempo é
-     publicada pela folha, o ancestral comum. Sem suporte, o degradê fica sempre à vista. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
-    }
-    [data-layout="fixed"]
-      &:has(
-        + [data-slot="dialog-body"],
-        + form > [data-slot="dialog-body"]:first-child,
-        + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
-      ) {
-      /* A placa e o degradê juntos: em repouso o cabeçalho não tem tinta nenhuma (a placa
-         mais escura que a folha marcava uma faixa sobre o topo, 13/11), e os dois acendem
-         nos primeiros 24px de rolagem. Sem rolagem a linha do tempo fica inativa: a base
-         invisível mantém os dois apagados. */
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-header-fade-in linear both;
-        animation-timeline: --dialog-body-scroll;
-        animation-range: 0 24px;
-      }
-      & + [data-slot="dialog-body"],
-      & + form > [data-slot="dialog-body"]:first-child,
-      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
-        scroll-timeline: --dialog-body-scroll block;
-      }
-    }
-  }
-}
-
-@keyframes dialog-header-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 
 /* O espelho do cabeçalho, virado para cima (rodada 382, 17/11/2026): o corpo rola por trás do
-   rodapé, que fica com a mesma placa a 95% e o mesmo degradê de 56px, subindo. O corpo vem
+   rodapé, escondido por baixo dele pela máscara do corpo, como no cabeçalho. O corpo vem
    antes: irmão, ou os dois dentro do mesmo `form` (o Importar). */
 @utility dialog-footer-translucent {
   [data-layout="fixed"] [data-slot="dialog-body"] + & {
@@ -4427,7 +4390,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
 
     &::before,
     &::after {
-      content: "";
+      /* Sem tinta, como o cabeçalho (rodada 384): a máscara do corpo esconde o que passa sob o
+         rodapé, e ali se vê a própria gaveta. */
+      content: none;
       position: absolute;
       inset-inline: 0;
       z-index: -1;
@@ -4473,37 +4438,10 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     margin-bottom: calc(var(--dialog-footer-h, 0px) * -1);
     padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--dialog-body-pb, calc(var(--spacing) * 4)));
     scroll-padding-block-end: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
-    /* Quem esconde o conteúdo embaixo é o rodapé: a dissolução de baixo sai. */
-    --scroll-fade-bottom-max: 0px;
-  }
-
-  /* O degradê aparece enquanto há conteúdo por baixo e some nos últimos 24px da rolagem, o
-     inverso do cabeçalho. Sem rolagem a linha do tempo fica inativa e a base invisível vale;
-     sem suporte, o degradê fica sempre à vista. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
-    }
-    [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
-      scroll-timeline: --dialog-body-scroll block;
-    }
-    [data-layout="fixed"] [data-slot="dialog-body"] + & {
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-footer-fade-out linear both;
-        animation-timeline: --dialog-body-scroll;
-        animation-range: calc(100% - 24px) 100%;
-      }
-    }
+    /* A máscara do corpo esconde o que passa sob o rodapé (a faixa de baixo) e dissolve a
+       borda em 56px enquanto há lista por baixo. */
+    --scroll-fade-foot-h: var(--dialog-footer-h, 0px);
+    --scroll-fade-bottom-max: calc(var(--spacing) * 14);
   }
 }
 
-@keyframes dialog-footer-fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}

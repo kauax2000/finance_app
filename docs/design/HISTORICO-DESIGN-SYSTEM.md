@@ -29164,3 +29164,17 @@ Agora o seletor exige `:first-child`, e o Pôr categoria leva a busca e as abas 
 `DialogHeader`, com a lista rolando por trás. O Cancelar dele virou `FormCancel` e some no
 telefone, como nas outras gavetas com ×. Medido a 375px: o cabeçalho termina em 516px e a
 primeira linha começa em 532px. `dialog-header-translucent.test.ts`.
+
+### Rodada 384 — cabeçalho e rodapé sem placa: a máscara do corpo esconde o que passa por baixo
+
+O dono reparou que, ao rolar, a faixa do cabeçalho do Pôr categoria escurecia. Era a placa do
+cabeçalho translúcido, o `--background` a 95%, um degrau mais escuro que o vidro da gaveta, que
+acendia nos primeiros 24px de rolagem. O rodapé translúcido da rodada 382 fazia o mesmo embaixo.
+Ele pediu a cor da própria gaveta. Em vez de procurar uma tinta igual ao vidro, que muda com o que
+está atrás, os dois deixaram de pintar (`content: none` nos pseudo-elementos, e as linhas do tempo
+de rolagem saíram). Quem esconde o conteúdo agora é a máscara do `DialogBody`, que já sabia fazer
+isso: a faixa de cima (`--scroll-fade-band-h` = altura do cabeçalho, mais a do puxador na gaveta)
+e a de baixo (`--scroll-fade-foot-h` = altura do rodapé) ficam transparentes, e a borda se
+dissolve numa rampa que cresce com a rolagem até 56px. Medido a 375px no Importar: a máscara é
+transparente até 154px (o cabeçalho e o puxador) e dissolve até 210px. Sob o cabeçalho e o
+rodapé, só a gaveta. `dialog-header-translucent.test.ts` e `dialog-footer-translucent.test.ts`.
