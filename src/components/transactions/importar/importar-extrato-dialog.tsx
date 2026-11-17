@@ -181,7 +181,7 @@ export function ImportarExtratoDialog({
                 <span className="sr-only">{titulo}</span>
             </DialogTitle>
             {/* A descrição fica só para o leitor de tela no passo Arquivo (a área de soltar já diz "CSV ou OFX") e,
-                no telefone, nas Colunas: lá a frase é o título da seção da lista (`ConferirLeitura`). */}
+                no telefone, nas Colunas: lá quem explica é o próprio `ConferirLeitura` ("É assim que vai entrar?"). */}
             <DialogDescription
                 className={imp.passo === "arquivo" || (celular && imp.passo === "colunas") ? "sr-only" : undefined}
             >
