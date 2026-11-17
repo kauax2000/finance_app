@@ -602,10 +602,9 @@ describe("no telefone a conferência mostra tudo", () => {
 })
 
 describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
-    it("cada pendência tem a frase `so` em FILTROS", () => {
-        expect(conferir).toContain('so: "Só sem categoria"')
-        expect(conferir).toContain('so: "Só as que já existem"')
-        expect(conferir).toContain('so: "Só as sugeridas"')
+    it("a legenda diz o nome da pendência, sem \"Só\"", () => {
+        expect(conferir).toContain("{pendenciaLigada(imp)?.rotulo} (")
+        expect(conferir).not.toMatch(/"Só /)
     })
 
     it("a legenda tem o Mostrar todos, um link que volta a Todos", () => {

@@ -105,15 +105,15 @@ const LIMITE = 6
 
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true; so?: string }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
-    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true, so: "Só as que já existem" },
-    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true, so: "Só sem categoria" },
+    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
+    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
     // O ✦ liga a aba ao botão "IA categorizou N".
-    { valor: "ia", rotulo: "Sugeridas", so: "Só as sugeridas", so_com_linhas: true, ia: true },
+    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true },
 ]
 
 /** A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista. */
@@ -1080,7 +1080,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     <Caption className="md:hidden">
                         {pendenciaLigada(imp) ? (
                             <>
-                                {pendenciaLigada(imp)?.so} ({numberBR(imp.contagens[imp.filtro])}) ·{" "}
+                                {pendenciaLigada(imp)?.rotulo} ({numberBR(imp.contagens[imp.filtro])}) ·{" "}
                                 <Button type="button" variant="link" className="h-auto px-0 text-xs" onClick={() => imp.setFiltro("todos")}>
                                     Mostrar todos
                                 </Button>
