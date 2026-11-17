@@ -362,7 +362,7 @@ describe("a busca que abre da lupa", () => {
 
 describe("na tela cheia o topo fica parado e só as linhas rolam", () => {
     it("o DialogBody para de rolar no desktop, só com a tela cheia", () => {
-        expect(dialogo).toMatch(/<DialogBody[\s\S]*?className=\{expandido \? "md:flex md:flex-col md:overflow-hidden" : undefined\}/)
+        expect(dialogo).toMatch(/<DialogBody[\s\S]*?className=\{cn\(expandido && "md:flex md:flex-col md:overflow-hidden", comMenu && "\[--dialog-body-pt:0px\]"\)\}/)
         expect(dialogo).toMatch(/key="conferir" className=\{cn\(ESMAECE_AO_CHEGAR, expandido && "md:flex md:min-h-0 md:flex-1 md:flex-col"\)\}/)
     })
 
