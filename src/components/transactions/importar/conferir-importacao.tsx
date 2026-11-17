@@ -75,6 +75,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toggle } from "@/components/ui/toggle"
 import { Caption } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { normalizeSearchText } from "@/lib/command-filter"
@@ -102,16 +103,20 @@ const LIMITE = 6
 
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; curto?: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
-    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
-    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
+    // `curto` é o nome na pílula do telefone, depois da contagem ("15 sem categoria").
+    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true, curto: "já existem" },
+    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true, curto: "sem categoria" },
     // O ✦ liga a aba ao botão "IA categorizou N".
-    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true },
+    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true, curto: "sugeridas" },
 ]
+
+/** A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista. */
+const esmaecido = (lendo: boolean) => cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
 
 const papeisDe = (m: ImportarExtrato["mapeamento"]) =>
     [
@@ -592,6 +597,129 @@ const BUSCA_QUE_SAI_MS = 260
 const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
 
 /**
+ * O filtro da conferência: as abas e, no telefone, as pílulas das pendências e a
+ * busca que o ⋯ abre. No telefone o diálogo a monta no cabeçalho, que já é fixo e
+ * translúcido; no desktop ela fica no corpo, na linha das abas.
+ */
+export function FiltrosDaConferencia({ imp, conf, travado = false }: { imp: ImportarExtrato; conf: Conferencia; travado?: boolean }) {
+    const celular = useIsMobile()
+    const { busca, setBusca } = conf
+    const iaLendo = imp.ia.estado === "lendo"
+    const lendo = imp.pendente === "lendo"
+    const esmaece = esmaecido(lendo)
+    // A ligada continua à vista mesmo zerada, para o toque a desligar; a da IA aparece já enquanto ela lê.
+    const aVista = (f: (typeof FILTROS)[number]) => imp.contagens[f.valor] > 0 || imp.filtro === f.valor || Boolean(f.ia && iaLendo)
+    // No telefone o TabsList leva só os três de tipo, que sempre cabem; as pendências viram pílulas abaixo.
+    const abas = FILTROS.filter((f) => (celular ? !f.so_com_linhas : !f.so_com_linhas || aVista(f)))
+    const pilulas = celular ? FILTROS.filter((f) => f.so_com_linhas && aVista(f)) : []
+    // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
+    const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
+    if (conf.buscaAberta && !buscaNaTela) setBuscaNaTela(true)
+    React.useEffect(() => {
+        if (conf.buscaAberta || !buscaNaTela) return
+        const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        const t = window.setTimeout(() => setBuscaNaTela(false), reduzido ? 0 : BUSCA_QUE_SAI_MS)
+        return () => window.clearTimeout(t)
+    }, [conf.buscaAberta, buscaNaTela])
+    return (
+        // No cabeçalho do telefone o respiro acima é o dos passos (`pt-3`); no desktop quem esmaece é a linha das abas.
+        <div className={cn("flex min-w-0 flex-col gap-2", celular && cn("pt-3", esmaece))} aria-busy={celular ? lendo : undefined}>
+            <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
+                {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
+                {/* No telefone só os três de tipo, divididos na linha: cabem sempre, sem rolar de lado. */}
+                <TabsList aria-label="Filtro" stretch={celular || !imp.expandido}>
+                    {/* A aba da IA aparece já enquanto ela lê, com o spinner no lugar da contagem. */}
+                    {abas.map((f) => (
+                        <TabsTrigger
+                            key={f.valor}
+                            value={f.valor}
+                            disabled={travado}
+                            icon={f.ia ? <SparklesIcon /> : undefined}
+                            // A sobra da linha se divide a partir do rótulo de cada aba, para "Sem categoria" não apertar.
+                            className="flex-auto"
+                            // Se a fileira não couber e rolar de lado, a aba escolhida vem inteira à vista.
+                            onClick={(e) => {
+                                const aba = e.currentTarget
+                                requestAnimationFrame(() => aba.scrollIntoView({ block: "nearest", inline: "nearest" }))
+                            }}
+                            count={
+                                f.ia && iaLendo ? (
+                                    <Spinner size="sm" label="A IA está categorizando" />
+                                ) : f.aviso && imp.contagens[f.valor] > 0 ? (
+                                    <Badge size="xs" tone="warning" className="nums">
+                                        <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
+                                    </Badge>
+                                ) : (
+                                    <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
+                                )
+                            }
+                        >
+                            {f.rotulo}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+            {/* Com uma pílula ligada, o valor do Tabs não casa com aba nenhuma, e nenhuma acende. */}
+            {pilulas.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                    {pilulas.map((f) => (
+                        <Toggle
+                            key={f.valor}
+                            variant="chip"
+                            size="sm"
+                            pressed={imp.filtro === f.valor}
+                            // Tocar de novo desliga e volta a Todos.
+                            onPressedChange={() => imp.setFiltro(imp.filtro === f.valor ? "todos" : f.valor)}
+                            disabled={travado}
+                            icon={f.ia ? SparklesIcon : undefined}
+                        >
+                            {/* O Toggle não tem tom de aviso: a contagem leva o Badge de aviso, como na aba. */}
+                            {f.ia && iaLendo ? (
+                                <Spinner size="sm" label="A IA está categorizando" />
+                            ) : f.aviso && imp.contagens[f.valor] > 0 ? (
+                                <Badge size="xs" tone="warning" className="nums">
+                                    <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
+                                </Badge>
+                            ) : (
+                                <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
+                            )}
+                            {` ${f.curto}`}
+                        </Toggle>
+                    ))}
+                </div>
+            ) : null}
+            {/* No telefone o Buscar do ⋯ abre a busca logo abaixo das abas, nas duas vistas; o × a fecha. */}
+            {celular && (conf.buscaAberta || buscaNaTela) ? (
+                // Brota da linha das abas (o `field-bloom`, o gesto do campo que abre) e volta a ela ao fechar.
+                <div
+                    data-state={conf.buscaAberta ? "open" : "closed"}
+                    inert={!conf.buscaAberta}
+                    className="field-bloom origin-top motion-reduce:animate-none!"
+                >
+                    <SearchInput
+                        id={conf.idDaBusca}
+                        value={busca}
+                        onChange={(e) => setBusca(e.target.value)}
+                        onClear={() => {
+                            setBusca("")
+                            conf.setBuscaAberta(false)
+                        }}
+                        clearLabel="Fechar busca"
+                        placeholder="Buscar descrição"
+                        aria-label="Buscar descrição"
+                        disabled={travado}
+                        // Vazia, sair do campo a fecha: o × só aparece com texto.
+                        onBlur={() => {
+                            if (!busca) conf.setBuscaAberta(false)
+                        }}
+                    />
+                </div>
+            ) : null}
+        </div>
+    )
+}
+
+/**
  * A conferência: o resumo em chips, o filtro e a lista. Compacta, no máximo 6
  * linhas (a última dissolve) e "Ver os N"; expandida, o mesmo diálogo em tela
  * cheia com o `DataTable` (busca, ordenação, seleção = o que entra, soma).
@@ -603,7 +731,6 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
     // descrição e sem acento, e não no `DataTable`: a tabela e as Ações recebem a mesma lista.
     const nomeDoId = (id: string | null) => (id ? (imp.previa?.nomeDaCategoria.get(id) ?? "") : "")
     const pelaIa = imp.filtro === "ia"
-    const iaLendo = imp.ia.estado === "lendo"
     // Todas as da IA de uma vez, com o toast que deixa voltar.
     const desfazerTodas = () => {
         const ids = (imp.previa?.itens ?? []).filter((i) => imp.origemDe(i.clientId) === "ia").map((i) => i.clientId)
@@ -670,7 +797,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
     const grande = teto !== undefined && daTabela.length > teto
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
-    const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
+    const esmaece = esmaecido(lendo)
     const chavesCompacto = chavesDasLinhas(daTabela.slice(0, teto))
     const podeExpandir = !celular && resumo.total > LIMITE
     // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-base`, `VISTA_QUE_SAI`),
@@ -735,15 +862,6 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         if (celular && expandido) setExpandido(false)
     }, [celular, expandido, setExpandido])
     const escadaDaLista = celular && trocouDeAba ? ESCADA : ESCADA_DA_LISTA
-    // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
-    const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
-    if (conf.buscaAberta && !buscaNaTela) setBuscaNaTela(true)
-    React.useEffect(() => {
-        if (conf.buscaAberta || !buscaNaTela) return
-        const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        const t = window.setTimeout(() => setBuscaNaTela(false), reduzido ? 0 : BUSCA_QUE_SAI_MS)
-        return () => window.clearTimeout(t)
-    }, [conf.buscaAberta, buscaNaTela])
     // Na tela cheia, entre a lupa e as Ações: três pesos — a lupa sem nada, ele sem fundo, as Ações com fundo, na ponta.
     const botaoRecolher = (
         // Sem `aria-expanded`: no terciário ele é o realce de menu aberto, e o rótulo já diz o estado.
@@ -843,7 +961,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             ) : null}
             {imp.previa && imp.previa.ignoradas > 0 ? <Caption>{rotuloDasIgnoradas(imp.previa.ignoradas)}</Caption> : null}
             {/* O filtro é o resumo: cada aba traz a contagem, e a que pede atenção acende em aviso.
-                No desktop as abas dividem a linha; no telefone, onde não cabem, a fileira rola de lado. */}
+                No desktop as abas dividem a linha; no telefone, as de tipo dividem a linha e as pendências viram pílulas. */}
             {/* A IA mora na aba "✦ Sugeridas"; acima das abas fica só a falha, com o caminho de volta. */}
             {imp.ia.estado === "falhou" ? (
                 <Alert size="sm" tone="warning" className={esmaece}>
@@ -855,78 +973,21 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     </AlertActions>
                 </Alert>
             ) : null}
-            <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
-                <div className="min-w-0 flex-1">
-                    <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
-                        {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
-                        <TabsList aria-label="Filtro" scrollable={celular} stretch={!imp.expandido}>
-                            {/* A aba da IA aparece já enquanto ela lê, com o spinner no lugar da contagem. */}
-                            {FILTROS.filter((f) => !f.so_com_linhas || imp.contagens[f.valor] > 0 || imp.filtro === f.valor || (f.ia && iaLendo)).map((f) => (
-                                <TabsTrigger
-                                    key={f.valor}
-                                    value={f.valor}
-                                    disabled={travado}
-                                    icon={f.ia ? <SparklesIcon /> : undefined}
-                                    // A sobra da linha se divide a partir do rótulo de cada aba, para "Sem categoria" não apertar.
-                                    className="flex-auto"
-                                    // A fileira rola de lado quando não cabe: a aba escolhida vem inteira à vista.
-                                    onClick={(e) => {
-                                        const aba = e.currentTarget
-                                        requestAnimationFrame(() => aba.scrollIntoView({ block: "nearest", inline: "nearest" }))
-                                    }}
-                                    count={
-                                        f.ia && iaLendo ? (
-                                            <Spinner size="sm" label="A IA está categorizando" />
-                                        ) : f.aviso && imp.contagens[f.valor] > 0 ? (
-                                            <Badge size="xs" tone="warning" className="nums">
-                                                <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
-                                            </Badge>
-                                        ) : (
-                                            <ContagemQueAnda value={imp.contagens[f.valor]} formatar={numberBR} />
-                                        )
-                                    }
-                                >
-                                    {f.rotulo}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
-                </div>
-                {/* Na tela cheia sobra largura: a busca, o recolher e as Ações (na ponta) vêm para a linha das abas. */}
-                {/* No telefone a linha é só das abas: a busca e as Ações moram no ⋯, e o Ver menos no pé da lista. */}
-                {imp.expandido && !celular ? (
-                    <>
-                        <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
-                        {podeExpandir ? botaoRecolher : null}
-                        <AcoesDasVisiveis imp={imp} itens={daTabela} onPorCategoria={setPorCategoria} travado={travado} />
-                    </>
-                ) : null}
-            </div>
-            {/* No telefone o Buscar do ⋯ abre a busca logo abaixo das abas, nas duas vistas; o × a fecha. */}
-            {celular && (conf.buscaAberta || buscaNaTela) ? (
-                // Brota da linha das abas (o `field-bloom`, o gesto do campo que abre) e volta a ela ao fechar.
-                <div
-                    data-state={conf.buscaAberta ? "open" : "closed"}
-                    inert={!conf.buscaAberta}
-                    className="field-bloom origin-top motion-reduce:animate-none!"
-                >
-                    <SearchInput
-                        id={conf.idDaBusca}
-                        value={busca}
-                        onChange={(e) => setBusca(e.target.value)}
-                        onClear={() => {
-                            setBusca("")
-                            conf.setBuscaAberta(false)
-                        }}
-                        clearLabel="Fechar busca"
-                        placeholder="Buscar descrição"
-                        aria-label="Buscar descrição"
-                        disabled={travado}
-                        // Vazia, sair do campo a fecha: o × só aparece com texto.
-                        onBlur={() => {
-                            if (!busca) conf.setBuscaAberta(false)
-                        }}
-                    />
+            {/* No telefone as abas, as pílulas e a busca moram no cabeçalho do diálogo, fixas no topo. */}
+            {!celular ? (
+                <div className={cn("flex items-center gap-2", esmaece)} aria-busy={lendo}>
+                    <div className="min-w-0 flex-1">
+                        <FiltrosDaConferencia imp={imp} conf={conf} travado={travado} />
+                    </div>
+                    {/* Na tela cheia sobra largura: a busca, o recolher e as Ações (na ponta) vêm para a linha das abas. */}
+                    {/* No telefone a linha é só das abas: a busca e as Ações moram no ⋯, e o Ver menos no pé da lista. */}
+                    {imp.expandido && !celular ? (
+                        <>
+                            <BuscaQueAbre value={busca} onChange={setBusca} label="Buscar descrição" disabled={travado} />
+                            {podeExpandir ? botaoRecolher : null}
+                            <AcoesDasVisiveis imp={imp} itens={daTabela} onPorCategoria={setPorCategoria} travado={travado} />
+                        </>
+                    ) : null}
                 </div>
             ) : null}
             {/* Como o arquivo foi lido mora logo abaixo do filtro, antes das linhas que ele explica. */}

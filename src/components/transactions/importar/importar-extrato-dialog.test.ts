@@ -186,7 +186,7 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/<BuscaQueAbre[\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toMatch(/if \(de\) \{\s*setBusca\(""\)[\s\S]*?imp\.setExpandido\(!de\)/)
         // Na tela cheia as Ações e o recolher moram na linha das abas.
-        expect(conferir).toMatch(/<\/Tabs>\s*<\/div>[\s\S]*?\{imp\.expandido && !celular \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
+        expect(conferir).toMatch(/<FiltrosDaConferencia[^>]*\/>\s*<\/div>[\s\S]*?\{imp\.expandido && !celular \? \([\s\S]*?botaoRecolher[\s\S]*?<AcoesDasVisiveis imp=\{imp\} itens=\{daTabela\}/)
         expect(conferir).toContain("enableSelection")
         expect(conferir).toContain("rowSelection={selecao}")
         // A pílula flutuante do DataTable fica sob o véu do diálogo: as ações e a soma moram na barra da tabela.
@@ -495,7 +495,38 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
         expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*<>\s*<BuscaQueAbre/)
         // O telefone não tem Ver todos nem Ver menos: a lista mostra tudo.
         expect(conferir).not.toContain("celular && podeExpandir")
-        expect(conferir).toContain('scrollable={celular}')
+        // No telefone as abas cabem: três de tipo, divididas na linha, sem rolar de lado.
+        expect(conferir).not.toContain("scrollable={celular}")
+        expect(conferir).toMatch(/<TabsList aria-label="Filtro" stretch=\{celular \|\| !imp\.expandido\}>/)
+    })
+})
+
+describe("no telefone, abas de tipo e pílulas de pendência", () => {
+    it("o TabsList do telefone leva só as três abas de tipo", () => {
+        expect(conferir).toContain("celular ? !f.so_com_linhas :")
+    })
+
+    it("as pendências são pílulas Toggle chip, que ligam e desligam o filtro", () => {
+        expect(conferir).toMatch(/<Toggle[\s\S]*?variant="chip"[\s\S]*?pressed=\{imp\.filtro === f\.valor\}/)
+        expect(conferir).toMatch(/imp\.setFiltro\(imp\.filtro === f\.valor \? "todos" : f\.valor\)/)
+        expect(conferir).toMatch(/\{pilulas\.length > 0 \? \(\s*<div className="flex flex-wrap gap-2">/)
+    })
+
+    it("a pílula diz a contagem e o nome curto, em minúscula", () => {
+        expect(conferir).toContain('curto: "sem categoria"')
+        expect(conferir).toContain('curto: "já existem"')
+        expect(conferir).toContain('curto: "sugeridas"')
+        expect(conferir).not.toMatch(/rotulo\.toLowerCase\(\)/)
+    })
+
+    it("as abas, as pílulas e a busca ficam fixas no cabeçalho do telefone", () => {
+        expect(conferir).toContain("export function FiltrosDaConferencia(")
+        const cabecalho = dialogo.slice(dialogo.indexOf("<DialogHeader>"), dialogo.indexOf("</DialogHeader>"))
+        expect(cabecalho).toMatch(/<DialogSteps[\s\S]*?\{comMenu \? <FiltrosDaConferencia/)
+        // No corpo, só no desktop.
+        expect(conferir).toMatch(/\{!celular \? \(\s*<div[^>]*>\s*<div className="min-w-0 flex-1">\s*<FiltrosDaConferencia/)
+        const filtros = conferir.slice(conferir.indexOf("export function FiltrosDaConferencia("), conferir.indexOf("export function ConferirImportacao("))
+        expect(filtros).not.toContain("sticky")
     })
 })
 

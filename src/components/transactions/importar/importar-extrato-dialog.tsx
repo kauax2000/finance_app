@@ -74,7 +74,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao, ItensDasVisiveis, pelaBusca, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
+import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -275,6 +275,9 @@ export function ImportarExtratoDialog({
                                 className={PASSOS_ACOMPANHAM}
                             />
                         )}
+                        {/* No telefone o filtro da conferência fica fixo no topo: o cabeçalho não rola, e o corpo
+                            começa abaixo dele pela altura medida (`--dialog-header-h`), também com a busca aberta. */}
+                        {comMenu ? <FiltrosDaConferencia imp={imp} conf={conf} travado={travadoAoImportar} /> : null}
                     </DialogHeader>
                     <DialogBody
                         // Na tela cheia do desktop o corpo não rola: quem rola é o viewport da tabela, com as abas e o cabeçalho parados.
