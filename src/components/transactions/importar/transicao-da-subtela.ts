@@ -14,8 +14,8 @@ type DocumentoComTransicao = Document & {
 
 /**
  * O gesto da subpágina do telefone (`TransicaoDeSubpagina`) dentro da gaveta do Importar: a
- * subtela Ajustar colunas entra pela direita, e a conferência volta da esquerda. O navegador
- * segura a foto da tela velha enquanto a nova monta; a releitura do Pronto espera o passo mudar,
+ * subtela Conferir leitura entra pela direita, e a conferência volta da esquerda. O navegador
+ * segura a foto da tela velha enquanto a nova monta; a releitura do Está certo espera o passo mudar,
  * até 1,2s. Se o passo não muda (o erro de coluna faltando), a troca acontece sem gesto. Só no
  * telefone; sem View Transitions ou com movimento reduzido, a troca é seca.
  */

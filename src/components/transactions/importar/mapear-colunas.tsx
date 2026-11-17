@@ -249,7 +249,8 @@ export function ConferirLeitura({ linhas, valor, onChange, disabled = false }: P
                                     <ItemContent className="min-w-0">
                                         <ItemTitle className="truncate">{item.descricao}</ItemTitle>
                                         <ItemDescription>
-                                            {formatDayHeadingPtBr(item.data)}
+                                            {/* Meio-dia local: a data pura (YYYY-MM-DD) é lida em UTC e voltava um dia no Brasil. */}
+                                            {formatDayHeadingPtBr(`${item.data}T12:00:00`)}
                                             {item.categoria ? ` · ${item.categoria}` : null}
                                         </ItemDescription>
                                     </ItemContent>

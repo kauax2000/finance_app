@@ -656,7 +656,7 @@ describe("Conferir leitura vindo da conferência é uma subtela, e não um passo
         expect(dialogo).toContain("{subtela ? null : imp.passo === \"arquivo\" ? (")
         expect(dialogo).toContain(': subtela ? "Está certo" : "Continuar"')
         expect(dialogo).toContain('? "Escolha de onde vem cada informação."')
-        expect(mapear).toContain("formatDayHeadingPtBr(item.data)")
+        expect(mapear).toContain("formatDayHeadingPtBr(`${item.data}T12:00:00`)")
         expect(mapear).not.toContain("formatDateLongPtBr")
     })
 
@@ -672,7 +672,7 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
     const gesto = ler("transicao-da-subtela.ts")
     const css = lerFonte("src/app/globals.css")
 
-    it("os três caminhos passam pela troca: o ⋯, o ‹ e o Pronto", () => {
+    it("os três caminhos passam pela troca: o ⋯, o ‹ e o Está certo", () => {
         expect(dialogo).toContain('onSelect={() => trocarDeTela("entra", imp.ajustarColunas)}')
         expect(dialogo).toContain('onClick={() => (subtela ? trocarDeTela("volta", imp.voltar) : imp.voltar())}')
         expect(dialogo).toContain('subtela ? trocarDeTela("volta", imp.lerColunas) : imp.lerColunas()')
