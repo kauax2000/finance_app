@@ -78,6 +78,7 @@ import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
 import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
 import { MapearColunas, MapearColunasEmLista } from "./mapear-colunas"
+import { useTransicaoDaSubtela } from "./transicao-da-subtela"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
 const CONTAS = [
@@ -128,6 +129,8 @@ export function ImportarExtratoDialog({
     // Ajustar colunas, vindo da conferência, é uma edição do que o app leu (dono, 16/11/2026): a gaveta vira
     // subtela, com ‹ no lugar dos passos e um botão só, Pronto. Quando a dedução falha, Colunas segue um passo.
     const subtela = imp.ajustandoColunas
+    // Entrar e sair da subtela é o gesto da subpágina do app, só no telefone.
+    const trocarDeTela = useTransicaoDaSubtela({ passo: imp.passo, pendente: imp.pendente, erro: imp.erro }, celular)
 
     function mudarAberto(aberto: boolean) {
         if (!aberto) {
@@ -168,7 +171,7 @@ export function ImportarExtratoDialog({
                         size="icon-md"
                         aria-label="Voltar à conferência"
                         disabled={travado}
-                        onClick={imp.voltar}
+                        onClick={() => trocarDeTela("volta", imp.voltar)}
                     >
                         <ChevronLeftIcon />
                     </Button>
@@ -200,7 +203,7 @@ export function ImportarExtratoDialog({
     function enviar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         if (imp.passo === "arquivo") return imp.continuar()
-        if (imp.passo === "colunas") return imp.lerColunas()
+        if (imp.passo === "colunas") return subtela ? trocarDeTela("volta", imp.lerColunas) : imp.lerColunas()
         if (imp.passo === "conferir") return imp.importar()
     }
 
@@ -236,7 +239,7 @@ export function ImportarExtratoDialog({
                 // Com o ⋯, o ✕ desce à linha do título, ao lado dele (como no painel de notificações).
                 showCloseButton={!comMenu}
             >
-                <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
+                <Form layout="none" data-subtela-conteudo="" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
                         {comMenu ? (
                             <DialogHeaderRow endAdornment={
@@ -283,7 +286,7 @@ export function ImportarExtratoDialog({
                                                     Inverter sinal
                                                 </DropdownMenuItem>
                                                 {/* Ajustar no meio da releitura deixaria a resposta cair no passo trocado: espera, como o Inverter. */}
-                                                <DropdownMenuItem disabled={imp.pendente === "lendo"} onSelect={imp.ajustarColunas}>
+                                                <DropdownMenuItem disabled={imp.pendente === "lendo"} onSelect={() => trocarDeTela("entra", imp.ajustarColunas)}>
                                                     <TableCellsIcon />
                                                     Ajustar colunas
                                                 </DropdownMenuItem>

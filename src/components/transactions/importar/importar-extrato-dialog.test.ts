@@ -566,7 +566,7 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
         expect(conferir).toContain("`Mostrando ${numberBR(LIMITE)} de ${numberBR(daTabela.length)} ·`")
         expect(conferir).toContain('busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"')
         // Ajustar colunas no ⋯ espera a releitura, como o Inverter.
-        expect(dialogo).toMatch(/<DropdownMenuItem disabled=\{imp\.pendente === "lendo"\} onSelect=\{imp\.ajustarColunas\}>/)
+        expect(dialogo).toMatch(/<DropdownMenuItem disabled=\{imp\.pendente === "lendo"\} onSelect=\{\(\) => trocarDeTela\("entra", imp\.ajustarColunas\)\}>/)
     })
 })
 
@@ -656,5 +656,27 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(dialogo).toMatch(/imp\.passo === "colunas" && imp\.csv && celular \? \(\s*<MapearColunasEmLista/)
         expect(mapear).toContain("export function MapearColunasEmLista(")
         expect(mapear.match(/<AjustesDaLeitura /g)?.length).toBe(2)
+    })
+})
+
+describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
+    const gesto = ler("transicao-da-subtela.ts")
+    const css = lerFonte("src/app/globals.css")
+
+    it("os três caminhos passam pela troca: o ⋯, o ‹ e o Pronto", () => {
+        expect(dialogo).toContain('onSelect={() => trocarDeTela("entra", imp.ajustarColunas)}')
+        expect(dialogo).toContain('onClick={() => trocarDeTela("volta", imp.voltar)}')
+        expect(dialogo).toContain('subtela ? trocarDeTela("volta", imp.lerColunas) : imp.lerColunas()')
+        expect(dialogo).toContain('<Form layout="none" data-subtela-conteudo=""')
+    })
+
+    it("a espera não usa quadros, que o navegador suspende com a foto segura", () => {
+        expect(gesto).not.toContain("requestAnimationFrame")
+        expect(gesto).toContain('raiz.dataset.subtela = "parada"')
+    })
+
+    it("o nome só existe durante a troca, e a tela nova entra pela direita", () => {
+        expect(css).toContain("html[data-subtela] [data-subtela-conteudo] {\n  view-transition-name: subtela-conteudo;")
+        expect(css).toMatch(/html\[data-subtela="entra"\]::view-transition-new\(subtela-conteudo\) \{\s*animation: var\(--duration-slow\) var\(--ease-out\) both subpagina-direita;/)
     })
 })

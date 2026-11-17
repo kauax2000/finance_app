@@ -13,7 +13,7 @@ describe("a transição de subpágina", () => {
             m[1].replace(/\/\*[\s\S]*?\*\//g, "").trim()
         )
         expect(regras.length).toBeGreaterThan(0)
-        for (const seletor of regras) expect(seletor).toMatch(/^(html\[data-subpagina\]|\.workspace-switch) /)
+        for (const seletor of regras) expect(seletor).toMatch(/^(html\[data-subpagina\]|html\[data-subtela\]|\.workspace-switch) /)
     })
 
     it("com nome, a pílula da barra fica chapada: sem borrão, o texto passaria por ela", () => {

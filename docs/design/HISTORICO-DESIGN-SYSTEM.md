@@ -29092,3 +29092,18 @@ ficava atrás dele, e o toque caía no cabeçalho. Onde o ✕ mora na linha do t
 (`placement="inline"`), nada mudava. O canto agora leva `z-20`, um empilhamento local,
 e vale para todo `Dialog`, `Sheet` e gaveta. Tirar o ✕ e deixar só a alça foi recusado:
 no desktop e no leitor de tela, o ✕ é a saída. `dialog-versions.test.ts`.
+
+### Rodada 377 — a subtela da gaveta anda como a subpágina
+
+O Ajustar colunas do Importar virou subtela (‹ e Pronto), mas trocava por escada no lugar,
+sem dizer que era outra página. Agora ela usa o gesto da `TransicaoDeSubpagina`, só no
+telefone (`useTransicaoDaSubtela`, em `components/transactions/importar/`): a tela nova
+entra pela direita (`subpagina-direita`), e a de baixo recua 30% e esmaece. Na volta, a
+subtela sai pela direita, por cima, e a conferência vem da esquerda. Só o conteúdo da folha
+tem nome (`html[data-subtela] [data-subtela-conteudo]`). A placa, a alça e a página ficam
+paradas, e o grupo recorta o que passa da caixa nova. A placa é de vidro, então a tela de
+baixo esmaece em vez de ganhar fundo (a subpágina do app pinta `--background`). O Pronto espera
+a releitura (até 1,2s); sem passo novo (coluna faltando), a troca é seca (`"parada"`).
+Armadilha: com a foto segura, o navegador suspende o `requestAnimationFrame`, e uma espera
+em quadros nunca terminava. A espera é por `setTimeout`. `transicao-de-subpagina.test.ts`
+aceita o seletor `html[data-subtela]` entre os nomes que só valem durante a troca.

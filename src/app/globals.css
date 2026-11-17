@@ -2453,6 +2453,63 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   }
 }
 
+/* A subtela de uma gaveta (o Ajustar colunas do Importar, `useTransicaoDaSubtela`): o
+   gesto da subpágina dentro da folha. Só o conteúdo dela anda; a placa de vidro, a alça
+   e a página ficam paradas (a raiz não anima). A placa é translúcida, então a tela de
+   baixo não leva fundo: ela recua e esmaece enquanto a de cima entra, e o grupo recorta
+   o que passa da caixa da tela nova. O nome só existe durante a troca. */
+html[data-subtela] [data-subtela-conteudo] {
+  view-transition-name: subtela-conteudo;
+}
+html[data-subtela]::view-transition-old(root),
+html[data-subtela]::view-transition-new(root) {
+  animation: none;
+}
+html[data-subtela]::view-transition-group(subtela-conteudo) {
+  animation: none;
+  overflow: clip;
+}
+html[data-subtela="entra"]::view-transition-old(subtela-conteudo) {
+  animation: var(--duration-slow) var(--ease-out) both subtela-recua-esquerda;
+}
+html[data-subtela="entra"]::view-transition-new(subtela-conteudo) {
+  animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
+}
+html[data-subtela="volta"]::view-transition-old(subtela-conteudo) {
+  z-index: 1;
+  animation: var(--duration-slow) var(--ease-out) both subtela-sai-direita;
+}
+html[data-subtela="volta"]::view-transition-new(subtela-conteudo) {
+  animation: var(--duration-slow) var(--ease-out) both subtela-vem-esquerda;
+}
+html[data-subtela="parada"]::view-transition-old(subtela-conteudo),
+html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(subtela-conteudo),
+  ::view-transition-new(subtela-conteudo) {
+    animation: none;
+  }
+}
+@keyframes subtela-recua-esquerda {
+  to {
+    translate: -30% 0;
+    opacity: 0;
+  }
+}
+@keyframes subtela-sai-direita {
+  to {
+    translate: 100% 0;
+  }
+}
+@keyframes subtela-vem-esquerda {
+  from {
+    translate: -30% 0;
+    opacity: 0;
+  }
+}
+
 /* As cores de identidade e de ladrilho têm duas versões: a viva (uma claridade, o
    croma da marca, tinta escura) e a suave (quase branca, com a letra no tom forte do
    mesmo matiz). As utilities publicam variáveis e o componente pinta com
