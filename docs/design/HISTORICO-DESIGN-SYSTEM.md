@@ -29081,3 +29081,14 @@ motivo do `link`, ela não usa `text-decoration`. `button-touch-response.test.ts
 Depois, a pedido do dono ("o underline aparecendo só em hover ou click"), o traço passou
 a ficar escondido em repouso (`visibility: hidden`). Ele aparece inteiro e de uma vez no
 cursor (dentro de `@media (hover: hover)`), no toque (`:active`) e no foco do teclado.
+
+### Rodada 376 — o ✕ flutuante por cima do cabeçalho translúcido
+
+O dono relatou que, numa das telas da gaveta do Importar (o passo Arquivo), o ✕ nunca
+fechava. Medido a 375px: `elementFromPoint` no centro do ✕ devolvia o `dialog-header`.
+O `@utility dialog-header-translucent` põe o cabeçalho em `position: relative; z-index: 10`,
+e o `DialogCloseButton` no canto (`placement="floating"`, `absolute`) não tinha `z`, então
+ficava atrás dele, e o toque caía no cabeçalho. Onde o ✕ mora na linha do título
+(`placement="inline"`), nada mudava. O canto agora leva `z-20`, um empilhamento local,
+e vale para todo `Dialog`, `Sheet` e gaveta. Tirar o ✕ e deixar só a alça foi recusado:
+no desktop e no leitor de tela, o ✕ é a saída. `dialog-versions.test.ts`.

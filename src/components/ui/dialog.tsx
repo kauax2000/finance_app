@@ -728,7 +728,8 @@ function DialogHeader({
 const dialogCloseButtonVariants = cva("", {
   variants: {
     placement: {
-      floating: "absolute top-2.5 right-2.5",
+      // Acima do cabeçalho translúcido (`z-index: 10`, `dialog-header-translucent`): atrás dele, o toque caía no cabeçalho.
+      floating: "absolute top-2.5 right-2.5 z-20",
       inline: "-me-1.5 -my-0.5",
     },
   },

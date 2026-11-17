@@ -219,3 +219,11 @@ describe("um link de dentro do diálogo fecha antes de abrir a tela", () => {
     expect(SHEET).toContain("value={navegarDeFora ?? navegarFechando}")
   })
 })
+
+describe("o ✕ flutuante fica por cima do cabeçalho translúcido", () => {
+  it("o canto leva z acima do z-index 10 do cabeçalho", () => {
+    // Atrás do cabeçalho (`dialog-header-translucent`, z-index 10), o toque no ✕ caía nele e a gaveta não fechava.
+    expect(semComentarios(CODIGO)).toContain('floating: "absolute top-2.5 right-2.5 z-20"')
+    expect(lerFonte("src/app/globals.css")).toMatch(/@utility dialog-header-translucent[\s\S]*?z-index: 10;/)
+  })
+})
