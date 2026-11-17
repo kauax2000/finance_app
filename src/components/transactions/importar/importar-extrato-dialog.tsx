@@ -76,7 +76,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
+import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, TotalDaConferencia, FaixaSemCategoria, useConferencia } from "./conferir-importacao"
 import { ConferirLeitura, MapearColunas } from "./mapear-colunas"
 import { useTransicaoDaSubtela } from "./transicao-da-subtela"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
@@ -612,9 +612,12 @@ export function ImportarExtratoDialog({
                             {/* No telefone o Total fica parado acima do botão, nas duas vistas: com o
                                 `flex-col-reverse` do rodapé, o último filho sobe para cima dos botões. */}
                             {celular && imp.passo === "conferir" ? (
-                                <div role="status" aria-busy={imp.pendente === "lendo"} className="sm:order-first sm:me-auto sm:flex-1">
-                                    <ResumoDoSaldo imp={imp} rotulo="Total" />
-                                </div>
+                                <>
+                                    <FaixaSemCategoria imp={imp} travado={travadoAoImportar} />
+                                    <div role="status" aria-busy={imp.pendente === "lendo"} className="sm:order-first sm:me-auto sm:flex-1">
+                                        <TotalDaConferencia imp={imp} />
+                                    </div>
+                                </>
                             ) : null}
                         </DialogFooter>
                     )}

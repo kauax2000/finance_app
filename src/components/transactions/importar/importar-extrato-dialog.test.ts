@@ -137,7 +137,7 @@ describe("a conferência", () => {
         expect(conferir).toMatch(/function ResumoDoSaldo\([\s\S]*?<Collapsible>[\s\S]*?<CollapsibleRow[\s\S]*?\{rotulo\}[\s\S]*?<CollapsibleContent>[\s\S]*?Entram/)
         // Anunciado nos dois lugares: a caixa do desktop (no corpo) e a linha do telefone (no rodapé).
         expect(conferir).toMatch(/role="status"[^>]*>\s*<ItemContent>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Saldo"/)
-        expect(dialogo).toMatch(/role="status"[^>]*>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Total"/)
+        expect(dialogo).toMatch(/role="status"[^>]*>\s*<TotalDaConferencia imp=\{imp\} \/>/)
         expect(dialogo).not.toContain("Vão entrar")
         // A linha de fora não esmaece por opacidade; só a espera da releitura (lendo) usa 60%.
         expect(conferir.match(/opacity-60/g)).toHaveLength(1)
@@ -559,7 +559,20 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
         // No desktop o Saldo segue no corpo, na caixa; no telefone o corpo não o tem.
         expect(conferir).toMatch(/<\/ItemGroup>[\s\S]*?\{celular \? null : \(\s*<Item variant="muted"[\s\S]*?<ResumoDoSaldo imp=\{imp\} rotulo="Saldo" \/>/)
         // O Total mora no rodapé, fora da vista que rola: aparece nas duas vistas.
-        expect(dialogo).toMatch(/<DialogFooter>[\s\S]*?\{celular && imp\.passo === "conferir" \? \(\s*<div role="status"[^>]*>\s*<ResumoDoSaldo imp=\{imp\} rotulo="Total" \/>[\s\S]*?<\/DialogFooter>/)
+        expect(dialogo).toMatch(/<DialogFooter>[\s\S]*?\{celular && imp\.passo === "conferir" \? \(\s*<>\s*<FaixaSemCategoria imp=\{imp\} travado=\{travadoAoImportar\} \/>\s*<div role="status"[^>]*>\s*<TotalDaConferencia imp=\{imp\} \/>[\s\S]*?<\/DialogFooter>/)
+    })
+
+    it("o Total do telefone é fixo e a faixa dos sem categoria liga e desliga o filtro", () => {
+        expect(conferir).toContain("export function TotalDaConferencia(")
+        expect(conferir).toContain("export function FaixaSemCategoria(")
+        for (const t of ["Revisar", "Mostrando só os sem categoria", "Ver todos", "tagChipWarning", 'imp.setFiltro("sem-categoria")', 'imp.setFiltro("todos")']) {
+            expect(conferir).toContain(t)
+        }
+        // O singular nasce do ternário: 1 saída / 1 entrada.
+        expect(conferir).toContain('nSaidas === 1 ? "saída" : "saídas"')
+        expect(conferir).toContain('nEntradas === 1 ? "entrada" : "entradas"')
+        const total = conferir.slice(conferir.indexOf("function TotalDaConferencia("), conferir.indexOf("function FaixaSemCategoria("))
+        expect(total).not.toContain("Collapsible")
     })
 
     it("a contagem e o vazio seguem a busca", () => {

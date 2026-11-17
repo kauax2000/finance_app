@@ -15,7 +15,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline"
 import { BuscaQueAbre } from "./busca-que-abre"
 import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
 import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
-import { Badge, BadgeDot } from "@/components/ui/badge"
+import { Badge, BadgeDot, tagChipWarning } from "@/components/ui/badge"
 import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
 import { Separator } from "@/components/ui/separator"
@@ -588,6 +588,47 @@ export function ResumoDoSaldo({ imp, rotulo }: { imp: ImportarExtrato; rotulo: s
                 </DescriptionList>
             </CollapsibleContent>
         </Collapsible>
+    )
+}
+
+/** O Total do telefone, sempre à vista: o saldo e, abaixo, quantas saídas e entradas o formam. */
+export function TotalDaConferencia({ imp }: { imp: ImportarExtrato }) {
+    const { resumo } = imp
+    const saldo = resumo.entradas - resumo.saidas
+    return (
+        <div className="flex flex-col">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">Total</span>
+                <span className={cn("nums text-base font-medium", saldo < 0 ? "text-expense" : "text-income")}>
+                    <ContagemQueAnda value={saldo} formatar={signedCurrencyBRL} />
+                </span>
+            </div>
+            <Caption>
+                {`${numberBR(resumo.nSaidas)} ${resumo.nSaidas === 1 ? "saída" : "saídas"} · ${numberBR(resumo.nEntradas)} ${resumo.nEntradas === 1 ? "entrada" : "entradas"}`}
+            </Caption>
+        </div>
+    )
+}
+
+/** A faixa de ação dos sem categoria, no rodapé do telefone: Revisar liga o filtro, Ver todos o desliga. */
+export function FaixaSemCategoria({ imp, travado = false }: { imp: ImportarExtrato; travado?: boolean }) {
+    const ligado = imp.filtro === "sem-categoria"
+    const { semCategoria } = imp.resumo
+    // Com o filtro ligado a faixa fica mesmo em zero: é por ela que a pessoa sai.
+    if (!ligado && semCategoria <= 0) return null
+    return (
+        <button
+            type="button"
+            disabled={travado}
+            onClick={() => (ligado ? imp.setFiltro("todos") : imp.setFiltro("sem-categoria"))}
+            className={cn(tagChipWarning, "flex min-h-11 w-full items-center gap-2 rounded-row-lg px-3 text-sm disabled:opacity-50")}
+        >
+            <BadgeDot className="[--badge-dot:var(--warning)]" />
+            <span className="min-w-0 flex-1 truncate text-left">
+                {ligado ? "Mostrando só os sem categoria" : `${numberBR(semCategoria)} sem categoria`}
+            </span>
+            <span className="font-medium">{ligado ? "Ver todos" : "Revisar"}</span>
+        </button>
     )
 }
 

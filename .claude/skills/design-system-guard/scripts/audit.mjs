@@ -251,6 +251,9 @@ const RAW_PRIMITIVE_EXCEPTIONS = [
   // abrem o editor deles no lugar: o `Badge` não tem `asChild`, e o `Button`
   // poria a escada de altura e o realce num número de 36px.
   ["transactions/lancamento-inteligente", "button"],
+  // A faixa dos sem categoria é uma chip de aviso de linha inteira (`tagChipWarning`): o
+  // `Button` traria a escada de altura e o realce de um botão, não o de um aviso.
+  ["importar/conferir-importacao", "button"],
   // O seletor de cor nativo não tem peça; o `Input` lhe daria a moldura de campo.
   ["workspace-appearance-form-fields", "input"],
   // Substitui o layout raiz quando o resto quebrou: o CSS do sistema pode não
