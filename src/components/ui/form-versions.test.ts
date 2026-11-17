@@ -107,3 +107,11 @@ describe("as versões do Form", () => {
     expect(fonte).toMatch(/requestSubmit\(/)
   })
 })
+
+describe("FormCancel na gaveta com ✕", () => {
+  it("some no rodapé da gaveta com ✕, só no telefone", () => {
+    expect(semComentarios(CODIGO)).toContain(
+      "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-close-button])_[data-slot=dialog-footer]_&]:hidden",
+    )
+  })
+})

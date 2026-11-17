@@ -858,6 +858,7 @@ function FormActions({
 /** Sair sem fazer nada. `tertiary` e `type="button"` não são escolha de quem chama: é a tabela do rodapé. */
 function FormCancel({
   disabled,
+  className,
   ...props
 }: React.ComponentProps<typeof Button>) {
   const form = React.useContext(FormContext)
@@ -867,6 +868,11 @@ function FormCancel({
       data-slot="form-cancel"
       type="button"
       variant="tertiary"
+      // No telefone a gaveta com ✕ já tem a saída no topo: o Cancelar do rodapé não a repete.
+      className={cn(
+        "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-close-button])_[data-slot=dialog-footer]_&]:hidden",
+        className,
+      )}
       {...props}
       disabled={disabled || form?.pending}
     />

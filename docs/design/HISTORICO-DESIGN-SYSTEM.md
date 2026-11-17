@@ -29146,3 +29146,7 @@ recusado. Medido a 375px: o ‹, o título e o × na mesma linha (y igual), e o 
 ### Rodada 380 — a gaveta com ✕ perde a alça
 
 Na gaveta do telefone com ✕ e sem `snapPoints`, a alça passou a ficar `invisible`: o ✕ já é a saída, e a alça escondida guarda os 26px da barra para o título não pular. Com degraus, ou sem ✕, a alça continua. O arraste para baixo para fechar foi mantido a pedido do dono: o vaul arrasta pela gaveta inteira enquanto ninguém passa `handleOnly`, e um teste trava que `drawer.tsx` não o contém. O seletor `group-has-[[data-slot=dialog-close-button]]/dialog-content` fica preso à superfície da própria gaveta.
+
+### Rodada 381 — a gaveta com ✕ não repete o Cancelar
+
+No telefone, o `FormCancel` dentro do `DialogFooter` de uma gaveta (`sheet-content`) que tem o ✕ (`dialog-close-button`) passou a ficar `hidden`: o ✕ já é a saída, e o rodapé fica com a ação principal e, se houver, a do `start`. O seletor exige o ✕ na mesma `sheet-content`, então a gaveta sem ✕ mantém o Cancelar, e o desktop e os diálogos centrados não mudam. Um teste de fonte trava a classe em `form.tsx`.

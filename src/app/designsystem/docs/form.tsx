@@ -469,7 +469,7 @@ export default function FormDoc() {
             prop: "FormCancel",
             type: "ComponentProps<typeof Button>",
             description:
-              "type='button' e variant='tertiary' já vêm da peça.",
+              "type='button' e variant='tertiary' já vêm da peça. No telefone, no rodapé de uma gaveta com ✕, ele some: o ✕ já é a saída.",
           },
           {
             prop: "FormSwitch",

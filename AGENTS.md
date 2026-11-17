@@ -342,6 +342,11 @@ dois. Só a terceira linha se escreve — `variant="primary"`, para a confirmaç
 definitiva que não destrói nada. No `Dialog`, `DialogClose` é um passa-tudo e
 recebe `asChild` com um `Button variant="tertiary" type="button"` dentro.
 
+**No telefone, a gaveta com ✕ não repete o Cancelar**: o `FormCancel` dentro do
+`DialogFooter` de uma `sheet-content` que tem `dialog-close-button` some abaixo
+de 768px (a saída já está no topo). Gaveta sem ✕, desktop e `FormCancel` fora do
+rodapé não mudam.
+
 ### Duas ações lado a lado: a segunda não preenche
 
 A tabela do rodapé de diálogo é a regra de **par de ações**, e vale onde quer
