@@ -106,7 +106,7 @@ describe("o diálogo de importar, versão C", () => {
 describe("a conferência", () => {
     it("o compacto mostra só 6 linhas (a tela cheia mostra todas), e só com mais de 6 aparecem o contador e o expandir", () => {
         expect(conferir).toContain("const LIMITE = 6")
-        expect(conferir).toContain(".slice(0, LIMITE).map((i, n) => (")
+        expect(conferir).toContain(".slice(0, teto).map((i, n) => (")
         // No desktop a categoria é coluna da linha; no telefone, a segunda linha.
         // No telefone a linha não tem Combobox: a categoria é texto na segunda linha, e o campo só existe do md para cima.
         expect(conferir).toContain('<div className="hidden md:block md:w-44">')
@@ -120,7 +120,7 @@ describe("a conferência", () => {
         expect(conferir).not.toContain("Marque e use")
         // Com uma marcada só, a folha nomeia o lançamento.
         expect(conferir).toContain("`Vale para ${itens[0].descricao}.`")
-        expect(conferir).toContain("const grande = daTabela.length > LIMITE")
+        expect(conferir).toContain("const grande = teto !== undefined && daTabela.length > teto")
         expect(conferir).toMatch(/grande \? \(\s*<Caption className="text-control-sm leading-5">\{`Mostrando \$\{numberBR\(LIMITE\)\} de \$\{numberBR\(daTabela\.length\)\} ·`[\s\S]*?<span>Ver todos<\/span>/)
         expect(conferir).toMatch(/ArrowsPointingOutIcon[\s\S]*?ArrowsPointingInIcon/)
         expect(conferir).toMatch(/variant="tertiary" disabled=\{travado\} onClick=\{alternar\}>[\s\S]*?<ArrowsPointingInIcon data-icon="inline-start" \/>\}\s*<span>Ver menos<\/span>/)
@@ -493,8 +493,8 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
         expect(conferir).toMatch(/\{imp\.csv && !imp\.expandido && !celular \? \(/)
         expect(conferir).toMatch(/\{!imp\.csv && !imp\.expandido && !celular \? \(/)
         expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*<>\s*<BuscaQueAbre/)
-        // O Ver menos vai ao pé da lista, onde fica o Ver todos.
-        expect(conferir).toMatch(/<DataTable[\s\S]*?\{celular && podeExpandir \? <div[^>]*>\{botaoRecolher\}/)
+        // O telefone não tem Ver todos nem Ver menos: a lista mostra tudo.
+        expect(conferir).not.toContain("celular && podeExpandir")
         expect(conferir).toContain('scrollable={celular}')
     })
 })
@@ -529,7 +529,7 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
     })
 
     it("a contagem e o vazio seguem a busca", () => {
-        expect(conferir).toContain("const grande = daTabela.length > LIMITE")
+        expect(conferir).toContain("const grande = teto !== undefined && daTabela.length > teto")
         expect(conferir).toContain("`Mostrando ${numberBR(LIMITE)} de ${numberBR(daTabela.length)} ·`")
         expect(conferir).toContain('busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"')
         // Ajustar colunas no ⋯ espera a releitura, como o Inverter.
@@ -559,5 +559,17 @@ describe("no telefone, as transições da conferência (opção B, tarefa 3)", (
         expect(movimento).toContain("[&_[data-slot=data-table-mobile]>*]:animate-in")
         expect(movimento).toContain("[&_[data-slot=data-table-mobile]>*]:stagger-ladder")
         expect(movimento).toContain("motion-reduce:[&_[data-slot=data-table-mobile]>*]:animate-none")
+    })
+})
+
+describe("no telefone a conferência mostra tudo", () => {
+    it("o teto de 6 e o Ver todos / Ver menos são só do desktop", () => {
+        expect(conferir).toContain("const teto = celular ? undefined : LIMITE")
+        expect(conferir).toContain("const podeExpandir = !celular && resumo.total > LIMITE")
+        expect(conferir).toContain("daTabela.slice(0, teto).map((i, n) => (")
+        expect(conferir).toContain("chavesDasLinhas(daTabela.slice(0, teto))")
+        expect(conferir).not.toContain("celular && podeExpandir")
+        expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*(?:\/\/[^\n]*\s*)*<div[\s\S]*?<DataTable/)
+        expect(conferir).toMatch(/if \(celular && imp\.expandido\) imp\.setExpandido\(false\)/)
     })
 })

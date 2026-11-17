@@ -664,13 +664,15 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
             </span>
         )
     }
-    const grande = daTabela.length > LIMITE
     const celular = useIsMobile()
+    // O teto de 6 e o Ver todos são só do desktop: no telefone a lista mostra tudo.
+    const teto = celular ? undefined : LIMITE
+    const grande = teto !== undefined && daTabela.length > teto
     // A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista.
     const lendo = imp.pendente === "lendo"
     const esmaece = cn("transition-opacity duration-(--duration-fast)", lendo && "opacity-60")
-    const chavesCompacto = chavesDasLinhas(daTabela.slice(0, LIMITE))
-    const podeExpandir = resumo.total > LIMITE
+    const chavesCompacto = chavesDasLinhas(daTabela.slice(0, teto))
+    const podeExpandir = !celular && resumo.total > LIMITE
     // Ver todos e Recolher em três fases: a vista que sai esmaece (`--duration-base`, `VISTA_QUE_SAI`),
     // a troca monta na transição (o toque pinta antes da tabela) e a caixa anda; o que chega surge em escada.
     const [mudando, startTransition] = React.useTransition()
@@ -727,6 +729,11 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         setFiltroVisto(imp.filtro)
         setTrocouDeAba(true)
     }
+    // No telefone não há vista cheia: se o `expandido` ficou ligado (veio do desktop), volta ao compacto.
+    React.useEffect(() => {
+        if (celular && imp.expandido) imp.setExpandido(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `imp` muda a cada render; só o `expandido` importa
+    }, [celular, imp.expandido])
     const escadaDaLista = celular && trocouDeAba ? ESCADA : ESCADA_DA_LISTA
     // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
     const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
@@ -958,7 +965,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     </AlertActions>
                 </Alert>
             ) : null}
-            {imp.expandido ? (
+            {imp.expandido && !celular ? (
                 // A barra e as linhas chegam em escada (teto de 8), a barra junto com a primeira; a moldura e o cabeçalho já estão lá.
                 // A altura desce até o viewport: o grupo, a moldura e o pai do viewport (o `hidden md:block`, só no desktop) encolhem, e o viewport rola.
                 <div
@@ -990,7 +997,6 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                         onRowSelectionChange={mudarSelecao}
                         empty={vazio}
                     />
-                    {celular && podeExpandir ? <div className="flex justify-center pt-2">{botaoRecolher}</div> : null}
                 </div>
             ) : daTabela.length === 0 ? (
                 vazio
@@ -1004,8 +1010,8 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                         className={cn(esmaece, escadaDaLista)}
                         aria-busy={lendo}
                     >
-                        {/* O compacto tem teto: as 6 primeiras; a tela cheia mostra todas. No telefone a busca também filtra aqui. */}
-                        {daTabela.slice(0, LIMITE).map((i, n) => (
+                        {/* No desktop o compacto tem teto (as 6 primeiras; a tela cheia mostra todas); o telefone mostra tudo. A busca também filtra aqui. */}
+                        {daTabela.slice(0, teto).map((i, n) => (
                             <Linha
                                 // O `clientId` nasce de novo a cada leitura: a chave do conteúdo segura a linha, para o valor trocar no lugar.
                                 key={chavesCompacto[n]}
