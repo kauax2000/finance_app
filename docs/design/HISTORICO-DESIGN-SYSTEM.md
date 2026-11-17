@@ -29178,7 +29178,3 @@ e a de baixo (`--scroll-fade-foot-h` = altura do rodapé) ficam transparentes, e
 dissolve numa rampa que cresce com a rolagem até 56px. Medido a 375px no Importar: a máscara é
 transparente até 154px (o cabeçalho e o puxador) e dissolve até 210px. Sob o cabeçalho e o
 rodapé, só a gaveta. `dialog-header-translucent.test.ts` e `dialog-footer-translucent.test.ts`.
-Logo depois, o dono observou que assim o conteúdo não passava mais por trás, apenas sumia. A
-rampa do `DialogBody` ganhou um piso, `--scroll-fade-band-a`: 0 por padrão e 0,15 sob o cabeçalho
-e o rodapé translúcidos. Sob as duas faixas a lista passa apagada, a 15%, e a rampa sobe de 15% a
-100% nos 56px da borda. A cor continua sendo a da própria gaveta.

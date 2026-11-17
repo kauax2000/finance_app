@@ -25,8 +25,6 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("margin-top: calc(var(--dialog-header-h, 0px) * -1)")
     expect(u).toContain("--scroll-fade-band-h: var(--dialog-header-h, 0px)")
     expect(u).toContain("--scroll-fade-top-max: calc(var(--spacing) * 14)")
-    // A lista passa por trás apagada, e não some.
-    expect(u).toContain("--scroll-fade-band-a: 0.15")
     // Na gaveta, a faixa soma o puxador: o corpo começa na borda dela.
     expect(u).toContain("--scroll-fade-band-h: calc(var(--dialog-header-h, 0px) + var(--drawer-handle-h))")
   })

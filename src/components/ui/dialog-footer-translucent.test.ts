@@ -26,8 +26,6 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
     expect(u).toContain("margin-bottom: calc(var(--dialog-footer-h, 0px) * -1)")
     expect(u).toContain("--scroll-fade-foot-h: var(--dialog-footer-h, 0px)")
     expect(u).toContain("--scroll-fade-bottom-max: calc(var(--spacing) * 14)")
-    expect(u).toContain("--scroll-fade-band-a: 0.15")
-    expect(DIALOG).toContain("rgb(0_0_0/var(--scroll-fade-band-a,0))")
     expect(u).toMatch(/scroll-padding-block-end: calc\(var\(--dialog-footer-h, 0px\)/)
     // O corpo lê o teto: sem ele a variável não faria nada.
     expect(DIALOG).toContain("var(--scroll-fade-bottom-max,var(--scroll-fade-end-h))")
