@@ -4343,6 +4343,8 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
          em 56px conforme a lista rola. */
       --scroll-fade-band-h: var(--dialog-header-h, 0px);
       --scroll-fade-top-max: calc(var(--spacing) * 14);
+      /* A lista passa por trás apagada (15%), e não some: o conteúdo segue visível sob a faixa. */
+      --scroll-fade-band-a: 0.15;
     }
 
     /* Na gaveta o puxador vem antes (16/11/2026): a placa sobe e cobre a faixa dele, e o
@@ -4442,6 +4444,7 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
        borda em 56px enquanto há lista por baixo. */
     --scroll-fade-foot-h: var(--dialog-footer-h, 0px);
     --scroll-fade-bottom-max: calc(var(--spacing) * 14);
+    --scroll-fade-band-a: 0.15;
   }
 }
 
