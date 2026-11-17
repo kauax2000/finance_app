@@ -652,7 +652,7 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(dialogo).toMatch(/<\/Form>[\s{}]*\{voltarNoTopo \? \(\s*<Button[\s\S]*?aria-label=\{subtela \? "Voltar à conferência" : "Voltar"\}[\s\S]*?className="absolute top-2\.5 left-2\.5 z-20"/)
         expect(dialogo).toContain('const voltarNoTopo = celular && (imp.passo === "conferir" || imp.passo === "colunas")')
         expect(dialogo).toContain('onClick={() => (subtela ? trocarDeTela("volta", imp.voltar) : imp.voltar())}')
-        expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela ? null : (")
+        expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela || celular ? null : (")
         expect(dialogo).toContain("{subtela ? null : imp.passo === \"arquivo\" ? (")
         expect(dialogo).toContain(': subtela ? "Pronto" : "Continuar"')
     })

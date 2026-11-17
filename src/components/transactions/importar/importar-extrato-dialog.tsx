@@ -310,7 +310,8 @@ export function ImportarExtratoDialog({
                         ) : (
                             tituloEDescricao
                         )}
-                        {imp.passo === "feito" || expandido || subtela ? null : (
+                        {/* No telefone não há barra de passos (dono, 17/11/2026): o título diz o passo, e o ‹ do canto, que dá para voltar. */}
+                        {imp.passo === "feito" || expandido || subtela || celular ? null : (
                             // Esmaece junto com a conferência no Ver todos, em vez de sumir seca e puxar tudo para cima.
                             <DialogSteps
                                 current={atual}
