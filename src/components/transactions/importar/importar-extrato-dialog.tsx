@@ -236,12 +236,12 @@ export function ImportarExtratoDialog({
                                             disabled={travadoAoImportar}
                                         >
                                             <EllipsisHorizontalIcon />
-                                            {/* A bolha do sino das notificações (`top-bar-action-count`) sem o número: mesma cor, anel e entrada na mola, e menor (8px), acima e à direita do último ponto do ⋯, porque não carrega número. */}
+                                            {/* A bolha do sino das notificações (`top-bar-action-count`) sem o número: mesma cor, anel e entrada na mola, e menor (8px), no contorno do botão a 45° (centro a 22px do centro do círculo de 44), metade dentro e metade fora, porque não carrega número. */}
                                             {pendenciaLigada(imp) ? (
                                                 <span
                                                     aria-hidden
                                                     className={cn(
-                                                        "pointer-events-none absolute top-2 right-1.5 z-10 size-2 rounded-full ring-2 ring-background",
+                                                        "pointer-events-none absolute top-0.5 right-0.5 z-10 size-2 rounded-full ring-2 ring-background",
                                                         tagChipUnreadCount,
                                                         "transition-[scale,opacity] duration-(--duration-spring) ease-(--ease-spring) starting:scale-30 starting:opacity-0"
                                                     )}
