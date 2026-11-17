@@ -688,6 +688,13 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
 
 describe("no passo Arquivo, a descrição não repete a área de soltar", () => {
     it("fica só para o leitor de tela", () => {
-        expect(dialogo).toContain('<DialogDescription className={imp.passo === "arquivo" ? "sr-only" : undefined}>')
+        expect(dialogo).toContain('className={imp.passo === "arquivo" || (celular && imp.passo === "colunas") ? "sr-only" : undefined}')
+    })
+})
+
+describe("no telefone, a frase das Colunas é o título da seção da lista", () => {
+    const mapear = ler("mapear-colunas.tsx")
+    it("a lista mora numa PageSection pequena com a frase no título", () => {
+        expect(mapear).toMatch(/<PageSection size="sm">\s*<PageSectionHeader>\s*<PageSectionTitle>Diga o que é cada coluna do arquivo\.<\/PageSectionTitle>/)
     })
 })

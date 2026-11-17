@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import { ESCADA } from "./movimento"
 import { Card } from "@/components/ui/card"
+import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import { FormSwitch } from "@/components/ui/form"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -190,45 +191,51 @@ export function MapearColunasEmLista({ linhas, valor, onChange, disabled = false
 
     return (
         <div key="colunas" className={cn(ESCADA, "flex flex-col gap-4")}>
-            <Card variant="muted" padding="none">
-                <ItemGroup variant="divided">
-                    {Array.from({ length: largura }, (_, i) => (
-                        <Item key={i}>
-                            <ItemContent className="min-w-0">
-                                <ItemTitle>{nomeDa(i)}</ItemTitle>
-                                <ItemDescription className="truncate">
-                                    {dados
-                                        .slice(0, 2)
-                                        .map((l) => (l[i] ?? "").trim())
-                                        .filter(Boolean)
-                                        .join(" · ")}
-                                </ItemDescription>
-                            </ItemContent>
-                            <ItemActions>
-                                <Select
-                                    value={papelDa(valor, i)}
-                                    disabled={disabled}
-                                    onValueChange={(v) => onChange(comPapel(valor, i, v as Papel | typeof IGNORAR))}
-                                >
-                                    <SelectTrigger className="w-32" aria-label={`Papel da coluna ${nomeDa(i)}`}>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value={IGNORAR} variant="none">
-                                            Ignorar
-                                        </SelectItem>
-                                        {PAPEIS.map(({ papel, rotulo }) => (
-                                            <SelectItem key={papel} value={papel}>
-                                                {rotulo}
+            {/* A frase que era a descrição do cabeçalho é o título da seção (dono, 17/11/2026), como os grupos de Configurações. */}
+            <PageSection size="sm">
+                <PageSectionHeader>
+                    <PageSectionTitle>Diga o que é cada coluna do arquivo.</PageSectionTitle>
+                </PageSectionHeader>
+                <Card variant="muted" padding="none">
+                    <ItemGroup variant="divided">
+                        {Array.from({ length: largura }, (_, i) => (
+                            <Item key={i}>
+                                <ItemContent className="min-w-0">
+                                    <ItemTitle>{nomeDa(i)}</ItemTitle>
+                                    <ItemDescription className="truncate">
+                                        {dados
+                                            .slice(0, 2)
+                                            .map((l) => (l[i] ?? "").trim())
+                                            .filter(Boolean)
+                                            .join(" · ")}
+                                    </ItemDescription>
+                                </ItemContent>
+                                <ItemActions>
+                                    <Select
+                                        value={papelDa(valor, i)}
+                                        disabled={disabled}
+                                        onValueChange={(v) => onChange(comPapel(valor, i, v as Papel | typeof IGNORAR))}
+                                    >
+                                        <SelectTrigger className="w-32" aria-label={`Papel da coluna ${nomeDa(i)}`}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={IGNORAR} variant="none">
+                                                Ignorar
                                             </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </ItemActions>
-                        </Item>
-                    ))}
-                </ItemGroup>
-            </Card>
+                                            {PAPEIS.map(({ papel, rotulo }) => (
+                                                <SelectItem key={papel} value={papel}>
+                                                    {rotulo}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </ItemActions>
+                            </Item>
+                        ))}
+                    </ItemGroup>
+                </Card>
+            </PageSection>
             <AjustesDaLeitura valor={valor} onChange={onChange} disabled={disabled} />
         </div>
     )
