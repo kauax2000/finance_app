@@ -114,6 +114,17 @@ describe("resposta ao toque do Button", () => {
     expect(botao).not.toMatch(/--button-mx|PESOS_COM_PONTEIRO/)
   })
 
+  it("4b. `underline` é o link parado: traço em repouso, na tinta do texto, sem animar", () => {
+    const classes = buttonVariants({ variant: "underline" })
+    expect(classes.split(/\s+/)).toContain("link-underline")
+    expect(classes.split(/\s+/)).not.toContain("link-sweep")
+    expect(classes).not.toContain("text-decoration")
+    const CSS = lerFonte("src/app/globals.css")
+    const bloco = CSS.slice(CSS.indexOf("@utility link-underline"), CSS.indexOf("}\n}", CSS.indexOf("@utility link-underline")))
+    expect(bloco).toContain("background-color: currentColor")
+    expect(bloco).not.toMatch(/transition|transform/)
+  })
+
   it("4. `link` não tem traço em repouso, e ele entra pela esquerda", () => {
     const classes = buttonVariants({ variant: "link" })
     // A pintura mora em `@utility link-sweep`; a variante só a veste, junto de

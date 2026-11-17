@@ -109,6 +109,11 @@ const buttonVariants = cva(
         // emenda. A receita está em `@utility link-sweep`.
         // `brand-rainbow-image` declara `--brand-rainbow` aqui, que o traço lê.
         link: "brand-rainbow-image link-sweep text-primary-accent",
+        // O link de sempre, para o meio de uma frase (a legenda de um filtro ligado):
+        // o traço já está lá, parado, na tinta do texto — branco no escuro, preto no
+        // claro —, e nada anda no cursor. Mesmo `::after` do `link`, pela mesma razão
+        // (`@utility link-underline`).
+        underline: "link-underline text-foreground",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto. O padrão é `lg` (36), a altura do `Input` e do

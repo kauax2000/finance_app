@@ -607,8 +607,8 @@ describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
         expect(conferir).not.toMatch(/"Só /)
     })
 
-    it("a legenda tem o Mostrar todos, um link que volta a Todos", () => {
-        expect(conferir).toMatch(/<Button[^>]*variant="link"[^>]*onClick=\{\(\) => imp\.setFiltro\("todos"\)\}[^>]*>\s*Mostrar todos/)
+    it("a legenda tem o Mostrar todos, um link parado que volta a Todos", () => {
+        expect(conferir).toMatch(/<Button[^>]*variant="underline"[^>]*onClick=\{\(\) => imp\.setFiltro\("todos"\)\}[^>]*>\s*Mostrar todos/)
     })
 
     it("a pendência ligada é um helper exportado, usado nas abas e na legenda", () => {

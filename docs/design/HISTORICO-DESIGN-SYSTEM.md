@@ -29069,3 +29069,12 @@ logo abaixo das abas, no telefone. A 28px o toque ficava abaixo do piso de 44 do
 ficha ganhou o mesmo alvo das abas e do `ToggleGroup`: um `::after` de `h-11`, centrado,
 com `pointer-coarse:`. O desenho não muda. Medido a 375px: caixa de 28 e `::after` de
 44px. Pedido do dono em 16/11/2026. `toggle.test.ts`.
+
+### Rodada 375 — `Button variant="underline"`, o link parado
+
+O "Mostrar todos" da legenda de filtro da conferência do Importar usava o `link`. O
+traço dele só entra no cursor, e no telefone o link parecia texto em negrito. O dono
+pediu "uma versão do link normal sem a animação e com o underline branco". A variante
+`underline` veste `text-foreground` e a `@utility link-underline`: o mesmo `::after` de
+1px do `link-sweep`, em `currentColor`, sempre desenhado, sem transição. Pelo mesmo
+motivo do `link`, ela não usa `text-decoration`. `button-touch-response.test.ts` (4b).

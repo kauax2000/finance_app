@@ -1081,7 +1081,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                         {pendenciaLigada(imp) ? (
                             <>
                                 {pendenciaLigada(imp)?.rotulo} ({numberBR(imp.contagens[imp.filtro])}) ·{" "}
-                                <Button type="button" variant="link" className="h-auto px-0 text-xs" onClick={() => imp.setFiltro("todos")}>
+                                <Button type="button" variant="underline" className="h-auto px-0 text-xs" onClick={() => imp.setFiltro("todos")}>
                                     Mostrar todos
                                 </Button>
                             </>

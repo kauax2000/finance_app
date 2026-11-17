@@ -998,7 +998,10 @@ declaração de `background-color` no trilho).
     `destructive` (o que não tem volta), `floating` (a pílula que paira: placa
     `--popover`, anel de 1px, `shadow-sm`) e `link` — um traço que entra pela
     esquerda (`@utility link-sweep`, um `::after` do `button-label`), **nunca
-    `text-decoration`** (o `::first-letter` partiria o sublinhado).
+    `text-decoration`** (o `::first-letter` partiria o sublinhado), e `underline`,
+    o link parado no meio de uma frase: o mesmo `::after`, já desenhado na tinta do
+    texto (`text-foreground`, `currentColor`), sem animação (`@utility
+    link-underline`, rodada 375).
   - Marca, **um por tela**: `brand` (o CTA neutro com o brilho; o fundo não muda
     no cursor), `brandColorful` (a tecla que floresce cinco paradas da marca no
     cursor, `@utility button-colorful` + `@property --button-bloom`; cor sob o

@@ -1413,6 +1413,26 @@
   }
 }
 
+/* ── O link parado ───────────────────────────────────────────────────────────
+   O `Button variant="underline"`: o traço do `link-sweep` já desenhado, na tinta
+   do rótulo (`currentColor`), sem transição. Também é um `::after` e não
+   `text-decoration`, porque o `::first-letter` da base partiria o sublinhado. */
+@utility link-underline {
+  & [data-slot="button-label"] {
+    position: relative;
+  }
+
+  & [data-slot="button-label"]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: calc(50% + 0.5lh);
+    height: 1px;
+    background-color: currentColor;
+    pointer-events: none;
+  }
+}
+
 
 
 /* ── O florescer do hover ────────────────────────────────────────────────────
