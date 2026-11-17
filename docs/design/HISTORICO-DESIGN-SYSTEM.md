@@ -29164,3 +29164,13 @@ Agora o seletor exige `:first-child`, e o Pôr categoria leva a busca e as abas 
 `DialogHeader`, com a lista rolando por trás. O Cancelar dele virou `FormCancel` e some no
 telefone, como nas outras gavetas com ×. Medido a 375px: o cabeçalho termina em 516px e a
 primeira linha começa em 532px. `dialog-header-translucent.test.ts`.
+
+### Rodada 385 — a placa do cabeçalho e do rodapé fica sempre acesa
+
+A rodada 384 tirou a placa e deixou a máscara do corpo esconder o que passava por baixo, primeiro
+inteira e depois com a lista apagada a 15% e a 6%. O dono recusou as duas: inteira, o conteúdo não
+passava por trás; apagada, o que estava atrás atrapalhava a leitura do que estava na frente.
+Revertida a 384, a placa volta (o `--background` a 95% e o degradê de 56px), mas sem a linha do
+tempo de rolagem: ela fica acesa desde o topo, no cabeçalho e no rodapé, e a faixa não muda de
+tom no meio do gesto. Saíram os `@supports (animation-timeline: scroll())` e os `@keyframes`
+`dialog-header-fade-in` e `dialog-footer-fade-out`.

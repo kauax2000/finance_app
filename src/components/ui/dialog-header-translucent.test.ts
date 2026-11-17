@@ -26,20 +26,11 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("--scroll-fade-top-max: 0px")
   })
 
-  it("o degradê só aparece ao rolar: invisível no topo, liga nos primeiros 24px", () => {
+  it("a placa e o degradê ficam sempre acesos, sem acender com a rolagem (rodada 385)", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    expect(u).toContain("@supports (animation-timeline: scroll())")
-    expect(u).toContain("timeline-scope: --dialog-body-scroll")
-    expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
-    expect(u).toContain("animation-timeline: --dialog-body-scroll")
-    expect(u).toContain("animation-range: 0 24px")
-    expect(CSS).toMatch(/@keyframes dialog-header-fade-in \{\s*from \{\s*opacity: 0;?\s*\}/)
-  })
-
-  it("em repouso o cabeçalho não tem tinta: a placa e o degradê acendem juntos com a rolagem", () => {
-    const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    const sup = u.slice(u.indexOf("@supports (animation-timeline: scroll())"))
-    expect(sup).toMatch(/&::before,\s*&::after \{\s*opacity: 0;/)
+    expect(u).not.toContain("animation-timeline")
+    expect(CSS).not.toContain("@keyframes dialog-header-fade-in")
+    expect(u).not.toMatch(/&::before,\s*&::after \{\s*opacity: 0;/)
   })
 
   it("na gaveta, a placa cobre o puxador e o corpo sobe até a borda (16/11/2026)", () => {

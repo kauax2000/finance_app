@@ -4367,49 +4367,10 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
   }
 
-  /* O degradê só aparece ao rolar (13/11): invisível no topo, liga nos primeiros 24px do corpo.
-     Cabeçalho e corpo são irmãos (ou o corpo está num `form`), então a linha do tempo é
-     publicada pela folha, o ancestral comum. Sem suporte, o degradê fica sempre à vista. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
-    }
-    [data-layout="fixed"]
-      &:has(
-        + [data-slot="dialog-body"],
-        + form > [data-slot="dialog-body"]:first-child,
-        + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
-      ) {
-      /* A placa e o degradê juntos: em repouso o cabeçalho não tem tinta nenhuma (a placa
-         mais escura que a folha marcava uma faixa sobre o topo, 13/11), e os dois acendem
-         nos primeiros 24px de rolagem. Sem rolagem a linha do tempo fica inativa: a base
-         invisível mantém os dois apagados. */
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-header-fade-in linear both;
-        animation-timeline: --dialog-body-scroll;
-        animation-range: 0 24px;
-      }
-      & + [data-slot="dialog-body"],
-      & + form > [data-slot="dialog-body"]:first-child,
-      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
-        scroll-timeline: --dialog-body-scroll block;
-      }
-    }
-  }
+  /* A placa e o degradê ficam sempre acesos (rodada 385, 17/11/2026, o dono): o cabeçalho não
+     muda de tom ao rolar. Acender só com a rolagem (13/11) escurecia a faixa no meio do gesto. */
 }
 
-@keyframes dialog-header-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
 
 /* O espelho do cabeçalho, virado para cima (rodada 382, 17/11/2026): o corpo rola por trás do
    rodapé, que fica com a mesma placa a 95% e o mesmo degradê de 56px, subindo. O corpo vem
@@ -4477,33 +4438,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     --scroll-fade-bottom-max: 0px;
   }
 
-  /* O degradê aparece enquanto há conteúdo por baixo e some nos últimos 24px da rolagem, o
-     inverso do cabeçalho. Sem rolagem a linha do tempo fica inativa e a base invisível vale;
-     sem suporte, o degradê fica sempre à vista. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
-    }
-    [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
-      scroll-timeline: --dialog-body-scroll block;
-    }
-    [data-layout="fixed"] [data-slot="dialog-body"] + & {
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-footer-fade-out linear both;
-        animation-timeline: --dialog-body-scroll;
-        animation-range: calc(100% - 24px) 100%;
-      }
-    }
-  }
+  /* Sempre aceso, como o cabeçalho (rodada 385). */
 }
 
-@keyframes dialog-footer-fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
