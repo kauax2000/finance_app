@@ -105,15 +105,15 @@ const LIMITE = 6
 
 const SEM = "__sem__"
 
-const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true }[] = [
+const FILTROS: { valor: FiltroConferencia; rotulo: string; aviso?: true; so_com_linhas?: true; ia?: true; so?: string }[] = [
     { valor: "todos", rotulo: "Todos" },
     { valor: "saidas", rotulo: "Saídas" },
     { valor: "entradas", rotulo: "Entradas" },
     // As duas pendências só aparecem quando há linha, e acendem em aviso.
-    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true },
-    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true },
+    { valor: "existem", rotulo: "Já existem", aviso: true, so_com_linhas: true, so: "Só as que já existem" },
+    { valor: "sem-categoria", rotulo: "Sem categoria", aviso: true, so_com_linhas: true, so: "Só sem categoria" },
     // O ✦ liga a aba ao botão "IA categorizou N".
-    { valor: "ia", rotulo: "Sugeridas", so_com_linhas: true, ia: true },
+    { valor: "ia", rotulo: "Sugeridas", so: "Só as sugeridas", so_com_linhas: true, ia: true },
 ]
 
 /** A releitura (Inverter) esmaece o que vai mudar, com o conteúdo velho à vista. */
@@ -602,6 +602,11 @@ const RESERVA_DA_SAIDA_MS = VISTA_QUE_SAI_MS + 100
  * busca que o ⋯ abre. No telefone o diálogo a monta no cabeçalho, que já é fixo e
  * translúcido; no desktop ela fica no corpo, na linha das abas.
  */
+/** A pendência do ⋯ que está ligada (o filtro com `so_com_linhas`), ou `undefined`. */
+export function pendenciaLigada(imp: ImportarExtrato) {
+    return FILTROS.find((f) => f.so_com_linhas && f.valor === imp.filtro)
+}
+
 /**
  * No telefone, as pendências (Já existem, Sem categoria, Sugeridas) são itens marcáveis do ⋯:
  * marcar mostra só elas, e desmarcar volta a Todos. Com uma ligada, nenhuma aba acende.
@@ -662,7 +667,7 @@ export function FiltrosDaConferencia({ imp, conf, travado = false }: { imp: Impo
     return (
         // No cabeçalho do telefone o respiro acima é o dos passos (`pt-3`); no desktop quem esmaece é a linha das abas.
         <div className={cn("flex min-w-0 flex-col gap-2", celular && cn("pt-3", esmaece))} aria-busy={celular ? lendo : undefined}>
-            <Tabs value={imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
+            <Tabs value={celular && pendenciaLigada(imp) ? "todos" : imp.filtro} onValueChange={(v) => imp.setFiltro(v as FiltroConferencia)}>
                 {/* Na tela cheia a linha é larga: as abas ficam do tamanho delas, à esquerda, como nas telas do app. */}
                 {/* No telefone só os três de tipo, divididos na linha: cabem sempre, sem rolar de lado. */}
                 <TabsList aria-label="Filtro" stretch={celular || !imp.expandido}>
@@ -1072,7 +1077,18 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                 vazio
             ) : (
                 <>
-                    <Caption className="md:hidden">Toque numa linha para trocar a categoria</Caption>
+                    <Caption className="md:hidden">
+                        {pendenciaLigada(imp) ? (
+                            <>
+                                {pendenciaLigada(imp)?.so} ({numberBR(imp.contagens[imp.filtro])}) ·{" "}
+                                <Button type="button" variant="link" onClick={() => imp.setFiltro("todos")}>
+                                    Mostrar todos
+                                </Button>
+                            </>
+                        ) : (
+                            "Toque numa linha para trocar a categoria"
+                        )}
+                    </Caption>
                     <ItemGroup
                         // No telefone, trocar de aba remonta a lista: as linhas da aba nova chegam na escada.
                         key={celular ? imp.filtro : undefined}

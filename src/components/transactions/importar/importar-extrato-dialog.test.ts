@@ -462,9 +462,9 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
         // O ✕ desce à linha do título, ao lado do ⋯; o do canto sai.
         expect(dialogo).toContain("showCloseButton={!comMenu}")
         expect(dialogo).toMatch(/<\/DropdownMenu>\s*<DialogCloseButton placement="inline" \/>/)
-        expect(dialogo).toMatch(/<DialogHeaderRow endAdornment=\{[\s\S]*?<DropdownMenu>[\s\S]*?aria-label="Mais ações"/)
+        expect(dialogo).toMatch(/<DialogHeaderRow endAdornment=\{[\s\S]*?<DropdownMenu>[\s\S]*?"Mais ações"/)
         // O gatilho do ⋯ é o da regra: terciário, icon-md, sem size-* nem ícone com tamanho.
-        expect(dialogo).toMatch(/<Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações" disabled=\{travadoAoImportar\}>\s*<EllipsisHorizontalIcon \/>/)
+        expect(dialogo).toMatch(/<Button[^>]*variant="tertiary"[^>]*size="icon-md"[^>]*"Mais ações"[^>]*disabled=\{travadoAoImportar\}[^>]*>\s*<EllipsisHorizontalIcon \/>/)
     })
 
     it("o menu traz Buscar, Inverter e Ajustar (os dois só com CSV) e as ações das visíveis", () => {
@@ -598,5 +598,29 @@ describe("no telefone a conferência mostra tudo", () => {
         expect(conferir).not.toContain("celular && podeExpandir")
         expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*(?:\/\/[^\n]*\s*)*<div[\s\S]*?<DataTable/)
         expect(conferir).toMatch(/if \(celular && expandido\) setExpandido\(false\)/)
+    })
+})
+
+describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
+    it("cada pendência tem a frase `so` em FILTROS", () => {
+        expect(conferir).toContain('so: "Só sem categoria"')
+        expect(conferir).toContain('so: "Só as que já existem"')
+        expect(conferir).toContain('so: "Só as sugeridas"')
+    })
+
+    it("a legenda tem o Mostrar todos, um link que volta a Todos", () => {
+        expect(conferir).toMatch(/<Button[^>]*variant="link"[^>]*onClick=\{\(\) => imp\.setFiltro\("todos"\)\}[^>]*>\s*Mostrar todos/)
+    })
+
+    it("a pendência ligada é um helper exportado, usado nas abas e na legenda", () => {
+        expect(conferir).toContain("export function pendenciaLigada(")
+        expect(conferir.match(/pendenciaLigada\(imp\)/g)?.length).toBeGreaterThanOrEqual(2)
+        expect(conferir).toMatch(/<Tabs value=\{celular && pendenciaLigada\(imp\) \? "todos" : imp\.filtro\}/)
+    })
+
+    it("o gatilho ⋯ mostra o BadgeDot e muda o nome acessível", () => {
+        expect(dialogo).toContain("pendenciaLigada(imp)")
+        expect(dialogo).toContain("<BadgeDot")
+        expect(dialogo).toContain('"Mais ações, filtro ligado"')
     })
 })

@@ -25,6 +25,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -74,7 +75,7 @@ import { ESCADA, ESMAECE_AO_CHEGAR, PASSOS_ACOMPANHAM } from "./movimento"
 import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
-import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
+import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
 import { MapearColunas } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -226,8 +227,16 @@ export function ImportarExtratoDialog({
                                 <>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" variant="tertiary" size="icon-md" aria-label="Mais ações" disabled={travadoAoImportar}>
+                                        <Button
+                                            type="button"
+                                            variant="tertiary"
+                                            size="icon-md"
+                                            className="relative"
+                                            aria-label={pendenciaLigada(imp) ? "Mais ações, filtro ligado" : "Mais ações"}
+                                            disabled={travadoAoImportar}
+                                        >
                                             <EllipsisHorizontalIcon />
+                                            {pendenciaLigada(imp) ? <BadgeDot className="absolute top-1.5 right-1.5 [--badge-dot:var(--info)]" /> : null}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" onCloseAutoFocus={conf.focoAoFecharMenu}>
