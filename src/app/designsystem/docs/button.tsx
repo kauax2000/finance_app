@@ -58,7 +58,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno próprio e nenhum degrau serve, floating para a ação que paira sobre o conteúdo — a placa flutuante da casa, com anel e sombra —, destructive para o que não tem volta, link para a ação que se comporta como texto — sem traço em repouso, ele entra pela esquerda no cursor —, e underline para o link no meio de uma frase, com o traço parado na tinta do texto."
+        description="outline quando o controle precisa de contorno próprio e nenhum degrau serve, floating para a ação que paira sobre o conteúdo — a placa flutuante da casa, com anel e sombra —, destructive para o que não tem volta, link para a ação que se comporta como texto — sem traço em repouso, ele entra pela esquerda no cursor —, e underline para o link no meio de uma frase: na tinta do texto, com o traço que aparece inteiro, sem andar, no cursor e no toque."
         code={`<Button variant="outline">outline</Button>
 <Button variant="floating">floating</Button>
 <Button variant="destructive">destructive</Button>

@@ -114,7 +114,7 @@ describe("resposta ao toque do Button", () => {
     expect(botao).not.toMatch(/--button-mx|PESOS_COM_PONTEIRO/)
   })
 
-  it("4b. `underline` é o link parado: traço em repouso, na tinta do texto, sem animar", () => {
+  it("4b. `underline` é o link parado: o traço na tinta do texto aparece no cursor, no toque e no foco, sem animar", () => {
     const classes = buttonVariants({ variant: "underline" })
     expect(classes.split(/\s+/)).toContain("link-underline")
     expect(classes.split(/\s+/)).not.toContain("link-sweep")
@@ -123,6 +123,9 @@ describe("resposta ao toque do Button", () => {
     const bloco = CSS.slice(CSS.indexOf("@utility link-underline"), CSS.indexOf("}\n}", CSS.indexOf("@utility link-underline")))
     expect(bloco).toContain("background-color: currentColor")
     expect(bloco).not.toMatch(/transition|transform/)
+    expect(bloco).toContain("visibility: hidden")
+    expect(bloco).toMatch(/@media \(hover: hover\) \{\s*&:hover \[data-slot="button-label"\]::after \{\s*visibility: visible/)
+    expect(bloco).toMatch(/&:active \[data-slot="button-label"\]::after,\s*&:focus-visible/)
   })
 
   it("4. `link` não tem traço em repouso, e ele entra pela esquerda", () => {

@@ -1414,9 +1414,10 @@
 }
 
 /* ── O link parado ───────────────────────────────────────────────────────────
-   O `Button variant="underline"`: o traço do `link-sweep` já desenhado, na tinta
-   do rótulo (`currentColor`), sem transição. Também é um `::after` e não
-   `text-decoration`, porque o `::first-letter` da base partiria o sublinhado. */
+   O `Button variant="underline"`: o traço do `link-sweep`, na tinta do rótulo
+   (`currentColor`), sem transição. Some em repouso e aparece inteiro, de uma vez,
+   no cursor, no toque e no foco. Também é um `::after` e não `text-decoration`,
+   porque o `::first-letter` da base partiria o sublinhado. */
 @utility link-underline {
   & [data-slot="button-label"] {
     position: relative;
@@ -1430,6 +1431,18 @@
     height: 1px;
     background-color: currentColor;
     pointer-events: none;
+    visibility: hidden;
+  }
+
+  /* O `:hover` mora na mídia: solto, o toque o deixaria aceso até o toque seguinte. */
+  @media (hover: hover) {
+    &:hover [data-slot="button-label"]::after {
+      visibility: visible;
+    }
+  }
+  &:active [data-slot="button-label"]::after,
+  &:focus-visible [data-slot="button-label"]::after {
+    visibility: visible;
   }
 }
 

@@ -29078,3 +29078,6 @@ pediu "uma versão do link normal sem a animação e com o underline branco". A 
 `underline` veste `text-foreground` e a `@utility link-underline`: o mesmo `::after` de
 1px do `link-sweep`, em `currentColor`, sempre desenhado, sem transição. Pelo mesmo
 motivo do `link`, ela não usa `text-decoration`. `button-touch-response.test.ts` (4b).
+Depois, a pedido do dono ("o underline aparecendo só em hover ou click"), o traço passou
+a ficar escondido em repouso (`visibility: hidden`). Ele aparece inteiro e de uma vez no
+cursor (dentro de `@media (hover: hover)`), no toque (`:active`) e no foco do teclado.
