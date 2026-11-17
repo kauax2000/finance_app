@@ -647,7 +647,7 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(dialogo).toContain("const subtela = imp.ajustandoColunas")
         expect(dialogo).toContain('const titulo = subtela ? "Ajustar colunas"')
         // O título desce para baixo da linha do ‹ e do ✕ (16px abaixo do ‹ de 44 no telefone).
-        expect(dialogo).toContain('<DialogHeader className={subtela ? "pt-7! pointer-coarse:pt-11!" : undefined}>')
+        expect(dialogo).toContain('<DialogHeader className={subtela ? "pt-6! pointer-coarse:pt-9!" : undefined}>')
         // O ‹ espelha o ✕ (\`absolute top-2.5 right-2.5 z-20\`) no canto esquerdo, fora do formulário.
         expect(dialogo).toMatch(/<\/Form>[\s{}]*\{subtela \? \(\s*<Button[\s\S]*?aria-label="Voltar à conferência"[\s\S]*?className="absolute top-2\.5 left-2\.5 z-20"/)
         expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela ? null : (")

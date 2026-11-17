@@ -228,9 +228,9 @@ export function ImportarExtratoDialog({
                 showCloseButton={!comMenu}
             >
                 <Form layout="none" data-subtela-conteudo="" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
-                    {/* Na subtela, o título desce para baixo da linha do ‹ e do ✕ (16px abaixo do botão). O `!` vence o
+                    {/* Na subtela, o título desce para baixo da linha do ‹ e do ✕ (8px abaixo do botão). O `!` vence o
                         `pt-(--dialog-px)` que o layout `fixed` impõe ao cabeçalho com seletor mais forte. */}
-                    <DialogHeader className={subtela ? "pt-7! pointer-coarse:pt-11!" : undefined}>
+                    <DialogHeader className={subtela ? "pt-6! pointer-coarse:pt-9!" : undefined}>
                         {comMenu ? (
                             <DialogHeaderRow endAdornment={
                                 <>
