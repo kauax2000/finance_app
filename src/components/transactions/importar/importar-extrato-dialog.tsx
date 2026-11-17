@@ -239,7 +239,12 @@ export function ImportarExtratoDialog({
                                             {pendenciaLigada(imp) ? <BadgeDot className="absolute top-1.5 right-1.5 [--badge-dot:var(--info)]" /> : null}
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" onCloseAutoFocus={conf.focoAoFecharMenu}>
+                                    <DropdownMenuContent
+                                        align="end"
+                                        onCloseAutoFocus={conf.focoAoFecharMenu}
+                                        // O menu cabe na tela: o teto de 384 do toque o fazia rolar por 2px. Quem limita é a altura disponível (o recurso do `panel`).
+                                        className="[--menu-max-h:100dvh] pointer-coarse:[--menu-max-h:100dvh]"
+                                    >
                                         <DropdownMenuItem onSelect={conf.abrirBusca}>
                                             <MagnifyingGlassIcon />
                                             Buscar
