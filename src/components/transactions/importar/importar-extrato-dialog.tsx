@@ -175,8 +175,12 @@ export function ImportarExtratoDialog({
         <>
             <DialogTitle className="relative">
                 {/* Um título só para o leitor: o que sai da cena é decoração. */}
-                <span aria-hidden="true">
-                    <TrocaSuave forma="titulo" chave={titulo}>{titulo}</TrocaSuave>
+                {/* A linha recorta o giro (o que sai sobe pelo alto, o novo vem de baixo), e o título é `inline-block`:
+                    num elemento inline o navegador ignora o `transform`, e só o esmaecer aparecia. */}
+                <span aria-hidden="true" className="relative block truncate">
+                    <TrocaSuave forma="titulo" chave={titulo} className="inline-block max-w-full truncate align-top">
+                        {titulo}
+                    </TrocaSuave>
                 </span>
                 <span className="sr-only">{titulo}</span>
             </DialogTitle>

@@ -14,12 +14,12 @@ const TEXTO_ABAIXO = { opacity: 0, y: "0.35em", filter: "blur(2px)" }
 const TEXTO_ACIMA = { opacity: 0, y: "-0.35em", filter: "blur(2px)" }
 const TEXTO_PRESENTE = { opacity: 1, y: "0em", filter: "blur(0px)" }
 
-// O título de tela troca como o nome da carteira pelo título na barra do telefone (`TopBarPageTitle`):
-// os dois juntos, 6px para cima e o desfoque `blur-xs`, em `--duration-base` com `--ease-out`.
-const TITULO_ABAIXO = { opacity: 0, y: 6, filter: "blur(4px)" }
-const TITULO_ACIMA = { opacity: 0, y: -6, filter: "blur(4px)" }
-const TITULO_PRESENTE = { opacity: 1, y: 0, filter: "blur(0px)" }
-const TROCA_DO_TITULO = { duration: 0.2, ease: [0.16, 1, 0.3, 1] } as const
+// O título de tela gira como um tambor (dono, 17/11/2026): o de antes sobe e sai pelo alto da linha,
+// tombando para trás, e o novo vem de baixo, de pé. Quem envolve recorta a linha (`overflow-hidden`).
+const TITULO_ABAIXO = { opacity: 0, y: "100%", rotateX: -60, filter: "blur(2px)", transformPerspective: 400 }
+const TITULO_ACIMA = { opacity: 0, y: "-100%", rotateX: 60, filter: "blur(2px)", transformPerspective: 400 }
+const TITULO_PRESENTE = { opacity: 1, y: "0%", rotateX: 0, filter: "blur(0px)", transformPerspective: 400 }
+const TROCA_DO_TITULO = { duration: 0.3, ease: [0.16, 1, 0.3, 1] } as const
 
 /**
  * Troca um ícone ou um rótulo no lugar: o de antes sai no desfoque e o novo
@@ -38,7 +38,7 @@ function TrocaSuave({
   className?: string
   /**
    * `icone` (o padrão) encolhe e volta na mola; `texto` rola de leve, na mola, para número;
-   * `titulo` rola como o título da barra do telefone (6px, 200ms, saída e chegada juntas).
+   * `titulo` gira como um tambor: sai pelo alto e o novo vem de baixo, em 300ms, os dois juntos.
    */
   forma?: "icone" | "texto" | "titulo"
   /** Segundos de espera só na chegada (a saída é imediata): a escada de uma lista. */

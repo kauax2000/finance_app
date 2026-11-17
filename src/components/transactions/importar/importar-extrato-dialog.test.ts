@@ -332,7 +332,7 @@ describe("a troca de passo chega em escada", () => {
     })
 
     it("o título tem um nome só para o leitor: a cena é aria-hidden e o texto vai num sr-only", () => {
-        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave forma="titulo" chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<span aria-hidden="true" className="relative block truncate">\s*<TrocaSuave forma="titulo" chave=\{titulo\} className="inline-block max-w-full truncate align-top"/)
         expect(dialogo).toContain('<span className="sr-only">{titulo}</span>')
     })
 
