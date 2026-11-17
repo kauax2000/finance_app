@@ -33,7 +33,8 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
   it("como o cabeçalho: só existe quando o corpo rola (rodada 386)", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
     expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
-    expect(u).not.toContain("animation-range")
+    expect(u).toContain("animation-name: dialog-degrade-apaga")
+    expect(u).toContain("animation-range: calc(100% - 24px) 100%")
   })
 
   it("na gaveta de baixo, a placa desce até a borda e cobre a área segura", () => {

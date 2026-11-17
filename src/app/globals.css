@@ -4388,6 +4388,12 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         animation: dialog-placa-com-rolagem linear both;
         animation-timeline: --dialog-body-scroll;
       }
+      /* O degradê só acende nos primeiros 24px de rolagem: no topo não há nada passando por
+         baixo, e ele escurecia a primeira linha (rodada 387). A placa fica parada. */
+      &::after {
+        animation-name: dialog-degrade-acende;
+        animation-range: 0 24px;
+      }
       & + [data-slot="dialog-body"],
       & + form > [data-slot="dialog-body"]:first-child,
       & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
@@ -4480,6 +4486,12 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         animation: dialog-placa-com-rolagem linear both;
         animation-timeline: --dialog-body-scroll;
       }
+      /* O degradê some nos últimos 24px: no fim não há nada por baixo, e ele escurecia a
+         última linha (rodada 387). */
+      &::after {
+        animation-name: dialog-degrade-apaga;
+        animation-range: calc(100% - 24px) 100%;
+      }
     }
   }
 }
@@ -4491,6 +4503,24 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes dialog-degrade-acende {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-degrade-apaga {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 

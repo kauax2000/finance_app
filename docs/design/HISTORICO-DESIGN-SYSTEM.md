@@ -29183,3 +29183,12 @@ tempo de rolagem voltou, mas com uma animação de 1 a 1 (`dialog-placa-com-rola
 rolando, a linha do tempo fica ativa e a placa fica acesa do começo ao fim, sem mudar de tom. Sem
 rolagem, a linha do tempo fica inativa, e a base invisível (`opacity: 0`) vale. Medido a 375px: no
 Arquivo, a placa do cabeçalho e a do rodapé ficam em 0; na conferência, que rola, as duas ficam em 1.
+
+### Rodada 387 — o degradê só aparece quando há algo passando por baixo
+
+Com a placa acesa desde o topo, o degradê de 56px abaixo do cabeçalho escurecia a primeira linha,
+e a legenda "Toque numa linha…" do Importar, sem nada passando por trás. Agora a placa
+(`::before`) fica parada, e o degradê (`::after`) tem animação própria. No cabeçalho, ele acende
+nos primeiros 24px de rolagem (`dialog-degrade-acende`, `animation-range: 0 24px`). No rodapé, ele
+some nos últimos 24px (`dialog-degrade-apaga`), para não escurecer a última linha. Medido a 375px,
+com a lista no topo: o degradê do cabeçalho fica em 0 e o do rodapé em 1.
