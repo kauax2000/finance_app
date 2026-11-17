@@ -4277,13 +4277,15 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
 }
 
 @utility dialog-header-translucent {
+  /* Dentro do `form` seguinte, só o corpo que abre o `form` (`:first-child`) passa por baixo:
+     com a busca ou as abas entre os dois, o corpo subia por cima delas (o Pôr categoria, 17/11/2026). */
   /* A descrição só para o leitor de tela (`sr-only`) pode ficar entre os dois. */
   [data-layout="fixed"]
     &:has(
       + [data-slot="dialog-body"],
-      + form > [data-slot="dialog-body"],
+      + form > [data-slot="dialog-body"]:first-child,
       + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
+      + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
     ) {
     /* O fundo da página, um degrau abaixo da placa: o cabeçalho lê mais escuro (13/11). */
     --dialog-header-tint: color-mix(in oklab, var(--background) 95%, transparent);
@@ -4328,9 +4330,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
 
     & + [data-slot="dialog-body"],
-    & + form > [data-slot="dialog-body"],
+    & + form > [data-slot="dialog-body"]:first-child,
     & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-    & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
+    & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
       margin-top: calc(var(--dialog-header-h, 0px) * -1);
       padding-top: calc(var(--dialog-header-h, 0px) + var(--dialog-body-pt, calc(var(--spacing) * 4)));
       scroll-padding-block-start: calc(var(--dialog-header-h, 0px) + var(--spacing) * 2);
@@ -4350,9 +4352,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         height: calc(100% + var(--drawer-handle-h));
       }
       & + [data-slot="dialog-body"],
-      & + form > [data-slot="dialog-body"],
+      & + form > [data-slot="dialog-body"]:first-child,
       & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
+      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
         margin-top: calc((var(--dialog-header-h, 0px) + var(--drawer-handle-h)) * -1);
         padding-top: calc(
           var(--dialog-header-h, 0px) + var(--drawer-handle-h) +
@@ -4375,9 +4377,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     [data-layout="fixed"]
       &:has(
         + [data-slot="dialog-body"],
-        + form > [data-slot="dialog-body"],
+        + form > [data-slot="dialog-body"]:first-child,
         + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]
+        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
       ) {
       /* A placa e o degradê juntos: em repouso o cabeçalho não tem tinta nenhuma (a placa
          mais escura que a folha marcava uma faixa sobre o topo, 13/11), e os dois acendem
@@ -4391,9 +4393,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         animation-range: 0 24px;
       }
       & + [data-slot="dialog-body"],
-      & + form > [data-slot="dialog-body"],
+      & + form > [data-slot="dialog-body"]:first-child,
       & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"] {
+      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
         scroll-timeline: --dialog-body-scroll block;
       }
     }

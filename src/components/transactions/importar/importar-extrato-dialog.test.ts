@@ -748,3 +748,15 @@ describe("Conferir leitura fala dos dados, não das colunas", () => {
         expect(conferirLeitura).not.toMatch(/>[^<>{}\n]*coluna/i)
     })
 })
+
+describe("o Pôr categoria: a busca e as abas no cabeçalho, a lista rola por trás", () => {
+    it("o cabeçalho leva a busca e as abas, e o form abre com o corpo", () => {
+        const cabecalho = conferir.slice(conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>"), conferir.indexOf("</DialogHeader>", conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>")))
+        expect(cabecalho).toContain('placeholder="Buscar categoria"')
+        expect(cabecalho).toContain('<TabsList aria-label="Tipo do lançamento" stretch>')
+        expect(conferir).toMatch(/<Form layout="none" onSubmit=\{aplicar\}[^>]*>\s*<DialogBody/)
+    })
+    it("o Cancelar é o FormCancel, que some no telefone numa gaveta com ✕", () => {
+        expect(conferir).toMatch(/<DialogClose asChild>\s*<FormCancel>Cancelar<\/FormCancel>\s*<\/DialogClose>/)
+    })
+})

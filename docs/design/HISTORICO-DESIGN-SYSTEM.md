@@ -29154,3 +29154,13 @@ No telefone, o `FormCancel` dentro do `DialogFooter` de uma gaveta (`sheet-conte
 ### Rodada 382 — o rodapé translúcido
 
 O corpo de uma gaveta ou de um diálogo de altura fixa passou a rolar por trás do rodapé, como já rolava por trás do cabeçalho translúcido (B3). O `DialogFooter` ganhou `translucent` (ligado; `false` é a saída), mede a própria altura e a publica no pai como `--dialog-footer-h`, pelo mesmo hook do cabeçalho, generalizado em `useAlturaPublicada(nome, ligado)`. A `@utility dialog-footer-translucent`, logo depois da do cabeçalho, é o espelho: a placa a 95% do `--background` (opaca com menos transparência), o degradê de 56px com as mesmas oito paradas, subindo de `bottom: 100%`, e o corpo de antes (irmão, ou os dois no mesmo `form`, o Importar) desce pela altura medida, com o recuo e o `scroll-padding-block-end` somando a mesma altura, para a última linha ficar inteira acima da placa. A dissolução de baixo do corpo sai (`--scroll-fade-bottom-max: 0px`, o teto novo, espelho do `--scroll-fade-top-max`, lido pelo `DialogBody` e pela `scroll-fade-y`). Placa e degradê aparecem enquanto há conteúdo embaixo e somem nos últimos 24px, na mesma linha do tempo `--dialog-body-scroll` do cabeçalho; sem rolagem, nada; sem suporte, sempre à vista. Na gaveta de baixo a placa desce sobre a área segura (`--drawer-safe`), para a barra de gestos não virar faixa de outra cor. Sem desfoque: o vidro foi recusado em 12/11. No `layout="auto"` nada muda, porque a regra exige `[data-layout="fixed"]`. `dialog-footer-translucent.test.ts`.
+
+### Rodada 383 — só o primeiro corpo do form passa por baixo do cabeçalho
+
+O Pôr categoria do Importar tinha a busca e as abas dentro do `form`, entre o cabeçalho e o
+`DialogBody`. A regra do cabeçalho translúcido casava `+ form > [data-slot="dialog-body"]` e
+puxava o corpo para cima da altura do cabeçalho, então a lista subia por cima da busca e das abas.
+Agora o seletor exige `:first-child`, e o Pôr categoria leva a busca e as abas para dentro do
+`DialogHeader`, com a lista rolando por trás. O Cancelar dele virou `FormCancel` e some no
+telefone, como nas outras gavetas com ×. Medido a 375px: o cabeçalho termina em 516px e a
+primeira linha começa em 532px. `dialog-header-translucent.test.ts`.

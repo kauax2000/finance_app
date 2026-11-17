@@ -61,3 +61,12 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(DRAWER).toMatch(/dragHandleClassName = cn\([\s\S]*"relative z-20"/)
   })
 })
+
+describe("dentro do form seguinte, só o corpo que abre o form passa por baixo do cabeçalho", () => {
+  it("com a busca ou as abas entre os dois, o corpo não sobe por cima delas", () => {
+    const css = lerFonte("src/app/globals.css")
+    const bloco = css.slice(css.indexOf("@utility dialog-header-translucent"), css.indexOf("@utility dialog-footer-translucent"))
+    expect(bloco).toContain('& + form > [data-slot="dialog-body"]:first-child')
+    expect(bloco).not.toMatch(/form > \[data-slot="dialog-body"\](?!:first-child)/)
+  })
+})

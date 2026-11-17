@@ -1228,6 +1228,10 @@ declaração de `background-color` no trilho).
     DOM (`useLinkQueFecha`, `NavegarFechandoContext`; a raiz mais de fora
     responde). Nova aba, modificadoras, `download` e outro domínio seguem o
     navegador. Não escreva `onClick` que fecha o diálogo num link.
+  - **Só o corpo que vem logo depois do cabeçalho passa por baixo dele** (17/11/2026): dentro do
+    `form` seguinte, o `DialogBody` precisa ser o primeiro filho (`:first-child`). Busca, abas ou
+    filtros fixos moram **dentro** do `DialogHeader`, como no Importar e no Pôr categoria. Fora
+    dele, o corpo subia por cima dessas peças.
   - **O `DialogHeader` é translúcido em todas as folhas** (`translucent`, ligado; `false` é a
     saída, que o painel de notificações usa): o corpo rola por trás do cabeçalho, a placa a 95%, sem desfoque e a borda descendo num degradê
     de 56px, sem linha reta (`@utility dialog-header-translucent`, 13/11/2026). O vidro de

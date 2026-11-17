@@ -16,7 +16,7 @@ import { BuscaQueAbre } from "./busca-que-abre"
 import { LadrilhoDaCategoria } from "./ladrilho-da-categoria"
 import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
 import { Badge, BadgeDot, tagChipWarning } from "@/components/ui/badge"
-import { Form, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
+import { Form, FormCancel, FormPickerPopoverItem, FormSubmit } from "@/components/ui/form"
 import { SearchInput } from "@/components/ui/search-input"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -358,10 +358,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                               ? "Escolha uma categoria para as saídas e outra para as entradas. Cada uma vale só para o seu tipo."
                               : `Vale para todos os ${numberBR(itens.length)} lançamentos.`}
                     </DialogDescription>
-                </DialogHeader>
-                <Form layout="none" onSubmit={aplicar} className="flex min-h-0 flex-1 flex-col">
-                    {/* A busca fica parada acima da lista: só a lista rola. */}
-                    <div className="px-(--dialog-px)">
+                    {/* A busca e as abas moram no cabeçalho, que é fixo e translúcido: a lista rola por trás delas. */}
+                    <div className="pt-3">
                         <SearchInput
                             placeholder="Buscar categoria"
                             aria-label="Buscar categoria"
@@ -371,7 +369,7 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                         />
                     </div>
                     {misturadas ? (
-                        <div className="flex flex-col gap-2 px-(--dialog-px) pt-3">
+                        <div className="flex flex-col gap-2 pt-3">
                             <Tabs value={aba} onValueChange={(v) => setAba(v as TipoDeCategoria)}>
                                 <TabsList aria-label="Tipo do lançamento" stretch>
                                     <TabsTrigger value="expense" count={numberBR(saidas)}>
@@ -386,6 +384,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                             <Caption className="px-1">{guiaDaAba(tipo, tipo === "expense" ? saidas : entradas, nomeDaEscolha(escolhas[tipo]))}</Caption>
                         </div>
                     ) : null}
+                </DialogHeader>
+                <Form layout="none" onSubmit={aplicar} className="flex min-h-0 flex-1 flex-col">
                     <DialogBody className="flex flex-col gap-3">
                         <ul className="flex flex-col gap-0.5">
                             <li>
@@ -415,10 +415,9 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                         )}
                     </DialogBody>
                     <DialogFooter>
+                        {/* `FormCancel`: no telefone, numa gaveta com ✕, ele some sozinho (o ✕ já é a saída). */}
                         <DialogClose asChild>
-                            <Button variant="tertiary" type="button">
-                                Cancelar
-                            </Button>
+                            <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
                         <FormSubmit disabled={aplicaveis.every((p) => p.ids.length === 0)}>{rotulo}</FormSubmit>
                     </DialogFooter>
