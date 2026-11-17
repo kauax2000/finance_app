@@ -1310,7 +1310,9 @@ declaração de `background-color` no trilho).
   `direction` só `bottom` | `top`. A superfície é o vidro modal
   (`modalSurfaceClassName`) em `--z-sheet`.
   - **A alça é da superfície** (`DrawerPrimitive.Handle`, o `DragHandle`): uma
-    tela nunca a escreve. Não existem `DrawerHeader`, `DrawerTitle`,
+    tela nunca a escreve. Com ✕ e sem `snapPoints` a alça fica `invisible` (guarda
+    os 26px): o ✕ é a saída e o arraste para fechar é da gaveta inteira; com degraus
+    ou sem ✕ ela fica. Não existem `DrawerHeader`, `DrawerTitle`,
     `DrawerDescription` nem `DrawerFooter`.
   - `DrawerContent` `variant` (`flush`, o padrão e **toda gaveta do telefone**;
     `inset`), `size` (`full` | `md` | `lg`) e `fill`.

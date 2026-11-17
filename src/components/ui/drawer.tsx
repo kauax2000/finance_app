@@ -744,7 +744,10 @@ function DrawerContent({
         )}
         {...props}
       >
-        {showHandle ? <DragHandle /> : null}
+        {/* Com ✕ e sem degraus o ✕ é a saída: a alça some, mas guarda os 26px da barra. */}
+        {showHandle ? (
+          <DragHandle className={degraus ? undefined : "group-has-[[data-slot=dialog-close-button]]/dialog-content:invisible"} />
+        ) : null}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>

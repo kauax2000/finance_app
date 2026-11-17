@@ -104,6 +104,17 @@ describe("as versões do Drawer", () => {
   })
 })
 
+describe("a alça da gaveta com ✕", () => {
+  it("com ✕ e sem degraus a alça some, guardando o lugar", () => {
+    const codigo = semComentarios(CODIGO)
+    expect(codigo).toContain("group-has-[[data-slot=dialog-close-button]]/dialog-content:invisible")
+    expect(codigo).not.toContain("handleOnly")
+    expect(codigo).toMatch(
+      /<DragHandle className=\{degraus \? undefined : "group-has-\[\[data-slot=dialog-close-button\]\]\/dialog-content:invisible"\} \/>/
+    )
+  })
+})
+
 describe("toda gaveta do telefone é a flush", () => {
   it("nenhum consumidor pede inset — só a página do catálogo o demonstra", () => {
     const consumidores = [
