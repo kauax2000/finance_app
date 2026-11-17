@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { ESCADA } from "./movimento"
 import { Card } from "@/components/ui/card"
 import { FormSwitch } from "@/components/ui/form"
-import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -129,38 +129,107 @@ export function MapearColunas({
                     ))}
                 </TableBody>
             </Table>
+            <AjustesDaLeitura valor={valor} onChange={onChange} disabled={disabled} />
+        </div>
+    )
+}
+
+type PropsDaLeitura = {
+    valor: MapeamentoColunas
+    onChange: (m: MapeamentoColunas) => void
+    disabled?: boolean
+}
+
+/** O cabeçalho e o sinal: as duas perguntas que valem para o arquivo inteiro. */
+function AjustesDaLeitura({ valor, onChange, disabled = false }: PropsDaLeitura) {
+    return (
+        <Card variant="muted" padding="none">
+            <ItemGroup variant="divided">
+                <Item>
+                    <ItemContent>
+                        <FormSwitch
+                            label="1ª linha é cabeçalho"
+                            checked={valor.temCabecalho}
+                            disabled={disabled}
+                            onCheckedChange={(temCabecalho) => onChange({ ...valor, temCabecalho })}
+                        />
+                    </ItemContent>
+                </Item>
+                <Item>
+                    <ItemContent>
+                        <ItemTitle>Valor negativo é</ItemTitle>
+                    </ItemContent>
+                    <Tabs
+                        value={valor.negativoEhDespesa ? "gasto" : "entrada"}
+                        onValueChange={(v) => onChange({ ...valor, negativoEhDespesa: v === "gasto" })}
+                    >
+                        <TabsList aria-label="Valor negativo é">
+                            <TabsTrigger value="gasto" disabled={disabled}>
+                                Gasto
+                            </TabsTrigger>
+                            <TabsTrigger value="entrada" disabled={disabled}>
+                                Entrada
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </Item>
+            </ItemGroup>
+        </Card>
+    )
+}
+
+/**
+ * No telefone (dono, 16/11/2026): uma linha por coluna do arquivo, com o nome,
+ * dois exemplos e o papel, em vez da tabela larga que rolava para o lado.
+ */
+export function MapearColunasEmLista({ linhas, valor, onChange, disabled = false }: PropsDaLeitura & { linhas: string[][] }) {
+    const largura = Math.max(0, ...linhas.slice(0, 6).map((l) => l.length))
+    const cabecalho = valor.temCabecalho ? linhas[0] : undefined
+    const dados = linhas.slice(valor.temCabecalho ? 1 : 0, 6)
+    const nomeDa = (i: number) => cabecalho?.[i]?.trim() || `Coluna ${i + 1}`
+
+    return (
+        <div key="colunas" className={cn(ESCADA, "flex flex-col gap-4")}>
             <Card variant="muted" padding="none">
                 <ItemGroup variant="divided">
-                    <Item>
-                        <ItemContent>
-                            <FormSwitch
-                                label="1ª linha é cabeçalho"
-                                checked={valor.temCabecalho}
-                                disabled={disabled}
-                                onCheckedChange={(temCabecalho) => onChange({ ...valor, temCabecalho })}
-                            />
-                        </ItemContent>
-                    </Item>
-                    <Item>
-                        <ItemContent>
-                            <ItemTitle>Valor negativo é</ItemTitle>
-                        </ItemContent>
-                        <Tabs
-                            value={valor.negativoEhDespesa ? "gasto" : "entrada"}
-                            onValueChange={(v) => onChange({ ...valor, negativoEhDespesa: v === "gasto" })}
-                        >
-                            <TabsList aria-label="Valor negativo é">
-                                <TabsTrigger value="gasto" disabled={disabled}>
-                                    Gasto
-                                </TabsTrigger>
-                                <TabsTrigger value="entrada" disabled={disabled}>
-                                    Entrada
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </Item>
+                    {Array.from({ length: largura }, (_, i) => (
+                        <Item key={i}>
+                            <ItemContent className="min-w-0">
+                                <ItemTitle>{nomeDa(i)}</ItemTitle>
+                                <ItemDescription className="truncate">
+                                    {dados
+                                        .slice(0, 2)
+                                        .map((l) => (l[i] ?? "").trim())
+                                        .filter(Boolean)
+                                        .join(" · ")}
+                                </ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                                <Select
+                                    value={papelDa(valor, i)}
+                                    disabled={disabled}
+                                    onValueChange={(v) => onChange(comPapel(valor, i, v as Papel | typeof IGNORAR))}
+                                >
+                                    <SelectTrigger className="w-32" aria-label={`Papel da coluna ${nomeDa(i)}`}>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={IGNORAR} variant="none">
+                                            Ignorar
+                                        </SelectItem>
+                                        {PAPEIS.map(({ papel, rotulo }) => (
+                                            <SelectItem key={papel} value={papel}>
+                                                {rotulo}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </ItemActions>
+                        </Item>
+                    ))}
                 </ItemGroup>
             </Card>
+            <AjustesDaLeitura valor={valor} onChange={onChange} disabled={disabled} />
         </div>
     )
 }

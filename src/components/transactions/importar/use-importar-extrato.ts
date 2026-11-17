@@ -458,11 +458,14 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     const iaPorChave = useRef(new Map<string, string>())
     // O mapeamento ao pedir Ajustar: confirmar sem mudar volta à mesma conferência.
     const ajustando = useRef<MapeamentoColunas | null>(null)
+    // O mesmo pedido para a tela: vindo da conferência, Colunas é uma subtela de edição, e não um passo.
+    const [vindoDaConferencia, setVindoDaConferencia] = useState(false)
 
     function limparLeitura({ manterCsv = false }: { manterCsv?: boolean } = {}) {
         // A leitura no ar não aterrissa num estado que mudou.
         vez.invalidar()
         ajustando.current = null
+        setVindoDaConferencia(false)
         if (!manterCsv) {
             setCsv(null)
             setDeducao(null)
@@ -560,6 +563,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         const achados = await buscarJaExistentes(supabase, workspaceId, destino, r.lote.itens)
         if (!vez.vale(n)) return
         ajustando.current = null
+        setVindoDaConferencia(false)
         r.lote.itens = comCategoriasDaIA(
             r.lote.itens,
             sugestoesPelaChave(r.lote.itens, iaPorChave.current, r.lote.categorias, destino),
@@ -665,6 +669,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
     function ajustarColunas() {
         if (!csv) return
         ajustando.current = mapeamento
+        setVindoDaConferencia(true)
         setErro(null)
         setPasso("colunas")
     }
@@ -700,7 +705,10 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             setIa(IA_OCIOSA)
         }
         if (passo === "conferir") setPasso(csv && !deducao?.certa ? "colunas" : "arquivo")
-        else if (passo === "colunas") setPasso(lote && ajustando.current ? "conferir" : "arquivo")
+        else if (passo === "colunas") {
+            setVindoDaConferencia(false)
+            setPasso(lote && ajustando.current ? "conferir" : "arquivo")
+        }
     }
 
     // O CSV deduzido já se lê no passo Arquivo: o total e o período aparecem no item do arquivo.
@@ -842,6 +850,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
         setMapeamento,
         continuar,
         lerColunas,
+        ajustandoColunas: passo === "colunas" && vindoDaConferencia,
         ajustarColunas,
         inverterSinal,
         voltar,

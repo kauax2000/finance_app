@@ -337,7 +337,7 @@ describe("a troca de passo chega em escada", () => {
     })
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
-        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<DialogTitle className=\{cn\("relative", subtela && "flex items-center gap-2"\)\}>[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
     })
 })
 
@@ -630,5 +630,31 @@ describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
         expect(dialogo).toContain("tagChipUnreadCount")
         expect(dialogo).not.toContain("<BadgeDot")
         expect(dialogo).toContain('"Mais ações, filtro ligado"')
+    })
+})
+
+describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo", () => {
+    const hook = ler("use-importar-extrato.ts")
+    const mapear = ler("mapear-colunas.tsx")
+
+    it("o hook marca a vinda da conferência e a desfaz ao sair", () => {
+        expect(hook).toContain('ajustandoColunas: passo === "colunas" && vindoDaConferencia')
+        expect(hook).toMatch(/ajustando\.current = mapeamento\s*setVindoDaConferencia\(true\)/)
+        expect(hook.match(/setVindoDaConferencia\(false\)/g)?.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it("a subtela troca os passos pelo ‹ e o rodapé por um Pronto só", () => {
+        expect(dialogo).toContain("const subtela = imp.ajustandoColunas")
+        expect(dialogo).toContain('const titulo = subtela ? "Ajustar colunas"')
+        expect(dialogo).toMatch(/aria-label="Voltar à conferência"[\s\S]*?onClick=\{imp\.voltar\}/)
+        expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela ? null : (")
+        expect(dialogo).toContain("{subtela ? null : imp.passo === \"arquivo\" ? (")
+        expect(dialogo).toContain(': subtela ? "Pronto" : "Continuar"')
+    })
+
+    it("no telefone as colunas são uma lista, uma linha por coluna", () => {
+        expect(dialogo).toMatch(/imp\.passo === "colunas" && imp\.csv && celular \? \(\s*<MapearColunasEmLista/)
+        expect(mapear).toContain("export function MapearColunasEmLista(")
+        expect(mapear.match(/<AjustesDaLeitura /g)?.length).toBe(2)
     })
 })

@@ -5,6 +5,7 @@ import { ArrowUpTrayIcon } from "@heroicons/react/24/outline"
 import {
     ArrowsRightLeftIcon,
     CheckIcon,
+    ChevronLeftIcon,
     DocumentTextIcon,
     EllipsisHorizontalIcon,
     MagnifyingGlassIcon,
@@ -76,7 +77,7 @@ import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
 import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
-import { MapearColunas } from "./mapear-colunas"
+import { MapearColunas, MapearColunasEmLista } from "./mapear-colunas"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
 const CONTAS = [
@@ -124,6 +125,9 @@ export function ImportarExtratoDialog({
     const entrada = useRef<HTMLInputElement>(null)
     const celular = useIsMobile()
     const conf = useConferencia(imp.passo === "conferir")
+    // Ajustar colunas, vindo da conferência, é uma edição do que o app leu (dono, 16/11/2026): a gaveta vira
+    // subtela, com ‹ no lugar dos passos e um botão só, Pronto. Quando a dedução falha, Colunas segue um passo.
+    const subtela = imp.ajustandoColunas
 
     function mudarAberto(aberto: boolean) {
         if (!aberto) {
@@ -148,7 +152,7 @@ export function ImportarExtratoDialog({
     const nomeDoDestino = cartao
         ? `para o ${cartao.name}`
         : (CONTAS.find((c) => d?.tipo === "conta" && c.forma === d.paymentMethod)?.em ?? "")
-    const titulo = imp.passo === "conferir" && nomeDoDestino ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}` : "Importar extrato"
+    const titulo = subtela ? "Ajustar colunas" : imp.passo === "conferir" && nomeDoDestino ? `${lancamentos(imp.resumo.total)} ${nomeDoDestino}` : "Importar extrato"
     const periodo = imp.resumo.periodo
     // No telefone as ações da conferência moram no ⋯ do cabeçalho, ao lado do ✕; as abas ficam com a linha delas.
     const comMenu = celular && imp.passo === "conferir"
@@ -156,7 +160,19 @@ export function ImportarExtratoDialog({
 
     const tituloEDescricao = (
         <>
-            <DialogTitle className="relative">
+            <DialogTitle className={cn("relative", subtela && "flex items-center gap-2")}>
+                {subtela ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar à conferência"
+                        disabled={travado}
+                        onClick={imp.voltar}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
                 {/* Um título só para o leitor: o que sai da cena é decoração. */}
                 <span aria-hidden="true">
                     <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
@@ -292,7 +308,7 @@ export function ImportarExtratoDialog({
                         ) : (
                             tituloEDescricao
                         )}
-                        {imp.passo === "feito" || expandido ? null : (
+                        {imp.passo === "feito" || expandido || subtela ? null : (
                             // Esmaece junto com a conferência no Ver todos, em vez de sumir seca e puxar tudo para cima.
                             <DialogSteps
                                 current={atual}
@@ -456,6 +472,13 @@ export function ImportarExtratoDialog({
                                     </Select>
                                 </FormField>
                             </div>
+                        ) : imp.passo === "colunas" && imp.csv && celular ? (
+                            <MapearColunasEmLista
+                                linhas={imp.csv}
+                                valor={imp.mapeamento}
+                                onChange={imp.setMapeamento}
+                                disabled={travado}
+                            />
                         ) : imp.passo === "colunas" && imp.csv ? (
                             <MapearColunas
                                 linhas={imp.csv}
@@ -549,7 +572,7 @@ export function ImportarExtratoDialog({
                             {/* Quantas entram fica à esquerda, na linha dos botões; no telefone sobe para cima deles.
                                 Dentro do rodapé (e não no `start`): o par Voltar e Importar mantém os dois pesos. */}
                             
-                            {imp.passo === "arquivo" ? (
+                            {subtela ? null : imp.passo === "arquivo" ? (
                                 <DialogClose asChild>
                                     <FormCancel>Cancelar</FormCancel>
                                 </DialogClose>
@@ -565,7 +588,7 @@ export function ImportarExtratoDialog({
                                         : imp.passo === "conferir" && !imp.resumo.entram
                                 }
                             >
-                                {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : "Continuar"}
+                                {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : subtela ? "Pronto" : "Continuar"}
                             </FormSubmit>
                             {/* No telefone o Total fica parado acima do botão, nas duas vistas: com o
                                 `flex-col-reverse` do rodapé, o último filho sobe para cima dos botões. */}
