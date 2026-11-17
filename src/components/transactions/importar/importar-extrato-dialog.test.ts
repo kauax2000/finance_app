@@ -623,9 +623,12 @@ describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
         expect(conferir).toMatch(/<Tabs value=\{celular && pendenciaLigada\(imp\) \? "todos" : imp\.filtro\}/)
     })
 
-    it("o gatilho ⋯ mostra o BadgeDot e muda o nome acessível", () => {
+    it("o gatilho ⋯ mostra a bolha do sino das notificações, sem número, e muda o nome acessível", () => {
         expect(dialogo).toContain("pendenciaLigada(imp)")
-        expect(dialogo).toContain("<BadgeDot")
+        // A cor, o anel e a entrada da `top-bar-action-count` (top-bar.tsx); menor, sem número.
+        expect(dialogo).toContain("absolute top-2 right-1.5 z-10 size-2 rounded-full ring-2 ring-background")
+        expect(dialogo).toContain("tagChipUnreadCount")
+        expect(dialogo).not.toContain("<BadgeDot")
         expect(dialogo).toContain('"Mais ações, filtro ligado"')
     })
 })

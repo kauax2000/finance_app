@@ -25,7 +25,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { BadgeDot } from "@/components/ui/badge"
+import { tagChipUnreadCount } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -236,7 +236,17 @@ export function ImportarExtratoDialog({
                                             disabled={travadoAoImportar}
                                         >
                                             <EllipsisHorizontalIcon />
-                                            {pendenciaLigada(imp) ? <BadgeDot className="absolute top-1.5 right-1.5 [--badge-dot:var(--info)]" /> : null}
+                                            {/* A bolha do sino das notificações (`top-bar-action-count`) sem o número: mesma cor, anel e entrada na mola, e menor (8px), acima e à direita do último ponto do ⋯, porque não carrega número. */}
+                                            {pendenciaLigada(imp) ? (
+                                                <span
+                                                    aria-hidden
+                                                    className={cn(
+                                                        "pointer-events-none absolute top-2 right-1.5 z-10 size-2 rounded-full ring-2 ring-background",
+                                                        tagChipUnreadCount,
+                                                        "transition-[scale,opacity] duration-(--duration-spring) ease-(--ease-spring) starting:scale-30 starting:opacity-0"
+                                                    )}
+                                                />
+                                            ) : null}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent
