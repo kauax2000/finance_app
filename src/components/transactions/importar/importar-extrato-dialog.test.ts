@@ -337,7 +337,7 @@ describe("a troca de passo chega em escada", () => {
     })
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
-        expect(dialogo).toMatch(/<DialogTitle className=\{cn\("relative", subtela && "flex items-center gap-2"\)\}>[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
     })
 })
 
@@ -646,7 +646,8 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
     it("a subtela troca os passos pelo ‹ e o rodapé por um Pronto só", () => {
         expect(dialogo).toContain("const subtela = imp.ajustandoColunas")
         expect(dialogo).toContain('const titulo = subtela ? "Ajustar colunas"')
-        expect(dialogo).toMatch(/aria-label="Voltar à conferência"[\s\S]*?onClick=\{imp\.voltar\}/)
+        // O ‹ espelha o ✕ (\`absolute top-2.5 right-2.5 z-20\`) no canto esquerdo, fora do formulário.
+        expect(dialogo).toMatch(/<\/Form>[\s{}]*\{subtela \? \(\s*<Button[\s\S]*?aria-label="Voltar à conferência"[\s\S]*?className="absolute top-2\.5 left-2\.5 z-20"/)
         expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela ? null : (")
         expect(dialogo).toContain("{subtela ? null : imp.passo === \"arquivo\" ? (")
         expect(dialogo).toContain(': subtela ? "Pronto" : "Continuar"')

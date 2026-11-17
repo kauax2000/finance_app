@@ -163,19 +163,7 @@ export function ImportarExtratoDialog({
 
     const tituloEDescricao = (
         <>
-            <DialogTitle className={cn("relative", subtela && "flex items-center gap-2")}>
-                {subtela ? (
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="icon-md"
-                        aria-label="Voltar à conferência"
-                        disabled={travado}
-                        onClick={() => trocarDeTela("volta", imp.voltar)}
-                    >
-                        <ChevronLeftIcon />
-                    </Button>
-                ) : null}
+            <DialogTitle className="relative">
                 {/* Um título só para o leitor: o que sai da cena é decoração. */}
                 <span aria-hidden="true">
                     <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
@@ -603,6 +591,20 @@ export function ImportarExtratoDialog({
                         </DialogFooter>
                     )}
                 </Form>
+                {/* O ‹ da subtela é o espelho do ✕: o mesmo canto (`top-2.5`, acima do cabeçalho translúcido), do lado esquerdo. */}
+                {subtela ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar à conferência"
+                        disabled={travado}
+                        className="absolute top-2.5 left-2.5 z-20"
+                        onClick={() => trocarDeTela("volta", imp.voltar)}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
             </DialogContent>
         </Dialog>
     )
