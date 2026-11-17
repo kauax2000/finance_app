@@ -126,8 +126,8 @@ export function ImportarExtratoDialog({
     const entrada = useRef<HTMLInputElement>(null)
     const celular = useIsMobile()
     const conf = useConferencia(imp.passo === "conferir")
-    // Ajustar colunas, vindo da conferência, é uma edição do que o app leu (dono, 16/11/2026): a gaveta vira
-    // subtela, com ‹ no lugar dos passos e um botão só, Pronto. Quando a dedução falha, Colunas segue um passo.
+    // Conferir leitura, vindo da conferência, é uma edição do que o app leu (dono, 16/11/2026): a gaveta vira
+    // subtela, com ‹ no lugar dos passos e um botão só, Está certo. Quando a dedução falha, Colunas segue um passo.
     const subtela = imp.ajustandoColunas
     const voltarNoTopo = celular && (imp.passo === "conferir" || imp.passo === "colunas")
     // Entrar e sair da subtela é o gesto da subpágina do app, só no telefone.
@@ -160,7 +160,7 @@ export function ImportarExtratoDialog({
     // desce para a descrição, senão "2 lançamentos em Outro" cortava.
     const destinoNaDescricao = celular && imp.passo === "conferir" && Boolean(nomeDoDestino)
     const titulo = subtela
-        ? "Ajustar colunas"
+        ? "Conferir leitura"
         : imp.passo === "conferir" && nomeDoDestino
           ? destinoNaDescricao
               ? lancamentos(imp.resumo.total)
@@ -196,7 +196,9 @@ export function ImportarExtratoDialog({
                         </>
                     )
                       : imp.passo === "colunas"
-                        ? "Diga o que é cada coluna do arquivo."
+                        ? subtela
+                          ? "Escolha de onde vem cada informação."
+                          : "Diga o que é cada coluna do arquivo."
                         : "CSV ou OFX do seu banco, ou uma planilha sua."}
             </DialogDescription>
         </>
@@ -290,7 +292,7 @@ export function ImportarExtratoDialog({
                                                 {/* Ajustar no meio da releitura deixaria a resposta cair no passo trocado: espera, como o Inverter. */}
                                                 <DropdownMenuItem disabled={imp.pendente === "lendo"} onSelect={() => trocarDeTela("entra", imp.ajustarColunas)}>
                                                     <TableCellsIcon />
-                                                    Ajustar colunas
+                                                    Conferir leitura
                                                 </DropdownMenuItem>
                                             </>
                                         ) : null}
@@ -595,7 +597,7 @@ export function ImportarExtratoDialog({
                                         : imp.passo === "conferir" && !imp.resumo.entram
                                 }
                             >
-                                {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : subtela ? "Pronto" : "Continuar"}
+                                {imp.passo === "conferir" ? `Importar ${lancamentos(imp.resumo.entram)}` : subtela ? "Está certo" : "Continuar"}
                             </FormSubmit>
                             {/* No telefone o Total fica parado acima do botão, nas duas vistas: com o
                                 `flex-col-reverse` do rodapé, o último filho sobe para cima dos botões. */}

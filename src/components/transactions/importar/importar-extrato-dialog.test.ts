@@ -474,7 +474,7 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
         expect(menu).toContain("onSelect={conf.abrirBusca}")
         expect(dialogo).toContain("onCloseAutoFocus={conf.focoAoFecharMenu}")
         expect(conferir).toContain("id={conf.idDaBusca}")
-        expect(menu).toMatch(/\{imp\.csv \? \([\s\S]*?Inverter sinal[\s\S]*?Ajustar colunas[\s\S]*?\) : null\}/)
+        expect(menu).toMatch(/\{imp\.csv \? \([\s\S]*?Inverter sinal[\s\S]*?Conferir leitura[\s\S]*?\) : null\}/)
         expect(menu).toContain("<DropdownMenuSeparator />")
         expect(menu).toContain("<ItensDasVisiveis")
         // Os itens das visíveis são um componente só, do ⋯ e do menu Ações do desktop.
@@ -565,7 +565,7 @@ describe("no telefone, uma linha só nas duas vistas, a busca pelo ⋯ e o Total
         expect(conferir).toContain("const grande = teto !== undefined && daTabela.length > teto")
         expect(conferir).toContain("`Mostrando ${numberBR(LIMITE)} de ${numberBR(daTabela.length)} ·`")
         expect(conferir).toContain('busca.trim() ? "Nenhum lançamento para essa busca." : "Nenhum lançamento neste filtro"')
-        // Ajustar colunas no ⋯ espera a releitura, como o Inverter.
+        // Conferir leitura no ⋯ espera a releitura, como o Inverter.
         expect(dialogo).toMatch(/<DropdownMenuItem disabled=\{imp\.pendente === "lendo"\} onSelect=\{\(\) => trocarDeTela\("entra", imp\.ajustarColunas\)\}>/)
     })
 })
@@ -633,7 +633,7 @@ describe("no telefone, o filtro do ⋯ aparece sem apagar a aba Todos", () => {
     })
 })
 
-describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo", () => {
+describe("Conferir leitura vindo da conferência é uma subtela, e não um passo", () => {
     const hook = ler("use-importar-extrato.ts")
     const mapear = ler("mapear-colunas.tsx")
 
@@ -643,9 +643,9 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(hook.match(/setVindoDaConferencia\(false\)/g)?.length).toBeGreaterThanOrEqual(3)
     })
 
-    it("a subtela troca os passos pelo ‹ e o rodapé por um Pronto só", () => {
+    it("a subtela troca os passos pelo ‹ e o rodapé por um Está certo só", () => {
         expect(dialogo).toContain("const subtela = imp.ajustandoColunas")
-        expect(dialogo).toMatch(/const titulo = subtela\s*\? "Ajustar colunas"/)
+        expect(dialogo).toMatch(/const titulo = subtela\s*\? "Conferir leitura"/)
         // No telefone o título fica no centro da barra, e o destino desce para a descrição.
         expect(dialogo).toContain("const destinoNaDescricao = celular && imp.passo === \"conferir\" && Boolean(nomeDoDestino)")
         // O ‹ espelha o ✕ (\`absolute top-2.5 right-2.5 z-20\`) no canto esquerdo, fora do formulário.
@@ -654,7 +654,10 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(dialogo).toContain('onClick={() => (subtela ? trocarDeTela("volta", imp.voltar) : imp.voltar())}')
         expect(dialogo).toContain("imp.passo === \"feito\" || expandido || subtela || celular ? null : (")
         expect(dialogo).toContain("{subtela ? null : imp.passo === \"arquivo\" ? (")
-        expect(dialogo).toContain(': subtela ? "Pronto" : "Continuar"')
+        expect(dialogo).toContain(': subtela ? "Está certo" : "Continuar"')
+        expect(dialogo).toContain('? "Escolha de onde vem cada informação."')
+        expect(mapear).toContain("formatDayHeadingPtBr(item.data)")
+        expect(mapear).not.toContain("formatDateLongPtBr")
     })
 
     it("no telefone o passo Colunas é o Conferir leitura", () => {

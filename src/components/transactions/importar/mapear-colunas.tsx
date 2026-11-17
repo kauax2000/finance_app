@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { mapearCsv } from "@/lib/import/csv"
 import { lerValorBr } from "@/lib/import/normalizar"
 import { numberBR } from "@/lib/formatters"
-import { formatDateLongPtBr } from "@/lib/transaction-date"
+import { formatDayHeadingPtBr } from "@/lib/transaction-date"
 
 import type { MapeamentoColunas } from "./use-importar-extrato"
 
@@ -249,7 +249,7 @@ export function ConferirLeitura({ linhas, valor, onChange, disabled = false }: P
                                     <ItemContent className="min-w-0">
                                         <ItemTitle className="truncate">{item.descricao}</ItemTitle>
                                         <ItemDescription>
-                                            {formatDateLongPtBr(item.data)}
+                                            {formatDayHeadingPtBr(item.data)}
                                             {item.categoria ? ` · ${item.categoria}` : null}
                                         </ItemDescription>
                                     </ItemContent>

@@ -692,7 +692,7 @@ export function useImportarExtrato({ workspaceId }: { workspaceId: string | null
             return Promise.resolve()
         }
         if (m.data < 0 || m.descricao < 0 || m.valor < 0) {
-            setErro("Escolha a coluna da data, da descrição e do valor.")
+            setErro("Escolha a data, a descrição e o valor.")
             return Promise.resolve()
         }
         return lendo((n) => preparar(n, lerComMapeamento(linhas, m), sourceDoArquivo("csv", m.categoria)))
