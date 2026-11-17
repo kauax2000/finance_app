@@ -129,6 +129,7 @@ export function ImportarExtratoDialog({
     // Ajustar colunas, vindo da conferência, é uma edição do que o app leu (dono, 16/11/2026): a gaveta vira
     // subtela, com ‹ no lugar dos passos e um botão só, Pronto. Quando a dedução falha, Colunas segue um passo.
     const subtela = imp.ajustandoColunas
+    const voltarNoTopo = celular && (imp.passo === "conferir" || imp.passo === "colunas")
     // Entrar e sair da subtela é o gesto da subpágina do app, só no telefone.
     const trocarDeTela = useTransicaoDaSubtela({ passo: imp.passo, pendente: imp.pendente, erro: imp.erro }, celular)
 
@@ -601,16 +602,16 @@ export function ImportarExtratoDialog({
                         </DialogFooter>
                     )}
                 </Form>
-                {/* O ‹ da subtela é o espelho do ✕: o mesmo canto (`top-2.5`, acima do cabeçalho translúcido), do lado esquerdo. */}
-                {subtela ? (
+                {/* O ‹ é o espelho do ✕: o mesmo canto (`top-2.5`, acima do cabeçalho translúcido), do lado esquerdo. No telefone ele aparece em todo passo que tinha o Voltar no rodapé (o `FormCancel` some lá); a subtela sempre o tem. */}
+                {voltarNoTopo ? (
                     <Button
                         type="button"
                         variant="tertiary"
                         size="icon-md"
-                        aria-label="Voltar à conferência"
+                        aria-label={subtela ? "Voltar à conferência" : "Voltar"}
                         disabled={travado}
                         className="absolute top-2.5 left-2.5 z-20"
-                        onClick={() => trocarDeTela("volta", imp.voltar)}
+                        onClick={() => (subtela ? trocarDeTela("volta", imp.voltar) : imp.voltar())}
                     >
                         <ChevronLeftIcon />
                     </Button>
