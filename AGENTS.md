@@ -1231,7 +1231,12 @@ declaração de `background-color` no trilho).
   - **O `DialogHeader` é translúcido em todas as folhas** (`translucent`, ligado; `false` é a
     saída, que o painel de notificações usa): o corpo rola por trás do cabeçalho, a placa a 95%, sem desfoque e a borda descendo num degradê
     de 56px, sem linha reta (`@utility dialog-header-translucent`, 13/11/2026). O vidro de
-    24px em todas as folhas (12/11) foi recusado.
+    24px em todas as folhas (12/11) foi recusado. **O `DialogFooter` é o espelho** (`translucent`,
+    ligado; rodada 382, 17/11/2026): o corpo rola por trás do rodapé, a mesma placa a 95% e o
+    degradê de 56px subindo, que some nos últimos 24px da rolagem; na gaveta de baixo a placa
+    desce sobre a área segura (`@utility dialog-footer-translucent`, `--dialog-footer-h`). **A
+    regra geral**: o que fica preso na borda de uma área que rola (cabeçalho, rodapé) deixa o
+    conteúdo passar por trás, com a placa a 95% e o degradê de 56px, sem desfoque.
   - **Aberto de dentro de uma folha, o diálogo sobe à camada dela**: o `DialogContent` lê o `DrawerRaizContext` e, dentro de um `SheetContent`, véu e placa vão a `--z-sheet` (em `--z-modal` ficavam atrás da folha). Abrir um arquivo do detalhe é o caso (`VisualizadorDeAnexo`).
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: a `@utility dialog-step`
     (as peças surgem do desfoque, `menu-content-in`, em ondas por

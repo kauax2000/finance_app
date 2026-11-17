@@ -3695,7 +3695,11 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   &:has([data-scroll-fade-head]) {
     --scroll-fade-top-max: 0px;
   }
-  --scroll-fade-bottom-z: clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h));
+  --scroll-fade-bottom-z: clamp(
+    0px,
+    var(--scroll-fade-end, 0px),
+    var(--scroll-fade-bottom-max, var(--scroll-fade-h))
+  );
   --scroll-fade-bottom-h: calc(var(--scroll-fade-foot-h, 0px) + var(--scroll-fade-bottom-z));
   /* A guarda de cruzamento: numa caixa mais curta que as duas zonas somadas as paradas
      de baixo resolveriam antes das de cima e o *color-stop fixup* deixaria um degrau em
@@ -4402,5 +4406,102 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   }
   to {
     opacity: 1;
+  }
+}
+
+/* O espelho do cabeçalho, virado para cima (rodada 382, 17/11/2026): o corpo rola por trás do
+   rodapé, que fica com a mesma placa a 95% e o mesmo degradê de 56px, subindo. O corpo vem
+   antes: irmão, ou os dois dentro do mesmo `form` (o Importar). */
+@utility dialog-footer-translucent {
+  [data-layout="fixed"] [data-slot="dialog-body"] + & {
+    --dialog-footer-tint: color-mix(in oklab, var(--background) 95%, transparent);
+    --dialog-footer-fade-h: calc(var(--spacing) * 14);
+    position: relative;
+    z-index: 10;
+
+    @media (prefers-reduced-transparency: reduce) {
+      --dialog-footer-tint: var(--background);
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+    &::before {
+      bottom: 0;
+      height: 100%;
+      background-color: var(--dialog-footer-tint);
+    }
+    &::after {
+      bottom: 100%;
+      height: var(--dialog-footer-fade-h);
+      background-image: linear-gradient(
+        to top,
+        color-mix(in oklab, var(--dialog-footer-tint) 100%, transparent) 0%,
+        color-mix(in oklab, var(--dialog-footer-tint) 91%, transparent) 12%,
+        color-mix(in oklab, var(--dialog-footer-tint) 78%, transparent) 25%,
+        color-mix(in oklab, var(--dialog-footer-tint) 62%, transparent) 38%,
+        color-mix(in oklab, var(--dialog-footer-tint) 47%, transparent) 50%,
+        color-mix(in oklab, var(--dialog-footer-tint) 33%, transparent) 62%,
+        color-mix(in oklab, var(--dialog-footer-tint) 19%, transparent) 75%,
+        color-mix(in oklab, var(--dialog-footer-tint) 8%, transparent) 88%,
+        transparent
+      );
+    }
+
+    /* Na gaveta de baixo a superfície guarda embaixo a área segura (`--drawer-safe`): a placa
+       desce até a borda, como a do cabeçalho sobe sobre o puxador, e a barra de gestos não
+       vira uma faixa de outra cor sob o rodapé. */
+    [data-vaul-drawer-direction="bottom"] > &,
+    [data-vaul-drawer-direction="bottom"] > form > & {
+      &::before {
+        height: calc(100% + var(--drawer-safe, 0px));
+        bottom: calc(var(--drawer-safe, 0px) * -1);
+      }
+    }
+  }
+
+  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura: a última linha
+     fica inteira acima da placa com a lista rolada até o fim. */
+  [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
+    margin-bottom: calc(var(--dialog-footer-h, 0px) * -1);
+    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--dialog-body-pb, calc(var(--spacing) * 4)));
+    scroll-padding-block-end: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
+    /* Quem esconde o conteúdo embaixo é o rodapé: a dissolução de baixo sai. */
+    --scroll-fade-bottom-max: 0px;
+  }
+
+  /* O degradê aparece enquanto há conteúdo por baixo e some nos últimos 24px da rolagem, o
+     inverso do cabeçalho. Sem rolagem a linha do tempo fica inativa e a base invisível vale;
+     sem suporte, o degradê fica sempre à vista. */
+  @supports (animation-timeline: scroll()) {
+    [data-layout="fixed"]:has(&) {
+      timeline-scope: --dialog-body-scroll;
+    }
+    [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
+      scroll-timeline: --dialog-body-scroll block;
+    }
+    [data-layout="fixed"] [data-slot="dialog-body"] + & {
+      &::before,
+      &::after {
+        opacity: 0;
+        animation: dialog-footer-fade-out linear both;
+        animation-timeline: --dialog-body-scroll;
+        animation-range: calc(100% - 24px) 100%;
+      }
+    }
+  }
+}
+
+@keyframes dialog-footer-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

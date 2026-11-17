@@ -103,6 +103,9 @@ export default function DialogDoc() {
             <code>surface=&quot;auto&quot;</code>, abaixo de 768px o mesmo
             diálogo é a gaveta do <code>Sheet</code>, arrastável e com a área
             segura: nada de <code>if (isMobile)</code> trocando de componente.
+            O corpo rola por trás do cabeçalho e do rodapé, que ficam com a
+            placa a 95% e o degradê de 56px só enquanto há conteúdo por baixo
+            (<code>translucent</code>, ligado nos dois).
           </>
         }
         code={`<Dialog surface="auto">

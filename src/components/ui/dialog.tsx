@@ -654,26 +654,27 @@ const dialogHeaderVariants = cva("", {
  * casco já dá o recuo, então aqui ele é zero.
  */
 /**
- * A altura do cabeçalho, publicada no pai como `--dialog-header-h`: com
- * `translucent`, o corpo irmão sobe por trás dele nessa medida
- * (`@utility dialog-header-translucent`). Medida antes da pintura e a cada
- * mudança de tamanho.
+ * A altura de uma tira, publicada no pai na variável `nome`: com
+ * `translucent`, o corpo irmão passa por trás dela nessa medida
+ * (`--dialog-header-h` no `@utility dialog-header-translucent`,
+ * `--dialog-footer-h` no `dialog-footer-translucent`). Medida antes da pintura
+ * e a cada mudança de tamanho.
  */
-function useAlturaDoCabecalho(ligado: boolean) {
+function useAlturaPublicada(nome: string, ligado: boolean) {
   const [el, setEl] = React.useState<HTMLDivElement | null>(null)
   React.useLayoutEffect(() => {
     const pai = el?.parentElement
     const Observer = el?.ownerDocument.defaultView?.ResizeObserver
     if (!ligado || !el || !pai || !Observer) return
-    const medir = () => pai.style.setProperty("--dialog-header-h", `${el.offsetHeight}px`)
+    const medir = () => pai.style.setProperty(nome, `${el.offsetHeight}px`)
     medir()
     const ob = new Observer(medir)
     ob.observe(el)
     return () => {
       ob.disconnect()
-      pai.style.removeProperty("--dialog-header-h")
+      pai.style.removeProperty(nome)
     }
-  }, [el, ligado])
+  }, [el, nome, ligado])
   return setEl
 }
 
@@ -695,7 +696,7 @@ function DialogHeader({
      */
     translucent?: boolean
   }) {
-  const medir = useAlturaDoCabecalho(translucent)
+  const medir = useAlturaPublicada("--dialog-header-h", translucent)
   return (
     <div
       ref={useComposedRefs(ref, medir)}
@@ -825,7 +826,7 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
         "[--scroll-fade-end-h:var(--dialog-body-fade-end-h,var(--scroll-fade-h))]",
         // As paradas são frações da zona aberta (`--scroll-fade-top-z` e
         // `-bottom-z`, de `scroll-fade-y`): a rampa encolhe, não desliza.
-        "[--scroll-fade-bottom-z:clamp(0px,var(--scroll-fade-end,0px),var(--scroll-fade-end-h))]!",
+        "[--scroll-fade-bottom-z:clamp(0px,var(--scroll-fade-end,0px),var(--scroll-fade-bottom-max,var(--scroll-fade-end-h)))]!",
         dialogBodyRampClassName,
         className
       )}
@@ -836,7 +837,9 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
 
 /**
  * O rodapé: uma tira na borda de baixo, nos dois layouts. O recuo negativo sai
- * da mesma variável do recuo positivo e só existe no layout que tem recuo. Sem
+ * da mesma variável do recuo positivo e só existe no layout que tem recuo. Com
+ * `translucent` (o padrão), no `layout="fixed"` o corpo rola por trás dele, sob
+ * a placa e o degradê que só aparecem com conteúdo embaixo; fora disso, sem
  * tingido: o peso dos botões já separa o rodapé. `start` é a ação do outro lado
  * ("Excluir", "Voltar"), à esquerda no desktop e embaixo de tudo no telefone.
  */
@@ -844,16 +847,29 @@ function DialogFooter({
   className,
   showCloseButton = false,
   start,
+  translucent = true,
   children,
+  ref,
   ...props
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
   start?: React.ReactNode
+  /**
+   * O corpo rola por trás do rodapé, o espelho do cabeçalho translúcido: a
+   * mesma placa a 95% e o degradê de 56px, subindo (rodada 382, 17/11/2026).
+   * Vale no `layout="fixed"` com o `DialogBody` logo antes (irmão, ou os dois
+   * no mesmo `form`). `false` é a saída.
+   */
+  translucent?: boolean
 }) {
+  const medir = useAlturaPublicada("--dialog-footer-h", translucent)
   return (
     <div
+      ref={useComposedRefs(ref, medir)}
       data-slot="dialog-footer"
+      data-translucent={translucent || undefined}
       className={cn(
+        translucent && "dialog-footer-translucent",
         // Sem fio, nem aqui nem no cabeçalho: o diálogo é uma superfície só, e
         // o que separa as faixas é a dissolução (com rolagem) ou o respiro.
         "flex shrink-0 flex-col-reverse gap-2",
