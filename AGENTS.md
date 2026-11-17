@@ -1240,8 +1240,9 @@ declaração de `background-color` no trilho).
     degradê de 56px subindo; na gaveta de baixo a placa
     desce sobre a área segura (`@utility dialog-footer-translucent`, `--dialog-footer-h`). **A
     regra geral**: o que fica preso na borda de uma área que rola (cabeçalho, rodapé) deixa o
-    conteúdo passar por trás, com a placa a 95% e o degradê de 56px, sem desfoque, **sempre
-    acesos** (rodada 385): a faixa não muda de tom ao rolar. A máscara sem placa, com a lista
+    conteúdo passar por trás, com a placa a 95% e o degradê de 56px, sem desfoque. **Só
+    existem quando o corpo rola** (rodada 386: numa gaveta curta não há placa) e, aí, **ficam
+    acesos do começo ao fim** (rodada 385): a faixa não muda de tom ao rolar. A máscara sem placa, com a lista
     apagada por trás (rodada 384), foi recusada: o conteúdo de trás atrapalhava a leitura.
   - **Aberto de dentro de uma folha, o diálogo sobe à camada dela**: o `DialogContent` lê o `DrawerRaizContext` e, dentro de um `SheetContent`, véu e placa vão a `--z-sheet` (em `--z-modal` ficavam atrás da folha). Abrir um arquivo do detalhe é o caso (`VisualizadorDeAnexo`).
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. **A troca de passo anima**: a `@utility dialog-step`

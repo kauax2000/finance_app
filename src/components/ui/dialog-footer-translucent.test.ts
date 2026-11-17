@@ -30,10 +30,10 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
     expect(DIALOG).toContain("var(--scroll-fade-bottom-max,var(--scroll-fade-end-h))")
   })
 
-  it("a placa e o degradê ficam sempre acesos, como no cabeçalho (rodada 385)", () => {
+  it("como o cabeçalho: só existe quando o corpo rola (rodada 386)", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
-    expect(u).not.toContain("animation-timeline")
-    expect(CSS).not.toContain("@keyframes dialog-footer-fade-out")
+    expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
+    expect(u).not.toContain("animation-range")
   })
 
   it("na gaveta de baixo, a placa desce até a borda e cobre a área segura", () => {

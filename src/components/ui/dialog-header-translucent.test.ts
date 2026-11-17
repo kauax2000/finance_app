@@ -26,11 +26,13 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("--scroll-fade-top-max: 0px")
   })
 
-  it("a placa e o degradê ficam sempre acesos, sem acender com a rolagem (rodada 385)", () => {
+  it("a placa só existe quando o corpo rola, e aí fica acesa do começo ao fim (rodadas 385 e 386)", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    expect(u).not.toContain("animation-timeline")
-    expect(CSS).not.toContain("@keyframes dialog-header-fade-in")
-    expect(u).not.toMatch(/&::before,\s*&::after \{\s*opacity: 0;/)
+    expect(u).toContain("@supports (animation-timeline: scroll())")
+    expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
+    expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
+    expect(u).not.toContain("animation-range")
+    expect(CSS).toMatch(/@keyframes dialog-placa-com-rolagem \{\s*from \{\s*opacity: 1;\s*\}\s*to \{\s*opacity: 1;/)
   })
 
   it("na gaveta, a placa cobre o puxador e o corpo sobe até a borda (16/11/2026)", () => {

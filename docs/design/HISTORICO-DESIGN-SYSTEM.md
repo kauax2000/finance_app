@@ -29174,3 +29174,12 @@ Revertida a 384, a placa volta (o `--background` a 95% e o degradê de 56px), ma
 tempo de rolagem: ela fica acesa desde o topo, no cabeçalho e no rodapé, e a faixa não muda de
 tom no meio do gesto. Saíram os `@supports (animation-timeline: scroll())` e os `@keyframes`
 `dialog-header-fade-in` e `dialog-footer-fade-out`.
+
+### Rodada 386 — sem rolagem, sem placa
+
+Com a placa sempre acesa, o passo Arquivo do Importar, que não rola, ganhou uma faixa escura sobre
+o topo do cartão do arquivo. O dono apontou isso, porque ali a placa não tinha função. A linha do
+tempo de rolagem voltou, mas com uma animação de 1 a 1 (`dialog-placa-com-rolagem`). Com o corpo
+rolando, a linha do tempo fica ativa e a placa fica acesa do começo ao fim, sem mudar de tom. Sem
+rolagem, a linha do tempo fica inativa, e a base invisível (`opacity: 0`) vale. Medido a 375px: no
+Arquivo, a placa do cabeçalho e a do rodapé ficam em 0; na conferência, que rola, as duas ficam em 1.

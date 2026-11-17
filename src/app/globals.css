@@ -4367,8 +4367,35 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
   }
 
-  /* A placa e o degradê ficam sempre acesos (rodada 385, 17/11/2026, o dono): o cabeçalho não
-     muda de tom ao rolar. Acender só com a rolagem (13/11) escurecia a faixa no meio do gesto. */
+  /* A placa e o degradê só existem quando o corpo rola (rodada 386, 17/11/2026, o dono): numa
+     gaveta curta, sem rolagem, a linha do tempo fica inativa e a base invisível vale. Com
+     rolagem, a animação (de 1 a 1) os mantém acesos do começo ao fim, sem mudar de tom
+     (rodada 385). Sem suporte a `animation-timeline`, ficam sempre à vista. */
+  @supports (animation-timeline: scroll()) {
+    [data-layout="fixed"]:has(&) {
+      timeline-scope: --dialog-body-scroll;
+    }
+    [data-layout="fixed"]
+      &:has(
+        + [data-slot="dialog-body"],
+        + form > [data-slot="dialog-body"]:first-child,
+        + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
+      ) {
+      &::before,
+      &::after {
+        opacity: 0;
+        animation: dialog-placa-com-rolagem linear both;
+        animation-timeline: --dialog-body-scroll;
+      }
+      & + [data-slot="dialog-body"],
+      & + form > [data-slot="dialog-body"]:first-child,
+      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
+        scroll-timeline: --dialog-body-scroll block;
+      }
+    }
+  }
 }
 
 
@@ -4438,6 +4465,32 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     --scroll-fade-bottom-max: 0px;
   }
 
-  /* Sempre aceso, como o cabeçalho (rodada 385). */
+  /* Como o cabeçalho (rodada 386): só existe quando o corpo rola, e aí fica aceso. */
+  @supports (animation-timeline: scroll()) {
+    [data-layout="fixed"]:has(&) {
+      timeline-scope: --dialog-body-scroll;
+    }
+    [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
+      scroll-timeline: --dialog-body-scroll block;
+    }
+    [data-layout="fixed"] [data-slot="dialog-body"] + & {
+      &::before,
+      &::after {
+        opacity: 0;
+        animation: dialog-placa-com-rolagem linear both;
+        animation-timeline: --dialog-body-scroll;
+      }
+    }
+  }
+}
+
+/* De 1 a 1: com a linha do tempo ativa (o corpo rola), a placa fica acesa o tempo todo. */
+@keyframes dialog-placa-com-rolagem {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
