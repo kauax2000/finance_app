@@ -459,9 +459,10 @@ describe("no telefone, as ações da conferência vão para o ⋯ do cabeçalho 
     it("o cabeçalho põe o ⋯ ao lado do ✕ só no telefone e só no passo Conferir", () => {
         expect(dialogo).toContain("useIsMobile()")
         expect(dialogo).toMatch(/const comMenu = celular && imp\.passo === "conferir"/)
-        // O ✕ desce à linha do título, ao lado do ⋯; o do canto sai.
-        expect(dialogo).toContain("showCloseButton={!comMenu}")
-        expect(dialogo).toMatch(/<\/DropdownMenu>\s*<DialogCloseButton placement="inline" \/>/)
+        // No telefone o ✕ mora na linha do título em todo passo, e o ⋯ entra ao lado dele só na conferência.
+        expect(dialogo).toContain("showCloseButton={!celular}")
+        expect(dialogo).toMatch(/\{celular \? \(\s*<DialogHeaderRow endAdornment=\{\s*<>\s*\{comMenu \? \(\s*<DropdownMenu>/)
+        expect(dialogo).toMatch(/<\/DropdownMenu>\s*\) : null\}\s*<DialogCloseButton placement="inline" \/>/)
         expect(dialogo).toMatch(/<DialogHeaderRow endAdornment=\{[\s\S]*?<DropdownMenu>[\s\S]*?"Mais ações"/)
         // O gatilho do ⋯ é o da regra: terciário, icon-md, sem size-* nem ícone com tamanho.
         expect(dialogo).toMatch(/<Button[^>]*variant="tertiary"[^>]*size="icon-md"[^>]*"Mais ações"[^>]*disabled=\{travadoAoImportar\}[^>]*>\s*<EllipsisHorizontalIcon \/>/)

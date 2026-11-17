@@ -240,14 +240,17 @@ export function ImportarExtratoDialog({
             <DialogContent
                 size={expandido ? "full" : imp.passo === "conferir" ? "xl" : "lg"}
                 layout={expandido ? "fixed" : "auto"}
-                // Com o ⋯, o ✕ desce à linha do título, ao lado dele (como no painel de notificações).
-                showCloseButton={!comMenu}
+                // No telefone o ✕ mora na linha do título, ao lado do ⋯ quando ele existe (como no painel de notificações).
+                showCloseButton={!celular}
             >
                 <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
-                        {comMenu ? (
+                        {/* No telefone o título mora sempre na mesma linha, em todo passo: com a mesma árvore, a
+                            troca suave anima o título; trocando de linha para solto, o React o recriava sem animar. */}
+                        {celular ? (
                             <DialogHeaderRow endAdornment={
                                 <>
+                                {comMenu ? (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -307,6 +310,7 @@ export function ImportarExtratoDialog({
                                         />
                                     </DropdownMenuContent>
                                 </DropdownMenu>
+                                ) : null}
                                 <DialogCloseButton placement="inline" />
                                 </>
                             }>
