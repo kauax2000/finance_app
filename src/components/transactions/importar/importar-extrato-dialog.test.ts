@@ -657,10 +657,11 @@ describe("Ajustar colunas vindo da conferência é uma subtela, e não um passo"
         expect(dialogo).toContain(': subtela ? "Pronto" : "Continuar"')
     })
 
-    it("no telefone as colunas são uma lista, uma linha por coluna", () => {
-        expect(dialogo).toMatch(/imp\.passo === "colunas" && imp\.csv && celular \? \(\s*<MapearColunasEmLista/)
-        expect(mapear).toContain("export function MapearColunasEmLista(")
-        expect(mapear.match(/<AjustesDaLeitura /g)?.length).toBe(2)
+    it("no telefone o passo Colunas é o Conferir leitura", () => {
+        expect(dialogo).toMatch(/imp\.passo === "colunas" && imp\.csv && celular \? \(\s*<ConferirLeitura/)
+        expect(mapear).toContain("export function ConferirLeitura(")
+        // O cabeçalho e o sinal da tabela do desktop continuam numa peça só; o telefone escreve os seus.
+        expect(mapear.match(/<AjustesDaLeitura /g)?.length).toBe(1)
     })
 })
 
@@ -692,9 +693,40 @@ describe("no passo Arquivo, a descrição não repete a área de soltar", () => 
     })
 })
 
-describe("no telefone, a frase das Colunas é o título da seção da lista", () => {
+describe("Conferir leitura fala dos dados, não das colunas", () => {
     const mapear = ler("mapear-colunas.tsx")
-    it("a lista mora numa PageSection pequena com a frase no título", () => {
-        expect(mapear).toMatch(/<PageSection size="sm">\s*<PageSectionHeader>\s*<PageSectionTitle>Diga o que é cada coluna do arquivo\.<\/PageSectionTitle>/)
+    const conferirLeitura = mapear.slice(mapear.indexOf("export function ConferirLeitura("))
+
+    it("substitui a lista de colunas", () => {
+        expect(mapear).toContain("export function ConferirLeitura(")
+        expect(mapear).not.toContain("MapearColunasEmLista")
+        expect(dialogo).not.toContain("MapearColunasEmLista")
+    })
+
+    it("escreve a copy aprovada", () => {
+        for (const texto of [
+            "É assim que vai entrar?",
+            "Algo fora do lugar?",
+            "Escolha de onde vem cada informação.",
+            "Nenhum destes",
+            "Gastos aparecem como",
+            "Pular a 1ª linha",
+            "Ela tem os títulos, não um lançamento",
+            "Nenhum lançamento legível com estas escolhas.",
+            "Qual destes é ",
+        ]) {
+            expect(conferirLeitura).toContain(texto)
+        }
+    })
+
+    it("a prévia são os dois primeiros lançamentos lidos com o mapeamento atual", () => {
+        expect(conferirLeitura).toContain("mapearCsv(")
+        expect(conferirLeitura).toContain(".slice(0, 2)")
+    })
+
+    it("nenhum texto visível fala de coluna", () => {
+        // Strings entre aspas e texto de JSX; os nomes acessíveis da tabela do desktop moram antes deste componente.
+        expect(conferirLeitura).not.toMatch(/["'`][^"'`\n]*coluna[^"'`\n]*["'`]/i)
+        expect(conferirLeitura).not.toMatch(/>[^<>{}\n]*coluna/i)
     })
 })

@@ -77,7 +77,7 @@ import type { DestinoImportacao } from "@/lib/import/importar"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 
 import { ConferirImportacao, FiltrosDaConferencia, ItensDasVisiveis, pelaBusca, pendenciaLigada, PendenciasNoMenu, ResumoDoSaldo, useConferencia } from "./conferir-importacao"
-import { MapearColunas, MapearColunasEmLista } from "./mapear-colunas"
+import { ConferirLeitura, MapearColunas } from "./mapear-colunas"
 import { useTransicaoDaSubtela } from "./transicao-da-subtela"
 import { periodoPtBr, rotuloDasIgnoradas, useImportarExtrato } from "./use-importar-extrato"
 
@@ -181,7 +181,7 @@ export function ImportarExtratoDialog({
                 <span className="sr-only">{titulo}</span>
             </DialogTitle>
             {/* A descrição fica só para o leitor de tela no passo Arquivo (a área de soltar já diz "CSV ou OFX") e,
-                no telefone, nas Colunas: lá a frase é o título da seção da lista (`MapearColunasEmLista`). */}
+                no telefone, nas Colunas: lá a frase é o título da seção da lista (`ConferirLeitura`). */}
             <DialogDescription
                 className={imp.passo === "arquivo" || (celular && imp.passo === "colunas") ? "sr-only" : undefined}
             >
@@ -480,7 +480,7 @@ export function ImportarExtratoDialog({
                                 </FormField>
                             </div>
                         ) : imp.passo === "colunas" && imp.csv && celular ? (
-                            <MapearColunasEmLista
+                            <ConferirLeitura
                                 linhas={imp.csv}
                                 valor={imp.mapeamento}
                                 onChange={imp.setMapeamento}
