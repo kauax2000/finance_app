@@ -24,18 +24,18 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
   it("o corpo desce por trás pela altura medida, e a dissolução de baixo sai", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
     expect(u).toContain("margin-bottom: calc(var(--dialog-footer-h, 0px) * -1)")
-    expect(u).toContain("--scroll-fade-foot-h: var(--dialog-footer-h, 0px)")
-    expect(u).toContain("--scroll-fade-bottom-max: calc(var(--spacing) * 14)")
+    expect(u).toContain("--scroll-fade-bottom-max: 0px")
     expect(u).toMatch(/scroll-padding-block-end: calc\(var\(--dialog-footer-h, 0px\)/)
     // O corpo lê o teto: sem ele a variável não faria nada.
     expect(DIALOG).toContain("var(--scroll-fade-bottom-max,var(--scroll-fade-end-h))")
   })
 
-  it("sem tinta, como o cabeçalho (rodada 384)", () => {
+  it("o degradê some nos últimos 24px da rolagem", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
-    expect(u).toContain("content: none")
-    expect(u).not.toContain("animation-timeline")
-    expect(CSS).not.toContain("@keyframes dialog-footer-fade-out")
+    expect(u).toContain("@supports (animation-timeline: scroll())")
+    expect(u).toContain("animation-timeline: --dialog-body-scroll")
+    expect(u).toContain("animation-range: calc(100% - 24px) 100%")
+    expect(CSS).toMatch(/@keyframes dialog-footer-fade-out \{\s*from \{\s*opacity: 1;?\s*\}/)
   })
 
   it("na gaveta de baixo, a placa desce até a borda e cobre a área segura", () => {

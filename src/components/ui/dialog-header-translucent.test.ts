@@ -20,20 +20,26 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u.match(/var\(--dialog-header-tint\) \d+%, transparent\) \d+%/g)).toHaveLength(8)
   })
 
-  it("o corpo sobe por trás pela altura medida, e a máscara dele esconde o que passa sob o cabeçalho", () => {
+  it("o corpo sobe por trás pela altura medida, e a dissolução de cima sai", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
     expect(u).toContain("margin-top: calc(var(--dialog-header-h, 0px) * -1)")
-    expect(u).toContain("--scroll-fade-band-h: var(--dialog-header-h, 0px)")
-    expect(u).toContain("--scroll-fade-top-max: calc(var(--spacing) * 14)")
-    // Na gaveta, a faixa soma o puxador: o corpo começa na borda dela.
-    expect(u).toContain("--scroll-fade-band-h: calc(var(--dialog-header-h, 0px) + var(--drawer-handle-h))")
+    expect(u).toContain("--scroll-fade-top-max: 0px")
   })
 
-  it("sem tinta: o que se vê sob o cabeçalho é a própria gaveta (rodada 384)", () => {
+  it("o degradê só aparece ao rolar: invisível no topo, liga nos primeiros 24px", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    expect(u).toContain("content: none")
-    expect(u).not.toContain("animation-timeline")
-    expect(CSS).not.toContain("@keyframes dialog-header-fade-in")
+    expect(u).toContain("@supports (animation-timeline: scroll())")
+    expect(u).toContain("timeline-scope: --dialog-body-scroll")
+    expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
+    expect(u).toContain("animation-timeline: --dialog-body-scroll")
+    expect(u).toContain("animation-range: 0 24px")
+    expect(CSS).toMatch(/@keyframes dialog-header-fade-in \{\s*from \{\s*opacity: 0;?\s*\}/)
+  })
+
+  it("em repouso o cabeçalho não tem tinta: a placa e o degradê acendem juntos com a rolagem", () => {
+    const u = blocoCss(CSS, "@utility dialog-header-translucent")
+    const sup = u.slice(u.indexOf("@supports (animation-timeline: scroll())"))
+    expect(sup).toMatch(/&::before,\s*&::after \{\s*opacity: 0;/)
   })
 
   it("na gaveta, a placa cobre o puxador e o corpo sobe até a borda (16/11/2026)", () => {
