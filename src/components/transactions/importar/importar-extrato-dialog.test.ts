@@ -570,6 +570,6 @@ describe("no telefone a conferência mostra tudo", () => {
         expect(conferir).toContain("chavesDasLinhas(daTabela.slice(0, teto))")
         expect(conferir).not.toContain("celular && podeExpandir")
         expect(conferir).toMatch(/\{imp\.expandido && !celular \? \(\s*(?:\/\/[^\n]*\s*)*<div[\s\S]*?<DataTable/)
-        expect(conferir).toMatch(/if \(celular && imp\.expandido\) imp\.setExpandido\(false\)/)
+        expect(conferir).toMatch(/if \(celular && expandido\) setExpandido\(false\)/)
     })
 })

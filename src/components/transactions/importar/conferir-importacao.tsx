@@ -730,10 +730,10 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
         setTrocouDeAba(true)
     }
     // No telefone não há vista cheia: se o `expandido` ficou ligado (veio do desktop), volta ao compacto.
+    const { expandido, setExpandido } = imp
     React.useEffect(() => {
-        if (celular && imp.expandido) imp.setExpandido(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `imp` muda a cada render; só o `expandido` importa
-    }, [celular, imp.expandido])
+        if (celular && expandido) setExpandido(false)
+    }, [celular, expandido, setExpandido])
     const escadaDaLista = celular && trocouDeAba ? ESCADA : ESCADA_DA_LISTA
     // A linha da busca fica montada enquanto sai (os 210ms do `menu-unmorph`); com movimento reduzido, sai na hora.
     const [buscaNaTela, setBuscaNaTela] = React.useState(conf.buscaAberta)
