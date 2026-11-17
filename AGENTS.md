@@ -1237,6 +1237,14 @@ declaração de `background-color` no trilho).
     `FormCancel` e `FormSubmit`. `DialogHeader align="center"`, `DialogMedia
     variant="well" tone` e `DialogSteps variant="dots"` (depois da descrição)
     são o cabeçalho centrado de uma confirmação que pausa (Excluir conta).
+  - **Na gaveta, as ações do `DialogHeaderRow` moram na linha do × do canto**
+    (17/11/2026): abaixo de 768px a linha sobe (`-mt-8`) à altura do ×
+    flutuante (`top-2.5`), e, com `DialogTitle` dentro, o título desce para a
+    segunda linha, 8px abaixo do ⋯ e do ×. Sem título (as setas do detalhe), a
+    linha inteira sobe. No desktop nada muda. O ‹ de uma subtela espelha o ×
+    no canto esquerdo. Para a linha subir sem ser recortada, **o invólucro que
+    embrulha `DialogBody` (formulário ou `div`) não é o meio da gaveta**: só
+    repassa a coluna, e quem rola é o corpo (`acharMeio`).
   - O cabeçalho é alinhado à esquerda e sem `gap`; o × não reserva lugar (o
     título desvia dele só quando ele existe). O rodapé sangra por
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem

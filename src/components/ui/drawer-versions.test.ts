@@ -145,8 +145,14 @@ describe("toda gaveta do telefone é a flush", () => {
   it("o rodapé fica no pé da gaveta, também com o formulário embrulhando corpo e rodapé", () => {
     expect(CODIGO).toContain('"[&>[data-drawer-meio]]:flex-1"')
     for (const c of ["flex", "min-h-0", "flex-1", "flex-col"]) {
-      expect(CODIGO).toContain(`"[&>form:has(>[data-slot=dialog-body])]:${c}"`)
+      expect(CODIGO).toContain(`"[&>*:has(>[data-slot=dialog-body])]:${c}"`)
     }
+  })
+
+  it("o invólucro com DialogBody, formulário ou não, não é o meio: quem rola é o corpo", () => {
+    const fonte = semComentarios(CODIGO)
+    expect(fonte).toContain(`if (filho.querySelector(':scope > [data-slot="dialog-body"]')) continue`)
+    expect(fonte).not.toContain('filho.tagName === "FORM"')
   })
 
   it("com o teclado, a gaveta fica parada e só o meio rola por trás do cabeçalho", () => {

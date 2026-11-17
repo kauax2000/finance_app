@@ -29107,3 +29107,22 @@ a releitura (até 1,2s); sem passo novo (coluna faltando), a troca é seca (`"pa
 Armadilha: com a foto segura, o navegador suspende o `requestAnimationFrame`, e uma espera
 em quadros nunca terminava. A espera é por `setTimeout`. `transicao-de-subpagina.test.ts`
 aceita o seletor `html[data-subtela]` entre os nomes que só valem durante a troca.
+
+### Rodada 378 — na gaveta, as ações do cabeçalho sobem à linha do ×
+
+O dono pediu, para todas as gavetas, o arranjo da subtela do Importar: o ⋯ e o × na linha do
+canto, com o título logo abaixo. Escolheu "só no telefone". O `DialogHeaderRow`, abaixo de 768px
+e com `endAdornment`, sobe a linha em `-mt-8` até a altura do × flutuante (`top-2.5`), e tira o
+`-my-0.75` das ações. Com `DialogTitle` dentro (`has-[[data-slot=dialog-title]]`), a grade vira
+uma coluna: as ações vão para a primeira linha, à direita, e o título para a segunda, a 8px
+(`gap-2`). Sem título (as setas do detalhe do lançamento), a linha inteira sobe junto, e o
+resumo do `center` também. A mudança alcança seis folhas: o formulário de lançamento, o de
+assinatura, as notificações, o detalhe do lançamento, a folha do plano e o Importar. Medido a
+375px: o ⋯ e o × a 19px do topo, como o × do canto; o título 8px abaixo.
+
+Ao subir, o ⋯ do detalhe ficava cortado 16px em cima. O `div` que embrulha o cabeçalho e o
+`DialogBody` virava o meio rolável da gaveta (`acharMeio` só pulava um `<form>`), e o
+`overflow-y: auto` dele recortava o que saía para cima. Agora todo invólucro com `DialogBody`
+direto só repassa a coluna (`[&>*:has(>[data-slot=dialog-body])]`), e quem rola é o corpo.
+O resumo que entra no topo do detalhe continua lendo a rolagem do `DialogBody`.
+`drawer-versions.test.ts`.

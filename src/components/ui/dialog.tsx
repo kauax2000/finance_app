@@ -554,14 +554,28 @@ function DialogHeaderRow({
     <div
       data-slot="dialog-header-row"
       className={cn(
-        "grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3",
+        "group/dialog-header-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3",
+        // Na gaveta (abaixo de 768px) as ações sobem à linha do ✕ do canto (`top-2.5`), como
+        // a subtela do Importar, e, com título, o título desce para a linha de baixo, 8px abaixo
+        // delas. Sem título (as setas do detalhe), a linha inteira sobe junto (dono, 17/11/2026).
+        endAdornment != null && "max-md:-mt-8",
+        endAdornment != null &&
+          "max-md:has-[[data-slot=dialog-title]]:grid-cols-1 max-md:has-[[data-slot=dialog-title]]:gap-2",
         center != null && "relative",
         className
       )}
     >
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-2">
+        {children}
+      </div>
       {endAdornment != null ? (
-        <div className={cn("-my-0.75 flex shrink-0 items-center gap-1", DIALOG_CLOSE_RESERVE)}>
+        <div
+          className={cn(
+            "-my-0.75 flex shrink-0 items-center gap-1 max-md:my-0",
+            "max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end",
+            DIALOG_CLOSE_RESERVE
+          )}
+        >
           {endAdornment}
         </div>
       ) : null}

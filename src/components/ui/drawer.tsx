@@ -365,12 +365,14 @@ const MEIO_CLASSES = [
   "[&>[data-drawer-meio]]:overscroll-contain",
   "[&>[data-drawer-meio]]:scroll-fade-y",
   "[&>[data-drawer-meio]]:[--scroll-fade-floor:0]",
-  // O formulário que embrulha `DialogBody` e `DialogFooter` só repassa a coluna:
-  // quem rola é o corpo, e o rodapé desce ao pé da gaveta.
-  "[&>form:has(>[data-slot=dialog-body])]:flex",
-  "[&>form:has(>[data-slot=dialog-body])]:min-h-0",
-  "[&>form:has(>[data-slot=dialog-body])]:flex-1",
-  "[&>form:has(>[data-slot=dialog-body])]:flex-col",
+  // O invólucro que embrulha `DialogBody` (um formulário, ou o `div` do detalhe do
+  // lançamento) só repassa a coluna: quem rola é o corpo, e o rodapé desce ao pé da
+  // gaveta. Rolando o invólucro, o cabeçalho rolava junto e recortava o que sobe dele
+  // (as ações do `DialogHeaderRow` na linha do ✕, 17/11/2026).
+  "[&>*:has(>[data-slot=dialog-body])]:flex",
+  "[&>*:has(>[data-slot=dialog-body])]:min-h-0",
+  "[&>*:has(>[data-slot=dialog-body])]:flex-1",
+  "[&>*:has(>[data-slot=dialog-body])]:flex-col",
 ].join(" ")
 
 function acharMeio(el: HTMLElement): HTMLElement | null {
@@ -386,8 +388,8 @@ function acharMeio(el: HTMLElement): HTMLElement | null {
   ])
   for (const filho of Array.from(el.children)) {
     const slot = (filho as HTMLElement).dataset.slot
-    // O formulário com `DialogBody` dentro não é o meio: o corpo dele é que rola.
-    if (filho.tagName === "FORM" && filho.querySelector(':scope > [data-slot="dialog-body"]')) continue
+    // O invólucro com `DialogBody` dentro (formulário ou não) não é o meio: o corpo dele é que rola.
+    if (filho.querySelector(':scope > [data-slot="dialog-body"]')) continue
     if (!slot || !cromagem.has(slot)) return filho as HTMLElement
   }
   return null
@@ -575,7 +577,7 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     const foco = el.ownerDocument.activeElement
     if (!foco || foco.nodeType !== 1 || !el.contains(foco)) return
     const rolavel = el.querySelector<HTMLElement>(
-      ':scope > [data-slot="dialog-body"], :scope > form > [data-slot="dialog-body"], :scope > [data-drawer-meio]'
+      ':scope > [data-slot="dialog-body"], :scope > * > [data-slot="dialog-body"], :scope > [data-drawer-meio]'
     )
     if (!rolavel || !rolavel.contains(foco)) return
     const campo = (foco as HTMLElement).getBoundingClientRect()

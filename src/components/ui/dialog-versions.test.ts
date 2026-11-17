@@ -227,3 +227,13 @@ describe("o ✕ flutuante fica por cima do cabeçalho translúcido", () => {
     expect(lerFonte("src/app/globals.css")).toMatch(/@utility dialog-header-translucent[\s\S]*?z-index: 10;/)
   })
 })
+
+describe("na gaveta, as ações do DialogHeaderRow sobem à linha do ✕", () => {
+  const fonte = semComentarios(CODIGO)
+  it("a linha sobe à altura do ✕ do canto, e o título desce para a de baixo", () => {
+    expect(fonte).toContain('endAdornment != null && "max-md:-mt-8"')
+    expect(fonte).toContain("max-md:has-[[data-slot=dialog-title]]:grid-cols-1 max-md:has-[[data-slot=dialog-title]]:gap-2")
+    expect(fonte).toContain("max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-2")
+    expect(fonte).toContain("max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end")
+  })
+})

@@ -326,7 +326,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         <>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="tertiary" size="icon-md" className="-my-0.5" aria-label="Mais ações">
+                                <Button type="button" variant="tertiary" size="icon-md" className="md:-my-0.5" aria-label="Mais ações">
                                     <EllipsisHorizontalIcon />
                                 </Button>
                             </DropdownMenuTrigger>
