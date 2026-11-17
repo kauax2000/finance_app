@@ -25,4 +25,9 @@ describe("o toggle", () => {
     )
     expect(culpados).toEqual([])
   })
+
+  it("a ficha alcança 44 no dedo sem mudar o desenho", () => {
+    // 28 de ficha numa fileira: o alvo cresce pelo `::after`, como as abas e o `ToggleGroup`.
+    expect(TOGGLE).toContain("relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11")
+  })
 })

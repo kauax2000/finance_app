@@ -1536,7 +1536,7 @@ declaração de `background-color` no trilho).
   **Escolha única não é `role="group"` com `aria-pressed`.**
 - **`Toggle`**: `variant="swatch"` com `color` é a amostra de cor (a superfície
   do `ColorTile`) — **não pinte amostra com `style={{ backgroundColor: hex
-  }}`**; `variant="chip"`; `size="icon-sm…icon-xl"`; `icon` + `iconOn`. Nenhuma
+  }}`**; `variant="chip"` (28, e 44 de alvo no dedo pelo `::after`, rodada 374); `size="icon-sm…icon-xl"`; `icon` + `iconOn`. Nenhuma
   chamada escreve `rounded-full px-*`, `size-*` ou borda de seleção num
   `ToggleGroupItem`.
 - **`ToggleGroup`**: `variant="segmented"` (um marcador só que viaja, como o

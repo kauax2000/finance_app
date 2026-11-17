@@ -29061,3 +29061,11 @@ mais alta que a linha do resumo, porque lá marcar quer dizer "esta entra" e qua
 - Página: o eixo "Linha no telefone" (`full` · `compact` · `flush`) em "Na tela" e o eixo "Linha"
   no iPhone, com seis linhas marcadas. `table-versions.test.ts` tranca.
 - Na tela: a conferência do Importar passa `mobileRow="flush"` (só o gêmeo a lê; o desktop não muda).
+
+### Rodada 374 — a ficha do `Toggle` alcança 44 no dedo
+
+As pendências da conferência do Importar viraram fichas (`Toggle variant="chip"`, 28px)
+logo abaixo das abas, no telefone. A 28px o toque ficava abaixo do piso de 44 do iOS. A
+ficha ganhou o mesmo alvo das abas e do `ToggleGroup`: um `::after` de `h-11`, centrado,
+com `pointer-coarse:`. O desenho não muda. Medido a 375px: caixa de 28 e `::after` de
+44px. Pedido do dono em 16/11/2026. `toggle.test.ts`.

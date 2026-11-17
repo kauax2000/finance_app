@@ -84,6 +84,9 @@ const toggleVariants = cva(
         // cobra a igualdade). O foco é `outline`, porque o anel de 1px da escolha já é `ring`.
         chip: [
           "text-xs font-semibold",
+          // A ficha mede 28 e mora numa fileira: no dedo o alvo vai a 44 por um `::after`
+          // de altura fixa, centrado, sem mudar o desenho (a régua das abas e do `ToggleGroup`).
+          "relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11 pointer-coarse:after:-translate-y-1/2 pointer-coarse:after:content-['']",
           "bg-muted text-muted-foreground",
           "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground",
           "data-[state=on]:bg-primary-muted data-[state=on]:text-primary-muted-foreground data-[state=on]:ring-1 data-[state=on]:ring-primary-accent/25 dark:data-[state=on]:ring-primary-accent/40",
