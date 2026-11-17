@@ -421,7 +421,7 @@ const [tituloRef, docked] = useDialogHeaderDock<HTMLHeadingElement>()
             prop: "DialogBody",
             type: "div",
             description:
-              "O corpo rolável do layout fixed, com overscroll-contain para o gesto não vazar.",
+              "O corpo rolável do layout fixed, com overscroll-contain para o gesto não vazar. O recuo de baixo se muda por --dialog-body-pb: uma classe pb-* perde para a regra do rodapé translúcido.",
           },
           {
             prop: "DialogFooter",

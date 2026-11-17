@@ -196,7 +196,10 @@ describe("toda gaveta do telefone é a flush", () => {
     expect(fonte).toContain("if (el.scrollTop !== 0) el.scrollTop = 0")
     expect(fonte).toContain('el.style.getPropertyValue("--drawer-teclado")')
     // O campo focado não assenta atrás do cabeçalho translúcido e do puxador: o topo lê o `scroll-padding`.
-    expect(fonte).toContain("parseFloat(janela.getComputedStyle(rolavel).scrollPaddingTop)")
+    expect(fonte).toContain("parseFloat(estilo.scrollPaddingTop)")
+    // E não atrás do rodapé translúcido: o fim lê o `scroll-padding` de baixo.
+    expect(fonte).toContain("parseFloat(estilo.scrollPaddingBottom)")
+    expect(fonte).toContain("if (campo.bottom > caixa.bottom - baixo)")
     expect(fonte).toContain("else if (campo.top < caixa.top + topo)")
   })
 

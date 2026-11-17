@@ -585,8 +585,11 @@ function rolarSobOTeclado(el: HTMLElement): (() => void) | undefined {
     const respiro = 16
     // Em cima, o corpo passa por trás do cabeçalho translúcido e do puxador: o
     // `scroll-padding` dele diz quanto fica coberto, e o campo assenta abaixo disso.
-    const topo = Math.max(respiro, parseFloat(janela.getComputedStyle(rolavel).scrollPaddingTop) || 0)
-    if (campo.bottom > caixa.bottom - respiro) rolavel.scrollTop += campo.bottom - caixa.bottom + respiro
+    // Embaixo, o mesmo com o rodapé translúcido: o corpo desce por trás dele.
+    const estilo = janela.getComputedStyle(rolavel)
+    const topo = Math.max(respiro, parseFloat(estilo.scrollPaddingTop) || 0)
+    const baixo = Math.max(respiro, parseFloat(estilo.scrollPaddingBottom) || 0)
+    if (campo.bottom > caixa.bottom - baixo) rolavel.scrollTop += campo.bottom - caixa.bottom + baixo
     else if (campo.top < caixa.top + topo) rolavel.scrollTop -= caixa.top + topo - campo.top
   }
   // O iOS centraliza o campo focado rolando a página, e a gaveta inteira pularia
