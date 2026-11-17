@@ -176,7 +176,7 @@ export function ImportarExtratoDialog({
             <DialogTitle className="relative">
                 {/* Um título só para o leitor: o que sai da cena é decoração. */}
                 <span aria-hidden="true">
-                    <TrocaSuave forma="texto" chave={titulo}>{titulo}</TrocaSuave>
+                    <TrocaSuave forma="titulo" chave={titulo}>{titulo}</TrocaSuave>
                 </span>
                 <span className="sr-only">{titulo}</span>
             </DialogTitle>
@@ -243,7 +243,7 @@ export function ImportarExtratoDialog({
                 // Com o ⋯, o ✕ desce à linha do título, ao lado dele (como no painel de notificações).
                 showCloseButton={!comMenu}
             >
-                <Form layout="none" data-subtela-conteudo="" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
+                <Form layout="none" onSubmit={enviar} className={expandido ? "flex min-h-0 min-w-0 flex-1 flex-col" : "min-w-0"}>
                     <DialogHeader>
                         {comMenu ? (
                             <DialogHeaderRow endAdornment={
@@ -330,6 +330,8 @@ export function ImportarExtratoDialog({
                         {comMenu ? <FiltrosDaConferencia imp={imp} conf={conf} travado={travadoAoImportar} /> : null}
                     </DialogHeader>
                     <DialogBody
+                        // Na troca de subtela só o corpo desliza (`useTransicaoDaSubtela`): o cabeçalho fica, e o título rola no lugar.
+                        data-subtela-conteudo=""
                         // Na tela cheia do desktop o corpo não rola: quem rola é o viewport da tabela, com as abas e o cabeçalho parados.
                         // No telefone as abas moram no cabeçalho: o respiro dele (16) já separa a legenda, e o do topo do corpo dobraria o vão.
                         // Na subtela também: o respiro do cabeçalho (16) já separa o subtítulo da lista das colunas.

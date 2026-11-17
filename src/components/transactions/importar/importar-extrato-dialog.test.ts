@@ -332,12 +332,12 @@ describe("a troca de passo chega em escada", () => {
     })
 
     it("o título tem um nome só para o leitor: a cena é aria-hidden e o texto vai num sr-only", () => {
-        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave forma="texto" chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<span aria-hidden="true">\s*<TrocaSuave forma="titulo" chave=\{titulo\}/)
         expect(dialogo).toContain('<span className="sr-only">{titulo}</span>')
     })
 
     it("o título troca no lugar pela TrocaSuave, num pai relative", () => {
-        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="texto" chave=\{titulo\}/)
+        expect(dialogo).toMatch(/<DialogTitle className="relative">[\s\S]*?<TrocaSuave forma="titulo" chave=\{titulo\}/)
     })
 })
 
@@ -676,7 +676,8 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
         expect(dialogo).toContain('onSelect={() => trocarDeTela("entra", imp.ajustarColunas)}')
         expect(dialogo).toContain('onClick={() => (subtela ? trocarDeTela("volta", imp.voltar) : imp.voltar())}')
         expect(dialogo).toContain('subtela ? trocarDeTela("volta", imp.lerColunas) : imp.lerColunas()')
-        expect(dialogo).toContain('<Form layout="none" data-subtela-conteudo=""')
+        expect(dialogo).toMatch(/<DialogBody[^>]*?data-subtela-conteudo=""/)
+        expect(dialogo).not.toContain('<Form layout="none" data-subtela-conteudo=""')
     })
 
     it("a espera não usa quadros, que o navegador suspende com a foto segura", () => {
