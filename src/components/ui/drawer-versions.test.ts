@@ -227,3 +227,10 @@ describe("a gaveta de trás recua quando outra abre por cima", () => {
     expect(fonte).toMatch(/data-aninhada=\{raiz\?\.aninhada \? "" : undefined\}/)
   })
 })
+
+describe("o véu da gaveta aninhada é mais claro", () => {
+  it("metade do véu e sem desfoque", () => {
+    const fonte = semComentarios(lerFonte(join(process.cwd(), "src/components/ui/drawer.tsx")))
+    expect(fonte).toContain('"bg-overlay/50 supports-backdrop-filter:backdrop-blur-none"')
+  })
+})

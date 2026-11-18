@@ -1347,7 +1347,7 @@ declaração de `background-color` no trilho).
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha, e a de trás encolhe e sobe como no iOS
     (`pai.recuar`, o transform do vaul, porque o vaul não avisa a de trás com o
-    `open` controlado); a de cima é 24px mais baixa (`--drawer-recuo`). **Com o teclado do iOS aberto, a gaveta
+    `open` controlado); a de cima é 24px mais baixa (`--drawer-recuo`) e o véu dela é metade, sem desfoque. **Com o teclado do iOS aberto, a gaveta
     não muda de tamanho nem de lugar** (`rolarSobOTeclado`): ela guarda embaixo
     o lugar do teclado **com a barra de setas e ✓** (medido contra a janela de
     antes do teclado, e remedido até 1s, porque o iOS desconta a barra depois),

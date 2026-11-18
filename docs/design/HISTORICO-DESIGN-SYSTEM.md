@@ -29249,3 +29249,5 @@ topo da de trás aparece.
 
 O dono pediu mais da gaveta de trás à vista: com 12px, sob o véu, a faixa quase não aparecia.
 `--drawer-recuo` foi a 24px (`calc(var(--spacing) * 6)`).
+O véu da gaveta aninhada também clareou: `bg-overlay/50` (0,2 em vez de 0,4) e sem o desfoque, para
+a de trás, que recuou, aparecer atrás da de cima. A gaveta raiz segue com o véu cheio e o borrão.

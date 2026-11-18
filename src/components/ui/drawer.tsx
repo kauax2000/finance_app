@@ -778,7 +778,15 @@ function DrawerContent({
 
   return (
     <DrawerPortal>
-      <DrawerOverlay />
+      {/* Aberta por cima de outra gaveta, o véu é mais claro e sem desfoque: a de trás, que
+          recuou, continua à vista atrás da de cima, como as folhas empilhadas do iOS. */}
+      <DrawerOverlay
+        className={
+          raiz?.aninhada
+            ? "bg-overlay/50 supports-backdrop-filter:backdrop-blur-none"
+            : undefined
+        }
+      />
       {raiz?.veuEmulado ? (
         // O véu da moldura: o mesmo desenho, e tocar nele fecha.
         // `pointer-events-auto` porque o Radix pode deixar o `body` de dentro em
