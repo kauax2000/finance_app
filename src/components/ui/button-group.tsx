@@ -52,9 +52,9 @@ const HORIZONTAL = [
  */
 const RAIL = [
     "inline-flex h-9 items-center justify-start gap-0.5 rounded-full bg-popover p-0.5 ring-1 ring-foreground/10 pointer-coarse:h-11",
-    "[&>[data-slot=button]:not([data-size^=icon])]:h-8! pointer-coarse:[&>[data-slot=button]:not([data-size^=icon])]:h-10!",
-    "[&>[data-slot=button][data-size^=icon]]:size-8! pointer-coarse:[&>[data-slot=button][data-size^=icon]]:size-10!",
-    "[&>[data-slot=button]]:rounded-full",
+    "[&>button:not([data-size^=icon])]:h-8! pointer-coarse:[&>button:not([data-size^=icon])]:h-10!",
+    "[&>button[data-size^=icon]]:size-8! pointer-coarse:[&>button[data-size^=icon]]:size-10!",
+    "[&>button]:rounded-full",
 ]
 
 /** A mesma emenda, em pé: cantos de cima e de baixo, fio na horizontal. */

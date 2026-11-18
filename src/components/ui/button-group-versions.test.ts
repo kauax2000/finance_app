@@ -18,7 +18,12 @@ describe("ButtonGroup variant=rail", () => {
   it("as peças de dentro medem 32 (40 no dedo) e vencem a altura da Toolbar", () => {
     expect(rail).toContain("h-8!")
     expect(rail).toContain("size-8!")
-    expect(rail).toContain("pointer-coarse:[&>[data-slot=button]:not([data-size^=icon])]:h-10!")
+    expect(rail).toContain("pointer-coarse:[&>button:not([data-size^=icon])]:h-10!")
+  })
+
+  it("mede todo filho botão, não só data-slot=button (o gatilho de popover leva outro slot)", () => {
+    expect(rail).not.toContain("data-slot=button")
+    expect(rail).toContain("[&>button:not([data-size^=icon])]:h-8!")
   })
 
   it("sem emenda, filete nem canto achatado", () => {
