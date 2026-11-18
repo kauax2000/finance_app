@@ -541,15 +541,22 @@ function DialogContent({
 function DialogHeaderRow({
   className,
   children,
+  startAdornment,
   endAdornment,
   center,
   centerShown = false,
 }: React.ComponentProps<"div"> & {
+  /**
+   * A ação do lado esquerdo da barra (o "‹ Cancelar" da edição dentro de uma folha). Na gaveta
+   * ocupa a reserva da esquerda, espelhando o `endAdornment`; no desktop vem antes do título.
+   */
+  startAdornment?: React.ReactNode
   endAdornment?: React.ReactNode
   /** Resumo que entra no meio da linha (o título do corpo passou por baixo dela). */
   center?: React.ReactNode
   centerShown?: boolean
 }) {
+  const barra = endAdornment != null || startAdornment != null
   return (
     <div
       data-slot="dialog-header-row"
@@ -559,23 +566,33 @@ function DialogHeaderRow({
         // sobe à altura do ✕ do canto (`top-2.5`), o título fica no centro dela, numa linha só,
         // entre duas reservas iguais (as ações à direita, 44 + 4 + 44), e a descrição desce
         // para baixo da barra, à esquerda. Sem título (as setas do detalhe), a linha sobe inteira.
-        endAdornment != null && "max-md:-mt-8",
-        endAdornment != null &&
+        barra && "max-md:-mt-8",
+        startAdornment != null && "grid-cols-[auto_minmax(0,1fr)_auto]",
+        barra &&
           "max-md:has-[[data-slot=dialog-title]]:grid-cols-[5.75rem_minmax(0,1fr)_5.75rem] max-md:has-[[data-slot=dialog-title]]:gap-x-0 max-md:has-[[data-slot=dialog-title]]:gap-y-2 max-md:has-[[data-slot=dialog-title]]:items-center",
-        endAdornment != null &&
+        barra &&
           "max-md:[&_[data-slot=dialog-title]]:col-start-2 max-md:[&_[data-slot=dialog-title]]:row-start-1 max-md:[&_[data-slot=dialog-title]]:truncate max-md:[&_[data-slot=dialog-title]]:text-center max-md:[&_[data-slot=dialog-title]]:font-semibold",
-        endAdornment != null &&
+        barra &&
           "max-md:[&_[data-slot=dialog-description]]:col-span-full max-md:[&_[data-slot=dialog-description]]:row-start-2",
         center != null && "relative",
         className
       )}
     >
+      {startAdornment != null ? (
+        <div
+          data-slot="dialog-header-start"
+          className="-my-0.75 flex shrink-0 items-center gap-1 max-md:my-0 max-md:col-start-1 max-md:row-start-1 max-md:justify-self-start"
+        >
+          {startAdornment}
+        </div>
+      ) : null}
       {/* Com título, na gaveta, o invólucro some (`contents`): título e descrição viram itens da grade. */}
       <div className="min-w-0 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:contents">
         {children}
       </div>
       {endAdornment != null ? (
         <div
+          data-slot="dialog-header-end"
           className={cn(
             "-my-0.75 flex shrink-0 items-center gap-1 max-md:my-0",
             "max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:col-start-3 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:row-start-1 max-md:group-has-[[data-slot=dialog-title]]/dialog-header-row:justify-self-end",

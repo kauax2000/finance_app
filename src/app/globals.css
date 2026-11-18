@@ -2479,6 +2479,48 @@ html[data-subtela]::view-transition-old(root),
 html[data-subtela]::view-transition-new(root) {
   animation: none;
 }
+/* Os botões da barra não andam com a tela (a barra de navegação do iOS): o ⋯ e o × da direita
+   e o "‹ Cancelar" da esquerda ganham nome só durante a troca, ficam parados por cima e trocam
+   esmaecendo no lugar; o que entra ainda vem 12px da direita. O título continua na tela que
+   desliza. (O Editar do detalhe do lançamento, 18/11/2026.) */
+html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header-end"] {
+  view-transition-name: subtela-acoes;
+}
+html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header-start"] {
+  view-transition-name: subtela-voltar;
+}
+html[data-subtela]::view-transition-group(subtela-acoes),
+html[data-subtela]::view-transition-group(subtela-voltar) {
+  z-index: 2;
+  animation: none;
+}
+html[data-subtela]::view-transition-old(subtela-acoes),
+html[data-subtela]::view-transition-old(subtela-voltar) {
+  animation: var(--duration-base) var(--ease-out) both subtela-botao-sai;
+}
+html[data-subtela]::view-transition-new(subtela-acoes),
+html[data-subtela]::view-transition-new(subtela-voltar) {
+  animation: var(--duration-slow) var(--ease-out) both subtela-botao-entra;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-subtela]::view-transition-old(subtela-acoes),
+  html[data-subtela]::view-transition-old(subtela-voltar),
+  html[data-subtela]::view-transition-new(subtela-acoes),
+  html[data-subtela]::view-transition-new(subtela-voltar) {
+    animation: none;
+  }
+}
+@keyframes subtela-botao-sai {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes subtela-botao-entra {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+  }
+}
 /* Durante a troca de subtela, o fundo do cabeçalho translúcido não entra na foto: a tela nova
    ainda não sabe se rola, e a placa aparecia escura no voo e sumia ao assentar (o Editar do
    detalhe do lançamento, 18/11/2026). */

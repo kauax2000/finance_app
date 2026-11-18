@@ -1,5 +1,7 @@
 "use client"
 
+import { ChevronLeftIcon } from "@heroicons/react/16/solid"
+import { Button } from "@/components/ui/button"
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import {
@@ -130,20 +132,25 @@ export function TransactionFormSurface({
             >
                 <DialogHeader className={headerClassName}>
                     <DialogHeaderRow
-                        endAdornment={
-                            // Na edição dentro do detalhe, o × cancela a edição e volta ao detalhe, como
-                            // o Cancelar; não fecha a folha inteira (pedido do dono, 18/11/2026). O
-                            // `preventDefault` segura o fechar do Radix.
-                            <DialogCloseButton
-                                placement="inline"
-                                label={onCancel ? "Cancelar edição" : undefined}
-                                onClick={(e) => {
-                                    if (!onCancel) return
-                                    e.preventDefault()
-                                    onCancel()
-                                }}
-                            />
+                        // Na edição dentro do detalhe, a saída é "‹ Cancelar" à esquerda, e não o ×: ela
+                        // volta ao detalhe, não fecha a folha (pedido do dono, 18/11/2026). Sem `onCancel`
+                        // (fora do detalhe), fica o × de sempre.
+                        startAdornment={
+                            onCancel ? (
+                                <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    size="md"
+                                    className="-ms-2 gap-0.5 ps-1 pe-2"
+                                    disabled={saving}
+                                    onClick={onCancel}
+                                >
+                                    <ChevronLeftIcon aria-hidden />
+                                    Cancelar
+                                </Button>
+                            ) : undefined
                         }
+                        endAdornment={onCancel ? undefined : <DialogCloseButton placement="inline" />}
                     >
                         <DialogTitle>{formTitle}</DialogTitle>
                     </DialogHeaderRow>
