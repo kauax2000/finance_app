@@ -73,4 +73,10 @@ describe("DataTable mobileSwipe", () => {
   it("Transações liga", () => {
     expect(lerFonte("src/components/transactions/transacoes-tabela.tsx")).toMatch(/^\s+mobileSwipe$/m)
   })
+
+  it("em repouso a faixa das ações fica escondida, para o vermelho não vazar pelos cantos", () => {
+    const fonte = semComentarios(lerFonte("src/components/ui/data-table.tsx"))
+    expect(fonte).toContain('className="invisible absolute inset-y-0 end-0 flex"')
+    expect(fonte).toContain('faixa.style.visibility = x < 0 ? "visible" : ""')
+  })
 })

@@ -1678,6 +1678,10 @@ function LinhaDeslizavel<T>({
   const mover = (x: number) => {
     posicao.current = x
     if (frente.current) frente.current.style.translate = x ? `${x}px 0` : ""
+    // Em repouso a faixa das ações fica escondida: o vermelho cheio vazava pelo
+    // antisserrilhado dos cantos arredondados da linha, como uma borda vermelha.
+    const faixa = caixa.current?.querySelector<HTMLElement>("[data-slot=data-table-mobile-swipe-actions]")
+    if (faixa) faixa.style.visibility = x < 0 ? "visible" : ""
   }
   // O alvo da mola em curso: soltar já a dispara, e o efeito de `aberta` que vem depois não a reinicia do zero.
   const alvoDaMola = React.useRef<number | null>(null)
@@ -1747,7 +1751,7 @@ function LinhaDeslizavel<T>({
       <div
         data-slot="data-table-mobile-swipe-actions"
         aria-hidden={!aberta}
-        className="absolute inset-y-0 end-0 flex"
+        className="invisible absolute inset-y-0 end-0 flex"
       >
         {actions.map((a) => {
           const destrutiva = a.variant === "destructive"

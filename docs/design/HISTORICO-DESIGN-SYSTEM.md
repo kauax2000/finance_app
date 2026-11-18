@@ -29347,3 +29347,4 @@ Pedido do dono (18/11/2026).
 - Transações liga. A página do `DataTable` ganha o interruptor "Deslizar" no exemplo do iPhone.
 - `deslize.test.ts` e `data-table-deslize.test.ts`.
 - Ajuste no mesmo dia (revisão): o ícone de 20 do deslize vem de `swipeIcon`, uma prop nova da `DataTableAction` (`20/solid`); sem ela, o `icon` fica nos 16 dele, em vez de um `16/solid` ampliado. Transações passa os três. Excluir passa ao vermelho cheio (`bg-destructive` com `text-destructive-foreground`), e não mais a tinta translúcida do `Button destructive`. Os ouvintes de fora não se reinscrevem a cada render, e a mola não reinicia quando o efeito de `aberta` pede o mesmo alvo.
+- Correção no mesmo dia: em repouso, a faixa das ações fica `invisible`, e o `mover` a mostra só com a linha deslizada (`x < 0`). O vermelho cheio do Excluir vazava pelo antisserrilhado dos cantos arredondados da linha, como uma borda vermelha em todo cartão.
