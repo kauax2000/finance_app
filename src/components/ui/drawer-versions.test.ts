@@ -221,7 +221,7 @@ describe("a gaveta de trás recua quando outra abre por cima", () => {
 
   it("a aninhada desconta `--drawer-recuo` da altura, e o topo da de trás aparece", () => {
     const fonte = semComentarios(CODIGO)
-    expect(fonte).toContain("[--drawer-recuo:calc(var(--spacing)*3)]")
+    expect(fonte).toContain("[--drawer-recuo:calc(var(--spacing)*6)]")
     expect(fonte).toContain("data-aninhada:[--drawer-desconto:var(--drawer-recuo)]")
     expect(fonte.match(/\[--drawer-h:calc\(100dvh-max\([^\]]*_-_var\(--drawer-desconto,0px\)\)\]/g)).toHaveLength(2)
     expect(fonte).toMatch(/data-aninhada=\{raiz\?\.aninhada \? "" : undefined\}/)

@@ -29246,3 +29246,6 @@ desmontada, `pai.recuar(false)`. A de trás escreve no próprio nó os valores d
 transição com movimento reduzido. O arraste continua com o vaul. Como as duas gavetas altas tinham
 o topo no mesmo lugar, a de cima (`data-aninhada`) desconta `--drawer-recuo` (12px) da altura, e o
 topo da de trás aparece.
+
+O dono pediu mais da gaveta de trás à vista: com 12px, sob o véu, a faixa quase não aparecia.
+`--drawer-recuo` foi a 24px (`calc(var(--spacing) * 6)`).

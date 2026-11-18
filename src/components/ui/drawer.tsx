@@ -154,7 +154,7 @@ const drawerContentVariants = cva(
     "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px))_-_var(--drawer-desconto,0px))]",
     // A gaveta aberta por cima de outra é 12px mais baixa: com o topo no mesmo
     // lugar, a da frente cobriria a de trás inteira, e o recuo não apareceria.
-    "[--drawer-recuo:calc(var(--spacing)*3)]",
+    "[--drawer-recuo:calc(var(--spacing)*6)]",
     "data-aninhada:[--drawer-desconto:var(--drawer-recuo)]",
     // O raio e a borda ficam do lado que **não** encosta na tela.
     "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-modal data-[vaul-drawer-direction=bottom]:border-t",
