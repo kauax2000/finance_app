@@ -29382,3 +29382,4 @@ Pedido do dono (18/11/2026): na linha da data do detalhe do lançamento, quem pa
 - Degrau novo `2xs` no `Avatar`: `size-4`, iniciais em `text-[0.5rem] leading-none` (com `text-2xs`, 11px, duas letras não cabem; exceção nomeada em `ARBITRARY_VALUE_EXCEPTIONS`).
 - O `2xs` não tem canto nem `onEdit`: em 16px o canto não cabe, então o `Avatar` os ignora. O `AvatarGroup` tem escada própria e não o aceita.
 - `FotoDoMembro` ganha `size` (`2xs` | `xs`, padrão `xs`); o topo do detalhe usa `2xs` e o texto vira " · ", com o `aria-label` "Pago por …" e a dica mantidos.
+- Ajuste no mesmo dia: a edição do detalhe do lançamento põe o cabeçalho dois níveis abaixo do puxador (o invólucro da subtela e o `form`). A regra passa a valer também um nível abaixo do invólucro (`[data-slot="drag-handle"] + * > :first-child > &:first-child`).

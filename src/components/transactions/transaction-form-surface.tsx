@@ -129,7 +129,22 @@ export function TransactionFormSurface({
                 className="flex min-h-0 flex-1 flex-col"
             >
                 <DialogHeader className={headerClassName}>
-                    <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" />}>
+                    <DialogHeaderRow
+                        endAdornment={
+                            // Na edição dentro do detalhe, o × cancela a edição e volta ao detalhe, como
+                            // o Cancelar; não fecha a folha inteira (pedido do dono, 18/11/2026). O
+                            // `preventDefault` segura o fechar do Radix.
+                            <DialogCloseButton
+                                placement="inline"
+                                label={onCancel ? "Cancelar edição" : undefined}
+                                onClick={(e) => {
+                                    if (!onCancel) return
+                                    e.preventDefault()
+                                    onCancel()
+                                }}
+                            />
+                        }
+                    >
                         <DialogTitle>{formTitle}</DialogTitle>
                     </DialogHeaderRow>
                     {segmento}

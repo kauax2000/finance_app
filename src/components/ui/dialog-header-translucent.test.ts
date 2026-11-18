@@ -45,6 +45,8 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(i).toBeGreaterThan(-1)
     // O cabeçalho dentro de um `form` (o Importar), de um `div` (o detalhe do lançamento) ou de outro invólucro.
     expect(u).toContain('[data-slot="drag-handle"] + * > &:first-child')
+    // E um nível abaixo: a edição do detalhe (o invólucro da subtela e, dentro, o \`form\`).
+    expect(u).toContain('[data-slot="drag-handle"] + * > :first-child > &:first-child')
     const puxador = u.slice(i)
     expect(puxador).toMatch(/&::before \{[^}]*var\(--drawer-handle-h\)/)
     expect(puxador).toMatch(/margin-top: calc\([^;]*var\(--drawer-handle-h\)/)
