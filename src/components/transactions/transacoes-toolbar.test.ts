@@ -44,8 +44,8 @@ describe("transacoes-toolbar (fonte)", () => {
         expect(TOOLBAR).not.toMatch(/\border-/)
     })
 
-    it("o ⋯ aparece no telefone e na linha partida, o complemento dos botões de Importar e Exportar", () => {
-        expect(TOOLBAR).toContain('className="hidden shrink-0 max-md:flex @max-3xl/transacoes:flex"')
+    it("o ⋯ segue o cabeçalho da página (que some abaixo do md), não a largura da linha", () => {
+        expect(TOOLBAR).toContain('className="hidden shrink-0 max-md:flex"')
     })
 
     it("os campos partem de CAMPOS_BASE", () => {

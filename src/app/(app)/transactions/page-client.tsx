@@ -12,7 +12,9 @@ import { TransactionsPageSkeleton } from "@/components/transactions/transactions
 import { useTransacoesDaTela } from "@/components/transactions/use-transacoes-da-tela"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Card, CardMessage } from "@/components/ui/card"
-import { PageHeader, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/16/solid"
+import { Button } from "@/components/ui/button"
+import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { downloadCsv } from "@/lib/data-table/csv"
@@ -105,7 +107,7 @@ export default function TransactionsPageClient() {
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-4">
-            {/* No telefone a tela de aba não tem título, e Importar e Exportar moram no ⋯ da barra (e, no desktop, em botões na barra da lista). */}
+            {/* No telefone a tela de aba não tem título, e Importar e Exportar moram no ⋯ da barra. */}
             {isMobile ? null : (
                 <PageHeader collapse>
                     <PageHeaderTitleRow>
@@ -114,7 +116,20 @@ export default function TransactionsPageClient() {
                             <p aria-hidden="true">Transações</p>
                         </PageHeaderTitle>
                     </PageHeaderTitleRow>
-                    {/* Criar mora no "+ Adicionar" da barra lateral; Importar e Exportar, na barra da lista. */}
+                    {/* Criar mora no "+ Adicionar" da barra lateral; o cabeçalho só importa e exporta, em dois
+                        terciários (de vez em quando, sem fundo para não pesar). Estreito, o `overflow` os leva ao ⋯. */}
+                    {convidado ? null : (
+                        <PageHeaderActions overflow="menu">
+                            <Button type="button" variant="tertiary" onClick={() => pedidos.setImportar(true)}>
+                                <ArrowUpTrayIcon aria-hidden />
+                                Importar
+                            </Button>
+                            <Button type="button" variant="tertiary" onClick={() => void exportar()} disabled={exportando}>
+                                <ArrowDownTrayIcon aria-hidden />
+                                Exportar
+                            </Button>
+                        </PageHeaderActions>
+                    )}
                 </PageHeader>
             )}
 

@@ -25,7 +25,7 @@ export function TransacoesToolbar({
 }: {
     tela: TelaDeTransacoes
     campos: FilterField[]
-    /** Sem ele (o convidado), o botão e o item do ⋯ somem; sem os dois, somem ambos. */
+    /** Sem ele (o convidado), o item some do ⋯; sem os dois, some o ⋯. */
     onImportar?: () => void
     onExportar?: () => void
     /** Exportando: o item fica desligado até o arquivo sair. */
@@ -66,10 +66,10 @@ export function TransacoesToolbar({
                     onChange={(type) => setEstado({ type, filtros: podarCategoriasDoTipo(estado.filtros, type, categories) })}
                     className="shrink-0 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1"
                 />
-                {/* O ⋯ é o complemento exato dos botões de Importar/Exportar (abaixo, depois da FilterBar):
-                    aparece no telefone (max-md) e na linha partida (@max-3xl), onde eles somem. Nunca os dois juntos. */}
+                {/* Só abaixo do md, onde a página não tem cabeçalho (isMobile): acima, Importar e Exportar moram nele.
+                    Pela janela, e não pela linha: pela linha, a 768–1000px ele duplicaria o do cabeçalho. */}
                 {onImportar || onExportar ? (
-                    <div className="hidden shrink-0 max-md:flex @max-3xl/transacoes:flex">
+                    <div className="hidden shrink-0 max-md:flex">
                         {/* No telefone o ⋯ veste a pele das abas ao lado. */}
                         <MenuMaisAcoes onImportar={onImportar} onExportar={onExportar} exportando={exportando} variant="floating" />
                     </div>
@@ -86,29 +86,12 @@ export function TransacoesToolbar({
                         disabled={desligado}
                     />
                 </div>
-                {/* Só com a linha inteira no desktop: o `@max-3xl` vem depois do `md:` e vence no CSS gerado. */}
-                {onImportar || onExportar ? (
-                    <div className="hidden shrink-0 items-center gap-1 md:flex @max-3xl/transacoes:hidden">
-                        {onImportar ? (
-                            <Button type="button" variant="tertiary" onClick={onImportar}>
-                                <ArrowUpTrayIcon aria-hidden />
-                                Importar
-                            </Button>
-                        ) : null}
-                        {onExportar ? (
-                            <Button type="button" variant="tertiary" onClick={onExportar} disabled={exportando}>
-                                <ArrowDownTrayIcon aria-hidden />
-                                Exportar
-                            </Button>
-                        ) : null}
-                    </div>
-                ) : null}
             </div>
         </div>
     )
 }
 
-/** O ⋯ de Importar e Exportar: na barra do telefone e na linha partida do desktop. Sem um handler, o item some. */
+/** O ⋯ de Importar e Exportar: no cabeçalho do desktop e na barra do telefone. Sem um handler, o item some. */
 export function MenuMaisAcoes({
     onImportar,
     onExportar,
