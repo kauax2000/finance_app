@@ -430,7 +430,9 @@ export function TransactionDetailSheet({
                 {isIncome ? "Receita" : "Despesa"}. {formatTransactionDayPtBr(t.date)}. Valor {currencyBRL(Number(t.amount))}.
             </DialogDescription>
 
-            <DialogBody className="flex flex-col gap-6">
+            {/* Na gaveta o ícone começa logo abaixo da linha do ⋯ e do ×, sem o respiro de 16 do corpo
+                (pedido do dono, 18/11/2026: sobrava espaço entre o topo da gaveta e o ícone). */}
+            <DialogBody className="flex flex-col gap-6 max-md:[--dialog-body-pt:0px]">
                 {/* O topo (C1 + D4 + E2/E5, 11/nov/2026): o ladrilho, o nome sobre o valor grande, a data relativa embaixo dele e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
                     <ColorTile size="2xl" color={t.category?.color}>
