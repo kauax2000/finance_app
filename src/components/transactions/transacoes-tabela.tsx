@@ -205,7 +205,10 @@ function colunas(
             meta: {
                 label: "Descrição",
                 mobile: "title",
-                cellClassName: "max-w-80",
+                // A Descrição fica com a sobra da largura (`w-full`); o `max-w-0` deixa o texto cortar
+                // em vez de alargar a tabela, e o `min-w-60` (240px) a segura numa janela estreita. Com o teto
+                // de 320px, a sobra virava um vão antes do Pagamento.
+                cellClassName: "w-full max-w-0 min-w-60",
                 // No telefone o ladrilho vai para a mídia e o "A conferir" fica no título.
                 identity: {
                     title: (t: Transaction) => (
