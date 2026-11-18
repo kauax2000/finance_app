@@ -87,12 +87,13 @@ function MonthNavArrowControls({
             ) : null}
             <ButtonGroup
                 aria-label="Mês de referência"
+                variant="rail"
                 className={cn("min-w-0", esteMesInsidePopoverOnNarrow && "flex-1")}
             >
                 <Button
                     type="button"
-                    variant="outline"
-                    size="icon-lg"
+                    variant="tertiary"
+                    size="icon-md"
                     aria-label="Mês anterior"
                     onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
                 >
@@ -102,7 +103,7 @@ function MonthNavArrowControls({
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="tertiary"
                             aria-label={pickerAriaLabel}
                             className={cn(
                                 "min-w-0 gap-2 font-medium tabular-nums",
@@ -147,8 +148,8 @@ function MonthNavArrowControls({
                 </Popover>
                 <Button
                     type="button"
-                    variant="outline"
-                    size="icon-lg"
+                    variant="tertiary"
+                    size="icon-md"
                     aria-label="Próximo mês"
                     onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
                 >

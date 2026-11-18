@@ -15,6 +15,12 @@ describe("o seletor de mês compacto", () => {
         expect(n).toBeGreaterThan(p)
     })
 
+    it("a cápsula veste o trilho das abas e nenhum botão de dentro é outline", () => {
+        const grupo = f.slice(f.indexOf("<ButtonGroup"), f.indexOf("</ButtonGroup>"))
+        expect(grupo).toContain('variant="rail"')
+        expect(grupo).not.toContain('variant="outline"')
+    })
+
     it('"Voltar a este mês" só fora do mês atual', () => {
         expect(f).toContain("Voltar a este mês")
         expect(f).not.toContain(">Este mês<")

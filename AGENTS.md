@@ -310,6 +310,9 @@ devolva ao estado anterior tudo que já existia — o procedimento está em
 
 - `ButtonGroup` junta botões numa peça só — uma ação com seu menu, um par de
   navegação: cantos internos achatados e bordas vizinhas sobrepostas em 1px.
+- `variant="rail"` veste nele o trilho do `Tabs floating` (placa, anel, 36 · 44
+  no dedo, peças de 32 sem emenda): é para um par de ações de navegação com um
+  valor no meio (o mês), nunca para escolha segmentada.
 - **Não embrulhe um controle segmentado nele**: um `role="group"` entre um
   `role="tablist"` e suas `role="tab"` quebra a posse ARIA. O trilho segmentado
   do app é o `Tabs` (o `TransactionTypeSegment` é `Tabs` sem `TabsContent`), e
