@@ -56,7 +56,9 @@ describe("a lista se refaz em cascata", () => {
     expect(tabela).toContain("key={animar ? `pagina-${pagination.pageIndex}-${refaz}` : undefined}")
     expect(tabela).toContain("refazendo={refaz > refeito}")
     expect(tabela.match(/refazendo && "list-reveal"/g)?.length).toBe(2)
-    expect(tabela).toContain('e.animationName === "rise" && e.target === e.currentTarget.lastElementChild')
+    // Consome-se por tempo, chaveada na troca: sem linhas ou com o gêmeo escondido não há `animationend`.
+    expect(tabela).toMatch(/if \(refaz === 0\) return\s*const t = window\.setTimeout\(\(\) => setRefeito\(refaz\), 700\)/)
+    expect(tabela).not.toContain("onAnimationEnd")
   })
 
   it("a primeira carga não se refaz", () => {

@@ -915,9 +915,10 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
   // render: a troca de filtro arma a cascata, e ela toca quando a busca nova assenta
   // (sem `loading` nem `pending`) — tocada já com a troca, a cascata animaria as
   // linhas velhas e as novas entrariam secas. `refaz` conta as trocas; `refeito` é a
-  // última que o gêmeo terminou (no `animationend` da última linha), para a classe
-  // sair e uma linha que entrar depois (refetch, página) não subir. A primeira carga
-  // não arma nada. Com movimento reduzido, nada anima.
+  // última que já se consumiu, para a classe sair e uma linha que entrar depois
+  // (refetch, página) não subir. Ela se consome por tempo, e não no `animationend`:
+  // com a lista vazia ou o gêmeo escondido (desktop) a cascata não toca, e o evento
+  // nunca chegaria. A primeira carga não arma nada. Com movimento reduzido, nada anima.
   const [chaveVista, setChaveVista] = React.useState(revealKey)
   const [armada, setArmada] = React.useState(false)
   const [refaz, setRefaz] = React.useState(0)
@@ -930,6 +931,12 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     setArmada(false)
     if (comMovimento && !reduzir) setRefaz(refaz + 1)
   }
+  // A escada mais longa termina em 40 + 30 × 11 + 160 = 530ms; 700ms dá folga.
+  React.useEffect(() => {
+    if (refaz === 0) return
+    const t = window.setTimeout(() => setRefeito(refaz), 700)
+    return () => window.clearTimeout(t)
+  }, [refaz])
 
   const marcadas = Object.keys(rowSelection).filter((k) => rowSelection[k])
   const idsMarcados = new Set(marcadas)
@@ -1401,7 +1408,6 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       marcando={marcadas.length > 0}
       menuDe={menuDaLinha}
       refazendo={refaz > refeito}
-      onRefeito={() => setRefeito(refaz)}
     />
   ) : null
 
@@ -1905,7 +1911,6 @@ function GemeoDoTelefone<T extends RowData>({
   marcando = false,
   menuDe,
   refazendo = false,
-  onRefeito,
 }: {
   rows: DataTableRow<T>[]
   rowState?: (row: T) => "current" | "pending" | undefined
@@ -1930,18 +1935,7 @@ function GemeoDoTelefone<T extends RowData>({
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
   /** Uma troca de filtro: as linhas (e os cartões do `inset`) sobem em cascata uma vez. */
   refazendo?: boolean
-  /** A cascata terminou: a classe sai, e o que entrar depois não sobe. */
-  onRefeito?: () => void
 }) {
-  // A cascata termina na última filha da raiz (a de maior atraso; acima do teto,
-  // todas terminam juntas). Animações de dentro das linhas também borbulham até aqui.
-  const refeito = refazendo
-    ? {
-        onAnimationEnd: (e: React.AnimationEvent<HTMLDivElement>) => {
-          if (e.animationName === "rise" && e.target === e.currentTarget.lastElementChild) onRefeito?.()
-        },
-      }
-    : {}
   const [lista, setLista] = React.useState<HTMLDivElement | null>(null)
   useTrocaDoDia(lista, inset ? rows : null)
   // Uma linha aberta por vez: abrir outra fecha a de antes.
@@ -2095,7 +2089,7 @@ function GemeoDoTelefone<T extends RowData>({
       else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
     }
     return (
-      <div ref={setLista} data-slot="data-table-mobile" className={cn("flex flex-col", refazendo && "list-reveal")} {...refeito}>
+      <div ref={setLista} data-slot="data-table-mobile" className={cn("flex flex-col", refazendo && "list-reveal")}>
         {grupos.map(({ key, grupo, linhas }) => (
           <React.Fragment key={key}>
             {grupo ? (
@@ -2145,7 +2139,7 @@ function GemeoDoTelefone<T extends RowData>({
   }
 
   return (
-    <ItemGroup variant="divided" data-slot="data-table-mobile" className={cn(refazendo && "list-reveal")} {...refeito}>
+    <ItemGroup variant="divided" data-slot="data-table-mobile" className={cn(refazendo && "list-reveal")}>
       {rows.map((row, i) => {
         // A faixa do grupo, quando a linha abre um grupo novo: no telefone o
         // mês também separa a lista, como na tabela.

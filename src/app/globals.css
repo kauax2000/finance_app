@@ -2960,8 +2960,8 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
 
 /* A mesma cascata da `table-reveal` nas filhas de uma lista que não é tabela: o gêmeo
    do telefone do `DataTable` (as linhas, ou os cabeçalhos e cartões do `inset`), quando
-   a lista se refaz depois de uma troca de filtro. Quem liga tira a classe no
-   `animationend` da última filha. Com movimento reduzido, nada sobe. */
+   a lista se refaz depois de uma troca de filtro. Quem liga tira a classe depois
+   que a escada acaba (por tempo). Com movimento reduzido, nada sobe. */
 @utility list-reveal {
   & > * {
     animation: rise 160ms var(--ease-out) 40ms both;
