@@ -56,7 +56,10 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                 // O formulário não navega: o link só no detalhe.
                 link={comLink ? { href: ROUTES.PREVISAO, label: "ver previsão" } : null}
             >
-                <div role="list" className="grid grid-cols-4 gap-1.5">
+                {/* Quatro meses lado a lado só com espaço (a partir de 28rem do cartão): mais estreito, o
+                    valor ("R$ 3.115,12") passava da borda do ladrilho, e a grade vira 2 × 2. */}
+                <div className="@container">
+                <div role="list" className="grid grid-cols-2 gap-1.5 @md:grid-cols-4">
                     {impacto.meses.map((m, i) => {
                         const desta = m.comEsta - m.semEsta
                         const ehPico = m.mes === pico.mes
@@ -84,6 +87,7 @@ function QuadroDoImpacto({ impacto, comLink }: { impacto: Impacto; comLink: bool
                             </div>
                         )
                     })}
+                </div>
                 </div>
                 {/* O "+" laranja é a parte desta compra; o % é do mês mais pesado, nomeado quando não é um ladrilho. */}
                 <Caption>
