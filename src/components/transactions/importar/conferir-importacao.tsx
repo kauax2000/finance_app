@@ -386,7 +386,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                     ) : null}
                 </DialogHeader>
                 <Form layout="none" onSubmit={aplicar} className="flex min-h-0 flex-1 flex-col">
-                    <DialogBody className="flex flex-col gap-3">
+                    {/* O respiro do fim do cabeçalho (16) já separa a busca da lista: o do topo do corpo dobraria o vão. */}
+                    <DialogBody className="flex flex-col gap-3 [--dialog-body-pt:0px]">
                         <ul className="flex flex-col gap-0.5">
                             <li>
                                 <FormPickerPopoverItem selected={escolhida === SEM} onClick={() => marcar(SEM)}>

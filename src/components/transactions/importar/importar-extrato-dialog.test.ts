@@ -754,7 +754,7 @@ describe("o Pôr categoria: a busca e as abas no cabeçalho, a lista rola por tr
         const cabecalho = conferir.slice(conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>"), conferir.indexOf("</DialogHeader>", conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>")))
         expect(cabecalho).toContain('placeholder="Buscar categoria"')
         expect(cabecalho).toContain('<TabsList aria-label="Tipo do lançamento" stretch>')
-        expect(conferir).toMatch(/<Form layout="none" onSubmit=\{aplicar\}[^>]*>\s*<DialogBody/)
+        expect(conferir).toMatch(/<Form layout="none" onSubmit=\{aplicar\}[^>]*>[\s{}]*<DialogBody className="flex flex-col gap-3 \[--dialog-body-pt:0px\]">/)
     })
     it("o Cancelar é o FormCancel, que some no telefone numa gaveta com ✕", () => {
         expect(conferir).toMatch(/<DialogClose asChild>\s*<FormCancel>Cancelar<\/FormCancel>\s*<\/DialogClose>/)
