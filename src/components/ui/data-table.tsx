@@ -1819,7 +1819,7 @@ function LinhaDeslizavel<T>({
         className="relative z-20 touch-pan-y overflow-hidden bg-card [&>[data-slot=item]]:rounded-none data-solta:[&_[data-slot=item-content]]:after:opacity-0"
         onPointerDown={(e) => {
           arrastou.current = false
-          if (!aceitaDeslize(e) || marcando) return
+          if (e.pointerType !== "touch" || marcando) return
           parar()
           gesto.current = { x: e.clientX, y: e.clientY, base: posicao.current, direcao: null }
           // Onde o fio parado começa: no texto, como o fio da linha.
@@ -1831,7 +1831,7 @@ function LinhaDeslizavel<T>({
         }}
         onPointerMove={(e) => {
           const g = gesto.current
-          if (!g || !aceitaDeslize(e)) return
+          if (!g || e.pointerType !== "touch") return
           const dx = e.clientX - g.x
           if (!g.direcao) {
             g.direcao = travarDirecao(dx, e.clientY - g.y)
@@ -1860,18 +1860,6 @@ function LinhaDeslizavel<T>({
       </div>
     </div>
   )
-}
-
-/**
- * Quem pode deslizar a linha: o dedo (`pointerType === "touch"`).
- * shortcut: temporário, a pedido do dono (18/11/2026), o mouse também desliza
- * numa janela da largura de um celular (abaixo de 768px), para testar no
- * navegador do computador. Tirar quando o teste no iPhone fechar o desenho.
- */
-function aceitaDeslize(e: React.PointerEvent) {
-  if (e.pointerType === "touch") return true
-  const janela = e.currentTarget.ownerDocument.defaultView
-  return e.pointerType === "mouse" && Boolean(janela?.matchMedia("(max-width: 47.99rem)").matches)
 }
 
 /** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */

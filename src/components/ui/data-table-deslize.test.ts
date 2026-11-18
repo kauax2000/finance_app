@@ -29,9 +29,9 @@ describe("DataTable mobileSwipe", () => {
   it("declara a prop, desligada por padrão, e o gesto só do dedo com a trava de direção", () => {
     expect(fonte).toContain("mobileSwipe?: boolean")
     expect(fonte).toContain("mobileSwipe = false,")
-    expect(fonte).toContain('if (e.pointerType === "touch") return true')
-    // Temporário (18/11/2026): o mouse desliza numa janela de celular, para testar no computador.
-    expect(fonte).toContain('matchMedia("(max-width: 47.99rem)")')
+    expect(ramo).toContain('pointerType !== "touch"')
+    // O mouse numa janela de celular saiu quando o deslize foi aprovado (18/11/2026).
+    expect(fonte).not.toContain("aceitaDeslize")
     expect(ramo).toContain("travarDirecao(")
     expect(ramo).toContain("assentarDeslize(")
     // Abrir no balanço do app, fechar na mola macia (rodada 403).

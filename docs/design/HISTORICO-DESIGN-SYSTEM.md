@@ -29366,3 +29366,4 @@ Pedido do dono (18/11/2026), validado no Mobbin (Mail do iOS 26: rascunhos e Lis
 - O arraste tem elástico além da faixa e antes do zero (`elastico`: um terço do dedo). Abrir assenta no `BALANCO` (passa um pouco e volta); fechar, na `MOLA`, sem passar do zero.
 
 - Ajuste no mesmo dia: os cantos arredondados da linha solta saíram, a pedido do dono, para comparar. A linha anda com os cantos retos; o fundo da página, o fio parado, o elástico e o balanço ficam.
+- Deslize aprovado pelo dono (18/11/2026): a liberação temporária do mouse (`aceitaDeslize`) saiu. O gesto volta a ser só do dedo.
