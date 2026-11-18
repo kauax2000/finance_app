@@ -767,3 +767,9 @@ describe("a busca no cabeçalho borra o que passa por trás", () => {
         expect(ler("busca-que-abre.tsx")).toContain('aberta ? "glass-surface" : "border-transparent bg-transparent"')
     })
 })
+
+describe("Escolha a categoria aproveita a tela do telefone", () => {
+    it("o teto de altura vale só do md para cima", () => {
+        expect(conferir).toContain('className="md:h-(--dialog-max-h) md:[--dialog-max-h:min(85dvh,34rem)]')
+    })
+})

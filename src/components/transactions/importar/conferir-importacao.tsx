@@ -348,7 +348,8 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
 
     return (
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
-            <DialogContent size="md" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,34rem)] [--dialog-body-fade-h:--spacing(12)]">
+            {/* O teto de altura é só do diálogo do desktop: no telefone a gaveta de `layout="fixed"` ocupa a tela toda, porque a lista de categorias é longa. */}
+            <DialogContent size="md" layout="fixed" className="md:h-(--dialog-max-h) md:[--dialog-max-h:min(85dvh,34rem)] [--dialog-body-fade-h:--spacing(12)]">
                 <DialogHeader>
                     <DialogTitle>Escolha a categoria</DialogTitle>
                     {/* A quem vale fica para o leitor de tela: a busca sobe para logo abaixo do título. */}
