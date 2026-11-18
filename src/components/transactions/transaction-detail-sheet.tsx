@@ -649,7 +649,9 @@ export function TransactionDetailSheet({
                 {detailMode === "edit" ? (
                     // Na troca de subtela (`useTrocaDeSubtela`) desliza a raiz de cada ramo, e não um invólucro novo:
                     // a gaveta acharia nele o meio (`acharMeio`) e o rolaria, com cabeçalho e tudo.
-                    <div data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">
+                    // Sem `overflow-hidden`: o título sobe à linha do × (o `-mt-8` do cabeçalho da gaveta) e
+                    // o recorte o cortava em cima. Quem rola é o corpo, como no ramo do detalhe.
+                    <div data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col gap-0">
                         <TransactionFormSurface
                             variant="detail-sheet"
                             handleSubmit={handleSubmit}
