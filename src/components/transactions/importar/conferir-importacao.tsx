@@ -350,8 +350,9 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
         <Dialog open={itens.length > 0} surface="auto" onOpenChange={(o) => (o ? undefined : fechar())}>
             <DialogContent size="md" layout="fixed" className="h-(--dialog-max-h) [--dialog-max-h:min(85dvh,34rem)] [--dialog-body-fade-h:--spacing(12)]">
                 <DialogHeader>
-                    <DialogTitle>Pôr categoria</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle>Escolha a categoria</DialogTitle>
+                    {/* A quem vale fica para o leitor de tela: a busca sobe para logo abaixo do título. */}
+                    <DialogDescription className="sr-only">
                         {itens.length === 1
                             ? `Vale para ${itens[0].descricao}.`
                             : misturadas

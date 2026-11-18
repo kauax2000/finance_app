@@ -751,7 +751,7 @@ describe("Conferir leitura fala dos dados, não das colunas", () => {
 
 describe("o Pôr categoria: a busca e as abas no cabeçalho, a lista rola por trás", () => {
     it("o cabeçalho leva a busca e as abas, e o form abre com o corpo", () => {
-        const cabecalho = conferir.slice(conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>"), conferir.indexOf("</DialogHeader>", conferir.indexOf("<DialogTitle>Pôr categoria</DialogTitle>")))
+        const cabecalho = conferir.slice(conferir.indexOf("<DialogTitle>Escolha a categoria</DialogTitle>"), conferir.indexOf("</DialogHeader>", conferir.indexOf("<DialogTitle>Escolha a categoria</DialogTitle>")))
         expect(cabecalho).toContain('placeholder="Buscar categoria"')
         expect(cabecalho).toContain('<TabsList aria-label="Tipo do lançamento" stretch>')
         expect(conferir).toMatch(/<Form layout="none" onSubmit=\{aplicar\}[^>]*>[\s{}]*<DialogBody className="flex flex-col gap-3 \[--dialog-body-pt:0px\]">/)
