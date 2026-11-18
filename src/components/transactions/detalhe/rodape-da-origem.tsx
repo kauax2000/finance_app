@@ -33,27 +33,30 @@ export function RodapeDaOrigem({
     transaction: t,
     autor,
     pagou,
+    mesmaPessoa = false,
 }: {
     transaction: Pick<Transaction, "source" | "created_at" | "updated_at">
     /** Quem lançou: a frase o nomeia e a foto vai no lugar do ícone da origem. */
     autor?: { nome: string; foto: ReactNode } | null
     /** Quem pagou (despesa de carteira com 2+ pessoas): repete o avatar do topo, a pedido do dono. */
     pagou?: { nome: string; foto: ReactNode } | null
+    /** Quem pagou é quem lançou: decidido pela identidade (ids), nunca pelo nome, que dois membros podem repetir. */
+    mesmaPessoa?: boolean
 }) {
     const Icone = ICONE_DA_ORIGEM[t.source] ?? DevicePhoneMobileIcon
     const quando = linhaDoQuando(t.created_at, t.updated_at)
     // "lançou pelo app", "lançou pela Planilha": a mesma tabela de notaComAutor, sem o nome.
     const lancou = notaComAutor(t.source, "").trim()
-    const mesmaPessoa = Boolean(autor && pagou && autor.nome === pagou.nome)
+    const juntas = Boolean(autor && pagou && mesmaPessoa)
     return (
         <footer data-slot="rodape-da-origem" className="grid justify-items-center gap-0.5 text-center">
             {autor ? (
                 <>
-                    {pagou && !mesmaPessoa ? <Frase foto={pagou.foto} nome={pagou.nome} resto="pagou" /> : null}
+                    {pagou && !juntas ? <Frase foto={pagou.foto} nome={pagou.nome} resto="pagou" /> : null}
                     <Frase
                         foto={autor.foto}
                         nome={autor.nome}
-                        resto={mesmaPessoa ? `pagou e ${lancou}` : lancou}
+                        resto={juntas ? `pagou e ${lancou}` : lancou}
                     />
                 </>
             ) : (

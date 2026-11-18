@@ -583,6 +583,7 @@ export function TransactionDetailSheet({
                 <RodapeDaOrigem
                     transaction={t}
                     autor={autor ? { nome: autor, foto: membroAutor ? <FotoDoMembro membro={membroAutor} size="2xs" /> : null } : null}
+                    mesmaPessoa={t.paid_by === t.user_id}
                     pagou={pagou ? { nome: pagou, foto: membroQuePagou ? <FotoDoMembro membro={membroQuePagou} size="2xs" /> : null } : null}
                 />
             </DialogBody>

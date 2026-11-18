@@ -115,6 +115,7 @@ describe("fonte do detalhe", () => {
     expect(f).not.toMatch(/<\/FotoDoMembro>|<FotoDoMembro[^>]*\/>\s*\{pagou\}/)
     expect(f).toMatch(/<RodapeDaOrigem[\s\S]*?autor=/)
     expect(f).toMatch(/<RodapeDaOrigem[\s\S]*?pagou=/)
+    expect(f).toContain("mesmaPessoa={t.paid_by === t.user_id}")
   })
 
   it("ao rolar, o cabeçalho resume o lançamento: ladrilho, nome e valor em cinza (H2a/A5, 11/nov/2026)", () => {
@@ -319,7 +320,7 @@ describe("RodapeDaOrigem: as frases", () => {
   const fotos = (html: string) => (html.match(/data-foto/g) ?? []).length
 
   it("mesma pessoa: uma frase e uma foto", () => {
-    const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: { nome: "Kauã", foto: foto("p") } })
+    const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: { nome: "Kauã", foto: foto("p") }, mesmaPessoa: true })
     expect(html.replace(/<[^>]+>/g, "")).toContain("Kauã pagou e lançou pelo app")
     expect(fotos(html)).toBe(1)
   })
@@ -328,6 +329,12 @@ describe("RodapeDaOrigem: as frases", () => {
     const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: { nome: "Renata", foto: foto("p") } })
     expect(html.replace(/<[^>]+>/g, "")).toContain("Renata pagou")
     expect(html.replace(/<[^>]+>/g, "")).toContain("Kauã lançou pelo app")
+    expect(html.replace(/<[^>]+>/g, "")).not.toContain("pagou e lançou")
+    expect(fotos(html)).toBe(2)
+  })
+
+  it("duas pessoas com o mesmo nome continuam em duas linhas", () => {
+    const html = rodape({ autor: { nome: "Ana", foto: foto("a") }, pagou: { nome: "Ana", foto: foto("p") }, mesmaPessoa: false })
     expect(html.replace(/<[^>]+>/g, "")).not.toContain("pagou e lançou")
     expect(fotos(html)).toBe(2)
   })
