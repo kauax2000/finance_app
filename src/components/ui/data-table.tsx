@@ -324,6 +324,8 @@ export type DataTableColumnMeta = {
   /** Quando devolve `false`, a célula não entra no gêmeo daquela linha, nem o " · " antes dela (a receita sem forma de pagar não mostra "Salário · —"). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mobileWhen?: (row: any) => boolean
+  /** `false`: a coluna existe só pelo gêmeo do telefone (a categoria na legenda) e não se desenha na tabela; ela também sai da conta das colunas, para o título de grupo e o vazio não ficarem uma coluna maiores que a tabela. */
+  desktop?: boolean
   /** As partes da célula de identidade, para o gêmeo as separar (ladrilho na mídia, nome no título, legenda na descrição); a fábrica `identity` as preenche. */
   identity?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -863,7 +865,9 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
 
   const linhas = table.getRowModel().rows
   const folhas = table.getVisibleLeafColumns()
-  const nColunas = folhas.length
+  // Sem as colunas só do telefone (`desktop: false`): com elas, o título de grupo ocupava uma coluna
+  // a mais, o total caía sob as ações e a tabela transbordava a moldura.
+  const nColunas = folhas.filter((c) => metaDe(c).desktop !== false).length
   const filtrado = Boolean(globalFilter) || columnFilters.length > 0
 
   // --- Os detalhes ficam montados depois de abertos (para a curva de
@@ -1116,6 +1120,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         onDoubleClick={editable && meta.edit ? () => setEditando(chave) : undefined}
         className={cn(
           meta.cellClassName,
+          meta.desktop === false && "hidden",
           editable && "focus-visible:inset-ring-2 focus-visible:inset-ring-ring/45 focus-visible:outline-none",
           primeiraDeDados && profundidade > 0 && "ps-[calc(var(--table-px)+var(--table-depth)*1.5rem)]"
         )}
@@ -1369,7 +1374,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
                   selection={h.column.id === "__select"}
                   actions={h.column.id === "__actions"}
                   pin={meta.pin}
-                  className={meta.headClassName}
+                  className={cn(meta.headClassName, meta.desktop === false && "hidden")}
                   sort={h.column.getCanSort() ? (ordem || "none") : undefined}
                   sortIndex={ordem && nOrdenadas > 1 ? h.column.getSortIndex() + 1 : undefined}
                   onSort={h.column.getCanSort() ? (e) => h.column.toggleSorting(undefined, e.shiftKey) : undefined}

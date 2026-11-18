@@ -113,3 +113,22 @@ describe("o gêmeo do telefone não segue as colunas escondidas do desktop", () 
     expect(fonte).toContain("const cells = row.getAllCells()")
   })
 })
+
+describe("coluna só do telefone (`desktop: false`)", () => {
+  const COM_LEGENDA: DataTableColumnDef<L>[] = [
+    COLUNAS[0],
+    { id: "dia", accessorFn: (l) => l.dia, header: "Dia", meta: { label: "Dia", mobile: "description", desktop: false } },
+    COLUNAS[1],
+  ]
+
+  it("o título de grupo ocupa só as colunas desenhadas, e a coluna some da tabela", () => {
+    const html = renderToStaticMarkup(
+      h(DataTable<L>, { ...base, columns: COM_LEGENDA, groupBy: (l: L) => ({ key: l.dia, label: l.dia }) }),
+    )
+    const tabela = html.slice(0, html.indexOf('data-slot="data-table-mobile"'))
+    // Duas colunas desenhadas: o grupo não pode pedir três.
+    expect(tabela).not.toContain('colSpan="3"')
+    expect(tabela).not.toContain('colspan="3"')
+    expect(tabela).toMatch(/<th[^>]*class="[^"]*\bhidden\b/)
+  })
+})

@@ -29415,3 +29415,14 @@ com o "—". Na mesma mudança, fora do `ui/`, os dias da lista ganharam a seman
 `formatDayHeadingPtBr(iso, agora, { semana: true })` escreve "Quarta, 11 de novembro" (sem o
 "-feira", para caber no telefone); Hoje, Ontem e Amanhã ficam como estavam, e de dois a
 seis dias atrás vale só o dia da semana ("Sábado"), como no iPhone (pedido do dono, mesmo dia).
+
+### Rodada 409 — a coluna só do telefone sai da conta
+
+Pedido do dono (18/11/2026): a ponta direita da tabela de Transações no desktop quebrava. A
+Categoria existe só pela legenda do gêmeo e era escondida com `headClassName`/`cellClassName:
+"hidden"`; o `DataTable` ainda a contava em `nColunas`, e o título de grupo (`TableGroupRow`)
+pedia uma coluna a mais. O total do dia caía sob as ações, a última célula abria uma coluna
+fantasma de 32px e a tabela transbordava a moldura (974 → 1006px), com a coluna presa das ações
+aparecendo na quina. Agora a coluna declara `meta.desktop: false`: o `DataTable` põe o
+`hidden` na cabeça e na célula e a tira de `nColunas`. Transações e a conferência do Importar
+trocaram as classes pela prop.

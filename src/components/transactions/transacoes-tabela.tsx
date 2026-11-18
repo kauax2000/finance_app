@@ -238,7 +238,7 @@ function colunas(
             },
             // Na tabela a coluna fica escondida (o ladrilho da Descrição já diz a categoria, e as colunas respiram);
             // ela existe pelo gêmeo do telefone, que a escreve na legenda ("Mercado · Nubank").
-            meta: { label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden" },
+            meta: { label: "Categoria", mobile: "description", desktop: false },
         },
         {
             id: "payment",

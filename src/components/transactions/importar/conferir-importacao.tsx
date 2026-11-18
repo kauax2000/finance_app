@@ -970,7 +970,7 @@ export function ConferirImportacao({ imp, conf, travado = false }: { imp: Import
                     <AvisosDaLinha imp={imp} item={row.original} />
                 </>
             ),
-            meta: { label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden", csv: false },
+            meta: { label: "Categoria", mobile: "description", desktop: false, csv: false },
         } satisfies DataTableColumnDef<ItemImportavel>] : []),
         col.money({ id: "valor", header: "Valor", accessor: valorDe }),
     ]

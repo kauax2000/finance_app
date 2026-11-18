@@ -80,7 +80,7 @@ describe("fonte da tabela", () => {
         expect(fonte).not.toContain("--badge-dot")
         expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(1)
         expect(fonte).toContain("return parcela ? `${c.name} · ${parcela}` : c.name")
-        expect(fonte).toContain('label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden"')
+        expect(fonte).toContain('label: "Categoria", mobile: "description", desktop: false')
         expect(fonte).not.toContain("block truncate")
     })
     it("os vazios da §6.5", () => {
