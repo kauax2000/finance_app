@@ -1774,7 +1774,7 @@ function LinhaDeslizavel<T>({
                 a.swipeIcon ? "[&_svg]:size-5" : "[&_svg]:size-4",
                 destrutiva
                   ? "bg-destructive text-destructive-foreground active:brightness-90"
-                  : "bg-secondary text-secondary-foreground active:bg-secondary-hover"
+                  : "bg-secondary text-secondary-foreground active:brightness-90"
               )}
               style={{ transform: "scale(calc(0.4 + 0.6 * var(--deslize, 0)))", opacity: "var(--deslize, 0)" }}
               onClick={(e) => {

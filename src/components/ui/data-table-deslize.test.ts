@@ -53,6 +53,8 @@ describe("DataTable mobileSwipe", () => {
     expect(ramo).toContain("--deslize")
     expect(ramo).not.toContain("{a.label}</span>")
     expect(ramo).not.toContain("<span>")
+    expect(ramo).toContain("bg-secondary text-secondary-foreground active:brightness-90")
+    expect(ramo).not.toContain("active:bg-secondary-hover")
   })
 
   it("Excluir é o vermelho cheio, sem alfa (fix 1)", () => {
