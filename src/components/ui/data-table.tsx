@@ -54,8 +54,8 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
-import { assentarDeslize, larguraDaFaixa, progressoDoDeslize, travarDirecao } from "@/lib/deslize"
-import { MOLA } from "@/lib/spring"
+import { assentarDeslize, elastico, larguraDaFaixa, progressoDoDeslize, travarDirecao } from "@/lib/deslize"
+import { BALANCO, MOLA } from "@/lib/spring"
 import { topBarBottom } from "@/lib/top-bar-bottom"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
@@ -1649,6 +1649,7 @@ function LinhaDeslizavel<T>({
   onFechar,
   marcando,
   inset,
+  fio = false,
   children,
 }: {
   row: T
@@ -1659,6 +1660,8 @@ function LinhaDeslizavel<T>({
   onFechar: () => void
   marcando: boolean
   inset: boolean
+  /** A linha tem o fio de baixo do `inset` (todas menos a última do cartão). */
+  fio?: boolean
   children: React.ReactNode
 }) {
   const caixa = React.useRef<HTMLDivElement>(null)
@@ -1679,7 +1682,14 @@ function LinhaDeslizavel<T>({
 
   const mover = (x: number) => {
     posicao.current = x
-    if (frente.current) frente.current.style.translate = x ? `${x}px 0` : ""
+    const linha = frente.current
+    if (linha) {
+      linha.style.translate = x ? `${x}px 0` : ""
+      // Como no Mail do iOS 26: solta, a linha vira um cartão, e os cantos arredondam
+      // com o arraste (até o raio de superfície, 22px), sem salto no primeiro pixel.
+      linha.style.borderRadius = x < 0 ? `${Math.min(22, -x / 2)}px` : ""
+      linha.toggleAttribute("data-solta", x < 0)
+    }
     // Em repouso a faixa das ações fica escondida: o vermelho cheio vazava pelo
     // antisserrilhado dos cantos arredondados da linha, como uma borda vermelha.
     const faixa = caixa.current?.querySelector<HTMLElement>("[data-slot=data-table-mobile-swipe-actions]")
@@ -1702,7 +1712,9 @@ function LinhaDeslizavel<T>({
       parar()
       if (reduzido || posicao.current === alvo) return mover(alvo)
       alvoDaMola.current = alvo
-      mola.current = animate(posicao.current, alvo, { ...MOLA, onUpdate: mover })
+      // Abrir assenta no balanço do app (passa um pouco e volta), como as outras molas
+      // orgânicas; fechar volta na mola macia, sem passar do zero.
+      mola.current = animate(posicao.current, alvo, { ...(alvo ? BALANCO : MOLA), onUpdate: (x) => mover(Math.min(0, x)) })
     },
     [reduzido]
   )
@@ -1752,7 +1764,16 @@ function LinhaDeslizavel<T>({
       ref={caixa}
       data-slot="data-table-mobile-swipe"
       data-open={aberta ? "" : undefined}
-      className={cn("relative overflow-hidden bg-card", !inset && "border-b border-border last:border-b-0")}
+      className={cn(
+        // Atrás dos botões fica o fundo da página, e não o do cartão: o cartão não
+        // continua por baixo da linha que saiu (o Mail do iOS 26, a Lista VIP).
+        "relative overflow-hidden bg-background",
+        !inset && "border-b border-border last:border-b-0",
+        // O fio não anda com a linha: solta, o dela some e este, parado, fica no
+        // lugar, do texto (`--fio-inicio`, medido ao soltar) até a borda.
+        fio &&
+          "has-data-solta:after:absolute has-data-solta:after:end-0 has-data-solta:after:start-(--fio-inicio,0px) has-data-solta:after:bottom-0 has-data-solta:after:z-10 has-data-solta:after:h-px has-data-solta:after:bg-border has-data-solta:after:content-['']"
+      )}
     >
       <div
         data-slot="data-table-mobile-swipe-actions"
@@ -1794,12 +1815,18 @@ function LinhaDeslizavel<T>({
         ref={frente}
         data-slot="data-table-mobile-swipe-row"
         // A vertical é do navegador (a rolagem); a horizontal chega aqui como `pointermove`.
-        className="relative touch-pan-y bg-card [&>[data-slot=item]]:rounded-none"
+        className="relative z-20 touch-pan-y overflow-hidden bg-card [&>[data-slot=item]]:rounded-none data-solta:[&_[data-slot=item-content]]:after:opacity-0"
         onPointerDown={(e) => {
           arrastou.current = false
           if (!aceitaDeslize(e) || marcando) return
           parar()
           gesto.current = { x: e.clientX, y: e.clientY, base: posicao.current, direcao: null }
+          // Onde o fio parado começa: no texto, como o fio da linha.
+          const conteudo = e.currentTarget.querySelector<HTMLElement>("[data-slot=item-content]")
+          if (fio && conteudo && caixa.current) {
+            const inicio = conteudo.getBoundingClientRect().left - caixa.current.getBoundingClientRect().left - posicao.current
+            caixa.current.style.setProperty("--fio-inicio", `${inicio}px`)
+          }
         }}
         onPointerMove={(e) => {
           const g = gesto.current
@@ -1813,7 +1840,7 @@ function LinhaDeslizavel<T>({
               e.currentTarget.setPointerCapture?.(e.pointerId)
             }
           }
-          if (g.direcao === "x") mover(Math.min(0, Math.max(-largura, g.base + dx)))
+          if (g.direcao === "x") mover(elastico(g.base + dx, largura))
         }}
         onPointerUp={soltar}
         onPointerCancel={soltar}
@@ -2020,6 +2047,7 @@ function GemeoDoTelefone<T extends RowData>({
         onFechar={() => setAberta((a) => (a === row.id ? null : a))}
         marcando={marcando}
         inset={inset}
+        fio={fio}
       >
         {linha}
       </LinhaDeslizavel>

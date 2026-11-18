@@ -18,3 +18,14 @@ export function larguraDaFaixa(n: number): number {
 export function progressoDoDeslize(x: number, largura: number): number {
   return Math.min(1, Math.max(0, -x / largura))
 }
+
+/**
+ * O arraste com elástico: dentro de [-largura, 0] a linha segue o dedo; além
+ * disso ela resiste e anda um terço do que o dedo anda, nos dois sentidos,
+ * como as listas do iOS.
+ */
+export function elastico(x: number, largura: number): number {
+  if (x < -largura) return -largura + (x + largura) / 3
+  if (x > 0) return x / 3
+  return x
+}

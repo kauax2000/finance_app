@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { assentarDeslize, larguraDaFaixa, progressoDoDeslize, travarDirecao } from "./deslize"
+import { assentarDeslize, elastico, larguraDaFaixa, progressoDoDeslize, travarDirecao } from "./deslize"
 
 describe("deslize", () => {
   it("trava a direção depois de 8px", () => {
@@ -24,5 +24,14 @@ describe("deslize", () => {
     expect(progressoDoDeslize(-56, 112)).toBe(0.5)
     expect(progressoDoDeslize(-200, 112)).toBe(1)
     expect(progressoDoDeslize(10, 112)).toBe(0)
+  })
+})
+
+describe("elastico", () => {
+  it("segue o dedo dentro da faixa e resiste a um terço fora dela", () => {
+    expect(elastico(-50, 112)).toBe(-50)
+    expect(elastico(-142, 112)).toBe(-122)
+    expect(elastico(30, 112)).toBe(10)
+    expect(elastico(0, 112)).toBe(0)
   })
 })

@@ -29356,3 +29356,12 @@ Pedido do dono (18/11/2026).
 - Os círculos crescem com o arraste: `--deslize` (`progressoDoDeslize`, de 0 a 1) escrito pelo `mover` na faixa dirige `scale(calc(0.4 + 0.6 * var(--deslize)))` e a opacidade, sem transição própria. Fechada, volta a 0 e a faixa segue `invisible`.
 - Excluir segue em `bg-destructive` cheio; as outras em `bg-secondary`. Sem fundo colorido atrás.
 - Temporário (18/11/2026, a pedido do dono): o mouse também desliza a linha numa janela da largura de um celular (abaixo de 768px), para testar no navegador do computador (`aceitaDeslize`). Sai quando o teste no iPhone fechar o desenho.
+
+### Rodada 403 — o deslize como no Mail do iOS 26
+
+Pedido do dono (18/11/2026), validado no Mobbin (Mail do iOS 26: rascunhos e Lista VIP): o fio não anda com a linha, e onde os botões ficam não há fundo. E o movimento orgânico, como o resto do app.
+
+- Atrás dos círculos fica o fundo da página (`bg-background` no invólucro), e não o do cartão: a linha solta vira um cartão próprio, e os cantos dela arredondam com o arraste, até 22px (o raio de superfície), escritos pelo `mover` a cada quadro.
+- O fio parado: com a linha solta (`data-solta`), o fio dela some, e o invólucro desenha um fio fixo do texto (`--fio-inicio`, medido no toque) até a borda.
+- O arraste tem elástico além da faixa e antes do zero (`elastico`: um terço do dedo). Abrir assenta no `BALANCO` (passa um pouco e volta); fechar, na `MOLA`, sem passar do zero.
+
