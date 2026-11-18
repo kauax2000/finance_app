@@ -2958,6 +2958,37 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   }
 }
 
+/* A mesma cascata da `table-reveal` nas filhas de uma lista que não é tabela: o gêmeo
+   do telefone do `DataTable` (as linhas, ou os cabeçalhos e cartões do `inset`), quando
+   a lista se refaz depois de uma troca de filtro. Quem liga tira a classe no
+   `animationend` da última filha. Com movimento reduzido, nada sobe. */
+@utility list-reveal {
+  & > * {
+    animation: rise 160ms var(--ease-out) 40ms both;
+    --rise-distance: 3px;
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 11;
+    @apply stagger-ladder;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > * {
+      animation: none;
+    }
+  }
+}
+
+/* O token do `FilterBar` que nasce depois da montagem (o filtro que um link aplicou,
+   ou o que a pessoa pôs) brota no gesto dos menus (`menu-morph`), da ponta esquerda,
+   e assenta na cápsula. O que já estava ao montar não veste a classe. */
+@utility token-sprout {
+  --morph-radius: calc(infinity * 1px);
+  animation: menu-morph 380ms linear backwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* A trilha sobe em cascata (a régua da `table-reveal`) nos eventos da `Timeline
    reveal`; um evento inserido depois também entra assim. O fio que se desenha
    (`timeline-progress`) não entra. */

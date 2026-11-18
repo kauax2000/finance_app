@@ -64,6 +64,7 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { HoverCardGroup } from "@/components/ui/hover-card"
+import { serializeFilters } from "@/components/ui/filter-bar"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ROUTES } from "@/config/navigation"
@@ -641,6 +642,8 @@ export function TransacoesTabela({
                 pagination={{ pageIndex: estado.page - 1, pageSize: PAGE_SIZE }}
                 onPaginationChange={(p) => setEstado({ page: p.pageIndex + 1 })}
                 pending={pagina.isFetching && !pagina.isLoading}
+                // Trocar o filtro (o "Ver os N" do detalhe, ou a própria barra) refaz a lista em cascata.
+                revealKey={serializeFilters(estado.filtros)}
                 error={
                     pagina.error
                         ? { message: "Não foi possível carregar os lançamentos.", onRetry: () => pagina.refetch() }

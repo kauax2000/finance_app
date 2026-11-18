@@ -29394,3 +29394,11 @@ Pedido do dono (18/11/2026): o texto dos botões pequenos parecia alto (o "Ver o
 - O `button-label` corta a caixa na altura das maiúsculas (`text-box: trim-both cap alphabetic`), também com `asChild`. O botão centra as maiúsculas em todo degrau: medido 0px no "Ver os 19", no "Ver fatura", no "Definir orçamento" e no "Adicionar anexo".
 - O traço do `link-sweep` e do `link-underline` parte do meio do rótulo (`50% + 0.5lh`) e não muda de lugar.
 - Sem suporte a `text-box` (Safari antes do 18.2), nada muda.
+
+### Rodada 407 — o filtro brota e a lista se refaz
+
+Pedido do dono (18/11/2026): o "Ver os N" do detalhe do lançamento aplica um filtro e volta a Transações; a etiqueta e a lista mudavam de uma vez. Escolha dele: "Filtro brota, lista se refaz".
+
+- O token do `FilterBar` que nasce com a barra já montada brota no gesto dos menus (`@utility token-sprout`, sobre o `menu-morph`, da ponta esquerda). O que já estava ao montar fica parado (`montada`, lido uma vez pelo token). A saída segue a do `motion`.
+- `DataTable revealKey`: a chave dos filtros de quem chama (Transações passa `serializeFilters(estado.filtros)`). Quando ela muda depois da montagem, a cascata arma e toca quando a busca nova assenta (sem `loading` nem `pending`): no desktop o `<tbody>` remonta com a `table-reveal`; no telefone o gêmeo veste a `@utility list-reveal` (`rise` + `stagger-ladder`, a régua da `table-reveal`) até o `animationend` da última filha. Primeira carga e refetch não animam; com movimento reduzido, nada anima. No telefone o sinal do filtro é a bolha da contagem do botão do cabeçalho, que já enche na mola ao chegar.
+- O "Limpar tudo" da gaveta de filtros do telefone limpa e fecha a gaveta (é o `limpar` da barra); a folha antiga de filtros de Transações (`transactions-toolbar.tsx`) também fecha. `filtro-refaz.test.ts`.

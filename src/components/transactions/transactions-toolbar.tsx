@@ -316,6 +316,8 @@ export function TransactionsToolbar({
                                 className={isMobile ? "w-full" : undefined}
                                 onClick={() => {
                                     resetAllFilters()
+                                    // Como na gaveta do FilterBar: limpar tudo também fecha a folha.
+                                    setFiltersSheetOpen(false)
                                 }}
                             >
                                 Limpar tudo

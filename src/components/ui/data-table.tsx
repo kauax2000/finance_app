@@ -582,6 +582,8 @@ export type DataTableProps<T extends RowData> = {
   mobileSwipe?: boolean
   /** As linhas que entram em cascata e deslizam ao reordenar. */
   motion?: boolean
+  /** A chave dos filtros de quem chama (o `serializeFilters` deles). Quando ela muda depois da montagem, a lista se refaz em cascata assim que os dados novos chegam: no desktop o `<tbody>` remonta com a `table-reveal`, no telefone o gêmeo veste a `list-reveal` uma vez. Sem ela, nada muda. */
+  revealKey?: string | null
   virtualize?: { estimateSize?: number; overscan?: number }
   /** A edição na célula — liga `role="grid"`. */
   editable?: {
@@ -643,6 +645,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     footer,
     countLabel,
     motion: comMovimento = true,
+    revealKey,
     virtualize,
     editable,
     onExport,
@@ -907,6 +910,26 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
   })
 
   const animar = comMovimento && !reduzir && !virtualize && linhas.length <= TETO_DO_MOVIMENTO
+
+  // A lista se refaz quando o filtro de quem chama muda (`revealKey`), e não a cada
+  // render: a troca de filtro arma a cascata, e ela toca quando a busca nova assenta
+  // (sem `loading` nem `pending`) — tocada já com a troca, a cascata animaria as
+  // linhas velhas e as novas entrariam secas. `refaz` conta as trocas; `refeito` é a
+  // última que o gêmeo terminou (no `animationend` da última linha), para a classe
+  // sair e uma linha que entrar depois (refetch, página) não subir. A primeira carga
+  // não arma nada. Com movimento reduzido, nada anima.
+  const [chaveVista, setChaveVista] = React.useState(revealKey)
+  const [armada, setArmada] = React.useState(false)
+  const [refaz, setRefaz] = React.useState(0)
+  const [refeito, setRefeito] = React.useState(0)
+  if (revealKey !== chaveVista) {
+    setChaveVista(revealKey)
+    setArmada(true)
+  }
+  if (armada && !loading && !pending) {
+    setArmada(false)
+    if (comMovimento && !reduzir) setRefaz(refaz + 1)
+  }
 
   const marcadas = Object.keys(rowSelection).filter((k) => rowSelection[k])
   const idsMarcados = new Set(marcadas)
@@ -1337,7 +1360,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       </TableHeader>
       <TableBody
         ref={corpoRef}
-        key={animar ? `pagina-${pagination.pageIndex}` : undefined}
+        key={animar ? `pagina-${pagination.pageIndex}-${refaz}` : undefined}
         reveal={animar}
       >
         {error ? (
@@ -1377,6 +1400,8 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       deslizar={mobileSwipe}
       marcando={marcadas.length > 0}
       menuDe={menuDaLinha}
+      refazendo={refaz > refeito}
+      onRefeito={() => setRefeito(refaz)}
     />
   ) : null
 
@@ -1879,6 +1904,8 @@ function GemeoDoTelefone<T extends RowData>({
   deslizar = false,
   marcando = false,
   menuDe,
+  refazendo = false,
+  onRefeito,
 }: {
   rows: DataTableRow<T>[]
   rowState?: (row: T) => "current" | "pending" | undefined
@@ -1901,7 +1928,20 @@ function GemeoDoTelefone<T extends RowData>({
   /** Alguma linha marcada: na linha compacta, o toque marca em vez de abrir. */
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
+  /** Uma troca de filtro: as linhas (e os cartões do `inset`) sobem em cascata uma vez. */
+  refazendo?: boolean
+  /** A cascata terminou: a classe sai, e o que entrar depois não sobe. */
+  onRefeito?: () => void
 }) {
+  // A cascata termina na última filha da raiz (a de maior atraso; acima do teto,
+  // todas terminam juntas). Animações de dentro das linhas também borbulham até aqui.
+  const refeito = refazendo
+    ? {
+        onAnimationEnd: (e: React.AnimationEvent<HTMLDivElement>) => {
+          if (e.animationName === "rise" && e.target === e.currentTarget.lastElementChild) onRefeito?.()
+        },
+      }
+    : {}
   const [lista, setLista] = React.useState<HTMLDivElement | null>(null)
   useTrocaDoDia(lista, inset ? rows : null)
   // Uma linha aberta por vez: abrir outra fecha a de antes.
@@ -2055,7 +2095,7 @@ function GemeoDoTelefone<T extends RowData>({
       else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
     }
     return (
-      <div ref={setLista} data-slot="data-table-mobile" className="flex flex-col">
+      <div ref={setLista} data-slot="data-table-mobile" className={cn("flex flex-col", refazendo && "list-reveal")} {...refeito}>
         {grupos.map(({ key, grupo, linhas }) => (
           <React.Fragment key={key}>
             {grupo ? (
@@ -2105,7 +2145,7 @@ function GemeoDoTelefone<T extends RowData>({
   }
 
   return (
-    <ItemGroup variant="divided" data-slot="data-table-mobile">
+    <ItemGroup variant="divided" data-slot="data-table-mobile" className={cn(refazendo && "list-reveal")} {...refeito}>
       {rows.map((row, i) => {
         // A faixa do grupo, quando a linha abre um grupo novo: no telefone o
         // mês também separa a lista, como na tabela.

@@ -1283,6 +1283,9 @@ function FilterBar({
               disabled={disabled}
               aberto={aberto?.tipo === "valor" && aberto.field === t.field}
               conteudoId={conteudoId}
+              // `cabeca` só existe depois da primeira pintura da linha: quem nasce
+              // antes (o filtro que já estava na URL ao montar) fica parado.
+              montada={Boolean(cabeca)}
               onAbrir={() => abrirValor(t.field)}
               onOperador={(op) => trocarOperador(t.field, op)}
               onOperadorAberto={() => {
@@ -1420,10 +1423,8 @@ function FilterBar({
                 const t = tokens.find((x) => x.field === id)
                 return campo && t && !t.rascunho ? valorNaLista(campo, t, (v) => opcaoDe(campo, v)) : undefined
               }}
-              onLimparTudo={() => {
-                setRascunho(null)
-                emitir([])
-              }}
+              // Limpar tudo também fecha a gaveta, como escolher: sem filtro, a lista de campos não tem o que mostrar.
+              onLimparTudo={limpar}
               verLabel={rotuloVerResultados(count, noun)}
               onVer={fechar}
               onEscolher={escolherCampo}
@@ -1462,6 +1463,7 @@ function FilterToken({
   disabled,
   aberto,
   conteudoId,
+  montada,
   onAbrir,
   onOperador,
   onOperadorAberto,
@@ -1480,6 +1482,8 @@ function FilterToken({
   disabled: boolean
   aberto: boolean
   conteudoId: string
+  /** A barra já estava montada quando o token nasceu: ele brota. */
+  montada: boolean
   onAbrir: () => void
   onOperador: (op: FilterOperator) => void
   onOperadorAberto: () => void
@@ -1487,6 +1491,9 @@ function FilterToken({
 }) {
   const presente = useIsPresent()
   const reduzir = useReducedMotion()
+  // Lido uma vez, ao nascer: o token que chega com a barra montada brota no gesto
+  // dos menus (`token-sprout`, sobre o `menu-morph`), no lugar do surgir do `motion`.
+  const [brota] = React.useState(montada && !reduzir)
   const booleano = campo.type === "boolean"
   const ops = OPERADORES[campo.type]
   const trocasOperador = useTrocas(descricao.operador)
@@ -1515,6 +1522,8 @@ function FilterToken({
       inert={!presente || undefined}
       layout={reduzir ? undefined : "position"}
       {...(reduzir ? SURGIR_REDUZIDO : SURGIR)}
+      // A entrada é a da classe; a saída segue a do `motion`.
+      initial={false}
       onKeyDown={(e) => {
         // Só o que nasce no token no DOM: o menu do operador é portal, e o
         // Backspace dele subiria pela árvore do React até aqui.
@@ -1526,6 +1535,7 @@ function FilterToken({
       className={cn(
         // Surge de onde estava o "+ Filtro", que desliza para frente.
         "flex max-w-full min-w-0 origin-left items-stretch",
+        brota && "token-sprout",
         CAPSULA_TOM[tone],
         CAPSULA_TAMANHO[size],
         fieldControlHeightClassName[size],

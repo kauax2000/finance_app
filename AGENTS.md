@@ -1632,7 +1632,10 @@ declaração de `background-color` no trilho).
   do telefone** (`meta.mobile`; abaixo do `md`, sem linhas, o vazio sai do cartão e da tabela; `emptyPhone` troca o conteúdo do telefone; `mobileRow="compact"` tira a caixa e o ⋯ da linha
   até haver seleção, e as ações vão ao toque longo — Transações usa; `mobileRow="flush"` é o `full` raso: sem a caixa de `selected` e no degrau `sm`, para a lista em que marcar é "esta entra" — o Ver todos do Importar; `mobileGroups="inset"` é a lista agrupada do iOS: um cartão por grupo do `groupBy`, com o `label` e o `aside` dele por fora, acima do cartão e preso sob a barra do topo: o dia de cima não sobe, gira no próprio eixo e some de uma vez (transição de 200ms, sem seguir a rolagem) quando o próximo encosta, e o próximo passa por cima (`useTrocaDoDia` marca `data-saindo`; 24px de vão entre os dias), o fio começando no texto e, abaixo do `md`, sem a moldura do `TablePanel`; sem grupo, um cartão só — Transações usa; o padrão `band` é a faixa dentro da lista; `mobileSwipe` (desligado por padrão) faz a linha do gêmeo deslizar para a esquerda e revelar as `rowActions` visíveis atrás, à direita (círculos de 44 só com ícone, 8px entre eles e da borda — `larguraDaFaixa` —, sobre o fundo da página (a linha solta anda com os cantos retos, e o fio fica parado, como no Mail do iOS 26), com elástico além da faixa e o balanço do app ao abrir, o `swipeIcon` de `20/solid` (sem ele, o `icon` nos 16), o nome só no `aria-label`, crescendo e aparecendo com o arraste por `--deslize` (`progressoDoDeslize`); Excluir em `bg-destructive` cheio com `text-destructive-foreground`, as outras em `bg-secondary`): só o dedo (`pointerType === "touch"`), trava de direção de 8px (`travarDirecao`, `lib/deslize`), abre passada a metade das ações (`assentarDeslize`) e assenta na `MOLA`; uma aberta por vez, e o toque fora ou a rolagem fecha; sem deslize total, e o toque e o toque longo seguem — Transações usa), teclado, URL, virtualização, CSV e edição
   (`role="grid"`); dados do servidor, `manual`. A barra e o rodapé ficam **fora**
-  da moldura (`toolbar`, `footer`). Peça de lugar certo entra por prop, nunca
+  da moldura (`toolbar`, `footer`). `revealKey` (a chave dos filtros de quem
+  chama) refaz a lista em cascata quando muda depois da montagem e a busca assenta:
+  o `<tbody>` remonta com a `table-reveal`, o gêmeo veste a `list-reveal` uma vez
+  (rodada 407, `filtro-refaz.test.ts`). Peça de lugar certo entra por prop, nunca
   por `child.type === Peca` — `table-versions.test.ts`.
 - **`Resizable`** redimensiona colunas (`useResizableColumns` +
   `ResizableColumnHandle`): uma coluna fica sem largura; o `TableHead` não
@@ -1681,7 +1684,7 @@ declaração de `background-color` no trilho).
   remover); o do editor aberto não sai e, aberto, digitar não remede; "+ Filtro", "Limpar" e a contagem ficam presos fora — é a
   de Transações. **O Enter de dentro dela e dos
   portais dela para nela** — a exceção documentada do `Form`.
-  No `overflow="menu"` o +N leva só o que não cabe: o primeiro que sairia fica encolhido, o valor em reticências, se sobram 7rem (`excessoDaLinha`). A aba Ano do período são três atalhos por id (`este-ano`, `ano-passado`, `ultimos-12-meses`) e a grade de anos em intervalo (`GradeDeAnos`), na régua da `MonthGrid`. `filter-bar-versions.test.ts`.
+  No `overflow="menu"` o +N leva só o que não cabe: o primeiro que sairia fica encolhido, o valor em reticências, se sobram 7rem (`excessoDaLinha`). A aba Ano do período são três atalhos por id (`este-ano`, `ano-passado`, `ultimos-12-meses`) e a grade de anos em intervalo (`GradeDeAnos`), na régua da `MonthGrid`. O token que nasce com a barra montada brota (`token-sprout`, sobre o `menu-morph`); o que estava ao montar fica parado. O "Limpar tudo" da gaveta do telefone limpa e fecha (rodada 407). `filter-bar-versions.test.ts`.
 - **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão e a do
   app desde a rodada 261, **sem vidro**), `sidebar` (a rente), `inset`,
   `plain` (a do catálogo, com
