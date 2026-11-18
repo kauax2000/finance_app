@@ -29251,3 +29251,13 @@ O dono pediu mais da gaveta de trás à vista: com 12px, sob o véu, a faixa qua
 `--drawer-recuo` foi a 24px (`calc(var(--spacing) * 6)`).
 O véu da gaveta aninhada também clareou: `bg-overlay/50` (0,2 em vez de 0,4) e sem o desfoque, para
 a de trás, que recuou, aparecer atrás da de cima. A gaveta raiz segue com o véu cheio e o borrão.
+
+### Rodada 393 — o rodapé fica todo sobre a placa
+
+No Importar, o "Total" mora no alto do rodapé, e com a sombra dentro da faixa (rodada 390) a lista
+passava legível por trás dele. O dono pediu mais sombra. Agora a placa a 95% cobre o rodapé
+inteiro, e o degradê de 56px sobe todo por cima da borda (`--dialog-footer-fade-over` igual a
+`--dialog-footer-fade-h`). Para a sombra não cobrir a última linha no fim da rolagem, o recuo de
+baixo do corpo soma os mesmos 56px no lugar do `--dialog-body-pb`. O cabeçalho não muda. Medido a
+375px: com o rodapé de 124,5px, a placa cobre os 124,5px (mais a área segura) e o degradê vai de
+124,5px a 180,5px acima do pé.

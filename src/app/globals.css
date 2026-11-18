@@ -4425,8 +4425,9 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   [data-layout="fixed"] [data-slot="dialog-body"] + & {
     --dialog-footer-tint: color-mix(in oklab, var(--background) 95%, transparent);
     --dialog-footer-fade-h: calc(var(--spacing) * 14);
-    /* Quanto do degradê passa da borda de cima (rodada 390), o espelho do cabeçalho. */
-    --dialog-footer-fade-over: calc(var(--spacing) * 4);
+    /* O degradê inteiro passa da borda de cima (rodada 393): o rodapé tem texto no alto (o Total
+       do Importar), e a placa cheia fica atrás dele todo. */
+    --dialog-footer-fade-over: var(--dialog-footer-fade-h);
     position: relative;
     z-index: 10;
 
@@ -4442,8 +4443,8 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
       z-index: -1;
       pointer-events: none;
     }
-    /* A sombra mora dentro da faixa do rodapé e passa 16px da borda de cima, como a do cabeçalho
-       (rodadas 388–390): sem linha reta na borda quando a lista chega ao fim. */
+    /* A placa cobre o rodapé inteiro e o degradê sobe por cima da borda (rodada 393). Ele não some
+       no fim da rolagem: o recuo do corpo deixa a última linha acima dele, sem linha reta. */
     &::before {
       bottom: 0;
       height: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over));
@@ -4478,11 +4479,11 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
   }
 
-  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura: a última linha
-     fica inteira acima da placa com a lista rolada até o fim. */
+  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura e o degradê (56px):
+     a última linha fica inteira acima da sombra com a lista rolada até o fim. */
   [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
     margin-bottom: calc(var(--dialog-footer-h, 0px) * -1);
-    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--dialog-body-pb, calc(var(--spacing) * 4)));
+    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 14);
     scroll-padding-block-end: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
     /* Quem esconde o conteúdo embaixo é o rodapé: a dissolução de baixo sai. */
     --scroll-fade-bottom-max: 0px;

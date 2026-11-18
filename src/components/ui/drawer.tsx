@@ -777,9 +777,9 @@ function DrawerContent({
   }, [el, dissolver])
 
   return (
+    // Aberta por cima de outra gaveta, o véu é mais claro e sem desfoque: a de trás, que
+    // recuou, continua à vista atrás da de cima, como as folhas empilhadas do iOS.
     <DrawerPortal>
-      {/* Aberta por cima de outra gaveta, o véu é mais claro e sem desfoque: a de trás, que
-          recuou, continua à vista atrás da de cima, como as folhas empilhadas do iOS. */}
       <DrawerOverlay
         className={
           raiz?.aninhada

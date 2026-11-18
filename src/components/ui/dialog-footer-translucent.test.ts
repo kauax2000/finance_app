@@ -17,7 +17,7 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
     expect(u).toContain("--dialog-footer-tint: color-mix(in oklab, var(--background) 95%, transparent)")
     expect(u).toContain("--dialog-footer-fade-h: calc(var(--spacing) * 14)")
     expect(u).not.toContain("backdrop-filter")
-    expect(u).toContain("--dialog-footer-fade-over: calc(var(--spacing) * 4)")
+    expect(u).toContain("--dialog-footer-fade-over: var(--dialog-footer-fade-h)")
     expect(u.match(/var\(--dialog-footer-tint\) \d+%, transparent\) \d+%/g)).toHaveLength(8)
   })
 
