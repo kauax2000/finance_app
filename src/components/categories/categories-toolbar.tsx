@@ -5,6 +5,7 @@ import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusI
 import * as React from "react"
 import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import { MonthGrid } from "@/components/ui/date-picker"
 import {
     Popover,
@@ -26,12 +27,8 @@ import { cn } from "@/lib/utils"
  * seletor de mês fora de uma barra, e ali a variável não existe.
  */
 const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
-const DENSO_QUADRADO = "size-[var(--toolbar-control,--spacing(8))]"
 
 const monthNavDenseButtonClassName = cn(DENSO_H, "px-2 text-xs")
-const monthNavDenseIconButtonClassName = DENSO_QUADRADO
-const monthNavDenseMonthPickerClassName = cn(DENSO_H, "flex-1 gap-1.5 px-2 text-xs")
-const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
 
 /**
  * Inside the TopBar: the system default step (`lg`, 36) at every width. The
@@ -39,9 +36,6 @@ const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
  * the bar is 48 tall and every button in it is `lg`.
  */
 const monthNavBarButtonClassName = "h-9 px-2 text-xs"
-const monthNavBarIconButtonClassName = "size-9"
-const monthNavBarMonthPickerClassName = "h-9 flex-1 gap-1.5 px-2 text-xs"
-const monthNavBarCalendarIconClassName = "size-3.5"
 
 /** "2026-04" → o primeiro dia de abril, o valor do `MonthGrid`. */
 function mesDoAnoMes(ym: string) {
@@ -79,74 +73,42 @@ function MonthNavArrowControls({
           }
         : {}
 
+    const foraDoMesAtual = budgetMonthYm !== formatYearMonth(new Date())
+
     return (
         <>
-            <Button
-                type="button"
-                variant="tertiary"
-                className={cn(
-                    "shrink-0 text-muted-foreground",
-                    inBar
-                        ? monthNavBarButtonClassName
-                        : dense
-                          ? monthNavDenseButtonClassName
-                          : "h-10 pointer-coarse:h-11 px-2 text-sm",
-                    esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
-                )}
-                onClick={() => onJump()}
-            >
-                Este mês
-            </Button>
-            <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                className={cn(
-                    "shrink-0",
-                    inBar
-                        ? monthNavBarIconButtonClassName
-                        : dense
-                          ? monthNavDenseIconButtonClassName
-                          : "size-10 pointer-coarse:size-11",
-                )}
-                aria-label="Mês anterior"
-                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
-            >
-                <ChevronLeftIcon />
-            </Button>
-
-            <div
-                className={cn(
-                    "flex min-w-0 flex-1 items-center justify-center gap-1.5",
-                    dense ? "max-w-[min(100%,16rem)]" : "",
-                )}
-            >
+            {foraDoMesAtual ? (
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    className={cn(
+                        "shrink-0 text-muted-foreground",
+                        esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
+                    )}
+                    onClick={() => onJump()}
+                >
+                    Voltar a este mês
+                </Button>
+            ) : null}
+            <ButtonGroup className="min-w-0">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-lg"
+                    aria-label="Mês anterior"
+                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
+                >
+                    <ChevronLeftIcon />
+                </Button>
                 <Popover {...popoverControlledProps}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
                             variant="outline"
                             aria-label={pickerAriaLabel}
-                            className={cn(
-                                "min-w-0 shrink font-medium tabular-nums",
-                                inBar
-                                    ? monthNavBarMonthPickerClassName
-                                    : dense
-                                    ? monthNavDenseMonthPickerClassName
-                                    : "h-10 pointer-coarse:h-11 flex-1 gap-2 px-3 text-sm",
-                            )}
+                            className="min-w-0 gap-2 font-medium tabular-nums"
                         >
-                            <CalendarIcon
-                                className={cn(
-                                    "shrink-0 opacity-80",
-                                    inBar
-                                        ? monthNavBarCalendarIconClassName
-                                        : dense
-                                          ? monthNavDenseCalendarIconClassName
-                                          : "size-4",
-                                )}
-                                aria-hidden
-                            />
+                            <CalendarIcon className="shrink-0 opacity-80" aria-hidden />
                             <span className="min-w-0 truncate">{monthLabel}</span>
                         </Button>
                     </PopoverTrigger>
@@ -165,7 +127,7 @@ function MonthNavArrowControls({
                                 if (esteMesInsidePopoverOnNarrow) setMonthPickerOpen(false)
                             }}
                         />
-                        {esteMesInsidePopoverOnNarrow ? (
+                        {esteMesInsidePopoverOnNarrow && foraDoMesAtual ? (
                             <PopoverFooter className="md:hidden">
                                 <Button
                                     type="button"
@@ -176,31 +138,22 @@ function MonthNavArrowControls({
                                         setMonthPickerOpen(false)
                                     }}
                                 >
-                                    Este mês
+                                    Voltar a este mês
                                 </Button>
                             </PopoverFooter>
                         ) : null}
                     </PopoverContent>
                 </Popover>
-            </div>
-
-            <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                className={cn(
-                    "shrink-0",
-                    inBar
-                        ? monthNavBarIconButtonClassName
-                        : dense
-                          ? monthNavDenseIconButtonClassName
-                          : "size-10 pointer-coarse:size-11",
-                )}
-                aria-label="Próximo mês"
-                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
-            >
-                <ChevronRightIcon />
-            </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-lg"
+                    aria-label="Próximo mês"
+                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
+                >
+                    <ChevronRightIcon />
+                </Button>
+            </ButtonGroup>
         </>
     )
 }
