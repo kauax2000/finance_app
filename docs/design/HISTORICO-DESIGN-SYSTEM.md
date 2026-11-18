@@ -29323,3 +29323,4 @@ Pedido do dono (18/11/2026), sobre a rodada 398: menos inclinação nas pontas d
 - `lib/troca-do-dia` saiu: o ouvinte não escreve mais estilo, só os atributos.
 - Ajuste no mesmo dia: a troca começava longe, com o próximo a uma altura de cabeçalho (40px, contando o respiro). Agora começa a uma linha de texto (a altura do miolo, ~16px): o texto de baixo encosta no de cima antes de ele girar.
 
+- Ajuste no mesmo dia: a transição foi de `--duration-slow` (300ms) para `--duration-base` (200ms), a pedido do dono.

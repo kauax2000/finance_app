@@ -1816,7 +1816,7 @@ function GemeoDoTelefone<T extends RowData>({
                   // O giro sai da raiz por variável (`--dia-giro`, `--dia-opacidade`): uma
                   // variante `group-data-*` perderia para a classe base. A perspectiva longa
                   // (1200px) quase não inclina as pontas do texto, que ocupa a largura toda.
-                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3 opacity-(--dia-opacidade,1) transition-[transform,opacity] duration-(--duration-slow) ease-(--ease-out) [transform:perspective(1200px)_rotateX(var(--dia-giro,0deg))]"
+                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3 opacity-(--dia-opacidade,1) transition-[transform,opacity] duration-(--duration-base) ease-(--ease-out) [transform:perspective(1200px)_rotateX(var(--dia-giro,0deg))]"
                 >
                   <span className="min-w-0 truncate">{grupo.label}</span>
                   {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}

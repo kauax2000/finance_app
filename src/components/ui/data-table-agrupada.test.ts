@@ -49,7 +49,7 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(ramo).toContain("useTrocaDoDia(lista,")
     expect(ramo).toContain("ref={setLista}")
     expect(fonte).toContain("[transform:perspective(1200px)_rotateX(var(--dia-giro,0deg))]")
-    expect(fonte).toContain("transition-[transform,opacity] duration-(--duration-slow)")
+    expect(fonte).toContain("transition-[transform,opacity] duration-(--duration-base)")
     expect(ramo).not.toContain("useCabecalhoPreso")
     expect(fonte).not.toContain("useCabecalhoPreso")
     expect(ramo).toContain('data-slot="data-table-mobile-group-heading-text"')
