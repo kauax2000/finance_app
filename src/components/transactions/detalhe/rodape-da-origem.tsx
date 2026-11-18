@@ -12,7 +12,7 @@ import {
     SparklesIcon,
 } from "@heroicons/react/16/solid"
 import { Caption } from "@/components/ui/typography"
-import { linhaDaEdicao, momentoDoRegistro, notaComAutor, notaDaOrigem } from "@/components/transactions/detalhe-regras"
+import { linhaDoQuando, notaComAutor, notaDaOrigem } from "@/components/transactions/detalhe-regras"
 import type { Transaction, TransactionSource } from "@/lib/supabase"
 
 const ICONE_DA_ORIGEM: Record<TransactionSource, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -28,26 +28,53 @@ const ICONE_DA_ORIGEM: Record<TransactionSource, ComponentType<SVGProps<SVGSVGEl
     recurring: ArrowPathRoundedSquareIcon,
 }
 
-/** O fim da folha do detalhe: de onde o lançamento veio, quando entrou e, se mudou, quando. */
+/** O fim da folha do detalhe: quem pagou, quem lançou e por onde, e quando entrou (e quando mudou), em frases curtas. */
 export function RodapeDaOrigem({
     transaction: t,
     autor,
+    pagou,
 }: {
     transaction: Pick<Transaction, "source" | "created_at" | "updated_at">
-    /** Quem lançou: com ele, a nota o nomeia e a foto vai no lugar do ícone da origem. */
+    /** Quem lançou: a frase o nomeia e a foto vai no lugar do ícone da origem. */
     autor?: { nome: string; foto: ReactNode } | null
+    /** Quem pagou (despesa de carteira com 2+ pessoas): repete o avatar do topo, a pedido do dono. */
+    pagou?: { nome: string; foto: ReactNode } | null
 }) {
     const Icone = ICONE_DA_ORIGEM[t.source] ?? DevicePhoneMobileIcon
-    const momento = momentoDoRegistro(t.created_at)
-    const nota = autor ? notaComAutor(t.source, autor.nome) : notaDaOrigem(t.source)
-    const edicao = linhaDaEdicao(t.created_at, t.updated_at)
+    const quando = linhaDoQuando(t.created_at, t.updated_at)
+    // "lançou pelo app", "lançou pela Planilha": a mesma tabela de notaComAutor, sem o nome.
+    const lancou = notaComAutor(t.source, "").trim()
+    const mesmaPessoa = Boolean(autor && pagou && autor.nome === pagou.nome)
     return (
-        <footer data-slot="rodape-da-origem" className="grid justify-items-center text-center">
-            <Caption className="inline-flex items-center gap-1.5">
-                {autor ? autor.foto : <Icone aria-hidden className="size-3.5 shrink-0" />}
-                {momento ? `${nota} · ${momento}` : nota}
-            </Caption>
-            {edicao ? <Caption>{edicao}</Caption> : null}
+        <footer data-slot="rodape-da-origem" className="grid justify-items-center gap-0.5 text-center">
+            {autor ? (
+                <>
+                    {pagou && !mesmaPessoa ? <Frase foto={pagou.foto} nome={pagou.nome} resto="pagou" /> : null}
+                    <Frase
+                        foto={autor.foto}
+                        nome={autor.nome}
+                        resto={mesmaPessoa ? `pagou e ${lancou}` : lancou}
+                    />
+                </>
+            ) : (
+                <Caption className="inline-flex items-center justify-center gap-1.5">
+                    <Icone aria-hidden className="size-3.5 shrink-0" />
+                    {notaDaOrigem(t.source)}
+                </Caption>
+            )}
+            {quando ? <Caption>{quando}</Caption> : null}
         </footer>
+    )
+}
+
+/** Uma linha do rodapé: a foto e o nome em destaque, o resto em cinza; quebra centralizada, sem soltar a foto. */
+function Frase({ foto, nome, resto }: { foto: ReactNode; nome: string; resto: string }) {
+    return (
+        <Caption className="inline-flex items-center justify-center gap-1.5">
+            {foto}
+            <span>
+                <span className="font-medium text-foreground">{nome}</span> {resto}
+            </span>
+        </Caption>
     )
 }

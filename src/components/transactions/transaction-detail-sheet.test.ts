@@ -1,4 +1,7 @@
+import { createElement as h } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { RodapeDaOrigem } from "@/components/transactions/detalhe/rodape-da-origem"
 import type { Transaction } from "@/lib/supabase"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import {
@@ -8,6 +11,7 @@ import {
     notaDaOrigem,
     momentoDoRegistro,
     linhaDaEdicao,
+    linhaDoQuando,
     podeNavegar,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
@@ -110,6 +114,7 @@ describe("fonte do detalhe", () => {
     expect(f).toContain("aria-label={`Pago por ${pagou}`}")
     expect(f).not.toMatch(/<\/FotoDoMembro>|<FotoDoMembro[^>]*\/>\s*\{pagou\}/)
     expect(f).toMatch(/<RodapeDaOrigem[\s\S]*?autor=/)
+    expect(f).toMatch(/<RodapeDaOrigem[\s\S]*?pagou=/)
   })
 
   it("ao rolar, o cabeçalho resume o lançamento: ladrilho, nome e valor em cinza (H2a/A5, 11/nov/2026)", () => {
@@ -285,4 +290,57 @@ describe("folha do plano: releitura e versão", () => {
         expect(fonte(SHEET)).toContain("editarDesabilitado={lendoPlano}")
         expect(fonte("src/components/transactions/detalhe/folha-do-plano.tsx")).toContain("disabled={editarDesabilitado}")
     })
+})
+
+describe("linhaDoQuando", () => {
+    const agora = new Date(2026, 10, 13, 18, 0)
+    const criado = new Date(2026, 10, 12, 18, 6).toISOString()
+
+    it("sem edição, só o quando, sem separador sobrando", () => {
+        expect(linhaDoQuando(criado, null, agora)).toBe("Ontem, 18:06")
+        expect(linhaDoQuando(criado, criado, agora)).toBe("Ontem, 18:06")
+    })
+
+    it("com edição, soma o editado em minúscula", () => {
+        const editado = new Date(2026, 10, 13, 9, 12).toISOString()
+        expect(linhaDoQuando(criado, editado, agora)).toBe("Ontem, 18:06 · editado hoje, 09:12")
+    })
+
+    it("sem created_at, some", () => {
+        expect(linhaDoQuando(null, null, agora)).toBeNull()
+        expect(linhaDoQuando("", null, agora)).toBeNull()
+    })
+})
+
+describe("RodapeDaOrigem: as frases", () => {
+  const foto = (id: string) => h("i", { "data-foto": id })
+  const rodape = (props: Record<string, unknown>) =>
+    renderToStaticMarkup(h(RodapeDaOrigem, { transaction: { source: "app", created_at: "", updated_at: null }, ...props } as never))
+  const fotos = (html: string) => (html.match(/data-foto/g) ?? []).length
+
+  it("mesma pessoa: uma frase e uma foto", () => {
+    const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: { nome: "Kauã", foto: foto("p") } })
+    expect(html.replace(/<[^>]+>/g, "")).toContain("Kauã pagou e lançou pelo app")
+    expect(fotos(html)).toBe(1)
+  })
+
+  it("pessoas diferentes: duas linhas e duas fotos", () => {
+    const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: { nome: "Renata", foto: foto("p") } })
+    expect(html.replace(/<[^>]+>/g, "")).toContain("Renata pagou")
+    expect(html.replace(/<[^>]+>/g, "")).toContain("Kauã lançou pelo app")
+    expect(html.replace(/<[^>]+>/g, "")).not.toContain("pagou e lançou")
+    expect(fotos(html)).toBe(2)
+  })
+
+  it("receita (sem pagou): só quem lançou", () => {
+    const html = rodape({ autor: { nome: "Kauã", foto: foto("a") }, pagou: null })
+    expect(html.replace(/<[^>]+>/g, "")).toContain("Kauã lançou pelo app")
+    expect(fotos(html)).toBe(1)
+  })
+
+  it("sem autor: a nota de hoje, sem linha do quando vazia", () => {
+    const html = rodape({})
+    expect(html.replace(/<[^>]+>/g, "")).toBe("Lançado pelo app")
+    expect((html.match(/<p /g) ?? []).length).toBe(1)
+  })
 })

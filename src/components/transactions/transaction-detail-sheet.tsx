@@ -582,7 +582,8 @@ export function TransactionDetailSheet({
 
                 <RodapeDaOrigem
                     transaction={t}
-                    autor={autor ? { nome: autor, foto: membroAutor ? <FotoDoMembro membro={membroAutor} /> : null } : null}
+                    autor={autor ? { nome: autor, foto: membroAutor ? <FotoDoMembro membro={membroAutor} size="2xs" /> : null } : null}
+                    pagou={pagou ? { nome: pagou, foto: membroQuePagou ? <FotoDoMembro membro={membroQuePagou} size="2xs" /> : null } : null}
                 />
             </DialogBody>
 

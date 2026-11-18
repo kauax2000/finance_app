@@ -88,3 +88,20 @@ export function linhaDaEdicao(criado: string, editado: string | null | undefined
     const dia = diaDoInstante(e, agora)
     return `Editado ${dia === "hoje" || dia === "ontem" ? dia : `em ${dia}`} às ${hora(e)}`
 }
+
+/** A última linha do rodapé: "Ontem, 18:06", ou "Ontem, 18:06 · editado hoje, 09:12" quando houve edição. */
+export function linhaDoQuando(
+    criado: string | null | undefined,
+    editado: string | null | undefined,
+    agora: Date = new Date(),
+): string | null {
+    if (!criado) return null
+    const momento = momentoDoRegistro(criado, agora)
+    if (!momento) return null
+    const quando = momento.charAt(0).toUpperCase() + momento.slice(1)
+    // linhaDaEdicao já decide se a edição vale (mais de um minuto depois de criar).
+    if (!linhaDaEdicao(criado, editado, agora)) return quando
+    const e = new Date(editado as string)
+    const dia = diaDoInstante(e, agora)
+    return `${quando} · editado ${dia === "hoje" || dia === "ontem" ? dia : `em ${dia}`}, ${hora(e)}`
+}
