@@ -919,22 +919,31 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
   // (refetch, página) não subir. Ela se consome por tempo, e não no `animationend`:
   // com a lista vazia ou o gêmeo escondido (desktop) a cascata não toca, e o evento
   // nunca chegaria. A primeira carga não arma nada. Com movimento reduzido, nada anima.
-  // A arma guarda os dados da hora da troca: a cascata só toca quando chegam outros. A chave
-  // muda um render antes de a busca começar, e nesse render ainda não há `loading` nem
-  // `pending` — tocada ali, a cascata animava as linhas velhas e as filtradas entravam secas
-  // logo depois (o "pisca tudo e depois filtra", 18/11/2026).
+  // A cascata toca quando, depois da troca de filtro, as linhas são outras: compara-se a lista
+  // de ids de agora com a do último render antes da troca. A chave pode mudar um render antes
+  // de a busca começar (e a cascata animava as linhas velhas: o "pisca tudo e depois filtra"),
+  // ou no mesmo render em que os dados novos chegam do cache (e guardar os dados da hora da
+  // troca não via mudança nenhuma: sem animação). Os ids de antes vêm do último render.
+  const idsDe = (lista: T[] | undefined) => (lista ?? []).map((r) => getRowId(r)).join("|")
+  const idsAgora = idsDe(data)
+  const idsDoRenderAnterior = React.useRef(idsAgora)
   const [chaveVista, setChaveVista] = React.useState(revealKey)
-  const [armada, setArmada] = React.useState<{ dados: T[] | undefined } | null>(null)
+  const [armada, setArmada] = React.useState<{ ids: string } | null>(null)
   const [refaz, setRefaz] = React.useState(0)
   const [refeito, setRefeito] = React.useState(0)
   if (revealKey !== chaveVista) {
     setChaveVista(revealKey)
-    setArmada({ dados: data })
+    setArmada({ ids: idsDoRenderAnterior.current })
   }
-  if (armada && data !== armada.dados && !loading && !pending) {
+  // Sem esperar o `pending`: com os dados do cache, as linhas novas aparecem enquanto a
+  // atualização em segundo plano corre, e esperar por ela as mostrava paradas antes de animar.
+  if (armada && idsAgora !== armada.ids && !loading) {
     setArmada(null)
     if (comMovimento && !reduzir) setRefaz(refaz + 1)
   }
+  React.useEffect(() => {
+    idsDoRenderAnterior.current = idsAgora
+  })
   // A escada mais longa termina em 40 + 30 × 11 + 160 = 530ms; 700ms dá folga.
   React.useEffect(() => {
     if (refaz === 0) return
