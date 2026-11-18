@@ -21,4 +21,9 @@ describe("o cabeçalho de Categorias", () => {
     it("o esqueleto tem o osso do cabeçalho, escondido no telefone", () => {
         expect(esq).toContain('<PageHeaderSkeleton description={false} actions={1} className="max-md:hidden" />')
     })
+
+    it("o seletor de mês do telefone some do md em diante, mesmo com className de quem chama", () => {
+        const t = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"), "tudo")
+        expect(t).toContain('cn(className, "md:hidden")')
+    })
 })

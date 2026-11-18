@@ -356,7 +356,7 @@ export function MonthNav({
                 </div>
             ) : (
                 <>
-                    <div className={cn("md:hidden", className)}>
+                    <div className={cn(className, "md:hidden")}>
                         <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
                             <Button
