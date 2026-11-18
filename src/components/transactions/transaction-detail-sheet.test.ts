@@ -351,3 +351,31 @@ describe("RodapeDaOrigem: as frases", () => {
     expect((html.match(/<p /g) ?? []).length).toBe(1)
   })
 })
+
+describe("Editar com o gesto da subtela", () => {
+    const src = fonte(SHEET)
+
+    it("a troca é a da subtela, só no telefone, no invólucro do conteúdo", () => {
+        expect(src).toContain("useTrocaDeSubtela(isMobile")
+        expect(src).toContain("data-subtela-conteudo")
+    })
+
+    it("Editar entra com o gesto", () => {
+        expect(src).toMatch(/const editar = \(\) => trocar\("entra"/)
+        expect(src).toMatch(/const editarPlano = \(\) =>\s*trocar\("entra"/)
+    })
+
+    it("Cancelar, fechar o formulário e salvar voltam com o gesto", () => {
+        expect(src).toMatch(/onCancel=\{\(\) => trocar\("volta"/)
+        expect(src).toMatch(/onClose: \(\) => trocar\("volta"/)
+        expect(src).toMatch(/onSuccess: \(\) =>\s*trocar\("volta"/)
+    })
+
+    it("não sobra setDetailMode(\"edit\") fora da troca", () => {
+        const fora = src.split('setDetailMode("edit")').slice(0, -1).filter((antes) => {
+            const perto = antes.slice(-120)
+            return !perto.includes('trocar("entra"') && !perto.includes("const entrar =")
+        })
+        expect(fora).toEqual([])
+    })
+})

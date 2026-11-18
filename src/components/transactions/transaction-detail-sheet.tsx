@@ -47,6 +47,7 @@ import type {
 } from "@/components/transactions/transaction-form-types"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
+import { useTrocaDeSubtela } from "@/components/transactions/importar/transicao-da-subtela"
 import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components/ui/alert"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -131,6 +132,8 @@ export function TransactionDetailSheet({
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
+    // Entrar e sair da edição é o gesto da subtela do Importar, só no telefone.
+    const trocar = useTrocaDeSubtela(isMobile)
     const [escopoAoEditar, setEscopoAoEditar] = useState<"slice" | "plan">("slice")
     const [versaoDasParcelas, setVersaoDasParcelas] = useState(0)
     const [versaoLida, setVersaoLida] = useState(0)
@@ -224,11 +227,12 @@ export function TransactionDetailSheet({
         onSaveInstallmentPlan: undefined,
         onUpdateInstallmentPlan,
         closeOnSuccess: false,
-        onClose: () => setDetailMode("view"),
-        onSuccess: () => {
-            setDetailMode("view")
-            setVersaoDasParcelas((v) => v + 1)
-        },
+        onClose: () => trocar("volta", () => setDetailMode("view")),
+        onSuccess: () =>
+            trocar("volta", () => {
+                setDetailMode("view")
+                setVersaoDasParcelas((v) => v + 1)
+            }),
         initialInstallmentEditScope: escopoAoEditar,
     })
 
@@ -257,12 +261,17 @@ export function TransactionDetailSheet({
         setVersaoLida(0)
     }, [t?.installment_plan_id])
 
+    const abertoAntes = useRef(false)
     useEffect(() => {
+        const estavaAberto = abertoAntes.current
+        abertoAntes.current = open
         if (!open || !launchInEditMode) return
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- open sheet directly in edit from row action
-        setDetailMode("edit")
+        // Com o detalhe já aberto, entra com o gesto; abrindo já em edição, quem anima é a gaveta.
+        const entrar = () => setDetailMode("edit")
+        if (estavaAberto) trocar("entra", entrar)
+        else entrar()
         onLaunchEditConsumed?.()
-    }, [open, launchInEditMode, onLaunchEditConsumed])
+    }, [open, launchInEditMode, onLaunchEditConsumed, trocar])
 
     // As setas: só no desktop, só abertas pela lista, e desligadas enquanto edita.
     const setas = podeNavegar(isMobile || !onNavegar ? null : { anterior, seguinte }, detailMode === "edit")
@@ -334,11 +343,12 @@ export function TransactionDetailSheet({
         mesCorrente: (transactionLocalYmd(t.date) ?? "").slice(0, 7) === formatYearMonth(hoje),
     })
 
-    const editar = () => setDetailMode("edit")
-    const editarPlano = () => {
-        setEscopoAoEditar("plan")
-        setDetailMode("edit")
-    }
+    const editar = () => trocar("entra", () => setDetailMode("edit"))
+    const editarPlano = () =>
+        trocar("entra", () => {
+            setEscopoAoEditar("plan")
+            setDetailMode("edit")
+        })
     const excluir = () => onDelete(t)
     // Tocar numa parcela lançada: o dono da folha troca o lançamento mostrado; sem ele, não é clicável.
     const carteira = t.workspace_id
@@ -381,7 +391,7 @@ export function TransactionDetailSheet({
     }
 
     const viewBody = (
-        <div ref={marca} className="flex min-h-0 flex-1 flex-col">
+        <div ref={marca} data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col">
             <DialogHeader>
                 <DialogHeaderRow
                     centerShown={nomeSubiu}
@@ -637,7 +647,9 @@ export function TransactionDetailSheet({
                 )}
             >
                 {detailMode === "edit" ? (
-                    <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">
+                    // Na troca de subtela (`useTrocaDeSubtela`) desliza a raiz de cada ramo, e não um invólucro novo:
+                    // a gaveta acharia nele o meio (`acharMeio`) e o rolaria, com cabeçalho e tudo.
+                    <div data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">
                         <TransactionFormSurface
                             variant="detail-sheet"
                             handleSubmit={handleSubmit}
@@ -647,7 +659,7 @@ export function TransactionDetailSheet({
                             showFooter={showFooter}
                             submitDisabled={submitDisabled}
                             saving={saving}
-                            onCancel={() => setDetailMode("view")}
+                            onCancel={() => trocar("volta", () => setDetailMode("view"))}
                         />
                     </div>
                 ) : (

@@ -9,7 +9,42 @@ const LIMITE_DA_ESPERA_MS = 1200
 type Estado = { passo: string; pendente: string | null; erro: string | null }
 
 type DocumentoComTransicao = Document & {
-    startViewTransition?: (trocar: () => Promise<void>) => { finished: Promise<void> }
+    startViewTransition?: (trocar: () => Promise<void> | void) => { finished: Promise<void> }
+}
+
+/**
+ * A parte comum às duas formas: decide se há gesto e, havendo, marca a direção no `<html>` e a
+ * tira quando a troca acaba (também se a gaveta fecha no meio). Devolve `null` quando a troca é seca:
+ * fora do telefone, sem View Transitions, com movimento reduzido ou com outra troca em curso.
+ */
+function comecarSubtela(ativo: boolean, direcao: "entra" | "volta", trocar: () => Promise<void> | void) {
+    const doc = document as DocumentoComTransicao
+    const raiz = document.documentElement
+    if (
+        !ativo ||
+        !doc.startViewTransition ||
+        raiz.dataset.subtela ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+        return null
+    }
+    raiz.dataset.subtela = direcao
+    const transicao = doc.startViewTransition(trocar)
+    void transicao.finished.finally(() => delete raiz.dataset.subtela)
+    return transicao
+}
+
+/**
+ * A forma genérica, sem espera: a tela nova é a que a `acao` monta na hora (o formulário de edição
+ * do detalhe do lançamento). Mesmo gesto e mesmo CSS (`html[data-subtela]`) da subtela do Importar.
+ */
+export function useTrocaDeSubtela(ativo: boolean) {
+    return useCallback(
+        (direcao: "entra" | "volta", acao: () => void) => {
+            if (!comecarSubtela(ativo, direcao, () => flushSync(acao))) acao()
+        },
+        [ativo],
+    )
 }
 
 /**
@@ -27,20 +62,9 @@ export function useTransicaoDaSubtela(estado: Estado, ativo: boolean) {
 
     return useCallback(
         (direcao: "entra" | "volta", acao: () => unknown) => {
-            const doc = document as DocumentoComTransicao
             const raiz = document.documentElement
-            if (
-                !ativo ||
-                !doc.startViewTransition ||
-                raiz.dataset.subtela ||
-                window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ) {
-                void acao()
-                return
-            }
             const passoDeAntes = atual.current.passo
-            raiz.dataset.subtela = direcao
-            const transicao = doc.startViewTransition(async () => {
+            const transicao = comecarSubtela(ativo, direcao, async () => {
                 flushSync(() => {
                     void acao()
                 })
@@ -58,7 +82,7 @@ export function useTransicaoDaSubtela(estado: Estado, ativo: boolean) {
                 // Sem passo novo não há página a empurrar: a foto troca sem deslizar.
                 if (atual.current.passo === passoDeAntes) raiz.dataset.subtela = "parada"
             })
-            void transicao.finished.finally(() => delete raiz.dataset.subtela)
+            if (!transicao) void acao()
         },
         [ativo],
     )
