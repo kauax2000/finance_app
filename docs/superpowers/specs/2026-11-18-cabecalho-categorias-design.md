@@ -19,7 +19,7 @@ Categorias                                  [+ Nova categoria]
 - `PageHeader collapse` com `PageHeaderTitle asChild` + `<p aria-hidden="true">Categorias</p>`
   (o `<h1>` é o da barra do topo). Ao rolar, o título sobe para a barra.
 - **Nova categoria** sai da `Toolbar` e vai para `PageHeaderActions`, como o Convidar de
-  Membros: `secondary` (o + Adicionar já é o `primary` da tela), ícone `PlusIcon`. Some para quem não escreve (`podeEscrever`).
+  Membros: `tertiary`, sem fundo como Importar e Exportar de Transações (o + Adicionar é o `primary` da tela; com fundo, brigava com as abas), ícone `PlusIcon`. Some para quem não escreve (`podeEscrever`).
 - A `Toolbar` fica com Despesas | Receitas e o mês (só em Despesas). O mês no desktop mora
   na barra da tela (regra do AGENTS).
 

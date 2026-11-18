@@ -489,7 +489,7 @@ export function CategoriesToolbar({
                 {onNewCategory ? (
                     <ToolbarButton
                         type="button"
-                        variant="secondary"
+                        variant="tertiary"
                         collapse
                         icon={<PlusIcon aria-hidden />}
                         label="Nova categoria"

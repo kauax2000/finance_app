@@ -684,7 +684,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     </PageHeaderTitleRow>
                     {podeEscrever ? (
                         <PageHeaderActions>
-                            <Button type="button" variant="secondary" onClick={() => openDialog()}>
+                            <Button type="button" variant="tertiary" onClick={() => openDialog()}>
                                 <PlusIcon aria-hidden />
                                 Nova categoria
                             </Button>
