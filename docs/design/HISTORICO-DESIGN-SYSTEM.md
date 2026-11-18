@@ -29302,3 +29302,12 @@ Pedido do dono (18/11/2026): manter a lista agrupada (A), com mais espaço entre
 - O `TablePanel` recortava (`overflow-hidden`) e o `sticky` não grudava. Na lista agrupada, abaixo do `md`, a moldura fica `max-md:overflow-visible`: ela já não desenha nada no telefone.
 - `data-table-agrupada.test.ts` tranca o `sticky` e o recorte.
 
+### Rodada 398 — o dia preso gira e troca por baixo
+
+Pedido do dono (18/11/2026): o dia de cima não deve subir empurrado pelo próximo.
+
+- Os cabeçalhos do `mobileGroups="inset"` deixam o invólucro por grupo: cabeçalho e cartão são irmãos na lista (um `React.Fragment` por grupo), então todo cabeçalho fica preso pela lista inteira e o próximo passa por cima dele, em vez de empurrá-lo.
+- Enquanto o próximo chega (a menos de uma altura do preso), o texto do de cima (`data-table-mobile-group-heading-text`) gira em `rotateX` até 90° e esmaece até sumir: `trocaDoDia(distancia, altura, reduzido)` em `lib/troca-do-dia.ts`. Com movimento reduzido, só esmaece.
+- `useTrocaDoDia` troca o `useCabecalhoPreso`: um quadro por rajada de rolagem (`passive`, `capture`, nunca `rAF` em laço), lê a linha da barra por `topBarBottom` e marca `data-preso` e `data-coberto` (o próximo já em cima). Coberto, o `::before` do de baixo apaga, para o fundo não somar ao do próximo.
+- O vão entre os dias segue 24px: o `gap-2` da lista virou `not-first:mt-2` no cabeçalho (e no cartão sem cabeçalho), mais o `pt-4`.
+- `troca-do-dia.test.ts` e `data-table-agrupada.test.ts`.

@@ -55,6 +55,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
 import { topBarBottom } from "@/lib/top-bar-bottom"
+import { trocaDoDia } from "@/lib/troca-do-dia"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { downloadCsv, toCsv, type CsvColumn } from "@/lib/data-table/csv"
@@ -1568,28 +1569,63 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
 
 /** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 /**
- * Marca `data-preso` nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
- * de `raiz` enquanto estão grudados sob a barra do topo: o fundo deles só existe
- * aí, subindo até o topo da tela para virar uma peça só com a borda da barra.
- * Preso é estar acima da linha da barra mais 1px (o `rootMargin` corta a janela
- * nela), e continua preso enquanto o próximo o empurra para fora.
+ * A troca do dia preso nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
+ * de `raiz`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
+ * o dia não sobe. Quando o próximo chega a menos de uma altura dele, o texto gira
+ * no próprio eixo e some (`trocaDoDia`), e o próximo passa por cima
+ * (`data-coberto`, que apaga o fundo do de baixo). Um quadro por rajada de rolagem.
  */
-function useCabecalhoPreso(raiz: React.RefObject<HTMLElement | null>, chave: unknown) {
+function useTrocaDoDia(raiz: React.RefObject<HTMLElement | null>, chave: unknown) {
   React.useEffect(() => {
     const no = raiz.current
-    if (!no || typeof IntersectionObserver === "undefined") return
-    const linha = topBarBottom(no.ownerDocument) + 1
-    const observador = new IntersectionObserver(
-      (entradas) => {
-        for (const e of entradas) {
-          const preso = e.intersectionRatio < 1 && e.boundingClientRect.top < linha
-          ;(e.target as HTMLElement).toggleAttribute("data-preso", preso)
+    const janela = no?.ownerDocument.defaultView
+    if (!no || !janela) return
+    const doc = no.ownerDocument
+    const reduzido = janela.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+    const cabecalhos = () => Array.from(no.querySelectorAll<HTMLElement>("[data-slot=data-table-mobile-group-heading]"))
+    const textoDe = (c: HTMLElement) => c.querySelector<HTMLElement>("[data-slot=data-table-mobile-group-heading-text]")
+    let quadro = 0
+    const medir = () => {
+      quadro = 0
+      const linha = topBarBottom(doc)
+      const lista = cabecalhos()
+      const tops = lista.map((c) => c.getBoundingClientRect().top)
+      lista.forEach((c, i) => {
+        const preso = tops[i] <= linha + 0.5
+        const proximo = tops[i + 1]
+        const distancia = proximo === undefined ? Infinity : proximo - tops[i]
+        const { giro, opacidade } =
+          preso && proximo !== undefined ? trocaDoDia(distancia, c.offsetHeight, reduzido) : { giro: 0, opacidade: 1 }
+        const texto = textoDe(c)
+        if (texto) {
+          texto.style.transform = giro ? `rotateX(${giro}deg)` : ""
+          texto.style.opacity = opacidade < 1 ? String(opacidade) : ""
         }
-      },
-      { rootMargin: `-${linha}px 0px 0px 0px`, threshold: [1] }
-    )
-    no.querySelectorAll("[data-slot=data-table-mobile-group-heading]").forEach((c) => observador.observe(c))
-    return () => observador.disconnect()
+        c.toggleAttribute("data-preso", preso)
+        c.toggleAttribute("data-coberto", preso && distancia <= 0)
+      })
+    }
+    const agendar = () => {
+      if (!quadro) quadro = janela.requestAnimationFrame(medir)
+    }
+    medir()
+    // `capture`: a rolagem de um ancestral também conta, não só a do documento.
+    janela.addEventListener("scroll", agendar, { passive: true, capture: true })
+    janela.addEventListener("resize", agendar, { passive: true })
+    return () => {
+      janela.removeEventListener("scroll", agendar, { capture: true })
+      janela.removeEventListener("resize", agendar)
+      if (quadro) janela.cancelAnimationFrame(quadro)
+      for (const c of cabecalhos()) {
+        const texto = textoDe(c)
+        if (texto) {
+          texto.style.transform = ""
+          texto.style.opacity = ""
+        }
+        c.removeAttribute("data-preso")
+        c.removeAttribute("data-coberto")
+      }
+    }
   }, [raiz, chave])
 }
 
@@ -1630,7 +1666,7 @@ function GemeoDoTelefone<T extends RowData>({
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
   const listaRef = React.useRef<HTMLDivElement>(null)
-  useCabecalhoPreso(listaRef, inset ? rows : null)
+  useTrocaDoDia(listaRef, inset ? rows : null)
   // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
   // da mídia (o recuo do iOS) — a última linha do cartão não tem.
   const linhaDe = (row: DataTableRow<T>, fio = false) => {
@@ -1761,35 +1797,46 @@ function GemeoDoTelefone<T extends RowData>({
       else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
     }
     return (
-      <div ref={listaRef} data-slot="data-table-mobile" className="flex flex-col gap-2">
+      <div ref={listaRef} data-slot="data-table-mobile" className="flex flex-col">
         {grupos.map(({ key, grupo, linhas }) => (
-          <div key={key} className="flex flex-col">
+          <React.Fragment key={key}>
             {grupo ? (
-              // Preso sob a barra do topo até o grupo acabar: cada cabeçalho mora no
-              // invólucro do próprio grupo, e o próximo o empurra para fora. Sem fundo
-              // chapado, a pedido do dono. Preso (`data-preso`), um `::before` sobe até o
-              // topo da tela por baixo da barra, com a tinta e o borrão da borda dela, e
-              // desce 12px abaixo do texto se dissolvendo: a borda da barra e o fundo do
-              // dia são uma peça só. O borrão é do cabeçalho, e não da barra, porque a
-              // barra fica por cima e borraria o texto. O respiro de cima (`pt-4`) é o
-              // vão entre os dias.
+              // Preso sob a barra do topo pela lista inteira: os cabeçalhos são irmãos,
+              // sem invólucro por grupo, então o de cima não sobe — gira no próprio eixo
+              // e some quando o próximo chega, e o próximo passa por cima
+              // (`useTrocaDoDia`). Sem fundo chapado, a pedido do dono. Preso
+              // (`data-preso`), um `::before` sobe até o topo da tela por baixo da barra,
+              // com a tinta e o borrão da borda dela, e desce 12px abaixo do texto se
+              // dissolvendo: a borda da barra e o fundo do dia são uma peça só. Coberto
+              // (`data-coberto`), o fundo sai, para não somar ao do próximo. O borrão é
+              // do cabeçalho, e não da barra, porque a barra fica por cima e borraria o
+              // texto. O vão entre os dias é o `mt-2` mais o respiro de cima (`pt-4`).
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="sticky top-(--top-bar-bottom) isolate z-10 flex items-baseline justify-between gap-3 px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 reduced-transparency:before:hidden"
+                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 data-coberto:before:opacity-0 reduced-transparency:before:hidden"
               >
-                <span className="min-w-0 truncate">{grupo.label}</span>
-                {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}
+                <span
+                  data-slot="data-table-mobile-group-heading-text"
+                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3"
+                >
+                  <span className="min-w-0 truncate">{grupo.label}</span>
+                  {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}
+                </span>
               </div>
             ) : null}
             <ItemGroup
               variant="divided"
               data-slot="data-table-mobile-group"
               // O fio do `divided` sai: quem o desenha é o conteúdo da linha (`linhaDe`).
-              className="overflow-hidden rounded-surface bg-card text-card-foreground [&>[data-slot=item]:not(:last-child)]:border-b-transparent"
+              // Sem cabeçalho, o vão entre os cartões é dele.
+              className={cn(
+                "overflow-hidden rounded-surface bg-card text-card-foreground [&>[data-slot=item]:not(:last-child)]:border-b-transparent",
+                !grupo && "not-first:mt-2"
+              )}
             >
               {linhas.map((row, i) => linhaDe(row, i < linhas.length - 1))}
             </ItemGroup>
-          </div>
+          </React.Fragment>
         ))}
       </div>
     )

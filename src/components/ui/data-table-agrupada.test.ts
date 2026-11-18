@@ -33,7 +33,7 @@ describe('DataTable mobileGroups="inset"', () => {
 
   it("o ramo `inset` monta um `ItemGroup divided` por grupo", () => {
     const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
-    expect(ramo).toMatch(/grupos\.map\([\s\S]{0,1200}<ItemGroup\s+variant="divided"/)
+    expect(ramo).toMatch(/grupos\.map\([\s\S]{0,2400}<ItemGroup\s+variant="divided"/)
   })
 
   it("o cabeçalho gruda sob a barra até o próximo grupo, e a moldura não o recorta (rodada 397)", () => {
@@ -41,8 +41,20 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="sticky top-\(--top-bar-bottom\) [^"]*z-10 [^"]*pt-4/)
     expect(ramo).not.toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*\sbg-/)
     expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*before:-top-\(--top-bar-bottom\)[^"]*before:backdrop-blur-md[^"]*data-preso:before:opacity-100/)
-    expect(fonte).toContain("useCabecalhoPreso(listaRef")
     expect(fonte).toContain('"max-md:overflow-visible max-md:border-transparent max-md:bg-transparent"')
+  })
+
+  it("o dia de cima não sobe: gira no próprio eixo e o próximo passa por cima (rodada 398)", () => {
+    const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
+    expect(ramo).toContain("useTrocaDoDia(listaRef")
+    expect(ramo).not.toContain("useCabecalhoPreso")
+    expect(fonte).not.toContain("useCabecalhoPreso")
+    expect(ramo).toContain('data-slot="data-table-mobile-group-heading-text"')
+    const ate = ramo.slice(ramo.indexOf("grupos.map("), ramo.indexOf('data-slot="data-table-mobile-group-heading"'))
+    expect(ate).not.toContain('<div key={key} className="flex flex-col">')
+    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*not-first:mt-2[^"]*data-coberto:before:opacity-0/)
+    expect(fonte).toContain("passive: true")
+    expect(fonte).toContain("trocaDoDia(")
   })
 
   it("um cartão por grupo, com o nome e o `aside` por fora", () => {
