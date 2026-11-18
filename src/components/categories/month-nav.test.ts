@@ -29,4 +29,11 @@ describe("o seletor de mês compacto", () => {
         expect(f).toContain('aria-label="Mês de referência"')
         expect(f).toMatch(/esteMesInsidePopoverOnNarrow && "flex-1"[\s\S]*esteMesInsidePopoverOnNarrow && "flex-1"/)
     })
+
+    it("o mês atual é uma prop, com o calendário como padrão, e a fatura passa o ciclo atual", () => {
+        expect(f).toContain("currentYm = formatYearMonth(new Date())")
+        expect(f).toContain("budgetMonthYm !== currentYm")
+        const fat = semComentarios(lerFonte("src/components/credit-cards/credit-card-invoice-analytics-panel.tsx"), "tudo")
+        expect(fat).toContain("currentYm={anchorYm}")
+    })
 })

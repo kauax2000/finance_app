@@ -47,6 +47,7 @@ function MonthNavArrowControls({
     pickerAriaLabel,
     monthLabel,
     esteMesInsidePopoverOnNarrow,
+    currentYm = formatYearMonth(new Date()),
 }: {
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
@@ -55,6 +56,8 @@ function MonthNavArrowControls({
     monthLabel: string
     /** Below `md`, hide row "Este mês" and show it inside the center month popover instead. */
     esteMesInsidePopoverOnNarrow?: boolean
+    /** O "mês atual" que o atalho compara; a fatura passa o ciclo atual. */
+    currentYm?: string
 }) {
     const [monthPickerOpen, setMonthPickerOpen] = React.useState(false)
 
@@ -65,7 +68,7 @@ function MonthNavArrowControls({
           }
         : {}
 
-    const foraDoMesAtual = budgetMonthYm !== formatYearMonth(new Date())
+    const foraDoMesAtual = budgetMonthYm !== currentYm
 
     return (
         <>
@@ -260,6 +263,7 @@ export function MonthNav({
     iconOnly,
     className,
     mobileTriggerFullWidth,
+    currentYm,
 }: {
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
@@ -272,6 +276,8 @@ export function MonthNav({
     className?: string
     /** Mobile: same strip as desktop (Este mês, arrows, center month picker), full width. */
     mobileTriggerFullWidth?: boolean
+    /** O mês que "Voltar a este mês" considera o atual (padrão: o do calendário). */
+    currentYm?: string
 }) {
     const [open, setOpen] = React.useState(false)
     const jump =
@@ -288,6 +294,7 @@ export function MonthNav({
             pickerAriaLabel={pickerAriaLabel}
             monthLabel={monthLabel}
             esteMesInsidePopoverOnNarrow={Boolean(mobileTriggerFullWidth)}
+            currentYm={currentYm}
         />
     )
 
