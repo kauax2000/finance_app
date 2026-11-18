@@ -37,11 +37,31 @@ describe("DataTable mobileSwipe", () => {
     expect(ramo).toContain("tabIndex={aberta ? 0 : -1}")
   })
 
+  it("o ícone de 20 é o `swipeIcon` (20/solid); sem ele, o `icon` fica nos 16 (fix 1)", () => {
+    expect(fonte).toContain("swipeIcon?: React.ReactNode")
+    expect(ramo).toContain('a.swipeIcon ? "[&_svg]:size-5" : "[&_svg]:size-4"')
+    expect(ramo).toContain("{a.swipeIcon ?? a.icon}")
+    const transacoes = lerFonte("src/components/transactions/transacoes-tabela.tsx")
+    expect(transacoes).toContain('from "@heroicons/react/20/solid"')
+    expect(conta(transacoes, "swipeIcon:")).toBe(3)
+  })
+
+  it("Excluir é o vermelho cheio, sem alfa (fix 1)", () => {
+    expect(ramo).toContain('"bg-destructive text-destructive-foreground')
+    expect(ramo).not.toMatch(/bg-destructive\//)
+  })
+
+  it("os ouvintes de fora não se reinscrevem a cada render, e a mola não reinicia no mesmo alvo (fix 1)", () => {
+    expect(ramo).toContain("}, [aberta])")
+    expect(ramo).toContain("if (mola.current && alvoDaMola.current === alvo) return")
+  })
+
   it("só a linha com ação visível desliza, e as ações ficam fora do Tab fechadas", () => {
     const html = renderToStaticMarkup(h(DataTable<L>, { ...base, rowActions: ACOES, mobileSwipe: true }))
     expect(conta(html, 'data-slot="data-table-mobile-swipe"')).toBe(1)
     expect(html).toMatch(/data-slot="data-table-mobile-swipe-actions" aria-hidden="true"/)
-    expect(conta(html, 'tabindex="-1"')).toBeGreaterThanOrEqual(2)
+    const acoes = html.slice(html.indexOf('data-slot="data-table-mobile-swipe-actions"'), html.indexOf('data-slot="data-table-mobile-swipe-row"'))
+    expect(conta(acoes, 'tabindex="-1"')).toBe(2)
     expect(html).toContain('aria-label="Excluir Mercado"')
   })
 

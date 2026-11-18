@@ -11,6 +11,11 @@ import {
     TrashIcon,
     XMarkIcon,
 } from "@heroicons/react/16/solid"
+import {
+    CheckIcon as CheckIcon20,
+    PencilIcon as PencilIcon20,
+    TrashIcon as TrashIcon20,
+} from "@heroicons/react/20/solid"
 import { FunnelIcon, InboxStackIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -505,14 +510,22 @@ export function TransacoesTabela({
         {
             label: "Confirmar",
             icon: <CheckIcon aria-hidden />,
+            swipeIcon: <CheckIcon20 aria-hidden className="size-5" />,
             primary: true,
             hidden: (t) => projetada(t) || !t.needs_review,
             onSelect: (t) => conferir([t.id], "Conferido"),
         },
-        { label: "Editar", icon: <PencilIcon aria-hidden />, hidden: projetada, onSelect: onEditar },
+        {
+            label: "Editar",
+            icon: <PencilIcon aria-hidden />,
+            swipeIcon: <PencilIcon20 aria-hidden className="size-5" />,
+            hidden: projetada,
+            onSelect: onEditar,
+        },
         {
             label: "Excluir",
             icon: <TrashIcon aria-hidden />,
+            swipeIcon: <TrashIcon20 aria-hidden className="size-5" />,
             variant: "destructive",
             hidden: projetada,
             onSelect: (t) => onExcluir([t.id]),

@@ -396,6 +396,8 @@ export type DataTableAction<T> = {
   label: string
   /** Um ícone `16/solid`. */
   icon?: React.ReactNode
+  /** O ícone de 20 do deslize (`mobileSwipe`), de `20/solid`; sem ele, o deslize mostra o `icon` nos 16 dele. */
+  swipeIcon?: React.ReactNode
   onSelect: (row: T) => void | Promise<unknown>
   variant?: "default" | "destructive"
   /** O primeiro toque só arma (o `confirm` do `DropdownMenuItem`). */
@@ -1677,14 +1679,28 @@ function LinhaDeslizavel<T>({
     posicao.current = x
     if (frente.current) frente.current.style.translate = x ? `${x}px 0` : ""
   }
+  // O alvo da mola em curso: soltar já a dispara, e o efeito de `aberta` que vem depois não a reinicia do zero.
+  const alvoDaMola = React.useRef<number | null>(null)
+  const parar = () => {
+    mola.current?.stop()
+    mola.current = null
+    alvoDaMola.current = null
+  }
   const assentar = React.useCallback(
     (alvo: number) => {
-      mola.current?.stop()
+      if (mola.current && alvoDaMola.current === alvo) return
+      parar()
       if (reduzido || posicao.current === alvo) return mover(alvo)
+      alvoDaMola.current = alvo
       mola.current = animate(posicao.current, alvo, { ...MOLA, onUpdate: mover })
     },
     [reduzido]
   )
+  // Os ouvintes de fora leem o fechar mais novo sem se reinscrever a cada render.
+  const fechar = React.useRef(onFechar)
+  React.useLayoutEffect(() => {
+    fechar.current = onFechar
+  })
 
   // Quem abre ou fecha por fora (outra linha abriu, um toque fora) também assenta.
   React.useEffect(() => {
@@ -1698,17 +1714,18 @@ function LinhaDeslizavel<T>({
     const el = caixa.current
     const janela = el?.ownerDocument.defaultView
     if (!aberta || !el || !janela) return
+    const rolou = () => fechar.current()
     const fora = (e: PointerEvent) => {
       const alvo = e.target as Node | null
-      if (!alvo || !el.contains(alvo)) onFechar()
+      if (!alvo || !el.contains(alvo)) fechar.current()
     }
-    janela.addEventListener("scroll", onFechar, { passive: true, capture: true })
+    janela.addEventListener("scroll", rolou, { passive: true, capture: true })
     janela.document.addEventListener("pointerdown", fora, true)
     return () => {
-      janela.removeEventListener("scroll", onFechar, { capture: true })
+      janela.removeEventListener("scroll", rolou, { capture: true })
       janela.document.removeEventListener("pointerdown", fora, true)
     }
-  }, [aberta, onFechar])
+  }, [aberta])
 
   const soltar = () => {
     const g = gesto.current
@@ -1742,9 +1759,11 @@ function LinhaDeslizavel<T>({
               tabIndex={aberta ? 0 : -1}
               aria-label={confirmar ? `${typeof a.confirm === "string" ? a.confirm : "Confirmar"} ${label}` : `${a.label} ${label}`}
               className={cn(
-                "flex h-full min-h-11 w-18 flex-col items-center justify-center gap-1 text-2xs font-medium outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45 [&_svg]:size-5",
+                "flex h-full min-h-11 w-18 flex-col items-center justify-center gap-1 text-2xs font-medium outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45",
+                // O ícone de 20 vem do `swipeIcon` (`20/solid`); sem ele, o `icon` fica nos 16 dele.
+                a.swipeIcon ? "[&_svg]:size-5" : "[&_svg]:size-4",
                 destrutiva
-                  ? "bg-destructive/10 text-destructive-muted-foreground active:bg-destructive/20 dark:bg-destructive/20 dark:active:bg-destructive/30"
+                  ? "bg-destructive text-destructive-foreground active:brightness-90"
                   : "bg-secondary text-secondary-foreground active:bg-secondary-hover"
               )}
               onClick={(e) => {
@@ -1755,7 +1774,7 @@ function LinhaDeslizavel<T>({
                 onFechar()
               }}
             >
-              {a.icon}
+              {a.swipeIcon ?? a.icon}
               <span>{confirmar ? (typeof a.confirm === "string" ? a.confirm : "Confirmar?") : a.label}</span>
             </button>
           )
@@ -1769,7 +1788,7 @@ function LinhaDeslizavel<T>({
         onPointerDown={(e) => {
           arrastou.current = false
           if (e.pointerType !== "touch" || marcando) return
-          mola.current?.stop()
+          parar()
           gesto.current = { x: e.clientX, y: e.clientY, base: posicao.current, direcao: null }
         }}
         onPointerMove={(e) => {
