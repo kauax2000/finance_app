@@ -29367,3 +29367,10 @@ Pedido do dono (18/11/2026), validado no Mobbin (Mail do iOS 26: rascunhos e Lis
 
 - Ajuste no mesmo dia: os cantos arredondados da linha solta saíram, a pedido do dono, para comparar. A linha anda com os cantos retos; o fundo da página, o fio parado, o elástico e o balanço ficam.
 - Deslize aprovado pelo dono (18/11/2026): a liberação temporária do mouse (`aceitaDeslize`) saiu. O gesto volta a ser só do dedo.
+
+### Rodada 404 — o fundo do cabeçalho sobe até o topo de toda gaveta
+
+Pedido do dono (18/11/2026): no detalhe do lançamento, a faixa do puxador ficava separada do fundo, e o conteúdo que rolava parava abaixo dela.
+
+- A regra que leva a placa do cabeçalho translúcido e o corpo até a borda da gaveta só reconhecia o cabeçalho dentro de um `form` logo depois do puxador (o Importar). O detalhe do lançamento o embrulha num `div`, e ficava de fora.
+- Agora vale qualquer invólucro (`[data-slot="drag-handle"] + * > &:first-child`): a placa cobre a faixa do puxador, e o conteúdo passa por trás até o topo em toda gaveta.

@@ -4363,9 +4363,11 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
        corpo sobe junto até a borda da gaveta, com o recuo somando a mesma altura, então a
        primeira linha fica onde estava. O puxador (`z-20`) fica por cima. Na gaveta de cima o
        puxador é a borda de baixo (`order-last`), e nada muda. O cabeçalho pode vir dentro do
-       `form` que segue o puxador (o Importar): o primeiro filho dele conta igual. */
+       invólucro que segue o puxador (o `form` do Importar, o `div` do detalhe do lançamento,
+       qualquer outro): o primeiro filho dele conta igual. Só com o `form`, o detalhe deixava a
+       faixa do puxador de fora, e o conteúdo parava abaixo dela (18/11/2026). */
     :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + &,
-    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + form > &:first-child {
+    :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + * > &:first-child {
       &::before {
         top: calc(var(--drawer-handle-h) * -1);
         height: calc(100% + var(--drawer-handle-h) - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));

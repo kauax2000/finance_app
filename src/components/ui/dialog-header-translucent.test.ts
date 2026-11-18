@@ -43,8 +43,8 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
     const i = u.indexOf('[data-slot="drag-handle"] + &')
     expect(i).toBeGreaterThan(-1)
-    // O cabeçalho dentro do `form` que segue o puxador (o Importar) também conta.
-    expect(u).toContain('[data-slot="drag-handle"] + form > &:first-child')
+    // O cabeçalho dentro de um `form` (o Importar), de um `div` (o detalhe do lançamento) ou de outro invólucro.
+    expect(u).toContain('[data-slot="drag-handle"] + * > &:first-child')
     const puxador = u.slice(i)
     expect(puxador).toMatch(/&::before \{[^}]*var\(--drawer-handle-h\)/)
     expect(puxador).toMatch(/margin-top: calc\([^;]*var\(--drawer-handle-h\)/)
