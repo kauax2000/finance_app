@@ -329,9 +329,11 @@ export function formatDayHeadingPtBr(
         ...(d.getFullYear() === new Date(agora).getFullYear() ? {} : { year: "numeric" }),
     })
     if (!semana) return data
-    // "Terça, 11 de novembro": o dia da semana sem o "-feira", para caber no telefone.
+    // O dia da semana sem o "-feira", para caber no telefone. Nos últimos sete dias ele
+    // basta ("Sábado"), como no iPhone; antes disso vem com a data ("Terça, 11 de novembro").
     const dia = d.toLocaleDateString("pt-BR", { weekday: "long" }).replace("-feira", "")
-    return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, ${data}`
+    const nome = `${dia.charAt(0).toUpperCase()}${dia.slice(1)}`
+    return dias < -1 && dias > -7 ? nome : `${nome}, ${data}`
 }
 
 /**

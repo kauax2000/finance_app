@@ -29413,4 +29413,5 @@ aparecia como "Salário · —". O `DataTableColumnMeta` ganhou `mobileWhen(row)
 Transações o liga na coluna Pagamento (`Boolean(t.payment_method)`); no desktop a célula segue
 com o "—". Na mesma mudança, fora do `ui/`, os dias da lista ganharam a semana:
 `formatDayHeadingPtBr(iso, agora, { semana: true })` escreve "Quarta, 11 de novembro" (sem o
-"-feira", para caber no telefone); Hoje, Ontem e Amanhã ficam como estavam.
+"-feira", para caber no telefone); Hoje, Ontem e Amanhã ficam como estavam, e de dois a
+seis dias atrás vale só o dia da semana ("Sábado"), como no iPhone (pedido do dono, mesmo dia).
