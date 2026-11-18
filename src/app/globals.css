@@ -4305,13 +4305,16 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
       z-index: -1;
       pointer-events: none;
     }
+    /* A sombra mora dentro da faixa do cabeçalho e termina na borda dele (rodada 388): a placa
+       cheia para 56px antes, e o degradê ocupa esses 56px. Sem linha reta na borda, e nada abaixo
+       do cabeçalho escurece. */
     &::before {
       top: 0;
-      height: 100%;
+      height: calc(100% - var(--dialog-header-fade-h));
       background-color: var(--dialog-header-tint);
     }
     &::after {
-      top: 100%;
+      top: calc(100% - var(--dialog-header-fade-h));
       height: var(--dialog-header-fade-h);
       /* Uma curva suave (mais paradas, a queda espalhada), e não três retas: a borda
          não aparece como degrau. */
@@ -4349,7 +4352,7 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + form > &:first-child {
       &::before {
         top: calc(var(--drawer-handle-h) * -1);
-        height: calc(100% + var(--drawer-handle-h));
+        height: calc(100% + var(--drawer-handle-h) - var(--dialog-header-fade-h));
       }
       & + [data-slot="dialog-body"],
       & + form > [data-slot="dialog-body"]:first-child,
@@ -4387,12 +4390,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         opacity: 0;
         animation: dialog-placa-com-rolagem linear both;
         animation-timeline: --dialog-body-scroll;
-      }
-      /* O degradê só acende nos primeiros 24px de rolagem: no topo não há nada passando por
-         baixo, e ele escurecia a primeira linha (rodada 387). A placa fica parada. */
-      &::after {
-        animation-name: dialog-degrade-acende;
-        animation-range: 0 24px;
       }
       & + [data-slot="dialog-body"],
       & + form > [data-slot="dialog-body"]:first-child,
@@ -4506,15 +4503,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   }
 }
 
-@keyframes dialog-degrade-acende {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes dialog-degrade-apaga {
   from {
     opacity: 1;
@@ -4523,4 +4511,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     opacity: 0;
   }
 }
+
+
 

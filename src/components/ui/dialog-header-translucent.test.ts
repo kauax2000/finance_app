@@ -31,9 +31,10 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("@supports (animation-timeline: scroll())")
     expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
     expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
-    // O degradê acende nos primeiros 24px (rodada 387); a placa não muda.
-    expect(u).toContain("animation-name: dialog-degrade-acende")
-    expect(u).toContain("animation-range: 0 24px")
+    // A sombra mora dentro da faixa e termina na borda do cabeçalho (rodada 388): sem linha reta.
+    expect(u).toContain("height: calc(100% - var(--dialog-header-fade-h))")
+    expect(u).toContain("top: calc(100% - var(--dialog-header-fade-h))")
+    expect(u).not.toContain("animation-range")
     expect(CSS).toMatch(/@keyframes dialog-placa-com-rolagem \{\s*from \{\s*opacity: 1;\s*\}\s*to \{\s*opacity: 1;/)
   })
 

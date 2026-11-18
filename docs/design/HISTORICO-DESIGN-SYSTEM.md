@@ -29192,3 +29192,15 @@ e a legenda "Toque numa linha…" do Importar, sem nada passando por trás. Agor
 nos primeiros 24px de rolagem (`dialog-degrade-acende`, `animation-range: 0 24px`). No rodapé, ele
 some nos últimos 24px (`dialog-degrade-apaga`), para não escurecer a última linha. Medido a 375px,
 com a lista no topo: o degradê do cabeçalho fica em 0 e o do rodapé em 1.
+
+### Rodada 388 — a sombra do cabeçalho termina na borda dele
+
+Com o degradê aceso só ao rolar (rodada 387), a borda de baixo da placa virou uma linha reta, que
+cortava a legenda logo abaixo do cabeçalho. O dono pediu "a sombra mais para cima". A sombra passou
+a morar dentro da faixa do cabeçalho: a placa cheia para 56px antes da borda, e o degradê ocupa
+esses 56px, terminando transparente exatamente na borda (`height: calc(100% -
+var(--dialog-header-fade-h))` e `top: calc(100% - var(--dialog-header-fade-h))`). Sem linha reta,
+nada abaixo do cabeçalho escurece, e a animação de acender saiu. O rodapé ficou como estava, com o
+degradê para fora e sumindo no fim da rolagem: com o Total no alto, uma sombra dentro dele deixaria
+a lista visível atrás do número. Medido a 375px: o cabeçalho vai até 163px, e a legenda começa em
+163px, limpa.
