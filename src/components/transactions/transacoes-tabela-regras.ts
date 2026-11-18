@@ -1,5 +1,6 @@
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
+import { signedCurrencyBRL } from "@/lib/formatters"
 import type { EstadoDaLista } from "@/lib/transactions/filtros"
 
 /** O valor com sinal: receita positiva, despesa negativa. */
@@ -11,6 +12,14 @@ export function totalDoDia(linhas: Transaction[]): number {
     let soma = 0
     for (const t of linhas) if (!isProjectedTransactionRow(t)) soma += valorComSinal(t)
     return Math.round(soma * 100) / 100
+}
+
+/** O total do dia na lista do telefone: o que saiu (sem as previstas) e, se nada saiu, o que entrou. */
+export function totalDoDiaEmTexto(linhas: Transaction[]): string {
+    const reais = linhas.filter((t) => !isProjectedTransactionRow(t))
+    const saidas = reais.filter((t) => t.type !== "income")
+    const soma = (l: Transaction[]) => Math.round(l.reduce((a, t) => a + valorComSinal(t), 0) * 100) / 100
+    return signedCurrencyBRL(saidas.length ? soma(saidas) : soma(reais))
 }
 
 /** O tipo comum do lote; `null` vazio ou com despesas e receitas misturadas. */

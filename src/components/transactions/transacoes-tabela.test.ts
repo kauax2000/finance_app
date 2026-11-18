@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { PROJECTED_TRANSACTION_ID_PREFIX } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
+import { signedCurrencyBRL } from "@/lib/formatters"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     diaLocalDe,
     ordemDepoisDoClique,
     tipoDoLote,
     totalDoDia,
+    totalDoDiaEmTexto,
 } from "./transacoes-tabela-regras"
 
 const tx = (p: Partial<Transaction>) => ({ id: "x", type: "expense", amount: 10, date: "2026-11-07", ...p }) as Transaction
@@ -15,6 +17,16 @@ describe("regras da tabela de transações", () => {
     it("o total do dia é receitas − despesas, sem as projetadas", () => {
         expect(totalDoDia([tx({ type: "income", amount: 100 }), tx({ amount: 30.1 }), tx({ amount: 9.9 })])).toBe(60)
         expect(totalDoDia([tx({ amount: 5, id: `${PROJECTED_TRANSACTION_ID_PREFIX}1` })])).toBe(0)
+    })
+    it("o total do dia no telefone soma as saídas, ou as entradas se nada saiu", () => {
+        expect(totalDoDiaEmTexto([tx({ amount: 29.09 }), tx({ amount: 213.36 }), tx({ type: "income", amount: 5 })])).toBe(signedCurrencyBRL(-242.45))
+        expect(totalDoDiaEmTexto([tx({ type: "income", amount: 1200 })])).toBe(signedCurrencyBRL(1200))
+        expect(totalDoDiaEmTexto([tx({ amount: 5, id: `${PROJECTED_TRANSACTION_ID_PREFIX}1` })])).toBe(signedCurrencyBRL(0))
+    })
+    it("a tela liga o cartão por dia e tira o pagamento único da legenda", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
+        expect(fonte).toContain('mobileGroups="inset"')
+        expect(fonte).toContain('mobile: pagamentoUnico ? undefined : "description"')
     })
     it("o tipo do lote é nulo vazio ou misturado", () => {
         expect(tipoDoLote([])).toBeNull()

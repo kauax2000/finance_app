@@ -22,6 +22,7 @@ import {
     ordemDepoisDoClique,
     tipoDoLote,
     totalDoDia,
+    totalDoDiaEmTexto,
     valorComSinal,
 } from "@/components/transactions/transacoes-tabela-regras"
 import {
@@ -137,7 +138,12 @@ function QuemLancou({ t, membros, divide }: { t: Transaction; membros: MemberDir
     )
 }
 
-function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: ReadonlySet<string>) {
+function colunas(
+    membros: MemberDirectoryRow[],
+    divide: boolean,
+    faturasPagas: ReadonlySet<string>,
+    pagamentoUnico: boolean,
+) {
     const lista: DataTableColumnDef<Transaction>[] = [
         {
             id: "description",
@@ -243,7 +249,8 @@ function colunas(membros: MemberDirectoryRow[], divide: boolean, faturasPagas: R
                     </span>
                 )
             },
-            meta: { label: "Pagamento", mobile: "description", cellClassName: "max-w-48" },
+            // Com um pagamento só na página, repeti-lo em toda legenda é ruído: sai do telefone e fica no desktop.
+            meta: { label: "Pagamento", mobile: pagamentoUnico ? undefined : "description", cellClassName: "max-w-48" },
         },
     ]
     if (membros.length >= 2) {
@@ -393,7 +400,14 @@ export function TransacoesTabela({
         () => chavesDeFaturasPagas(tela.workspaceAux?.invoicePayments ?? []),
         [tela.workspaceAux?.invoicePayments],
     )
-    const columns = React.useMemo(() => colunas(membros, divide, faturasPagas), [membros, divide, faturasPagas])
+    const pagamentoUnico = React.useMemo(
+        () => new Set(transacoes.map(pagamentoDe)).size <= 1,
+        [transacoes],
+    )
+    const columns = React.useMemo(
+        () => colunas(membros, divide, faturasPagas, pagamentoUnico),
+        [membros, divide, faturasPagas, pagamentoUnico],
+    )
 
     // Só conta o que está na tela: uma seleção de antes do filtro não leva linhas
     // invisíveis ao lote. As projetadas não são do banco e nunca entram.
@@ -406,9 +420,9 @@ export function TransacoesTabela({
 
     // O dia de cada linha, na ordem da página (que já vem por data).
     const diaDaLinha = React.useMemo(() => {
-        const mapa = new Map<string, { key: string; label: string }>()
+        const mapa = new Map<string, { key: string; label: string; aside: string }>()
         for (const g of groupByLocalDay(transacoes, diaLocalDe)) {
-            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data) }
+            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data), aside: totalDoDiaEmTexto(g.itens) }
             for (const t of g.itens) mapa.set(t.id, grupo)
         }
         return mapa
@@ -624,6 +638,7 @@ export function TransacoesTabela({
                 bulkActions={bulkActions}
                 selectionSummary={(rows) => <MoneyDisplay value={totalDoDia(rows)} signed />}
                 mobileRow="compact"
+                mobileGroups="inset"
                 rowActions={rowActions}
                 // As projetadas são cobranças previstas: não abrem, não têm menu e aparecem apagadas.
                 onRowClick={(t) => tela.detalhe.abrir(t)}
