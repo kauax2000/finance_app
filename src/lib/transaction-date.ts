@@ -312,18 +312,26 @@ export function formatRelativeTimePtBr(iso: string, agora: number = Date.now()):
  * O rótulo da faixa de dia de um histórico: "Hoje", "Ontem", "Amanhã",
  * "12 de março" — e com o ano quando não é o corrente.
  */
-export function formatDayHeadingPtBr(iso: string, agora: number = Date.now()): string {
+export function formatDayHeadingPtBr(
+    iso: string,
+    agora: number = Date.now(),
+    { semana = false }: { semana?: boolean } = {},
+): string {
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return iso.trim()
     const dias = diasDeCalendario(new Date(agora), d)
     if (dias === 0) return "Hoje"
     if (dias === -1) return "Ontem"
     if (dias === 1) return "Amanhã"
-    return d.toLocaleDateString("pt-BR", {
+    const data = d.toLocaleDateString("pt-BR", {
         day: "numeric",
         month: "long",
         ...(d.getFullYear() === new Date(agora).getFullYear() ? {} : { year: "numeric" }),
     })
+    if (!semana) return data
+    // "Terça, 11 de novembro": o dia da semana sem o "-feira", para caber no telefone.
+    const dia = d.toLocaleDateString("pt-BR", { weekday: "long" }).replace("-feira", "")
+    return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, ${data}`
 }
 
 /**

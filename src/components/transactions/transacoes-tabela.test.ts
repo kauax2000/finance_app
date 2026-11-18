@@ -58,8 +58,11 @@ describe("fonte da tabela", () => {
     const fonte = semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
     it("agrupa por dia com os helpers de data", () => {
         expect(fonte).toContain("groupByLocalDay")
-        expect(fonte).toContain("formatDayHeadingPtBr")
+        expect(fonte).toContain("formatDayHeadingPtBr(g.data, undefined, { semana: true })")
         expect(fonte).toContain("groupTotal")
+    })
+    it("sem forma de pagar, a legenda do telefone não ganha o \"—\"", () => {
+        expect(fonte).toContain("mobileWhen: (t: Transaction) => Boolean(t.payment_method)")
     })
     it("não tem a coluna Tipo", () => {
         expect(fonte).not.toMatch(/header:\s*"Tipo"/)

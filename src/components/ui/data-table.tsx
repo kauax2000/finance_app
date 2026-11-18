@@ -321,6 +321,9 @@ export type DataTableColumnMeta = {
   cellClassName?: string
   /** O lugar da coluna no gêmeo do telefone (sem ele ela não aparece lá); `meta` é a linha miúda sob a ponta, à direita. */
   mobile?: "media" | "title" | "description" | "trailing" | "meta"
+  /** Quando devolve `false`, a célula não entra no gêmeo daquela linha, nem o " · " antes dela (a receita sem forma de pagar não mostra "Salário · —"). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mobileWhen?: (row: any) => boolean
   /** As partes da célula de identidade, para o gêmeo as separar (ladrilho na mídia, nome no título, legenda na descrição); a fábrica `identity` as preenche. */
   identity?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1961,7 +1964,7 @@ function GemeoDoTelefone<T extends RowData>({
     // (o menu de colunas não existe no telefone), e a legenda do gêmeo perdia a categoria.
     const cells = row.getAllCells()
     const em = (lugar: DataTableColumnMeta["mobile"]) =>
-      cells.filter((c) => metaDe(c.column).mobile === lugar)
+      cells.filter((c) => metaDe(c.column).mobile === lugar && (metaDe(c.column).mobileWhen?.(row.original) ?? true))
     const [titulo] = em("title")
     const [midia] = em("media")
     const descricoes = em("description")

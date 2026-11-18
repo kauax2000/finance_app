@@ -29404,3 +29404,13 @@ Pedido do dono (18/11/2026): o "Ver os N" do detalhe do lançamento aplica um fi
 - O "Limpar tudo" da gaveta de filtros do telefone limpa e fecha a gaveta (é o `limpar` da barra); a folha antiga de filtros de Transações (`transactions-toolbar.tsx`) também fecha. `filtro-refaz.test.ts`.
 - Correção no mesmo dia: a cascata só toca quando os dados da lista mudam depois da troca. A chave do filtro muda um render antes de a busca começar, e nesse render não havia `loading` nem `pending`: a cascata animava as linhas velhas, e as filtradas entravam secas logo depois ("pisca tudo e depois filtra", ao filtrar e ao limpar).
 - Correção no mesmo dia: a cascata não tocava. A chave do filtro podia mudar no mesmo render em que os dados do cache chegavam, e a comparação com os dados da hora da troca não via mudança; e, com o cache, esperar o fim da atualização em segundo plano mostrava as linhas paradas antes de animar. Agora a lista de ids de agora é comparada com a do último render antes da troca, e a cascata toca assim que as linhas mudam, sem esperar o `pending`.
+
+### Rodada 408 — a legenda sem o travessão
+
+Pedido do dono (18/11/2026), na revisão de Transações no telefone: a receita sem forma de pagar
+aparecia como "Salário · —". O `DataTableColumnMeta` ganhou `mobileWhen(row)`: quando devolve
+`false`, a célula sai da legenda do gêmeo daquela linha, e o " · " antes dela some junto.
+Transações o liga na coluna Pagamento (`Boolean(t.payment_method)`); no desktop a célula segue
+com o "—". Na mesma mudança, fora do `ui/`, os dias da lista ganharam a semana:
+`formatDayHeadingPtBr(iso, agora, { semana: true })` escreve "Quarta, 11 de novembro" (sem o
+"-feira", para caber no telefone); Hoje, Ontem e Amanhã ficam como estavam.

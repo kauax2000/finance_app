@@ -261,7 +261,13 @@ function colunas(
                 )
             },
             // Com um pagamento só na página, repeti-lo em toda legenda é ruído: sai do telefone e fica no desktop.
-            meta: { label: "Pagamento", mobile: pagamentoUnico ? undefined : "description", cellClassName: "max-w-48" },
+            // Sem forma de pagar (a receita), a legenda do telefone fica só com a categoria, sem o "—".
+            meta: {
+                label: "Pagamento",
+                mobile: pagamentoUnico ? undefined : "description",
+                mobileWhen: (t: Transaction) => Boolean(t.payment_method),
+                cellClassName: "max-w-48",
+            },
         },
     ]
     if (membros.length >= 2) {
@@ -433,7 +439,7 @@ export function TransacoesTabela({
     const diaDaLinha = React.useMemo(() => {
         const mapa = new Map<string, { key: string; label: string; aside?: string }>()
         for (const g of groupByLocalDay(transacoes, diaLocalDe)) {
-            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data), aside: totalDoDiaEmTexto(g.itens) ?? undefined }
+            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data, undefined, { semana: true }), aside: totalDoDiaEmTexto(g.itens) ?? undefined }
             for (const t of g.itens) mapa.set(t.id, grupo)
         }
         return mapa
