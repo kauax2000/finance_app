@@ -150,8 +150,12 @@ const drawerContentVariants = cva(
     "data-[vaul-drawer-direction=bottom]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
     "data-[vaul-drawer-direction=top]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-top,0px))]",
     // A folga do topo muda com o aparelho, então ela também é variável.
-    "data-[vaul-drawer-direction=bottom]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px)))]",
-    "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px)))]",
+    "data-[vaul-drawer-direction=bottom]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px))_-_var(--drawer-desconto,0px))]",
+    "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px))_-_var(--drawer-desconto,0px))]",
+    // A gaveta aberta por cima de outra é 12px mais baixa: com o topo no mesmo
+    // lugar, a da frente cobriria a de trás inteira, e o recuo não apareceria.
+    "[--drawer-recuo:calc(var(--spacing)*3)]",
+    "data-aninhada:[--drawer-desconto:var(--drawer-recuo)]",
     // O raio e a borda ficam do lado que **não** encosta na tela.
     "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-modal data-[vaul-drawer-direction=bottom]:border-t",
     "data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:rounded-b-modal data-[vaul-drawer-direction=top]:border-b",
@@ -215,10 +219,31 @@ type DrawerRaiz =
       /** Na moldura do catálogo: o véu e o fechar no toque fora são desenhados aqui. */
       veuEmulado: boolean
       fechar: () => void
+      /** Esta gaveta está aberta por cima de outra (a raiz é `NestedRoot`). */
+      aninhada: boolean
+      /** O `DrawerContent` desta raiz se registra aqui, para o recuo achar o nó. */
+      registrarConteudo: (no: HTMLDivElement | null) => void
+      /** Outra gaveta abriu (ou fechou) por cima desta: ela encolhe e sobe (ou volta). */
+      recuar: (aberta: boolean) => void
     }
   | { superficie: "painel"; cobrir: (coberta: boolean) => void }
 
 const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
+
+/** O deslocamento do recuo, o `NESTED_DISPLACEMENT` do vaul. */
+const RECUO_PX = 16
+
+/**
+ * O transform da gaveta de trás, o mesmo que o vaul escreve no
+ * `onNestedOpenChange`: encolhe 16px na largura e sobe 16px; fechada, volta.
+ */
+function transformDoRecuo(aberta: boolean, largura: number): string {
+  if (!aberta) return "translate3d(0, 0, 0)"
+  return `scale(${(largura - RECUO_PX) / largura}) translate3d(0, -${RECUO_PX}px, 0)`
+}
+
+/** A transição do recuo, a `TRANSITIONS` do vaul, para o arraste e a abertura darem o mesmo. */
+const TRANSICAO_DO_RECUO = "transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)"
 
 /**
  * Uma `Drawer` aberta dentro de outra vira `NestedRoot` sozinha (a de baixo
@@ -275,6 +300,13 @@ function Drawer({
   React.useEffect(() => {
     pedirRef.current = pedir
   })
+  const aninhada = pai?.superficie === "gaveta"
+  // O recuo: o vaul só avisa a gaveta de trás quando ele mesmo muda o `open`, e as
+  // nossas abrem e fecham pelo `open` controlado. Então a de cima avisa a de trás
+  // por aqui (`pai.recuar`), e a de trás escreve no próprio nó o que o vaul
+  // escreveria. O arraste continua com o vaul (`onNestedDrag`).
+  const conteudoRef = React.useRef<HTMLDivElement | null>(null)
+  const voltaRef = React.useRef<number | undefined>(undefined)
   const raiz = React.useMemo(
     () => ({
       superficie: "gaveta" as const,
@@ -282,9 +314,36 @@ function Drawer({
       pending,
       veuEmulado,
       fechar: () => pedirRef.current(false),
+      aninhada,
+      registrarConteudo: (no: HTMLDivElement | null) => {
+        conteudoRef.current = no
+      },
+      recuar: (aberta: boolean) => {
+        const no = conteudoRef.current
+        if (!no) return
+        const janela = no.ownerDocument.defaultView ?? window
+        janela.clearTimeout(voltaRef.current)
+        const reduzido = janela.matchMedia("(prefers-reduced-motion: reduce)").matches
+        no.style.transition = reduzido ? "none" : TRANSICAO_DO_RECUO
+        no.style.transform = transformDoRecuo(aberta, janela.innerWidth)
+        // De volta ao lugar, a transição sai, como no vaul: senão o próximo
+        // arraste andaria atrasado do dedo.
+        if (!aberta) {
+          voltaRef.current = janela.setTimeout(() => {
+            no.style.transition = "none"
+          }, 500)
+        }
+      },
     }),
-    [degraus, pending, veuEmulado]
+    [degraus, pending, veuEmulado, aninhada]
   )
+  // Aberta por cima de outra gaveta, ela recua a de trás; fechada pelo `open` ou
+  // desmontada aberta, a de trás volta.
+  React.useEffect(() => {
+    if (pai?.superficie !== "gaveta" || !open) return
+    pai.recuar(true)
+    return () => pai.recuar(false)
+  }, [open, pai])
   const Raiz =
     pai?.superficie === "gaveta" ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
 
@@ -667,6 +726,12 @@ function DrawerContent({
   const [el, setEl] = React.useState<HTMLDivElement | null>(null)
   const conteudo = useComposedRefs<HTMLDivElement>(setEl, ref)
   useAlturaQueAcompanha(el, !alta)
+  // O nó vai à raiz, para o recuo achá-lo quando outra gaveta abrir por cima.
+  React.useEffect(() => {
+    if (!raiz) return
+    raiz.registrarConteudo(el)
+    return () => raiz.registrarConteudo(null)
+  }, [el, raiz])
   // Com degraus, o vaul desloca a gaveta pela altura da janela; ali o teclado fica com ele.
   const degraus = raiz?.degraus ?? false
   React.useEffect(() => {
@@ -737,6 +802,8 @@ function DrawerContent({
         // `fixed` é o que a cromagem do `Dialog` lê para dar recuo ao cabeçalho
         // e deixar o corpo rolar entre ele e o rodapé.
         data-layout="fixed"
+        // Aberta por cima de outra: a altura desconta `--drawer-recuo`.
+        data-aninhada={raiz?.aninhada ? "" : undefined}
         aria-busy={raiz?.pending || undefined}
         className={cn(
           drawerContentVariants({ fill: alta, variant, size }),
@@ -845,6 +912,7 @@ export {
   DrawerRaizContext,
   DrawerTrigger,
   drawerContentVariants,
+  transformDoRecuo,
   overlayClassName,
   SHEET_OVERLAY_CLASS,
   SURFACE_CONTRACT_CLASS,

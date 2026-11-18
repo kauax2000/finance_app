@@ -204,3 +204,26 @@ describe("toda gaveta do telefone é a flush", () => {
   })
 
 })
+
+describe("a gaveta de trás recua quando outra abre por cima", () => {
+  it("o recuo é o do vaul: encolhe 16px na largura e sobe 16px; fechada, volta", async () => {
+    const { transformDoRecuo } = await import("./drawer")
+    expect(transformDoRecuo(true, 400)).toBe("scale(0.96) translate3d(0, -16px, 0)")
+    expect(transformDoRecuo(false, 400)).toBe("translate3d(0, 0, 0)")
+  })
+
+  it("a aninhada avisa a de trás pelo `open` controlado, e o conteúdo se registra na raiz", () => {
+    const fonte = semComentarios(CODIGO)
+    expect(fonte).toContain("pai.recuar(")
+    expect(fonte).toContain("registrarConteudo")
+    expect(fonte).toContain("cubic-bezier(0.32, 0.72, 0, 1)")
+  })
+
+  it("a aninhada desconta `--drawer-recuo` da altura, e o topo da de trás aparece", () => {
+    const fonte = semComentarios(CODIGO)
+    expect(fonte).toContain("[--drawer-recuo:calc(var(--spacing)*3)]")
+    expect(fonte).toContain("data-aninhada:[--drawer-desconto:var(--drawer-recuo)]")
+    expect(fonte.match(/\[--drawer-h:calc\(100dvh-max\([^\]]*_-_var\(--drawer-desconto,0px\)\)\]/g)).toHaveLength(2)
+    expect(fonte).toMatch(/data-aninhada=\{raiz\?\.aninhada \? "" : undefined\}/)
+  })
+})

@@ -29231,3 +29231,18 @@ cor, opaca. A `@utility button-disabled-solid` pinta a tecla com a própria cor 
 teclas preenchidas; as outras variantes não têm preenchimento opaco e seguem com a `opacity-50`.
 Medido no escuro a 375px: o "Continuar" desabilitado do Importar mede L 0,565, com o rótulo em
 0,355, o mesmo tom de antes, e opacidade 1.
+
+### Rodada 392 — a gaveta de trás recua
+
+O dono pediu o efeito do iOS: quando uma gaveta abre por cima de outra, a de trás vai levemente
+para trás. O `Drawer` já virava `NestedRoot` dentro de outra gaveta, mas no vaul 1.1.2 o
+`NestedRoot` só avisa a de trás (`onNestedOpenChange`) quando o próprio vaul muda o `open`, e o
+`useControllableState` dele não chama `onOpenChange` quando o `open` controlado muda por prop. As
+nossas gavetas são sempre controladas, então a de trás nunca recuava. Agora a raiz da gaveta ganha
+`recuar` e `registrarConteudo`: a de cima, aberta, chama `pai.recuar(true)`, e fechada ou
+desmontada, `pai.recuar(false)`. A de trás escreve no próprio nó os valores do vaul
+(`transformDoRecuo`: `scale((largura - 16) / largura) translate3d(0, -16px, 0)`, em
+`transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)`; a volta tira a transição depois de 500ms), e sem
+transição com movimento reduzido. O arraste continua com o vaul. Como as duas gavetas altas tinham
+o topo no mesmo lugar, a de cima (`data-aninhada`) desconta `--drawer-recuo` (12px) da altura, e o
+topo da de trás aparece.
