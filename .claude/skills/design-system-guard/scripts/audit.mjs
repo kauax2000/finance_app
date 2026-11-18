@@ -274,6 +274,8 @@ const ARBITRARY_VALUE_EXCEPTIONS = [
   ],
   // As iniciais no avatar de 16px da linha: com 11px duas letras não cabem.
   ["dashboard/dashboard-recent-transactions", ["text-[8px]"]],
+  // O degrau `2xs` do avatar (16px): com 11px duas iniciais não cabem.
+  ["components/ui/avatar.tsx", ["text-[0.5rem]"]],
   // A pílula de linha do extrato: o `badge.tsx` registra que `text-2xs` (11px)
   // mudaria pixel em cinco telas.
   ["components/ui/badge.tsx", ["text-[10px]"]],

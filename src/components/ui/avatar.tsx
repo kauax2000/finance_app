@@ -14,15 +14,18 @@ import { cn } from "@/lib/utils"
  */
 
 /**
- * A escala do avatar é dele (24, 32, 40, 48, 56) e diverge da escada de controle
+ * A escala do avatar é dele (16, 24, 32, 40, 48, 56) e diverge da escada de controle
  * de propósito: avatar identifica pessoa numa lista, e 40px é teto. O `xs` a 24
- * vale o mesmo nos dois vocabulários.
+ * vale o mesmo nos dois vocabulários. O `2xs` a 16 é o avatar do tamanho do texto (a linha da data do lançamento): as
+ * iniciais ficam em 8px, porque com 11px duas letras não cabem, e ele não tem
+ * canto nem `onEdit`.
  */
 const avatarVariants = cva(
   "relative flex shrink-0 overflow-hidden rounded-full select-none",
   {
     variants: {
       size: {
+        "2xs": "size-4 text-[0.5rem] leading-none",
         xs: "size-6 text-2xs",
         sm: "size-8 text-xs",
         md: "size-10 text-sm",
@@ -96,21 +99,23 @@ function Avatar({
   editLabel = "Editar foto",
   ...props
 }: AvatarProps) {
+  // Em 16px o canto não cabe: o `2xs` ignora `badge` e `onEdit`.
+  const cantoSize = size === "2xs" ? null : size
+  const canto = cantoSize === null ? null : (badge ?? (onEdit ? <PencilIcon /> : null))
   const raiz = (
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size ?? "md"}
-      className={cn(avatarVariants({ size }), !(badge || onEdit) && className)}
+      className={cn(avatarVariants({ size }), !canto && className)}
       {...props}
     />
   )
-  const canto = badge ?? (onEdit ? <PencilIcon /> : null)
   if (!canto) return raiz
 
   const corpo = (
     <>
       {raiz}
-      <AvatarBadge size={size}>{canto}</AvatarBadge>
+      <AvatarBadge size={cantoSize ?? undefined}>{canto}</AvatarBadge>
     </>
   )
   if (!onEdit) {

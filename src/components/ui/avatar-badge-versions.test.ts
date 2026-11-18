@@ -2,6 +2,8 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { lerFonte } from "@/test/fonte"
+
 import { Avatar, AvatarFallback } from "./avatar"
 
 /** O canto do `Avatar` (rodada 362): fora do recorte, o anel da superfície, e a foto que edita. */
@@ -56,5 +58,18 @@ describe("Avatar — o canto", () => {
 
   it("editLabel tem um padrão", () => {
     expect(avatar({ onEdit: () => {} })).toContain('aria-label="Editar foto"')
+  })
+
+  it("o 2xs é o círculo de 16px, sem canto nem edição", () => {
+    const html = avatar({ size: "2xs", badge: h("svg"), onEdit: () => {} })
+    expect(html).toContain('data-size="2xs"')
+    expect(classeDo(html, "avatar")).toMatch(/(^|\s)size-4(\s|$)/)
+    expect(html).not.toContain("avatar-badge")
+    expect(html).not.toContain("avatar-frame")
+    expect(html).not.toContain("<button")
+  })
+
+  it("a fonte declara o degrau 2xs de 16px", () => {
+    expect(lerFonte("src/components/ui/avatar.tsx")).toContain('"2xs": "size-4')
   })
 })

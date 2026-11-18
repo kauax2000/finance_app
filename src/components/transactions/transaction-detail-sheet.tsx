@@ -450,12 +450,12 @@ export function TransactionDetailSheet({
                             {quandoExato}
                             {pagou ? (
                                 <>
-                                    {" · pago por "}
+                                    {" · "}
                                     {/* Só a foto: o nome fica no nome acessível e na dica. */}
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span role="img" aria-label={`Pago por ${pagou}`} className="inline-flex align-middle">
-                                                {membroQuePagou ? <FotoDoMembro membro={membroQuePagou} /> : pagou}
+                                                {membroQuePagou ? <FotoDoMembro membro={membroQuePagou} size="2xs" /> : pagou}
                                             </span>
                                         </TooltipTrigger>
                                         <TooltipContent>{pagou}</TooltipContent>

@@ -29374,3 +29374,11 @@ Pedido do dono (18/11/2026): no detalhe do lançamento, a faixa do puxador ficav
 
 - A regra que leva a placa do cabeçalho translúcido e o corpo até a borda da gaveta só reconhecia o cabeçalho dentro de um `form` logo depois do puxador (o Importar). O detalhe do lançamento o embrulha num `div`, e ficava de fora.
 - Agora vale qualquer invólucro (`[data-slot="drag-handle"] + * > &:first-child`): a placa cobre a faixa do puxador, e o conteúdo passa por trás até o topo em toda gaveta.
+
+### Rodada 405 — o avatar de 16px
+
+Pedido do dono (18/11/2026): na linha da data do detalhe do lançamento, quem pagou aparece só pelo avatar, do tamanho do texto, sem o "pago por".
+
+- Degrau novo `2xs` no `Avatar`: `size-4`, iniciais em `text-[0.5rem] leading-none` (com `text-2xs`, 11px, duas letras não cabem; exceção nomeada em `ARBITRARY_VALUE_EXCEPTIONS`).
+- O `2xs` não tem canto nem `onEdit`: em 16px o canto não cabe, então o `Avatar` os ignora. O `AvatarGroup` tem escada própria e não o aceita.
+- `FotoDoMembro` ganha `size` (`2xs` | `xs`, padrão `xs`); o topo do detalhe usa `2xs` e o texto vira " · ", com o `aria-label` "Pago por …" e a dica mantidos.

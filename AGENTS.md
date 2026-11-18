@@ -1185,7 +1185,7 @@ declaração de `background-color` no trilho).
   pelo **resultado** (o Radix fecha a dica no `pointerdown`). Um filho
   `disabled` é embrulhado sozinho num `span` focável. `shortcut`,
   `variant="contrast"`, `size` `sm` (o padrão) | `md`.
-- **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form
+- **`Avatar`**: Radix-based with `size` (`2xs` 16 · `xs` 24 · … `xl` 56; o `2xs`, rodada 405, é o avatar do tamanho do texto, com as iniciais em `text-[0.5rem]`, e ignora `badge` e `onEdit`); keep `data-slot` for tests and form
   deferrals. `AvatarImage` ou `AvatarFallback` (`tint` `vivid` | `soft`). Sem
   `variant` de superfície, vidro ou anel, e **só o círculo**. A cor vem de
   `identityToneFor`, nunca de classe montada.

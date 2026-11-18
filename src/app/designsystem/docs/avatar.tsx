@@ -11,6 +11,7 @@ import { Group, Spec } from "../ds-kit"
 
 /** A escala de 8 em 8, com o corpo das iniciais que cada degrau declara. */
 const SIZES = [
+  { size: "2xs", px: 16, texto: "0,5rem" },
   { size: "xs", px: 24, texto: "text-2xs" },
   { size: "sm", px: 32, texto: "text-xs" },
   { size: "md", px: 40, texto: "text-sm" },
@@ -51,7 +52,7 @@ export default function AvatarDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="Cinco degraus de 8 em 8, e o corpo das iniciais sobe junto. O padrão é md; o app usa xs na barra de baixo, sm nos menus e na lista de membros, e lg no cabeçalho da conta."
+        description="Seis degraus: o 2xs a 16 (do tamanho do texto, sem canto nem edição) e os outros de 8 em 8, e o corpo das iniciais sobe junto. O padrão é md; o app usa 2xs na linha da data do lançamento, xs na barra de baixo, sm nos menus e na lista de membros, e lg no cabeçalho da conta."
         code={SIZES.map((s) => `<Avatar size="${s.size}"><AvatarFallback>KL</AvatarFallback></Avatar>`).join("\n")}
         previewClassName="flex-wrap items-end gap-6"
       >
