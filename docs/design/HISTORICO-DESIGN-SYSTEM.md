@@ -29383,3 +29383,4 @@ Pedido do dono (18/11/2026): na linha da data do detalhe do lançamento, quem pa
 - O `2xs` não tem canto nem `onEdit`: em 16px o canto não cabe, então o `Avatar` os ignora. O `AvatarGroup` tem escada própria e não o aceita.
 - `FotoDoMembro` ganha `size` (`2xs` | `xs`, padrão `xs`); o topo do detalhe usa `2xs` e o texto vira " · ", com o `aria-label` "Pago por …" e a dica mantidos.
 - Ajuste no mesmo dia: a edição do detalhe do lançamento põe o cabeçalho dois níveis abaixo do puxador (o invólucro da subtela e o `form`). A regra passa a valer também um nível abaixo do invólucro (`[data-slot="drag-handle"] + * > :first-child > &:first-child`).
+- Ajuste no mesmo dia: na troca de subtela, o fundo do cabeçalho translúcido não entra na foto (`html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::before/::after` a opacidade 0), e o bloco que desliza no detalhe do lançamento sobe sobre a faixa do puxador, para o título não ser cortado no voo.

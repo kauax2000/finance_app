@@ -390,8 +390,10 @@ export function TransactionDetailSheet({
         )
     }
 
+    // O bloco que desliza na troca de subtela sobe sobre a faixa do puxador (e devolve a altura em
+    // respiro): o título, que sobe à linha do ×, fica dentro da foto da transição e não é cortado.
     const viewBody = (
-        <div ref={marca} data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col">
+        <div ref={marca} data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col -mt-(--drawer-handle-h,0px) pt-(--drawer-handle-h,0px)">
             <DialogHeader>
                 <DialogHeaderRow
                     centerShown={nomeSubiu}
@@ -651,7 +653,7 @@ export function TransactionDetailSheet({
                     // a gaveta acharia nele o meio (`acharMeio`) e o rolaria, com cabeçalho e tudo.
                     // Sem `overflow-hidden`: o título sobe à linha do × (o `-mt-8` do cabeçalho da gaveta) e
                     // o recorte o cortava em cima. Quem rola é o corpo, como no ramo do detalhe.
-                    <div data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col gap-0">
+                    <div data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col -mt-(--drawer-handle-h,0px) pt-(--drawer-handle-h,0px) gap-0">
                         <TransactionFormSurface
                             variant="detail-sheet"
                             handleSubmit={handleSubmit}

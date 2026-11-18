@@ -2479,6 +2479,14 @@ html[data-subtela]::view-transition-old(root),
 html[data-subtela]::view-transition-new(root) {
   animation: none;
 }
+/* Durante a troca de subtela, o fundo do cabeçalho translúcido não entra na foto: a tela nova
+   ainda não sabe se rola, e a placa aparecia escura no voo e sumia ao assentar (o Editar do
+   detalhe do lançamento, 18/11/2026). */
+html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::before,
+html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::after {
+  opacity: 0 !important;
+  animation: none !important;
+}
 html[data-subtela]::view-transition-group(subtela-conteudo) {
   animation: none;
   overflow: clip;
