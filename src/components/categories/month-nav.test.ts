@@ -24,4 +24,9 @@ describe("o seletor de mês compacto", () => {
     it("o botão volta como terciário", () => {
         expect(f).toMatch(/variant="tertiary"[\s\S]{0,300}?Voltar a este mês/)
     })
+
+    it("a cápsula tem nome e, no telefone da fatura, ocupa a faixa", () => {
+        expect(f).toContain('aria-label="Mês de referência"')
+        expect(f).toMatch(/esteMesInsidePopoverOnNarrow && "flex-1"[\s\S]*esteMesInsidePopoverOnNarrow && "flex-1"/)
+    })
 })

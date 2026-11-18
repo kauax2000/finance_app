@@ -18,13 +18,10 @@ import { formatYearMonth, labelYearMonthPt, parseYearMonth, shiftYearMonth, shor
 import { cn } from "@/lib/utils"
 
 /**
- * A densidade — 32 no ponteiro fino, 40 no grosso.
- *
- * Ela era escrita com `md:`, e a pergunta estava errada: um desktop de 700px
- * recebia 40px que ninguém pede, e um tablet em paisagem recebia 32 que o dedo
- * não acerta. Quem responde certo é `--toolbar-control`, que o `Toolbar`
- * publica — **com o degrau padrão como reserva**, porque duas telas usam este
- * seletor de mês fora de uma barra, e ali a variável não existe.
+ * A altura do gatilho compacto do telefone (o ramo que não é a cápsula): quem
+ * responde é `--toolbar-control`, que o `Toolbar` publica — com o degrau padrão
+ * (32) como reserva, porque duas telas usam este seletor fora de uma barra.
+ * A cápsula `‹ mês ›` não usa isto: o `ButtonGroup` e a `Toolbar` a medem.
  */
 const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
 
@@ -44,8 +41,6 @@ function mesDoAnoMes(ym: string) {
 }
 
 function MonthNavArrowControls({
-    dense,
-    inBar,
     budgetMonthYm,
     onBudgetMonthYmChange,
     onJump,
@@ -53,9 +48,6 @@ function MonthNavArrowControls({
     monthLabel,
     esteMesInsidePopoverOnNarrow,
 }: {
-    dense?: boolean
-    /** Sizing for the `TopBar` (`md` at every width). */
-    inBar?: boolean
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
     onJump: () => void
@@ -90,7 +82,10 @@ function MonthNavArrowControls({
                     Voltar a este mês
                 </Button>
             ) : null}
-            <ButtonGroup className="min-w-0">
+            <ButtonGroup
+                aria-label="Mês de referência"
+                className={cn("min-w-0", esteMesInsidePopoverOnNarrow && "flex-1")}
+            >
                 <Button
                     type="button"
                     variant="outline"
@@ -106,7 +101,10 @@ function MonthNavArrowControls({
                             type="button"
                             variant="outline"
                             aria-label={pickerAriaLabel}
-                            className="min-w-0 gap-2 font-medium tabular-nums"
+                            className={cn(
+                                "min-w-0 gap-2 font-medium tabular-nums",
+                                esteMesInsidePopoverOnNarrow && "flex-1",
+                            )}
                         >
                             <CalendarIcon className="shrink-0 opacity-80" aria-hidden />
                             <span className="min-w-0 truncate">{monthLabel}</span>
@@ -284,8 +282,6 @@ export function MonthNav({
 
     const arrowControls = (
         <MonthNavArrowControls
-            dense={dense}
-            inBar={inBar}
             budgetMonthYm={budgetMonthYm}
             onBudgetMonthYmChange={onBudgetMonthYmChange}
             onJump={jump}
