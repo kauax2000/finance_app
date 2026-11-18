@@ -29355,3 +29355,4 @@ Pedido do dono (18/11/2026).
 - A faixa mede `larguraDaFaixa(n)` = `n * 44 + (n + 1) * 8`: 8px entre os círculos e nas duas bordas. Duas ações, 112; três, 164.
 - Os círculos crescem com o arraste: `--deslize` (`progressoDoDeslize`, de 0 a 1) escrito pelo `mover` na faixa dirige `scale(calc(0.4 + 0.6 * var(--deslize)))` e a opacidade, sem transição própria. Fechada, volta a 0 e a faixa segue `invisible`.
 - Excluir segue em `bg-destructive` cheio; as outras em `bg-secondary`. Sem fundo colorido atrás.
+- Temporário (18/11/2026, a pedido do dono): o mouse também desliza a linha numa janela da largura de um celular (abaixo de 768px), para testar no navegador do computador (`aceitaDeslize`). Sai quando o teste no iPhone fechar o desenho.
