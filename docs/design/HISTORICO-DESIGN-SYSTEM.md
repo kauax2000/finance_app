@@ -29365,3 +29365,4 @@ Pedido do dono (18/11/2026), validado no Mobbin (Mail do iOS 26: rascunhos e Lis
 - O fio parado: com a linha solta (`data-solta`), o fio dela some, e o invólucro desenha um fio fixo do texto (`--fio-inicio`, medido no toque) até a borda.
 - O arraste tem elástico além da faixa e antes do zero (`elastico`: um terço do dedo). Abrir assenta no `BALANCO` (passa um pouco e volta); fechar, na `MOLA`, sem passar do zero.
 
+- Ajuste no mesmo dia: os cantos arredondados da linha solta saíram, a pedido do dono, para comparar. A linha anda com os cantos retos; o fundo da página, o fio parado, o elástico e o balanço ficam.

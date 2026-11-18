@@ -1685,9 +1685,8 @@ function LinhaDeslizavel<T>({
     const linha = frente.current
     if (linha) {
       linha.style.translate = x ? `${x}px 0` : ""
-      // Como no Mail do iOS 26: solta, a linha vira um cartão, e os cantos arredondam
-      // com o arraste (até o raio de superfície, 22px), sem salto no primeiro pixel.
-      linha.style.borderRadius = x < 0 ? `${Math.min(22, -x / 2)}px` : ""
+      // Os cantos ficam retos ao soltar: o arredondado do Mail do iOS 26 foi testado e
+      // tirado a pedido do dono (18/11/2026), para comparar.
       linha.toggleAttribute("data-solta", x < 0)
     }
     // Em repouso a faixa das ações fica escondida: o vermelho cheio vazava pelo
