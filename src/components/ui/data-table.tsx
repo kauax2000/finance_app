@@ -947,7 +947,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
   // A escada mais longa termina em 40 + 30 × 11 + 160 = 530ms; 700ms dá folga.
   React.useEffect(() => {
     if (refaz === 0) return
-    const t = window.setTimeout(() => setRefeito(refaz), 700)
+    const t = window.setTimeout(() => setRefeito(refaz), 1300)
     return () => window.clearTimeout(t)
   }, [refaz])
 
@@ -1382,6 +1382,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         ref={corpoRef}
         key={animar ? `pagina-${pagination.pageIndex}-${refaz}` : undefined}
         reveal={animar}
+        className={cn(refaz > refeito && "list-reveal")}
       >
         {error ? (
           <TableError colSpan={nColunas} onRetry={error.onRetry}>
