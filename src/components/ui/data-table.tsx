@@ -1766,7 +1766,9 @@ function LinhaDeslizavel<T>({
       className={cn(
         // Atrás dos botões fica o fundo da página, e não o do cartão: o cartão não
         // continua por baixo da linha que saiu (o Mail do iOS 26, a Lista VIP).
-        "relative overflow-hidden bg-background",
+        // `isolate`: as camadas de dentro (o fio em `z-10`, a linha em `z-20`) ficam
+        // locais; sem ele, a linha passava por cima do dia preso (`z-10`) ao rolar.
+        "relative isolate overflow-hidden bg-background",
         !inset && "border-b border-border last:border-b-0",
         // O fio não anda com a linha: solta, o dela some e este, parado, fica no
         // lugar, do texto (`--fio-inicio`, medido ao soltar) até a borda.

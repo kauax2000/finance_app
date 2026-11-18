@@ -38,7 +38,7 @@ describe("DataTable mobileSwipe", () => {
     expect(ramo).toContain("...(alvo ? BALANCO : MOLA)")
     expect(ramo).toContain("elastico(g.base + dx, largura)")
     // Como no Mail do iOS 26: fundo da página atrás dos botões, linha arredondada e fio parado.
-    expect(ramo).toContain('"relative overflow-hidden bg-background"')
+    expect(ramo).toContain('"relative isolate overflow-hidden bg-background"')
     expect(ramo).toContain('linha.toggleAttribute("data-solta", x < 0)')
     expect(ramo).toContain("data-solta:[&_[data-slot=item-content]]:after:opacity-0")
     expect(ramo).toContain("has-data-solta:after:start-(--fio-inicio,0px)")
