@@ -575,12 +575,16 @@
 
 /* Com uma folha aberta, as ações da barra do topo saem de cena: a folha da direita pousa
    sobre elas, e o vidro dela borrava a pílula da busca e do sino num borrão claro bem
-   atrás do ⋯ e do × do cabeçalho (pedido do dono, 2026-11-08). */
+   atrás do ⋯ e do × do cabeçalho (pedido do dono, 2026-11-08). Só do md para cima: no
+   telefone a folha é a gaveta que sobe de baixo, não cobre a barra, e a lupa e o filtro
+   ficam à vista atrás do véu (pedido do dono, 2026-11-18). */
 [data-slot="top-bar-actions"] {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
-:root:has([data-slot="sheet-content"][data-state="open"]) [data-slot="top-bar-actions"] {
-  opacity: 0;
+@media (width >= 48rem) {
+  :root:has([data-slot="sheet-content"][data-state="open"]) [data-slot="top-bar-actions"] {
+    opacity: 0;
+  }
 }
 
 .dark {
