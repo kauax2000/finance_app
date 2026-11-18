@@ -294,4 +294,10 @@ describe("o desabilitado das teclas preenchidas é opaco", () => {
         expect(buttonVariants({ variant: "primary" })).toContain("[--button-disabled-fill:var(--primary)]")
         expect(buttonVariants({ variant: "secondary" })).toContain("[--button-disabled-fill:var(--secondary)]")
     })
+
+describe("o rótulo do botão centra as maiúsculas", () => {
+  it("corta a caixa do rótulo na altura das maiúsculas, também com asChild", () => {
+    expect(lerFonte("src/components/ui/button.tsx")).toContain("[&_[data-slot=button-label]]:[text-box:trim-both_cap_alphabetic]")
+  })
+})
 })

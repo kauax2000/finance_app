@@ -29386,3 +29386,11 @@ Pedido do dono (18/11/2026): na linha da data do detalhe do lançamento, quem pa
 - Ajuste no mesmo dia: na troca de subtela, o fundo do cabeçalho translúcido não entra na foto (`html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::before/::after` a opacidade 0), e o bloco que desliza no detalhe do lançamento sobe sobre a faixa do puxador, para o título não ser cortado no voo.
 - Ajuste no mesmo dia: o `DialogHeaderRow` ganhou `startAdornment` (a ação da esquerda, na reserva da esquerda da barra da gaveta). A edição do detalhe do lançamento troca o × por "‹ Cancelar" à esquerda. Na troca de subtela, as ações da barra (`dialog-header-start`, `dialog-header-end`) ganham nome só durante a troca e esmaecem no lugar, sem andar com a tela; a que entra vem 12px da direita.
 - Ajuste no mesmo dia: com a ação da esquerda da barra (`dialog-header-start`), a gaveta faz o mesmo que com o ✕: esconde a alça e o Cancelar do rodapé (`FormCancel`) no telefone.
+
+### Rodada 406 — o rótulo do botão centra as maiúsculas
+
+Pedido do dono (18/11/2026): o texto dos botões pequenos parecia alto (o "Ver os 19" do detalhe do lançamento). Medido: no degrau `sm` (28px, texto de 12,8px numa linha de 20px), a altura das maiúsculas ficava 0,66px acima do centro, pela linha de base arredondada; no `lg` ficava a 0,09px.
+
+- O `button-label` corta a caixa na altura das maiúsculas (`text-box: trim-both cap alphabetic`), também com `asChild`. O botão centra as maiúsculas em todo degrau: medido 0px no "Ver os 19", no "Ver fatura", no "Definir orçamento" e no "Adicionar anexo".
+- O traço do `link-sweep` e do `link-underline` parte do meio do rótulo (`50% + 0.5lh`) e não muda de lugar.
+- Sem suporte a `text-box` (Safari antes do 18.2), nada muda.

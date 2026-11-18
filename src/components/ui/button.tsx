@@ -30,10 +30,13 @@ const FLORESCER =
 const ACENDER_VEU =
   "hover:[--button-veil:1] active:[--button-veil:1] aria-expanded:[--button-veil:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-veil] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring) aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)"
 
+// O rótulo corta a caixa na altura das maiúsculas (`text-box: trim-both cap alphabetic`): o botão
+// centra as maiúsculas, e não a linha de 20px, que a linha de base arredondada deixava até 0,66px
+// acima do centro nos degraus pequenos (o "Ver os 19" do detalhe, 18/11/2026). Sem suporte, nada muda.
 // O afundar do clique é o `active:translate-y-px` mais o `afundar` (abaixo), que
 // cobre o gatilho de menu do Radix: lá o `:active` não chega a pintar.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-hover] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-hover] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_[data-slot=button-label]]:[text-box:trim-both_cap_alphabetic] [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       // A hierarquia é uma escada em peso visual: `primary` preenche de preto,
