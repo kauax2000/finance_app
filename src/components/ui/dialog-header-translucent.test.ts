@@ -32,8 +32,9 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
     expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
     // A sombra mora dentro da faixa e termina na borda do cabeçalho (rodada 388): sem linha reta.
-    expect(u).toContain("height: calc(100% - var(--dialog-header-fade-h))")
-    expect(u).toContain("top: calc(100% - var(--dialog-header-fade-h))")
+    expect(u).toContain("height: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over))")
+    expect(u).toContain("--dialog-header-fade-over: calc(var(--spacing) * 4)")
+    expect(u).toContain("top: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over))")
     expect(u).not.toContain("animation-range")
     expect(CSS).toMatch(/@keyframes dialog-placa-com-rolagem \{\s*from \{\s*opacity: 1;\s*\}\s*to \{\s*opacity: 1;/)
   })

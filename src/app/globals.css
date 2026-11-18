@@ -4290,6 +4290,8 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     /* O fundo da página, um degrau abaixo da placa: o cabeçalho lê mais escuro (13/11). */
     --dialog-header-tint: color-mix(in oklab, var(--background) 95%, transparent);
     --dialog-header-fade-h: calc(var(--spacing) * 14);
+    /* Quanto do degradê passa da borda: a ponta mais clara cobre o que passa logo sob as abas (rodada 389). */
+    --dialog-header-fade-over: calc(var(--spacing) * 4);
     position: relative;
     z-index: 10;
 
@@ -4310,11 +4312,11 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
        do cabeçalho escurece. */
     &::before {
       top: 0;
-      height: calc(100% - var(--dialog-header-fade-h));
+      height: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
       background-color: var(--dialog-header-tint);
     }
     &::after {
-      top: calc(100% - var(--dialog-header-fade-h));
+      top: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
       height: var(--dialog-header-fade-h);
       /* Uma curva suave (mais paradas, a queda espalhada), e não três retas: a borda
          não aparece como degrau. */
@@ -4352,7 +4354,7 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + form > &:first-child {
       &::before {
         top: calc(var(--drawer-handle-h) * -1);
-        height: calc(100% + var(--drawer-handle-h) - var(--dialog-header-fade-h));
+        height: calc(100% + var(--drawer-handle-h) - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
       }
       & + [data-slot="dialog-body"],
       & + form > [data-slot="dialog-body"]:first-child,

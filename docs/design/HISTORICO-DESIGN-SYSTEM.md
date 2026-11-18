@@ -29204,3 +29204,11 @@ nada abaixo do cabeçalho escurece, e a animação de acender saiu. O rodapé fi
 degradê para fora e sumindo no fim da rolagem: com o Total no alto, uma sombra dentro dele deixaria
 a lista visível atrás do número. Medido a 375px: o cabeçalho vai até 163px, e a legenda começa em
 163px, limpa.
+
+### Rodada 389 — a sombra do cabeçalho passa 16px da borda
+
+Com o degradê terminando na borda do cabeçalho (rodada 388), ao rolar, o que passava logo sob as
+abas ainda aparecia. O dono pediu a sombra "um pouco mais para baixo". O degradê agora termina
+`--dialog-header-fade-over` (16px) abaixo da borda, e a placa cheia acompanha o mesmo deslocamento.
+Os 16px de fora são a ponta mais clara do degradê, e com a lista parada no topo a legenda continua
+legível. Medido a 375px: com o cabeçalho de 128px, o degradê vai de 88px a 144px.
