@@ -48,8 +48,9 @@ describe("a lista se refaz em cascata", () => {
 
   it("a troca da chave arma, e a cascata toca quando a busca assenta, nunca com movimento reduzido", () => {
     expect(tabela).toContain("revealKey?: string | null")
-    expect(tabela).toMatch(/if \(revealKey !== chaveVista\) \{\s*setChaveVista\(revealKey\)\s*setArmada\(true\)/)
-    expect(tabela).toMatch(/if \(armada && !loading && !pending\) \{[\s\S]{0,80}if \(comMovimento && !reduzir\) setRefaz/)
+    expect(tabela).toMatch(/if \(revealKey !== chaveVista\) \{\s*setChaveVista\(revealKey\)\s*setArmada\(\{ dados: data \}\)/)
+    // Só com dados novos: a chave muda antes de a busca começar, e a cascata animava as linhas velhas.
+    expect(tabela).toMatch(/if \(armada && data !== armada\.dados && !loading && !pending\) \{[\s\S]{0,80}if \(comMovimento && !reduzir\) setRefaz/)
   })
 
   it("no desktop o `<tbody>` remonta pela troca; no telefone o gêmeo veste a classe até o fim da última linha", () => {
