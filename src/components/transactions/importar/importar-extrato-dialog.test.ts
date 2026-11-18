@@ -760,3 +760,10 @@ describe("o Pôr categoria: a busca e as abas no cabeçalho, a lista rola por tr
         expect(conferir).toMatch(/<DialogClose asChild>\s*<FormCancel>Cancelar<\/FormCancel>\s*<\/DialogClose>/)
     })
 })
+
+describe("a busca no cabeçalho borra o que passa por trás", () => {
+    it("Pôr categoria e a busca da conferência levam glass-surface sobre o preenchimento do campo", () => {
+        expect(conferir).toMatch(/<SearchInput\s+className="glass-surface"\s+placeholder="Buscar categoria"/)
+        expect(ler("busca-que-abre.tsx")).toContain('aberta ? "glass-surface" : "border-transparent bg-transparent"')
+    })
+})

@@ -360,7 +360,9 @@ function PorCategoria({ imp, itens, onClose }: { imp: ImportarExtrato; itens: It
                     </DialogDescription>
                     {/* A busca e as abas moram no cabeçalho, que é fixo e translúcido: a lista rola por trás delas. */}
                     <div className="pt-3">
+                        {/* O preenchimento do campo, com o desfoque do vidro (`glass-surface`): a lista passa por trás do cabeçalho e fica borrada. */}
                         <SearchInput
+                            className="glass-surface"
                             placeholder="Buscar categoria"
                             aria-label="Buscar categoria"
                             value={busca}

@@ -102,6 +102,8 @@ export function BuscaQueAbre({
                 aberta ? "w-[min(18rem,100%)]" : "w-9 pointer-coarse:w-11"
             )}
         >
+            {/* O preenchimento do campo, com o desfoque do vidro (`glass-surface`): no telefone a busca
+                mora no cabeçalho, e a lista passa por trás dela, borrada. */}
             <SearchInput
                 ref={campo}
                 size="lg"
@@ -119,7 +121,7 @@ export function BuscaQueAbre({
                 onBlur={() => setFoco(false)}
                 // O recuo fica igual aberto e fechado, para a lupa não saltar ao abrir.
                 // Fechada, a lupa não tem fundo nem fio (o terciário da linha); aberta, volta a ser campo.
-                className={cn("overflow-hidden ps-2.5 pointer-coarse:ps-3.5", !aberta && "border-transparent bg-transparent")}
+                className={cn("overflow-hidden ps-2.5 pointer-coarse:ps-3.5", aberta ? "glass-surface" : "border-transparent bg-transparent")}
                 inputClassName="opacity-0 transition-opacity duration-(--duration-fast) ease-(--ease-out) group-data-[texto]/busca:opacity-100"
             />
             {aberta ? null : (
