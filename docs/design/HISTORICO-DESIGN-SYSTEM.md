@@ -29292,3 +29292,13 @@ borda, recortada por `overflow-x-clip` na linha — o eixo vertical fica livre p
 da caixa. Abaixo do `md` a moldura do `TablePanel` fica só com o fio transparente, que alinha com a
 barra. Sem grupo (`null`, ordenado por valor), um cartão só, sem cabeçalho.
 `data-table-agrupada.test.ts`.
+
+### Rodada 397 — o dia gruda no topo até o próximo
+
+Pedido do dono (18/11/2026): manter a lista agrupada (A), com mais espaço entre os dias e o nome do dia sempre preso em cima até chegar o próximo.
+
+- O cabeçalho do grupo do `mobileGroups="inset"` é `sticky` em `top-(--top-bar-bottom)`, com o fundo da página (`bg-background`). Cada cabeçalho mora no invólucro do próprio grupo, então o próximo o empurra para fora, como as seções da lista do iOS.
+- O vão entre os dias é o respiro de cima do cabeçalho (`pt-4`, 16px) mais o `gap-2` dos grupos: 24px do fim de um cartão ao nome do próximo dia. Era 8px.
+- O `TablePanel` recortava (`overflow-hidden`) e o `sticky` não grudava. Na lista agrupada, abaixo do `md`, a moldura fica `max-md:overflow-visible`: ela já não desenha nada no telefone.
+- `data-table-agrupada.test.ts` tranca o `sticky` e o recorte.
+

@@ -36,6 +36,12 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(ramo).toMatch(/grupos\.map\([\s\S]{0,1200}<ItemGroup\s+variant="divided"/)
   })
 
+  it("o cabeçalho gruda sob a barra até o próximo grupo, e a moldura não o recorta (rodada 397)", () => {
+    const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
+    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="sticky top-\(--top-bar-bottom\) z-10 [^"]*bg-background[^"]*pt-4/)
+    expect(fonte).toContain('"max-md:overflow-visible max-md:border-transparent max-md:bg-transparent"')
+  })
+
   it("um cartão por grupo, com o nome e o `aside` por fora", () => {
     const html = gemeo(
       renderToStaticMarkup(

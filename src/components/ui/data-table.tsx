@@ -1425,8 +1425,9 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
                 ? "max-md:hidden"
                 : gemeo && mobileGroups === "inset"
                   // Quem desenha no telefone são os cartões dos grupos: a moldura
-                  // fica só com o fio transparente, que alinha com a barra.
-                  ? "max-md:border-transparent max-md:bg-transparent"
+                  // fica só com o fio transparente, que alinha com a barra. Sem o
+                  // recorte, o cabeçalho de cada grupo gruda na rolagem da página.
+                  ? "max-md:overflow-visible max-md:border-transparent max-md:bg-transparent"
                   : undefined
             }
             outside={vazioSolto}
@@ -1735,9 +1736,12 @@ function GemeoDoTelefone<T extends RowData>({
         {grupos.map(({ key, grupo, linhas }) => (
           <div key={key} className="flex flex-col">
             {grupo ? (
+              // Preso sob a barra do topo até o grupo acabar: cada cabeçalho mora no
+              // invólucro do próprio grupo, e o próximo o empurra para fora. O fundo é
+              // o da página, e o respiro de cima (`pt-4`) é o vão entre os dias.
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="flex items-baseline justify-between gap-3 px-4 pb-1.5 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
+                className="sticky top-(--top-bar-bottom) z-10 flex items-baseline justify-between gap-3 bg-background px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
               >
                 <span className="min-w-0 truncate">{grupo.label}</span>
                 {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}
