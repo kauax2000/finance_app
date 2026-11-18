@@ -26,4 +26,14 @@ describe("o cabeçalho de Categorias", () => {
         const t = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"), "tudo")
         expect(t).toContain('cn(className, "md:hidden")')
     })
+
+    it("o mês vale nas duas abas", () => {
+        expect(f).not.toContain('enabled: filterType === "expense"')
+        expect(f).not.toContain('showMonthControls={filterType === "expense"}')
+    })
+
+    it("a receita recebe o mês", () => {
+        expect(f).toContain("receitasDoMesPorCategoria(")
+        expect(f).toContain("month={")
+    })
 })

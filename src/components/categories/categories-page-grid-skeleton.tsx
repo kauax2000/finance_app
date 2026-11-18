@@ -146,9 +146,11 @@ function IncomeCategoryCardSkeleton({ seed }: { seed: number }) {
                 </CardAction>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-3">
-                <div className="mt-auto flex justify-center">
-                    <Skeleton className="h-3 w-24 rounded-md" />
+                <div className="flex items-start justify-between gap-2">
+                    <Skeleton className="h-8 w-28 max-w-full" />
+                    <Skeleton className="mt-0.5 h-3 w-20 shrink-0 rounded-md" />
                 </div>
+                <Skeleton className="-mt-2 h-3 w-full max-w-54" />
             </CardContent>
         </CategoryCardShellSkeleton>
     )

@@ -41,6 +41,8 @@ import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ExpenseCategoryCard } from "@/components/categories/expense-category-card"
 import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
+import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
+import { localYmdFromDate } from "@/lib/transaction-date"
 import {
     TransactionFormTypeSegment,
     type TransactionFilterType,
@@ -122,6 +124,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [projectedSubscriptionsByCategoryId, setProjectedSubscriptionsByCategoryId] =
         useState<Record<string, number>>({})
     const [prevSpendByCategoryId, setPrevSpendByCategoryId] = useState<Record<string, number>>({})
+    const [incomeByCategoryId, setIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
     const listLoading = categoriesQuery.isPending && !categoriesQuery.data
     const [, setBudgetsLoading] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(() => shouldOpenNew)
@@ -164,11 +167,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         [subrouteLabels?.titleLabel, subrouteLabels?.kind],
     )
     usePageChromeSlot(categoriesChrome)
-    // No telefone o mês (só das despesas) mora no cabeçalho, colado à lupa.
+    // No telefone o mês mora no cabeçalho, colado à lupa.
     useMonthInHeader({
         budgetMonthYm,
         onBudgetMonthYmChange: handleBudgetMonthYmChange,
-        enabled: filterType === "expense",
     })
     const resetForm = useCallback(() => {
         setName("")
@@ -280,6 +282,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 setProjectedInstallmentsByCategoryId({})
                 setProjectedSubscriptionsByCategoryId({})
                 setPrevSpendByCategoryId({})
+                setIncomeByCategoryId({})
             } else {
                 const monthTx = (txRes.data ?? []) as Pick<
                     Transaction,
@@ -330,6 +333,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     prevCommitted[cid] = t.committedTotal
                 }
                 setPrevSpendByCategoryId(prevCommitted)
+                setIncomeByCategoryId(
+                    receitasDoMesPorCategoria({
+                        yearMonth: budgetMonthYm,
+                        hojeYmd: localYmdFromDate(new Date()),
+                        transactions: monthTx,
+                        subscriptions: subs,
+                    }),
+                )
             }
         } catch (error) {
             console.error(error)
@@ -697,7 +708,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 onFilterTypeChange={setFilterType}
                 onNewCategory={podeEscrever && isMobile ? () => openDialog() : undefined}
                 includeAll={false}
-                showMonthControls={filterType === "expense"}
+                showMonthControls
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
             />
@@ -743,6 +754,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                     key={category.id}
                                     category={category}
                                     href={categoryDetailPath(category.id, { type: "income" })}
+                                    month={incomeByCategoryId[category.id] ?? { recebido: 0, previsto: 0 }}
                                     onEdit={podeEscrever ? () => openDialog(category) : undefined}
                                     onDelete={
                                         podeEscrever
