@@ -54,6 +54,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
+import { topBarBottom } from "@/lib/top-bar-bottom"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { downloadCsv, toCsv, type CsvColumn } from "@/lib/data-table/csv"
@@ -1566,6 +1567,32 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
 }
 
 /** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
+/**
+ * Marca `data-preso` nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
+ * de `raiz` enquanto estão grudados sob a barra do topo: o fundo deles só existe
+ * aí, subindo até o topo da tela para virar uma peça só com a borda da barra.
+ * Preso é estar acima da linha da barra mais 1px (o `rootMargin` corta a janela
+ * nela), e continua preso enquanto o próximo o empurra para fora.
+ */
+function useCabecalhoPreso(raiz: React.RefObject<HTMLElement | null>, chave: unknown) {
+  React.useEffect(() => {
+    const no = raiz.current
+    if (!no || typeof IntersectionObserver === "undefined") return
+    const linha = topBarBottom(no.ownerDocument) + 1
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          const preso = e.intersectionRatio < 1 && e.boundingClientRect.top < linha
+          ;(e.target as HTMLElement).toggleAttribute("data-preso", preso)
+        }
+      },
+      { rootMargin: `-${linha}px 0px 0px 0px`, threshold: [1] }
+    )
+    no.querySelectorAll("[data-slot=data-table-mobile-group-heading]").forEach((c) => observador.observe(c))
+    return () => observador.disconnect()
+  }, [raiz, chave])
+}
+
 function GemeoDoTelefone<T extends RowData>({
   rows,
   rowState,
@@ -1602,6 +1629,8 @@ function GemeoDoTelefone<T extends RowData>({
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
+  const listaRef = React.useRef<HTMLDivElement>(null)
+  useCabecalhoPreso(listaRef, inset ? rows : null)
   // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
   // da mídia (o recuo do iOS) — a última linha do cartão não tem.
   const linhaDe = (row: DataTableRow<T>, fio = false) => {
@@ -1732,16 +1761,21 @@ function GemeoDoTelefone<T extends RowData>({
       else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
     }
     return (
-      <div data-slot="data-table-mobile" className="flex flex-col gap-2">
+      <div ref={listaRef} data-slot="data-table-mobile" className="flex flex-col gap-2">
         {grupos.map(({ key, grupo, linhas }) => (
           <div key={key} className="flex flex-col">
             {grupo ? (
               // Preso sob a barra do topo até o grupo acabar: cada cabeçalho mora no
-              // invólucro do próprio grupo, e o próximo o empurra para fora. Sem fundo,
-              // a pedido do dono; o respiro de cima (`pt-4`) é o vão entre os dias.
+              // invólucro do próprio grupo, e o próximo o empurra para fora. Sem fundo
+              // chapado, a pedido do dono. Preso (`data-preso`), um `::before` sobe até o
+              // topo da tela por baixo da barra, com a tinta e o borrão da borda dela, e
+              // desce 12px abaixo do texto se dissolvendo: a borda da barra e o fundo do
+              // dia são uma peça só. O borrão é do cabeçalho, e não da barra, porque a
+              // barra fica por cima e borraria o texto. O respiro de cima (`pt-4`) é o
+              // vão entre os dias.
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="sticky top-(--top-bar-bottom) z-10 flex items-baseline justify-between gap-3 px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
+                className="sticky top-(--top-bar-bottom) isolate z-10 flex items-baseline justify-between gap-3 px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 reduced-transparency:before:hidden"
               >
                 <span className="min-w-0 truncate">{grupo.label}</span>
                 {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}

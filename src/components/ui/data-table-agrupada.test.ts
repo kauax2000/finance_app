@@ -38,8 +38,10 @@ describe('DataTable mobileGroups="inset"', () => {
 
   it("o cabeçalho gruda sob a barra até o próximo grupo, e a moldura não o recorta (rodada 397)", () => {
     const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
-    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="sticky top-\(--top-bar-bottom\) z-10 [^"]*pt-4/)
-    expect(ramo).not.toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*\bbg-/)
+    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="sticky top-\(--top-bar-bottom\) [^"]*z-10 [^"]*pt-4/)
+    expect(ramo).not.toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*\sbg-/)
+    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*before:-top-\(--top-bar-bottom\)[^"]*before:backdrop-blur-md[^"]*data-preso:before:opacity-100/)
+    expect(fonte).toContain("useCabecalhoPreso(listaRef")
     expect(fonte).toContain('"max-md:overflow-visible max-md:border-transparent max-md:bg-transparent"')
   })
 
