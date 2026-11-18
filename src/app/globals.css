@@ -1501,6 +1501,20 @@
   );
 }
 
+/* O desabilitado das teclas preenchidas (`primary`, `secondary`) não é transparente: a
+   `opacity-50` da base deixava a lista de uma gaveta aparecer através do botão. A tecla
+   pinta a própria cor misturada a 50% com o fundo, e o rótulo a 50% sobre ela: sobre o
+   fundo liso, o mesmo tom de antes; sobre conteúdo, nada passa. Esperando (`aria-busy`),
+   a tecla fica cheia, como antes. */
+@utility button-disabled-solid {
+  &:disabled:not([aria-busy="true"]) {
+    --button-disabled-surface: color-mix(in oklab, var(--button-disabled-fill) 50%, var(--background));
+    opacity: 1;
+    background-color: var(--button-disabled-surface);
+    color: color-mix(in oklab, var(--button-disabled-ink) 50%, var(--button-disabled-surface));
+  }
+}
+
 /* O degradê do `brandColorful`: a mesma flor, com as cinco paradas da marca num
    `::after` borrado; nasce comprimido (30% × 60%, 16px de borrão) e abre até as
    bordas com 8px. `isolate` põe o `-z-10` acima do fundo e abaixo do rótulo;

@@ -281,3 +281,17 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     expect(veu).toContain("prefers-reduced-motion")
   })
 })
+
+describe("o desabilitado das teclas preenchidas é opaco", () => {
+    const css = lerFonte(join(RAIZ, "app/globals.css"))
+    it("a utility mistura a cor da tecla com o fundo, sem transparência", () => {
+        const bloco = blocoCss(css, "@utility button-disabled-solid")
+        expect(bloco).toContain("opacity: 1;")
+        expect(bloco).toContain("color-mix(in oklab, var(--button-disabled-fill) 50%, var(--background))")
+        expect(bloco).toContain('&:disabled:not([aria-busy="true"])')
+    })
+    it("primary e secondary a vestem com a própria cor", () => {
+        expect(buttonVariants({ variant: "primary" })).toContain("[--button-disabled-fill:var(--primary)]")
+        expect(buttonVariants({ variant: "secondary" })).toContain("[--button-disabled-fill:var(--secondary)]")
+    })
+})

@@ -52,7 +52,7 @@ const buttonVariants = cva(
         // `padding-box`: não mexe na caixa); em repouso ele já existe,
         // transparente, para esmaecer. Só no cursor: o toque não tem hover.
         primary:
-          "bg-primary text-primary-foreground inset-ring-1 inset-ring-transparent hover:bg-primary-hover hover:inset-ring-primary-hover-ring active:bg-primary-hover aria-expanded:bg-primary-hover aria-busy:disabled:opacity-100",
+          "bg-primary text-primary-foreground inset-ring-1 inset-ring-transparent hover:bg-primary-hover hover:inset-ring-primary-hover-ring active:bg-primary-hover aria-expanded:bg-primary-hover aria-busy:disabled:opacity-100 button-disabled-solid [--button-disabled-fill:var(--primary)] [--button-disabled-ink:var(--primary-foreground)]",
         // A tecla do primário em repouso e, no cursor, no toque e com o menu
         // aberto, cinco paradas do arco-íris florescem do centro
         // (`@utility button-colorful`). Um CTA de marca por tela.
@@ -82,7 +82,7 @@ const buttonVariants = cva(
         // aresta (com `bg-clip-padding` o cinza pintava 30px dentro de 32).
         // Preferido a `border-0` porque a borda de 1px mantém a geometria igual
         // entre as variantes.
-        secondary: `bg-clip-border bg-secondary text-secondary-foreground [--button-hover-fill:var(--secondary-hover)] ${REALCE} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
+        secondary: `bg-clip-border bg-secondary text-secondary-foreground button-disabled-solid [--button-disabled-fill:var(--secondary)] [--button-disabled-ink:var(--secondary-foreground)] [--button-hover-fill:var(--secondary-hover)] ${REALCE} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
         // O realce é chapado: a cor do peso (`--button-hover-fill`) pinta por
         // cima do repouso e esmaece em `--duration-fast`. `tertiary`, `outline`
         // e `floating` usam `--accent` a 50%, o realce das linhas da barra lateral

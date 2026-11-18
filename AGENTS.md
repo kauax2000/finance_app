@@ -1022,6 +1022,7 @@ declaração de `background-color` no trilho).
   - `button-primary.test.ts` e `button-touch-response.test.ts` cobram que a
     lava, o brilho do primário e o disco do `button-fill` não voltem; a
     `@utility button-bloom` é só do `Checkbox`.
+  - **O desabilitado de `primary` e `secondary` é opaco** (`@utility button-disabled-solid`, rodada 391): a cor da tecla a 50% sobre `--background` e o rótulo a 50% sobre ela, no lugar da `opacity-50` da base, que deixava a lista de uma gaveta aparecer através do botão. Esperando (`aria-busy`), a tecla fica cheia.
   - **Não há eixo `shape`** (cápsula; os `icon-*` são círculo). **Não existem
     `variant="default"`, `"ghost"`, `"success"` nem `"warning"`**: estado é do
     `Badge` e do `Alert`. `iconMotion="spin"` gira o ícone do "tentar

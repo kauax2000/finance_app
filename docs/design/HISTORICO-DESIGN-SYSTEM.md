@@ -29221,3 +29221,13 @@ rodapé agora é o espelho da rodada 389: o degradê mora dentro da faixa e pass
 `--dialog-footer-fade-over` (16px) da borda, a placa cheia para onde o degradê começa, e nada some
 com a rolagem. Medido a 375px no Importar: com o rodapé de 176,5px, o degradê vai de 136,5px a
 192,5px acima do pé, e com a lista no fim a última linha fica inteira acima do Total.
+
+### Rodada 391 — o botão desabilitado não é transparente
+
+No rodapé translúcido do Pôr categoria, o botão desabilitado deixava a lista aparecer através
+dele: todo `Button` desabilitado usava `opacity-50`. O dono não gostou e escolheu manter a mesma
+cor, opaca. A `@utility button-disabled-solid` pinta a tecla com a própria cor misturada a 50% com
+`--background`, e o rótulo a 50% sobre essa superfície. Vale para `primary` e `secondary`, as
+teclas preenchidas; as outras variantes não têm preenchimento opaco e seguem com a `opacity-50`.
+Medido no escuro a 375px: o "Continuar" desabilitado do Importar mede L 0,565, com o rótulo em
+0,355, o mesmo tom de antes, e opacidade 1.
