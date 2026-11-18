@@ -29212,3 +29212,12 @@ abas ainda aparecia. O dono pediu a sombra "um pouco mais para baixo". O degrad�
 `--dialog-header-fade-over` (16px) abaixo da borda, e a placa cheia acompanha o mesmo deslocamento.
 Os 16px de fora são a ponta mais clara do degradê, e com a lista parada no topo a legenda continua
 legível. Medido a 375px: com o cabeçalho de 128px, o degradê vai de 88px a 144px.
+
+### Rodada 390 — o rodapé espelha o cabeçalho, sem linha reta no fim
+
+No fim da rolagem, o degradê do rodapé sumia (`dialog-degrade-apaga`) e a placa cheia acabava numa
+borda reta no topo do rodapé: uma linha cortando a gaveta, vista pelo dono no Pôr categoria. O
+rodapé agora é o espelho da rodada 389: o degradê mora dentro da faixa e passa
+`--dialog-footer-fade-over` (16px) da borda, a placa cheia para onde o degradê começa, e nada some
+com a rolagem. Medido a 375px no Importar: com o rodapé de 176,5px, o degradê vai de 136,5px a
+192,5px acima do pé, e com a lista no fim a última linha fica inteira acima do Total.

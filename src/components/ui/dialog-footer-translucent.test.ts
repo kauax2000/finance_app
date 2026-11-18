@@ -17,7 +17,7 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
     expect(u).toContain("--dialog-footer-tint: color-mix(in oklab, var(--background) 95%, transparent)")
     expect(u).toContain("--dialog-footer-fade-h: calc(var(--spacing) * 14)")
     expect(u).not.toContain("backdrop-filter")
-    expect(u).toContain("bottom: 100%")
+    expect(u).toContain("--dialog-footer-fade-over: calc(var(--spacing) * 4)")
     expect(u.match(/var\(--dialog-footer-tint\) \d+%, transparent\) \d+%/g)).toHaveLength(8)
   })
 
@@ -33,8 +33,10 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
   it("como o cabeçalho: só existe quando o corpo rola (rodada 386)", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
     expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
-    expect(u).toContain("animation-name: dialog-degrade-apaga")
-    expect(u).toContain("animation-range: calc(100% - 24px) 100%")
+    // A sombra mora dentro do rodapé e passa 16px da borda de cima (rodada 390): sem linha reta no fim.
+    expect(u).toContain("height: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
+    expect(u).toContain("bottom: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
+    expect(u).not.toContain("animation-range")
   })
 
   it("na gaveta de baixo, a placa desce até a borda e cobre a área segura", () => {

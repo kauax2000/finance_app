@@ -4411,6 +4411,8 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   [data-layout="fixed"] [data-slot="dialog-body"] + & {
     --dialog-footer-tint: color-mix(in oklab, var(--background) 95%, transparent);
     --dialog-footer-fade-h: calc(var(--spacing) * 14);
+    /* Quanto do degradê passa da borda de cima (rodada 390), o espelho do cabeçalho. */
+    --dialog-footer-fade-over: calc(var(--spacing) * 4);
     position: relative;
     z-index: 10;
 
@@ -4426,13 +4428,15 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
       z-index: -1;
       pointer-events: none;
     }
+    /* A sombra mora dentro da faixa do rodapé e passa 16px da borda de cima, como a do cabeçalho
+       (rodadas 388–390): sem linha reta na borda quando a lista chega ao fim. */
     &::before {
       bottom: 0;
-      height: 100%;
+      height: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over));
       background-color: var(--dialog-footer-tint);
     }
     &::after {
-      bottom: 100%;
+      bottom: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over));
       height: var(--dialog-footer-fade-h);
       background-image: linear-gradient(
         to top,
@@ -4454,7 +4458,7 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     [data-vaul-drawer-direction="bottom"] > &,
     [data-vaul-drawer-direction="bottom"] > form > & {
       &::before {
-        height: calc(100% + var(--drawer-safe, 0px));
+        height: calc(100% + var(--drawer-safe, 0px) - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over));
         bottom: calc(var(--drawer-safe, 0px) * -1);
       }
     }
@@ -4485,12 +4489,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
         animation: dialog-placa-com-rolagem linear both;
         animation-timeline: --dialog-body-scroll;
       }
-      /* O degradê some nos últimos 24px: no fim não há nada por baixo, e ele escurecia a
-         última linha (rodada 387). */
-      &::after {
-        animation-name: dialog-degrade-apaga;
-        animation-range: calc(100% - 24px) 100%;
-      }
     }
   }
 }
@@ -4505,14 +4503,6 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
   }
 }
 
-@keyframes dialog-degrade-apaga {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
 
 
 
