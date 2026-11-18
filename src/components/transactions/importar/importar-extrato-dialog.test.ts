@@ -707,7 +707,7 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
 
 describe("no passo Arquivo, a descrição não repete a área de soltar", () => {
     it("fica só para o leitor de tela", () => {
-        expect(dialogo).toContain('className={imp.passo === "arquivo" || (celular && imp.passo === "colunas") ? "sr-only" : undefined}')
+        expect(dialogo).toContain('className={imp.passo === "arquivo" || (celular && (imp.passo === "colunas" || imp.passo === "conferir")) ? "sr-only" : undefined}')
     })
 })
 
