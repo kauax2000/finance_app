@@ -29277,3 +29277,18 @@ juntos (`@keyframes dialog-rodape-apaga-no-fim`, `animation-range: calc(100% - 2
 rodada 387 só o degradê se apagava, e a placa a 95% sobre o vidro da gaveta (50%) desenhava a
 linha reta da rodada 390. Apagando as duas, no fim o rodapé é o próprio vidro: sem nada por trás,
 sem linha. Medido a 375px no Importar: no meio da lista as duas camadas ficam em 1, no fim em 0.
+
+### Rodada 396 — no telefone, a lista agrupada do iOS
+
+O dono escolheu a opção A do artefato "Lista de transações no telefone" (18/11/2026): no telefone,
+cada dia vira um cartão, com o nome e o total do dia por fora. O `DataTable` ganhou
+`mobileGroups="inset"` (o padrão segue `band`, a faixa de hoje, para o Importar e o catálogo), e o
+`groupBy` ganhou o campo `aside`. Com ele, o gêmeo parte as linhas em grupos consecutivos: o
+cabeçalho (`data-table-mobile-group-heading`) na sobrancelha da faixa, fora do cartão, e o cartão
+(`data-table-mobile-group`) é um `ItemGroup divided` em `rounded-surface` sobre `bg-card`. Os grupos
+ficam a 8px. O fio do `divided` sai e quem o desenha é o `::after` do conteúdo da linha: sem
+`left`, ele parte de onde o texto começa (depois da caixa e da mídia, o recuo do iOS) e corre até a
+borda, recortada por `overflow-x-clip` na linha — o eixo vertical fica livre para o alvo de 44px
+da caixa. Abaixo do `md` a moldura do `TablePanel` fica só com o fio transparente, que alinha com a
+barra. Sem grupo (`null`, ordenado por valor), um cartão só, sem cabeçalho.
+`data-table-agrupada.test.ts`.

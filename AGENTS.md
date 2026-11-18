@@ -1628,7 +1628,7 @@ declaração de `background-color` no trilho).
   seleção e barra flutuante (`selectionSummary` põe a soma na barra, depois de
   "N selecionadas ·", e no anúncio), grupo, detalhe, ações, menu de contexto, **o gêmeo
   do telefone** (`meta.mobile`; abaixo do `md`, sem linhas, o vazio sai do cartão e da tabela; `emptyPhone` troca o conteúdo do telefone; `mobileRow="compact"` tira a caixa e o ⋯ da linha
-  até haver seleção, e as ações vão ao toque longo — Transações usa; `mobileRow="flush"` é o `full` raso: sem a caixa de `selected` e no degrau `sm`, para a lista em que marcar é "esta entra" — o Ver todos do Importar), teclado, URL, virtualização, CSV e edição
+  até haver seleção, e as ações vão ao toque longo — Transações usa; `mobileRow="flush"` é o `full` raso: sem a caixa de `selected` e no degrau `sm`, para a lista em que marcar é "esta entra" — o Ver todos do Importar; `mobileGroups="inset"` é a lista agrupada do iOS: um cartão por grupo do `groupBy`, com o `label` e o `aside` dele por fora, acima do cartão, o fio começando no texto e, abaixo do `md`, sem a moldura do `TablePanel`; sem grupo, um cartão só — Transações usa; o padrão `band` é a faixa dentro da lista), teclado, URL, virtualização, CSV e edição
   (`role="grid"`); dados do servidor, `manual`. A barra e o rodapé ficam **fora**
   da moldura (`toolbar`, `footer`). Peça de lugar certo entra por prop, nunca
   por `child.type === Peca` — `table-versions.test.ts`.

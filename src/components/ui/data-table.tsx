@@ -531,7 +531,7 @@ export type DataTableProps<T extends RowData> = {
   renderDetail?: (row: T) => React.ReactNode
   getSubRows?: (row: T) => T[] | undefined
   /** Agrupa linhas consecutivas pela chave (o mês das transações). Recebe a ordenação, e `null` desliga o grupo: ordenado por valor ele viraria uma faixa a cada linha. */
-  groupBy?: (row: T, ctx: { sorting: SortingState }) => { key: string; label: React.ReactNode } | null
+  groupBy?: (row: T, ctx: { sorting: SortingState }) => { key: string; label: React.ReactNode; aside?: React.ReactNode } | null
   groupTotal?: (rows: T[]) => React.ReactNode
   groupCollapsible?: boolean
 
@@ -571,6 +571,8 @@ export type DataTableProps<T extends RowData> = {
   mobile?: boolean
   /** A linha do gêmeo. `full` (o padrão): caixa de seleção e ⋯ sempre à vista. `compact`: a caixa só aparece com uma seleção em curso (e aí o toque marca em vez de abrir), e as ações moram no toque longo — o mesmo menu do botão direito; sem menu, o ⋯ volta. `flush`: o `full` de linha rasa — sem o contorno nem o fundo de `selected` (a caixa já diz quem está marcado) e no degrau `sm`, como a lista do resumo do Importar, onde marcar é "esta entra" e quase toda linha está marcada. */
   mobileRow?: "full" | "compact" | "flush"
+  /** Os grupos do gêmeo. `band` (o padrão): uma lista só, com o grupo numa faixa dentro dela. `inset`: a lista agrupada do iOS — um cartão por grupo, com o nome (`label`) e o `aside` do `groupBy` por fora, acima dele; no telefone a moldura do painel some. Sem grupo (`null`), um cartão só. */
+  mobileGroups?: "band" | "inset"
   /** As linhas que entram em cascata e deslizam ao reordenar. */
   motion?: boolean
   virtualize?: { estimateSize?: number; overscan?: number }
@@ -617,6 +619,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     rowActions,
     rowContextMenu = false,
     mobileRow = "full",
+    mobileGroups = "band",
     toolbar,
     panel = true,
     striped,
@@ -1362,6 +1365,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       FlexRender={table.FlexRender}
       compacta={mobileRow === "compact"}
       rasa={mobileRow === "flush"}
+      inset={mobileGroups === "inset"}
       marcando={marcadas.length > 0}
       menuDe={menuDaLinha}
     />
@@ -1416,7 +1420,15 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         {panel ? (
           <TablePanel
             className="w-full"
-            cardClassName={vazioFora ? "max-md:hidden" : undefined}
+            cardClassName={
+              vazioFora
+                ? "max-md:hidden"
+                : gemeo && mobileGroups === "inset"
+                  // Quem desenha no telefone são os cartões dos grupos: a moldura
+                  // fica só com o fio transparente, que alinha com a barra.
+                  ? "max-md:border-transparent max-md:bg-transparent"
+                  : undefined
+            }
             outside={vazioSolto}
             toolbar={barra ? <TablePanelToolbar className="gap-2">{barra}</TablePanelToolbar> : undefined}
             footer={rodape}
@@ -1565,6 +1577,7 @@ function GemeoDoTelefone<T extends RowData>({
   FlexRender,
   compacta = false,
   rasa = false,
+  inset = false,
   marcando = false,
   menuDe,
 }: {
@@ -1572,7 +1585,7 @@ function GemeoDoTelefone<T extends RowData>({
   rowState?: (row: T) => "current" | "pending" | undefined
   rowClickable?: (row: T) => boolean
   /** O grupo da linha, para o gêmeo repetir a faixa do mês. */
-  grupoDe?: (row: DataTableRow<T>) => { key: string; label: React.ReactNode } | null
+  grupoDe?: (row: DataTableRow<T>) => { key: string; label: React.ReactNode; aside?: React.ReactNode } | null
   onRowClick?: (row: T) => void
   rowActions?: DataTableAction<T>[]
   rotuloDe: (row: T) => string
@@ -1582,10 +1595,166 @@ function GemeoDoTelefone<T extends RowData>({
   compacta?: boolean
   /** `mobileRow="flush"`: só o visual — sem a caixa de `selected`, no degrau `sm`. */
   rasa?: boolean
+  /** `mobileGroups="inset"`: um cartão por grupo, com o cabeçalho por fora. */
+  inset?: boolean
   /** Alguma linha marcada: na linha compacta, o toque marca em vez de abrir. */
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
+  // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
+  // da mídia (o recuo do iOS) — a última linha do cartão não tem.
+  const linhaDe = (row: DataTableRow<T>, fio = false) => {
+    const cells = row.getVisibleCells()
+    const em = (lugar: DataTableColumnMeta["mobile"]) =>
+      cells.filter((c) => metaDe(c.column).mobile === lugar)
+    const [titulo] = em("title")
+    const [midia] = em("media")
+    const descricoes = em("description")
+    const pontas = em("trailing")
+    const metas = em("meta")
+    const identidade = titulo ? metaDe(titulo.column).identity : undefined
+    const legenda = identidade?.description?.(row.original)
+    const midiaDaIdentidade = identidade?.media?.(row.original)
+    const estado = rowState?.(row.original)
+    const clicavel = Boolean(onRowClick) && (rowClickable?.(row.original) ?? true)
+    const menu = compacta ? menuDe?.(row) : null
+    // Na linha compacta, com uma seleção em curso, o toque marca (como na lista do iOS em modo de edição).
+    const marcaNoToque = compacta && marcando && enableSelection && row.getCanSelect()
+    const comCaixa = enableSelection && row.getCanSelect() && (!compacta || marcando)
+    const comAcoes = Boolean(rowActions?.length) && (!compacta || !menu)
+    const item = (
+      <Item
+        variant="flush"
+        size={rasa ? "sm" : "lg"}
+        // O mesmo estado da linha da tabela: a prevista apaga texto e cor; a de agora só leva `aria-current`.
+        data-row-state={estado}
+        aria-current={estado === "current" ? "true" : undefined}
+        className={cn(
+          "gap-3",
+          // O fio do `inset` é o `::after` do conteúdo (abaixo): sem posição
+          // própria, ele parte de onde o texto começa e corre até a borda,
+          // recortada aqui; o eixo vertical fica livre para o alvo da caixa.
+          inset && "relative overflow-x-clip",
+          estado === "pending" &&
+            "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=money-display]]:opacity-50"
+        )}
+        interactive={clicavel || marcaNoToque}
+        selected={!rasa && row.getIsSelected()}
+        onClick={
+          marcaNoToque
+            ? () => row.toggleSelected()
+            : clicavel
+              ? () => onRowClick?.(row.original)
+              : undefined
+        }
+      >
+        {comCaixa ? (
+          <CaixaDaLinha row={row} label={rotuloDe(row.original)} />
+        ) : null}
+        {midiaDaIdentidade ?? midia ? (
+          <ItemMedia>{midiaDaIdentidade ?? (midia ? <FlexRender cell={midia} /> : null)}</ItemMedia>
+        ) : null}
+        {/* Duas colunas, como um extrato: nome e legenda à esquerda, uma
+            linha cada e truncando; valor e data à direita, alinhados pela
+            ponta (para os valores formarem coluna). */}
+        <ItemContent
+          className={cn(fio && "after:absolute after:-bottom-px after:h-px after:w-full after:bg-border after:content-['']")}
+        >
+          <ItemTitle className="w-full truncate">
+            {identidade
+              ? identidade.title(row.original)
+              : titulo
+                ? <FlexRender cell={titulo} />
+                : rotuloDe(row.original)}
+          </ItemTitle>
+          {legenda != null || descricoes.length ? (
+            <ItemDescription className="line-clamp-1 text-xs">
+              {legenda}
+              {descricoes.map((d, i) => (
+                <React.Fragment key={d.id}>
+                  {i > 0 || legenda != null ? " · " : null}
+                  <FlexRender cell={d} />
+                </React.Fragment>
+              ))}
+            </ItemDescription>
+          ) : null}
+        </ItemContent>
+        {pontas.length || metas.length ? (
+          <ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">
+            {pontas.map((p) => (
+              <span key={p.id} className="text-sm font-medium whitespace-nowrap">
+                <FlexRender cell={p} />
+              </span>
+            ))}
+            {metas.length ? (
+              <span className="text-xs whitespace-nowrap text-muted-foreground [&_*]:text-xs">
+                {metas.map((m, i) => (
+                  <React.Fragment key={m.id}>
+                    {i > 0 ? " · " : null}
+                    <FlexRender cell={m} />
+                  </React.Fragment>
+                ))}
+              </span>
+            ) : null}
+          </ItemContent>
+        ) : null}
+        {comAcoes && rowActions ? (
+          <ItemActions className="-me-2">
+            <AcoesDaLinha
+              row={row.original}
+              actions={rowActions.map((a) => ({ ...a, primary: false }))}
+              label={rotuloDe(row.original)}
+            />
+          </ItemActions>
+        ) : null}
+      </Item>
+    )
+    return menu ? (
+      <ContextMenu key={row.id}>
+        <ContextMenuTrigger asChild>{item}</ContextMenuTrigger>
+        {menu}
+      </ContextMenu>
+    ) : (
+      <React.Fragment key={row.id}>{item}</React.Fragment>
+    )
+  }
+
+  if (inset) {
+    // Grupos consecutivos pela chave; sem grupo (`null`), um cartão sem cabeçalho.
+    const grupos: { key: string; grupo: ReturnType<NonNullable<typeof grupoDe>>; linhas: DataTableRow<T>[] }[] = []
+    for (const row of rows) {
+      const grupo = grupoDe?.(row) ?? null
+      const ultimo = grupos.at(-1)
+      if (ultimo && ultimo.grupo?.key === grupo?.key) ultimo.linhas.push(row)
+      else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
+    }
+    return (
+      <div data-slot="data-table-mobile" className="flex flex-col gap-2">
+        {grupos.map(({ key, grupo, linhas }) => (
+          <div key={key} className="flex flex-col">
+            {grupo ? (
+              <div
+                data-slot="data-table-mobile-group-heading"
+                className="flex items-baseline justify-between gap-3 px-4 pb-1.5 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
+              >
+                <span className="min-w-0 truncate">{grupo.label}</span>
+                {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}
+              </div>
+            ) : null}
+            <ItemGroup
+              variant="divided"
+              data-slot="data-table-mobile-group"
+              // O fio do `divided` sai: quem o desenha é o conteúdo da linha (`linhaDe`).
+              className="overflow-hidden rounded-surface bg-card text-card-foreground [&>[data-slot=item]:not(:last-child)]:border-b-transparent"
+            >
+              {linhas.map((row, i) => linhaDe(row, i < linhas.length - 1))}
+            </ItemGroup>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <ItemGroup variant="divided" data-slot="data-table-mobile">
       {rows.map((row, i) => {
@@ -1593,126 +1762,17 @@ function GemeoDoTelefone<T extends RowData>({
         // mês também separa a lista, como na tabela.
         const grupo = grupoDe?.(row)
         const anterior = i > 0 ? grupoDe?.(rows[i - 1]) : null
-        const faixa =
-          grupo && grupo.key !== anterior?.key ? (
-            <div
-              key={`grupo:${grupo.key}:${row.id}`}
-              data-slot="data-table-mobile-group"
-              className="bg-muted/30 px-4 py-1.5 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
-            >
-              {grupo.label}
-            </div>
-          ) : null
-        const cells = row.getVisibleCells()
-        const em = (lugar: DataTableColumnMeta["mobile"]) =>
-          cells.filter((c) => metaDe(c.column).mobile === lugar)
-        const [titulo] = em("title")
-        const [midia] = em("media")
-        const descricoes = em("description")
-        const pontas = em("trailing")
-        const metas = em("meta")
-        const identidade = titulo ? metaDe(titulo.column).identity : undefined
-        const legenda = identidade?.description?.(row.original)
-        const midiaDaIdentidade = identidade?.media?.(row.original)
-        const estado = rowState?.(row.original)
-        const clicavel = Boolean(onRowClick) && (rowClickable?.(row.original) ?? true)
-        const menu = compacta ? menuDe?.(row) : null
-        // Na linha compacta, com uma seleção em curso, o toque marca (como na lista do iOS em modo de edição).
-        const marcaNoToque = compacta && marcando && enableSelection && row.getCanSelect()
-        const comCaixa = enableSelection && row.getCanSelect() && (!compacta || marcando)
-        const comAcoes = Boolean(rowActions?.length) && (!compacta || !menu)
-        const item = (
-          <Item
-            variant="flush"
-            size={rasa ? "sm" : "lg"}
-            // O mesmo estado da linha da tabela: a prevista apaga texto e cor; a de agora só leva `aria-current`.
-            data-row-state={estado}
-            aria-current={estado === "current" ? "true" : undefined}
-            className={cn(
-              "gap-3",
-              estado === "pending" &&
-                "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=money-display]]:opacity-50"
-            )}
-            interactive={clicavel || marcaNoToque}
-            selected={!rasa && row.getIsSelected()}
-            onClick={
-              marcaNoToque
-                ? () => row.toggleSelected()
-                : clicavel
-                  ? () => onRowClick?.(row.original)
-                  : undefined
-            }
-          >
-            {comCaixa ? (
-              <CaixaDaLinha row={row} label={rotuloDe(row.original)} />
-            ) : null}
-            {midiaDaIdentidade ?? midia ? (
-              <ItemMedia>{midiaDaIdentidade ?? (midia ? <FlexRender cell={midia} /> : null)}</ItemMedia>
-            ) : null}
-            {/* Duas colunas, como um extrato: nome e legenda à esquerda, uma
-                linha cada e truncando; valor e data à direita, alinhados pela
-                ponta (para os valores formarem coluna). */}
-            <ItemContent>
-              <ItemTitle className="w-full truncate">
-                {identidade
-                  ? identidade.title(row.original)
-                  : titulo
-                    ? <FlexRender cell={titulo} />
-                    : rotuloDe(row.original)}
-              </ItemTitle>
-              {legenda != null || descricoes.length ? (
-                <ItemDescription className="line-clamp-1 text-xs">
-                  {legenda}
-                  {descricoes.map((d, i) => (
-                    <React.Fragment key={d.id}>
-                      {i > 0 || legenda != null ? " · " : null}
-                      <FlexRender cell={d} />
-                    </React.Fragment>
-                  ))}
-                </ItemDescription>
-              ) : null}
-            </ItemContent>
-            {pontas.length || metas.length ? (
-              <ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">
-                {pontas.map((p) => (
-                  <span key={p.id} className="text-sm font-medium whitespace-nowrap">
-                    <FlexRender cell={p} />
-                  </span>
-                ))}
-                {metas.length ? (
-                  <span className="text-xs whitespace-nowrap text-muted-foreground [&_*]:text-xs">
-                    {metas.map((m, i) => (
-                      <React.Fragment key={m.id}>
-                        {i > 0 ? " · " : null}
-                        <FlexRender cell={m} />
-                      </React.Fragment>
-                    ))}
-                  </span>
-                ) : null}
-              </ItemContent>
-            ) : null}
-            {comAcoes && rowActions ? (
-              <ItemActions className="-me-2">
-                <AcoesDaLinha
-                  row={row.original}
-                  actions={rowActions.map((a) => ({ ...a, primary: false }))}
-                  label={rotuloDe(row.original)}
-                />
-              </ItemActions>
-            ) : null}
-          </Item>
-        )
         return (
           <React.Fragment key={row.id}>
-            {faixa}
-            {menu ? (
-              <ContextMenu>
-                <ContextMenuTrigger asChild>{item}</ContextMenuTrigger>
-                {menu}
-              </ContextMenu>
-            ) : (
-              item
-            )}
+            {grupo && grupo.key !== anterior?.key ? (
+              <div
+                data-slot="data-table-mobile-group"
+                className="bg-muted/30 px-4 py-1.5 text-2xs font-semibold tracking-wider text-muted-foreground uppercase"
+              >
+                {grupo.label}
+              </div>
+            ) : null}
+            {linhaDe(row)}
           </React.Fragment>
         )
       })}

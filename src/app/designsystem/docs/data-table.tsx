@@ -24,6 +24,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { TILE_PALETTE } from "@/lib/tile-palette"
+import { signedCurrencyBRL } from "@/lib/formatters"
 import { IphoneFrame } from "../ds-frame"
 import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
@@ -415,25 +416,41 @@ function DemoEdicao() {
   )
 }
 
+/** Março e fevereiro se encontram aqui: dois grupos para o `inset`. */
+const NO_TELEFONE = LANCAMENTOS.slice(12, 20)
+const totalDoMes = (mes: string) =>
+  signedCurrencyBRL(NO_TELEFONE.filter((l) => l.data.startsWith(mes)).reduce((s, l) => s + l.valor, 0))
+
 function DemoTelefone() {
   const [linha, setLinha] = React.useState<"full" | "flush">("full")
+  const [grupos, setGrupos] = React.useState<"band" | "inset">("band")
   const [selecao, setSelecao] = React.useState<Record<string, true>>(() =>
     Object.fromEntries(LANCAMENTOS.slice(0, 6).map((l) => [l.id, true] as const))
   )
   return (
     <div className="flex w-full flex-col items-center gap-4">
     {/* `flush`: a lista em que marcar é "esta entra" (a conferência do Importar) — quase tudo marcado, nenhuma linha em caixa. */}
-    <Controles inicio={<Eixo rotulo="Linha" valores={["full", "flush"] as const} valor={linha} onChange={setLinha} />} />
+    {/* `inset`: a lista agrupada do iOS — um cartão por grupo, com o nome e o total por fora (Transações). */}
+    <Controles
+      inicio={
+        <>
+          <Eixo rotulo="Linha" valores={["full", "flush"] as const} valor={linha} onChange={setLinha} />
+          <Eixo rotulo="Grupos" valores={["band", "inset"] as const} valor={grupos} onChange={setGrupos} />
+        </>
+      }
+    />
     <IphoneFrame title="Lançamentos num iPhone">
       {/* O topo desce da ilha do iPhone, como a página de Touch & safe area. */}
       <div className="h-full overflow-y-auto bg-background px-4 pt-16 pb-8">
         <DataTable
           aria-label="Lançamentos no telefone"
           columns={COLUNAS}
-          data={LANCAMENTOS.slice(0, 8)}
+          data={NO_TELEFONE}
           getRowId={(l) => l.id}
           getRowLabel={(l) => l.descricao}
           pageSize={false}
+          groupBy={(l) => ({ key: l.data.slice(0, 7), label: nomeDoMes(l.data), aside: totalDoMes(l.data.slice(0, 7)) })}
+          mobileGroups={grupos}
           enableSelection
           rowSelection={selecao}
           onRowSelectionChange={setSelecao}
@@ -562,9 +579,14 @@ export default function DataTableDoc() {
 
       <DocSection
         title="No telefone"
-        description="As colunas dizem onde moram no gêmeo (meta.mobile: media, title, description, trailing, meta), e abaixo de md a tabela vira a lista de Item — por CSS, sem hook de largura. A linha é um extrato: o nome e a legenda à esquerda, numa linha cada; o valor e a data à direita, alinhados pela ponta. As ações vão para o ⋯, que abre a folha com o nome da linha no título."
+        description="As colunas dizem onde moram no gêmeo (meta.mobile: media, title, description, trailing, meta), e abaixo de md a tabela vira a lista de Item — por CSS, sem hook de largura. A linha é um extrato: o nome e a legenda à esquerda, numa linha cada; o valor e a data à direita, alinhados pela ponta. As ações vão para o ⋯, que abre a folha com o nome da linha no título. Os grupos do groupBy são uma faixa dentro da lista (band) ou, com mobileGroups inset, a lista agrupada do iOS: um cartão por grupo, o nome e o aside por fora, o fio começando no texto, e a moldura do painel some."
         code={`col.identity({ …, meta: { mobile: "title" } })
-col.money({ … })        // trailing, de fábrica`}
+col.money({ … })        // trailing, de fábrica
+
+<DataTable
+  groupBy={(l) => ({ key: l.dia, label: diaDe(l), aside: totalDoDia(l.dia) })}
+  mobileGroups="inset"
+/>`}
         previewClassName="items-center"
       >
         <DemoTelefone />
@@ -596,11 +618,12 @@ col.money({ … })        // trailing, de fábrica`}
           { prop: "onRowClick", type: "(row) => void", description: "A linha clicável, com Enter no teclado." },
           { prop: "rowState", type: "(row) => \"current\" | \"pending\"", description: "A linha de agora e a prevista." },
           { prop: "renderDetail / getSubRows", type: "(row) => ReactNode / (row) => T[]", description: "O detalhe sob a linha e as sublinhas, com a seta que gira." },
-          { prop: "groupBy / groupTotal / groupCollapsible", type: "(row) => { key, label } / (rows) => ReactNode / boolean", description: "A faixa de grupo entre linhas consecutivas, com o total e a seta." },
+          { prop: "groupBy / groupTotal / groupCollapsible", type: "(row) => { key, label, aside? } / (rows) => ReactNode / boolean", description: "A faixa de grupo entre linhas consecutivas, com o total e a seta." },
           { prop: "enableSelection", type: "boolean | (row) => boolean", description: "A coluna de caixas; a função diz quais linhas se marcam." },
           { prop: "bulkActions / onSelectAllMatching", type: "DataTableBulkAction[] / () => void", description: "As ações da barra flutuante; marcar todas além da página." },
           { prop: "rowActions / rowContextMenu", type: "DataTableAction[] / boolean", description: "primary fica à vista, o resto vai para o ⋯; o botão direito repete." },
           { prop: "mobileRow", type: '"full" | "compact" | "flush"', default: '"full"', description: "A linha do gêmeo. compact: a caixa só aparece com uma seleção em curso (e o toque marca), e as ações moram no toque longo; sem menu de contexto, o ⋯ volta. flush: o full sem a caixa de selected e no degrau sm — para a lista em que marcar é \"esta entra\" e quase tudo está marcado (o Importar)." },
+          { prop: "mobileGroups", type: '"band" | "inset"', default: '"band"', description: "Os grupos do gêmeo. band: uma faixa dentro da lista. inset: a lista agrupada do iOS — um cartão por grupo, com o label e o aside do groupBy por fora, o fio começando no texto e, no telefone, sem a moldura do painel. Sem grupo (null), um cartão só." },
         ]}
       />
 
