@@ -46,6 +46,15 @@ describe("DataTable mobileSwipe", () => {
     expect(conta(transacoes, "swipeIcon:")).toBe(3)
   })
 
+  it("os botões são círculos de 44 só com ícone, que crescem com o arraste (rodada 402)", () => {
+    expect(fonte).not.toContain("LARGURA_DA_ACAO")
+    expect(ramo).toContain("larguraDaFaixa(")
+    expect(ramo).toContain("size-11 rounded-full")
+    expect(ramo).toContain("--deslize")
+    expect(ramo).not.toContain("{a.label}</span>")
+    expect(ramo).not.toContain("<span>")
+  })
+
   it("Excluir é o vermelho cheio, sem alfa (fix 1)", () => {
     expect(ramo).toContain('"bg-destructive text-destructive-foreground')
     expect(ramo).not.toMatch(/bg-destructive\//)
@@ -76,7 +85,7 @@ describe("DataTable mobileSwipe", () => {
 
   it("em repouso a faixa das ações fica escondida, para o vermelho não vazar pelos cantos", () => {
     const fonte = semComentarios(lerFonte("src/components/ui/data-table.tsx"))
-    expect(fonte).toContain('className="invisible absolute inset-y-0 end-0 flex"')
+    expect(fonte).toContain('className="invisible absolute inset-y-0 end-0 flex items-center gap-2 pe-2"')
     expect(fonte).toContain('faixa.style.visibility = x < 0 ? "visible" : ""')
   })
 })

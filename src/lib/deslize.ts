@@ -8,3 +8,13 @@ export function travarDirecao(dx: number, dy: number): "x" | "y" | null {
 export function assentarDeslize(deslocamento: number, larguraAcoes: number): number {
   return deslocamento <= -larguraAcoes / 2 ? -larguraAcoes : 0
 }
+
+/** A faixa das ações: n círculos de 44, cada um com 8px depois dele (entre eles e até a borda direita). */
+export function larguraDaFaixa(n: number): number {
+  return n * 52
+}
+
+/** Quanto a faixa já abriu, de 0 a 1: guia o crescimento dos círculos (`--deslize`). */
+export function progressoDoDeslize(x: number, largura: number): number {
+  return Math.min(1, Math.max(0, -x / largura))
+}

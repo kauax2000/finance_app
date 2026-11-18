@@ -29348,3 +29348,10 @@ Pedido do dono (18/11/2026).
 - `deslize.test.ts` e `data-table-deslize.test.ts`.
 - Ajuste no mesmo dia (revisão): o ícone de 20 do deslize vem de `swipeIcon`, uma prop nova da `DataTableAction` (`20/solid`); sem ela, o `icon` fica nos 16 dele, em vez de um `16/solid` ampliado. Transações passa os três. Excluir passa ao vermelho cheio (`bg-destructive` com `text-destructive-foreground`), e não mais a tinta translúcida do `Button destructive`. Os ouvintes de fora não se reinscrevem a cada render, e a mola não reinicia quando o efeito de `aberta` pede o mesmo alvo.
 - Correção no mesmo dia: em repouso, a faixa das ações fica `invisible`, e o `mover` a mostra só com a linha deslizada (`x < 0`). O vermelho cheio do Excluir vazava pelo antisserrilhado dos cantos arredondados da linha, como uma borda vermelha em todo cartão.
+
+### Rodada 402 — os botões do deslize viram círculos
+
+- As ações reveladas pelo deslize deixam de ser retângulos de 72px com rótulo: viram círculos de 44 só com o ícone (`swipeIcon` de 20; sem ele, o `icon` de 16), com o nome apenas no `aria-label` (o `confirm` segue armando no primeiro toque).
+- A faixa mede `larguraDaFaixa(n)` = `n * 52` (círculo de 44 + 8px depois dele): 8px entre os círculos e da borda direita. Duas ações, 104; três, 156.
+- Os círculos crescem com o arraste: `--deslize` (`progressoDoDeslize`, de 0 a 1) escrito pelo `mover` na faixa dirige `scale(calc(0.4 + 0.6 * var(--deslize)))` e a opacidade, sem transição própria. Fechada, volta a 0 e a faixa segue `invisible`.
+- Excluir segue em `bg-destructive` cheio; as outras em `bg-secondary`. Sem fundo colorido atrás.

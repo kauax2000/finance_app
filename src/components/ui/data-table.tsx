@@ -54,7 +54,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
-import { assentarDeslize, travarDirecao } from "@/lib/deslize"
+import { assentarDeslize, larguraDaFaixa, progressoDoDeslize, travarDirecao } from "@/lib/deslize"
 import { MOLA } from "@/lib/spring"
 import { topBarBottom } from "@/lib/top-bar-bottom"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
@@ -1635,9 +1635,6 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
   }, [lista, chave])
 }
 
-/** A largura de cada ação revelada pelo deslize (`w-18`). */
-const LARGURA_DA_ACAO = 72
-
 /**
  * `mobileSwipe`: a linha do gêmeo que desliza para a esquerda e revela as ações dela, como a lista do iOS.
  * Só o dedo (`pointerType === "touch"`), e só depois de a trava de direção dizer "x"; na vertical, a rolagem
@@ -1673,7 +1670,12 @@ function LinhaDeslizavel<T>({
   const arrastou = React.useRef(false)
   const [armada, setArmada] = React.useState<string | null>(null)
   const reduzido = useReducedMotion()
-  const largura = actions.length * LARGURA_DA_ACAO
+  const largura = larguraDaFaixa(actions.length)
+  // O `mover` é chamado por ouvintes e molas estáveis: lê a largura mais nova por ref.
+  const larguraRef = React.useRef(largura)
+  React.useLayoutEffect(() => {
+    larguraRef.current = largura
+  })
 
   const mover = (x: number) => {
     posicao.current = x
@@ -1681,7 +1683,11 @@ function LinhaDeslizavel<T>({
     // Em repouso a faixa das ações fica escondida: o vermelho cheio vazava pelo
     // antisserrilhado dos cantos arredondados da linha, como uma borda vermelha.
     const faixa = caixa.current?.querySelector<HTMLElement>("[data-slot=data-table-mobile-swipe-actions]")
-    if (faixa) faixa.style.visibility = x < 0 ? "visible" : ""
+    if (faixa) {
+      faixa.style.visibility = x < 0 ? "visible" : ""
+      // Os círculos crescem e aparecem com o arraste (sem transição própria).
+      faixa.style.setProperty("--deslize", String(progressoDoDeslize(x, larguraRef.current)))
+    }
   }
   // O alvo da mola em curso: soltar já a dispara, e o efeito de `aberta` que vem depois não a reinicia do zero.
   const alvoDaMola = React.useRef<number | null>(null)
@@ -1751,7 +1757,7 @@ function LinhaDeslizavel<T>({
       <div
         data-slot="data-table-mobile-swipe-actions"
         aria-hidden={!aberta}
-        className="invisible absolute inset-y-0 end-0 flex"
+        className="invisible absolute inset-y-0 end-0 flex items-center gap-2 pe-2"
       >
         {actions.map((a) => {
           const destrutiva = a.variant === "destructive"
@@ -1763,13 +1769,14 @@ function LinhaDeslizavel<T>({
               tabIndex={aberta ? 0 : -1}
               aria-label={confirmar ? `${typeof a.confirm === "string" ? a.confirm : "Confirmar"} ${label}` : `${a.label} ${label}`}
               className={cn(
-                "flex h-full min-h-11 w-18 flex-col items-center justify-center gap-1 text-2xs font-medium outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45",
+                "flex size-11 rounded-full items-center justify-center outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45",
                 // O ícone de 20 vem do `swipeIcon` (`20/solid`); sem ele, o `icon` fica nos 16 dele.
                 a.swipeIcon ? "[&_svg]:size-5" : "[&_svg]:size-4",
                 destrutiva
                   ? "bg-destructive text-destructive-foreground active:brightness-90"
                   : "bg-secondary text-secondary-foreground active:bg-secondary-hover"
               )}
+              style={{ transform: "scale(calc(0.4 + 0.6 * var(--deslize, 0)))", opacity: "var(--deslize, 0)" }}
               onClick={(e) => {
                 e.stopPropagation()
                 // `confirm`: o primeiro toque só arma, como no menu.
@@ -1779,7 +1786,6 @@ function LinhaDeslizavel<T>({
               }}
             >
               {a.swipeIcon ?? a.icon}
-              <span>{confirmar ? (typeof a.confirm === "string" ? a.confirm : "Confirmar?") : a.label}</span>
             </button>
           )
         })}
