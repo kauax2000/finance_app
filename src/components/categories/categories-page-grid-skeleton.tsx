@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeaderSkeleton } from "@/components/ui/page-header"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -179,7 +180,8 @@ export function CategoriesPageGridSkeleton({
     variant = "expense",
 }: Props) {
     return (
-        <SkeletonGroup className="min-w-0 max-w-full space-y-3" label={screenReaderLabel} delay>
+        <SkeletonGroup className="flex min-w-0 max-w-full flex-col gap-4" label={screenReaderLabel} delay>
+            <PageHeaderSkeleton description={false} actions={1} className="max-md:hidden" />
             <CategoriesToolbarSkeleton variant={variant} />
 
             <CategoryGridSkeleton variant={variant} />

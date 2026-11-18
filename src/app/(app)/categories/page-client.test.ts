@@ -1,0 +1,24 @@
+import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+
+describe("o cabeçalho de Categorias", () => {
+    const f = semComentarios(lerFonte("src/app/(app)/categories/page-client.tsx"), "tudo")
+    const esq = semComentarios(lerFonte("src/components/categories/categories-page-grid-skeleton.tsx"), "tudo")
+
+    it("abre com PageHeader collapse e o título escondido do leitor, só fora do telefone", () => {
+        expect(f).toMatch(/isMobile \? null : \(\s*<PageHeader collapse>/)
+        expect(f).toMatch(/<PageHeaderTitle asChild>[\s\S]{0,80}?<p aria-hidden="true">Categorias<\/p>/)
+    })
+
+    it("Nova categoria mora no cabeçalho, primária, só para quem escreve", () => {
+        expect(f).toMatch(/podeEscrever \? \(\s*<PageHeaderActions>[\s\S]*?variant="primary"[\s\S]*?Nova categoria/)
+    })
+
+    it("a barra só cria categoria no telefone", () => {
+        expect(f).toMatch(/onNewCategory=\{podeEscrever && isMobile \? \(\) => openDialog\(\) : undefined\}/)
+    })
+
+    it("o esqueleto tem o osso do cabeçalho, escondido no telefone", () => {
+        expect(esq).toContain('<PageHeaderSkeleton description={false} actions={1} className="max-md:hidden" />')
+    })
+})

@@ -51,7 +51,7 @@ describe("só leitura para quem não é adulto (Ruling 8)", () => {
         const f = fonte("src/app/(app)/categories/page-client.tsx")
         expect(f).toContain("const podeEscrever = isAdulto")
         expect(f).toMatch(/const showOnboarding =\s*podeEscrever &&/)
-        expect(f).toContain("onNewCategory={podeEscrever ? () => openDialog() : undefined}")
+        expect(f).toContain("onNewCategory={podeEscrever && isMobile ? () => openDialog() : undefined}")
         expect(f.match(/onEdit=\{podeEscrever \? \(\) => openDialog\(category\) : undefined\}/g)).toHaveLength(2)
         // O único `openDialog()` fora dos guardados é o do vazio, que mora dentro de `podeEscrever ? (`.
         const vazio = f.slice(f.indexOf("Criar primeira categoria") - 400, f.indexOf("Criar primeira categoria"))

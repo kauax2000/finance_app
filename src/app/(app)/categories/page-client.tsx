@@ -55,6 +55,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PlusIcon } from "@heroicons/react/16/solid"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+    PageHeader,
+    PageHeaderActions,
+    PageHeaderTitle,
+    PageHeaderTitleRow,
+} from "@/components/ui/page-header"
 import { upsertCategoryBudget, deleteCategoryBudgetById, definirRepeticao } from "@/lib/category-budget-ops"
 import { useGarantirOrcamentosDoMes } from "@/hooks/use-garantir-orcamentos-do-mes"
 import { OrcamentoRepeteWireframe } from "@/components/wireframe/orcamento-repete-wireframe"
@@ -100,6 +107,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     } = useWorkspace()
     // O convidado (Bloco 7A) só lê: sem criar, editar, apagar, orçamento nem o assistente.
     const podeEscrever = isAdulto
+    const isMobile = useIsMobile()
     const categoriesQuery = useCategoriesQuery(
         !authLoading && !workspaceLoading && currentWorkspaceId
             ? currentWorkspaceId
@@ -663,12 +671,31 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     }
 
     return (
-        <div className="min-w-0 max-w-full space-y-3">
+        <div className="flex min-w-0 max-w-full flex-col gap-4">
             {confirmDialog}
+            {/* No telefone a tela de aba não tem título, e a barra leva o Nova categoria. */}
+            {isMobile ? null : (
+                <PageHeader collapse>
+                    <PageHeaderTitleRow>
+                        <PageHeaderTitle asChild>
+                            {/* O `<h1>` da página é o da barra do topo. */}
+                            <p aria-hidden="true">Categorias</p>
+                        </PageHeaderTitle>
+                    </PageHeaderTitleRow>
+                    {podeEscrever ? (
+                        <PageHeaderActions>
+                            <Button type="button" variant="primary" onClick={() => openDialog()}>
+                                <PlusIcon aria-hidden />
+                                Nova categoria
+                            </Button>
+                        </PageHeaderActions>
+                    ) : null}
+                </PageHeader>
+            )}
             <CategoriesToolbar
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
-                onNewCategory={podeEscrever ? () => openDialog() : undefined}
+                onNewCategory={podeEscrever && isMobile ? () => openDialog() : undefined}
                 includeAll={false}
                 showMonthControls={filterType === "expense"}
                 budgetMonthYm={budgetMonthYm}
