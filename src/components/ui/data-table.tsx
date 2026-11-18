@@ -1569,7 +1569,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
 /**
  * A troca do dia preso nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
  * de `lista`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
- * o dia não sobe. Quando o próximo encosta nele (a menos de uma altura), ele ganha
+ * o dia não sobe. Quando o texto do próximo encosta no dele (a menos de uma linha), ele ganha
  * `data-saindo` e o texto gira no próprio eixo e some de uma vez, por transição de
  * CSS, sem seguir a rolagem; rolando de volta, o atributo sai e ele volta. O próximo
  * passa por cima (`data-coberto`, que apaga o fundo do de baixo). Um quadro por
@@ -1591,7 +1591,11 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
       const cabecalhosAgora = cabecalhos()
       // Toda leitura antes de qualquer escrita, para não forçar o layout a cada cabeçalho.
       const tops = cabecalhosAgora.map((c) => c.getBoundingClientRect().top)
-      const alturas = cabecalhosAgora.map((c) => c.offsetHeight)
+      // A troca começa quando o texto do próximo encosta no deste: a distância é a
+      // altura da linha de texto (o miolo), e não a do cabeçalho com o respiro.
+      const alturas = cabecalhosAgora.map(
+        (c) => c.querySelector<HTMLElement>("[data-slot=data-table-mobile-group-heading-text]")?.offsetHeight ?? 0
+      )
       cabecalhosAgora.forEach((c, i) => {
         const preso = tops[i] <= linha + 0.5
         const distancia = i + 1 < tops.length ? tops[i + 1] - tops[i] : Infinity

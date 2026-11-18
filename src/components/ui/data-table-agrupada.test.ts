@@ -61,6 +61,8 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(fonte).toContain('c.toggleAttribute("data-saindo", preso && distancia < alturas[i])')
     expect(fonte).toContain("data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]")
     expect(fonte).not.toContain("style.transform")
+    // Começa quando o texto do próximo encosta: a medida é a linha do miolo, não o cabeçalho.
+    expect(fonte).toMatch(/const alturas = cabecalhosAgora\.map\(\s*\(c\) => c\.querySelector<HTMLElement>\("\[data-slot=data-table-mobile-group-heading-text\]"\)\?\.offsetHeight/)
   })
 
   it("um cartão por grupo, com o nome e o `aside` por fora", () => {

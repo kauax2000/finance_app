@@ -29321,4 +29321,5 @@ Pedido do dono (18/11/2026), sobre a rodada 398: menos inclinação nas pontas d
 - A perspectiva foi de 400px para 1200px. O texto ocupa a largura toda, e a 400px as pontas inclinavam como itálico.
 - Com movimento reduzido, `--dia-giro` fica em 0 e só a opacidade muda.
 - `lib/troca-do-dia` saiu: o ouvinte não escreve mais estilo, só os atributos.
+- Ajuste no mesmo dia: a troca começava longe, com o próximo a uma altura de cabeçalho (40px, contando o respiro). Agora começa a uma linha de texto (a altura do miolo, ~16px): o texto de baixo encosta no de cima antes de ele girar.
 
