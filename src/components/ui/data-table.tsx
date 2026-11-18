@@ -1567,7 +1567,6 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
   )
 }
 
-/** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 /**
  * A troca do dia preso nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
  * de `lista`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
@@ -1633,6 +1632,7 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
   }, [lista, chave])
 }
 
+/** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 function GemeoDoTelefone<T extends RowData>({
   rows,
   rowState,
