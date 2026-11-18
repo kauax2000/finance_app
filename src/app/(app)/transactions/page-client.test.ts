@@ -37,15 +37,18 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("transactions-table")
     })
 
-    it("o cabeçalho só tem o ⋯ de importar e exportar: criar mora no + Adicionar da barra lateral", () => {
+    it("o cabeçalho só tem o título: Importar e Exportar moram na barra da lista", () => {
         expect(f).toMatch(/<PageHeader collapse>/)
         expect(f).toMatch(/<PageHeaderTitle asChild>[\s\S]{0,80}?<p aria-hidden="true">Transações<\/p>/)
         expect(f).not.toContain("TransactionNewSplitButton")
-        const acoes = f.slice(f.indexOf("<PageHeaderActions"), f.indexOf("</PageHeaderActions>"))
-        expect(f).toMatch(/convidado \? null : \(\s*<PageHeaderActions>/)
-        // Importar e Exportar moram no ⋯ (o mesmo menu do telefone), sem botão primário no cabeçalho.
-        expect(acoes).toMatch(/<MenuMaisAcoes[\s\S]*onImportar=[\s\S]*onExportar=/)
-        expect(acoes).not.toContain('variant="primary"')
+        expect(f).not.toContain("<PageHeaderActions")
+        expect(f).not.toContain("MenuMaisAcoes")
+        const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
+        expect(barra).toMatch(/className="hidden shrink-0 items-center gap-1 md:flex @max-3xl\/transacoes:hidden"/)
+        expect(barra).toMatch(/<Button type="button" variant="tertiary" onClick=\{onImportar\}>[\s\S]{0,140}?Importar\s*<\/Button>/)
+        expect(barra).toMatch(/<Button type="button" variant="tertiary" onClick=\{onExportar\} disabled=\{exportando\}>[\s\S]{0,140}?Exportar\s*<\/Button>/)
+        // O ⋯ é o complemento: telefone ou linha partida.
+        expect(barra).toMatch(/className="hidden shrink-0 max-md:flex @max-3xl\/transacoes:flex"/)
     })
 
     it("o convidado não vê Importar nem Exportar no ⋯, nem o Confirmar todos (spec §12)", () => {
@@ -56,7 +59,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         const barra = fonte("src/components/transactions/transacoes-toolbar.tsx")
         expect(barra).toContain("onImportar?: () => void")
         expect(barra).toContain("onExportar?: () => void")
-        expect(barra).toMatch(/\{onImportar \|\| onExportar \? \(\s*<div className="hidden shrink-0 max-md:flex">/)
+        expect(barra).toMatch(/\{onImportar \|\| onExportar \? \(\s*<div className="hidden shrink-0 max-md:flex @max-3xl\/transacoes:flex">/)
         expect(barra).toMatch(/\{onImportar \? \(\s*<DropdownMenuItem onSelect=\{onImportar\}>/)
         expect(barra).toMatch(/\{onExportar \? \(\s*<DropdownMenuItem onSelect=\{onExportar\} disabled=\{exportando\}>/)
         const tabela = fonte("src/components/transactions/transacoes-tabela.tsx")
