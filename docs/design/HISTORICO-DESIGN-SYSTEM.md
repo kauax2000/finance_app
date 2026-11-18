@@ -29261,3 +29261,10 @@ inteiro, e o degradê de 56px sobe todo por cima da borda (`--dialog-footer-fade
 baixo do corpo soma os mesmos 56px no lugar do `--dialog-body-pb`. O cabeçalho não muda. Medido a
 375px: com o rodapé de 124,5px, a placa cobre os 124,5px (mais a área segura) e o degradê vai de
 124,5px a 180,5px acima do pé.
+
+### Rodada 394 — o vão depois da última linha encolhe
+
+Com o recuo de 56px da rodada 393, sobrava um vão grande entre a última linha e o rodapé. O recuo
+de baixo do corpo foi a 32px (`calc(var(--dialog-footer-h, 0px) + var(--spacing) * 8)`): no fim
+da rolagem a última linha fica a 32px do rodapé, sobre a ponta clara do degradê, e continua
+legível. Medido a 375px no Importar: a última linha termina em 618px e o rodapé começa em 650px.

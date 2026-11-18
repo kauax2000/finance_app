@@ -4479,11 +4479,12 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
   }
 
-  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura e o degradê (56px):
-     a última linha fica inteira acima da sombra com a lista rolada até o fim. */
+  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura e 32px: no fim da
+     rolagem a última linha fica sobre a ponta clara do degradê (a metade de cima dos 56px), sem
+     um vão do tamanho da sombra inteira (rodada 394). */
   [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
     margin-bottom: calc(var(--dialog-footer-h, 0px) * -1);
-    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 14);
+    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 8);
     scroll-padding-block-end: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
     /* Quem esconde o conteúdo embaixo é o rodapé: a dissolução de baixo sai. */
     --scroll-fade-bottom-max: 0px;
