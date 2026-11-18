@@ -29268,3 +29268,12 @@ Com o recuo de 56px da rodada 393, sobrava um vão grande entre a última linha 
 de baixo do corpo foi a 32px (`calc(var(--dialog-footer-h, 0px) + var(--spacing) * 8)`): no fim
 da rolagem a última linha fica a 32px do rodapé, sobre a ponta clara do degradê, e continua
 legível. Medido a 375px no Importar: a última linha termina em 618px e o rodapé começa em 650px.
+
+### Rodada 395 — no fim da lista, o rodapé apaga a placa e a sombra juntas
+
+Os 32px da rodada 394 ainda deixavam um vão grande: somados aos 16px do recuo do rodapé e ao da
+própria linha. O recuo extra foi a 8px, e nos últimos 24px da rolagem a placa e o degradê se apagam
+juntos (`@keyframes dialog-rodape-apaga-no-fim`, `animation-range: calc(100% - 24px) 100%`). Na
+rodada 387 só o degradê se apagava, e a placa a 95% sobre o vidro da gaveta (50%) desenhava a
+linha reta da rodada 390. Apagando as duas, no fim o rodapé é o próprio vidro: sem nada por trás,
+sem linha. Medido a 375px no Importar: no meio da lista as duas camadas ficam em 1, no fim em 0.

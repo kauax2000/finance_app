@@ -4479,18 +4479,19 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     }
   }
 
-  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura e 32px: no fim da
-     rolagem a última linha fica sobre a ponta clara do degradê (a metade de cima dos 56px), sem
-     um vão do tamanho da sombra inteira (rodada 394). */
+  /* O corpo desce por trás pela altura medida, e o recuo soma a mesma altura e 8px: no fim da
+     rolagem a última linha encosta no rodapé, e a placa e a sombra já se apagaram (rodada 395). */
   [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
     margin-bottom: calc(var(--dialog-footer-h, 0px) * -1);
-    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 8);
+    padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
     scroll-padding-block-end: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2);
     /* Quem esconde o conteúdo embaixo é o rodapé: a dissolução de baixo sai. */
     --scroll-fade-bottom-max: 0px;
   }
 
-  /* Como o cabeçalho (rodada 386): só existe quando o corpo rola, e aí fica aceso. */
+  /* Como o cabeçalho (rodada 386): só existe quando o corpo rola. Nos últimos 24px da rolagem a
+     placa e a sombra se apagam juntas (rodada 395): no fim nada passa por trás do rodapé, e a
+     placa sozinha, sobre o vidro da gaveta, desenhava uma linha reta na borda. */
   @supports (animation-timeline: scroll()) {
     [data-layout="fixed"]:has(&) {
       timeline-scope: --dialog-body-scroll;
@@ -4502,14 +4503,24 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
       &::before,
       &::after {
         opacity: 0;
-        animation: dialog-placa-com-rolagem linear both;
+        animation: dialog-rodape-apaga-no-fim linear both;
         animation-timeline: --dialog-body-scroll;
+        animation-range: calc(100% - 24px) 100%;
       }
     }
   }
 }
 
 /* De 1 a 1: com a linha do tempo ativa (o corpo rola), a placa fica acesa o tempo todo. */
+@keyframes dialog-rodape-apaga-no-fim {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes dialog-placa-com-rolagem {
   from {
     opacity: 1;

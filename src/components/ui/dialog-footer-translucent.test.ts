@@ -30,13 +30,13 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
     expect(DIALOG).toContain("var(--scroll-fade-bottom-max,var(--scroll-fade-end-h))")
   })
 
-  it("como o cabeçalho: só existe quando o corpo rola (rodada 386)", () => {
+  it("só existe quando o corpo rola, e placa e sombra se apagam juntas no fim (rodadas 386 e 395)", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
-    expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
-    // A sombra mora dentro do rodapé e passa 16px da borda de cima (rodada 390): sem linha reta no fim.
+    expect(u).toContain("animation: dialog-rodape-apaga-no-fim linear both")
+    expect(u).toContain("animation-range: calc(100% - 24px) 100%")
+    expect(u).toContain("padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2)")
     expect(u).toContain("height: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
     expect(u).toContain("bottom: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
-    expect(u).not.toContain("animation-range")
   })
 
   it("na gaveta de baixo, a placa desce até a borda e cobre a área segura", () => {
