@@ -1604,7 +1604,9 @@ function GemeoDoTelefone<T extends RowData>({
   // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
   // da mídia (o recuo do iOS) — a última linha do cartão não tem.
   const linhaDe = (row: DataTableRow<T>, fio = false) => {
-    const cells = row.getVisibleCells()
+    // Todas as células, e não só as visíveis: esconder uma coluna é escolha da tabela do desktop
+    // (o menu de colunas não existe no telefone), e a legenda do gêmeo perdia a categoria.
+    const cells = row.getAllCells()
     const em = (lugar: DataTableColumnMeta["mobile"]) =>
       cells.filter((c) => metaDe(c.column).mobile === lugar)
     const [titulo] = em("title")

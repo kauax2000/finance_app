@@ -21,7 +21,7 @@ describe("regras da tabela de transações", () => {
     it("o total do dia no telefone soma as saídas, ou as entradas se nada saiu", () => {
         expect(totalDoDiaEmTexto([tx({ amount: 29.09 }), tx({ amount: 213.36 }), tx({ type: "income", amount: 5 })])).toBe(signedCurrencyBRL(-242.45))
         expect(totalDoDiaEmTexto([tx({ type: "income", amount: 1200 })])).toBe(signedCurrencyBRL(1200))
-        expect(totalDoDiaEmTexto([tx({ amount: 5, id: `${PROJECTED_TRANSACTION_ID_PREFIX}1` })])).toBe(signedCurrencyBRL(0))
+        expect(totalDoDiaEmTexto([tx({ amount: 5, id: `${PROJECTED_TRANSACTION_ID_PREFIX}1` })])).toBeNull()
     })
     it("a tela liga o cartão por dia e tira o pagamento único da legenda", () => {
         const fonte = semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
@@ -73,5 +73,12 @@ describe("fonte da tabela", () => {
         expect(fonte).toContain("Nenhum lançamento com esses filtros")
         expect(fonte).toContain("Tudo conferido")
         expect(fonte).toContain('variant="done"')
+    })
+})
+
+describe("o total do dia de um dia só de previstas", () => {
+    it("não existe", async () => {
+        const { totalDoDiaEmTexto } = await import("./transacoes-tabela-regras")
+        expect(totalDoDiaEmTexto([])).toBeNull()
     })
 })

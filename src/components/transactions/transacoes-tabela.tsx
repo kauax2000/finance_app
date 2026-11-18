@@ -420,9 +420,9 @@ export function TransacoesTabela({
 
     // O dia de cada linha, na ordem da página (que já vem por data).
     const diaDaLinha = React.useMemo(() => {
-        const mapa = new Map<string, { key: string; label: string; aside: string }>()
+        const mapa = new Map<string, { key: string; label: string; aside?: string }>()
         for (const g of groupByLocalDay(transacoes, diaLocalDe)) {
-            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data), aside: totalDoDiaEmTexto(g.itens) }
+            const grupo = { key: g.chave, label: formatDayHeadingPtBr(g.data), aside: totalDoDiaEmTexto(g.itens) ?? undefined }
             for (const t of g.itens) mapa.set(t.id, grupo)
         }
         return mapa

@@ -73,3 +73,11 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(conta(gemeo(faixa), 'data-slot="data-table-mobile-group"')).toBe(2)
   })
 })
+
+describe("o gêmeo do telefone não segue as colunas escondidas do desktop", () => {
+  it("lê todas as células da linha", async () => {
+    const { lerFonte, semComentarios } = await import("@/test/fonte")
+    const fonte = semComentarios(lerFonte("src/components/ui/data-table.tsx"))
+    expect(fonte).toContain("const cells = row.getAllCells()")
+  })
+})

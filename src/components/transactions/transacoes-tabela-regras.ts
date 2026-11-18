@@ -15,8 +15,10 @@ export function totalDoDia(linhas: Transaction[]): number {
 }
 
 /** O total do dia na lista do telefone: o que saiu (sem as previstas) e, se nada saiu, o que entrou. */
-export function totalDoDiaEmTexto(linhas: Transaction[]): string {
+export function totalDoDiaEmTexto(linhas: Transaction[]): string | null {
     const reais = linhas.filter((t) => !isProjectedTransactionRow(t))
+    // Um dia só de previstas não tem total: "R$ 0,00" diria que nada aconteceu.
+    if (!reais.length) return null
     const saidas = reais.filter((t) => t.type !== "income")
     const soma = (l: Transaction[]) => Math.round(l.reduce((a, t) => a + valorComSinal(t), 0) * 100) / 100
     return signedCurrencyBRL(saidas.length ? soma(saidas) : soma(reais))
