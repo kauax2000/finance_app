@@ -29311,3 +29311,14 @@ Pedido do dono (18/11/2026): o dia de cima não deve subir empurrado pelo próxi
 - `useTrocaDoDia` troca o `useCabecalhoPreso`: um quadro por rajada de rolagem (`passive`, `capture`, nunca `rAF` em laço), lê a linha da barra por `topBarBottom` e marca `data-preso` e `data-coberto` (o próximo já em cima). Coberto, o `::before` do de baixo apaga, para o fundo não somar ao do próximo.
 - O vão entre os dias segue 24px: o `gap-2` da lista virou `not-first:mt-2` no cabeçalho (e no cartão sem cabeçalho), mais o `pt-4`.
 - `troca-do-dia.test.ts` e `data-table-agrupada.test.ts`.
+
+### Rodada 399 — a troca do dia dispara de uma vez
+
+Pedido do dono (18/11/2026), sobre a rodada 398: menos inclinação nas pontas do texto e a animação de uma vez, sem seguir a rolagem.
+
+- O giro deixa de acompanhar a rolagem. Quando o próximo dia encosta no preso (a menos de uma altura dele), o `useTrocaDoDia` marca `data-saindo`, e o texto gira 90° e some numa transição de `--duration-slow` (300ms) em `--ease-out`. Rolando de volta, o atributo sai e o texto volta pela mesma transição.
+- O giro chega ao miolo por variável (`--dia-giro`, `--dia-opacidade`), declarada na raiz pelo `data-saindo`: uma variante `group-data-*` perderia para a classe base.
+- A perspectiva foi de 400px para 1200px. O texto ocupa a largura toda, e a 400px as pontas inclinavam como itálico.
+- Com movimento reduzido, `--dia-giro` fica em 0 e só a opacidade muda.
+- `lib/troca-do-dia` saiu: o ouvinte não escreve mais estilo, só os atributos.
+

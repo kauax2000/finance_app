@@ -48,7 +48,8 @@ describe('DataTable mobileGroups="inset"', () => {
     const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
     expect(ramo).toContain("useTrocaDoDia(lista,")
     expect(ramo).toContain("ref={setLista}")
-    expect(fonte).toContain("perspective(400px) rotateX(")
+    expect(fonte).toContain("[transform:perspective(1200px)_rotateX(var(--dia-giro,0deg))]")
+    expect(fonte).toContain("transition-[transform,opacity] duration-(--duration-slow)")
     expect(ramo).not.toContain("useCabecalhoPreso")
     expect(fonte).not.toContain("useCabecalhoPreso")
     expect(ramo).toContain('data-slot="data-table-mobile-group-heading-text"')
@@ -56,7 +57,10 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(ate).not.toContain('<div key={key} className="flex flex-col">')
     expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*not-first:mt-2[^"]*data-coberto:before:opacity-0/)
     expect(fonte).toContain("passive: true")
-    expect(fonte).toContain("trocaDoDia(")
+    // A troca dispara de uma vez (rodada 399): o ouvinte só marca `data-saindo`, sem escrever giro.
+    expect(fonte).toContain('c.toggleAttribute("data-saindo", preso && distancia < alturas[i])')
+    expect(fonte).toContain("data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]")
+    expect(fonte).not.toContain("style.transform")
   })
 
   it("um cartão por grupo, com o nome e o `aside` por fora", () => {

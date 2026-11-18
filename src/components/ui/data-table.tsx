@@ -55,7 +55,6 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
 import { topBarBottom } from "@/lib/top-bar-bottom"
-import { trocaDoDia } from "@/lib/troca-do-dia"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
 import { downloadCsv, toCsv, type CsvColumn } from "@/lib/data-table/csv"
@@ -1570,9 +1569,11 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
 /**
  * A troca do dia preso nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
  * de `lista`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
- * o dia não sobe. Quando o próximo chega a menos de uma altura dele, o texto gira
- * no próprio eixo e some (`trocaDoDia`), e o próximo passa por cima
- * (`data-coberto`, que apaga o fundo do de baixo). Um quadro por rajada de rolagem.
+ * o dia não sobe. Quando o próximo encosta nele (a menos de uma altura), ele ganha
+ * `data-saindo` e o texto gira no próprio eixo e some de uma vez, por transição de
+ * CSS, sem seguir a rolagem; rolando de volta, o atributo sai e ele volta. O próximo
+ * passa por cima (`data-coberto`, que apaga o fundo do de baixo). Um quadro por
+ * rajada de rolagem.
  */
 // `lista` é o elemento, e não um ref: a lista monta depois do primeiro render, e um
 // ref ainda vazio no efeito não o faria rodar de novo.
@@ -1582,9 +1583,7 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
     const janela = no?.ownerDocument.defaultView
     if (!no || !janela) return
     const doc = no.ownerDocument
-    const reduzido = janela.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
     const cabecalhos = () => Array.from(no.querySelectorAll<HTMLElement>("[data-slot=data-table-mobile-group-heading]"))
-    const textoDe = (c: HTMLElement) => c.querySelector<HTMLElement>("[data-slot=data-table-mobile-group-heading-text]")
     let quadro = 0
     const medir = () => {
       quadro = 0
@@ -1595,16 +1594,9 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
       const alturas = cabecalhosAgora.map((c) => c.offsetHeight)
       cabecalhosAgora.forEach((c, i) => {
         const preso = tops[i] <= linha + 0.5
-        const proximo = tops[i + 1]
-        const distancia = proximo === undefined ? Infinity : proximo - tops[i]
-        const { giro, opacidade } =
-          preso && proximo !== undefined ? trocaDoDia(distancia, alturas[i], reduzido) : { giro: 0, opacidade: 1 }
-        const texto = textoDe(c)
-        if (texto) {
-          texto.style.transform = giro ? `perspective(400px) rotateX(${giro}deg)` : ""
-          texto.style.opacity = opacidade < 1 ? String(opacidade) : ""
-        }
+        const distancia = i + 1 < tops.length ? tops[i + 1] - tops[i] : Infinity
         c.toggleAttribute("data-preso", preso)
+        c.toggleAttribute("data-saindo", preso && distancia < alturas[i])
         c.toggleAttribute("data-coberto", preso && distancia <= 0)
       })
     }
@@ -1620,12 +1612,8 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
       janela.removeEventListener("resize", agendar)
       if (quadro) janela.cancelAnimationFrame(quadro)
       for (const c of cabecalhos()) {
-        const texto = textoDe(c)
-        if (texto) {
-          texto.style.transform = ""
-          texto.style.opacity = ""
-        }
         c.removeAttribute("data-preso")
+        c.removeAttribute("data-saindo")
         c.removeAttribute("data-coberto")
       }
     }
@@ -1817,11 +1805,14 @@ function GemeoDoTelefone<T extends RowData>({
               // texto. O vão entre os dias é o `mt-2` mais o respiro de cima (`pt-4`).
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 data-coberto:before:opacity-0 reduced-transparency:before:hidden"
+                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 data-coberto:before:opacity-0 reduced-transparency:before:hidden data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]"
               >
                 <span
                   data-slot="data-table-mobile-group-heading-text"
-                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3"
+                  // O giro sai da raiz por variável (`--dia-giro`, `--dia-opacidade`): uma
+                  // variante `group-data-*` perderia para a classe base. A perspectiva longa
+                  // (1200px) quase não inclina as pontas do texto, que ocupa a largura toda.
+                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3 opacity-(--dia-opacidade,1) transition-[transform,opacity] duration-(--duration-slow) ease-(--ease-out) [transform:perspective(1200px)_rotateX(var(--dia-giro,0deg))]"
                 >
                   <span className="min-w-0 truncate">{grupo.label}</span>
                   {grupo.aside != null ? <span className="nums shrink-0 whitespace-nowrap">{grupo.aside}</span> : null}
