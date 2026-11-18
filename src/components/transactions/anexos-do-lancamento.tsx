@@ -79,6 +79,8 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
         await lista.refetch()
     }
 
+    const escolherArquivo = () => input.current?.click()
+
     if (!workspaceId) return null
     if (lista.isPending) return <PageSectionSkeleton size="sm" actions />
     const anexos = lista.data ?? []
@@ -87,12 +89,14 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
         <PageSection size="sm">
             <PageSectionHeader
                 actions={
+                    // No telefone a ação desce para o botão largo do fim da seção (abaixo).
                     <Button
                         type="button"
                         variant="secondary"
+                        className="max-sm:hidden"
                         disabled={enviando}
                         aria-busy={enviando || undefined}
-                        onClick={() => input.current?.click()}
+                        onClick={escolherArquivo}
                     >
                         {enviando ? <Spinner /> : <PlusIcon aria-hidden />}
                         Adicionar
@@ -185,6 +189,19 @@ export function AnexosDoLancamento({ transaction: t }: { transaction: Pick<Trans
                     </ItemGroup>
                 </Card>
             )}
+            {/* No telefone a ação é larga e fica embaixo, ao alcance do polegar (a opção C, 18/11/2026);
+                no título ela virava um círculo só com o "+". */}
+            <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:hidden"
+                disabled={enviando}
+                aria-busy={enviando || undefined}
+                onClick={escolherArquivo}
+            >
+                {enviando ? <Spinner /> : <PlusIcon aria-hidden />}
+                Adicionar anexo
+            </Button>
 
             <VisualizadorDeAnexo
                 anexo={aberto}
