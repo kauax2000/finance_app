@@ -2316,8 +2316,8 @@ export function dataTableColumns<T extends RowData>() {
       flash?: boolean
       /** Sem o sinal — a coluna em que todo valor é do mesmo lado. */
       signed?: boolean
-      /** `none` deixa neutro: o preço de uma assinatura não é "entrou dinheiro". */
-      tone?: "sign" | "none"
+      /** `none` deixa neutro: o preço de uma assinatura não é "entrou dinheiro". `income` só pinta a entrada. */
+      tone?: "sign" | "none" | "income"
       meta?: DataTableColumnMeta
     }): DataTableColumnDef<T> =>
       helper.accessor(accessor, {

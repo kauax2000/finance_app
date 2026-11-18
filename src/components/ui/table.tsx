@@ -1182,9 +1182,10 @@ function TableCellMoney({
   flash?: boolean
   /**
    * `sign` pinta pelo sinal (entrou, saiu); `none` deixa neutro (o saldo, que não
-   * é dinheiro entrando nem saindo).
+   * é dinheiro entrando nem saindo); `income` pinta só a entrada e deixa a saída
+   * no texto (o gasto, que é a regra da lista, não precisa de vermelho).
    */
-  tone?: "sign" | "none"
+  tone?: "sign" | "none" | "income"
 }) {
   const [anterior, setAnterior] = React.useState(value)
   const [trocas, setTrocas] = React.useState(0)
@@ -1193,7 +1194,13 @@ function TableCellMoney({
     setTrocas((n) => n + 1)
   }
   const tom =
-    tone === "none" || value == null || value === 0 ? undefined : value < 0 ? "expense" : "income"
+    tone === "none" || value == null || value === 0
+      ? undefined
+      : value < 0
+        ? tone === "income"
+          ? undefined
+          : "expense"
+        : "income"
   return (
     <span
       key={flash ? trocas : undefined}

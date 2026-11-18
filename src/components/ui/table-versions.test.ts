@@ -18,6 +18,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableCellMoney,
   TableError,
   TableGroupRow,
   TableHead,
@@ -119,6 +120,18 @@ describe("as versões do Table", () => {
     expect(html).toMatch(/colspan="2"/i)
     expect(html).toContain('aria-expanded="false"')
     expect(html).toContain("R$ 10,00")
+  })
+
+  it("`TableCellMoney tone=\"income\"` pinta só a entrada; o gasto fica no texto", () => {
+    const m = (value: number, tone?: "sign" | "none" | "income") =>
+      renderToStaticMarkup(h(TableCellMoney, { value, tone }))
+    expect(m(-10, "income")).not.toContain("text-expense")
+    expect(m(-10, "income")).toContain("text-foreground")
+    expect(m(10, "income")).toContain("text-income")
+    const zero = m(0, "income")
+    expect(zero).not.toContain("text-income")
+    expect(zero).not.toContain("text-expense")
+    expect(m(-10)).toContain("text-expense")
   })
 
   it("o esqueleto anuncia uma vez, com o cabeçalho real; `group={false}` não aninha outro status", () => {

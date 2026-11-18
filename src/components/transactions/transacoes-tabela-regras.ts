@@ -45,3 +45,9 @@ export function ordemDepoisDoClique(
  * UTC, que no Brasil cai no dia anterior e partiria o grupo do dia.
  */
 export const diaLocalDe = (t: Pick<Transaction, "date">) => `${t.date.slice(0, 10)}T12:00:00`
+
+/** A parcela que o banco grava no fim da descrição, "(2/3)", dita como "2 de 3"; `null` sem parcela. */
+export function parcelaDe(descricao: string): string | null {
+    const m = descricao.match(/ \((\d+)\/(\d+)\)$/)
+    return m ? `${m[1]} de ${m[2]}` : null
+}

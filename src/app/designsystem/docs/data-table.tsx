@@ -582,6 +582,7 @@ export default function DataTableDoc() {
         description="As colunas dizem onde moram no gêmeo (meta.mobile: media, title, description, trailing, meta), e abaixo de md a tabela vira a lista de Item — por CSS, sem hook de largura. A linha é um extrato: o nome e a legenda à esquerda, numa linha cada; o valor e a data à direita, alinhados pela ponta. As ações vão para o ⋯, que abre a folha com o nome da linha no título. Os grupos do groupBy são uma faixa dentro da lista (band) ou, com mobileGroups inset, a lista agrupada do iOS: um cartão por grupo, o nome e o aside por fora, o fio começando no texto, e a moldura do painel some."
         code={`col.identity({ …, meta: { mobile: "title" } })
 col.money({ … })        // trailing, de fábrica
+col.money({ …, tone: "income" })  // só a entrada ganha cor; o gasto fica no texto
 
 <DataTable
   groupBy={(l) => ({ key: l.dia, label: diaDe(l), aside: totalDoDia(l.dia) })}

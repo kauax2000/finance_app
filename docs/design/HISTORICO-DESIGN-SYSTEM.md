@@ -29325,3 +29325,12 @@ Pedido do dono (18/11/2026), sobre a rodada 398: menos inclinação nas pontas d
 
 - Ajuste no mesmo dia: a transição foi de `--duration-slow` (300ms) para `--duration-base` (200ms), a pedido do dono.
 - Correção no mesmo dia: o fundo escurecia a cada dia rolado. Os dias passados ficam empilhados no topo, e a regra `data-coberto:before:opacity-0` perdia para `data-preso:before:opacity-100` na ordem do CSS, então todos os fundos ficavam acesos e a tinta de 30% somava. Agora o coberto não recebe `data-preso`, e o atributo `data-coberto` saiu: um fundo aceso só, o do dia de cima.
+
+### Rodada 400 — o gasto sem vermelho em Transações
+
+Pedido do dono (18/11/2026).
+
+- `TableCellMoney` e `col.money` ganham `tone="income"`: só a entrada pinta (`text-income`); o gasto fica em `text-foreground` e o zero segue neutro. `sign` continua o padrão.
+- Transações usa `tone: "income"` na coluna Valor: o gasto é a regra da lista, e o vermelho em toda linha cansava.
+- No telefone o título da linha usa `descricaoNaTabela` (sem o "(2/3)") e a parcela vai para a segunda linha: `Categoria · 2 de 3` (`Sem categoria · 2 de 3` sem categoria), por `parcelaDe` em `transacoes-tabela-regras.ts`. A coluna segue escondida no desktop.
+- A página do `DataTable` ganha o exemplo `tone="income"`.

@@ -1623,6 +1623,8 @@ declaração de `background-color` no trilho).
   `state` e `interactive`, a célula `pin`; o `aria-sort` **só na coluna
   ordenada**. Peças `TableGroupRow`, `TableRowDetail`, `TableExpandButton`,
   `TableSkeleton`, `TableError`, `TableCellIdentity`, `TableCellMoney`.
+  `TableCellMoney`/`col.money` têm `tone` `sign` (padrão) | `none` | `income`: com `income` só a
+  entrada ganha `text-income` e o gasto fica em `text-foreground` (Transações).
 - **`DataTable`** (TanStack Table v9, por baixo do `TablePanel`, que se importa
   de `@/components/ui/data-table`) faz ordenação, busca, facetas (`arrHas`),
   seleção e barra flutuante (`selectionSummary` põe a soma na barra, depois de

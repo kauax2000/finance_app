@@ -23,6 +23,7 @@ import {
     tipoDoLote,
     totalDoDia,
     totalDoDiaEmTexto,
+    parcelaDe,
     valorComSinal,
 } from "@/components/transactions/transacoes-tabela-regras"
 import {
@@ -203,7 +204,7 @@ function colunas(
                 identity: {
                     title: (t: Transaction) => (
                         <>
-                            {descricaoDe(t)}
+                            {descricaoNaTabela(t)}
                             {t.needs_review ? (
                                 <span className={cn(transactionRowChipShell, tagChipInfo, "ms-1")}>
                                     A conferir
@@ -221,9 +222,13 @@ function colunas(
             enableSorting: false,
             cell: ({ row }) => {
                 const c = row.original.category
-                if (!c) return <span className="text-muted-foreground">Sem categoria</span>
+                // A parcela mora aqui, na segunda linha do telefone, e não no título ("Botox Renata" · "Saúde · 2 de 3").
+                const parcela = row.original.installment_plan_id ? parcelaDe(descricaoDe(row.original)) : null
+                if (!c) {
+                    return <span className="text-muted-foreground">{parcela ? `Sem categoria · ${parcela}` : "Sem categoria"}</span>
+                }
                 // Só o nome, em linha: a cor mora no ladrilho da Descrição, e o gêmeo do telefone junta as colunas na mesma linha.
-                return c.name
+                return parcela ? `${c.name} · ${parcela}` : c.name
             },
             // Na tabela a coluna fica escondida (o ladrilho da Descrição já diz a categoria, e as colunas respiram);
             // ela existe pelo gêmeo do telefone, que a escreve na legenda ("Mercado · Nubank").
@@ -277,7 +282,7 @@ function colunas(
             meta: { label: "Data" },
         },
     )
-    lista.push(col.money({ id: "amount", header: "Valor", accessor: valorComSinal }))
+    lista.push(col.money({ id: "amount", header: "Valor", accessor: valorComSinal, tone: "income" }))
     return lista
 }
 

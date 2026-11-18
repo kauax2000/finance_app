@@ -6,6 +6,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     diaLocalDe,
     ordemDepoisDoClique,
+    parcelaDe,
     tipoDoLote,
     totalDoDia,
     totalDoDiaEmTexto,
@@ -22,6 +23,17 @@ describe("regras da tabela de transações", () => {
         expect(totalDoDiaEmTexto([tx({ amount: 29.09 }), tx({ amount: 213.36 }), tx({ type: "income", amount: 5 })])).toBe(signedCurrencyBRL(-242.45))
         expect(totalDoDiaEmTexto([tx({ type: "income", amount: 1200 })])).toBe(signedCurrencyBRL(1200))
         expect(totalDoDiaEmTexto([tx({ amount: 5, id: `${PROJECTED_TRANSACTION_ID_PREFIX}1` })])).toBeNull()
+    })
+    it("a parcela do fim da descrição vira \"2 de 3\"", () => {
+        expect(parcelaDe("Botox Renata (2/3)")).toBe("2 de 3")
+        expect(parcelaDe("Mercado")).toBeNull()
+        expect(parcelaDe("Zara (1/12)")).toBe("1 de 12")
+    })
+    it("o gasto sai sem vermelho e a parcela vai para a legenda do telefone", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
+        expect(fonte).toContain('accessor: valorComSinal, tone: "income"')
+        expect(fonte).toContain("{descricaoNaTabela(t)}")
+        expect(fonte).toContain("parcelaDe(")
     })
     it("a tela liga o cartão por dia e tira o pagamento único da legenda", () => {
         const fonte = semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
@@ -64,7 +76,7 @@ describe("fonte da tabela", () => {
         expect(fonte).not.toContain("tileColorFor")
         expect(fonte).not.toContain("--badge-dot")
         expect(fonte.match(/<ColorTile size="xs" color=\{/g)?.length).toBe(1)
-        expect(fonte).toMatch(/\n\s*return c\.name\n/)
+        expect(fonte).toContain("return parcela ? `${c.name} · ${parcela}` : c.name")
         expect(fonte).toContain('label: "Categoria", mobile: "description", headClassName: "hidden", cellClassName: "hidden"')
         expect(fonte).not.toContain("block truncate")
     })
