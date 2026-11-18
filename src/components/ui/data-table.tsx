@@ -1572,7 +1572,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
  * o dia não sobe. Quando o texto do próximo encosta no dele (a menos de uma linha), ele ganha
  * `data-saindo` e o texto gira no próprio eixo e some de uma vez, por transição de
  * CSS, sem seguir a rolagem; rolando de volta, o atributo sai e ele volta. O próximo
- * passa por cima (`data-coberto`, que apaga o fundo do de baixo). Um quadro por
+ * passa por cima: o coberto perde o `data-preso`, e com ele o fundo. Um quadro por
  * rajada de rolagem.
  */
 // `lista` é o elemento, e não um ref: a lista monta depois do primeiro render, e um
@@ -1599,9 +1599,13 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
       cabecalhosAgora.forEach((c, i) => {
         const preso = tops[i] <= linha + 0.5
         const distancia = i + 1 < tops.length ? tops[i + 1] - tops[i] : Infinity
-        c.toggleAttribute("data-preso", preso)
+        // Coberto (o próximo já chegou em cima): os dias passados ficam empilhados no
+        // topo, e cada fundo aceso somaria a tinta, escurecendo a borda a cada dia.
+        // Por isso só o de cima é `data-preso`; o atributo decide sozinho, sem uma
+        // variante rival (`data-coberto:` perdia para `data-preso:` na ordem do CSS).
+        const coberto = distancia <= 0
+        c.toggleAttribute("data-preso", preso && !coberto)
         c.toggleAttribute("data-saindo", preso && distancia < alturas[i])
-        c.toggleAttribute("data-coberto", preso && distancia <= 0)
       })
     }
     const agendar = () => {
@@ -1618,7 +1622,6 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
       for (const c of cabecalhos()) {
         c.removeAttribute("data-preso")
         c.removeAttribute("data-saindo")
-        c.removeAttribute("data-coberto")
       }
     }
   }, [lista, chave])
@@ -1804,12 +1807,13 @@ function GemeoDoTelefone<T extends RowData>({
               // (`data-preso`), um `::before` sobe até o topo da tela por baixo da barra,
               // com a tinta e o borrão da borda dela, e desce 12px abaixo do texto se
               // dissolvendo: a borda da barra e o fundo do dia são uma peça só. Coberto
-              // (`data-coberto`), o fundo sai, para não somar ao do próximo. O borrão é
+              // pelo próximo, ele perde o `data-preso` e o fundo, para não somar ao do
+              // próximo. O borrão é
               // do cabeçalho, e não da barra, porque a barra fica por cima e borraria o
               // texto. O vão entre os dias é o `mt-2` mais o respiro de cima (`pt-4`).
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 data-coberto:before:opacity-0 reduced-transparency:before:hidden data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]"
+                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 reduced-transparency:before:hidden data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]"
               >
                 <span
                   data-slot="data-table-mobile-group-heading-text"

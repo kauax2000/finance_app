@@ -29324,3 +29324,4 @@ Pedido do dono (18/11/2026), sobre a rodada 398: menos inclinação nas pontas d
 - Ajuste no mesmo dia: a troca começava longe, com o próximo a uma altura de cabeçalho (40px, contando o respiro). Agora começa a uma linha de texto (a altura do miolo, ~16px): o texto de baixo encosta no de cima antes de ele girar.
 
 - Ajuste no mesmo dia: a transição foi de `--duration-slow` (300ms) para `--duration-base` (200ms), a pedido do dono.
+- Correção no mesmo dia: o fundo escurecia a cada dia rolado. Os dias passados ficam empilhados no topo, e a regra `data-coberto:before:opacity-0` perdia para `data-preso:before:opacity-100` na ordem do CSS, então todos os fundos ficavam acesos e a tinta de 30% somava. Agora o coberto não recebe `data-preso`, e o atributo `data-coberto` saiu: um fundo aceso só, o do dia de cima.

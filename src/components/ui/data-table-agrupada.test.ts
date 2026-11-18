@@ -55,7 +55,10 @@ describe('DataTable mobileGroups="inset"', () => {
     expect(ramo).toContain('data-slot="data-table-mobile-group-heading-text"')
     const ate = ramo.slice(ramo.indexOf("grupos.map("), ramo.indexOf('data-slot="data-table-mobile-group-heading"'))
     expect(ate).not.toContain('<div key={key} className="flex flex-col">')
-    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*not-first:mt-2[^"]*data-coberto:before:opacity-0/)
+    expect(ramo).toMatch(/data-slot="data-table-mobile-group-heading"\s+className="[^"]*not-first:mt-2/)
+    // Um fundo aceso só: o dia coberto não é `data-preso`, e a tinta não se soma ao rolar.
+    expect(fonte).toContain('c.toggleAttribute("data-preso", preso && !coberto)')
+    expect(fonte).not.toContain("data-coberto")
     expect(fonte).toContain("passive: true")
     // A troca dispara de uma vez (rodada 399): o ouvinte só marca `data-saindo`, sem escrever giro.
     expect(fonte).toContain('c.toggleAttribute("data-saindo", preso && distancia < alturas[i])')
