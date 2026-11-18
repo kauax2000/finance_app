@@ -868,9 +868,11 @@ function FormCancel({
       data-slot="form-cancel"
       type="button"
       variant="tertiary"
-      // No telefone a gaveta com ✕ já tem a saída no topo: o Cancelar do rodapé não a repete.
+      // No telefone a gaveta com ✕ (ou com a ação da esquerda da barra, o "‹ Cancelar" da edição) já
+      // tem a saída no topo: o Cancelar do rodapé não a repete.
       className={cn(
         "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-close-button])_[data-slot=dialog-footer]_&]:hidden",
+        "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-header-start])_[data-slot=dialog-footer]_&]:hidden",
         className,
       )}
       {...props}

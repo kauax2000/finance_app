@@ -108,10 +108,10 @@ describe("a alça da gaveta com ✕", () => {
   it("com ✕ e sem degraus a alça some, guardando o lugar", () => {
     const codigo = semComentarios(CODIGO)
     expect(codigo).toContain("group-has-[[data-slot=dialog-close-button]]/dialog-content:invisible")
+    expect(codigo).toContain("group-has-[[data-slot=dialog-header-start]]/dialog-content:invisible")
     expect(codigo).not.toContain("handleOnly")
-    expect(codigo).toMatch(
-      /<DragHandle className=\{degraus \? undefined : "group-has-\[\[data-slot=dialog-close-button\]\]\/dialog-content:invisible"\} \/>/
-    )
+    // Com degraus a alça fica (é o gesto); sem degraus, some com o ✕ ou com a ação da esquerda.
+    expect(codigo).toMatch(/<DragHandle\s+className=\{\s*degraus\s*\?\s*undefined\s*:\s*"group-has-\[\[data-slot=dialog-close-button\]\]\/dialog-content:invisible group-has-\[\[data-slot=dialog-header-start\]\]\/dialog-content:invisible"/)
   })
 })
 

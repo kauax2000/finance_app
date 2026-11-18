@@ -822,9 +822,16 @@ function DrawerContent({
         )}
         {...props}
       >
-        {/* Com ✕ e sem degraus o ✕ é a saída: a alça some, mas guarda os 26px da barra. */}
+        {/* Com ✕ e sem degraus o ✕ é a saída: a alça some, mas guarda os 26px da barra. A ação da
+            esquerda da barra (`dialog-header-start`, o "‹ Cancelar" da edição) conta igual. */}
         {showHandle ? (
-          <DragHandle className={degraus ? undefined : "group-has-[[data-slot=dialog-close-button]]/dialog-content:invisible"} />
+          <DragHandle
+            className={
+              degraus
+                ? undefined
+                : "group-has-[[data-slot=dialog-close-button]]/dialog-content:invisible group-has-[[data-slot=dialog-header-start]]/dialog-content:invisible"
+            }
+          />
         ) : null}
         {children}
       </DrawerPrimitive.Content>

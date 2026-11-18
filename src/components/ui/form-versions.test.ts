@@ -114,4 +114,9 @@ describe("FormCancel na gaveta com ✕", () => {
       "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-close-button])_[data-slot=dialog-footer]_&]:hidden",
     )
   })
+  it("some também com a ação da esquerda da barra (o ‹ Cancelar da edição)", () => {
+    expect(semComentarios(CODIGO)).toContain(
+      "max-md:[[data-slot=sheet-content]:has([data-slot=dialog-header-start])_[data-slot=dialog-footer]_&]:hidden",
+    )
+  })
 })
