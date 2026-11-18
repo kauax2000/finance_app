@@ -21,7 +21,7 @@ export function hojeDate(hojeYmd: string): Date {
 }
 
 /** `${assinatura}:${dia}` de cada lançamento que veio de uma assinatura. */
-export function cobrancasLancadas(transacoes: Transaction[]): Set<string> {
+export function cobrancasLancadas(transacoes: Pick<Transaction, "subscription_id" | "date">[]): Set<string> {
     const out = new Set<string>()
     for (const t of transacoes) {
         const ymd = t.subscription_id ? transactionLocalYmd(t.date) : null
