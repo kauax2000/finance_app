@@ -454,7 +454,8 @@ export function TransactionDetailSheet({
                                     {/* Só a foto: o nome fica no nome acessível e na dica. */}
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span role="img" aria-label={`Pago por ${pagou}`} className="inline-flex align-middle">
+                                            {/* `align-text-top`: o avatar de 16 fica no centro do texto de 12 (o `middle` o deixava 1px abaixo). */}
+                                            <span role="img" aria-label={`Pago por ${pagou}`} className="inline-flex align-text-top">
                                                 {membroQuePagou ? <FotoDoMembro membro={membroQuePagou} size="2xs" /> : pagou}
                                             </span>
                                         </TooltipTrigger>

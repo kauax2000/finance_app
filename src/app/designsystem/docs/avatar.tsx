@@ -274,9 +274,10 @@ const tone = identityToneFor(profile.avatar_color, email)
         rows={[
           {
             prop: "Avatar · size",
-            type: '"xs" | "sm" | "md" | "lg" | "xl"',
+            type: '"2xs" | "xs" | "sm" | "md" | "lg" | "xl"',
             default: '"md"',
-            description: "24, 32, 40, 48 e 56, com o corpo das iniciais junto.",
+            description:
+              "16, 24, 32, 40, 48 e 56, com o corpo das iniciais junto. O 2xs (16) é o avatar dentro de uma linha de texto e não desenha o canto (badge) nem o lápis (onEdit).",
           },
           {
             prop: "Avatar · badge",
