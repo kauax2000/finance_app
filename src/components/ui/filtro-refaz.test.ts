@@ -38,8 +38,8 @@ describe("o token do filtro brota", () => {
 describe("a lista se refaz em cascata", () => {
   it("a `list-reveal` usa a escada e a subida do sistema e para no movimento reduzido", () => {
     const bloco = blocoCss(css, "@utility list-reveal")
-    expect(bloco).toMatch(/animation:\s*rise 560ms/)
-    expect(bloco).toContain("menu-content-in 560ms")
+    expect(bloco).toMatch(/animation:\s*rise 380ms/)
+    expect(bloco).toContain("menu-content-in 380ms")
     expect(bloco).toContain("@apply stagger-ladder")
     expect(bloco).toMatch(/prefers-reduced-motion: reduce[\s\S]*animation: none/)
     // Depois de `no-scrollbar` (a faixa do `glass.test.ts`).
@@ -60,7 +60,7 @@ describe("a lista se refaz em cascata", () => {
     expect(tabela).toContain("refazendo={refaz > refeito}")
     expect(tabela.match(/refazendo && "list-reveal"/g)?.length).toBe(2)
     // Consome-se por tempo, chaveada na troca: sem linhas ou com o gêmeo escondido não há `animationend`.
-    expect(tabela).toMatch(/if \(refaz === 0\) return\s*const t = window\.setTimeout\(\(\) => setRefeito\(refaz\), 1300\)/)
+    expect(tabela).toMatch(/if \(refaz === 0\) return\s*const t = window\.setTimeout\(\(\) => setRefeito\(refaz\), 900\)/)
     expect(tabela).not.toContain("onAnimationEnd")
   })
 

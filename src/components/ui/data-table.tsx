@@ -947,7 +947,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
   // A escada mais longa termina em 40 + 30 × 11 + 160 = 530ms; 700ms dá folga.
   React.useEffect(() => {
     if (refaz === 0) return
-    const t = window.setTimeout(() => setRefeito(refaz), 1300)
+    const t = window.setTimeout(() => setRefeito(refaz), 900)
     return () => window.clearTimeout(t)
   }, [refaz])
 

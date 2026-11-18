@@ -2965,14 +2965,15 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
 @utility list-reveal {
   & > * {
     /* Mais lenta que a `table-reveal` (18/11/2026, "mais suave e orgânica"): cada
-       linha sobe 12px e surge do desfoque (`menu-content-in`) em 560ms, 55ms depois
-       da anterior. A escada para na décima linha: a última assenta em ~1,2s. */
+       linha sobe 8px e surge do desfoque (`menu-content-in`) em 380ms, 35ms depois
+       da anterior. A escada para na décima linha: a última assenta em ~0,8s (com
+       560ms e 55ms o app parecia lento). */
     animation:
-      rise 560ms var(--ease-out) both,
-      menu-content-in 560ms var(--ease-out) both;
-    --rise-distance: 12px;
-    --stagger-base: 60ms;
-    --stagger-step: 55ms;
+      rise 380ms var(--ease-out) both,
+      menu-content-in 380ms var(--ease-out) both;
+    --rise-distance: 8px;
+    --stagger-base: 40ms;
+    --stagger-step: 35ms;
     --stagger-cap: 10;
     @apply stagger-ladder;
   }
