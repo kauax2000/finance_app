@@ -14,7 +14,7 @@
 
 - Nada em `src/components/ui/` nem em `globals.css` muda.
 - O título é `<PageHeaderTitle asChild><p aria-hidden="true">Categorias</p></PageHeaderTitle>`: o `<h1>` é o da barra do topo.
-- Nova categoria: `Button variant="primary"` com `PlusIcon` (`@heroicons/react/16/solid`), texto `Nova categoria`, só com `podeEscrever`.
+- Nova categoria: `Button variant="secondary"` com `PlusIcon` (`@heroicons/react/16/solid`), texto `Nova categoria`, só com `podeEscrever`.
 - Telefone: sem `PageHeader`, a barra segue com o `+` recolhido.
 - Não é mudança de jornada: o botão abre o mesmo `openDialog()`.
 
