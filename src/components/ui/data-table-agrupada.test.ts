@@ -46,7 +46,9 @@ describe('DataTable mobileGroups="inset"', () => {
 
   it("o dia de cima não sobe: gira no próprio eixo e o próximo passa por cima (rodada 398)", () => {
     const ramo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"), fonte.indexOf("function EditorDeCelula"))
-    expect(ramo).toContain("useTrocaDoDia(listaRef")
+    expect(ramo).toContain("useTrocaDoDia(lista,")
+    expect(ramo).toContain("ref={setLista}")
+    expect(fonte).toContain("perspective(400px) rotateX(")
     expect(ramo).not.toContain("useCabecalhoPreso")
     expect(fonte).not.toContain("useCabecalhoPreso")
     expect(ramo).toContain('data-slot="data-table-mobile-group-heading-text"')

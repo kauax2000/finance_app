@@ -1570,14 +1570,16 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
 /** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 /**
  * A troca do dia preso nos cabeçalhos de grupo (`data-table-mobile-group-heading`)
- * de `raiz`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
+ * de `lista`: preso sob a barra do topo (`data-preso`, o fundo dele só existe aí),
  * o dia não sobe. Quando o próximo chega a menos de uma altura dele, o texto gira
  * no próprio eixo e some (`trocaDoDia`), e o próximo passa por cima
  * (`data-coberto`, que apaga o fundo do de baixo). Um quadro por rajada de rolagem.
  */
-function useTrocaDoDia(raiz: React.RefObject<HTMLElement | null>, chave: unknown) {
+// `lista` é o elemento, e não um ref: a lista monta depois do primeiro render, e um
+// ref ainda vazio no efeito não o faria rodar de novo.
+function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
   React.useEffect(() => {
-    const no = raiz.current
+    const no = lista
     const janela = no?.ownerDocument.defaultView
     if (!no || !janela) return
     const doc = no.ownerDocument
@@ -1588,17 +1590,19 @@ function useTrocaDoDia(raiz: React.RefObject<HTMLElement | null>, chave: unknown
     const medir = () => {
       quadro = 0
       const linha = topBarBottom(doc)
-      const lista = cabecalhos()
-      const tops = lista.map((c) => c.getBoundingClientRect().top)
-      lista.forEach((c, i) => {
+      const cabecalhosAgora = cabecalhos()
+      // Toda leitura antes de qualquer escrita, para não forçar o layout a cada cabeçalho.
+      const tops = cabecalhosAgora.map((c) => c.getBoundingClientRect().top)
+      const alturas = cabecalhosAgora.map((c) => c.offsetHeight)
+      cabecalhosAgora.forEach((c, i) => {
         const preso = tops[i] <= linha + 0.5
         const proximo = tops[i + 1]
         const distancia = proximo === undefined ? Infinity : proximo - tops[i]
         const { giro, opacidade } =
-          preso && proximo !== undefined ? trocaDoDia(distancia, c.offsetHeight, reduzido) : { giro: 0, opacidade: 1 }
+          preso && proximo !== undefined ? trocaDoDia(distancia, alturas[i], reduzido) : { giro: 0, opacidade: 1 }
         const texto = textoDe(c)
         if (texto) {
-          texto.style.transform = giro ? `rotateX(${giro}deg)` : ""
+          texto.style.transform = giro ? `perspective(400px) rotateX(${giro}deg)` : ""
           texto.style.opacity = opacidade < 1 ? String(opacidade) : ""
         }
         c.toggleAttribute("data-preso", preso)
@@ -1626,7 +1630,7 @@ function useTrocaDoDia(raiz: React.RefObject<HTMLElement | null>, chave: unknown
         c.removeAttribute("data-coberto")
       }
     }
-  }, [raiz, chave])
+  }, [lista, chave])
 }
 
 function GemeoDoTelefone<T extends RowData>({
@@ -1665,8 +1669,8 @@ function GemeoDoTelefone<T extends RowData>({
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
-  const listaRef = React.useRef<HTMLDivElement>(null)
-  useTrocaDoDia(listaRef, inset ? rows : null)
+  const [lista, setLista] = React.useState<HTMLDivElement | null>(null)
+  useTrocaDoDia(lista, inset ? rows : null)
   // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
   // da mídia (o recuo do iOS) — a última linha do cartão não tem.
   const linhaDe = (row: DataTableRow<T>, fio = false) => {
@@ -1797,7 +1801,7 @@ function GemeoDoTelefone<T extends RowData>({
       else grupos.push({ key: grupo ? `grupo:${grupo.key}` : `solto:${row.id}`, grupo, linhas: [row] })
     }
     return (
-      <div ref={listaRef} data-slot="data-table-mobile" className="flex flex-col">
+      <div ref={setLista} data-slot="data-table-mobile" className="flex flex-col">
         {grupos.map(({ key, grupo, linhas }) => (
           <React.Fragment key={key}>
             {grupo ? (
