@@ -3,10 +3,12 @@
 import Link from "next/link"
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import {
+    ArrowPathRoundedSquareIcon,
     BanknotesIcon,
     ChevronDownIcon,
     ChevronUpIcon,
     CreditCardIcon,
+    FolderIcon,
     EllipsisHorizontalIcon,
     PencilIcon,
     TrashIcon,
@@ -17,7 +19,6 @@ import { AnexosDoLancamento } from "@/components/transactions/anexos-do-lancamen
 import {
     direcaoDaTecla,
     ehCampoDeTexto,
-    linhaDeQuem,
     podeNavegar,
     rotuloDaRecorrencia,
 } from "@/components/transactions/detalhe-regras"
@@ -31,6 +32,7 @@ import { BlocoReceitasNoTempo } from "@/components/transactions/detalhe/bloco-re
 import { BlocoSaldoDoMes } from "@/components/transactions/detalhe/bloco-saldo-do-mes"
 import { RodapeDaOrigem } from "@/components/transactions/detalhe/rodape-da-origem"
 import { FolhaDoPlano } from "@/components/transactions/detalhe/folha-do-plano"
+import { FotoDoMembro } from "@/components/transactions/foto-do-membro"
 import { ImpactoDaParcela } from "@/components/transactions/impacto-da-parcela"
 import { PartesDaDespesa } from "@/components/transactions/partes-da-despesa"
 import {
@@ -49,12 +51,6 @@ import { Alert, AlertAction, AlertActions, AlertDescription } from "@/components
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
-import {
-    DescriptionDetails,
-    DescriptionList,
-    DescriptionListItem,
-    DescriptionTerm,
-} from "@/components/ui/description-list"
 import {
     DialogBody,
     DialogCloseButton,
@@ -319,7 +315,9 @@ export function TransactionDetailSheet({
     const variosMembros = membros.length >= 2
     const autor = variosMembros ? nomeDe(t.user_id) : null
     const pagou = variosMembros && !isIncome ? nomeDe(t.paid_by) : null
-    const quem = linhaDeQuem(autor, pagou, t.paid_by === t.user_id)
+    const membroDe = (id: string | null | undefined) => (id ? membros.find((x) => x.user_id === id) : undefined)
+    const membroQuePagou = pagou ? membroDe(t.paid_by) : undefined
+    const membroAutor = autor ? membroDe(t.user_id) : undefined
 
     // O que decide quais blocos valem: mudou (outro lançamento, ou este editado), os blocos remontam
     // e a manchete recomeça — um bloco que deixou de valer não manda nada, e a fatia velha não fica.
@@ -450,6 +448,20 @@ export function TransactionDetailSheet({
                             <span className="text-foreground">{quandoRelativo}</span>
                             {" · "}
                             {quandoExato}
+                            {pagou ? (
+                                <>
+                                    {" · pago por "}
+                                    {/* Só a foto: o nome fica no nome acessível e na dica. */}
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span role="img" aria-label={`Pago por ${pagou}`} className="inline-flex align-middle">
+                                                {membroQuePagou ? <FotoDoMembro membro={membroQuePagou} /> : pagou}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>{pagou}</TooltipContent>
+                                    </Tooltip>
+                                </>
+                            ) : null}
                         </Caption>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
@@ -476,6 +488,34 @@ export function TransactionDetailSheet({
                             {t.category ? <BadgeDot /> : null}
                             {t.category?.name ?? "Sem categoria"}
                         </Badge>
+                        {t.is_recurring ? (
+                            <Badge size="md" tone="neutral">
+                                <ArrowPathRoundedSquareIcon />
+                                {rotuloDaRecorrencia(t.recurring_interval)}
+                            </Badge>
+                        ) : null}
+                        {t.subscription_id ? (
+                            <Link
+                                href={`${subscriptionsHref}?sub=${encodeURIComponent(t.subscription_id)}`}
+                                className="inline-flex items-center rounded-full focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11"
+                            >
+                                <Badge size="md" tone="neutral">
+                                    <CreditCardIcon />
+                                    {t.subscription?.name ?? "Assinatura"}
+                                </Badge>
+                            </Link>
+                        ) : null}
+                        {t.project_id ? (
+                            <Link
+                                href={projetoDetailPath(t.project_id)}
+                                className="inline-flex items-center rounded-full focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11"
+                            >
+                                <Badge size="md" tone="neutral">
+                                    <FolderIcon />
+                                    Projeto
+                                </Badge>
+                            </Link>
+                        ) : null}
                     </div>
                 </div>
 
@@ -533,50 +573,16 @@ export function TransactionDetailSheet({
                     <BlocoReceitasNoTempo key={`receitas-no-tempo:${chaveDosBlocos}`} transaction={t} />
                 </div>
 
-                <DescriptionList>
-                    {t.is_recurring ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Recorrência</DescriptionTerm>
-                            <DescriptionDetails>{rotuloDaRecorrencia(t.recurring_interval)}</DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                    {t.subscription_id ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Assinatura</DescriptionTerm>
-                            <DescriptionDetails>
-                                <Button asChild variant="link">
-                                    <Link href={`${subscriptionsHref}?sub=${encodeURIComponent(t.subscription_id)}`}>
-                                        {t.subscription?.name ?? "Ver assinatura"}
-                                    </Link>
-                                </Button>
-                            </DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                    {t.project_id ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Projeto</DescriptionTerm>
-                            <DescriptionDetails>
-                                <Button asChild variant="link">
-                                    <Link href={projetoDetailPath(t.project_id)}>Ver projeto</Link>
-                                </Button>
-                            </DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                    {quem ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Quem</DescriptionTerm>
-                            <DescriptionDetails>{quem}</DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                </DescriptionList>
-
                 {/* As partes (Bloco 7C): só na carteira dividida, para o adulto. */}
                 <PartesDaDespesa transaction={t} />
 
                 {/* Com a conta paga por este lançamento, o boleto da instância aparece junto. */}
                 <AnexosDoLancamento key={t.id} transaction={t} />
 
-                <RodapeDaOrigem transaction={t} />
+                <RodapeDaOrigem
+                    transaction={t}
+                    autor={autor ? { nome: autor, foto: membroAutor ? <FotoDoMembro membro={membroAutor} /> : null } : null}
+                />
             </DialogBody>
 
             {installmentBlock && papel !== "guest" ? (

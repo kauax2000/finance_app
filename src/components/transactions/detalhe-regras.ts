@@ -44,11 +44,10 @@ export function notaDaOrigem(source: Transaction["source"]): string {
     return `Lançado ${FEMININAS.has(source) ? "pela" : "pelo"} ${origem}`
 }
 
-/** "Kauã lançou e pagou", "Renata pagou · Kauã lançou"; sem quem pagou, só quem lançou. */
-export function linhaDeQuem(autor: string | null, pagou: string | null, mesmaPessoa: boolean): string | null {
-    if (!autor) return pagou ? `${pagou} pagou` : null
-    if (!pagou) return `${autor} lançou`
-    return mesmaPessoa ? `${autor} lançou e pagou` : `${pagou} pagou · ${autor} lançou`
+/** "Kauã lançou pelo app", "Kauã lançou pela Planilha": a nota de origem com quem lançou. */
+export function notaComAutor(source: Transaction["source"], autor: string): string {
+    const origem = ROTULO_DA_ORIGEM[source] ?? "app"
+    return `${autor} lançou ${FEMININAS.has(source) ? "pela" : "pelo"} ${origem}`
 }
 
 const RECORRENCIA: Record<"daily" | "weekly" | "monthly", string> = {

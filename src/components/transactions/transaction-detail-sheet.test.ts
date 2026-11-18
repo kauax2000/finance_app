@@ -4,7 +4,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     direcaoDaTecla,
     ehCampoDeTexto,
-    linhaDeQuem,
+    notaComAutor,
     notaDaOrigem,
     momentoDoRegistro,
     linhaDaEdicao,
@@ -62,17 +62,16 @@ describe("as teclas", () => {
 })
 
 describe("as frases do detalhe", () => {
-    it("quem: lançou e pagou juntos, ou pagou · lançou", () => {
-        expect(linhaDeQuem("Kauã", "Kauã", true)).toBe("Kauã lançou e pagou")
-        expect(linhaDeQuem("Kauã", "Renata", false)).toBe("Renata pagou · Kauã lançou")
-        expect(linhaDeQuem("Kauã", null, false)).toBe("Kauã lançou")
-        expect(linhaDeQuem(null, null, false)).toBeNull()
-    })
-
     it("a nota da origem, com pelo/pela", () => {
         expect(notaDaOrigem("app")).toBe("Lançado pelo app")
         expect(notaDaOrigem("apple_pay")).toBe("Lançado pelo Apple Pay")
         expect(notaDaOrigem("import_sheet")).toBe("Lançado pela Planilha")
+    })
+
+    it("a nota com o autor, com pelo/pela", () => {
+        expect(notaComAutor("app", "Kauã")).toBe("Kauã lançou pelo app")
+        expect(notaComAutor("import_sheet", "Kauã")).toBe("Kauã lançou pela Planilha")
+        expect(notaComAutor("apple_pay", "Renata")).toBe("Renata lançou pelo Apple Pay")
     })
 
     it("o momento do registro: hoje, ontem, dia do mês e o ano só se for outro", () => {
@@ -101,6 +100,17 @@ describe("as frases do detalhe", () => {
 })
 
 describe("fonte do detalhe", () => {
+  it("recorrência, assinatura e projeto são etiquetas; quem pagou vai na data e quem lançou no rodapé", () => {
+    const f = fonte(SHEET)
+    expect(f).toContain("rotuloDaRecorrencia(")
+    expect(f).toContain("projetoDetailPath(")
+    expect(f).toContain("?sub=")
+    expect(f).toContain("pago por")
+    expect(f).toContain("aria-label={`Pago por ${pagou}`}")
+    expect(f).not.toMatch(/<\/FotoDoMembro>|<FotoDoMembro[^>]*\/>\s*\{pagou\}/)
+    expect(f).toMatch(/<RodapeDaOrigem[\s\S]*?autor=/)
+  })
+
   it("ao rolar, o cabeçalho resume o lançamento: ladrilho, nome e valor em cinza (H2a/A5, 11/nov/2026)", () => {
     const f = fonte(SHEET)
     expect(f).toContain("useDialogHeaderDock")
@@ -134,7 +144,9 @@ describe("fonte do detalhe", () => {
         expect(f).not.toContain("Duplicar")
         expect(f).toContain("<DialogCloseButton placement=\"inline\" />")
         expect(f).toContain('<MoneyDisplay size="3xl" signed')
-        expect(f).toContain("<DescriptionList>")
+        expect(f).not.toContain("<DescriptionList")
+        expect(f).not.toContain("<DescriptionTerm>Quem</DescriptionTerm>")
+        expect(f).not.toContain("<DescriptionTerm>Recorrência</DescriptionTerm>")
     })
 
     it("o topo é o C1 + D4 + E2/E5: a data relativa sob o valor, a categoria num chip com o ponto da cor dela (11/nov/2026)", () => {
@@ -222,7 +234,7 @@ describe("fonte do detalhe", () => {
             expect(f).toContain(b)
         }
         expect(f).toContain("<ImpactoDaParcela")
-        expect(f).toContain("<RodapeDaOrigem transaction={t} />")
+        expect(f).toMatch(/<RodapeDaOrigem\s+transaction=\{t\}/)
         expect(f).toContain("formatWeekdayDayMonthShortPtBr(t.date)")
     })
 
