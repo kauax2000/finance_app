@@ -424,6 +424,7 @@ const totalDoMes = (mes: string) =>
 function DemoTelefone() {
   const [linha, setLinha] = React.useState<"full" | "flush">("full")
   const [grupos, setGrupos] = React.useState<"band" | "inset">("band")
+  const [deslizar, setDeslizar] = React.useState(true)
   const [selecao, setSelecao] = React.useState<Record<string, true>>(() =>
     Object.fromEntries(LANCAMENTOS.slice(0, 6).map((l) => [l.id, true] as const))
   )
@@ -437,6 +438,12 @@ function DemoTelefone() {
           <Eixo rotulo="Linha" valores={["full", "flush"] as const} valor={linha} onChange={setLinha} />
           <Eixo rotulo="Grupos" valores={["band", "inset"] as const} valor={grupos} onChange={setGrupos} />
         </>
+      }
+      fim={
+        <Interruptores>
+          {/* `mobileSwipe`: arrastar a linha para a esquerda (com o dedo) revela as ações dela. */}
+          <Interruptor id="ds-dt-deslizar" rotulo="Deslizar" valor={deslizar} onChange={setDeslizar} />
+        </Interruptores>
       }
     />
     <IphoneFrame title="Lançamentos num iPhone">
@@ -455,6 +462,7 @@ function DemoTelefone() {
           rowSelection={selecao}
           onRowSelectionChange={setSelecao}
           mobileRow={linha}
+          mobileSwipe={deslizar}
           rowState={(l) => (l.status === "prevista" ? "pending" : undefined)}
           rowActions={ACOES(() => undefined)}
           onRowClick={() => undefined}
@@ -587,6 +595,7 @@ col.money({ …, tone: "income" })  // só a entrada ganha cor; o gasto fica no 
 <DataTable
   groupBy={(l) => ({ key: l.dia, label: diaDe(l), aside: totalDoDia(l.dia) })}
   mobileGroups="inset"
+  mobileSwipe  // deslizar a linha revela as rowActions, só com o dedo
 />`}
         previewClassName="items-center"
       >
@@ -625,6 +634,7 @@ col.money({ …, tone: "income" })  // só a entrada ganha cor; o gasto fica no 
           { prop: "rowActions / rowContextMenu", type: "DataTableAction[] / boolean", description: "primary fica à vista, o resto vai para o ⋯; o botão direito repete." },
           { prop: "mobileRow", type: '"full" | "compact" | "flush"', default: '"full"', description: "A linha do gêmeo. compact: a caixa só aparece com uma seleção em curso (e o toque marca), e as ações moram no toque longo; sem menu de contexto, o ⋯ volta. flush: o full sem a caixa de selected e no degrau sm — para a lista em que marcar é \"esta entra\" e quase tudo está marcado (o Importar)." },
           { prop: "mobileGroups", type: '"band" | "inset"', default: '"band"', description: "Os grupos do gêmeo. band: uma faixa dentro da lista. inset: a lista agrupada do iOS — um cartão por grupo, com o label e o aside do groupBy por fora, o fio começando no texto e, no telefone, sem a moldura do painel. Sem grupo (null), um cartão só." },
+          { prop: "mobileSwipe", type: "boolean", default: "false", description: "Deslizar a linha do gêmeo para a esquerda revela as rowActions visíveis dela, 72px cada, atrás e à direita. Só o dedo, depois da trava de direção de 8px; passou da metade das ações, abre; uma linha aberta por vez, e um toque fora ou a rolagem fecha. Sem deslize total, e confirm pede o segundo toque." },
         ]}
       />
 

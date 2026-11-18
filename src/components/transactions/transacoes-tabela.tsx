@@ -644,6 +644,7 @@ export function TransacoesTabela({
                 selectionSummary={(rows) => <MoneyDisplay value={totalDoDia(rows)} signed />}
                 mobileRow="compact"
                 mobileGroups="inset"
+                mobileSwipe
                 rowActions={rowActions}
                 // As projetadas são cobranças previstas: não abrem, não têm menu e aparecem apagadas.
                 onRowClick={(t) => tela.detalhe.abrir(t)}

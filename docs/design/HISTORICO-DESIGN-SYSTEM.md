@@ -29334,3 +29334,15 @@ Pedido do dono (18/11/2026).
 - Transações usa `tone: "income"` na coluna Valor: o gasto é a regra da lista, e o vermelho em toda linha cansava.
 - No telefone o título da linha usa `descricaoNaTabela` (sem o "(2/3)") e a parcela vai para a segunda linha: `Categoria · 2 de 3` (`Sem categoria · 2 de 3` sem categoria), por `parcelaDe` em `transacoes-tabela-regras.ts`. A coluna segue escondida no desktop.
 - A página do `DataTable` ganha o exemplo `tone="income"`.
+
+### Rodada 401 — deslizar a linha no telefone
+
+Pedido do dono (18/11/2026).
+
+- `DataTable` ganha `mobileSwipe` (desligado por padrão): no gêmeo do telefone, arrastar a linha para a esquerda revela as `rowActions` visíveis dela, atrás e à direita, na ordem. As linhas sem ação visível (as previstas de Transações) não deslizam.
+- Cada ação mede 72px, na altura da linha, com o ícone de 20 sobre o rótulo em `text-2xs`. Excluir veste os tokens do `Button destructive`; as outras, `bg-secondary`.
+- O gesto é só do dedo (`pointerType === "touch"`, com `touch-pan-y` na linha): a trava de direção decide nos primeiros 8px (`travarDirecao`, `lib/deslize.ts`); na vertical, a rolagem segue. Ao soltar, abre se passou da metade das ações (`assentarDeslize`) e assenta na `MOLA`; com movimento reduzido, vai direto. A linha anda por `style.translate`.
+- Uma linha aberta por vez (o estado mora no `GemeoDoTelefone`). Fecha num toque fora, numa rolagem (ouvinte de captura, `passive`) ou quando outra abre. O toque na linha aberta só a fecha; um arraste não vira clique nem toque longo.
+- Sem deslize total. Uma ação com `confirm` pede o segundo toque, como no menu. Os botões só entram no Tab com a linha aberta (`aria-hidden` fechada).
+- Transações liga. A página do `DataTable` ganha o interruptor "Deslizar" no exemplo do iPhone.
+- `deslize.test.ts` e `data-table-deslize.test.ts`.

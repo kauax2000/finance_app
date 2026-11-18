@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { createPortal } from "react-dom"
-import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { AnimatePresence, animate, motion, useReducedMotion } from "motion/react"
 import {
   ArrowDownTrayIcon,
   EllipsisHorizontalIcon,
@@ -54,6 +54,8 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { cn } from "@/lib/utils"
+import { assentarDeslize, travarDirecao } from "@/lib/deslize"
+import { MOLA } from "@/lib/spring"
 import { topBarBottom } from "@/lib/top-bar-bottom"
 import { bottomBarTintClassName } from "@/lib/glass-classes"
 import { normalizeSearchText } from "@/lib/command-filter"
@@ -574,6 +576,8 @@ export type DataTableProps<T extends RowData> = {
   mobileRow?: "full" | "compact" | "flush"
   /** Os grupos do gêmeo. `band` (o padrão): uma lista só, com o grupo numa faixa dentro dela. `inset`: a lista agrupada do iOS — um cartão por grupo, com o nome (`label`) e o `aside` do `groupBy` por fora, acima dele; no telefone a moldura do painel some. Sem grupo (`null`), um cartão só. */
   mobileGroups?: "band" | "inset"
+  /** No telefone, deslizar a linha para a esquerda revela as `rowActions` visíveis dela, atrás, à direita (só o dedo; sem deslize total). Desligado por padrão. */
+  mobileSwipe?: boolean
   /** As linhas que entram em cascata e deslizam ao reordenar. */
   motion?: boolean
   virtualize?: { estimateSize?: number; overscan?: number }
@@ -621,6 +625,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     rowContextMenu = false,
     mobileRow = "full",
     mobileGroups = "band",
+    mobileSwipe = false,
     toolbar,
     panel = true,
     striped,
@@ -1367,6 +1372,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
       compacta={mobileRow === "compact"}
       rasa={mobileRow === "flush"}
       inset={mobileGroups === "inset"}
+      deslizar={mobileSwipe}
       marcando={marcadas.length > 0}
       menuDe={menuDaLinha}
     />
@@ -1627,6 +1633,178 @@ function useTrocaDoDia(lista: HTMLElement | null, chave: unknown) {
   }, [lista, chave])
 }
 
+/** A largura de cada ação revelada pelo deslize (`w-18`). */
+const LARGURA_DA_ACAO = 72
+
+/**
+ * `mobileSwipe`: a linha do gêmeo que desliza para a esquerda e revela as ações dela, como a lista do iOS.
+ * Só o dedo (`pointerType === "touch"`), e só depois de a trava de direção dizer "x"; na vertical, a rolagem
+ * segue. Passou da metade das ações, abre; menos, volta. Sem deslize total: puxar até o fim não executa nada.
+ */
+function LinhaDeslizavel<T>({
+  row,
+  label,
+  actions,
+  aberta,
+  onAbrir,
+  onFechar,
+  marcando,
+  inset,
+  children,
+}: {
+  row: T
+  label: string
+  actions: DataTableAction<T>[]
+  aberta: boolean
+  onAbrir: () => void
+  onFechar: () => void
+  marcando: boolean
+  inset: boolean
+  children: React.ReactNode
+}) {
+  const caixa = React.useRef<HTMLDivElement>(null)
+  const frente = React.useRef<HTMLDivElement>(null)
+  const posicao = React.useRef(0)
+  const mola = React.useRef<{ stop: () => void } | null>(null)
+  const gesto = React.useRef<{ x: number; y: number; base: number; direcao: "x" | "y" | null } | null>(null)
+  // O toque que terminou num arraste não é clique.
+  const arrastou = React.useRef(false)
+  const [armada, setArmada] = React.useState<string | null>(null)
+  const reduzido = useReducedMotion()
+  const largura = actions.length * LARGURA_DA_ACAO
+
+  const mover = (x: number) => {
+    posicao.current = x
+    if (frente.current) frente.current.style.translate = x ? `${x}px 0` : ""
+  }
+  const assentar = React.useCallback(
+    (alvo: number) => {
+      mola.current?.stop()
+      if (reduzido || posicao.current === alvo) return mover(alvo)
+      mola.current = animate(posicao.current, alvo, { ...MOLA, onUpdate: mover })
+    },
+    [reduzido]
+  )
+
+  // Quem abre ou fecha por fora (outra linha abriu, um toque fora) também assenta.
+  React.useEffect(() => {
+    assentar(aberta ? -largura : 0)
+    if (!aberta) setArmada(null)
+  }, [aberta, largura, assentar])
+  React.useEffect(() => () => mola.current?.stop(), [])
+
+  // Aberta, fecha num toque fora dela ou numa rolagem (de qualquer região: o ouvinte é de captura).
+  React.useEffect(() => {
+    const el = caixa.current
+    const janela = el?.ownerDocument.defaultView
+    if (!aberta || !el || !janela) return
+    const fora = (e: PointerEvent) => {
+      const alvo = e.target as Node | null
+      if (!alvo || !el.contains(alvo)) onFechar()
+    }
+    janela.addEventListener("scroll", onFechar, { passive: true, capture: true })
+    janela.document.addEventListener("pointerdown", fora, true)
+    return () => {
+      janela.removeEventListener("scroll", onFechar, { capture: true })
+      janela.document.removeEventListener("pointerdown", fora, true)
+    }
+  }, [aberta, onFechar])
+
+  const soltar = () => {
+    const g = gesto.current
+    gesto.current = null
+    if (g?.direcao !== "x") return
+    const alvo = assentarDeslize(posicao.current, largura)
+    assentar(alvo)
+    if (alvo) onAbrir()
+    else onFechar()
+  }
+
+  return (
+    <div
+      ref={caixa}
+      data-slot="data-table-mobile-swipe"
+      data-open={aberta ? "" : undefined}
+      className={cn("relative overflow-hidden bg-card", !inset && "border-b border-border last:border-b-0")}
+    >
+      <div
+        data-slot="data-table-mobile-swipe-actions"
+        aria-hidden={!aberta}
+        className="absolute inset-y-0 end-0 flex"
+      >
+        {actions.map((a) => {
+          const destrutiva = a.variant === "destructive"
+          const confirmar = armada === a.label
+          return (
+            <button
+              key={a.label}
+              type="button"
+              tabIndex={aberta ? 0 : -1}
+              aria-label={confirmar ? `${typeof a.confirm === "string" ? a.confirm : "Confirmar"} ${label}` : `${a.label} ${label}`}
+              className={cn(
+                "flex h-full min-h-11 w-18 flex-col items-center justify-center gap-1 text-2xs font-medium outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45 [&_svg]:size-5",
+                destrutiva
+                  ? "bg-destructive/10 text-destructive-muted-foreground active:bg-destructive/20 dark:bg-destructive/20 dark:active:bg-destructive/30"
+                  : "bg-secondary text-secondary-foreground active:bg-secondary-hover"
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+                // `confirm`: o primeiro toque só arma, como no menu.
+                if (a.confirm && !confirmar) return setArmada(a.label)
+                void a.onSelect(row)
+                onFechar()
+              }}
+            >
+              {a.icon}
+              <span>{confirmar ? (typeof a.confirm === "string" ? a.confirm : "Confirmar?") : a.label}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div
+        ref={frente}
+        data-slot="data-table-mobile-swipe-row"
+        // A vertical é do navegador (a rolagem); a horizontal chega aqui como `pointermove`.
+        className="relative touch-pan-y bg-card [&>[data-slot=item]]:rounded-none"
+        onPointerDown={(e) => {
+          arrastou.current = false
+          if (e.pointerType !== "touch" || marcando) return
+          mola.current?.stop()
+          gesto.current = { x: e.clientX, y: e.clientY, base: posicao.current, direcao: null }
+        }}
+        onPointerMove={(e) => {
+          const g = gesto.current
+          if (!g || e.pointerType !== "touch") return
+          const dx = e.clientX - g.x
+          if (!g.direcao) {
+            g.direcao = travarDirecao(dx, e.clientY - g.y)
+            if (g.direcao === "y") return void (gesto.current = null)
+            if (g.direcao === "x") {
+              arrastou.current = true
+              e.currentTarget.setPointerCapture?.(e.pointerId)
+            }
+          }
+          if (g.direcao === "x") mover(Math.min(0, Math.max(-largura, g.base + dx)))
+        }}
+        onPointerUp={soltar}
+        onPointerCancel={soltar}
+        onClickCapture={(e) => {
+          // Um arraste não é clique; e o toque numa linha aberta só a fecha.
+          if (arrastou.current) {
+            arrastou.current = false
+          } else if (aberta) {
+            onFechar()
+          } else return
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 function GemeoDoTelefone<T extends RowData>({
   rows,
@@ -1641,6 +1819,7 @@ function GemeoDoTelefone<T extends RowData>({
   compacta = false,
   rasa = false,
   inset = false,
+  deslizar = false,
   marcando = false,
   menuDe,
 }: {
@@ -1660,12 +1839,16 @@ function GemeoDoTelefone<T extends RowData>({
   rasa?: boolean
   /** `mobileGroups="inset"`: um cartão por grupo, com o cabeçalho por fora. */
   inset?: boolean
+  /** `mobileSwipe`: a linha desliza e revela as ações. */
+  deslizar?: boolean
   /** Alguma linha marcada: na linha compacta, o toque marca em vez de abrir. */
   marcando?: boolean
   menuDe?: (row: DataTableRow<T>) => React.ReactNode
 }) {
   const [lista, setLista] = React.useState<HTMLDivElement | null>(null)
   useTrocaDoDia(lista, inset ? rows : null)
+  // Uma linha aberta por vez: abrir outra fecha a de antes.
+  const [aberta, setAberta] = React.useState<string | null>(null)
   // A linha do gêmeo. `fio`: no `inset`, o fio de baixo começa no texto, depois
   // da mídia (o recuo do iOS) — a última linha do cartão não tem.
   const linhaDe = (row: DataTableRow<T>, fio = false) => {
@@ -1776,13 +1959,31 @@ function GemeoDoTelefone<T extends RowData>({
         ) : null}
       </Item>
     )
-    return menu ? (
+    const linha = menu ? (
       <ContextMenu key={row.id}>
         <ContextMenuTrigger asChild>{item}</ContextMenuTrigger>
         {menu}
       </ContextMenu>
     ) : (
       <React.Fragment key={row.id}>{item}</React.Fragment>
+    )
+    const visiveis = deslizar ? (rowActions ?? []).filter((a) => !a.hidden?.(row.original)) : []
+    return visiveis.length ? (
+      <LinhaDeslizavel
+        key={row.id}
+        row={row.original}
+        label={rotuloDe(row.original)}
+        actions={visiveis}
+        aberta={aberta === row.id}
+        onAbrir={() => setAberta(row.id)}
+        onFechar={() => setAberta((a) => (a === row.id ? null : a))}
+        marcando={marcando}
+        inset={inset}
+      >
+        {linha}
+      </LinhaDeslizavel>
+    ) : (
+      linha
     )
   }
 
