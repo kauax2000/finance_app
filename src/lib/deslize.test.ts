@@ -15,14 +15,14 @@ describe("deslize", () => {
   })
 
   it("mede a faixa: círculos de 44 com 8px em volta", () => {
-    expect(larguraDaFaixa(2)).toBe(104)
-    expect(larguraDaFaixa(3)).toBe(156)
+    expect(larguraDaFaixa(2)).toBe(112)
+    expect(larguraDaFaixa(3)).toBe(164)
   })
 
   it("o progresso vai de 0 a 1 e não passa dos extremos", () => {
-    expect(progressoDoDeslize(0, 104)).toBe(0)
-    expect(progressoDoDeslize(-52, 104)).toBe(0.5)
-    expect(progressoDoDeslize(-200, 104)).toBe(1)
-    expect(progressoDoDeslize(10, 104)).toBe(0)
+    expect(progressoDoDeslize(0, 112)).toBe(0)
+    expect(progressoDoDeslize(-56, 112)).toBe(0.5)
+    expect(progressoDoDeslize(-200, 112)).toBe(1)
+    expect(progressoDoDeslize(10, 112)).toBe(0)
   })
 })

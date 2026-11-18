@@ -1757,7 +1757,7 @@ function LinhaDeslizavel<T>({
       <div
         data-slot="data-table-mobile-swipe-actions"
         aria-hidden={!aberta}
-        className="invisible absolute inset-y-0 end-0 flex items-center gap-2 pe-2"
+        className="invisible absolute inset-y-0 end-0 flex items-center gap-2 px-2"
       >
         {actions.map((a) => {
           const destrutiva = a.variant === "destructive"

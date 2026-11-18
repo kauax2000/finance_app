@@ -9,9 +9,9 @@ export function assentarDeslize(deslocamento: number, larguraAcoes: number): num
   return deslocamento <= -larguraAcoes / 2 ? -larguraAcoes : 0
 }
 
-/** A faixa das ações: n círculos de 44, cada um com 8px depois dele (entre eles e até a borda direita). */
+/** A faixa das ações: n círculos de 44 com 8px entre eles e nas duas bordas. */
 export function larguraDaFaixa(n: number): number {
-  return n * 52
+  return n * 44 + (n + 1) * 8
 }
 
 /** Quanto a faixa já abriu, de 0 a 1: guia o crescimento dos círculos (`--deslize`). */

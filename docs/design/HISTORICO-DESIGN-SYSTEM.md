@@ -29352,6 +29352,6 @@ Pedido do dono (18/11/2026).
 ### Rodada 402 — os botões do deslize viram círculos
 
 - As ações reveladas pelo deslize deixam de ser retângulos de 72px com rótulo: viram círculos de 44 só com o ícone (`swipeIcon` de 20; sem ele, o `icon` de 16), com o nome apenas no `aria-label` (o `confirm` segue armando no primeiro toque).
-- A faixa mede `larguraDaFaixa(n)` = `n * 52` (círculo de 44 + 8px depois dele): 8px entre os círculos e da borda direita. Duas ações, 104; três, 156.
+- A faixa mede `larguraDaFaixa(n)` = `n * 44 + (n + 1) * 8`: 8px entre os círculos e nas duas bordas. Duas ações, 112; três, 164.
 - Os círculos crescem com o arraste: `--deslize` (`progressoDoDeslize`, de 0 a 1) escrito pelo `mover` na faixa dirige `scale(calc(0.4 + 0.6 * var(--deslize)))` e a opacidade, sem transição própria. Fechada, volta a 0 e a faixa segue `invisible`.
 - Excluir segue em `bg-destructive` cheio; as outras em `bg-secondary`. Sem fundo colorido atrás.
