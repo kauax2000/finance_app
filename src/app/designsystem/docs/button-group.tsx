@@ -137,7 +137,7 @@ export default function ButtonGroupDoc() {
 
       <DocSection
         title="rail: o trilho das abas"
-        description="variant=&quot;rail&quot; veste a moldura do Tabs floating (placa --popover, anel de 1px, recuo de 2px, 36 no mouse e 44 no dedo) para um par de ações de navegação com um valor no meio, como o mês. As peças são pílulas inteiras de 32 (40 no dedo), sem emenda nem filete; use tertiary dentro. Não é escolha segmentada: isso é Tabs."
+        description="variant=&quot;rail&quot; veste a moldura do Tabs floating (placa --popover, anel de 1px, recuo de 2px, 36 no mouse e 44 no dedo) para um par de ações de navegação com um valor no meio, como o mês. As peças são pílulas inteiras de 32 (40 no dedo), sem emenda nem filete; use tertiary dentro. O trilho mede e arredonda só os filhos <button> (não ButtonGroupText nem link com asChild) e ignora orientation. Não é escolha segmentada: isso é Tabs."
         code={`<ButtonGroup variant="rail" aria-label="Mês de referência">
   <Button variant="tertiary" size="icon-md" aria-label="Mês anterior"><ChevronLeftIcon aria-hidden /></Button>
   <Button variant="tertiary">novembro de 2026</Button>
