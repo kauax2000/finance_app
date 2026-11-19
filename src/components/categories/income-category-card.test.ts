@@ -11,6 +11,15 @@ const { IncomeCategoryCard } = await import("./income-category-card")
 const fonte = semComentarios(lerFonte("src/components/categories/income-category-card.tsx"))
 
 describe("IncomeCategoryCard pelo fonte", () => {
+    it("a barra vem antes da faísca, que é o pé do cartão, de borda a borda", () => {
+        expect(fonte.indexOf("<Progress")).toBeLessThan(fonte.indexOf("<ChartSparkline"))
+        const faisca = fonte.slice(fonte.indexOf("<ChartSparkline"))
+        expect(faisca).toContain("bleed")
+        expect(faisca).toContain("-mx-(--card-px)")
+        expect(faisca).toContain("-mb-(--card-py)")
+        expect(faisca).toContain("h-16")
+    })
+
     it("a faísca é a área com a média", () => {
         expect(fonte).toMatch(/import \{[^}]*ChartSparkline[^}]*\} from "@\/components\/ui\/chart"/)
         expect(fonte).toContain('variant="area"')

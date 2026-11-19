@@ -207,22 +207,7 @@ export function ExpenseCategoryCard({
                         ) : null}
                     </div>
 
-                    {historico === undefined ? (
-                        <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
-                    ) : (
-                        <ChartSparkline
-                            variant="area"
-                            y="total"
-                            className="h-10"
-                            data={serie ?? []}
-                            reference={media}
-                            config={{ total: { label: category.name, color } }}
-                            label={`Gasto em ${category.name} nos últimos 6 meses`}
-                            description={descricaoDaSerie}
-                        />
-                    )}
-
-                    <div className="mt-auto flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5">
                         {comLimite ? (
                             <Progress
                                 size="sm"
@@ -244,13 +229,29 @@ export function ExpenseCategoryCard({
                         )}
                         <p className={cn("text-xs", TOM_DA_SITUACAO[situacao.tom])}>{situacao.texto}</p>
                     </div>
+
+                    {historico === undefined ? (
+                        <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 pb-0" />
+                    ) : (
+                        <ChartSparkline
+                            variant="area"
+                            bleed
+                            y="total"
+                            className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16"
+                            data={serie ?? []}
+                            reference={media}
+                            config={{ total: { label: category.name, color } }}
+                            label={`Gasto em ${category.name} nos últimos 6 meses`}
+                            description={descricaoDaSerie}
+                        />
+                    )}
                 </CardContent>
             </Card>
         </CategoryCardContextMenu>
     )
 }
 
-/** O osso do cartão de categoria (despesa e receita): cabeçalho, valor, faísca, barra e frase. */
+/** O osso do cartão de categoria (despesa e receita): cabeçalho, valor, barra, frase e faísca. */
 export function CategoryCardSkeleton() {
     return (
         <Card padding="sm" className="h-full" aria-hidden>
@@ -264,11 +265,11 @@ export function CategoryCardSkeleton() {
                     <Skeleton className="h-8 w-36 max-w-full" />
                     <Skeleton shape="text" className="w-14 shrink-0" />
                 </div>
-                <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
-                <div className="mt-auto flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5">
                     <Skeleton className="h-1.5 w-full rounded-full" />
                     <Skeleton shape="text" className="w-48 max-w-full" />
                 </div>
+                <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 pb-0" />
             </CardContent>
         </Card>
     )

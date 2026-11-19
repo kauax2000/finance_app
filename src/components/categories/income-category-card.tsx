@@ -194,22 +194,7 @@ export function IncomeCategoryCard({
                         ) : null}
                     </div>
 
-                    {historico === undefined ? (
-                        <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
-                    ) : (
-                        <ChartSparkline
-                            variant="area"
-                            y="total"
-                            className="h-10"
-                            data={serie ?? []}
-                            reference={media}
-                            config={{ total: { label: category.name, color } }}
-                            label={`Receita em ${category.name} nos últimos 6 meses`}
-                            description={descricaoDaSerie}
-                        />
-                    )}
-
-                    <div className="mt-auto flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5">
                         <Progress
                             size="sm"
                             value={recebidoNaTela}
@@ -219,6 +204,22 @@ export function IncomeCategoryCard({
                         />
                         <p className="text-xs text-muted-foreground">{frase}</p>
                     </div>
+
+                    {historico === undefined ? (
+                        <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 pb-0" />
+                    ) : (
+                        <ChartSparkline
+                            variant="area"
+                            bleed
+                            y="total"
+                            className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16"
+                            data={serie ?? []}
+                            reference={media}
+                            config={{ total: { label: category.name, color } }}
+                            label={`Receita em ${category.name} nos últimos 6 meses`}
+                            description={descricaoDaSerie}
+                        />
+                    )}
                 </CardContent>
             </Card>
         </CategoryCardContextMenu>
