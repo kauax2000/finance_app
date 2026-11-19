@@ -32,6 +32,6 @@ describe("o seletor de mês do desktop", () => {
     })
 
     it("na fatura do telefone o botão ocupa a faixa", () => {
-        expect(picker).toContain(`fullWidth ? "flex-1" : "text-foreground"`)
+        expect(picker).toContain(`fullWidth ? "flex-1" : "px-1.5 text-foreground"`)
     })
 })

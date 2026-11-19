@@ -1,6 +1,6 @@
 "use client"
 
-import { Toolbar, ToolbarActions, ToolbarButton, ToolbarCount } from "@/components/ui/toolbar"
+import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { useReducedMotion } from "motion/react"
@@ -71,7 +71,7 @@ function MonthNavPicker({
                     variant="tertiary"
                     size={fullWidth ? undefined : "md"}
                     aria-label={pickerAriaLabel}
-                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "text-foreground")}
+                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "px-1.5 text-foreground")}
                 >
                     <span className="min-w-0 truncate">{monthLabel}</span>
                     {/* Na pílula do desktop o mês dispensa o chevron: as setas ao lado já dizem que ele muda. */}
@@ -373,7 +373,6 @@ export function CategoriesToolbar({
     onJumpToCurrentMonth,
     className,
     includeAll = true,
-    contagem,
     ordem,
 }: {
     filterType: TransactionFilterType
@@ -386,8 +385,6 @@ export function CategoriesToolbar({
     onJumpToCurrentMonth?: () => void
     className?: string
     includeAll?: boolean
-    /** A contagem de categorias do mês: logo depois das abas, só no desktop. */
-    contagem?: number
     /** A ordem da grade: no grupo da direita, antes do mês. */
     ordem?: React.ReactNode
 }) {
@@ -402,13 +399,6 @@ export function CategoriesToolbar({
                 className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 includeAll={includeAll}
             />
-            {contagem != null ? (
-                <ToolbarCount
-                    count={contagem}
-                    noun={["categoria", "categorias"]}
-                    className="self-end max-md:hidden"
-                />
-            ) : null}
 
             <ToolbarActions>
                 {ordem}

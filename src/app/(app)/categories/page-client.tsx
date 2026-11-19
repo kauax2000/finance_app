@@ -668,8 +668,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         )
     }
 
-    const doMes = filterType === "income" ? receitas : despesas
-    const mostrarContagem = numerosProntos && doMes.comMovimento.length > 0
     // A ordem fica parada ao trocar de mês: depende só de a aba ter categoria, não dos números do mês.
     const mostrarOrdem = (filterType === "income" ? incomeCategories : expenseFiltered).length > 0
 
@@ -703,7 +701,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 showMonthControls
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                contagem={mostrarContagem ? doMes.comMovimento.length : undefined}
                 ordem={
                     mostrarOrdem ? (
                         <OrdemDasCategorias

@@ -27,11 +27,9 @@ describe("mesNaFrase", () => {
 })
 
 describe("a contagem do mês", () => {
-    it("é o ToolbarCount da barra, rente ao pé e escondido no telefone", () => {
+    it("saiu da barra (pedido do dono)", () => {
         const t = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"))
-        expect(t).toContain("<ToolbarCount")
-        expect(t).toContain('noun={["categoria", "categorias"]}')
-        expect(t).toContain('className="self-end max-md:hidden"')
+        expect(t).not.toContain("<ToolbarCount")
     })
 })
 
