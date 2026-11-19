@@ -120,25 +120,27 @@ def notificar(de: str) -> dict:
     )
 
 
-def se(grupo: str, de: str | dict, condicao: int, valor: str | None = None) -> dict:
-    """Se o valor do dicionário `de` (ou a variável `de`) ...: 100 tem valor, 4 é `valor` (texto).
+def se(grupo: str, de: str | dict, condicao: int = 100) -> dict:
+    """Se o valor do dicionário `de` (ou a variável `de`) tem valor (100)."""
+    alvo = de if isinstance(de, dict) else saida(de, "Valor do Dicionário")
+    return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=condicao,
+                WFInput={"Type": "Variable", "Variable": anexo(alvo)})
 
-    Só condições positivas: o "não é" (5) sobre um valor vazio não foi verificado no aparelho.
+
+def se_igual(grupo: str, de: str | dict, valor: str) -> list[dict]:
+    """Se `de` é `valor`, sem o "é" do Se: o iOS 27 não lê o valor do "é" gravado fora do app.
+
+    Procura `x<de>` num dicionário que só tem `x<valor>` e testa "tem qualquer valor".
+    O `x` deixa a chave nunca vazia (o `codigo` falta quando a frase lança).
     """
     alvo = de if isinstance(de, dict) else saida(de, "Valor do Dicionário")
-    params = dict(GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=condicao,
-                  WFInput={"Type": "Variable", "Variable": anexo(alvo)})
-    if valor is not None:
-        # O iOS 27 não lê o texto cru: o "é" ficava sem valor ("Escolha um valor para cada parâmetro").
-        params["WFConditionalActionString"] = texto(valor)
-        params["WFConditions"] = {
-            "WFSerializationType": "WFContentPredicateTableTemplate",
-            "Value": {"WFActionParameterFilterPrefix": 1, "WFContentPredicateBoundedDate": False,
-                      "WFActionParameterFilterTemplates": [{
-                          "WFCondition": condicao, "WFInput": params["WFInput"],
-                          "WFConditionalActionString": texto(valor)}]},
-        }
-    return acao("conditional", **params)
+    tabela, achado = str(uuid.uuid4()).upper(), str(uuid.uuid4()).upper()
+    return [
+        acao("dictionary", UUID=tabela, WFItems=dicionario([(f"x{valor}", texto("sim"))])),
+        acao("getvalueforkey", UUID=achado, WFDictionaryKey=texto(f"x{VAR}", {1: alvo}),
+             WFInput=anexo(saida(tabela, "Dicionário"))),
+        se(grupo, achado),
+    ]
 
 
 def senao(grupo: str) -> dict:
@@ -185,7 +187,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         chave(modo, "modo", opcoes),
         # Só o "sim" abre o formulário, uma vez só, depois dos dois caminhos que podem pedi-lo.
         *marcar(nao, "nao"),
-        se(modo_se, modo, 4, "formulario"),
+        *se_igual(modo_se, modo, "formulario"),
         *marcar(sim_modo, "sim"),
         # Qualquer outro `modo` cai na frase.
         senao(modo_se),
@@ -199,7 +201,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         ]),
         chave(cod_frase, "codigo", r_frase),
         # Frase sem valor segue para o formulário; a que lançou (codigo vazio) só notifica.
-        se(cod_se, cod_frase, 4, "sem_valor"),
+        *se_igual(cod_se, cod_frase, "sem_valor"),
         *marcar(sim_frase, "sim"),
         senao(cod_se),
         chave(resumo_frase, "resumo", r_frase),
@@ -207,7 +209,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         fim_se(cod_se),
         fim_se(modo_se),
         # O formulário, campo a campo.
-        se(form_se, variavel("irAoFormulario"), 4, "sim"),
+        *se_igual(form_se, variavel("irAoFormulario"), "sim"),
         acao("ask", UUID=valor, WFInputType="Number", WFAskActionPrompt=texto("Qual o valor?")),
         # O espaço deixa o Pronto valer com o campo vazio; a Edge apara o `merchant`.
         acao("ask", UUID=desc, WFInputType="Text", WFAskActionPrompt=texto("Descrição (opcional)"), WFAskActionDefaultAnswer=texto(" ")),
@@ -312,15 +314,27 @@ def verificar() -> None:
         if _id(a) == "format.date":
             assert a["WFWorkflowActionParameters"]["WFDateFormat"] == "yyyy-MM-dd"
 
-    # Só condições positivas: nenhum "não é" (5) sobre um valor que pode vir vazio.
+    # Só "tem qualquer valor": o "é" com texto gravado aqui abre vazio no iOS 27.
     conds = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "conditional" and a["WFWorkflowActionParameters"]["WFControlFlowMode"] == 0]
-    assert all(c["WFCondition"] in (4, 100) for c in conds), [c["WFCondition"] for c in conds]
-    por_valor = {_txt(c.get("WFConditionalActionString")): c for c in conds}
+    assert all(c["WFCondition"] == 100 and "WFConditionalActionString" not in c for c in conds), conds
+    por_uuid = {a["WFWorkflowActionParameters"].get("UUID"): a for a in acoes}
     origem = lambda c: c["WFInput"]["Variable"]["Value"]  # noqa: E731
-    leitura = lambda c: next(a["WFWorkflowActionParameters"] for a in acoes if a["WFWorkflowActionParameters"].get("UUID") == origem(c).get("OutputUUID"))  # noqa: E731
-    assert leitura(por_valor["formulario"])["WFDictionaryKey"] == "modo"
-    assert leitura(por_valor["sem_valor"])["WFDictionaryKey"] == "codigo"
-    assert origem(por_valor["sim"]) == variavel("irAoFormulario")
+    por_valor, alvo_de = {}, {}
+    for c in conds:
+        if "OutputUUID" not in origem(c):
+            continue
+        busca = por_uuid[origem(c)["OutputUUID"]]["WFWorkflowActionParameters"]
+        tabela = por_uuid.get(busca["WFInput"]["Value"]["OutputUUID"])
+        if tabela is None or _id(tabela) != "dictionary":
+            continue
+        (item,) = tabela["WFWorkflowActionParameters"]["WFItems"]["Value"]["WFDictionaryFieldValueItems"]
+        assert _txt(busca["WFDictionaryKey"]) == "x" + VAR and _txt(item["WFKey"]).startswith("x")
+        valor = _txt(item["WFKey"])[1:]
+        por_valor[valor], alvo_de[valor] = c, busca["WFDictionaryKey"]["Value"]["attachmentsByRange"]["{1, 1}"]
+    leitura = lambda v: por_uuid[alvo_de[v]["OutputUUID"]]["WFWorkflowActionParameters"]  # noqa: E731
+    assert leitura("formulario")["WFDictionaryKey"] == "modo"
+    assert leitura("sem_valor")["WFDictionaryKey"] == "codigo"
+    assert alvo_de["sim"] == variavel("irAoFormulario")
 
     # O sinalizador: "nao" antes dos caminhos, "sim" só dentro do modo formulario e do sem_valor.
     marcas = [
