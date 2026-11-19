@@ -38,7 +38,7 @@ describe("a contagem do mês", () => {
 describe("OrdemDasCategorias", () => {
     it("compacta é o botão de ícone do menu", () => {
         const html = renderToStaticMarkup(
-            h(OrdemDasCategorias, { tipo: "expense", criterio: "maior", onCriterioChange: () => {}, compacta: true }),
+            h(OrdemDasCategorias, { tipo: "expense", criterio: "maior", onCriterioChange: () => {}, invertida: false, onInvertidaChange: () => {}, compacta: true }),
         )
         expect(html).toContain('aria-label="Ordenar categorias"')
         expect(html).toContain("dropdown-menu-trigger")
@@ -46,17 +46,32 @@ describe("OrdemDasCategorias", () => {
 
     it("no desktop o gatilho é só o ícone, sem fundo (terciário)", () => {
         const html = renderToStaticMarkup(
-            h(TooltipProvider, null, h(OrdemDasCategorias, { tipo: "expense", criterio: "nome", onCriterioChange: () => {} })),
+            h(TooltipProvider, null, h(OrdemDasCategorias, { tipo: "expense", criterio: "nome", onCriterioChange: () => {}, invertida: false, onInvertidaChange: () => {} })),
         )
-        expect(html).toContain('aria-label="Ordenar categorias: Nome"')
+        expect(html).toContain('aria-label="Ordenar categorias: nome, a → z"')
         expect(html).toContain('data-variant="tertiary"')
         expect(html).not.toContain("select-trigger")
         expect(html).not.toMatch(/>\s*Nome\s*</)
     })
 
-    it("as quatro opções moram no arquivo", () => {
+    it("o sentido invertido aparece no nome do gatilho", () => {
+        const html = renderToStaticMarkup(
+            h(
+                TooltipProvider,
+                null,
+                h(OrdemDasCategorias, { tipo: "expense", criterio: "maior", onCriterioChange: () => {}, invertida: true, onInvertidaChange: () => {} }),
+            ),
+        )
+        expect(html).toContain('aria-label="Ordenar categorias: gasto, menor primeiro"')
+    })
+
+    it("o menu tem título, tique, ícones e os seis sentidos", () => {
         const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
-        for (const t of ["Maior receita", "Maior gasto", "Nome", "Variação"]) expect(fonte).toContain(`"${t}"`)
+        expect(fonte).toContain('title="Ordenar por"')
+        expect(fonte).toContain('indicator="check"')
+        for (const t of ["Gasto", "Receita", "Nome", "Variação"]) expect(fonte).toContain(`"${t}"`)
+        for (const t of ["Maior primeiro", "Menor primeiro", "A → Z", "Z → A", "Mais subiu", "Mais caiu"]) expect(fonte).toContain(`"${t}"`)
+        for (const i of ["BanknotesIcon", "LanguageIcon", "ArrowTrendingUpIcon"]) expect(fonte).toContain(i)
         expect(fonte).not.toContain("CategoriasDoMesCabecalho")
     })
 })

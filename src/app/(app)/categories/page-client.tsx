@@ -129,6 +129,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [incomeByCategoryId, setIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
     const [prevIncomeByCategoryId, setPrevIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
     const [criterio, setCriterio] = useState<CriterioDeOrdem>("maior")
+    const [invertida, setInvertida] = useState(false)
     const listLoading = categoriesQuery.isPending && !categoriesQuery.data
     // O mês cujos números já chegaram. Até chegarem, a grade espera no esqueleto:
     // com os totais ainda zerados, toda categoria cairia em "sem movimento" e a
@@ -597,6 +598,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             }
         }),
         criterio,
+        invertida,
     )
     const receitas = dividirDoMes(
         incomeCategories.map((category) => {
@@ -614,6 +616,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             }
         }),
         criterio,
+        invertida,
     )
 
     const dialogExistingBudget =
@@ -706,7 +709,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <OrdemDasCategorias
                             tipo={filterType === "income" ? "income" : "expense"}
                             criterio={criterio}
-                            onCriterioChange={setCriterio}
+                            onCriterioChange={(c) => {
+                                setCriterio(c)
+                                setInvertida(false)
+                            }}
+                            invertida={invertida}
+                            onInvertidaChange={setInvertida}
                             compacta={isMobile}
                         />
                     ) : undefined

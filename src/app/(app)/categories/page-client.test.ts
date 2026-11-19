@@ -62,4 +62,12 @@ describe("a grade espera os números do mês", () => {
         expect(f).toMatch(/ordem=\{\s*mostrarOrdem \?/)
         expect(f).toContain("compacta={isMobile}")
     })
+
+    it("o sentido vai à divisão do mês e trocar o critério o zera", () => {
+        const f = semComentarios(lerFonte("src/app/(app)/categories/page-client.tsx"), "tudo")
+        expect(f).toContain("const [invertida, setInvertida] = useState(false)")
+        expect(f.match(/criterio,\s*invertida,\s*\)/g)?.length).toBe(2)
+        expect(f).toMatch(/onCriterioChange=\{\(c\) => \{\s*setCriterio\(c\)\s*setInvertida\(false\)/)
+        expect(f).toContain("onInvertidaChange={setInvertida}")
+    })
 })
