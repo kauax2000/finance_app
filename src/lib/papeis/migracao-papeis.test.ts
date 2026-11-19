@@ -84,6 +84,7 @@ const ABERTAS_AO_CONVIDADO: Record<string, string> = {
     criar_plano_parcelado: "a compra parcelada é um lançamento; as parcelas são transações dele, e o plano fica invisível a ele",
     create_workspace_installment_plan: "a porta do app para o criar_plano_parcelado",
     create_capture_token: "a captura (atalho, e-mail) lança despesa em nome de quem criou o token",
+    set_capture_token_workspace: "o dono do token escolhe a carteira dele; é membro, como no create_capture_token",
     marcar_insight: "ele marca os insights que vê; o da carteira (user_id nulo) exige adulto, como o insights_select",
 }
 
