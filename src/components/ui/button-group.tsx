@@ -10,12 +10,6 @@ export interface ButtonGroupProps extends React.ComponentProps<"div"> {
     size?: ButtonSize
     /** `vertical` empilha, e a emenda passa a ser horizontal. */
     orientation?: "horizontal" | "vertical"
-    /**
-     * `rail` veste o trilho do `Tabs floating` (placa, anel, recuo, 36 · 44 no
-     * dedo) para um par de ações de navegação com um valor no meio (o mês). Não
-     * é escolha segmentada: isso é `Tabs`. Só horizontal.
-     */
-    variant?: "rail"
 }
 
 /**
@@ -44,19 +38,6 @@ const HORIZONTAL = [
     "pointer-coarse:has-[>[data-slot=input]]:*:h-11",
 ]
 
-/**
- * O trilho das abas, medido no `tabs.tsx` (moldura `floating`, recuo `p-0.5`,
- * 36 e 44 no dedo). Sem emenda, filete nem canto achatado: cada peça é uma
- * pílula inteira de 32 (40 no dedo, a bandeja de 44 menos o recuo). O `!` vence a
- * altura de 36 que a `Toolbar` impõe aos botões do grupo (`--toolbar-control`).
- */
-const RAIL = [
-    "inline-flex h-9 items-center justify-start gap-0.5 rounded-full bg-popover p-0.5 ring-1 ring-foreground/10 pointer-coarse:h-11",
-    "[&>[data-slot=button]:not([data-size^=icon])]:h-8! pointer-coarse:[&>[data-slot=button]:not([data-size^=icon])]:h-10!",
-    "[&>[data-slot=button][data-size^=icon]]:size-8! pointer-coarse:[&>[data-slot=button][data-size^=icon]]:size-10!",
-    "[&>[data-slot=button]]:rounded-full",
-]
-
 /** A mesma emenda, em pé: cantos de cima e de baixo, fio na horizontal. */
 const VERTICAL = [
     "inline-flex flex-col items-stretch",
@@ -69,27 +50,6 @@ const VERTICAL = [
     "[&>[data-variant=secondary]:not(:first-child)]:mt-px",
 ]
 
-const JUNTA = [
-    "[&>*:not(:first-child)]:relative",
-    "[&>*:not(:first-child)]:before:pointer-events-none",
-    "[&>*:not(:first-child)]:before:absolute",
-    "[&>*:not(:first-child)]:before:bg-current/20",
-    // Quem tem borda visível desenha a própria emenda; o filete
-    // por cima seria um segundo traço.
-    "[&>[data-variant=outline]]:before:hidden [&>[data-slot=button-group-text]]:before:hidden",
-    // O primário emenda por um vão transparente de 1px sem o
-    // `ml-px` do `secondary`: o fundo recortado no `padding-box`
-    // já deixa o vão, e com a margem a emenda somava 3px.
-    "[&>[data-variant=primary]]:before:hidden",
-    "[&>[data-variant=secondary]]:before:hidden",
-    // O divisor mora 1px fora da caixa; o vizinho em hover sobe a
-    // z-10 e cobria o filete, então o pseudo usa 20.
-    "[&>*:not(:first-child)]:before:z-20",
-    // A sobreposição recorta o anel de foco do vizinho; quem está
-    // ativo sobe. Empilhamento local, número cru.
-    "[&>*]:hover:z-10 [&>*:focus-visible]:z-10",
-]
-
 /**
  * Botões que agem sobre a mesma coisa e viram uma peça só: uma ação com seu
  * menu, um par de navegação, um campo com a sua ação. O grupo manda no raio.
@@ -100,7 +60,6 @@ export function ButtonGroup({
     children,
     size,
     orientation = "horizontal",
-    variant,
     ...props
 }: ButtonGroupProps) {
     return (
@@ -108,11 +67,27 @@ export function ButtonGroup({
             data-slot="button-group"
             data-size={size}
             data-orientation={orientation}
-            data-variant={variant}
             className={cn(
                 "group/button-group",
-                variant === "rail" ? RAIL : orientation === "vertical" ? VERTICAL : HORIZONTAL,
-                variant !== "rail" && JUNTA,
+                orientation === "vertical" ? VERTICAL : HORIZONTAL,
+                "[&>*:not(:first-child)]:relative",
+                "[&>*:not(:first-child)]:before:pointer-events-none",
+                "[&>*:not(:first-child)]:before:absolute",
+                "[&>*:not(:first-child)]:before:bg-current/20",
+                // Quem tem borda visível desenha a própria emenda; o filete
+                // por cima seria um segundo traço.
+                "[&>[data-variant=outline]]:before:hidden [&>[data-slot=button-group-text]]:before:hidden",
+                // O primário emenda por um vão transparente de 1px sem o
+                // `ml-px` do `secondary`: o fundo recortado no `padding-box`
+                // já deixa o vão, e com a margem a emenda somava 3px.
+                "[&>[data-variant=primary]]:before:hidden",
+                "[&>[data-variant=secondary]]:before:hidden",
+                // O divisor mora 1px fora da caixa; o vizinho em hover sobe a
+                // z-10 e cobria o filete, então o pseudo usa 20.
+                "[&>*:not(:first-child)]:before:z-20",
+                // A sobreposição recorta o anel de foco do vizinho; quem está
+                // ativo sobe. Empilhamento local, número cru.
+                "[&>*]:hover:z-10 [&>*:focus-visible]:z-10",
                 className
             )}
             role="group"

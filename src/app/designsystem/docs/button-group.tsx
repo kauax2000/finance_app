@@ -135,26 +135,6 @@ export default function ButtonGroupDoc() {
         </ButtonGroup>
       </DocSection>
 
-      <DocSection
-        title="rail: o trilho das abas"
-        description="variant=&quot;rail&quot; veste a moldura do Tabs floating (placa --popover, anel de 1px, recuo de 2px, 36 no mouse e 44 no dedo) para um par de ações de navegação com um valor no meio, como o mês. As peças são pílulas inteiras de 32 (40 no dedo), sem emenda nem filete; use tertiary dentro. Não é escolha segmentada: isso é Tabs."
-        code={`<ButtonGroup variant="rail" aria-label="Mês de referência">
-  <Button variant="tertiary" size="icon-md" aria-label="Mês anterior"><ChevronLeftIcon aria-hidden /></Button>
-  <Button variant="tertiary">novembro de 2026</Button>
-  <Button variant="tertiary" size="icon-md" aria-label="Próximo mês"><ChevronRightIcon aria-hidden /></Button>
-</ButtonGroup>`}
-      >
-        <ButtonGroup variant="rail" aria-label="Mês de referência">
-          <Button variant="tertiary" size="icon-md" aria-label="Mês anterior">
-            <ChevronLeftIcon aria-hidden />
-          </Button>
-          <Button variant="tertiary">novembro de 2026</Button>
-          <Button variant="tertiary" size="icon-md" aria-label="Próximo mês">
-            <ChevronRightIcon aria-hidden />
-          </Button>
-        </ButtonGroup>
-      </DocSection>
-
       <DocNote title="O grupo manda no raio e na emenda">
         Os cantos internos são achatados e as bordas vizinhas se sobrepõem em 1px, para a emenda ser um fio só. Não arredonde os filhos por fora. Quem recebe hover ou foco sobe de camada, senão o vizinho recorta o anel. O vão do primário é a sobreposição, sem o <code>ml-px</code> do <code>secondary</code>: o fundo dele é recortado no <code>padding-box</code>, e com a margem a emenda somava 3px.
       </DocNote>
@@ -170,7 +150,6 @@ export default function ButtonGroupDoc() {
       <PropsTable
         rows={[
           { prop: "size", type: "a escada do Button", description: "O degrau de todos os botões do grupo; o do próprio botão vence." },
-          { prop: "variant", type: '"rail"', description: "O trilho do Tabs floating para um par de navegação com valor no meio; só horizontal." },
           { prop: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "vertical empilha e deita a emenda." },
         ]}
       />
