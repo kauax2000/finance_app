@@ -171,7 +171,6 @@ describe("as versões do Dialog", () => {
       "src/components/bills/pay-bill-dialog.tsx",
       "src/components/categories/category-create-dialog.tsx",
       "src/components/categories/detail/category-detail-dialogs.tsx",
-      "src/components/categories/categories-onboarding-wizard.tsx",
     ]) {
       const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).toContain('surface="auto"')

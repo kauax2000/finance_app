@@ -8,7 +8,6 @@ describe("quem dispara notificação no cliente", () => {
     it.each([
         "src/app/(app)/categories/page-client.tsx",
         "src/components/categories/category-create-dialog.tsx",
-        "src/components/categories/categories-onboarding-wizard.tsx",
     ])("%s não avisa a pessoa de uma categoria que ela mesma criou", (caminho) => {
         expect(fonte(caminho)).not.toContain("dispatch-notifications")
     })

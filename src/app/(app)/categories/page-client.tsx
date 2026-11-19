@@ -14,8 +14,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { CategoriesOnboardingLoadingShell } from "@/components/categories/categories-onboarding-loading-shell"
-import { CategoriesOnboardingWizard } from "@/components/categories/categories-onboarding-wizard"
 import { CategoriesPageGridSkeleton } from "@/components/categories/categories-page-grid-skeleton"
 import {
     CATEGORY_COLORS,
@@ -114,10 +112,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         currentWorkspaceId,
         loading: workspaceLoading,
         error: workspaceError,
-        refreshWorkspaces,
         isAdulto,
     } = useWorkspace()
-    // O convidado (Bloco 7A) só lê: sem criar, editar, apagar, orçamento nem o assistente.
+    // O convidado (Bloco 7A) só lê: sem criar, editar, apagar nem orçamento.
     const podeEscrever = isAdulto
     const isMobile = useIsMobile()
     const categoriesQuery = useCategoriesQuery(
@@ -226,10 +223,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         },
         [resetForm, budgets],
     )
-
-    const showOnboarding =
-        podeEscrever &&
-        Boolean(user && currentWorkspace && !currentWorkspace.categories_onboarding_completed_at)
 
     const bumpCategories = useCallback(() => {
         if (!currentWorkspaceId) return
@@ -378,14 +371,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     useEffect(() => {
         if (authLoading || !user || !currentWorkspaceId || !currentWorkspace) return
-        if (showOnboarding) return
         void fetchBudgetsAndSpend()
     }, [
         authLoading,
         user,
         currentWorkspaceId,
         currentWorkspace,
-        showOnboarding,
         fetchBudgetsAndSpend,
     ])
 
@@ -432,21 +423,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     Não foi possível carregar as categorias. Tente recarregar a página.
                 </CardMessage>
             </Card>
-        )
-    }
-
-    if (showOnboarding && user && currentWorkspaceId && currentWorkspace) {
-        if (listLoading) {
-            return <CategoriesOnboardingLoadingShell />
-        }
-        return (
-            <CategoriesOnboardingWizard
-                user={user}
-                workspaceId={currentWorkspaceId}
-                categories={categories}
-                onFinished={() => void refreshWorkspaces()}
-                onCategoriesUpdated={() => bumpCategories()}
-            />
         )
     }
 

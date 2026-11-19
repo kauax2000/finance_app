@@ -47,10 +47,9 @@ describe("as chamadas da casa só com o adulto", () => {
 })
 
 describe("só leitura para quem não é adulto (Ruling 8)", () => {
-    it("Categorias: sem criar, editar, apagar nem o assistente", () => {
+    it("Categorias: sem criar, editar nem apagar", () => {
         const f = fonte("src/app/(app)/categories/page-client.tsx")
         expect(f).toContain("const podeEscrever = isAdulto")
-        expect(f).toMatch(/const showOnboarding =\s*podeEscrever &&/)
         expect(f).toContain("onNewCategory={podeEscrever && isMobile ? () => openDialog() : undefined}")
         expect(f.match(/onEdit=\{podeEscrever \? \(\) => openDialog\(category\) : undefined\}/g)).toHaveLength(2)
         // O único `openDialog()` fora dos guardados é o do vazio, que mora dentro de `podeEscrever ? (`.

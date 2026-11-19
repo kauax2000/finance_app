@@ -36,4 +36,11 @@ describe("o cabeçalho de Categorias", () => {
         expect(f).toContain("receitasDoMesPorCategoria(")
         expect(f).toContain("recebido={")
     })
+
+    it("a tela não tem o assistente de primeiro uso", () => {
+        const bruto = lerFonte("src/app/(app)/categories/page-client.tsx")
+        expect(bruto).not.toContain("CategoriesOnboarding")
+        expect(bruto).not.toContain("showOnboarding")
+        expect(bruto).not.toContain("categories_onboarding_completed_at")
+    })
 })

@@ -1221,24 +1221,13 @@ flowchart TD
 ## 9. Categorias e orçamentos
 
 `/categories`: as categorias da carteira e o limite mensal de cada uma. Não há
-tela separada de orçamento: o limite mora na categoria. Na primeira visita de
-cada carteira aparece um assistente.
+tela separada de orçamento: o limite mora na categoria. A tela abre direto na
+grade do mês; o assistente de primeiro uso saiu do app (19 nov 2026).
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    cats["/categories?month="] --> onboarded{"categories_onboarding_completed_at preenchido?"}
-    onboarded -->|"não"| step0(["Assistente 1: renda mensal, opcional"])
-    step0 -->|"Continuar"| step1(["Assistente 2: categorias e limites"])
-    step1 -->|"Voltar"| step0
-    step1 -->|"Sugerir pela renda"| step1
-    step1 -->|"adicionar, editar, excluir"| step1
-    step1 -->|"Revisar, com 1+ categoria de despesa"| step2(["Assistente 3: confirmar"])
-    step2 -->|"Voltar"| step1
-    step2 -->|"Concluir"| complete[("Grava orçamentos; RPC complete_workspace_categories_onboarding")]
-    step1 -->|"Configurar depois"| complete
-    complete --> listView
-    onboarded -->|"sim"| listView(["Lista: Despesas ou Receitas; mês só em Despesas"])
+    cats["/categories?month="] --> listView(["Lista: Despesas ou Receitas; mês só em Despesas"])
 
     newRoute["/categories/new"] --> catForm
     listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa, com Repetir todo mês"])
@@ -1284,7 +1273,6 @@ flowchart TD
 
 | Ponto | Regra | Onde |
 |---|---|---|
-| Assistente | Só em `/categories`, por carteira; nada redireciona para ele | `src/components/categories/categories-onboarding-wizard.tsx` |
 | Detalhe | `rpc_fetch_category_detail_bundle` | `src/lib/queries/fetch-category-detail-bundle.ts` |
 | "Ver" do toast | Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a `/categories/id?type=`; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar | `src/components/categories/category-create-dialog.tsx`, `src/app/(app)/categories/page-client.tsx` |
 | Entradas no detalhe | Lista de categorias (cartão ou rodapé "Sem gasto"), gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
@@ -1828,7 +1816,7 @@ flowchart TD
 | A navegação | A barra lateral, a barra de baixo, a página Você, o menu da conta e a paleta (⌘K) filtram pela lista dele: sem Membros, sem o "Assinatura" do menu de nova transação, ações só de despesa e parcelada (sem "Nova receita" na paleta), e sem os grupos de cartões, parcelas, assinaturas, contas e membros. Planos fica (exportar e apagar, no Editar perfil, são sempre liberados). "+ Adicionar" não muda (abre em Despesa). O formulário tira a aba Receita do convidado (na edição, o trilho do tipo some), e toda porta de receita (`?new=receita`, a casca) abre o dele em despesa (`transaction-form-use.tsx`) | `src/lib/papeis/rotas-do-convidado.ts` (`itensDeNavegacaoPara`), `src/components/layout/` |
 | O Painel dele | `PainelPorPapel` escolhe: convidado, o `ConvidadoPainelWireframe`; papel a caminho com a carteira carregando, o esqueleto; senão o Painel da casa. O wireframe mostra o limite, o gasto, o total do mês e as dez últimas transações dele (a RLS só devolve as dele), e recarrega a cada mutação de lançamento | `src/components/dashboard/painel-por-papel.tsx`, `src/components/wireframe/convidado-painel-wireframe.tsx` |
 | O que o convidado não chama | `useGarantirOrcamentosDoMes` e `useSeguroBaixo` exigem `isAdulto`: o Painel da casa e Categorias não pedem ao banco o que a RPC devolveria vazio ou barrado | `src/hooks/use-garantir-orcamentos-do-mes.ts`, `src/lib/insights/use-insights.ts` |
-| Só leitura | Categorias, o detalhe da categoria e Cartões escondem criar, editar e excluir para quem não é adulto, e o assistente de categorias não abre. O ladrilho do cartão não é link e mostra só as compras dele no ciclo ("Suas compras neste ciclo"), sem comparação nem uso do limite, que enganariam. O formulário de lançamento troca "Gerenciar categorias" por "Ver categorias" e esconde "Cadastrar cartão" | `src/app/(app)/categories/page-client.tsx`, `src/app/(app)/credit-cards/page-client.tsx` |
+| Só leitura | Categorias, o detalhe da categoria e Cartões escondem criar, editar e excluir para quem não é adulto. O ladrilho do cartão não é link e mostra só as compras dele no ciclo ("Suas compras neste ciclo"), sem comparação nem uso do limite, que enganariam. O formulário de lançamento troca "Gerenciar categorias" por "Ver categorias" e esconde "Cadastrar cartão" | `src/app/(app)/categories/page-client.tsx`, `src/app/(app)/credit-cards/page-client.tsx` |
 | Quem recebe aviso | O helper `adultosDaCarteira` (dono e membro) decide os destinatários: o lançamento de um membro **não** avisa o convidado, e a despesa do convidado avisa o dono e os membros. Orçamento, fatura, conta vencendo e insights da casa também são só dos adultos. Ao convidado, `evaluate-budgets` e `evaluate-credit-card-alerts` respondem `{ ok: true }`, sem dado da casa. O `review-reminder` fica de fora de propósito: cada pessoa é lembrada dos próprios itens a conferir | `supabase/functions/_shared/destinatarios.ts`, `src/lib/papeis/edges-papeis.test.ts` |
 | A captura | O dono de um token que é convidado casa o histórico só com os lançamentos dele, e uma receita lida para uma carteira em que ele é convidado é recusada antes de gravar (`422`, "Convidado lança só despesa. Peça a um adulto da carteira para lançar a receita."); a `capture` passa o `transaction_id` ao `evaluate-budgets` para o limite do autor | `supabase/functions/capture/index.ts` |
 | Assentos | O convidado ocupa um assento do Plano Família: a cobertura é dos 5 primeiros membros de quem assina, de qualquer papel (`tem_cobertura` não mudou). O filho coberto tem também o Família na própria carteira pessoal | `supabase/migrations/20261025120000_planos.sql` |
@@ -2006,7 +1994,7 @@ flowchart TD
     escolha -->|"Sem modelo"| semModelo[("RPC create_shared_workspace: nome, ícone e cor, como sempre")]
     escolha -->|"Pessoal"| pessoal(["Abrir a Pessoal: sem nome e sem aparência"])
     pessoal --> pessoalRpc[("RPC criar_carteira_de_modelo pessoal: devolve a carteira pessoal que já existe, não cria nada")]
-    escolha -->|"Casa, Casal, Viagem, Reforma ou Evento"| modeloRpc[("RPC criar_carteira_de_modelo, security invoker: grava purpose e split_mode, semeia as categorias do modelo e marca o assistente de categorias como concluído")]
+    escolha -->|"Casa, Casal, Viagem, Reforma ou Evento"| modeloRpc[("RPC criar_carteira_de_modelo, security invoker: grava purpose e split_mode, semeia as categorias do modelo e grava a coluna do assistente de categorias como concluída, só por compatibilidade")]
     modeloRpc -->|"MODELO_DESCONHECIDO, WORKSPACE_NAME_REQUIRED ou NOT_AUTHENTICATED"| erro(["A frase em português, e o diálogo continua aberto"])
     modeloRpc -.->|"banco sem a migração: PGRST202"| indisp(["Ainda não disponível, e nada é criado"])
     modeloRpc -->|"sucesso"| aparencia[("updateWorkspace: o ícone e a cor que a pessoa escolheu valem sobre os do modelo")]
@@ -2150,7 +2138,7 @@ flowchart TD
 | Ponto | Regra | Onde |
 |---|---|---|
 | A regra e os modelos (Bloco 7C) | A frase mostrada ao escolher é a da spec, literal: "Vai usar o cartão da casa e são as mesmas pessoas? É um projeto. Gente de fora ou dinheiro separado? É uma carteira." Os seis modelos são Casa (dia a dia, pote único), Casal (dia a dia, dividida), Pessoal, e Viagem, Reforma e Evento (projeto, dividida). "Sem modelo" segue o `create_shared_workspace` de antes | `src/lib/projetos/modelos.ts`, `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/components/workspace/project-form-dialog.tsx` |
-| O modelo no banco (Bloco 7C) | `criar_carteira_de_modelo(p_modelo, p_nome)` é `security invoker`, para a RLS e o `created_by = auth.uid()` valerem, e cria pelo mesmo caminho do `create_shared_workspace`: a carteira com `purpose`, `split_mode` e `categories_onboarding_completed_at = now()` (o assistente de categorias não abre), o vínculo de dono e as categorias na forma do `handle_new_user`. Erros: `NOT_AUTHENTICATED`, `MODELO_DESCONHECIDO`, `WORKSPACE_NAME_REQUIRED` e `CARTEIRA_PESSOAL_AUSENTE`. A Pessoal devolve a carteira pessoal mais antiga e não cria nada. O ícone e a cor que a pessoa escolheu valem sobre os do modelo (`updateWorkspace` depois da RPC) | `supabase/migrations/20261031120000_projetos.sql` |
+| O modelo no banco (Bloco 7C) | `criar_carteira_de_modelo(p_modelo, p_nome)` é `security invoker`, para a RLS e o `created_by = auth.uid()` valerem, e cria pelo mesmo caminho do `create_shared_workspace`: a carteira com `purpose`, `split_mode` e `categories_onboarding_completed_at = now()` (a coluna do assistente é gravada só por compatibilidade: o assistente saiu do app), o vínculo de dono e as categorias na forma do `handle_new_user`. Erros: `NOT_AUTHENTICATED`, `MODELO_DESCONHECIDO`, `WORKSPACE_NAME_REQUIRED` e `CARTEIRA_PESSOAL_AUSENTE`. A Pessoal devolve a carteira pessoal mais antiga e não cria nada. O ícone e a cor que a pessoa escolheu valem sobre os do modelo (`updateWorkspace` depois da RPC) | `supabase/migrations/20261031120000_projetos.sql` |
 | O primeiro uso cria a Casa (Bloco 7C) | Em `/comecar`, quem ainda não é dono de nenhuma carteira compartilhada vê "Criar a Casa" (`CriarACasaWireframe`), que chama o modelo `casa` com o nome "Casa" e troca para ela. O `handle_new_user` não mudou, porque o `main` depende dele | `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/app/(app)/comecar/page.tsx` |
 | O projeto (Bloco 7C) | `projects(workspace_id, name, starts_on, ends_on, budget_total, archived_at, created_by)`. O nome não é vazio, o fim não vem antes do começo e o orçamento é maior que zero ou nulo. RLS: **select de qualquer membro, o convidado incluído** (ele marca a despesa dele); insert, update e delete só do adulto, e o insert exige `created_by = auth.uid()`. O update é por coluna (`name`, `starts_on`, `ends_on`, `budget_total`, `archived_at`): a carteira e o autor não se trocam. A tela de projetos é só do adulto (Ruling 3 do bloco) | `supabase/migrations/20261031120000_projetos.sql`, `src/components/wireframe/projetos-wireframe.tsx` |
 | O lançamento no projeto (Bloco 7C) | `transactions.project_id` (`on delete set null`: apagar o projeto solta os lançamentos). `same_ws_project_id` exige o projeto da mesma carteira. `recusar_projeto_arquivado` recusa só o **vínculo novo** (insert, ou update que muda o `project_id`) com `PROJETO_ARQUIVADO`: editar um lançamento que já era do projeto passa. O seletor também não aparece na receita, na parcelada nem no escopo "plano" | `supabase/migrations/20261031120000_projetos.sql`, `src/components/transactions/transaction-form-fields.tsx` |
