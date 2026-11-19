@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Card, CardAction, CardContent, CardHeader, CardLink, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -13,188 +12,127 @@ import {
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { CategoryCardContextMenu } from "@/components/categories/category-card-context-menu"
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
-import { Progress, ProgressFooter, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
+import { ChartSkeleton, ChartSparkline } from "@/components/ui/chart"
+import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
-import { deltaTone } from "@/lib/delta-tone"
+import { shiftYearMonth } from "@/lib/budget-month"
+import {
+    mediaDosMeses,
+    rotuloDaVariacao,
+    situacaoDaDespesa,
+    variacaoDoMes,
+    type Situacao,
+    type Variacao,
+} from "@/lib/categoria-situacao"
 import { currencyBRL } from "@/lib/formatters"
-import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
+import { TILE_EXPENSE_DEFAULT, tileColorFor } from "@/lib/tile-palette"
+import { formatMonthShortPtBr } from "@/lib/transaction-date"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
 }
 
-const currency = (n: number) =>
-    currencyBRL(n)
-
-function isMomFlat(now: number, prev: number): boolean {
-    if (prev <= 0) return false
-    const rel = Math.abs(now - prev) / prev
-    return rel <= 0.05
+const TOM_DA_VARIACAO: Record<Variacao["kind"], string> = {
+    up: "text-expense",
+    down: "text-income",
+    flat: "text-muted-foreground",
+    novo: "text-muted-foreground",
+    nenhum: "text-muted-foreground",
 }
 
-function MomComparisonBadge(props: { now: number; prev: number }) {
-    const base = "max-w-full min-w-0 shrink-0 px-2 py-0.5 text-2xs font-medium"
-    // O estorno no cartão pode deixar o gasto negativo: ele lê como zero.
-    const now = Math.max(0, props.now)
-    const prev = Math.max(0, props.prev)
+const TOM_DA_SITUACAO: Record<Situacao["tom"], string> = {
+    neutro: "text-muted-foreground",
+    aviso: "text-warning-muted-foreground",
+    perigo: "text-destructive",
+}
 
-    if (prev <= 0 && now <= 0) {
-        const label = "Sem gasto"
-        return (
-            <Badge tone="neutral" className={base}>
-                {label}
-            </Badge>
-        )
-    }
+function variacaoPorExtenso(v: Variacao): string | undefined {
+    if (v.kind === "up") return `↑ ${v.pct}% vs mês anterior`
+    if (v.kind === "down") return `↓ ${v.pct}% vs mês anterior`
+    if (v.kind === "flat") return "Estável vs mês anterior"
+    if (v.kind === "novo") return "Sem gasto no mês anterior"
+    return undefined
+}
 
-    if (prev <= 0 && now > 0) {
-        const full = "Novo gasto"
-        return (
-            <Badge tone="expense" title={full} aria-label={full} className={base}>
-                Novo
-            </Badge>
-        )
-    }
-
-    if (isMomFlat(now, prev)) {
-        const full = "Estável vs mês anterior"
-        return (
-            <Badge tone={deltaTone("flat", "expense")} title={full} aria-label={full} className={base}>
-                Estável
-            </Badge>
-        )
-    }
-
-    if (now < prev) {
-        const drop = prev - now
-        const pct = ((drop / prev) * 100).toFixed(0)
-        const full = `−${pct}% vs mês anterior`
-        return (
-            <Badge tone={deltaTone("down", "expense")} title={full} aria-label={full} className={base}>
-                −{pct}%
-            </Badge>
-        )
-    }
-
-    if (now > prev) {
-        const rise = now - prev
-        const pct = ((rise / prev) * 100).toFixed(0)
-        const full = `+${pct}% vs mês anterior`
-        return (
-            <Badge tone={deltaTone("up", "expense")} title={full} aria-label={full} className={base}>
-                +{pct}%
-            </Badge>
-        )
-    }
-
-    const full = "Igual ao mês anterior"
-    return (
-        <Badge tone="neutral" title={full} aria-label={full} className={base}>
-            Igual
-        </Badge>
-    )
+function mesCurto(ym: string): string {
+    const [y, m] = ym.split("-").map(Number)
+    return formatMonthShortPtBr(new Date(y, m - 1, 1))
 }
 
 export function ExpenseCategoryCard({
     category,
-    spent,
-    posted,
-    projectedInstallments,
-    projectedSubscriptions,
-    previousSpent,
-    limit,
-    totalMonthSpend,
-    spendRank,
-    categoriesWithPositiveSpend,
+    lancado,
+    previsto,
+    anterior,
+    limite,
+    totalDoMes,
+    maiorTotal,
+    ritmo,
+    mesYm,
+    historico,
     href,
     onEdit,
     onDelete,
 }: {
     category: { id: string; name: string; icon: string | null; color: string | null }
-    spent: number
-    posted: number
-    projectedInstallments: number
-    projectedSubscriptions: number
-    previousSpent: number
-    limit: number
-    totalMonthSpend: number
-    spendRank: number
-    categoriesWithPositiveSpend: number
+    lancado: number
+    previsto: number
+    anterior: number
+    limite: number
+    totalDoMes: number
+    maiorTotal: number
+    ritmo: number | null
+    mesYm: string
+    /** Os 5 meses anteriores, do mais antigo ao mais recente; `undefined` enquanto carrega. */
+    historico: number[] | undefined
     href: string
     /** Sem eles (o convidado, Bloco 7A), o cartão é só leitura: sem o menu. */
     onEdit?: () => void
     onDelete?: () => void
 }) {
-    const color = category.color || TILE_EXPENSE_DEFAULT
-    const hasBudget = limit > 0
-    const over = hasBudget && spent > limit
-    // O número ao lado da barra carrega o que o desenho não carrega: a barra
-    // satura em 100% e o `Progress` só marca que passou, então quem diz **o
-    // quanto** passou é este número. Ele era limitado a 100 junto com a barra,
-    // e aí 104% e 400% liam igual nos dois lugares.
-    const budgetPctReal = hasBudget
-        ? Math.max(0, Math.round((spent / limit) * 100))
-        : 0
+    const color = tileColorFor(category.color) ?? TILE_EXPENSE_DEFAULT
+    // O estorno maior que as compras deixa o mês negativo: tudo lê como zero.
+    const lancadoNaTela = Math.max(0, lancado)
+    const previstoNaTela = Math.max(0, previsto)
+    const total = Math.max(0, lancado + previsto)
+    const comLimite = limite > 0
 
-    // O gasto negativo (estorno maior que as compras) lê como zero, na barra e no texto.
-    const gastoNaTela = Math.max(0, spent)
-    const sharePct = totalMonthSpend > 0 ? Math.min(100, (gastoNaTela / totalMonthSpend) * 100) : 0
+    const variacao = variacaoDoMes(total, anterior)
+    const rotulo = rotuloDaVariacao(variacao, shiftYearMonth(mesYm, -1))
+    const situacao = situacaoDaDespesa({ total, limite, totalDoMes, ritmo })
 
-    const shareInsight = (() => {
-        if (totalMonthSpend <= 0) {
-            return "Nenhuma despesa no mês"
-        }
-        const base = `${sharePct.toFixed(0)}% das despesas do mês`
-        if (spent <= 0) return base
-        if (categoriesWithPositiveSpend > 1) {
-            return `${base} · ${spendRank}ª maior`
-        }
-        return `${base} · única com gasto`
-    })()
-
-    const projectedTotal = projectedInstallments + projectedSubscriptions
-    const showBreakdown = projectedTotal > 0
-
-    const breakdownTitle = showBreakdown
-        ? [
-              `Registrado ${currency(posted)}`,
-              `Previsto ${currency(projectedTotal)}`,
-              projectedInstallments > 0 ? `Parcelas ${currency(projectedInstallments)}` : null,
-              projectedSubscriptions > 0 ? `Assinaturas ${currency(projectedSubscriptions)}` : null,
-          ]
-              .filter(Boolean)
-              .join(" · ")
+    const serie =
+        historico === undefined
+            ? null
+            : [...historico, total].map((v, i, todos) => ({
+                  name: mesCurto(shiftYearMonth(mesYm, i - (todos.length - 1))),
+                  total: Math.max(0, v),
+              }))
+    const media = historico === undefined ? 0 : mediaDosMeses(historico)
+    const valores = serie?.map((p) => p.total) ?? []
+    const descricaoDaSerie = serie
+        ? `de ${currencyBRL(Math.min(...valores))} a ${currencyBRL(Math.max(...valores))}; média ${currencyBRL(media)}`
         : undefined
 
-    const budgetBarLabel = hasBudget
-        ? `Uso do orçamento na categoria ${category.name}: ${budgetPctReal}% de ${currency(limit)}${over ? ", acima do limite" : ""}`
-        : undefined
-
-    const shareBarLabel =
-        totalMonthSpend > 0
-            ? `Participação da categoria ${category.name} nas despesas do mês: ${sharePct.toFixed(
-                  0
-              )}%`
-            : `Participação da categoria ${category.name} nas despesas do mês: 0%`
-
+    const barraLabel = `${category.name}: ${situacao.texto}`
 
     return (
         // O cartão inteiro é clicável pelo `CardLink` no título (o link
         // esticado do sistema, rodada 204), e não por um <a> em volta de tudo:
         // o menu ficava dentro de um link, e o aria-label do link apagava o
-        // conteúdo do cartão. O casco acende com o cursor e o foco do link, e
-        // sobe o menu acima da película.
+        // conteúdo do cartão.
         <CategoryCardContextMenu
             name={category.name}
-            description={`${currency(spent)} no mês`}
+            description={`${currencyBRL(total)} no mês`}
             href={href}
             onEdit={onEdit}
             onDelete={onDelete}
         >
-        <Card padding="sm" className="group h-full">
+            <Card padding="sm" className="group h-full">
                 <CardHeader
                     media={
                         <ColorTile size="lg" color={color}>
@@ -202,27 +140,26 @@ export function ExpenseCategoryCard({
                         </ColorTile>
                     }
                 >
-                    <CardTitle
-                        className={cn(
-                            "min-w-0 self-center leading-snug",
-                            "line-clamp-2 text-balance @min-[360px]/card-header:line-clamp-1 @min-[360px]/card-header:truncate",
-                        )}
-                    >
+                    <CardTitle className="min-w-0 self-center truncate leading-snug">
                         <CardLink asChild>
                             <Link href={href}>{category.name}</Link>
                         </CardLink>
                     </CardTitle>
 
-                    <CardAction className="flex items-center gap-1.5">
-                        <MomComparisonBadge now={spent} prev={previousSpent} />
-                        {onEdit && onDelete ? (
+                    {onEdit && onDelete ? (
+                        <CardAction>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
                                         variant="tertiary"
                                         size="icon-md"
-                                        className="text-muted-foreground hover:text-foreground active:text-foreground"
+                                        // No cursor, o ⋯ só aparece com ele sobre o cartão; o
+                                        // teclado o acha pelo foco, e o toque longo abre o menu de contexto.
+                                        className={cn(
+                                            "text-muted-foreground hover:text-foreground active:text-foreground",
+                                            "[@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100",
+                                        )}
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}
                                         onPointerDown={(e) => e.stopPropagation()}
@@ -230,105 +167,106 @@ export function ExpenseCategoryCard({
                                         <EllipsisVerticalIcon aria-hidden />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    size="sm"
-                                >
+                                <DropdownMenuContent align="end" size="sm">
                                     <DropdownMenuItem onSelect={onEdit}>
                                         <PencilIcon aria-hidden />
                                         Editar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive"
-                                        onSelect={onDelete}
-                                    >
+                                    <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                                         <TrashIcon aria-hidden />
                                         Excluir
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        ) : null}
-                    </CardAction>
+                        </CardAction>
+                    ) : null}
                 </CardHeader>
 
                 <CardContent className="flex flex-1 flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                        <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">{currency(spent)}</p>
-                        <div
-                            className={cn(
-                                "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors",
-                                "group-hover:text-foreground group-active:text-foreground",
-                            )}
-                            aria-hidden
-                        >
-                            Ver categoria
-                            <ChevronRightIcon
-                                className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
-                                aria-hidden
-                            />
+                    <div>
+                        <div className="flex items-baseline justify-between gap-2">
+                            <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">
+                                {currencyBRL(total)}
+                            </p>
+                            {rotulo ? (
+                                <span
+                                    className={cn("shrink-0 text-xs font-medium", TOM_DA_VARIACAO[variacao.kind])}
+                                    title={variacaoPorExtenso(variacao)}
+                                >
+                                    {rotulo}
+                                </span>
+                            ) : null}
                         </div>
-                    </div>
-                    {showBreakdown ? (
-                        <p
-                            className="-mt-2 text-xs leading-relaxed text-muted-foreground"
-                            title={breakdownTitle}
-                        >
-                            Registrado{" "}
-                            <span className="tabular-nums">{currency(posted)}</span>{" "}
-                            <span className="text-muted-foreground/70">·</span>{" "}
-                            +{" "}
-                            <span className="tabular-nums">{currency(projectedTotal)}</span>{" "}
-                            previstos
-                        </p>
-                    ) : (
-                        <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-                            Sem previsões no mês
-                        </p>
-                    )}
-                    <div className="space-y-1">
-                        {hasBudget ? (
-                            <>
-                                <Progress
-                                    value={gastoNaTela}
-                                    max={limit}
-                                    bands={BUDGET_BANDS}
-                                    size="sm"
-                                    aria-label={budgetBarLabel}
-                                    header={
-                                        <ProgressHeader>
-                                            <span className="min-w-0 truncate text-muted-foreground">
-                                                {shareInsight}
-                                            </span>
-                                            <ProgressValue />
-                                        </ProgressHeader>
-                                    }
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <Progress
-                                    value={sharePct}
-                                    size="sm"
-                                    aria-label={shareBarLabel}
-                                    header={
-                                        <ProgressHeader>
-                                            <span className="min-w-0 truncate text-muted-foreground">
-                                                <ProgressLabel>Sem orçamento</ProgressLabel> · Participação
-                                            </span>
-                                            <ProgressValue />
-                                        </ProgressHeader>
-                                    }
-                                    footer={
-                                        <ProgressFooter>
-                                            <span>{shareInsight}</span>
-                                        </ProgressFooter>
-                                    }
-                                />
-                            </>
-                        )}
+                        {previstoNaTela > 0 ? (
+                            <p className="text-xs text-muted-foreground tabular-nums">
+                                {currencyBRL(lancadoNaTela)} lançado + {currencyBRL(previstoNaTela)} previsto
+                            </p>
+                        ) : null}
                     </div>
 
+                    {historico === undefined ? (
+                        <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
+                    ) : (
+                        <ChartSparkline
+                            variant="area"
+                            y="total"
+                            className="h-10"
+                            data={serie ?? []}
+                            reference={media}
+                            config={{ total: { label: category.name, color } }}
+                            label={`Gasto em ${category.name} nos últimos 6 meses`}
+                            description={descricaoDaSerie}
+                        />
+                    )}
+
+                    <div className="mt-auto flex flex-col gap-1.5">
+                        {comLimite ? (
+                            <Progress
+                                size="sm"
+                                value={lancadoNaTela}
+                                projected={previstoNaTela}
+                                max={limite}
+                                bands={BUDGET_BANDS}
+                                marker={ritmo ?? undefined}
+                                aria-label={barraLabel}
+                            />
+                        ) : (
+                            <Progress
+                                size="sm"
+                                value={lancadoNaTela}
+                                projected={previstoNaTela}
+                                max={maiorTotal > 0 ? maiorTotal : 1}
+                                aria-label={barraLabel}
+                            />
+                        )}
+                        <p className={cn("text-xs", TOM_DA_SITUACAO[situacao.tom])}>{situacao.texto}</p>
+                    </div>
                 </CardContent>
-        </Card>
+            </Card>
         </CategoryCardContextMenu>
+    )
+}
+
+/** O osso do cartão de categoria (despesa e receita): cabeçalho, valor, faísca, barra e frase. */
+export function CategoryCardSkeleton() {
+    return (
+        <Card padding="sm" className="h-full" aria-hidden>
+            <CardHeader media={<Skeleton shape="tile" size="lg" />}>
+                <CardTitle className="min-w-0 self-center">
+                    <Skeleton shape="text" className="w-32 max-w-full" />
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-3">
+                <div className="flex items-baseline justify-between gap-2">
+                    <Skeleton className="h-8 w-36 max-w-full" />
+                    <Skeleton shape="text" className="w-14 shrink-0" />
+                </div>
+                <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
+                <div className="mt-auto flex flex-col gap-1.5">
+                    <Skeleton className="h-1.5 w-full rounded-full" />
+                    <Skeleton shape="text" className="w-48 max-w-full" />
+                </div>
+            </CardContent>
+        </Card>
     )
 }

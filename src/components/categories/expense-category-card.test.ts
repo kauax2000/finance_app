@@ -1,39 +1,75 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {} }) }))
 const { ExpenseCategoryCard } = await import("./expense-category-card")
 
-// O estorno no cartão maior que as compras deixa o gasto do mês negativo.
-function cartao(p: { spent: number; previousSpent: number; limit: number }) {
+const fonte = semComentarios(lerFonte("src/components/categories/expense-category-card.tsx"))
+
+describe("ExpenseCategoryCard pelo fonte", () => {
+    it("a faísca é a área com a média", () => {
+        expect(fonte).toMatch(/import \{[^}]*ChartSparkline[^}]*\} from "@\/components\/ui\/chart"/)
+        expect(fonte).toContain('variant="area"')
+        expect(fonte).toContain("reference=")
+    })
+
+    it("a barra leva o previsto", () => {
+        expect(fonte).toContain("projected=")
+    })
+
+    it("a frase, a variação e a cor vêm das contas e da paleta", () => {
+        expect(fonte).toContain("situacaoDaDespesa(")
+        expect(fonte).toContain("rotuloDaVariacao(")
+        expect(fonte).toContain("tileColorFor(")
+    })
+
+    it("saem o Ver categoria, o Sem orçamento e o selo antigo", () => {
+        expect(fonte).not.toContain("Ver categoria")
+        expect(fonte).not.toContain("Sem orçamento")
+        expect(fonte).not.toContain("MomComparisonBadge")
+    })
+
+    it("o ⋯ só existe para quem escreve e só aparece no cursor", () => {
+        expect(fonte).toContain("onEdit && onDelete")
+        expect(fonte).toContain("[@media(hover:hover)]:opacity-0")
+        expect(fonte).toContain("group-hover:opacity-100")
+        expect(fonte).toContain("group-focus-within:opacity-100")
+    })
+
+    it("a série carregando vira o esqueleto do gráfico", () => {
+        expect(fonte).toMatch(/historico === undefined[\s\S]{0,80}ChartSkeleton/)
+    })
+})
+
+function cartao(p: Partial<Parameters<typeof ExpenseCategoryCard>[0]> = {}) {
     return renderToStaticMarkup(
         h(ExpenseCategoryCard, {
             category: { id: "mercado", name: "Mercado", icon: null, color: null },
-            posted: p.spent,
-            projectedInstallments: 0,
-            projectedSubscriptions: 0,
-            totalMonthSpend: 400,
-            spendRank: 2,
-            categoriesWithPositiveSpend: 2,
+            lancado: 100,
+            previsto: 0,
+            anterior: 100,
+            limite: 500,
+            totalDoMes: 400,
+            maiorTotal: 400,
+            ritmo: 50,
+            mesYm: "2026-11",
+            historico: [80, 90, 100, 110, 120],
             href: "/categories/mercado",
             ...p,
         }),
     )
 }
 
-describe("ExpenseCategoryCard com o gasto negativo", () => {
-    it("nenhum percentual sai negativo nem passa de −100%", () => {
-        for (const html of [
-            cartao({ spent: -30, previousSpent: 100, limit: 500 }),
-            cartao({ spent: -30, previousSpent: 100, limit: 0 }),
-        ]) {
-            expect(html).not.toMatch(/-\d+%/)
-            // Acima de 100% de queda: 101% a 199% e de 200% em diante.
-            expect(html).not.toMatch(/−(1\d[1-9]|1[1-9]\d|[2-9]\d\d|\d{4,})%/)
-            expect(html).toContain("0% das despesas do mês")
-            expect(html).toContain("−100%")
+describe("ExpenseCategoryCard no render", () => {
+    it("com a série carregando e o gasto negativo, nada sai NaN nem -R$", () => {
+        for (const limite of [500, 0]) {
+            const html = cartao({ historico: undefined, lancado: -30, limite })
+            expect(html).not.toContain("NaN")
+            expect(html).not.toMatch(/[-−]\s?R\$/)
+            expect(html).toContain('data-slot="chart-skeleton"')
         }
     })
 })

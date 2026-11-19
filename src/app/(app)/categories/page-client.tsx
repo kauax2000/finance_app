@@ -42,6 +42,8 @@ import { ExpenseCategoryCard } from "@/components/categories/expense-category-ca
 import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
 import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
+import { ritmoDoMes } from "@/lib/categoria-situacao"
+import { useHojeYmd } from "@/hooks/use-hoje-ymd"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import {
     TransactionFormTypeSegment,
@@ -131,6 +133,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
     const [budgetMonthYm, setBudgetMonthYm] = useState(() => formatYearMonth(new Date()))
+    const hojeYmd = useHojeYmd()
     useEffect(() => {
         const ym = parseYearMonthParam(searchParams?.get("month") ?? null)
         if (ym) {
@@ -581,21 +584,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     const totalMonthSpend = totalDasDespesas(categories, spendByCategoryId)
 
-    const expenseSpendRankById = (() => {
-        const rows = expenseFiltered.map((c) => ({
-            id: c.id,
-            spent: spendByCategoryId[c.id] ?? 0,
-        }))
-        rows.sort((a, b) => b.spent - a.spent)
-        const m: Record<string, number> = {}
-        rows.forEach((r, i) => {
-            m[r.id] = i + 1
-        })
-        return m
-    })()
-    const categoriesWithPositiveSpend = expenseFiltered.filter(
-        (c) => (spendByCategoryId[c.id] ?? 0) > 0,
-    ).length
+    const maiorTotalDoMes = Math.max(0, ...Object.values(spendByCategoryId))
+    const ritmo = ritmoDoMes(budgetMonthYm, hojeYmd)
 
     const dialogBudgetPeriod = periodBoundsFromYearMonth(budgetMonthYm)
     const dialogExistingBudget =
@@ -776,7 +766,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
                             {expenseFiltered.map((category) => {
                                 const bud = budgetForCategory(category.id)
-                                const spent = spendByCategoryId[category.id] ?? 0
                                 const posted = postedByCategoryId[category.id] ?? 0
                                 const projectedInstallments =
                                     projectedInstallmentsByCategoryId[category.id] ?? 0
@@ -787,15 +776,15 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                     <ExpenseCategoryCard
                                         key={category.id}
                                         category={category}
-                                        spent={spent}
-                                        posted={posted}
-                                        projectedInstallments={projectedInstallments}
-                                        projectedSubscriptions={projectedSubscriptions}
-                                        previousSpent={prevSpendByCategoryId[category.id] ?? 0}
-                                        limit={limit}
-                                        totalMonthSpend={totalMonthSpend}
-                                        spendRank={expenseSpendRankById[category.id] ?? 1}
-                                        categoriesWithPositiveSpend={categoriesWithPositiveSpend}
+                                        lancado={posted}
+                                        previsto={projectedInstallments + projectedSubscriptions}
+                                        anterior={prevSpendByCategoryId[category.id] ?? 0}
+                                        limite={limit}
+                                        totalDoMes={totalMonthSpend}
+                                        maiorTotal={maiorTotalDoMes}
+                                        ritmo={ritmo}
+                                        mesYm={budgetMonthYm}
+                                        historico={undefined}
                                         href={categoryDetailPath(category.id, {
                                             type: "expense",
                                             month: budgetMonthYm,
