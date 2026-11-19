@@ -2169,7 +2169,7 @@ export type Database = {
         Returns: number
       }
       create_capture_token: {
-        Args: { p_name: string; p_workspace_id: string }
+        Args: { p_gatilho?: string; p_name: string; p_workspace_id: string }
         Returns: string
       }
       create_shared_workspace: {
@@ -2341,6 +2341,10 @@ export type Database = {
       reivindicar_push_de_insight: {
         Args: { p_semana: string; p_user_id: string }
         Returns: boolean
+      }
+      set_capture_token_workspace: {
+        Args: { p_id: string; p_workspace_id: string }
+        Returns: undefined
       }
       revoke_capture_token: { Args: { p_id: string }; Returns: undefined }
       rpc_fetch_bills_page_bundle: {
