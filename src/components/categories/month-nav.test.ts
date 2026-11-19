@@ -6,16 +6,23 @@ describe("o seletor de mês do desktop", () => {
     const ini = f.indexOf("function MonthNavPicker(")
     const picker = f.slice(ini, f.indexOf("function MonthNavPanel(", ini))
 
-    it("é uma pílula só: o mês no centro com o chevron abre a grade, sem setas dos lados", () => {
+    it("é uma pílula só, com as setas dentro e o mês no centro; o fundo das peças só no cursor", () => {
         expect(ini).toBeGreaterThan(-1)
         expect(picker).toContain("<MonthNavPanel")
         expect(picker).toContain("aria-label={pickerAriaLabel}")
-        expect(picker).toContain('fullWidth ? "tertiary" : "floating"')
-        expect(picker).toContain("<ChevronDownIcon")
+        expect(picker).toContain('aria-label="Mês anterior"')
+        expect(picker).toContain('aria-label="Próximo mês"')
+        expect(picker).toContain("shiftYearMonth(budgetMonthYm, -1)")
+        expect(picker).toContain("shiftYearMonth(budgetMonthYm, 1)")
+        expect(picker).toContain("rounded-full bg-popover")
         expect(picker).not.toContain("<ButtonGroup")
-        expect(picker).not.toContain('aria-label="Mês anterior"')
-        expect(picker).not.toContain('aria-label="Próximo mês"')
-        expect(picker).not.toContain("CalendarIcon")
+        expect(picker).not.toContain('variant="floating"')
+        expect(picker.match(/variant="tertiary"/g)?.length).toBe(3)
+    })
+
+    it("na fatura (fullWidth) só o botão da faixa, sem setas", () => {
+        expect(picker).toContain("if (fullWidth) return popover")
+        expect(picker.indexOf('aria-label="Mês anterior"')).toBeGreaterThan(picker.indexOf("if (fullWidth) return popover"))
     })
 
     it("não tem atalho solto nem as setas antigas do rodapé fora do painel", () => {

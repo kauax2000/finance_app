@@ -42,9 +42,9 @@ function mesDoAnoMes(ym: string) {
 }
 
 /**
- * O mês do desktop: uma pílula só (`floating`), com o mês no centro e o chevron, que abre a grade
- * de meses; as setas e "Este mês" moram no rodapé dela (`MonthNavPanel`). Na fatura do telefone
- * (`fullWidth`) é o botão da faixa, sem fundo.
+ * O mês do desktop: uma pílula só, com ‹ e › dentro dela e o mês no centro, com o chevron, que abre
+ * a grade de meses (`MonthNavPanel`, com as setas e "Este mês" no rodapé). Na fatura do telefone
+ * (`fullWidth`) é o botão da faixa, sem fundo e sem setas.
  */
 function MonthNavPicker({
     budgetMonthYm,
@@ -63,12 +63,13 @@ function MonthNavPicker({
     fullWidth?: boolean
 }) {
     const [aberto, setAberto] = React.useState(false)
-    return (
+    const popover = (
         <Popover open={aberto} onOpenChange={setAberto}>
             <PopoverTrigger asChild>
                 <Button
                     type="button"
-                    variant={fullWidth ? "tertiary" : "floating"}
+                    variant="tertiary"
+                    size={fullWidth ? undefined : "md"}
                     aria-label={pickerAriaLabel}
                     className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "text-foreground")}
                 >
@@ -85,6 +86,34 @@ function MonthNavPicker({
                 />
             </PopoverContent>
         </Popover>
+    )
+    if (fullWidth) return popover
+    // Uma pílula só, na pele do `floating`: as setas e o mês moram dentro dela, terciários (o fundo
+    // de cada um só acende no cursor e no toque). Não é `ButtonGroup`: sem emendas entre as peças.
+    return (
+        <div className="flex items-center rounded-full bg-popover p-0.5 shadow-sm ring-1 ring-foreground/10">
+            <Button
+                type="button"
+                variant="tertiary"
+                size="icon-md"
+                aria-label="Mês anterior"
+                className="text-muted-foreground hover:text-foreground active:text-foreground"
+                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
+            >
+                <ChevronLeftIcon aria-hidden />
+            </Button>
+            {popover}
+            <Button
+                type="button"
+                variant="tertiary"
+                size="icon-md"
+                aria-label="Próximo mês"
+                className="text-muted-foreground hover:text-foreground active:text-foreground"
+                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
+            >
+                <ChevronRightIcon aria-hidden />
+            </Button>
+        </div>
     )
 }
 

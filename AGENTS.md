@@ -770,7 +770,7 @@ declaração de `background-color` no trilho).
   `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
   telas que o têm (Painel, Categorias, detalhe da categoria) mora no cabeçalho do
   telefone, o calendário colado à lupa que abre a grade de meses
-  (`useMonthInHeader`, rodada 334); no desktop fica na barra da tela: o mês é uma pílula só (`MonthNavPicker`, `floating`), com o nome e o chevron, que abre a grade; as setas moram no rodapé dela (19/11/2026). No detalhe
+  (`useMonthInHeader`, rodada 334); no desktop fica na barra da tela: o mês é uma pílula só (`MonthNavPicker`), com ‹ e › terciárias dentro dela (o fundo só no cursor) e o nome com o chevron no centro, que abre a grade (19/11/2026). No detalhe
   da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra
   (`TransactionsToolbar headerFilter={false}`).
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
