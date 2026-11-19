@@ -297,7 +297,8 @@ export function GuiaDoAtalho({
                 ) : null}
                 {i === PASSOS.length - 1 ? (
                     <PecaDoPasso>
-                        <Tabs value={alvo} onValueChange={(v) => setLugar(v as Exclude<Gatilho, "siri">)}>
+                        {/* A aba guarda a própria escolha: trocar de aba redesenha só as abas, e não o guia com os fantasmas (a troca demorava). */}
+                        <Tabs defaultValue={alvo}>
                             <TabsList aria-label="Onde pôr o atalho">
                                 {LUGARES.map((l) => (
                                     <TabsTrigger key={l.valor} value={l.valor} disabled={fantasma}>
