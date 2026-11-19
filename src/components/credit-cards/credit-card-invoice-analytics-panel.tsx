@@ -355,7 +355,6 @@ export function InvoiceCycleSwitcher({
             budgetMonthYm={selectedYm}
             onBudgetMonthYmChange={handleChange}
             onJumpToCurrentMonth={handleJump}
-            currentYm={anchorYm}
             dense
             iconOnly={iconOnly}
             mobileTriggerFullWidth={mobileTriggerFullWidth}

@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
  * A altura do gatilho compacto do telefone (o ramo que não é a cápsula): quem
  * responde é `--toolbar-control`, que o `Toolbar` publica — com o degrau padrão
  * (32) como reserva, porque duas telas usam este seletor fora de uma barra.
- * As setas e o mês do desktop não usam isto: a escada do `Button` os mede.
+ * O botão do mês do desktop não usa isto: a escada do `Button` o mede.
  */
 const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
 
@@ -39,124 +39,50 @@ function mesDoAnoMes(ym: string) {
     return new Date(y, m - 1, 1)
 }
 
-function MonthNavArrowControls({
+/**
+ * O mês do desktop: um botão só, com fundo e borda (`outline`), que abre a grade de
+ * meses; as setas e "Este mês" moram no rodapé dela (`MonthNavPanel`), como no telefone.
+ */
+function MonthNavPicker({
     budgetMonthYm,
     onBudgetMonthYmChange,
     onJump,
     pickerAriaLabel,
     monthLabel,
-    esteMesInsidePopoverOnNarrow,
-    currentYm = formatYearMonth(new Date()),
+    fullWidth,
 }: {
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
     onJump: () => void
     pickerAriaLabel: string
     monthLabel: string
-    /** Below `md`, hide row "Este mês" and show it inside the center month popover instead. */
-    esteMesInsidePopoverOnNarrow?: boolean
-    /** O "mês atual" que o atalho compara; a fatura passa o ciclo atual. */
-    currentYm?: string
+    /** A faixa inteira (a fatura no telefone). */
+    fullWidth?: boolean
 }) {
-    const [monthPickerOpen, setMonthPickerOpen] = React.useState(false)
-
-    const popoverControlledProps = esteMesInsidePopoverOnNarrow
-        ? {
-              open: monthPickerOpen,
-              onOpenChange: setMonthPickerOpen,
-          }
-        : {}
-
-    const foraDoMesAtual = budgetMonthYm !== currentYm
-
+    const [aberto, setAberto] = React.useState(false)
     return (
-        <>
-            {foraDoMesAtual ? (
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    className={cn(
-                        "shrink-0 text-muted-foreground",
-                        esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
-                    )}
-                    onClick={() => onJump()}
-                >
-                    Voltar a este mês
-                </Button>
-            ) : null}
-            {/* As setas são os botões (círculos de contorno); o mês é o texto que abre a grade. */}
-            <div
-                role="group"
-                aria-label="Mês de referência"
-                className={cn("flex min-w-0 items-center gap-1", esteMesInsidePopoverOnNarrow && "flex-1")}
-            >
+        <Popover open={aberto} onOpenChange={setAberto}>
+            <PopoverTrigger asChild>
                 <Button
                     type="button"
                     variant="outline"
-                    size="icon-lg"
-                    aria-label="Mês anterior"
-                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
+                    aria-label={pickerAriaLabel}
+                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth && "flex-1")}
                 >
-                    <ChevronLeftIcon />
+                    <CalendarIcon className="shrink-0 opacity-80" aria-hidden />
+                    <span className="min-w-0 truncate">{monthLabel}</span>
+                    <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
                 </Button>
-                <Popover {...popoverControlledProps}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            aria-label={pickerAriaLabel}
-                            className={cn(
-                                "min-w-0 gap-1.5 px-3 font-medium tabular-nums",
-                                esteMesInsidePopoverOnNarrow && "flex-1",
-                            )}
-                        >
-                            <span className="min-w-0 truncate">{monthLabel}</span>
-                            <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                        align="center"
-                        size="auto"
-                        padding="none"
-                        label="Escolher mês"
-                    >
-                        {/* A grade de meses do design system (rodada 210): eram dois
-                            `Select` de mês e ano lado a lado. */}
-                        <MonthGrid
-                            value={mesDoAnoMes(budgetMonthYm)}
-                            onChange={(d) => {
-                                onBudgetMonthYmChange(formatYearMonth(d))
-                                if (esteMesInsidePopoverOnNarrow) setMonthPickerOpen(false)
-                            }}
-                        />
-                        {esteMesInsidePopoverOnNarrow && foraDoMesAtual ? (
-                            <PopoverFooter className="md:hidden">
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                    onClick={() => {
-                                        onJump()
-                                        setMonthPickerOpen(false)
-                                    }}
-                                >
-                                    Voltar a este mês
-                                </Button>
-                            </PopoverFooter>
-                        ) : null}
-                    </PopoverContent>
-                </Popover>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-lg"
-                    aria-label="Próximo mês"
-                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
-                >
-                    <ChevronRightIcon />
-                </Button>
-            </div>
-        </>
+            </PopoverTrigger>
+            <PopoverContent align="end" size="auto" padding="none" label="Escolher mês">
+                <MonthNavPanel
+                    budgetMonthYm={budgetMonthYm}
+                    onBudgetMonthYmChange={onBudgetMonthYmChange}
+                    onJump={onJump}
+                    fechar={() => setAberto(false)}
+                />
+            </PopoverContent>
+        </Popover>
     )
 }
 
@@ -264,7 +190,6 @@ export function MonthNav({
     iconOnly,
     className,
     mobileTriggerFullWidth,
-    currentYm,
 }: {
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
@@ -275,10 +200,8 @@ export function MonthNav({
     /** Mobile trigger: calendar + chevron only (no month label). */
     iconOnly?: boolean
     className?: string
-    /** Mobile: same strip as desktop (Este mês, arrows, center month picker), full width. */
+    /** O botão do mês ocupa a faixa inteira (a fatura no telefone). */
     mobileTriggerFullWidth?: boolean
-    /** O mês que "Voltar a este mês" considera o atual (padrão: o do calendário). */
-    currentYm?: string
 }) {
     const [open, setOpen] = React.useState(false)
     const jump =
@@ -287,15 +210,14 @@ export function MonthNav({
     const shortLabel = shortLabelYearMonthPt(budgetMonthYm)
     const pickerAriaLabel = `Escolher mês de referência. Mês selecionado: ${monthLabel}.`
 
-    const arrowControls = (
-        <MonthNavArrowControls
+    const seletorDoMes = (
+        <MonthNavPicker
             budgetMonthYm={budgetMonthYm}
             onBudgetMonthYmChange={onBudgetMonthYmChange}
             onJump={jump}
             pickerAriaLabel={pickerAriaLabel}
             monthLabel={monthLabel}
-            esteMesInsidePopoverOnNarrow={Boolean(mobileTriggerFullWidth)}
-            currentYm={currentYm}
+            fullWidth={Boolean(mobileTriggerFullWidth)}
         />
     )
 
@@ -309,7 +231,7 @@ export function MonthNav({
                         className,
                     )}
                 >
-                    {arrowControls}
+                    {seletorDoMes}
                 </div>
             ) : (
                 <>
@@ -391,7 +313,7 @@ export function MonthNav({
                             className,
                         )}
                     >
-                        {arrowControls}
+                        {seletorDoMes}
                     </div>
                 </>
             )}
