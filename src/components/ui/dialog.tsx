@@ -671,6 +671,40 @@ const dialogHeaderVariants = cva("", {
  * casco já dá o recuo, então aqui ele é zero.
  */
 /**
+ * A placa de uma tira translúcida acende só quando o corpo do diálogo rola
+ * (rodada 386): `data-placa` no elemento, que o CSS lê. No cabeçalho, com
+ * rolagem; no rodapé, também com rolagem, e apaga nos últimos 24px (rodada 395).
+ * Por script, e não por `animation-timeline`: no iPhone a linha do tempo da
+ * rolagem não ativava, e a placa nunca acendia — o conteúdo passava nítido por
+ * trás do cabeçalho (o painel de notificações, 19/11/2026).
+ */
+function usePlacaPorRolagem(el: HTMLDivElement | null, ligado: boolean, lado: "topo" | "pe") {
+  React.useEffect(() => {
+    const casco = el?.closest<HTMLElement>('[data-layout="fixed"]')
+    const corpo = casco?.querySelector<HTMLElement>('[data-slot="dialog-body"]')
+    const win = el?.ownerDocument.defaultView
+    if (!ligado || !el || !corpo || !win) return
+    const conferir = () => {
+      const sobra = corpo.scrollHeight - corpo.clientHeight
+      const acesa = sobra > 1 && (lado === "topo" || corpo.scrollTop < sobra - 24)
+      el.toggleAttribute("data-placa", acesa)
+    }
+    conferir()
+    corpo.addEventListener("scroll", conferir, { passive: true })
+    const tamanho = new win.ResizeObserver(conferir)
+    tamanho.observe(corpo)
+    const conteudo = new win.MutationObserver(conferir)
+    conteudo.observe(corpo, { childList: true, subtree: true })
+    return () => {
+      corpo.removeEventListener("scroll", conferir)
+      tamanho.disconnect()
+      conteudo.disconnect()
+      el.removeAttribute("data-placa")
+    }
+  }, [el, ligado, lado])
+}
+
+/**
  * A altura de uma tira, publicada no pai na variável `nome`: com
  * `translucent`, o corpo irmão passa por trás dela nessa medida
  * (`--dialog-header-h` no `@utility dialog-header-translucent`,
@@ -692,7 +726,7 @@ function useAlturaPublicada(nome: string, ligado: boolean) {
       pai.style.removeProperty(nome)
     }
   }, [el, nome, ligado])
-  return setEl
+  return [el, setEl] as const
 }
 
 function DialogHeader({
@@ -713,7 +747,8 @@ function DialogHeader({
      */
     translucent?: boolean
   }) {
-  const medir = useAlturaPublicada("--dialog-header-h", translucent)
+  const [tira, medir] = useAlturaPublicada("--dialog-header-h", translucent)
+  usePlacaPorRolagem(tira, translucent, "topo")
   return (
     <div
       ref={useComposedRefs(ref, medir)}
@@ -879,7 +914,8 @@ function DialogFooter({
    */
   translucent?: boolean
 }) {
-  const medir = useAlturaPublicada("--dialog-footer-h", translucent)
+  const [tira, medir] = useAlturaPublicada("--dialog-footer-h", translucent)
+  usePlacaPorRolagem(tira, translucent, "pe")
   return (
     <div
       ref={useComposedRefs(ref, medir)}

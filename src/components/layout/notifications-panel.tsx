@@ -539,11 +539,11 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 dela: a entrada em cascata o faz contexto de empilhamento, e o `z-10` só das
                 abas não saía dele — o clique em "Todas" caía no link da linha embaixo. */}
             <DialogHeader
-                // A borda dele é própria (o corpo sobe por trás das abas, com o dia
-                // preso): o cabeçalho translúcido esconderia o dia.
-                translucent={false}
                 className={cn(
-                    (comTrilho || carregando) && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0"
+                    (comTrilho || carregando) && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0",
+                    // O dia preso mora no fim do cabeçalho: a placa vai cheia até a base dele, e o
+                    // degradê começa abaixo, senão a lista passaria visível por trás do dia.
+                    comDia && "[--dialog-header-solid:100%]!"
                 )}
             >
                 {cabecalho}
@@ -553,18 +553,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 cabeçalho. */}
             <DialogBody
                 onScroll={comDia ? acompanharDia : undefined}
-                className={cn(
-                    "px-2 pb-2",
-                    comDia || carregando
-                        ? // A dissolução nasce na base das abas, não do dia: a faixa é só o
-                          // trilho, e a rampa (80px) atravessa o dia preso (8 + 28) antes de
-                          // abrir; o corpo sobe por trás das abas e do dia, e o respiro devolve os
-                          // dois: a primeira linha não se move.
-                          "-mt-[calc(var(--scroll-fade-band-h)+--spacing(9))] pt-[calc(var(--scroll-fade-band-h)+--spacing(9))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)] [--dialog-body-fade-h:--spacing(20)]"
-                        : comTrilho
-                          ? "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)]"
-                          : "pt-0"
-                )}
+                // O corpo passa por trás do cabeçalho translúcido (abas e dia preso), como em
+                // toda folha. Com o dia preso, o respiro do topo do corpo (16) sai: o dia já
+                // separa as abas da primeira linha, que fica no mesmo ritmo dos outros dias.
+                className={cn("px-2 pb-2", comDia && "[--dialog-body-pt:0px]")}
             >
                 {conteudo}
             </DialogBody>

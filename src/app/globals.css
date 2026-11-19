@@ -4336,32 +4336,20 @@ html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot
   }
 
   /* A placa e o degradê só existem quando o corpo rola (rodada 386, 17/11/2026, o dono): numa
-     gaveta curta, sem rolagem, a linha do tempo fica inativa e a base invisível vale. Com
-     rolagem, a animação (de 1 a 1) os mantém acesos do começo ao fim, sem mudar de tom
-     (rodada 385). Sem suporte a `animation-timeline`, ficam sempre à vista. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
-    }
-    [data-layout="fixed"]
-      &:has(
-        + [data-slot="dialog-body"],
-        + form > [data-slot="dialog-body"]:first-child,
-        + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-        + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
-      ) {
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-placa-com-rolagem linear both;
-        animation-timeline: --dialog-body-scroll;
-      }
-      & + [data-slot="dialog-body"],
-      & + form > [data-slot="dialog-body"]:first-child,
-      & + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
-      & + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child {
-        scroll-timeline: --dialog-body-scroll block;
-      }
+     gaveta curta, sem rolagem, a base invisível vale. Quem diz é o `data-placa`, que o
+     `DialogHeader` escreve olhando a rolagem do corpo (no iPhone o `animation-timeline` não
+     ativava, e a placa nunca acendia, 19/11/2026). Acesa, ela fica do começo ao fim da
+     rolagem, sem mudar de tom (rodada 385). */
+  [data-layout="fixed"]
+    &:not([data-placa]):has(
+      + [data-slot="dialog-body"],
+      + form > [data-slot="dialog-body"]:first-child,
+      + [data-slot="dialog-description"].sr-only + [data-slot="dialog-body"],
+      + [data-slot="dialog-description"].sr-only + form > [data-slot="dialog-body"]:first-child
+    ) {
+    &::before,
+    &::after {
+      opacity: 0;
     }
   }
 }
@@ -4440,44 +4428,21 @@ html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot
 
   /* Como o cabeçalho (rodada 386): só existe quando o corpo rola. Nos últimos 24px da rolagem a
      placa e a sombra se apagam juntas (rodada 395): no fim nada passa por trás do rodapé, e a
-     placa sozinha, sobre o vidro da gaveta, desenhava uma linha reta na borda. */
-  @supports (animation-timeline: scroll()) {
-    [data-layout="fixed"]:has(&) {
-      timeline-scope: --dialog-body-scroll;
+     placa sozinha, sobre o vidro da gaveta, desenhava uma linha reta na borda. Quem diz é o
+     `data-placa`, escrito pelo `DialogFooter` (19/11/2026). */
+  [data-layout="fixed"] [data-slot="dialog-body"] + & {
+    &::before,
+    &::after {
+      transition: opacity var(--duration-fast) var(--ease-out);
     }
-    [data-layout="fixed"] [data-slot="dialog-body"]:has(+ &) {
-      scroll-timeline: --dialog-body-scroll block;
-    }
-    [data-layout="fixed"] [data-slot="dialog-body"] + & {
-      &::before,
-      &::after {
-        opacity: 0;
-        animation: dialog-rodape-apaga-no-fim linear both;
-        animation-timeline: --dialog-body-scroll;
-        animation-range: calc(100% - 24px) 100%;
-      }
+    &:not([data-placa])::before,
+    &:not([data-placa])::after {
+      opacity: 0;
     }
   }
 }
 
-/* De 1 a 1: com a linha do tempo ativa (o corpo rola), a placa fica acesa o tempo todo. */
-@keyframes dialog-rodape-apaga-no-fim {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
 
-@keyframes dialog-placa-com-rolagem {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-  }
-}
 
 
 

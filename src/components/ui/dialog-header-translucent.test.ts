@@ -28,9 +28,9 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
 
   it("a placa só existe quando o corpo rola, e aí fica acesa do começo ao fim (rodadas 385 e 386)", () => {
     const u = blocoCss(CSS, "@utility dialog-header-translucent")
-    expect(u).toContain("@supports (animation-timeline: scroll())")
-    expect(u).toContain("scroll-timeline: --dialog-body-scroll block")
-    expect(u).toContain("animation: dialog-placa-com-rolagem linear both")
+    // Por script (`data-placa`): no iPhone o `animation-timeline` não ativava, e a placa nunca acendia (19/11/2026).
+    expect(u).toMatch(/&:not\(\[data-placa\]\):has\([\s\S]*?\) \{\s*&::before,\s*&::after \{\s*opacity: 0;/)
+    expect(u).not.toMatch(/animation-timeline:/)
     // A sombra mora dentro da faixa e termina na borda do cabeçalho (rodada 388): sem linha reta.
     // A placa cheia vai até 56px antes da borda ou até o fim do texto, o que for mais baixo (19/11/2026).
     expect(u).toMatch(/--dialog-header-solid: max\(\s*calc\(100% - var\(--dialog-header-fade-h\) \+ var\(--dialog-header-fade-over\)\),\s*calc\(100% - var\(--spacing\) \* 4\)\s*\)/)
@@ -38,7 +38,6 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("--dialog-header-fade-over: calc(var(--spacing) * 4)")
     expect(u).toContain("top: var(--dialog-header-solid)")
     expect(u).not.toContain("animation-range")
-    expect(CSS).toMatch(/@keyframes dialog-placa-com-rolagem \{\s*from \{\s*opacity: 1;\s*\}\s*to \{\s*opacity: 1;/)
   })
 
   it("na gaveta, a placa cobre o puxador e o corpo sobe até a borda (16/11/2026)", () => {

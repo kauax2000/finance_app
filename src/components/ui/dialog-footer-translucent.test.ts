@@ -32,8 +32,10 @@ describe("DialogFooter translúcido (rodada 382, 17/11/2026)", () => {
 
   it("só existe quando o corpo rola, e placa e sombra se apagam juntas no fim (rodadas 386 e 395)", () => {
     const u = blocoCss(CSS, "@utility dialog-footer-translucent")
-    expect(u).toContain("animation: dialog-rodape-apaga-no-fim linear both")
-    expect(u).toContain("animation-range: calc(100% - 24px) 100%")
+    // Por script (`data-placa`, o `usePlacaPorRolagem`): no iPhone a linha do tempo da rolagem não ativava.
+    expect(u).toMatch(/&:not\(\[data-placa\]\)::before,\s*&:not\(\[data-placa\]\)::after \{\s*opacity: 0;/)
+    expect(u).not.toMatch(/animation-timeline:/)
+    expect(DIALOG).toContain('const acesa = sobra > 1 && (lado === "topo" || corpo.scrollTop < sobra - 24)')
     expect(u).toContain("padding-bottom: calc(var(--dialog-footer-h, 0px) + var(--spacing) * 2)")
     expect(u).toContain("height: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
     expect(u).toContain("bottom: calc(100% - var(--dialog-footer-fade-h) + var(--dialog-footer-fade-over))")
