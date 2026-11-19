@@ -731,3 +731,9 @@ describe("o deslize da barra é medido contra ela", () => {
     expect(CODIGO).toMatch(/<motion\.div\s+layoutRoot\b/)
   })
 })
+
+describe("a contagem assenta no pé da linha", () => {
+  it("o span do filter-bar-count leva self-end, para ficar rente à base dos tokens", () => {
+    expect(CODIGO).toMatch(/data-slot="filter-bar-count"[^>]*className="[^"]*\sself-end\s[^"]*"/)
+  })
+})

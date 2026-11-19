@@ -1677,7 +1677,7 @@ declaração de `background-color` no trilho).
   ×) na superfície de campo; `FilterField` declara os campos; **o operador não segue
   a contagem** ("é" / "não é" com um valor ou vários; com dois operadores, o clique troca direto, sem menu); uma opção `exclusive` (o "Todas" de Compras parceladas) vale sozinha; o Valor tem cinco modos, trocados só no editor e nunca na pílula (até, a partir de, entre, igual a, por volta de: ±10%, `approxRange`), uma frase que diz o que entra e só os campos do modo; **um popover para a barra inteira** (`virtualRef`); **um token
   por campo** e **tudo grava ao vivo** (o incompleto nunca é emitido);
-  `serializeFilters`/`parseFilters`, `filterPeriodRange`, `FilterBarSkeleton`;
+  `serializeFilters`/`parseFilters`, `filterPeriodRange`, `FilterBarSkeleton`; a contagem assenta no pé da linha (`self-end`) (19/11/2026);
   `match`, `urlParam` (`history.pushState(null, …)`), `mobile="scroll" |
   "stack"` abaixo de 28rem da própria barra. `overflow="menu"` é a linha que
   não rola: os tokens numa linha só, em qualquer largura; os que não cabem saem
