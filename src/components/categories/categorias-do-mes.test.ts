@@ -43,6 +43,15 @@ describe("OrdemDasCategorias", () => {
         expect(html).toContain("dropdown-menu-trigger")
     })
 
+    it("no desktop o gatilho é o nome da ordem, sem fundo (terciário), como o mês", () => {
+        const html = renderToStaticMarkup(
+            h(OrdemDasCategorias, { tipo: "expense", criterio: "nome", onCriterioChange: () => {} }),
+        )
+        expect(html).toContain('aria-label="Ordenar categorias: Nome"')
+        expect(html).toContain('data-variant="tertiary"')
+        expect(html).not.toContain("select-trigger")
+    })
+
     it("as quatro opções moram no arquivo", () => {
         const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
         for (const t of ["Maior receita", "Maior gasto", "Nome", "Variação"]) expect(fonte).toContain(`"${t}"`)

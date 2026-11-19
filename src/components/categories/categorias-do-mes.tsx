@@ -1,6 +1,6 @@
 "use client"
 
-import { BarsArrowDownIcon } from "@heroicons/react/16/solid"
+import { BarsArrowDownIcon, ChevronDownIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { Fragment } from "react"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CriterioDeOrdem } from "@/lib/categoria-situacao"
-import { cn } from "@/lib/utils"
 import { formatMonthLongPtBr } from "@/lib/transaction-date"
 
 type Tipo = "expense" | "income"
@@ -33,7 +31,8 @@ const opcoesDeOrdem = (tipo: Tipo): { value: CriterioDeOrdem; label: string }[] 
     { value: "variacao", label: "Variação" },
 ]
 
-/** A ordem da grade: o `Select` no desktop; no telefone (`compacta`), um botão de ícone com o menu. */
+/** A ordem da grade: um menu de rádio. No desktop o gatilho é o nome da ordem, sem fundo, como o
+ *  mês ao lado; no telefone (`compacta`), um botão de ícone. */
 export function OrdemDasCategorias({
     tipo,
     criterio,
@@ -46,39 +45,31 @@ export function OrdemDasCategorias({
     compacta?: boolean
 }) {
     const opcoes = opcoesDeOrdem(tipo)
-    if (compacta) {
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+    const atual = opcoes.find((o) => o.value === criterio) ?? opcoes[0]
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                {compacta ? (
                     <Button type="button" variant="floating" size="icon-md" aria-label="Ordenar categorias">
                         <BarsArrowDownIcon aria-hidden />
                     </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
-                        {opcoes.map((o) => (
-                            <DropdownMenuRadioItem key={o.value} value={o.value}>
-                                {o.label}
-                            </DropdownMenuRadioItem>
-                        ))}
-                    </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        )
-    }
-    return (
-        <Select value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
-            <SelectTrigger aria-label="Ordenar categorias">
-                <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-                {opcoes.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
+                ) : (
+                    <Button type="button" variant="tertiary" aria-label={`Ordenar categorias: ${atual.label}`} className="font-medium">
+                        {atual.label}
+                        <ChevronDownIcon aria-hidden className="text-muted-foreground" />
+                    </Button>
+                )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
+                    {opcoes.map((o) => (
+                        <DropdownMenuRadioItem key={o.value} value={o.value}>
+                            {o.label}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }
 
