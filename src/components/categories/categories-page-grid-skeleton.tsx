@@ -60,6 +60,16 @@ function CategoryGridSkeleton() {
     )
 }
 
+/** Só a grade, para a espera dos números do mês com a barra já na tela: sem ela,
+    o vazio "Nenhum gasto" aparecia antes das categorias. */
+export function CategoriesGridLoading() {
+    return (
+        <SkeletonGroup label="Carregando os números do mês" delay>
+            <CategoryGridSkeleton />
+        </SkeletonGroup>
+    )
+}
+
 /** Skeleton for the main Categorias page (toolbar + grid of category cards). */
 export function CategoriesPageGridSkeleton({
     screenReaderLabel = "Carregando categorias",

@@ -14,7 +14,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { CategoriesPageGridSkeleton } from "@/components/categories/categories-page-grid-skeleton"
+import { CategoriesGridLoading, CategoriesPageGridSkeleton } from "@/components/categories/categories-page-grid-skeleton"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -130,7 +130,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [prevIncomeByCategoryId, setPrevIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
     const [criterio, setCriterio] = useState<CriterioDeOrdem>("maior")
     const listLoading = categoriesQuery.isPending && !categoriesQuery.data
-    const [, setBudgetsLoading] = useState(false)
+    // O mês cujos números já chegaram. Até chegarem, a grade espera no esqueleto:
+    // com os totais ainda zerados, toda categoria cairia em "sem movimento" e a
+    // tela mostrava o vazio antes das categorias.
+    const [mesCarregado, setMesCarregado] = useState<string | null>(null)
     const [dialogOpen, setDialogOpen] = useState(() => shouldOpenNew)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
@@ -234,7 +237,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const fetchBudgetsAndSpend = useCallback(async () => {
         if (!user || !currentWorkspaceId) return
         if (!parseYearMonthParam(budgetMonthYm)) return
-        setBudgetsLoading(true)
         try {
             const { period_start } = periodBoundsFromYearMonth(budgetMonthYm)
             const prevYm = shiftYearMonth(budgetMonthYm, -1)
@@ -358,7 +360,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         } catch (error) {
             console.error(error)
         } finally {
-            setBudgetsLoading(false)
+            setMesCarregado(budgetMonthYm)
         }
     }, [user, currentWorkspaceId, budgetMonthYm])
 
@@ -652,6 +654,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         />
     )
 
+    const numerosProntos = mesCarregado === budgetMonthYm
+
     if (listLoading) {
         return (
             <CategoriesPageGridSkeleton
@@ -740,6 +744,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             {filterType === "income" ? (
                 <>
                     {incomeCategories.length > 0 ? (
+                        !numerosProntos ? (
+                            <CategoriesGridLoading />
+                        ) : (
                         <>
                             {receitas.comMovimento.length > 0 ? (
                                 <>
@@ -793,6 +800,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 tipo="income"
                             />
                         </>
+                        )
                     ) : (
                         <EmptyState variant="plain" size="sm">
                             <EmptyStateTitle>Nenhuma categoria de receita</EmptyStateTitle>
@@ -802,6 +810,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             ) : (
                 <>
                     {expenseFiltered.length > 0 ? (
+                        !numerosProntos ? (
+                            <CategoriesGridLoading />
+                        ) : (
                         <>
                             {despesas.comMovimento.length > 0 ? (
                                 <>
@@ -866,6 +877,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 tipo="expense"
                             />
                         </>
+                        )
                     ) : (
                         <EmptyState variant="plain" size="sm">
                             <EmptyStateTitle>Nenhuma categoria de despesa</EmptyStateTitle>

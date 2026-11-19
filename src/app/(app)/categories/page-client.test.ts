@@ -44,3 +44,12 @@ describe("o cabeçalho de Categorias", () => {
         expect(bruto).not.toContain("categories_onboarding_completed_at")
     })
 })
+
+describe("a grade espera os números do mês", () => {
+    it("até o mês carregar mostra o esqueleto, e não o vazio", () => {
+        const f = semComentarios(lerFonte("src/app/(app)/categories/page-client.tsx"), "tudo")
+        expect(f).toMatch(/const numerosProntos = mesCarregado === budgetMonthYm/)
+        expect(f).toMatch(/setMesCarregado\(budgetMonthYm\)/)
+        expect(f.match(/!numerosProntos \? \(\s*<CategoriesGridLoading \/>/g)?.length).toBe(2)
+    })
+})
