@@ -2125,10 +2125,11 @@ function GemeoDoTelefone<T extends RowData>({
               // pelo próximo, ele perde o `data-preso` e o fundo, para não somar ao do
               // próximo. O borrão é
               // do cabeçalho, e não da barra, porque a barra fica por cima e borraria o
-              // texto. O vão entre os dias é o `mt-2` mais o respiro de cima (`pt-4`).
+              // texto. Preso, o dia fica 4px abaixo da barra (`pt-1`); o vão entre os dias
+              // continua 24px, vindo da margem (`not-first:mt-5`), que não conta no preso.
               <div
                 data-slot="data-table-mobile-group-heading"
-                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-4 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase not-first:mt-2 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 reduced-transparency:before:hidden data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]"
+                className="sticky top-(--top-bar-bottom) isolate z-10 flex px-4 pt-1 pb-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase mt-3 not-first:mt-5 before:pointer-events-none before:absolute before:inset-x-0 before:-top-(--top-bar-bottom) before:-bottom-3 before:-z-10 before:bg-background/30 before:opacity-0 before:backdrop-blur-md before:transition-opacity before:duration-(--duration-fast) before:[mask-image:linear-gradient(to_bottom,#000_75%,transparent)] data-preso:before:opacity-100 reduced-transparency:before:hidden data-saindo:[--dia-giro:90deg] data-saindo:[--dia-opacidade:0] motion-reduce:data-saindo:[--dia-giro:0deg]"
               >
                 <span
                   data-slot="data-table-mobile-group-heading-text"
