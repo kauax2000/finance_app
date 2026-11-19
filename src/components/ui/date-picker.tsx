@@ -24,6 +24,7 @@ import {
 } from "@/lib/transaction-date"
 import { formatYearMonth, labelYearMonthPt } from "@/lib/budget-month"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useMarcador } from "@/hooks/use-marcador"
 import { Button } from "@/components/ui/button"
 import {
   Calendar,
@@ -770,6 +771,24 @@ export function MonthGrid(props: MonthGridProps) {
     return i > de && i < ate ? "middle" : undefined
   }
 
+  // O mês escolhido do modo único é um marcador só, que viaja de um mês ao outro
+  // como o do `ToggleGroup segmented` (`useMarcador`, viagem líquida). Recua 1px:
+  // a borda transparente do `Button`, onde o `primary` não pinta (`bg-clip-padding`).
+  // Os botões são chaveados pelo ano, então cruzar o ano não viaja: o marcador
+  // só aparece no lugar novo.
+  const trilhaRef = React.useRef<HTMLDivElement>(null)
+  const marcadorRef = React.useRef<HTMLSpanElement>(null)
+  const marcadorPronto = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (t) => t.querySelector<HTMLElement>("[data-selected]"),
+    atributos: ["data-selected"],
+    prefixo: "month-grid-marker",
+    insete: 1,
+    viajar: props.mode !== "range",
+    mesmaViagem: (de) => de.isConnected,
+  })
+
   return (
     <div
       data-slot="month-grid"
@@ -803,7 +822,21 @@ export function MonthGrid(props: MonthGridProps) {
           <ChevronRightIcon aria-hidden />
         </Button>
       </div>
-      <div role="group" aria-label={`Meses de ${ano}`} className="grid grid-cols-3 gap-1">
+      <div ref={trilhaRef} role="group" aria-label={`Meses de ${ano}`} className="relative grid grid-cols-3 gap-1">
+        {marcadorPronto ? (
+          <span
+            ref={marcadorRef}
+            aria-hidden
+            data-slot="month-grid-marker"
+            className={cn(
+              // Vem antes dos meses e não declara camada: os meses são `relative`
+              // e pintam por cima por ordem de documento. Quem anda é a viagem líquida.
+              "pointer-events-none absolute top-0 left-0 rounded-full bg-primary",
+              "translate-x-(--month-grid-marker-x) translate-y-(--month-grid-marker-y)",
+              "w-(--month-grid-marker-w) h-(--month-grid-marker-h)"
+            )}
+          />
+        ) : null}
         {Array.from({ length: 12 }, (_, m) => {
           const mes = new Date(ano, m, 1)
           const posicao = noIntervalo(indice(mes))
@@ -811,23 +844,32 @@ export function MonthGrid(props: MonthGridProps) {
           const escolhido = intervalo
             ? ponta
             : unico?.getFullYear() === ano && unico.getMonth() === m
+          // O escolhido do modo único: o marcador pinta por baixo, e o botão só leva a tinta.
+          const marcado = !intervalo && escolhido
           const atual = agora.getFullYear() === ano && agora.getMonth() === m
           const nome = labelYearMonthPt(formatYearMonth(mes))
           const legenda = caption?.(mes)
           return (
             <Button
-              key={m}
+              key={`${ano}-${m}`}
               type="button"
               size="sm"
-              variant={escolhido ? "primary" : atual && !posicao ? "secondary" : "tertiary"}
+              variant={ponta ? "primary" : atual && !posicao && !escolhido ? "secondary" : "tertiary"}
               aria-pressed={escolhido}
               aria-current={atual ? "date" : undefined}
               aria-label={nome}
               data-range={posicao}
+              data-selected={marcado || undefined}
               disabled={foraDoLimite(ano, m)}
               className={cn(
                 // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
-                "font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+                // `relative`: pinta por cima do marcador.
+                "relative font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+                // A tinta da tecla sobre o marcador; o realce é o do `primary`.
+                marcado &&
+                  "text-primary-foreground hover:text-primary-foreground active:text-primary-foreground [--button-hover-fill:var(--primary-hover)] dark:[--button-hover-fill:var(--primary-hover)]",
+                // Antes da primeira medida (e sem JavaScript) o escolhido se pinta sozinho.
+                marcado && !marcadorPronto && "bg-primary",
                 // O atual mantém um sinal em todo estado: no meio do intervalo o fundo dele é o da faixa.
                 atual && "font-semibold",
                 // O meio do intervalo é a faixa do `Calendar` (`range_middle`).

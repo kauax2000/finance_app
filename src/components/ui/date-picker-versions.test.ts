@@ -168,3 +168,39 @@ describe("o mês atual no intervalo (revisão final)", () => {
     expect(botao("Agosto de 2026")).not.toContain("font-semibold")
   })
 })
+
+describe("MonthGrid: o mês escolhido viaja como o marcador das abas", () => {
+  const FONTE_DP = semComentarios(lerFonte("src/components/ui/date-picker.tsx"), "linha-inteira")
+  const inicio = FONTE_DP.indexOf("export function MonthGrid")
+  const GRADE = FONTE_DP.slice(inicio, FONTE_DP.indexOf("\nfunction ", inicio))
+  const botao = (html: string, rotulo: string) =>
+    html.match(new RegExp(`<button[^>]*aria-label="${rotulo}"[^>]*>`))?.[0] ?? ""
+
+  it("um marcador só, medido pelo useMarcador, mora na grade", () => {
+    expect(GRADE).toContain("useMarcador(")
+    expect(GRADE).toContain('data-slot="month-grid-marker"')
+    expect(GRADE).toMatch(/data-slot="month-grid-marker"[\s\S]*?bg-primary/)
+    expect(GRADE).toContain("viajar: props.mode !== \"range\"")
+  })
+
+  it("no modo single o escolhido é tertiary com a tinta de cima; o range segue nas pontas", () => {
+    expect(GRADE).not.toContain('variant={escolhido ? "primary"')
+    expect(GRADE).toContain('variant={ponta ? "primary"')
+    const unico = renderToStaticMarkup(h(MonthGrid, { value: new Date(2026, 2, 1), onChange: () => {} }))
+    const marco = botao(unico, "Março de 2026")
+    expect(marco).toContain("data-selected")
+    expect(marco).toContain("text-primary-foreground")
+    const intervalo = renderToStaticMarkup(
+      h(MonthGrid, { mode: "range", value: { from: new Date(2026, 7, 1), to: new Date(2026, 9, 1) }, onChange: () => {} })
+    )
+    expect(botao(intervalo, "Agosto de 2026")).not.toContain("data-selected")
+    expect(botao(intervalo, "Agosto de 2026")).toContain("bg-primary")
+  })
+
+  it("sem medida (e sem JavaScript) o escolhido se pinta sozinho", () => {
+    const html = renderToStaticMarkup(h(MonthGrid, { value: new Date(2026, 2, 1), onChange: () => {} }))
+    expect(html).not.toContain('data-slot="month-grid-marker"')
+    expect(botao(html, "Março de 2026")).toContain("bg-primary")
+    expect(botao(html, "Abril de 2026")).not.toContain("bg-primary")
+  })
+})
