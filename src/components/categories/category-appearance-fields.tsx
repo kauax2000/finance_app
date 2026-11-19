@@ -27,6 +27,23 @@ import {
     ShoppingBagIcon as MicroShoppingBagIcon,
     ShoppingCartIcon as MicroShoppingCartIcon,
     TruckIcon as MicroTruckIcon,
+    FilmIcon as MicroFilmIcon,
+    MusicalNoteIcon as MicroMusicalNoteIcon,
+    BookOpenIcon as MicroBookOpenIcon,
+    WrenchScrewdriverIcon as MicroWrenchScrewdriverIcon,
+    BanknotesIcon as MicroBanknotesIcon,
+    CreditCardIcon as MicroCreditCardIcon,
+    TvIcon as MicroTvIcon,
+    WifiIcon as MicroWifiIcon,
+    FireIcon as MicroFireIcon,
+    GlobeAmericasIcon as MicroGlobeAmericasIcon,
+    ScissorsIcon as MicroScissorsIcon,
+    SparklesIcon as MicroSparklesIcon,
+    DevicePhoneMobileIcon as MicroDevicePhoneMobileIcon,
+    TrophyIcon as MicroTrophyIcon,
+    KeyIcon as MicroKeyIcon,
+    ShieldCheckIcon as MicroShieldCheckIcon,
+    LightBulbIcon as MicroLightBulbIcon,
     UserGroupIcon as MicroUserGroupIcon,
 } from "@heroicons/react/16/solid"
 import {
@@ -49,6 +66,23 @@ import {
     ShoppingBagIcon as MiniShoppingBagIcon,
     ShoppingCartIcon as MiniShoppingCartIcon,
     TruckIcon as MiniTruckIcon,
+    FilmIcon as MiniFilmIcon,
+    MusicalNoteIcon as MiniMusicalNoteIcon,
+    BookOpenIcon as MiniBookOpenIcon,
+    WrenchScrewdriverIcon as MiniWrenchScrewdriverIcon,
+    BanknotesIcon as MiniBanknotesIcon,
+    CreditCardIcon as MiniCreditCardIcon,
+    TvIcon as MiniTvIcon,
+    WifiIcon as MiniWifiIcon,
+    FireIcon as MiniFireIcon,
+    GlobeAmericasIcon as MiniGlobeAmericasIcon,
+    ScissorsIcon as MiniScissorsIcon,
+    SparklesIcon as MiniSparklesIcon,
+    DevicePhoneMobileIcon as MiniDevicePhoneMobileIcon,
+    TrophyIcon as MiniTrophyIcon,
+    KeyIcon as MiniKeyIcon,
+    ShieldCheckIcon as MiniShieldCheckIcon,
+    LightBulbIcon as MiniLightBulbIcon,
     UserGroupIcon as MiniUserGroupIcon,
 } from "@heroicons/react/20/solid"
 import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
@@ -105,6 +139,23 @@ export const CATEGORY_ICONS = [
     "bike",
     "pill",
     "stethoscope",
+    "film",
+    "music",
+    "book-open",
+    "wrench",
+    "banknotes",
+    "credit-card",
+    "tv",
+    "wifi",
+    "fire",
+    "globe",
+    "scissors",
+    "sparkles",
+    "smartphone",
+    "trophy",
+    "key",
+    "shield",
+    "light-bulb",
 ] as const
 
 export type CategoryIconId = (typeof CATEGORY_ICONS)[number]
@@ -132,6 +183,23 @@ export const CATEGORY_GRID_ICONS: readonly CategoryIconId[] = [
     "users-round",
     "shopping-bag",
     "receipt",
+    "film",
+    "music",
+    "book-open",
+    "wrench",
+    "banknotes",
+    "credit-card",
+    "tv",
+    "wifi",
+    "fire",
+    "globe",
+    "scissors",
+    "sparkles",
+    "smartphone",
+    "trophy",
+    "key",
+    "shield",
+    "light-bulb",
 ]
 
 /** Nome do ícone para leitor de tela: a chave ("utensils") vazava em inglês. */
@@ -162,6 +230,23 @@ export const CATEGORY_ICON_LABELS: Record<CategoryIconId, string> = {
     bike: "Bicicleta",
     pill: "Remédios",
     stethoscope: "Médico",
+    "film": "Cinema e streaming",
+    "music": "Música",
+    "book-open": "Livros",
+    "wrench": "Manutenção",
+    "banknotes": "Dinheiro",
+    "credit-card": "Cartão",
+    "tv": "TV",
+    "wifi": "Internet",
+    "fire": "Gás",
+    "globe": "Viagem internacional",
+    "scissors": "Beleza",
+    "sparkles": "Limpeza",
+    "smartphone": "Celular",
+    "trophy": "Esportes",
+    "key": "Aluguel",
+    "shield": "Seguros",
+    "light-bulb": "Luz",
 }
 
 /** O corpo do ícone acompanha a caixa em que ele é desenhado. */
@@ -194,6 +279,23 @@ export const categoryIconComponents: Record<CategoryIconId, CategoryIconSet> = {
     bike: { micro: MicroTruckIcon, mini: MiniTruckIcon },
     pill: { micro: MicroBeakerIcon, mini: MiniBeakerIcon },
     stethoscope: { micro: MicroHeartIcon, mini: MiniHeartIcon },
+    "film": { micro: MicroFilmIcon, mini: MiniFilmIcon },
+    "music": { micro: MicroMusicalNoteIcon, mini: MiniMusicalNoteIcon },
+    "book-open": { micro: MicroBookOpenIcon, mini: MiniBookOpenIcon },
+    "wrench": { micro: MicroWrenchScrewdriverIcon, mini: MiniWrenchScrewdriverIcon },
+    "banknotes": { micro: MicroBanknotesIcon, mini: MiniBanknotesIcon },
+    "credit-card": { micro: MicroCreditCardIcon, mini: MiniCreditCardIcon },
+    "tv": { micro: MicroTvIcon, mini: MiniTvIcon },
+    "wifi": { micro: MicroWifiIcon, mini: MiniWifiIcon },
+    "fire": { micro: MicroFireIcon, mini: MiniFireIcon },
+    "globe": { micro: MicroGlobeAmericasIcon, mini: MiniGlobeAmericasIcon },
+    "scissors": { micro: MicroScissorsIcon, mini: MiniScissorsIcon },
+    "sparkles": { micro: MicroSparklesIcon, mini: MiniSparklesIcon },
+    "smartphone": { micro: MicroDevicePhoneMobileIcon, mini: MiniDevicePhoneMobileIcon },
+    "trophy": { micro: MicroTrophyIcon, mini: MiniTrophyIcon },
+    "key": { micro: MicroKeyIcon, mini: MiniKeyIcon },
+    "shield": { micro: MicroShieldCheckIcon, mini: MiniShieldCheckIcon },
+    "light-bulb": { micro: MicroLightBulbIcon, mini: MiniLightBulbIcon },
 }
 
 export function isKnownCategoryIcon(id: string | null | undefined): id is CategoryIconId {
@@ -247,7 +349,7 @@ export function CategoryColorSwatches({
                 if (next) onChange(next)
             }}
             aria-label="Cor da categoria"
-            className="flex-wrap gap-2"
+            className="flex-wrap justify-start gap-2"
         >
             {TILE_PALETTE.map(({ hex, nome }, i) => (
                 <ToggleGroupItem
@@ -306,7 +408,7 @@ export function CategoryIconGrid({
                 if (next) onChange(next as CategoryIconId)
             }}
             aria-label="Ícone da categoria"
-            className="flex-wrap gap-1.5"
+            className="flex-wrap justify-start gap-1.5"
         >
             {ids.map((key) => (
                 <ToggleGroupItem
