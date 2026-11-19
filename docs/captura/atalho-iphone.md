@@ -16,11 +16,11 @@ Os arquivos são gerados e assinados por:
 python3 scripts/atalho/gerar-atalho.py
 ```
 
-Ele grava dois arquivos (`MODOS`): a voz, "Lançar gasto", manda o
-cabeçalho `X-Atalho-Gatilho: siri` e responde com **Mostrar resultado**,
-falado (menos no ramo do Apple Pay, que roda em segundo plano e segue com a
-notificação); o toque, "Lançar gasto rápido", manda `toque` e responde com
-notificação. A lista de aparelhos mostra "Siri" ou "Toque" (gatilhos antigos
+Ele grava dois arquivos (`MODOS`), e os dois respondem com notificação: a voz,
+"Lançar gasto", é a versão que a Siri abria, sem cabeçalho de gatilho (com o
+cabeçalho `X-Atalho-Gatilho: siri` e o **Mostrar resultado**, a Siri dizia que
+não conseguia abrir o atalho; o gatilho `siri` já vem do `create_capture_token`);
+o toque, "Lançar gasto rápido", manda `toque`. A lista de aparelhos mostra "Siri" ou "Toque" (gatilhos antigos
 contam como Toque). Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
 do ambiente ou do `.env.local`. **Rode de novo se o endereço do Supabase
 mudar**, e versione o arquivo novo. `python3 scripts/atalho/gerar-atalho.py

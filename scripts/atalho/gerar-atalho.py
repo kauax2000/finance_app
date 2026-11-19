@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import os
 import plistlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -42,9 +43,11 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 PASTA = RAIZ / "public" / "atalho"
 VAR = "￼"
-# Dois arquivos assinados: modo -> (gatilho do cabeçalho, nome do arquivo).
-# A voz fala o resultado; o toque notifica.
-MODOS = {"voz": ("siri", "Lançar gasto"), "toque": ("toque", "Lançar gasto rápido")}
+# Dois arquivos assinados: modo -> (gatilho do cabeçalho, nome do arquivo). Os dois notificam.
+# A voz é a versão que a Siri abria: sem cabeçalho de gatilho e sem "Mostrar resultado"
+# (com os dois, a Siri dizia que não conseguia abrir, 19/11/2026); o gatilho dela vem
+# do create_capture_token.
+MODOS = {"voz": (None, "Lançar gasto"), "toque": ("toque", "Lançar gasto rápido")}
 
 
 def url_da_captura() -> str:
@@ -116,14 +119,11 @@ def chave(uid: str, nome: str, de: str) -> dict:
     return acao("getvalueforkey", UUID=uid, WFDictionaryKey=nome, WFInput=anexo(saida(de, "Conteúdo do URL")))
 
 
-def notificar(de: str, falar: bool = False) -> dict:
-    corpo = texto(VAR, {0: saida(de, "Valor do Dicionário")})
-    if falar:  # a Siri lê o resultado em voz alta, no lugar da notificação
-        return acao("showresult", Text=corpo)
+def notificar(de: str) -> dict:
     return acao(
         "notification",
         WFNotificationActionTitle=texto("Finance"),
-        WFNotificationActionBody=corpo,
+        WFNotificationActionBody=texto(VAR, {0: saida(de, "Valor do Dicionário")}),
     )
 
 
@@ -168,7 +168,6 @@ def fim_se(grupo: str) -> dict:
 
 def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None) -> dict:
     gatilho = MODOS[modo][0] if modo else None
-    falar = modo == "voz"
     pedido_ = lambda *a: pedido(*a, gatilho=gatilho)  # noqa: E731
     u = lambda: str(uuid.uuid4()).upper()  # noqa: E731
     codigo, entrada_se, menu = u(), u(), u()
@@ -191,7 +190,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         pedido_(opcoes, url, codigo, "GET"),
         chave(erro_get, "resumo", opcoes),
         se(erro_se, erro_get, 100),
-        notificar(erro_get, falar),
+        notificar(erro_get),
         acao("exit"),
         fim_se(erro_se),
         chave(modo, "modo", opcoes),
@@ -215,7 +214,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         *marcar(sim_frase, "sim"),
         senao(cod_se),
         chave(resumo_frase, "resumo", r_frase),
-        notificar(resumo_frase, falar),
+        notificar(resumo_frase),
         fim_se(cod_se),
         fim_se(modo_se),
         # O formulário, campo a campo.
@@ -245,7 +244,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
             ("source", texto("shortcut")),
         ]),
         chave(resumo_form, "resumo", r_form),
-        notificar(resumo_form, falar),
+        notificar(resumo_form),
         fim_se(form_se),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=2),
     ]
@@ -390,22 +389,17 @@ def verificar() -> None:
         if _id(a) == "setvariable":
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"
 
-    # Dois modos: o cabeçalho diz qual, e só a voz fala o resultado.
-    for m, (g, _nome) in MODOS.items():
-        a = atalho("https://exemplo.supabase.co/functions/v1/capture", m)["WFWorkflowActions"]
-        for p in (x["WFWorkflowActionParameters"] for x in a if _id(x) == "downloadurl"):
-            cab = {_txt(i["WFKey"]): _txt(i["WFValue"]) for i in p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]}
-            assert cab["X-Atalho-Gatilho"] == g and cab["X-Atalho-Versao"] == "2", cab
-        fim_entrada = next(i for i, x in enumerate(a) if _id(x) == "conditional" and x["WFWorkflowActionParameters"]["WFControlFlowMode"] == 1)
-        resto = [_id(x) for x in a[fim_entrada:]]
-        if m == "voz":
-            assert "notification" not in resto and resto.count("showresult") == 3, resto
-            assert [_id(x) for x in a[:fim_entrada]].count("notification") == 1  # Apple Pay segue notificando
-        else:
-            assert "showresult" not in resto
-    # Sem modo (só o teste do pedido) não manda o cabeçalho.
-    raiz = atalho("https://exemplo.supabase.co/functions/v1/capture")
-    assert not any("X-Atalho-Gatilho" in str(x) for x in raiz["WFWorkflowActions"])
+    # A voz é igual à versão que a Siri abria (sem cabeçalho de gatilho); o toque manda "toque".
+    # Nenhum dos dois usa "Mostrar resultado".
+    sem_uuid = lambda d: re.sub(r"[0-9A-F]{8}-[0-9A-F-]{27}", "", str(d))  # noqa: E731
+    voz = atalho("https://exemplo.supabase.co/functions/v1/capture", "voz")
+    assert sem_uuid(voz) == sem_uuid(atalho("https://exemplo.supabase.co/functions/v1/capture"))
+    assert "X-Atalho-Gatilho" not in str(voz) and "showresult" not in str(voz)
+    toque = atalho("https://exemplo.supabase.co/functions/v1/capture", "toque")["WFWorkflowActions"]
+    for p in (x["WFWorkflowActionParameters"] for x in toque if _id(x) == "downloadurl"):
+        cab = {_txt(i["WFKey"]): _txt(i["WFValue"]) for i in p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]}
+        assert cab["X-Atalho-Gatilho"] == "toque" and cab["X-Atalho-Versao"] == "2", cab
+    assert not any(_id(x) == "showresult" for x in toque)
     print("ok")
 
 
