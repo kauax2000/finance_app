@@ -3105,15 +3105,28 @@ function ChartSparkline({
   className,
   tooltip = false,
   format = "currency",
+  reference,
 }: Omit<ChartFormProps, "series" | "children" | "aspect" | "legend" | "dataTable"> & {
   variant?: "line" | "area" | "bars"
   y: string
+  /** A média, na unidade de `y`: a linha tracejada atrás da série. Zero, ausente ou não finito não desenha; em `bars` é ignorada. */
+  reference?: number
 }) {
   const cor = serieColor(y, 0, config)
   // A faísca não entra (dez numa lista seriam ruído): o primeiro quadro desenha parado e só a troca anima.
   const [montado, setMontado] = React.useState(false)
   React.useEffect(() => setMontado(true), [])
   const movimento = montado ? CHART_MARK_UPDATE : CHART_MARK_STILL
+  const media =
+    reference !== undefined && Number.isFinite(reference) && reference > 0 ? (
+      <ReferenceLine
+        y={reference}
+        stroke="var(--color-muted-foreground)"
+        strokeDasharray="4 4"
+        strokeWidth={1}
+        ifOverflow="extendDomain"
+      />
+    ) : null
 
   const marca =
     variant === "bars" ? (
@@ -3133,6 +3146,7 @@ function ChartSparkline({
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
+        {media}
         <Area
           {...movimento}
           dataKey={y}
@@ -3149,6 +3163,7 @@ function ChartSparkline({
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
+        {media}
         <Line
           dataKey={y}
           type="monotone"

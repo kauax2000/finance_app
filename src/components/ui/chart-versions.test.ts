@@ -325,4 +325,31 @@ describe("as versões do Chart", () => {
       expect(CODIGO).toContain('role={label ? (interactive ? "group" : "img") : undefined}')
     })
   })
+
+  describe("ChartSparkline reference", () => {
+    const trecho = semComentarios(CODIGO).split("function ChartSparkline(")[1].split("\n/* ----")[0]
+
+    it("reference: a média tracejada da faísca", () => {
+      expect(trecho).toContain("reference?: number")
+      expect(trecho).toContain("<ReferenceLine")
+      expect(trecho).toContain("strokeDasharray")
+      expect(trecho).toContain("var(--color-muted-foreground)")
+    })
+
+    it("a linha da média vem antes da série", () => {
+      const ref = trecho.indexOf("<ReferenceLine")
+      expect(ref).toBeGreaterThan(-1)
+      expect(ref).toBeLessThan(trecho.indexOf("<Area"))
+      expect(ref).toBeLessThan(trecho.indexOf("<Line"))
+    })
+
+    it("zero ou ausente não desenha", () => {
+      expect(trecho).toContain("Number.isFinite(reference)")
+      expect(trecho).toContain("reference > 0")
+    })
+
+    it("a página do catálogo mostra o reference", () => {
+      expect(lerFonte("src/app/designsystem/docs/chart.tsx")).toContain("reference=")
+    })
+  })
 }

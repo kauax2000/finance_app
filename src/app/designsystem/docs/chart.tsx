@@ -1311,7 +1311,8 @@ const config = {
             A tendência sem eixo, para dentro de um <code>StatCard</code> ou de uma linha de lista: sem grade, legenda nem tooltip. O nome acessível continua obrigatório.
           </>
         }
-        code={`<ChartSparkline y="saldo" config={CONFIG_SALDO} data={FLUXO} label="Saldo, últimos 6 meses" />`}
+        code={`<ChartSparkline y="saldo" config={CONFIG_SALDO} data={FLUXO} label="Saldo, últimos 6 meses" />
+<ChartSparkline variant="area" reference={media} … /> // a média, tracejada atrás da série`}
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
         {(["line", "area", "bars"] as const).map((variant) => (
@@ -1329,6 +1330,20 @@ const config = {
             />
           </div>
         ))}
+        <div className="flex items-center gap-4">
+          <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
+            média
+          </span>
+          <ChartSparkline
+            variant="area"
+            y="saldo"
+            config={{ saldo: { label: "Saldo", color: "var(--chart-2)" } }}
+            data={FLUXO}
+            reference={FLUXO.slice(0, 5).reduce((t, d) => t + d.saldo, 0) / 5}
+            label="Saldo dos últimos seis meses, com a média dos cinco primeiros"
+            className="h-10 max-w-64"
+          />
+        </div>
       </DocSection>
 
       <DocSection
