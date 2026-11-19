@@ -31,6 +31,19 @@ describe("a transição de subpágina", () => {
         expect(T).toContain(`'[aria-busy="true"], [data-slot="skeleton"]'`)
     })
 
+    // No simulador (19/11/2026) o teto vencia com a rota velha: o gesto andava a Você
+    // sobre ela mesma, e a tela nova chegava num corte seco.
+    it("nunca anima sem a rota nova: o teto de 1,2s só conta depois da troca, e a rota tem o próprio teto", () => {
+        expect(T).toContain("const LIMITE_DA_ROTA_MS = 4000")
+        expect(T).toMatch(/function telaPronta\(rotaDeAntes: string\): Promise<boolean>/)
+        expect(T).toMatch(/if \(!\(await telaPronta\(rotaDeAntes\)\)\) transicao\.skipTransition\(\)/)
+    })
+
+    it("o teto do esqueleto nasce na troca de rota, não no clique", () => {
+        // o temporizador de 1,2s é armado dentro do ramo em que a rota já mudou
+        expect(T).toMatch(/location\.pathname !== rotaDeAntes[\s\S]{0,300}setTimeout\([^,]+, LIMITE_DA_ESPERA_MS\)/)
+    })
+
     it("só o telefone, sem movimento reduzido, fora de diálogo e de link externo", () => {
         expect(T).toContain("if (!isMobile) return")
         expect(T).toContain('"(prefers-reduced-motion: reduce)"')

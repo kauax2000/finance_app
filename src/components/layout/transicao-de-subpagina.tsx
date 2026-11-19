@@ -6,7 +6,9 @@ import { defaultMobileBackHref } from "@/components/layout/app-header"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { direcaoDaTela } from "@/lib/direcao-da-tela"
 
-/** Quanto a tela velha espera a nova. Passou disso, anima com o que tiver. */
+/** A rota nova tem este tempo para chegar. Sem ela, a troca acontece sem gesto. */
+const LIMITE_DA_ROTA_MS = 4000
+/** Depois da troca de rota, quanto a tela velha espera o esqueleto sumir. */
 const LIMITE_DA_ESPERA_MS = 1200
 /** Sem esqueleto e sem o DOM mudar por esse tempo, a tela nova está pronta. */
 const SOSSEGO_MS = 80
@@ -15,27 +17,37 @@ const SOSSEGO_MS = 80
 const ESPERANDO = '[aria-busy="true"], [data-slot="skeleton"]'
 
 type DocumentoComTransicao = Document & {
-    startViewTransition?: (trocar: () => Promise<void>) => { finished: Promise<void> }
+    startViewTransition?: (trocar: () => Promise<void>) => { finished: Promise<void>; skipTransition: () => void }
 }
 
-/** Resolve quando a rota já mudou e nenhum esqueleto segue à espera no conteúdo. */
-function telaPronta(rotaDeAntes: string): Promise<void> {
+/**
+ * Duas fases: espera a rota mudar (`false` se passar de `LIMITE_DA_ROTA_MS`) e, mudada,
+ * espera o esqueleto sumir (`true`, com teto de `LIMITE_DA_ESPERA_MS` contado da troca).
+ */
+function telaPronta(rotaDeAntes: string): Promise<boolean> {
     const conteudo = document.querySelector("[data-workspace-content]")
-    if (!conteudo) return Promise.resolve()
+    if (!conteudo) return Promise.resolve(true)
     return new Promise((pronta) => {
         let sossego: ReturnType<typeof setTimeout> | undefined
-        const acabar = () => {
-            clearTimeout(limite)
+        let limiteDaEspera: ReturnType<typeof setTimeout> | undefined
+        const acabar = (ok: boolean) => {
+            clearTimeout(limiteDaRota)
+            clearTimeout(limiteDaEspera)
             clearTimeout(sossego)
             observador.disconnect()
-            pronta()
+            pronta(ok)
         }
         const conferir = () => {
             clearTimeout(sossego)
-            const esperando = conteudo.querySelector(ESPERANDO)
-            if (location.pathname !== rotaDeAntes && !esperando) sossego = setTimeout(acabar, SOSSEGO_MS)
+            if (location.pathname !== rotaDeAntes) {
+                if (!limiteDaEspera) {
+                    clearTimeout(limiteDaRota)
+                    limiteDaEspera = setTimeout(() => acabar(true), LIMITE_DA_ESPERA_MS)
+                }
+                if (!conteudo.querySelector(ESPERANDO)) sossego = setTimeout(() => acabar(true), SOSSEGO_MS)
+            }
         }
-        const limite = setTimeout(acabar, LIMITE_DA_ESPERA_MS)
+        const limiteDaRota = setTimeout(() => acabar(false), LIMITE_DA_ROTA_MS)
         const observador = new MutationObserver(conferir)
         observador.observe(conteudo, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-busy"] })
         conferir()
@@ -45,8 +57,9 @@ function telaPronta(rotaDeAntes: string): Promise<void> {
 /**
  * A transição das subpáginas do telefone. O navegador segura a tela velha enquanto a
  * promessa do `startViewTransition` corre: a tela nova monta e carrega por baixo, e só
- * pronta o gesto começa, sem esqueleto à vista. Vale para todo link, e nenhuma tela
- * marca nada. O voltar do navegador fica de fora, porque o gesto do Safari já anima.
+ * pronta o gesto começa, sem esqueleto à vista. A espera tem duas fases (a rota mudar, e
+ * o esqueleto sumir); sem rota nova em 4s a troca acontece sem gesto. Vale para todo link,
+ * e nenhuma tela marca nada. O voltar do navegador fica de fora, porque o gesto do Safari já anima.
  */
 export function TransicaoDeSubpagina() {
     const router = useRouter()
@@ -76,7 +89,7 @@ export function TransicaoDeSubpagina() {
             raiz.dataset.subpagina = direcao
             const transicao = doc.startViewTransition(async () => {
                 router.push(`${destino.pathname}${destino.search}${destino.hash}`)
-                await telaPronta(rotaDeAntes)
+                if (!(await telaPronta(rotaDeAntes))) transicao.skipTransition()
                 raiz.style.setProperty("--subpagina-desvio", `${window.scrollY - rolagemDeAntes}px`)
             })
             void transicao.finished.finally(() => delete raiz.dataset.subpagina)
