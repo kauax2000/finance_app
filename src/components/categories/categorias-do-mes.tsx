@@ -62,11 +62,12 @@ export function OrdemDasCategorias({
     const opcoes = opcoesDeOrdem(tipo)
     const atual = opcoes.find((o) => o.value === criterio) ?? opcoes[0]
     const sentido = atual.sentidos[invertida ? 1 : 0]
+    const nome = `Ordenar categorias: ${atual.label.toLocaleLowerCase("pt-BR")}, ${sentido.toLocaleLowerCase("pt-BR")}`
     return (
         <DropdownMenu>
             {compacta ? (
                 <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="floating" size="icon-md" aria-label="Ordenar categorias">
+                    <Button type="button" variant="floating" size="icon-md" aria-label={nome}>
                         <BarsArrowDownIcon aria-hidden />
                     </Button>
                 </DropdownMenuTrigger>
@@ -78,7 +79,7 @@ export function OrdemDasCategorias({
                                 type="button"
                                 variant="tertiary"
                                 size="icon-lg"
-                                aria-label={`Ordenar categorias: ${atual.label.toLocaleLowerCase("pt-BR")}, ${sentido.toLocaleLowerCase("pt-BR")}`}
+                                aria-label={nome}
                             >
                                 <BarsArrowDownIcon aria-hidden />
                             </Button>
@@ -87,7 +88,7 @@ export function OrdemDasCategorias({
                     <TooltipContent>Ordenar</TooltipContent>
                 </Tooltip>
             )}
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" size="lg">
                 <DropdownMenuHeader title="Ordenar por" />
                 <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
                     {opcoes.map((o) => (

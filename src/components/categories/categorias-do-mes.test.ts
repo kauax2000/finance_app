@@ -40,7 +40,7 @@ describe("OrdemDasCategorias", () => {
         const html = renderToStaticMarkup(
             h(OrdemDasCategorias, { tipo: "expense", criterio: "maior", onCriterioChange: () => {}, invertida: false, onInvertidaChange: () => {}, compacta: true }),
         )
-        expect(html).toContain('aria-label="Ordenar categorias"')
+        expect(html).toContain('aria-label="Ordenar categorias: gasto, maior primeiro"')
         expect(html).toContain("dropdown-menu-trigger")
     })
 
