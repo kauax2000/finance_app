@@ -206,7 +206,6 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                         {ultimo ? "Entendi" : "Próximo"}
                     </Button>
                 </DialogFooter>
-                {/* O ‹ é o espelho do ✕: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
                 {/* O ‹ é o espelho do ✕, como no Importar: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
                 {celular && passo > 0 ? (
                     <Button

@@ -55,8 +55,12 @@ export function MudarCarteiraDoAtalho({
         if (escolhida === atalho.workspace_id) return mudarAberto(false)
         setSalvando(true)
         setErro(null)
-        const { error } = await supabase.rpc("set_capture_token_workspace", { p_id: atalho.id, p_workspace_id: escolhida })
-        setSalvando(false)
+        let error
+        try {
+            ;({ error } = await supabase.rpc("set_capture_token_workspace", { p_id: atalho.id, p_workspace_id: escolhida }))
+        } finally {
+            setSalvando(false)
+        }
         if (error) return setErro(mensagemDoErroDeToken(error))
         mudarAberto(false)
         aoMudar()
