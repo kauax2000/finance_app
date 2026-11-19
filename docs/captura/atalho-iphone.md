@@ -2,13 +2,11 @@
 
 ## Para o dono: o atalho pronto
 
-O guia "Adicionar atalho" do app pergunta primeiro "Como você vai usar?"
-(passo 1: Voz ou Toque) e o botão **Baixar o atalho** entrega o arquivo
-assinado do modo escolhido: `public/atalho/Lançar gasto.shortcut` (voz) ou
-`public/atalho/Lançar gasto rápido.shortcut` (toque). O último passo mostra a
-Siri na voz, ou as abas Botão, Costas, Bloqueio e Ícone no toque, e um link
-para baixar também o outro arquivo (o mesmo código serve). Não há link do
-iCloud nem variável de ambiente.
+O guia "Adicionar atalho" do app tem 6 passos, sem escolha de modo, e o botão
+**Baixar o atalho** entrega o arquivo assinado `public/atalho/Lançar gasto.shortcut`.
+O último passo mostra a Siri ("E aí Siri, Lançar gasto") e, abaixo, as abas
+Botão, Costas, Bloqueio e Ícone. Não há link do iCloud nem variável de
+ambiente.
 
 Os arquivos são gerados e assinados por:
 
@@ -16,12 +14,13 @@ Os arquivos são gerados e assinados por:
 python3 scripts/atalho/gerar-atalho.py
 ```
 
-Ele grava dois arquivos (`MODOS`), e os dois respondem com notificação: a voz,
-"Lançar gasto", é a versão que a Siri abria, sem cabeçalho de gatilho (com o
-cabeçalho `X-Atalho-Gatilho: siri` e o **Mostrar resultado**, a Siri dizia que
-não conseguia abrir o atalho; o gatilho `siri` já vem do `create_capture_token`);
-o toque, "Lançar gasto rápido", manda `toque`. A lista de aparelhos mostra "Siri" ou "Toque" (gatilhos antigos
-contam como Toque). Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
+Ele grava um arquivo só, "Lançar gasto": sem o cabeçalho `X-Atalho-Gatilho` e
+respondendo com notificação, sem **Mostrar resultado**. Até 19/nov/2026 havia
+dois arquivos (voz e toque, "Lançar gasto rápido"); com a voz mandando o
+cabeçalho e o **Mostrar resultado**, a Siri passou a dizer que não conseguia
+abrir o atalho, e o arquivo original voltou como o único. O token novo é criado
+sem gatilho (`atalho_gatilho` nulo), e a lista mostra o nome guardado,
+"Lançar gasto". Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
 do ambiente ou do `.env.local`. **Rode de novo se o endereço do Supabase
 mudar**, e versione o arquivo novo. `python3 scripts/atalho/gerar-atalho.py
 --verificar` confere o atalho sem assinar nem gravar.
@@ -83,15 +82,15 @@ valor real de nenhum deles.**
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
 | `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do atalho" | Configurações › "Lançar pelo iPhone" › Adicionar atalho (o passo 2 o cria; aparece no passo 5, e some ao fechar o guia) |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do atalho" | Configurações › "Lançar pelo iPhone" › Adicionar atalho (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
 1. Abra o app e vá a **Configurações**.
 2. Na seção "Lançar pelo iPhone", toque em **Adicionar atalho**.
-3. No passo 2, **Escolha a carteira** onde os gastos vão cair. O atalho se chama
-   "Lançar gasto" na voz e "Lançar gasto rápido" no toque; há um atalho de cada
-   modo, e adicionar um novo substitui o do mesmo modo.
+3. No passo 1, **Escolha a carteira** onde os gastos vão cair. O atalho se chama
+   "Lançar gasto"; adicionar outro não substitui o que já existe (só "Baixar o
+   atalho de novo" substitui).
 4. Toque em **Criar código**.
 5. Copie o código na hora, se o navegador não o copiou sozinho. Ele **não aparece
    de novo**. Se perder o código, desconecte o atalho e crie outro.

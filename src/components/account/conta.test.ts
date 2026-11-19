@@ -2,7 +2,7 @@ import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
-import { MODOS_DO_ATALHO, modoDoGatilho, tituloDoAtalho, alvoDaTroca } from "@/components/account/gatilhos-do-atalho"
+import { ARQUIVO_DO_ATALHO, NOME_DO_ATALHO, modoDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import { legendaDoAtalho } from "@/components/account/atalho-secao"
 import type { CaptureToken } from "@/lib/supabase"
 
@@ -53,15 +53,14 @@ describe("tokens de captura", () => {
         expect(f).not.toContain("passoInicial")
     })
 
-    it("o atalho novo troca o do mesmo modo (ou o de baixar de novo), e só depois desconecta o antigo", () => {
+    it("o Baixar de novo troca o atalho, e só depois desconecta o antigo", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).not.toContain("passoInicial")
         expect(g).toContain("substituir?: CaptureToken")
-        expect(g).toContain("atalhos?: CaptureToken[]")
+        expect(g).not.toContain("atalhos?: CaptureToken[]")
         expect(g).not.toContain("nomesEmUso")
         expect(g).toContain('setCarteira(substituir?.workspace_id ?? "")')
-        expect(g).toContain("const trocado = alvoDaTroca(modo, substituir, atalhos)")
-        expect(semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))).toMatch(/substituir=\{substituir\}\s+atalhos=\{tokens\}/)
+        expect(g).toContain("const trocado = substituir")
         const criar = g.indexOf('rpc("create_capture_token"')
         const revogar = g.indexOf('rpc("revoke_capture_token"')
         expect(criar).toBeGreaterThan(0)
@@ -97,44 +96,32 @@ describe("tokens de captura", () => {
         expect(g).toMatch(/<FormSubmit/)
         expect(g).toMatch(/if \(error\) return setErro\(mensagemDoErroDeToken\(error\)\)/)
     })
-    it("o modo vem antes do código, e o arquivo baixado é o dele", () => {
+    it("um atalho só, sem escolher Siri ou toque: o passo 1 é a carteira, e o arquivo é o original", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toMatch(/titulo: "Como você vai usar\?"/)
-        expect(g.indexOf('"Como você vai usar?"')).toBeLessThan(g.indexOf('"Escolha a carteira"'))
-        expect(g).toMatch(/<a href=\{atual\.arquivo\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
-        expect(g).toMatch(/<a href=\{outro\.arquivo\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
-        expect(g).toMatch(/icon=\{o\.valor === "voz" \? MicrophoneIcon : CursorArrowRippleIcon\}/)
+        expect(g).not.toContain("Como você vai usar")
+        expect(g).not.toMatch(/MODOS_DO_ATALHO|setModo|Continuar com/)
+        expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
+        expect(ARQUIVO_DO_ATALHO).toBe("/atalho/Lan%C3%A7ar%20gasto.shortcut")
+        expect(decodeURIComponent(ARQUIVO_DO_ATALHO)).toBe(`/atalho/${NOME_DO_ATALHO}.shortcut`)
+        expect(existsSync(`public/atalho/${NOME_DO_ATALHO}.shortcut`)).toBe(true)
+        expect(existsSync("public/atalho/Lançar gasto rápido.shortcut")).toBe(false)
         expect(g).toMatch(/from "@heroicons\/react\/16\/solid"/)
-        expect(g).not.toMatch(/<TabsList aria-label="Como abrir o atalho">/)
         expect(g).toMatch(/<TabsList aria-label="Onde pôr o atalho">/)
-        expect(g).toMatch(/setModo\(modoDoGatilho\(substituir\?\.atalho_gatilho \?\? null\)\)/)
         expect(g).toMatch(/setLugar\(LUGARES\.find\(\(l\) => l\.valor === substituir\?\.atalho_gatilho\)\?\.valor \?\? "acao"\)/)
-        for (const t of ["Quer o outro também?", "O mesmo código serve.", "Baixar {outro.nome}"]) expect(g).toContain(t)
+        for (const t of ["Quer o outro também?", "Baixar {outro.nome}"]) expect(g).not.toContain(t)
         for (const a of ["atalho-1-baixar", "atalho-2-arquivos", "atalho-3-configurar", "atalho-4-colar"])
             expect(g).toContain(`from "./assets/${a}.webp"`)
         expect(g).not.toMatch(/NEXT_PUBLIC_CAPTURE_SHORTCUT_URL|icloud\.com|DeviceFrame/)
         expect(g).not.toContain("Montar à mão")
-    })
-    it("dois arquivos: voz e toque, cada um com o seu nome", () => {
-        expect(MODOS_DO_ATALHO.map((m) => m.arquivo)).toEqual([
-            "/atalho/Lan%C3%A7ar%20gasto.shortcut",
-            "/atalho/Lan%C3%A7ar%20gasto%20r%C3%A1pido.shortcut",
-        ])
-        expect(MODOS_DO_ATALHO.map((m) => m.nome)).toEqual(["Lançar gasto", "Lançar gasto rápido"])
-        for (const { arquivo, nome } of MODOS_DO_ATALHO) {
-            expect(decodeURIComponent(arquivo)).toBe(`/atalho/${nome}.shortcut`)
-            expect(existsSync(`public/atalho/${nome}.shortcut`)).toBe(true)
-        }
-        expect(existsSync("public/atalho/siri")).toBe(false)
     })
     it("o gatilho guardado vira o modo: só a Siri é voz", () => {
         expect(modoDoGatilho("siri")).toBe("voz")
         expect(modoDoGatilho("acao")).toBe("toque")
         expect(modoDoGatilho(null)).toBe("toque")
     })
-    it("trocar o gatilho com o código criado não cria outro código", () => {
+    it("voltar à carteira com o código criado não cria outro código", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toMatch(/if \(codigo\) return irPara\(2\)/)
+        expect(g).toMatch(/if \(codigo\) return irPara\(1\)/)
     })
     it("no app instalado do iPhone o download vai ao Safari, que salva o .shortcut", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
@@ -167,28 +154,20 @@ describe("tokens de captura", () => {
         expect(g).toContain("fantasmas={fantasmas}")
         expect(p).toContain("staggerChildren: 0.03")
     })
-    it("o guia do iPhone tem 7 passos: o gatilho, e depois os de antes", async () => {
+    it("o guia do iPhone tem 6 passos: a carteira, e depois os de antes", async () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
         const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
-        expect(lista.match(/titulo: "/g)).toHaveLength(7)
+        expect(lista.match(/titulo: "/g)).toHaveLength(6)
         expect(g).not.toContain("Lance ao pagar")
     })
-    it("o passo 1 põe o celular no palco: legenda de vidro, seletor Voz | Toque e o botão diz o modo", () => {
+    it("sem escolha de Siri ou toque: o último passo mostra a Siri e os lugares do toque", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        const p = semComentarios(lerFonte("src/components/account/passo-a-passo.tsx"))
-        expect(g).not.toContain("<RadioGroup")
-        expect(g).toMatch(/<ToggleGroup\b[^>]*variant="segmented"/)
-        expect(g).toContain('tamanho="palco"')
-        expect(p).toMatch(/\bpalco: \{/)
+        expect(g).not.toMatch(/<ToggleGroup\b/)
+        expect(g).not.toContain('tamanho="palco"')
         expect(g).not.toContain("OrbeDaSiri")
         expect(g).toMatch(/rounded-full bg-muted text-info">\s*<MicrophoneIcon aria-hidden className="size-4" \/>/)
         expect(g).toContain("E aí Siri, Lançar gasto")
-        expect(g).toMatch(/Continuar com \$\{/)
-        for (const l of ["Botão de Ação", "Costas", "Bloqueio", "Ícone"]) expect(g).toContain(`nome: "${l}"`)
-        expect(g).toMatch(/aria-label=\{l\.aria \?\? l\.nome\}/)
-        expect(g).toContain("menuPanelTintClassName")
-        // O passo 1 em Voz e em Toque estão entre os fantasmas: a caixa não muda de altura com a escolha.
-        expect(g).toMatch(/passoDe\(0, "siri", true\)/)
+        expect(g).toMatch(/\.\.\.LUGARES\.map\(\(l\) => passoDe\(PASSOS\.length - 1, l\.valor, true\)\)/)
     })
     it("os pontos ficam depois dos passos e antes do rodapé", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
@@ -202,21 +181,18 @@ describe("tokens de captura", () => {
     it("o último passo ensina a abrir o atalho", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toContain("Ligue o gatilho")
-        expect(MODOS_DO_ATALHO.map((o) => o.rotulo)).toEqual(["Voz", "Toque"])
         for (const x of [
-            "Diga \"E aí Siri, Lançar gasto\". Ela pergunta e responde falando.",
-            "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto rápido.",
-            "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto rápido.",
-            "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto rápido.",
-            "No app Atalhos, toque e segure Lançar gasto rápido › Compartilhar › Adicionar à Tela de Início.",
-            "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular.",
+            "Diga \"E aí Siri, Lançar gasto\". Ela pergunta o gasto.",
+            "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
+            "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
+            "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto.",
+            "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
         ])
             expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
         expect(g).not.toContain("Ditar")
         for (const a of ["atalho-5-siri", "atalho-11-botao-de-acao", "atalho-12-acessibilidade", "atalho-13-tela-de-inicio", "atalho-14-tela-bloqueada"])
             expect(g).toContain(`from "./assets/${a}.webp"`)
         expect(g).toMatch(/tela=\{[^}]*COMO_ABRIR[^}]*\.tela\}/)
-        expect(g).not.toContain('como === "siri"')
     })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
@@ -630,33 +606,16 @@ describe("o guia cria um atalho de cada modo, na carteira escolhida", () => {
     it("o título do atalho sai do gatilho; sem ele, o nome guardado", () => {
         expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: "siri" })).toBe("Lançar gasto")
         for (const g of ["bloqueio", "acao", "toque", "inicio"] as const)
-            expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Lançar gasto rápido")
+            expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Lançar gasto")
         expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: null })).toBe("iPhone de Kauã")
     })
-    it("o alvo da troca é um de cada modo: o de baixar de novo só se for do modo, senão o ativo do modo", () => {
-        const t = (id: string, atalho_gatilho: CaptureToken["atalho_gatilho"]) => ({ id, atalho_gatilho }) as CaptureToken
-        const voz = t("voz", "siri")
-        const toque = t("toque", "bloqueio")
-        const antigo = t("antigo", null)
-        const atalhos = [voz, toque, antigo]
-        expect(alvoDaTroca("voz", undefined, atalhos)).toBe(voz)
-        expect(alvoDaTroca("toque", undefined, atalhos)).toBe(toque)
-        expect(alvoDaTroca("toque", undefined, [voz, antigo])).toBeUndefined()
-        // Baixar de novo o de voz e trocar para toque: sai o de toque, o de voz fica.
-        expect(alvoDaTroca("toque", voz, atalhos)).toBe(toque)
-        expect(alvoDaTroca("toque", voz, [voz])).toBeUndefined()
-        expect(alvoDaTroca("voz", voz, atalhos)).toBe(voz)
-        // O antigo, sem gatilho, sai quando é ele o de baixar de novo, em qualquer modo.
-        expect(alvoDaTroca("voz", antigo, atalhos)).toBe(antigo)
-        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain('"Substitui o atalho antigo."')
-    })
-    it("sem nome de aparelho: o passo 2 escolhe a carteira, e o código leva o modo", () => {
+    it("sem nome de aparelho: o passo 1 escolhe a carteira, e o código leva o nome do atalho", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
-        expect(g).toContain("p_gatilho")
-        expect(g).toContain("p_name: atual.nome")
+        expect(g).not.toContain("p_gatilho")
+        expect(g).toContain("p_name: NOME_DO_ATALHO")
         expect(g).toContain("<DialogTitle>Adicionar atalho</DialogTitle>")
         expect(g).toContain("Escolha a carteira")
-        expect(g).toContain("Substitui o seu atalho de")
+        expect(g).toContain("Substitui o seu atalho atual.")
         expect(g).toContain("O atalho se chama")
         expect(g).toContain("Os gastos caem em {nomeDaCarteira}.")
         expect(g).not.toContain('label="Nome do aparelho"')

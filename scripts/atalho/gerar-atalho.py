@@ -43,11 +43,10 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 PASTA = RAIZ / "public" / "atalho"
 VAR = "￼"
-# Dois arquivos assinados: modo -> (gatilho do cabeçalho, nome do arquivo). Os dois notificam.
-# A voz é a versão que a Siri abria: sem cabeçalho de gatilho e sem "Mostrar resultado"
-# (com os dois, a Siri dizia que não conseguia abrir, 19/11/2026); o gatilho dela vem
-# do create_capture_token.
-MODOS = {"voz": (None, "Lançar gasto"), "toque": ("toque", "Lançar gasto rápido")}
+# Um arquivo só, o original, para a Siri e para o toque: sem cabeçalho de gatilho e com
+# notificação. Com dois arquivos (o de voz com `X-Atalho-Gatilho` e "Mostrar resultado"), a
+# Siri passou a dizer que não conseguia abrir o atalho (19/11/2026).
+MODOS = {"voz": (None, "Lançar gasto")}
 
 
 def url_da_captura() -> str:
@@ -389,17 +388,11 @@ def verificar() -> None:
         if _id(a) == "setvariable":
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"
 
-    # A voz é igual à versão que a Siri abria (sem cabeçalho de gatilho); o toque manda "toque".
-    # Nenhum dos dois usa "Mostrar resultado".
+    # O arquivo é igual ao original: sem cabeçalho de gatilho e sem "Mostrar resultado".
     sem_uuid = lambda d: re.sub(r"[0-9A-F]{8}-[0-9A-F-]{27}", "", str(d))  # noqa: E731
     voz = atalho("https://exemplo.supabase.co/functions/v1/capture", "voz")
     assert sem_uuid(voz) == sem_uuid(atalho("https://exemplo.supabase.co/functions/v1/capture"))
     assert "X-Atalho-Gatilho" not in str(voz) and "showresult" not in str(voz)
-    toque = atalho("https://exemplo.supabase.co/functions/v1/capture", "toque")["WFWorkflowActions"]
-    for p in (x["WFWorkflowActionParameters"] for x in toque if _id(x) == "downloadurl"):
-        cab = {_txt(i["WFKey"]): _txt(i["WFValue"]) for i in p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]}
-        assert cab["X-Atalho-Gatilho"] == "toque" and cab["X-Atalho-Versao"] == "2", cab
-    assert not any(_id(x) == "showresult" for x in toque)
     print("ok")
 
 

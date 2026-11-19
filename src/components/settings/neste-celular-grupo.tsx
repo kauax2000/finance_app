@@ -204,7 +204,6 @@ export function NesteCelularGrupo() {
                 open={guiaAberto}
                 onOpenChange={setGuiaAberto}
                 aoCriar={() => void aparelhos.refetch()}
-                atalhos={aparelhos.ativos}
             />
         </>
     )

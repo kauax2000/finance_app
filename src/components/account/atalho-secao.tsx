@@ -215,7 +215,6 @@ export function AtalhoSecao() {
                 open={guiaAberto}
                 onOpenChange={setGuiaAberto}
                 aoCriar={() => void lista.refetch()}
-                atalhos={tokens}
             />
             {/* O código antigo não pode ser mostrado de novo: o guia cria outro e desconecta o antigo. */}
             <GuiaDoAtalho
@@ -223,7 +222,6 @@ export function AtalhoSecao() {
                 onOpenChange={setBaixarDeNovo}
                 aoCriar={() => void lista.refetch()}
                 substituir={substituir}
-                atalhos={tokens}
             />
 
             <MudarCarteiraDoAtalho
