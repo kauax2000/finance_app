@@ -578,8 +578,14 @@ describe("a superfície de vidro", () => {
             /if \(surface === "drawer"\) \{[\s\S]*?<DrawerContent\b/
         )
         const gaveta = semComentariosDe("src/components/ui/drawer.tsx")
-        expect(gaveta, "a gaveta não dá área segura").toContain(
+        expect(gaveta, "sem rodapé a superfície não guarda o respiro").toContain(
+            "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:pb-0"
+        )
+        expect(gaveta, "com rodapé a superfície guarda a área segura").toContain(
             "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)"
+        )
+        expect(gaveta, "sem rodapé o meio leva o respiro por dentro").toContain(
+            "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[&_[data-drawer-meio]]:pb-(--drawer-safe)"
         )
         // `[^)]*` não serve: o `)` de `--spacing(6)` vem antes do `env(`.
         expect(gaveta, "a fórmula do env() não está aqui").toMatch(
