@@ -118,9 +118,9 @@ describe("tokens de captura", () => {
     it("dois arquivos: voz e toque, cada um com o seu nome", () => {
         expect(MODOS_DO_ATALHO.map((m) => m.arquivo)).toEqual([
             "/atalho/Lan%C3%A7ar%20gasto.shortcut",
-            "/atalho/Lan%C3%A7ar%20gasto%20r%C3%A1pido.shortcut",
+            "/atalho/Gasto%20r%C3%A1pido.shortcut",
         ])
-        expect(MODOS_DO_ATALHO.map((m) => m.nome)).toEqual(["Lançar gasto", "Lançar gasto rápido"])
+        expect(MODOS_DO_ATALHO.map((m) => m.nome)).toEqual(["Lançar gasto", "Gasto rápido"])
         for (const { arquivo, nome } of MODOS_DO_ATALHO) {
             expect(decodeURIComponent(arquivo)).toBe(`/atalho/${nome}.shortcut`)
             expect(existsSync(`public/atalho/${nome}.shortcut`)).toBe(true)
@@ -205,10 +205,10 @@ describe("tokens de captura", () => {
         expect(MODOS_DO_ATALHO.map((o) => o.rotulo)).toEqual(["Voz", "Toque"])
         for (const x of [
             "Diga \"E aí Siri, Lançar gasto\". Ela pergunta e responde falando.",
-            "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto rápido.",
-            "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto rápido.",
-            "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto rápido.",
-            "No app Atalhos, toque e segure Lançar gasto rápido › Compartilhar › Adicionar à Tela de Início.",
+            "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Gasto rápido.",
+            "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Gasto rápido.",
+            "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Gasto rápido.",
+            "No app Atalhos, toque e segure Gasto rápido › Compartilhar › Adicionar à Tela de Início.",
             "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular.",
         ])
             expect(g.replace(/\s+/g, " ")).toContain(x.replace(/\\"/g, '"'))
@@ -630,7 +630,7 @@ describe("o guia cria um atalho de cada modo, na carteira escolhida", () => {
     it("o título do atalho sai do gatilho; sem ele, o nome guardado", () => {
         expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: "siri" })).toBe("Lançar gasto")
         for (const g of ["bloqueio", "acao", "toque", "inicio"] as const)
-            expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Lançar gasto rápido")
+            expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Gasto rápido")
         expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: null })).toBe("iPhone de Kauã")
     })
     it("o alvo da troca é um de cada modo: o de baixar de novo só se for do modo, senão o ativo do modo", () => {

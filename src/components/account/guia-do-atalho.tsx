@@ -102,25 +102,25 @@ const COMO_ABRIR: Record<Gatilho, { texto: string; tela: Tela }> = {
         tela: { imagem: siri, ancora: "topo" },
     },
     acao: {
-        texto: "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto rápido.",
+        texto: "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Gasto rápido.",
         tela: { imagem: botaoDeAcao, ponto: { x: 50, y: 71.9 }, ancora: "baixo" },
     },
     toque: {
-        texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto rápido.",
+        texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Gasto rápido.",
         tela: { imagem: acessibilidade, ponto: { x: 30, y: 41.1 }, ancora: "topo" },
     },
     bloqueio: {
-        texto: "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto rápido.",
+        texto: "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Gasto rápido.",
         tela: { imagem: telaBloqueada, ponto: { x: 16.7, y: 52.7 }, ancora: "baixo" },
     },
     inicio: {
-        texto: "No app Atalhos, toque e segure Lançar gasto rápido › Compartilhar › Adicionar à Tela de Início.",
+        texto: "No app Atalhos, toque e segure Gasto rápido › Compartilhar › Adicionar à Tela de Início.",
         tela: { imagem: telaDeInicio, ponto: { x: 32, y: 67 }, ancora: "baixo" },
     },
 }
 
 /**
- * Onde o mesmo "Lançar gasto rápido" pode morar: os ícones da legenda do passo 1 (com `nome`)
+ * Onde o mesmo "Gasto rápido" pode morar: os ícones da legenda do passo 1 (com `nome`)
  * e as abas do último passo. Rótulos curtos nas abas: as quatro cabem em 343px; o nome inteiro está no texto da aba.
  */
 const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string; nome: string; aria?: string; icone: typeof MicrophoneIcon }[] = [
