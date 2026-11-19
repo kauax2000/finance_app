@@ -5,7 +5,7 @@
 O guia "Adicionar atalho" do app pergunta primeiro "Como você vai usar?"
 (passo 1: Voz ou Toque) e o botão **Baixar o atalho** entrega o arquivo
 assinado do modo escolhido: `public/atalho/Lançar gasto.shortcut` (voz) ou
-`public/atalho/Gasto rápido.shortcut` (toque). O último passo mostra a
+`public/atalho/Lançar gasto rápido.shortcut` (toque). O último passo mostra a
 Siri na voz, ou as abas Botão, Costas, Bloqueio e Ícone no toque, e um link
 para baixar também o outro arquivo (o mesmo código serve). Não há link do
 iCloud nem variável de ambiente.
@@ -20,7 +20,7 @@ Ele grava dois arquivos (`MODOS`), e os dois respondem com notificação: a voz,
 "Lançar gasto", é a versão que a Siri abria, sem cabeçalho de gatilho (com o
 cabeçalho `X-Atalho-Gatilho: siri` e o **Mostrar resultado**, a Siri dizia que
 não conseguia abrir o atalho; o gatilho `siri` já vem do `create_capture_token`);
-o toque, "Gasto rápido", manda `toque`. A lista de aparelhos mostra "Siri" ou "Toque" (gatilhos antigos
+o toque, "Lançar gasto rápido", manda `toque`. A lista de aparelhos mostra "Siri" ou "Toque" (gatilhos antigos
 contam como Toque). Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
 do ambiente ou do `.env.local`. **Rode de novo se o endereço do Supabase
 mudar**, e versione o arquivo novo. `python3 scripts/atalho/gerar-atalho.py
@@ -90,7 +90,7 @@ valor real de nenhum deles.**
 1. Abra o app e vá a **Configurações**.
 2. Na seção "Lançar pelo iPhone", toque em **Adicionar atalho**.
 3. No passo 2, **Escolha a carteira** onde os gastos vão cair. O atalho se chama
-   "Lançar gasto" na voz e "Gasto rápido" no toque; há um atalho de cada
+   "Lançar gasto" na voz e "Lançar gasto rápido" no toque; há um atalho de cada
    modo, e adicionar um novo substitui o do mesmo modo.
 4. Toque em **Criar código**.
 5. Copie o código na hora, se o navegador não o copiou sozinho. Ele **não aparece

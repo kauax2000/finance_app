@@ -47,9 +47,7 @@ VAR = "￼"
 # A voz é a versão que a Siri abria: sem cabeçalho de gatilho e sem "Mostrar resultado"
 # (com os dois, a Siri dizia que não conseguia abrir, 19/11/2026); o gatilho dela vem
 # do create_capture_token.
-# O toque não começa com "Lançar gasto": com os dois nomes assim, a Siri achava o de voz e
-# dizia que não conseguia abri-lo (19/11/2026).
-MODOS = {"voz": (None, "Lançar gasto"), "toque": ("toque", "Gasto rápido")}
+MODOS = {"voz": (None, "Lançar gasto"), "toque": ("toque", "Lançar gasto rápido")}
 
 
 def url_da_captura() -> str:

@@ -18,8 +18,8 @@ export const MODOS_DO_ATALHO: { valor: Modo; rotulo: string; descricao: string; 
         valor: "toque",
         rotulo: "Toque",
         descricao: "Um toque abre o atalho e você digita o gasto.",
-        arquivo: "/atalho/Gasto%20r%C3%A1pido.shortcut",
-        nome: "Gasto rápido",
+        arquivo: "/atalho/Lan%C3%A7ar%20gasto%20r%C3%A1pido.shortcut",
+        nome: "Lançar gasto rápido",
     },
 ]
 

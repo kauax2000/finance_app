@@ -33,7 +33,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 /** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
 export const DESCRICAO_DA_AUTOMACAO =
-    "Quando eu pagar com a Carteira, executar o atalho Lançar gasto (ou, se não houver, Gasto rápido) na hora, sem pedir confirmação."
+    "Quando eu pagar com a Carteira, executar o atalho Lançar gasto (ou, se não houver, Lançar gasto rápido) na hora, sem pedir confirmação."
 
 const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela }[] = [
     {
@@ -66,7 +66,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
                 <CampoDeCopiar rotulo="Descrição da automação" valor={DESCRICAO_DA_AUTOMACAO} multilinha />
                 <Muted>
                     Sem essa caixa? Toque em <strong>Transação</strong>, marque <strong>Executar Imediatamente</strong>{" "}
-                    e escolha <strong>Lançar gasto</strong> (ou <strong>Gasto rápido</strong>, se instalou o de toque).
+                    e escolha <strong>Lançar gasto</strong> (ou <strong>Lançar gasto rápido</strong>, se instalou o de toque).
                 </Muted>
             </>
         ),
@@ -88,7 +88,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
                                 <strong>Executar Imediatamente</strong> ligado
                             </>,
                             <>
-                                Ação: <strong>Lançar gasto</strong> (ou <strong>Gasto rápido</strong>)
+                                Ação: <strong>Lançar gasto</strong> (ou <strong>Lançar gasto rápido</strong>)
                             </>,
                         ].map((linha, i) => (
                             <Item key={i} variant="flush">
