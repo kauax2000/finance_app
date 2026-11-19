@@ -51,15 +51,24 @@ import {
     TruckIcon as MiniTruckIcon,
     UserGroupIcon as MiniUserGroupIcon,
 } from "@heroicons/react/20/solid"
+import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
 import type { HeroIcon } from "@/types/navigation"
 import {
     FieldTitle,
 } from "@/components/ui/field"
+import { Label } from "@/components/ui/label"
+import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
 import {
     ToggleGroup,
     ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-import { TILE_COLORS, TILE_PALETTE } from "@/lib/tile-palette"
+import {
+    TILE_COLORS,
+    TILE_PALETTE,
+    TILE_WORKSPACE_DEFAULT,
+    tileColorFor,
+} from "@/lib/tile-palette"
+import { cn } from "@/lib/utils"
 
 /**
  * As amostras de cor da categoria: **as oito paradas do arco-íris da marca**,
@@ -103,6 +112,31 @@ export const CATEGORY_ICONS = [
 
 export type CategoryIconId = (typeof CATEGORY_ICONS)[number]
 
+/** O que a grade oferece: um desenho por id. Os ids que o Heroicons não separa
+    de outro (pet, cachorro, gato, ônibus, bicicleta, remédio, médico) seguem em
+    `CATEGORY_ICONS` para as categorias já gravadas, mas não são escolha nova. */
+export const CATEGORY_GRID_ICONS: readonly CategoryIconId[] = [
+    "utensils",
+    "car",
+    "home",
+    "gamepad-2",
+    "heart",
+    "graduation-cap",
+    "laptop",
+    "briefcase",
+    "trending-up",
+    "gift",
+    "shopping-cart",
+    "coffee",
+    "plane",
+    "phone",
+    "zap",
+    "more-horizontal",
+    "users-round",
+    "shopping-bag",
+    "receipt",
+]
+
 /** Nome do ícone para leitor de tela: a chave ("utensils") vazava em inglês. */
 export const CATEGORY_ICON_LABELS: Record<CategoryIconId, string> = {
     utensils: "Alimentação",
@@ -136,7 +170,7 @@ export const CATEGORY_ICON_LABELS: Record<CategoryIconId, string> = {
 /** O corpo do ícone acompanha a caixa em que ele é desenhado. */
 type CategoryIconSet = { micro: HeroIcon; mini: HeroIcon }
 
-const categoryIconComponents: Record<CategoryIconId, CategoryIconSet> = {
+export const categoryIconComponents: Record<CategoryIconId, CategoryIconSet> = {
     utensils: { micro: MicroCakeIcon, mini: MiniCakeIcon },
     car: { micro: MicroTruckIcon, mini: MiniTruckIcon },
     home: { micro: MicroHomeIcon, mini: MiniHomeIcon },
@@ -199,6 +233,10 @@ export function CategoryColorSwatches({
     onChange: (color: string) => void
     idPrefix?: string
 }) {
+    const cor = tileColorFor(value) ?? ""
+    const daPaleta =
+        TILE_PALETTE.find(({ hex }) => hex.toLowerCase() === cor.toLowerCase())?.hex ?? ""
+
     return (
         // Escolha única: `ToggleGroup`, com setas e sem desmarcar tudo. A
         // amostra é a do sistema (`variant="swatch"`): a cor na claridade do
@@ -207,8 +245,10 @@ export function CategoryColorSwatches({
             type="single"
             variant="swatch"
             size="icon-md"
-            value={value}
-            onValueChange={(next) => onChange(next)}
+            value={daPaleta}
+            onValueChange={(next) => {
+                if (next) onChange(next)
+            }}
             aria-label="Cor da categoria"
             className="flex-wrap gap-2"
         >
@@ -223,6 +263,25 @@ export function CategoryColorSwatches({
                     aria-label={`Cor ${nome}`}
                 />
             ))}
+            {/* A cor livre é a nona amostra, como na carteira: o seletor
+                nativo mora escondido num `Label` que veste a amostra. */}
+            <Label
+                data-state={daPaleta ? "off" : "on"}
+                className={cn(
+                    toggleVariants({ variant: "swatch", size: "icon-md" }),
+                    "relative cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/45"
+                )}
+                style={toggleStyle(daPaleta ? null : cor)}
+            >
+                {daPaleta ? <EyeDropperIcon className="size-4" aria-hidden /> : <CheckIcon className="size-4" aria-hidden />}
+                <input
+                    type="color"
+                    value={/^#[0-9A-Fa-f]{6}$/.test(cor) ? cor : TILE_WORKSPACE_DEFAULT}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="sr-only"
+                    aria-label="Outra cor"
+                />
+            </Label>
         </ToggleGroup>
     )
 }
@@ -235,6 +294,10 @@ export function CategoryIconGrid({
     onChange: (icon: CategoryIconId) => void
 }) {
     const normalized = normalizeCategoryIcon(value)
+    // Ícone antigo fora da grade: aparece primeiro e marcado, para não se perder ao editar.
+    const ids = CATEGORY_GRID_ICONS.includes(normalized)
+        ? CATEGORY_GRID_ICONS
+        : [normalized, ...CATEGORY_GRID_ICONS]
 
     return (
         <ToggleGroup
@@ -242,11 +305,13 @@ export function CategoryIconGrid({
             variant="outline"
             size="icon-lg"
             value={normalized}
-            onValueChange={(next) => onChange(next as CategoryIconId)}
+            onValueChange={(next) => {
+                if (next) onChange(next as CategoryIconId)
+            }}
             aria-label="Ícone da categoria"
             className="flex-wrap gap-1.5"
         >
-            {CATEGORY_ICONS.map((key) => (
+            {ids.map((key) => (
                 <ToggleGroupItem
                     key={key}
                     value={key}

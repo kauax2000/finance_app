@@ -256,6 +256,7 @@ const RAW_PRIMITIVE_EXCEPTIONS = [
   ["importar/conferir-importacao", "button"],
   // O seletor de cor nativo não tem peça; o `Input` lhe daria a moldura de campo.
   ["workspace-appearance-form-fields", "input"],
+  ["categories/category-appearance-fields", "input"],
   // Substitui o layout raiz quando o resto quebrou: o CSS do sistema pode não
   // ter carregado, e o botão é estilo em linha.
   ["src/app/global-error.tsx", "button"],
