@@ -2,11 +2,19 @@
 
 import { useState, type MouseEvent, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
-import { CursorArrowRippleIcon, MicrophoneIcon } from "@heroicons/react/16/solid"
+import {
+    CursorArrowRippleIcon,
+    DevicePhoneMobileIcon,
+    HandRaisedIcon,
+    LockClosedIcon,
+    MicrophoneIcon,
+    Squares2X2Icon,
+} from "@heroicons/react/16/solid"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
 import { nomeLivre } from "@/components/account/nome-livre"
+import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
     JanelaDoAparelho,
@@ -27,13 +35,15 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, FormSubmit } from "@/components/ui/form"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
+import { menuPanelTintClassName } from "@/lib/glass-classes"
 import { supabase, type CaptureToken } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 import baixar from "./assets/atalho-1-baixar.webp"
 import arquivos from "./assets/atalho-2-arquivos.webp"
 import configurar from "./assets/atalho-3-configurar.webp"
@@ -104,12 +114,15 @@ const COMO_ABRIR: Record<Gatilho, { texto: string; tela: Tela }> = {
     },
 }
 
-/** As abas do último passo no toque: onde o mesmo "Lançar gasto rápido" pode morar. Rótulos curtos: as quatro cabem em 343px; o nome inteiro está no texto da aba. */
-const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string }[] = [
-    { valor: "acao", rotulo: "Botão" },
-    { valor: "toque", rotulo: "Costas" },
-    { valor: "bloqueio", rotulo: "Bloqueio" },
-    { valor: "inicio", rotulo: "Ícone" },
+/**
+ * Onde o mesmo "Lançar gasto rápido" pode morar: os ícones da legenda do passo 1 (com `nome`)
+ * e as abas do último passo. Rótulos curtos nas abas: as quatro cabem em 343px; o nome inteiro está no texto da aba.
+ */
+const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string; nome: string; icone: typeof MicrophoneIcon }[] = [
+    { valor: "acao", rotulo: "Botão", nome: "Botão de Ação", icone: DevicePhoneMobileIcon },
+    { valor: "toque", rotulo: "Costas", nome: "Costas", icone: HandRaisedIcon },
+    { valor: "bloqueio", rotulo: "Bloqueio", nome: "Bloqueio", icone: LockClosedIcon },
+    { valor: "inicio", rotulo: "Ícone", nome: "Ícone", icone: Squares2X2Icon },
 ]
 
 /**
@@ -230,7 +243,10 @@ export function GuiaDoAtalho({
 
     /** Os textos dos passos; o do último sai de `alvo`, para cada fantasma medir a própria combinação. */
     const textos = (alvo: Gatilho): ReactNode[] => [
-        "Os dois lançam na mesma carteira, com o mesmo código. Dá para ter os dois.",
+        <>
+            {MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(alvo))!.descricao} Instala{" "}
+            <strong>{MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(alvo))!.nome}</strong>.
+        </>,
         "O nome ajuda a reconhecer o aparelho na lista.",
         noAppDoIphone ? (
             <>
@@ -269,6 +285,8 @@ export function GuiaDoAtalho({
      */
     function passoDe(i: number, alvo: Gatilho, fantasma = false) {
         const outro = MODOS_DO_ATALHO.find((m) => m.valor !== modoDoGatilho(alvo))!
+        const texto = textos(alvo)[i]
+        const ondeFica = LUGARES.find((l) => l.valor === alvo)
         return (
             <>
                 <PecaDoPasso>
@@ -276,31 +294,78 @@ export function GuiaDoAtalho({
                         {i + 1} · {PASSOS[i].titulo}
                         <span className="sr-only"> de {PASSOS.length}</span>
                     </P>
-                    <Muted>{textos(alvo)[i]}</Muted>
+                    {/* No passo 1 a frase vem embaixo do seletor. */}
+                    {i === 0 ? null : <Muted>{texto}</Muted>}
                 </PecaDoPasso>
 
-                {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
+                {/*
+                 * O passo 1 é o palco: o celular grande mostra o que o modo faz, a legenda de vidro
+                 * sobe sobre a base dele (a Siri, ou o lugar do toque com os quatro ícones), e o
+                 * seletor vem embaixo. A legenda tem altura fixa: nada pula entre Voz e Toque.
+                 */}
                 {i === 0 ? (
-                    <PecaDoPasso>
-                        <RadioGroup
-                            aria-label="Como você vai usar o atalho"
-                            variant="card"
-                            value={modo}
-                            disabled={fantasma}
-                            onValueChange={(v) => setModo(v as Modo)}
+                    <>
+                        <PecaDoPasso className="mt-2">
+                            <JanelaDoAparelho tamanho="palco" tela={COMO_ABRIR[alvo].tela} />
+                        </PecaDoPasso>
+                        <PecaDoPasso
+                            className={cn(
+                                menuPanelTintClassName,
+                                "relative -mt-20 flex h-14 items-center gap-3 rounded-surface px-3 ring-1 ring-foreground/10"
+                            )}
                         >
-                            {MODOS_DO_ATALHO.map((o) => (
-                                <RadioGroupItem
-                                    key={o.valor}
-                                    value={o.valor}
-                                    description={o.descricao}
-                                    icon={o.valor === "voz" ? <MicrophoneIcon /> : <CursorArrowRippleIcon />}
-                                >
-                                    {o.rotulo}
-                                </RadioGroupItem>
-                            ))}
-                        </RadioGroup>
-                    </PecaDoPasso>
+                            {ondeFica ? (
+                                <>
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-row bg-foreground text-background">
+                                        <ondeFica.icone aria-hidden className="size-4" />
+                                    </span>
+                                    <P className="min-w-0 flex-1 truncate font-semibold">{ondeFica.nome}</P>
+                                    <ToggleGroup
+                                        type="single"
+                                        size="icon-sm"
+                                        aria-label="Onde fica o atalho"
+                                        value={alvo}
+                                        disabled={fantasma}
+                                        onValueChange={(v) => setLugar(v as Exclude<Gatilho, "siri">)}
+                                        className="shrink-0"
+                                    >
+                                        {LUGARES.map((l) => (
+                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} />
+                                        ))}
+                                    </ToggleGroup>
+                                </>
+                            ) : (
+                                <>
+                                    <OrbeDaSiri className="size-8 shrink-0" />
+                                    <P className="min-w-0 flex-1 truncate font-semibold">“E aí Siri, Lançar gasto”</P>
+                                </>
+                            )}
+                        </PecaDoPasso>
+                        <PecaDoPasso>
+                            <ToggleGroup
+                                type="single"
+                                variant="segmented"
+                                stretch
+                                aria-label="Como você vai usar o atalho"
+                                value={modoDoGatilho(alvo)}
+                                disabled={fantasma}
+                                onValueChange={(v) => setModo(v as Modo)}
+                            >
+                                {MODOS_DO_ATALHO.map((o) => (
+                                    <ToggleGroupItem
+                                        key={o.valor}
+                                        value={o.valor}
+                                        icon={o.valor === "voz" ? MicrophoneIcon : CursorArrowRippleIcon}
+                                    >
+                                        {o.rotulo}
+                                    </ToggleGroupItem>
+                                ))}
+                            </ToggleGroup>
+                        </PecaDoPasso>
+                        <PecaDoPasso>
+                            <Muted className="text-center">{texto}</Muted>
+                        </PecaDoPasso>
+                    </>
                 ) : null}
                 {i === 2 ? (
                     <PecaDoPasso className="flex flex-col">
@@ -399,8 +464,9 @@ export function GuiaDoAtalho({
         )
     }
 
-    // Todo passo, e o último na voz e em cada aba do toque: a caixa tem a altura do maior.
+    // Todo passo, o primeiro em Voz e em Toque, e o último na voz e em cada aba do toque: a caixa tem a altura do maior.
     const fantasmas = [
+        passoDe(0, "siri", true),
         ...PASSOS.slice(0, -1).map((_, i) => passoDe(i, lugar, true)),
         ...(["siri", ...LUGARES.map((l) => l.valor)] as Gatilho[]).map((a) => passoDe(PASSOS.length - 1, a, true)),
     ]
@@ -444,7 +510,7 @@ export function GuiaDoAtalho({
                         {passo === 0 ? (
                             <>
                                 <FormCancel onClick={fechar}>Cancelar</FormCancel>
-                                <FormSubmit>Próximo</FormSubmit>
+                                <FormSubmit>{`Continuar com ${atual.rotulo}`}</FormSubmit>
                             </>
                         ) : passo === 1 ? (
                             <>

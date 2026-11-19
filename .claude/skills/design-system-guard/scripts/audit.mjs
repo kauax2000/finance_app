@@ -157,6 +157,9 @@ const DRAWN_SVG_FILES = [
   "components/ui/seal",
   // O `QrCode`: a matriz é um desenho (um `<path>` de módulos), não um ícone.
   "components/ui/qr-code",
+  // O orbe da Siri no passo 1 do guia do atalho: pictograma pedido pelo dono
+  // (19/11/2026), um desenho de brilhos da marca, não o logo da Apple.
+  "account/orbe-da-siri",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
   "designsystem/docs/motion",
 ]

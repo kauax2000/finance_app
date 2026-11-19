@@ -68,6 +68,8 @@ const JANELA = {
     padrao: { caixa: "mx-auto h-72 w-60", imagem: "w-60", sizes: "240px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
     compacta: { caixa: "mx-auto h-36 w-48", imagem: "w-48", sizes: "192px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_4rem)]" },
     mini: { caixa: "h-40 w-36", imagem: "w-36", sizes: "144px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_2.5rem)]" },
+    // O aparelho grande do passo 1 do atalho: sempre do topo, sem alvo, e a base some num degradê longo, sob a legenda.
+    palco: { caixa: "mx-auto h-80 w-64", imagem: "w-64", sizes: "256px", topo: "[mask-image:linear-gradient(to_top,transparent,#000_8rem)]" },
 } as const
 
 export function JanelaDoAparelho({
@@ -75,10 +77,13 @@ export function JanelaDoAparelho({
     tamanho = "padrao",
 }: {
     tela: Tela
-    /** `padrao` nos passos, `compacta` no vazio da seção, `mini` ao lado de um texto. */
+    /** `padrao` nos passos, `compacta` no vazio da seção, `mini` ao lado de um texto, `palco` no passo 1 do atalho. */
     tamanho?: keyof typeof JANELA
 }) {
     const j = JANELA[tamanho]
+    // O palco mostra o que o modo faz, não onde tocar: sempre o topo do aparelho, sem alvo.
+    const palco = tamanho === "palco"
+    const topo = palco || tela.ancora === "topo"
     const fantasma = useContext(Fantasma)
     // O fantasma guarda o tamanho da janela (a caixa é fixa) sem baixar a imagem.
     if (fantasma) return <div aria-hidden className={cn("shrink-0", j.caixa)} />
@@ -89,14 +94,14 @@ export function JanelaDoAparelho({
                 "relative shrink-0 overflow-hidden",
                 j.caixa,
                 // O aparelho dissolve no lado em que a janela o corta.
-                tela.ancora === "topo" ? j.topo : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
+                topo ? j.topo : "[mask-image:linear-gradient(to_bottom,transparent,#000_4rem)]"
             )}
         >
             {/* A janela mede 288 e o aparelho inteiro, 496: ancorado embaixo, ele sobe 208. */}
             <div
                 className={cn(
                     "absolute inset-x-0 aspect-[720/1488]",
-                    tela.ancora === "topo" ? "top-0" : "-top-52"
+                    topo ? "top-0" : "-top-52"
                 )}
             >
                 <Image
@@ -110,7 +115,7 @@ export function JanelaDoAparelho({
                     placeholder="blur"
                     className={cn("absolute inset-0 h-auto max-w-none", j.imagem)}
                 />
-                {tela.ponto ? (
+                {tela.ponto && !palco ? (
                     <span
                         style={{ left: `${tela.ponto.x}%`, top: `${tela.ponto.y}%` }}
                         className="absolute size-8 -translate-x-1/2 -translate-y-1/2"
