@@ -13,7 +13,7 @@ import {
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
-import { nomeLivre } from "@/components/account/nome-livre"
+import { nomeSugerido } from "@/components/account/nome-livre"
 import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
@@ -153,6 +153,8 @@ export function GuiaDoAtalho({
     // O primeiro passo ao abrir não entra pelo lado: só a troca de passo anda.
     const [mudou, setMudou] = useState(false)
     const [nome, setNome] = useState("")
+    // Enquanto a pessoa não mexe no campo, trocar o modo troca o sufixo do nome sugerido.
+    const [nomeEditado, setNomeEditado] = useState(false)
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
@@ -163,6 +165,9 @@ export function GuiaDoAtalho({
     const { isStandalone } = useDisplayMode()
     const noAppDoIphone = useIsIos() && isStandalone
     usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...Object.values(COMO_ABRIR).map((c) => c.tela)])
+
+    const primeiroNome = () => (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
+    const baseDoNome = (primeiro: string) => (primeiro ? `iPhone de ${primeiro}` : "iPhone")
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
@@ -175,8 +180,9 @@ export function GuiaDoAtalho({
             setModo(modoDoGatilho(substituir?.atalho_gatilho ?? null))
             setLugar(LUGARES.find((l) => l.valor === substituir?.atalho_gatilho)?.valor ?? "acao")
             setMudou(false)
-            const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
-            setNome(substituir?.name ?? nomeLivre(primeiro ? `iPhone de ${primeiro}` : "iPhone", nomesEmUso))
+            const primeiro = primeiroNome()
+            setNomeEditado(false)
+            setNome(substituir?.name ?? nomeSugerido(baseDoNome(primeiro), modoDoGatilho(substituir?.atalho_gatilho ?? null), nomesEmUso))
             setCarteira(substituir?.workspace_id ?? "")
             setErro(null)
         }
@@ -351,7 +357,12 @@ export function GuiaDoAtalho({
                                 aria-label="Como você vai usar o atalho"
                                 value={modoDoGatilho(alvo)}
                                 disabled={fantasma}
-                                onValueChange={(v) => v && setModo(v as Modo)}
+                                onValueChange={(v) => {
+                                    if (!v) return
+                                    setModo(v as Modo)
+                                    if (!nomeEditado && !substituir && codigo == null)
+                                        setNome(nomeSugerido(baseDoNome(primeiroNome()), v as Modo, nomesEmUso))
+                                }}
                             >
                                 {MODOS_DO_ATALHO.map((o) => (
                                     <ToggleGroupItem
@@ -433,8 +444,12 @@ export function GuiaDoAtalho({
                             value={nome}
                             maxLength={60}
                             disabled={fantasma || codigo != null}
-                            onChange={(e) => setNome(e.target.value)}
+                            onChange={(e) => {
+                                setNomeEditado(true)
+                                setNome(e.target.value)
+                            }}
                         />
+                        <Muted>O atalho se chama {atual.nome}.</Muted>
                         {substituir ? (
                             <Muted>O código antigo para de funcionar quando você criar este.</Muted>
                         ) : null}

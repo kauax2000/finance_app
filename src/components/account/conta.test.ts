@@ -4,6 +4,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
 import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
 import { legendaDoAparelho } from "@/components/account/atalho-secao"
+import { nomeComModo, nomeSugerido } from "@/components/account/nome-livre"
 import type { CaptureToken } from "@/lib/supabase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -607,8 +608,19 @@ describe("a lista de aparelhos", () => {
         const base = { last_used_at: null, atalho_gatilho: null } as CaptureToken
         expect(legendaDoAparelho(base, "Casa")).toBe("Casa · ainda não lançou nada")
         expect(legendaDoAparelho({ ...base, atalho_gatilho: "inicio" }, "Casa")).toBe("Casa · Toque · ainda não lançou nada")
+        expect(legendaDoAparelho({ ...base, name: "iPhone · Toque", atalho_gatilho: "toque" }, "Casa")).toBe("Casa · ainda não lançou nada")
         expect(rotuloDoGatilho("bloqueio")).toBe("Toque")
         expect(rotuloDoGatilho("siri")).toBe("Siri")
         expect(rotuloDoGatilho(null)).toBeNull()
+    })
+})
+
+describe("o modo no nome do aparelho", () => {
+    it("acrescenta ou troca o sufixo, e evita nome repetido", () => {
+        expect(nomeComModo("iPhone de Kauã", "voz")).toBe("iPhone de Kauã · Voz")
+        expect(nomeComModo("iPhone de Kauã · Voz", "toque")).toBe("iPhone de Kauã · Toque")
+        expect(nomeSugerido("iPhone", "voz", ["iPhone · Voz"])).toBe("iPhone 2 · Voz")
+        expect(nomeSugerido("iPhone", "toque", ["iPhone · Voz"])).toBe("iPhone · Toque")
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain("O atalho se chama")
     })
 })
