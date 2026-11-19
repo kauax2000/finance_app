@@ -10,7 +10,8 @@
  * Atalho v2: o `GET` (sem corpo) devolve o modo da conta (frase ou formulário)
  * e as listas do formulário da carteira padrão; o `POST` do formulário manda o
  * valor e os nomes escolhidos (`category`, `payment`). O cabeçalho
- * `X-Atalho-Versao` vai para `capture_tokens.atalho_versao` (nulo = v1).
+ * `X-Atalho-Versao` vai para `capture_tokens.atalho_versao` (nulo = v1); `X-Atalho-Gatilho` (siri, acao,
+ * toque, bloqueio, inicio) vai para `capture_tokens.atalho_gatilho`.
  *
  * Usa a service role, então repete o que a RLS garantiria (Decisão 8): o autor é
  * o dono do token, e a carteira de destino é uma das dele. O aviso aos membros
@@ -443,7 +444,7 @@ Deno.serve(async (req: Request) => {
 
   const { error: usoErr } = await admin
     .from('capture_tokens')
-    .update(usoDoToken(req.headers.get('x-atalho-versao'), new Date().toISOString()))
+    .update(usoDoToken(req.headers.get('x-atalho-versao'), req.headers.get('x-atalho-gatilho'), new Date().toISOString()))
     .eq('id', tokenId)
   if (usoErr) console.error('capture: last_used_at', usoErr)
 

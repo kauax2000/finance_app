@@ -578,6 +578,7 @@ export type Database = {
       }
       capture_tokens: {
         Row: {
+          atalho_gatilho: string | null
           atalho_versao: number | null
           created_at: string
           id: string
@@ -589,6 +590,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          atalho_gatilho?: string | null
           atalho_versao?: number | null
           created_at?: string
           id?: string
@@ -600,6 +602,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          atalho_gatilho?: string | null
           atalho_versao?: number | null
           created_at?: string
           id?: string

@@ -148,6 +148,8 @@ export interface CaptureToken {
     revoked_at: string | null
     /** A versão do atalho que lançou por último (o cabeçalho `X-Atalho-Versao`); nulo = o atalho antigo, sem formulário. */
     atalho_versao: number | null
+    /** O que disparou o atalho por último (o cabeçalho `X-Atalho-Gatilho`); nulo = nunca informou. */
+    atalho_gatilho: "siri" | "acao" | "toque" | "bloqueio" | "inicio" | null
 }
 
 export type SubscriptionBillingInterval =

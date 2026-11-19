@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 
 /** O authenticated só lê estas colunas: o hash nunca sai do banco, e `*` dá 42501. */
-const COLUNAS = "id, user_id, workspace_id, name, created_at, last_used_at, revoked_at, atalho_versao"
+const COLUNAS = "id, user_id, workspace_id, name, created_at, last_used_at, revoked_at, atalho_versao, atalho_gatilho"
 
 /**
  * Os aparelhos de captura da pessoa (Atalho do iPhone, Apple Pay e compartilhar),

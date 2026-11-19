@@ -765,11 +765,13 @@ Deno.test('montarLancamento (formulário): opção fora da lista é opcao_invali
   assertEquals(montarLancamento({ amount: '1', category: 'Mercado' }, ctx()), invalida)
 })
 
-Deno.test('usoDoToken: a versão só entra com X-Atalho-Versao válido; sem ele, a coluna fica como está', () => {
+Deno.test('usoDoToken: versão e gatilho só entram com cabeçalho válido; sem eles, as colunas ficam como estão', () => {
   const AGORA = '2026-04-10T15:00:00.000Z'
-  assertEquals(usoDoToken('2', AGORA), { last_used_at: AGORA, atalho_versao: 2 })
-  assertEquals(usoDoToken(' 99 ', AGORA), { last_used_at: AGORA, atalho_versao: 99 })
-  for (const h of [null, '', '0', '100', '02', '2.5', 'v2', '-1']) {
-    assertEquals(usoDoToken(h, AGORA), { last_used_at: AGORA })
-  }
+  assertEquals(usoDoToken('2', null, AGORA), { last_used_at: AGORA, atalho_versao: 2 })
+  assertEquals(usoDoToken(' 99 ', null, AGORA), { last_used_at: AGORA, atalho_versao: 99 })
+  for (const h of [null, '', '0', '100', '02', '2.5', 'v2', '-1']) assertEquals(usoDoToken(h, null, AGORA), { last_used_at: AGORA })
+  assertEquals(usoDoToken('2', ' toque ', AGORA), { last_used_at: AGORA, atalho_versao: 2, atalho_gatilho: 'toque' })
+  for (const g of ['siri', 'acao', 'toque', 'bloqueio', 'inicio'])
+    assertEquals(usoDoToken(null, g, AGORA), { last_used_at: AGORA, atalho_gatilho: g })
+  for (const g of [null, '', 'Siri', 'toque2', 'apple_pay']) assertEquals(usoDoToken(null, g, AGORA), { last_used_at: AGORA })
 })

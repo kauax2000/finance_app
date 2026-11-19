@@ -458,16 +458,25 @@ function montarDoFormulario(
   }
 }
 
+export const GATILHOS_DO_ATALHO = ['siri', 'acao', 'toque', 'bloqueio', 'inicio']
+
 /**
  * O update de `capture_tokens` a cada uso válido. `atalho_versao` só entra com
- * `X-Atalho-Versao` válido (1 a 99): a automação do Apple Pay e a folha de
- * compartilhar usam o mesmo token sem o cabeçalho, e não podem zerar a versão
- * (nulo = atalho v1, "baixe de novo").
+ * `X-Atalho-Versao` válido (1 a 99) e `atalho_gatilho` só com `X-Atalho-Gatilho`
+ * conhecido: a automação do Apple Pay e a folha de compartilhar usam o mesmo
+ * token sem os cabeçalhos, e não podem zerar as colunas (nulo = atalho v1,
+ * "baixe de novo").
  */
 export function usoDoToken(
-  cabecalho: string | null,
+  versao: string | null,
+  gatilho: string | null,
   agora: string,
-): { last_used_at: string; atalho_versao?: number } {
-  const v = cabecalho?.trim() ?? ''
-  return /^[1-9]\d?$/.test(v) ? { last_used_at: agora, atalho_versao: Number(v) } : { last_used_at: agora }
+): { last_used_at: string; atalho_versao?: number; atalho_gatilho?: string } {
+  const v = versao?.trim() ?? ''
+  const g = gatilho?.trim() ?? ''
+  return {
+    last_used_at: agora,
+    ...(/^[1-9]\d?$/.test(v) && { atalho_versao: Number(v) }),
+    ...(GATILHOS_DO_ATALHO.includes(g) && { atalho_gatilho: g }),
+  }
 }
