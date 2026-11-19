@@ -1,6 +1,7 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
@@ -43,13 +44,14 @@ describe("OrdemDasCategorias", () => {
         expect(html).toContain("dropdown-menu-trigger")
     })
 
-    it("no desktop o gatilho é o nome da ordem, sem fundo (terciário), como o mês", () => {
+    it("no desktop o gatilho é só o ícone, sem fundo (terciário)", () => {
         const html = renderToStaticMarkup(
-            h(OrdemDasCategorias, { tipo: "expense", criterio: "nome", onCriterioChange: () => {} }),
+            h(TooltipProvider, null, h(OrdemDasCategorias, { tipo: "expense", criterio: "nome", onCriterioChange: () => {} })),
         )
         expect(html).toContain('aria-label="Ordenar categorias: Nome"')
         expect(html).toContain('data-variant="tertiary"')
         expect(html).not.toContain("select-trigger")
+        expect(html).not.toMatch(/>\s*Nome\s*</)
     })
 
     it("as quatro opções moram no arquivo", () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { BarsArrowDownIcon, ChevronDownIcon } from "@heroicons/react/16/solid"
+import { BarsArrowDownIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { Fragment } from "react"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CriterioDeOrdem } from "@/lib/categoria-situacao"
 import { formatMonthLongPtBr } from "@/lib/transaction-date"
 
@@ -31,8 +32,7 @@ const opcoesDeOrdem = (tipo: Tipo): { value: CriterioDeOrdem; label: string }[] 
     { value: "variacao", label: "Variação" },
 ]
 
-/** A ordem da grade: um menu de rádio. No desktop o gatilho é o nome da ordem, sem fundo, como o
- *  mês ao lado; no telefone (`compacta`), um botão de ícone. */
+/** A ordem da grade: um menu de rádio. No desktop o gatilho é só o ícone, sem fundo, com a dica "Ordenar"; no telefone (`compacta`), um botão de ícone. */
 export function OrdemDasCategorias({
     tipo,
     criterio,
@@ -48,18 +48,29 @@ export function OrdemDasCategorias({
     const atual = opcoes.find((o) => o.value === criterio) ?? opcoes[0]
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                {compacta ? (
+            {compacta ? (
+                <DropdownMenuTrigger asChild>
                     <Button type="button" variant="floating" size="icon-md" aria-label="Ordenar categorias">
                         <BarsArrowDownIcon aria-hidden />
                     </Button>
-                ) : (
-                    <Button type="button" variant="tertiary" aria-label={`Ordenar categorias: ${atual.label}`} className="font-medium">
-                        {atual.label}
-                        <ChevronDownIcon aria-hidden className="text-muted-foreground" />
-                    </Button>
-                )}
-            </DropdownMenuTrigger>
+                </DropdownMenuTrigger>
+            ) : (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                size="icon-lg"
+                                aria-label={`Ordenar categorias: ${atual.label}`}
+                            >
+                                <BarsArrowDownIcon aria-hidden />
+                            </Button>
+                        </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>Ordenar</TooltipContent>
+                </Tooltip>
+            )}
             <DropdownMenuContent align="end">
                 <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
                     {opcoes.map((o) => (
