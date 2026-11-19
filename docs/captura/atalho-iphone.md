@@ -83,7 +83,7 @@ valor real de nenhum deles.**
 | Marcador | O que é | Onde achar |
 | --- | --- | --- |
 | `<URL>` | o endereço da captura | o `NEXT_PUBLIC_SUPABASE_URL` do projeto seguido de `/functions/v1/capture` (o app não o mostra: ele já vem dentro do atalho baixado) |
-| `<TOKEN>` | o seu token pessoal, que o app chama de "código do aparelho" | Configurações › "Lançar pelo iPhone" › Adicionar iPhone (o passo 1 o cria; aparece no passo 5, e some ao fechar o guia) |
+| `<TOKEN>` | o seu token pessoal, que o app chama de "código do atalho" | Configurações › "Lançar pelo iPhone" › Adicionar atalho (o passo 2 o cria; aparece no passo 5, e some ao fechar o guia) |
 
 ## 1. Crie o token
 
@@ -296,9 +296,9 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 ## 6. Perdeu o aparelho? Revogue o token
 
 Em **Configurações** › "Lançar pelo iPhone", toque em **Desconectar** no
-aparelho e confirme em "Desconectar este atalho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
+atalho e confirme em "Desconectar este atalho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
-O aparelho desconectado sai da lista. Para voltar a lançar, conecte de novo.
+O atalho desconectado sai da lista. Para voltar a lançar, conecte de novo.
 
 ## 7. Opcional: Android avançado
 

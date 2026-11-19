@@ -2364,7 +2364,7 @@ continuam aqui para registro.
 | Era | Lacuna | O que fechou |
 |---|---|---|
 | 107 | O QR Code de Configurações abre `/settings#no-celular` no telefone, mas, sem sessão no telefone, o `AuthGuard` montava o `next` do login sem o hash: depois do login a pessoa chegava ao topo de Configurações, não à seção | O `AuthGuard` soma `window.location.hash` ao `next` (codificado com o resto); `getSafeInternalNextPath` já aceita o `#`, e o `router.push` do login rola até a seção |
-| 19 | O link do guia do Atalho apontava para `docs/captura/atalho-iphone.md` em `main` no GitHub e dava 404 até o `finance-app-2.0` ir para `main` | O guia saiu do GitHub: "Adicionar iPhone" abre o `GuiaDoAtalho` dentro do app, e `docs/captura/atalho-iphone.md` virou referência de quem monta à mão |
+| 19 | O link do guia do Atalho apontava para `docs/captura/atalho-iphone.md` em `main` no GitHub e dava 404 até o `finance-app-2.0` ir para `main` | O guia saiu do GitHub: "Adicionar atalho" abre o `GuiaDoAtalho` dentro do app, e `docs/captura/atalho-iphone.md` virou referência de quem monta à mão |
 | 3 | As subpáginas de sessões e de atividade redirecionavam para `/login` sem `next`, então a pessoa não voltava para a página depois de entrar | As duas subpáginas saíram com a tela nova de Minha conta (404), e o front não lista mais sessões nem atividade |
 
 ### Fechadas no Bloco 9b (26/out/2026)
