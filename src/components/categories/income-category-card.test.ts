@@ -40,9 +40,8 @@ describe("IncomeCategoryCard pelo fonte", () => {
     })
 
     it("a variação é invertida: subir é receita, cair é despesa", () => {
-        expect(fonte).toContain('up: "income"')
-        expect(fonte).toContain('down: "expense"')
-        expect(fonte).toContain("<Badge")
+        expect(fonte).toContain('up: "text-income"')
+        expect(fonte).toContain('down: "text-expense"')
     })
 
     it("sai o Ver categoria", () => {
