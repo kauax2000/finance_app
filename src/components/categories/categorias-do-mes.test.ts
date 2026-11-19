@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
-const { CategoriasDoMesCabecalho, SemMovimentoNoMes, mesNaFrase } = await import("./categorias-do-mes")
+const { ContagemDoMes, OrdemDasCategorias, SemMovimentoNoMes, mesNaFrase } = await import("./categorias-do-mes")
 
 beforeAll(() => {
     vi.useFakeTimers({ now: new Date(2026, 10, 19, 12) })
@@ -12,17 +12,6 @@ beforeAll(() => {
 afterAll(() => {
     vi.useRealTimers()
 })
-
-const cabecalho = (quantidade: number, tipo: "expense" | "income") =>
-    renderToStaticMarkup(
-        h(CategoriasDoMesCabecalho, {
-            quantidade,
-            mesYm: "2026-11",
-            tipo,
-            criterio: "maior",
-            onCriterioChange: () => {},
-        }),
-    )
 
 describe("mesNaFrase", () => {
     it("o mês do ano corrente sai só pelo nome, em minúscula", () => {
@@ -36,17 +25,37 @@ describe("mesNaFrase", () => {
     })
 })
 
-describe("CategoriasDoMesCabecalho", () => {
-    it("conta as categorias com gasto no mês", () => {
-        expect(cabecalho(5, "expense")).toContain("5 categorias com gasto em novembro")
-    })
+describe("ContagemDoMes", () => {
+    const html = (n: number) => renderToStaticMarkup(h(ContagemDoMes, { quantidade: n }))
 
-    it("na receita, com receita", () => {
-        expect(cabecalho(5, "income")).toContain("5 categorias com receita em novembro")
+    it("conta as categorias, sem a frase do mês", () => {
+        expect(html(10)).toContain("10 categorias")
+        expect(html(10)).not.toContain("com gasto")
     })
 
     it("uma só no singular", () => {
-        expect(cabecalho(1, "expense")).toContain("1 categoria com gasto em novembro")
+        expect(html(1)).toContain("1 categoria")
+        expect(html(1)).not.toContain("1 categorias")
+    })
+
+    it("cola no pé da linha", () => {
+        expect(html(3)).toContain("self-end")
+    })
+})
+
+describe("OrdemDasCategorias", () => {
+    it("compacta é o botão de ícone do menu", () => {
+        const html = renderToStaticMarkup(
+            h(OrdemDasCategorias, { tipo: "expense", criterio: "maior", onCriterioChange: () => {}, compacta: true }),
+        )
+        expect(html).toContain('aria-label="Ordenar categorias"')
+        expect(html).toContain("dropdown-menu-trigger")
+    })
+
+    it("as quatro opções moram no arquivo", () => {
+        const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
+        for (const t of ["Maior receita", "Maior gasto", "Nome", "Variação"]) expect(fonte).toContain(`"${t}"`)
+        expect(fonte).not.toContain("CategoriasDoMesCabecalho")
     })
 })
 

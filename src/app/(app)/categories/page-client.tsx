@@ -43,7 +43,8 @@ import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-re
 import { dividirDoMes, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
 import { useSerieDasCategorias } from "@/hooks/use-serie-das-categorias"
 import {
-    CategoriasDoMesCabecalho,
+    ContagemDoMes,
+    OrdemDasCategorias,
     SemMovimentoNoMes,
     mesNaFrase,
 } from "@/components/categories/categorias-do-mes"
@@ -665,6 +666,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         )
     }
 
+    const doMes = filterType === "income" ? receitas : despesas
+    const mostrarOrdem = numerosProntos && doMes.comMovimento.length > 0
+
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-4">
             {confirmDialog}
@@ -695,6 +699,17 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 showMonthControls
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
+                contagem={mostrarOrdem ? <ContagemDoMes quantidade={doMes.comMovimento.length} /> : undefined}
+                ordem={
+                    mostrarOrdem ? (
+                        <OrdemDasCategorias
+                            tipo={filterType === "income" ? "income" : "expense"}
+                            criterio={criterio}
+                            onCriterioChange={setCriterio}
+                            compacta={isMobile}
+                        />
+                    ) : undefined
+                }
             />
             {/* Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
                 Enquanto salva ou remove o orçamento, nada fecha. */}
@@ -750,13 +765,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <>
                             {receitas.comMovimento.length > 0 ? (
                                 <>
-                                    <CategoriasDoMesCabecalho
-                                        quantidade={receitas.comMovimento.length}
-                                        mesYm={budgetMonthYm}
-                                        tipo="income"
-                                        criterio={criterio}
-                                        onCriterioChange={setCriterio}
-                                    />
                                     <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
                                         {receitas.comMovimento.map(({ category, recebido, previsto, anterior }) => (
                                             <IncomeCategoryCard
@@ -816,13 +824,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <>
                             {despesas.comMovimento.length > 0 ? (
                                 <>
-                                    <CategoriasDoMesCabecalho
-                                        quantidade={despesas.comMovimento.length}
-                                        mesYm={budgetMonthYm}
-                                        tipo="expense"
-                                        criterio={criterio}
-                                        onCriterioChange={setCriterio}
-                                    />
                                     <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
                                         {despesas.comMovimento.map(({ category, lancado, previsto, anterior }) => {
                                             const bud = budgetForCategory(category.id)

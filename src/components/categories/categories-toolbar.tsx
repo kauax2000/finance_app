@@ -340,6 +340,8 @@ export function CategoriesToolbar({
     onJumpToCurrentMonth,
     className,
     includeAll = true,
+    contagem,
+    ordem,
 }: {
     filterType: TransactionFilterType
     onFilterTypeChange: (v: TransactionFilterType) => void
@@ -351,6 +353,10 @@ export function CategoriesToolbar({
     onJumpToCurrentMonth?: () => void
     className?: string
     includeAll?: boolean
+    /** A contagem de categorias do mês: logo depois das abas, só no desktop. */
+    contagem?: React.ReactNode
+    /** A ordem da grade: no grupo da direita, antes do mês. */
+    ordem?: React.ReactNode
 }) {
     // O `justify-between` saiu: com o `ms-auto` do `ToolbarActions` o grupo da
     // direita vai à borda sozinho, e com um grupo só ele continua lá — que é o
@@ -363,8 +369,10 @@ export function CategoriesToolbar({
                 className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 includeAll={includeAll}
             />
+            {contagem ? <div className="flex self-stretch max-md:hidden">{contagem}</div> : null}
 
             <ToolbarActions>
+                {ordem}
                 {showMonthControls ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}

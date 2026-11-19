@@ -1,10 +1,19 @@
 "use client"
 
+import { BarsArrowDownIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { Fragment } from "react"
 import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CriterioDeOrdem } from "@/lib/categoria-situacao"
+import { cn } from "@/lib/utils"
 import { formatMonthLongPtBr } from "@/lib/transaction-date"
 
 type Tipo = "expense" | "income"
@@ -18,38 +27,67 @@ export function mesNaFrase(ym: string, anoAtual: number): string {
 
 const mesDaFrase = (ym: string) => mesNaFrase(ym, new Date().getFullYear())
 
-/** A linha acima da grade: quantas categorias tiveram movimento no mês e a ordem delas. */
-export function CategoriasDoMesCabecalho({
-    quantidade,
-    mesYm,
+/** "10 categorias" / "1 categoria": a contagem que mora na barra, rente ao pé das abas. */
+export function ContagemDoMes({ quantidade, className }: { quantidade: number; className?: string }) {
+    return (
+        <p className={cn("nums self-end text-sm text-muted-foreground", className)}>
+            {quantidade} {quantidade === 1 ? "categoria" : "categorias"}
+        </p>
+    )
+}
+
+const opcoesDeOrdem = (tipo: Tipo): { value: CriterioDeOrdem; label: string }[] => [
+    { value: "maior", label: tipo === "income" ? "Maior receita" : "Maior gasto" },
+    { value: "nome", label: "Nome" },
+    { value: "variacao", label: "Variação" },
+]
+
+/** A ordem da grade: o `Select` no desktop; no telefone (`compacta`), um botão de ícone com o menu. */
+export function OrdemDasCategorias({
     tipo,
     criterio,
     onCriterioChange,
+    compacta,
 }: {
-    quantidade: number
-    mesYm: string
     tipo: Tipo
     criterio: CriterioDeOrdem
     onCriterioChange: (c: CriterioDeOrdem) => void
+    compacta?: boolean
 }) {
-    const movimento = tipo === "income" ? "receita" : "gasto"
-    const categorias = quantidade === 1 ? "categoria" : "categorias"
+    const opcoes = opcoesDeOrdem(tipo)
+    if (compacta) {
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="floating" size="icon-md" aria-label="Ordenar categorias">
+                        <BarsArrowDownIcon aria-hidden />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
+                        {opcoes.map((o) => (
+                            <DropdownMenuRadioItem key={o.value} value={o.value}>
+                                {o.label}
+                            </DropdownMenuRadioItem>
+                        ))}
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+    }
     return (
-        <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-                {quantidade} {categorias} com {movimento} em {mesDaFrase(mesYm)}
-            </p>
-            <Select value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
-                <SelectTrigger size="sm" aria-label="Ordenar categorias">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="maior">{tipo === "income" ? "Maior receita" : "Maior gasto"}</SelectItem>
-                    <SelectItem value="nome">Nome</SelectItem>
-                    <SelectItem value="variacao">Variação</SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
+        <Select value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
+            <SelectTrigger size="sm" aria-label="Ordenar categorias">
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                {opcoes.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
     )
 }
 
