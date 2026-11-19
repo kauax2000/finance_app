@@ -84,6 +84,27 @@ function fotografar(conteudo: HTMLElement): HTMLElement {
     return camada
 }
 
+/**
+ * O cabeçalho parado até o gesto: uma cópia dele, no mesmo lugar e com as mesmas camadas de
+ * borrão (o `backdrop-filter` da cópia é vivo), cobre o de verdade, que fica escondido e
+ * troca de título e de botão por baixo. Sem ela, o cabeçalho virava para a tela nova antes
+ * de o conteúdo andar (simulador, 19/11/2026). Devolve quem solta.
+ */
+function congelarCabecalho(): () => void {
+    const barra = document.querySelector<HTMLElement>('[data-slot="top-bar"]')
+    if (!barra) return () => {}
+    const copia = barra.cloneNode(true) as HTMLElement
+    copia.removeAttribute("data-slot")
+    copia.setAttribute("aria-hidden", "true")
+    copia.inert = true
+    barra.after(copia)
+    barra.style.visibility = "hidden"
+    return () => {
+        copia.remove()
+        barra.style.removeProperty("visibility")
+    }
+}
+
 /** O gesto do push do iOS: a tela de cima corre sobre a de baixo, que recua e escurece. */
 function animar(camada: HTMLElement, conteudo: HTMLElement, direcao: DirecaoDaTela): Promise<void> {
     const css = getComputedStyle(document.documentElement)
@@ -155,6 +176,7 @@ export function TransicaoDeSubpagina() {
             e.preventDefault()
             emCurso = true
             const camada = fotografar(conteudo)
+            const soltarCabecalho = congelarCabecalho()
             const rolagem = window.scrollY
             let novo = conteudo
 
@@ -171,8 +193,11 @@ export function TransicaoDeSubpagina() {
                     window.scrollTo({ top: 0, behavior: "instant" })
                     // A rota nova pode montar outro nó de conteúdo: anima o que está na tela agora.
                     novo = document.querySelector<HTMLElement>("[data-workspace-content]") ?? conteudo
+                    // O cabeçalho da tela nova aparece junto com o gesto.
+                    soltarCabecalho()
                     await animar(camada, novo, direcao)
                 } finally {
+                    soltarCabecalho()
                     camada.remove()
                     for (const p of ["position", "z-index", "background-color", "min-height"]) novo.style.removeProperty(p)
                     emCurso = false
