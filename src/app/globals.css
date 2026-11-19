@@ -766,6 +766,18 @@
     @apply font-sans;
   }
 
+  /* No app instalado do iOS 26/27 (WebKit 301994), com a página mais curta que a
+     tela o `<html>` mede 62pt a menos que ela (894 num 956), e o que é `fixed` com
+     `bottom: 0` (gaveta, véu) para ali: fica uma faixa preta embaixo. Com a página
+     rolável o pé volta ao fim da tela (rodada 344). O documento mede, no mínimo, a
+     tela inteira: nada muda à vista, e o pé é sempre o da tela. Só no instalado: no
+     Safari o `lvh` passa da área visível com a barra de endereço. */
+  @media (display-mode: standalone) {
+    html {
+      min-height: 100lvh;
+    }
+  }
+
   /* Reduced motion: encurtar, não desligar. Zerar tudo congelava o spinner e o
      skeleton, e quem liga a preferência perdia o indicador de "está carregando".
      Transições encurtam (o estado final chega), animações que repetem para sempre
