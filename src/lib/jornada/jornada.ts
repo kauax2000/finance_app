@@ -27,7 +27,7 @@ export function canaisPara(p: Plataforma, cartoesAtivos: readonly string[]): Can
     const proprio: Record<Plataforma, Canal> = {
         iphone: {
             titulo: "Atalho do iPhone",
-            texto: "Fale ou escreva o gasto e o Atalho lança. Conecte o iPhone em Lançar pelo iPhone.",
+            texto: "Fale ou escreva o gasto e o Atalho lança. Adicione um atalho em Lançar pelo iPhone.",
             href: ROUTES.SETTINGS_LANCAR,
         },
         android: {

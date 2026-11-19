@@ -2,7 +2,7 @@
 
 ## Para o dono: o atalho pronto
 
-O guia "Conectar o iPhone" do app pergunta primeiro "Como você vai usar?"
+O guia "Adicionar atalho" do app pergunta primeiro "Como você vai usar?"
 (passo 1: Voz ou Toque) e o botão **Baixar o atalho** entrega o arquivo
 assinado do modo escolhido: `public/atalho/Lançar gasto.shortcut` (voz) ou
 `public/atalho/Lançar gasto rápido.shortcut` (toque). O último passo mostra a
@@ -88,14 +88,13 @@ valor real de nenhum deles.**
 ## 1. Crie o token
 
 1. Abra o app e vá a **Configurações**.
-2. Na seção "Lançar pelo iPhone", toque em **Adicionar iPhone** (ou em
-   **Conectar o iPhone**, quando ainda não há nenhum) e escreva o nome do
-   aparelho, por exemplo "iPhone da Ana".
-3. Escolha a **carteira padrão**. É nela que o gasto cai quando o cartão citado
-   não diz outra carteira.
+2. Na seção "Lançar pelo iPhone", toque em **Adicionar atalho**.
+3. No passo 2, **Escolha a carteira** onde os gastos vão cair. O atalho se chama
+   "Lançar gasto" na voz e "Lançar gasto rápido" no toque; há um atalho de cada
+   modo, e adicionar um novo substitui o do mesmo modo.
 4. Toque em **Criar código**.
 5. Copie o código na hora, se o navegador não o copiou sozinho. Ele **não aparece
-   de novo**. Se perder o código, desconecte o aparelho e crie outro.
+   de novo**. Se perder o código, desconecte o atalho e crie outro.
 
 Cada pessoa tem no máximo 10 tokens ativos.
 
@@ -213,7 +212,7 @@ atalho mostra o motivo do erro.
 Esta automação lança cada compra feita com o Apple Pay.
 
 No app, ela aparece em **Configurações** › "Lançar pelo iPhone", no cartão
-**Lançar ao pagar com Apple Pay**, que surge depois de conectar um aparelho:
+**Lançar ao pagar com Apple Pay**, que surge depois de adicionar um atalho:
 "Configurar" abre um guia de 5 passos: abrir o app Atalhos; Automação › **+**;
 colar a frase pronta em **Descrever um atalho** (iOS 27), que o guia mostra com o
 botão Copiar; conferir e salvar; e a notificação depois de pagar. A frase é:
@@ -297,7 +296,7 @@ imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 ## 6. Perdeu o aparelho? Revogue o token
 
 Em **Configurações** › "Lançar pelo iPhone", toque em **Desconectar** no
-aparelho e confirme em "Desconectar este aparelho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
+aparelho e confirme em "Desconectar este atalho?". Daí em diante, qualquer pedido com ele recebe `401 Token inválido.`.
 
 O aparelho desconectado sai da lista. Para voltar a lançar, conecte de novo.
 
