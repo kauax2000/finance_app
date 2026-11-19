@@ -4457,6 +4457,14 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     --dialog-header-fade-h: calc(var(--spacing) * 14);
     /* Quanto do degradê passa da borda: a ponta mais clara cobre o que passa logo sob as abas (rodada 389). */
     --dialog-header-fade-over: calc(var(--spacing) * 4);
+    /* Onde a placa cheia termina: 56px antes da borda, ou no fim do texto se ele descer
+       mais (o `pb-4` do cabeçalho), o que for mais baixo. Com uma descrição de duas linhas,
+       o degradê começava sobre a segunda e o conteúdo aparecia atrás dela (19/11/2026); o
+       degradê desce junto e passa da borda o quanto precisar. */
+    --dialog-header-solid: max(
+      calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over)),
+      calc(100% - var(--spacing) * 4)
+    );
     position: relative;
     z-index: 10;
 
@@ -4477,11 +4485,11 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
        do cabeçalho escurece. */
     &::before {
       top: 0;
-      height: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
+      height: var(--dialog-header-solid);
       background-color: var(--dialog-header-tint);
     }
     &::after {
-      top: calc(100% - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
+      top: var(--dialog-header-solid);
       height: var(--dialog-header-fade-h);
       /* Uma curva suave (mais paradas, a queda espalhada), e não três retas: a borda
          não aparece como degrau. */
@@ -4523,7 +4531,7 @@ html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
     :not([data-vaul-drawer-direction="top"]) > [data-slot="drag-handle"] + * > :first-child > &:first-child {
       &::before {
         top: calc(var(--drawer-handle-h) * -1);
-        height: calc(100% + var(--drawer-handle-h) - var(--dialog-header-fade-h) + var(--dialog-header-fade-over));
+        height: calc(var(--dialog-header-solid) + var(--drawer-handle-h));
       }
       & + [data-slot="dialog-body"],
       & + form > [data-slot="dialog-body"]:first-child,
