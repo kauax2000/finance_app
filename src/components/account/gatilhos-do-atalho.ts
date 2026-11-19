@@ -38,3 +38,12 @@ export function tituloDoAtalho(t: Pick<CaptureToken, "name" | "atalho_gatilho">)
     if (t.atalho_gatilho == null) return t.name
     return MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(t.atalho_gatilho))!.nome
 }
+
+/**
+ * O atalho que o novo desconecta: um de cada modo. O de `substituir` (Baixar de novo) sai se for do modo escolhido ou
+ * antigo, sem gatilho; trocado o modo, sai o ativo do novo modo, e o de `substituir` fica. Sem gatilho, um ativo nunca é o alvo.
+ */
+export function alvoDaTroca(modo: Modo, substituir: CaptureToken | undefined, atalhos: CaptureToken[]): CaptureToken | undefined {
+    if (substituir && (substituir.atalho_gatilho == null || modoDoGatilho(substituir.atalho_gatilho) === modo)) return substituir
+    return atalhos.find((t) => t.atalho_gatilho != null && modoDoGatilho(t.atalho_gatilho) === modo)
+}

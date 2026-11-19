@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/16/solid"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken } from "@/components/account/atalho-secao"
-import { type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
+import { alvoDaTroca, type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
 import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
@@ -183,9 +183,7 @@ export function GuiaDoAtalho({
     const nomeDaCarteira = workspaces.find((w) => w.id === carteiraEscolhida)?.name ?? "sua carteira"
     const ultimo = passo === PASSOS.length - 1
     const atual = MODOS_DO_ATALHO.find((m) => m.valor === modo)!
-    // Um atalho de cada modo: o novo troca o do mesmo modo. Sem gatilho informado, não se sabe o modo, e ele fica.
-    const trocado =
-        substituir ?? atalhos.find((t) => t.atalho_gatilho != null && modoDoGatilho(t.atalho_gatilho) === modo)
+    const trocado = alvoDaTroca(modo, substituir, atalhos)
 
     function irPara(n: number) {
         setMudou(true)
@@ -435,7 +433,11 @@ export function GuiaDoAtalho({
 
                 {i === 1 ? (
                     <PecaDoPasso className="flex flex-col gap-4">
-                        {trocado && codigo == null ? <Muted>Substitui o seu atalho de {modo} atual.</Muted> : null}
+                        {trocado && codigo == null ? (
+                            <Muted>
+                                {trocado.atalho_gatilho == null ? "Substitui o atalho antigo." : `Substitui o seu atalho de ${modo} atual.`}
+                            </Muted>
+                        ) : null}
                         {workspaces.length > 1 ? (
                             <FormField label="Os gastos caem em">
                                 <Select

@@ -217,6 +217,7 @@ export function AtalhoSecao() {
                 onOpenChange={setBaixarDeNovo}
                 aoCriar={() => void lista.refetch()}
                 substituir={substituir}
+                atalhos={tokens}
             />
 
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>

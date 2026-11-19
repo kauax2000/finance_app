@@ -2,7 +2,7 @@ import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
-import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
+import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho, tituloDoAtalho, alvoDaTroca } from "@/components/account/gatilhos-do-atalho"
 import { legendaDoAparelho } from "@/components/account/atalho-secao"
 import type { CaptureToken } from "@/lib/supabase"
 
@@ -60,9 +60,8 @@ describe("tokens de captura", () => {
         expect(g).toContain("atalhos?: CaptureToken[]")
         expect(g).not.toContain("nomesEmUso")
         expect(g).toContain('setCarteira(substituir?.workspace_id ?? "")')
-        expect(g).toMatch(
-            /substituir \?\? atalhos\.find\(\(t\) => t\.atalho_gatilho != null && modoDoGatilho\(t\.atalho_gatilho\) === modo\)/,
-        )
+        expect(g).toContain("const trocado = alvoDaTroca(modo, substituir, atalhos)")
+        expect(semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))).toMatch(/substituir=\{substituir\}\s+atalhos=\{tokens\}/)
         const criar = g.indexOf('rpc("create_capture_token"')
         const revogar = g.indexOf('rpc("revoke_capture_token"')
         expect(criar).toBeGreaterThan(0)
@@ -624,6 +623,23 @@ describe("o guia cria um atalho de cada modo, na carteira escolhida", () => {
         for (const g of ["bloqueio", "acao", "toque", "inicio"] as const)
             expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Lançar gasto rápido")
         expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: null })).toBe("iPhone de Kauã")
+    })
+    it("o alvo da troca é um de cada modo: o de baixar de novo só se for do modo, senão o ativo do modo", () => {
+        const t = (id: string, atalho_gatilho: CaptureToken["atalho_gatilho"]) => ({ id, atalho_gatilho }) as CaptureToken
+        const voz = t("voz", "siri")
+        const toque = t("toque", "bloqueio")
+        const antigo = t("antigo", null)
+        const atalhos = [voz, toque, antigo]
+        expect(alvoDaTroca("voz", undefined, atalhos)).toBe(voz)
+        expect(alvoDaTroca("toque", undefined, atalhos)).toBe(toque)
+        expect(alvoDaTroca("toque", undefined, [voz, antigo])).toBeUndefined()
+        // Baixar de novo o de voz e trocar para toque: sai o de toque, o de voz fica.
+        expect(alvoDaTroca("toque", voz, atalhos)).toBe(toque)
+        expect(alvoDaTroca("toque", voz, [voz])).toBeUndefined()
+        expect(alvoDaTroca("voz", voz, atalhos)).toBe(voz)
+        // O antigo, sem gatilho, sai quando é ele o de baixar de novo, em qualquer modo.
+        expect(alvoDaTroca("voz", antigo, atalhos)).toBe(antigo)
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain('"Substitui o atalho antigo."')
     })
     it("sem nome de aparelho: o passo 2 escolhe a carteira, e o código leva o modo", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
