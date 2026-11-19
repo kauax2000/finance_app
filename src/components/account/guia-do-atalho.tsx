@@ -240,7 +240,7 @@ export function GuiaDoAtalho({
         </>,
         <>
             {COMO_ABRIR[gatilhoDoPasso].texto}{" "}
-            {/* A Siri só fala: a frase ou o formulário é dos outros gatilhos. */}
+            {/* A Siri também segue o `modo` (frase ou formulário), só que por voz; a linha explicativa só vale para os outros gatilhos. */}
             {gatilhoDoPasso === "siri"
                 ? null
                 : "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular. "}

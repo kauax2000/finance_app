@@ -283,6 +283,7 @@ git pull --rebase --autostash origin finance-app-2.0 && git push origin finance-
 ### Task 6: Produção (só com o ok do dono)
 
 - [ ] **Step 1:** Perguntar ao dono antes de qualquer comando: aplicar `20261119120000_atalho_gatilho.sql` e publicar a Edge `capture` em produção.
-- [ ] **Step 2:** Com o ok: aplicar a migração e `supabase functions deploy capture --use-api` (CLI fora do sandbox, como em `supabase-cli-fora-do-sandbox`).
+- [ ] **Step 2 (a ordem é uma trava):** Com o ok, **primeiro** aplicar a migração e **conferir que a coluna `capture_tokens.atalho_gatilho` existe**; **só então** `supabase functions deploy capture --use-api` (CLI fora do sandbox, como em `supabase-cli-fora-do-sandbox`). Publicar a Edge antes faria o update inteiro de `capture_tokens` falhar e congelaria `last_used_at` e `atalho_versao`.
+- Aviso: o front já chegou ao `origin/finance-app-2.0` antes da migração; até ela ser aplicada, a lista de aparelhos da prévia falha (42703, coluna inexistente).
 - [ ] **Step 3:** Conferir: `curl -s -H "Authorization: Bearer x" https://gexvgoknthcvdnqtdukq.supabase.co/functions/v1/capture` → `{"error":"Token inválido.",…}`; a lista de aparelhos carrega sem 42501.
 - [ ] **Step 4:** No iPhone (dono): instalar Toque atrás e Siri, lançar um gasto em cada; a lista mostra o gatilho e a Siri fala o resumo.

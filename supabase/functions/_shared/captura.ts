@@ -463,9 +463,9 @@ export const GATILHOS_DO_ATALHO = ['siri', 'acao', 'toque', 'bloqueio', 'inicio'
 /**
  * O update de `capture_tokens` a cada uso válido. `atalho_versao` só entra com
  * `X-Atalho-Versao` válido (1 a 99) e `atalho_gatilho` só com `X-Atalho-Gatilho`
- * conhecido: a automação do Apple Pay e a folha de compartilhar usam o mesmo
- * token sem os cabeçalhos, e não podem zerar as colunas (nulo = atalho v1,
- * "baixe de novo").
+ * conhecido. A automação do Apple Pay roda o mesmo atalho e manda os dois;
+ * só a folha de compartilhar do Android (e pedido sem cabeçalho) não os
+ * manda e não pode zerar as colunas (nulo = atalho v1, "baixe de novo").
  */
 export function usoDoToken(
   versao: string | null,

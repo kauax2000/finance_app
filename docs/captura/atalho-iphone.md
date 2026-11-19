@@ -2,17 +2,24 @@
 
 ## Para o dono: o atalho pronto
 
-O guia "Conectar o iPhone" do app baixa o atalho assinado
-`public/atalho/Lançar gasto.shortcut` pelo botão **Baixar o atalho**. Não há
-link do iCloud nem variável de ambiente.
+O guia "Conectar o iPhone" do app pergunta primeiro "Como você vai abrir?"
+(passo 1: Siri, Botão de Ação, Toque atrás, Tela bloqueada ou Ícone) e o botão
+**Baixar o atalho** entrega o arquivo assinado do gatilho escolhido,
+`public/atalho/<gatilho>/Lançar gasto.shortcut`, com `<gatilho>` em `siri`,
+`acao`, `toque`, `bloqueio` ou `inicio`. Não há link do iCloud nem variável de
+ambiente.
 
-O arquivo é gerado e assinado por:
+Os arquivos são gerados e assinados por:
 
 ```bash
 python3 scripts/atalho/gerar-atalho.py
 ```
 
-Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
+Ele grava cinco variantes, uma por gatilho: todo pedido delas manda o
+cabeçalho `X-Atalho-Gatilho` com o nome do gatilho, e a da Siri responde com
+**Mostrar resultado**, falado (menos no ramo do Apple Pay, que roda em segundo
+plano e segue com a notificação). Grava também o arquivo da raiz,
+`public/atalho/Lançar gasto.shortcut`, sem o cabeçalho de gatilho. Ele precisa do comando `shortcuts` do macOS e lê o `NEXT_PUBLIC_SUPABASE_URL`
 do ambiente ou do `.env.local`. **Rode de novo se o endereço do Supabase
 mudar**, e versione o arquivo novo. `python3 scripts/atalho/gerar-atalho.py
 --verificar` confere o atalho sem assinar nem gravar.
