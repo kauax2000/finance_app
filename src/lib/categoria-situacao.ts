@@ -98,10 +98,12 @@ export type CriterioDeOrdem = "maior" | "nome" | "variacao"
 export function dividirDoMes<T extends { nome: string; total: number; anterior: number }>(
   itens: T[],
   criterio: CriterioDeOrdem,
+  invertida = false,
 ) {
   const comMovimento = ordenarCategorias(
     itens.filter((i) => i.total > 0),
     criterio,
+    invertida,
   )
   return {
     comMovimento,
@@ -114,6 +116,7 @@ export function dividirDoMes<T extends { nome: string; total: number; anterior: 
 export function ordenarCategorias<T extends { nome: string; total: number; anterior: number }>(
   itens: T[],
   criterio: CriterioDeOrdem,
+  invertida = false,
 ): T[] {
   const cmp: (a: T, b: T) => number =
     criterio === "maior"
@@ -121,6 +124,7 @@ export function ordenarCategorias<T extends { nome: string; total: number; anter
       : criterio === "nome"
         ? (a, b) => a.nome.localeCompare(b.nome, "pt-BR")
         : (a, b) => (zero(b.total) - zero(b.anterior)) - (zero(a.total) - zero(a.anterior))
-  // Array.prototype.sort é estável: empate mantém a ordem de entrada.
-  return [...itens].sort(cmp)
+  // Array.prototype.sort é estável: empate mantém a ordem de entrada. Inverte-se o
+  // comparador, e não o array, para o empate não virar de ponta-cabeça.
+  return [...itens].sort(invertida ? (a, b) => cmp(b, a) : cmp)
 }

@@ -159,6 +159,22 @@ describe("ordenarCategorias", () => {
     ]
     expect(ordenarCategorias(empatados, "maior").map((i) => i.nome)).toEqual(["B", "A"])
   })
+
+  it("invertida: o menor gasto primeiro, Z→A e quem mais caiu", () => {
+    const nomes = (c: Parameters<typeof ordenarCategorias>[1]) =>
+      ordenarCategorias(itens, c, true).map((i) => i.nome)
+    expect(nomes("maior")).toEqual(["Banco", "Mercado", "Água"])
+    expect(nomes("nome")).toEqual(["Mercado", "Banco", "Água"])
+    expect(nomes("variacao")).toEqual(["Banco", "Água", "Mercado"])
+  })
+
+  it("invertida: o empate mantém a ordem de entrada", () => {
+    const empatados = [
+      { nome: "B", total: 100, anterior: 0 },
+      { nome: "A", total: 100, anterior: 0 },
+    ]
+    expect(ordenarCategorias(empatados, "maior", true).map((i) => i.nome)).toEqual(["B", "A"])
+  })
 })
 
 describe("dividirDoMes", () => {
@@ -173,6 +189,19 @@ describe("dividirDoMes", () => {
     )
     expect(r.semMovimento.map((i) => i.nome)).toEqual(["Estornada"])
     expect(r.comMovimento.map((i) => i.nome)).toEqual(["Mercado"])
+  })
+
+  it("invertida: a grade vem do menor para o maior", () => {
+    const r = dividirDoMes(
+      [
+        { nome: "A", total: 10, anterior: 0 },
+        { nome: "B", total: 30, anterior: 0 },
+        { nome: "C", total: 20, anterior: 0 },
+      ],
+      "maior",
+      true,
+    )
+    expect(r.comMovimento.map((i) => i.nome)).toEqual(["A", "C", "B"])
   })
 
   it("sem arredondar, 5,55e-17 passaria na grade (o porquê do roundCents)", () => {
