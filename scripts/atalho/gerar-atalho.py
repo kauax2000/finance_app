@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import os
 import plistlib
-import re
 import subprocess
 import sys
 import tempfile
@@ -41,12 +40,8 @@ import uuid
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
-PASTA = RAIZ / "public" / "atalho"
+SAIDA = RAIZ / "public" / "atalho" / "Lançar gasto.shortcut"
 VAR = "￼"
-# Um arquivo só, o original, para a Siri e para o toque: sem cabeçalho de gatilho e com
-# notificação. Com dois arquivos (o de voz com `X-Atalho-Gatilho` e "Mostrar resultado"), a
-# Siri passou a dizer que não conseguia abrir o atalho (19/11/2026).
-MODOS = {"voz": (None, "Lançar gasto")}
 
 
 def url_da_captura() -> str:
@@ -99,16 +94,15 @@ def acao(ident: str, **params) -> dict:
     return {"WFWorkflowActionIdentifier": f"is.workflow.actions.{ident}", "WFWorkflowActionParameters": params}
 
 
-def cabecalhos(codigo: str, gatilho: str | None = None) -> dict:
+def cabecalhos(codigo: str) -> dict:
     return dicionario([
         ("Authorization", texto(f"Bearer {VAR}", {7: saida(codigo, "Texto")})),
         ("X-Atalho-Versao", texto("2")),
-        *([("X-Atalho-Gatilho", texto(gatilho))] if gatilho else []),
     ])
 
 
-def pedido(uid: str, url: str, codigo: str, metodo: str, corpo: list[tuple[str, dict]] | None = None, gatilho: str | None = None) -> dict:
-    params = dict(UUID=uid, WFURL=url, WFHTTPMethod=metodo, ShowHeaders=True, WFHTTPHeaders=cabecalhos(codigo, gatilho))
+def pedido(uid: str, url: str, codigo: str, metodo: str, corpo: list[tuple[str, dict]] | None = None) -> dict:
+    params = dict(UUID=uid, WFURL=url, WFHTTPMethod=metodo, ShowHeaders=True, WFHTTPHeaders=cabecalhos(codigo))
     if corpo is not None:
         params.update(WFHTTPBodyType="JSON", WFJSONValues=dicionario(corpo))
     return acao("downloadurl", **params)
@@ -126,27 +120,17 @@ def notificar(de: str) -> dict:
     )
 
 
-def se(grupo: str, de: str | dict, condicao: int = 100) -> dict:
-    """Se o valor do dicionário `de` (ou a variável `de`) tem valor (100)."""
-    alvo = de if isinstance(de, dict) else saida(de, "Valor do Dicionário")
-    return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=condicao,
-                WFInput={"Type": "Variable", "Variable": anexo(alvo)})
+def se(grupo: str, de: str | dict, condicao: int, valor: str | None = None) -> dict:
+    """Se o valor do dicionário `de` (ou a variável `de`) ...: 100 tem valor, 4 é `valor` (texto).
 
-
-def se_igual(grupo: str, de: str | dict, valor: str) -> list[dict]:
-    """Se `de` é `valor`, sem o "é" do Se: o iOS 27 não lê o valor do "é" gravado fora do app.
-
-    Procura `x<de>` num dicionário que só tem `x<valor>` e testa "tem qualquer valor".
-    O `x` deixa a chave nunca vazia (o `codigo` falta quando a frase lança).
+    Só condições positivas: o "não é" (5) sobre um valor vazio não foi verificado no aparelho.
     """
     alvo = de if isinstance(de, dict) else saida(de, "Valor do Dicionário")
-    tabela, achado = str(uuid.uuid4()).upper(), str(uuid.uuid4()).upper()
-    return [
-        acao("dictionary", UUID=tabela, WFItems=dicionario([(f"x{valor}", texto("sim"))])),
-        acao("getvalueforkey", UUID=achado, WFDictionaryKey=texto(f"x{VAR}", {1: alvo}),
-             WFInput=anexo(saida(tabela, "Dicionário"))),
-        se(grupo, achado),
-    ]
+    params = dict(GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=condicao,
+                  WFInput={"Type": "Variable", "Variable": anexo(alvo)})
+    if valor is not None:
+        params["WFConditionalActionString"] = valor
+    return acao("conditional", **params)
 
 
 def senao(grupo: str) -> dict:
@@ -165,9 +149,7 @@ def fim_se(grupo: str) -> dict:
     return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=2)
 
 
-def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None) -> dict:
-    gatilho = MODOS[modo][0] if modo else None
-    pedido_ = lambda *a: pedido(*a, gatilho=gatilho)  # noqa: E731
+def atalho(url: str, frase_de_teste: str | None = None) -> dict:
     u = lambda: str(uuid.uuid4()).upper()  # noqa: E731
     codigo, entrada_se, menu = u(), u(), u()
     opcoes, erro_get, erro_se, modo, modo_se = u(), u(), u(), u(), u()
@@ -181,12 +163,12 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         acao("gettext", UUID=codigo, WFTextActionText=texto("")),
         # Com Entrada (a transação da Carteira, no Apple Pay): manda o texto dela.
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=0, WFCondition=100, WFInput={"Type": "Variable", "Variable": anexo(ENTRADA)}),
-        pedido_(r_pay, url, codigo, "POST", [("text", texto(VAR, {0: ENTRADA})), ("source", texto("apple_pay"))]),
+        pedido(r_pay, url, codigo, "POST", [("text", texto(VAR, {0: ENTRADA})), ("source", texto("apple_pay"))]),
         chave(resumo_pay, "resumo", r_pay),
         notificar(resumo_pay),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=1),
         # Sem Entrada: o GET diz o modo da conta e traz as listas do formulário.
-        pedido_(opcoes, url, codigo, "GET"),
+        pedido(opcoes, url, codigo, "GET"),
         chave(erro_get, "resumo", opcoes),
         se(erro_se, erro_get, 100),
         notificar(erro_get),
@@ -195,7 +177,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         chave(modo, "modo", opcoes),
         # Só o "sim" abre o formulário, uma vez só, depois dos dois caminhos que podem pedi-lo.
         *marcar(nao, "nao"),
-        *se_igual(modo_se, modo, "formulario"),
+        se(modo_se, modo, 4, "formulario"),
         *marcar(sim_modo, "sim"),
         # Qualquer outro `modo` cai na frase.
         senao(modo_se),
@@ -203,13 +185,13 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         acao("gettext", UUID=frase, WFTextActionText=texto(frase_de_teste))
         if frase_de_teste
         else acao("ask", UUID=frase, WFInputType="Text", WFAskActionPrompt=texto("Qual foi o gasto? Ex.: 42 mercado nubank")),
-        pedido_(r_frase, url, codigo, "POST", [
+        pedido(r_frase, url, codigo, "POST", [
             ("text", texto(VAR, {0: saida(frase, "Texto" if frase_de_teste else "Entrada Fornecida")})),
             ("source", texto("shortcut")),
         ]),
         chave(cod_frase, "codigo", r_frase),
         # Frase sem valor segue para o formulário; a que lançou (codigo vazio) só notifica.
-        *se_igual(cod_se, cod_frase, "sem_valor"),
+        se(cod_se, cod_frase, 4, "sem_valor"),
         *marcar(sim_frase, "sim"),
         senao(cod_se),
         chave(resumo_frase, "resumo", r_frase),
@@ -217,7 +199,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         fim_se(cod_se),
         fim_se(modo_se),
         # O formulário, campo a campo.
-        *se_igual(form_se, variavel("irAoFormulario"), "sim"),
+        se(form_se, variavel("irAoFormulario"), 4, "sim"),
         acao("ask", UUID=valor, WFInputType="Number", WFAskActionPrompt=texto("Qual o valor?")),
         # O espaço deixa o Pronto valer com o campo vazio; a Edge apara o `merchant`.
         acao("ask", UUID=desc, WFInputType="Text", WFAskActionPrompt=texto("Descrição (opcional)"), WFAskActionDefaultAnswer=texto(" ")),
@@ -234,7 +216,7 @@ def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None)
         acao("format.date", UUID=outro_fmt, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: saida(outro, "Entrada Fornecida")})),
         acao("setvariable", WFVariableName="data", WFInput=anexo(saida(outro_fmt, "Data Formatada"))),
         acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=2),
-        pedido_(r_form, url, codigo, "POST", [
+        pedido(r_form, url, codigo, "POST", [
             ("amount", texto(VAR, {0: saida(valor, "Entrada Fornecida")})),
             ("merchant", texto(VAR, {0: saida(desc, "Entrada Fornecida")})),
             ("category", texto(VAR, {0: saida(cat, "Item Escolhido")})),
@@ -322,27 +304,15 @@ def verificar() -> None:
         if _id(a) == "format.date":
             assert a["WFWorkflowActionParameters"]["WFDateFormat"] == "yyyy-MM-dd"
 
-    # Só "tem qualquer valor": o "é" com texto gravado aqui abre vazio no iOS 27.
+    # Só condições positivas: nenhum "não é" (5) sobre um valor que pode vir vazio.
     conds = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "conditional" and a["WFWorkflowActionParameters"]["WFControlFlowMode"] == 0]
-    assert all(c["WFCondition"] == 100 and "WFConditionalActionString" not in c for c in conds), conds
-    por_uuid = {a["WFWorkflowActionParameters"].get("UUID"): a for a in acoes}
+    assert all(c["WFCondition"] in (4, 100) for c in conds), [c["WFCondition"] for c in conds]
+    por_valor = {c.get("WFConditionalActionString"): c for c in conds}
     origem = lambda c: c["WFInput"]["Variable"]["Value"]  # noqa: E731
-    por_valor, alvo_de = {}, {}
-    for c in conds:
-        if "OutputUUID" not in origem(c):
-            continue
-        busca = por_uuid[origem(c)["OutputUUID"]]["WFWorkflowActionParameters"]
-        tabela = por_uuid.get(busca["WFInput"]["Value"]["OutputUUID"])
-        if tabela is None or _id(tabela) != "dictionary":
-            continue
-        (item,) = tabela["WFWorkflowActionParameters"]["WFItems"]["Value"]["WFDictionaryFieldValueItems"]
-        assert _txt(busca["WFDictionaryKey"]) == "x" + VAR and _txt(item["WFKey"]).startswith("x")
-        valor = _txt(item["WFKey"])[1:]
-        por_valor[valor], alvo_de[valor] = c, busca["WFDictionaryKey"]["Value"]["attachmentsByRange"]["{1, 1}"]
-    leitura = lambda v: por_uuid[alvo_de[v]["OutputUUID"]]["WFWorkflowActionParameters"]  # noqa: E731
-    assert leitura("formulario")["WFDictionaryKey"] == "modo"
-    assert leitura("sem_valor")["WFDictionaryKey"] == "codigo"
-    assert alvo_de["sim"] == variavel("irAoFormulario")
+    leitura = lambda c: next(a["WFWorkflowActionParameters"] for a in acoes if a["WFWorkflowActionParameters"].get("UUID") == origem(c).get("OutputUUID"))  # noqa: E731
+    assert leitura(por_valor["formulario"])["WFDictionaryKey"] == "modo"
+    assert leitura(por_valor["sem_valor"])["WFDictionaryKey"] == "codigo"
+    assert origem(por_valor["sim"]) == variavel("irAoFormulario")
 
     # O sinalizador: "nao" antes dos caminhos, "sim" só dentro do modo formulario e do sem_valor.
     marcas = [
@@ -387,22 +357,7 @@ def verificar() -> None:
     for a in acoes:
         if _id(a) == "setvariable":
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"
-
-    # O arquivo é igual ao original: sem cabeçalho de gatilho e sem "Mostrar resultado".
-    sem_uuid = lambda d: re.sub(r"[0-9A-F]{8}-[0-9A-F-]{27}", "", str(d))  # noqa: E731
-    voz = atalho("https://exemplo.supabase.co/functions/v1/capture", "voz")
-    assert sem_uuid(voz) == sem_uuid(atalho("https://exemplo.supabase.co/functions/v1/capture"))
-    assert "X-Atalho-Gatilho" not in str(voz) and "showresult" not in str(voz)
     print("ok")
-
-
-def assinar(dados: dict, saida_: Path) -> None:
-    saida_.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as d:
-        cru = Path(d) / "Lançar gasto.shortcut"
-        plistlib.dump(dados, cru.open("wb"), fmt=plistlib.FMT_BINARY)
-        subprocess.run(["shortcuts", "sign", "--mode", "anyone", "--input", str(cru), "--output", str(saida_)], check=True)
-    print(saida_)
 
 
 def main() -> None:
@@ -411,11 +366,16 @@ def main() -> None:
     # `--teste URL SAIDA`: o mesmo atalho contra outro endereço e com uma frase fixa, para conferir o pedido.
     if sys.argv[1:2] == ["--teste"]:
         url, saida_ = sys.argv[2], Path(sys.argv[3])
-        dados = atalho(url, frase_de_teste="42 mercado teste")
-        return assinar(dados, saida_)
-    url = url_da_captura()
-    for m, (_g, nome) in MODOS.items():
-        assinar(atalho(url, m), PASTA / f"{nome}.shortcut")
+        dados = atalho(url, "42 mercado teste")
+    else:
+        url, saida_ = url_da_captura(), SAIDA
+        dados = atalho(url)
+    saida_.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as d:
+        cru = Path(d) / "Lançar gasto.shortcut"
+        plistlib.dump(dados, cru.open("wb"), fmt=plistlib.FMT_BINARY)
+        subprocess.run(["shortcuts", "sign", "--mode", "anyone", "--input", str(cru), "--output", str(saida_)], check=True)
+    print(saida_)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ O último passo mostra a Siri ("E aí Siri, Lançar gasto") e, abaixo, as abas
 Botão, Costas, Bloqueio e Ícone. Não há link do iCloud nem variável de
 ambiente.
 
+O arquivo servido hoje é o da primeira versão de 19/nov/2026 (commit `33fad78e`, ainda com a condição "é" do formulário), a pedido do dono, e o `gerar-atalho.py` voltou junto com ele.
+
 Os arquivos são gerados e assinados por:
 
 ```bash
