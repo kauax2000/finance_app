@@ -5,7 +5,6 @@ import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusI
 import * as React from "react"
 import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { MonthGrid } from "@/components/ui/date-picker"
 import {
     Popover,
@@ -21,7 +20,7 @@ import { cn } from "@/lib/utils"
  * A altura do gatilho compacto do telefone (o ramo que não é a cápsula): quem
  * responde é `--toolbar-control`, que o `Toolbar` publica — com o degrau padrão
  * (32) como reserva, porque duas telas usam este seletor fora de uma barra.
- * A cápsula `‹ mês ›` não usa isto: o `ButtonGroup` e a `Toolbar` a medem.
+ * As setas e o mês do desktop não usam isto: a escada do `Button` os mede.
  */
 const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
 
@@ -85,9 +84,11 @@ function MonthNavArrowControls({
                     Voltar a este mês
                 </Button>
             ) : null}
-            <ButtonGroup
+            {/* As setas são os botões (círculos de contorno); o mês é o texto que abre a grade. */}
+            <div
+                role="group"
                 aria-label="Mês de referência"
-                className={cn("min-w-0", esteMesInsidePopoverOnNarrow && "flex-1")}
+                className={cn("flex min-w-0 items-center gap-1", esteMesInsidePopoverOnNarrow && "flex-1")}
             >
                 <Button
                     type="button"
@@ -102,15 +103,15 @@ function MonthNavArrowControls({
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="tertiary"
                             aria-label={pickerAriaLabel}
                             className={cn(
-                                "min-w-0 gap-2 font-medium tabular-nums",
+                                "min-w-0 gap-1.5 px-3 font-medium tabular-nums",
                                 esteMesInsidePopoverOnNarrow && "flex-1",
                             )}
                         >
-                            <CalendarIcon className="shrink-0 opacity-80" aria-hidden />
                             <span className="min-w-0 truncate">{monthLabel}</span>
+                            <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -154,7 +155,7 @@ function MonthNavArrowControls({
                 >
                     <ChevronRightIcon />
                 </Button>
-            </ButtonGroup>
+            </div>
         </>
     )
 }

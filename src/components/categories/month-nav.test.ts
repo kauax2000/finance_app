@@ -4,9 +4,14 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 describe("o seletor de mês compacto", () => {
     const f = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"), "tudo")
 
-    it("a cápsula é um ButtonGroup com ‹, o mês e ›", () => {
-        expect(f).toContain('from "@/components/ui/button-group"')
-        const grupo = f.slice(f.indexOf("<ButtonGroup"), f.indexOf("</ButtonGroup>"))
+    it("‹ e › são círculos de contorno, e o mês, sem caixa, abre a grade com ˅", () => {
+        expect(f).not.toContain('from "@/components/ui/button-group"')
+        const ini = f.indexOf('aria-label="Mês de referência"')
+        const grupo = f.slice(ini, f.indexOf("</Popover>", ini) + 400)
+        expect(grupo).toMatch(/variant="outline"\s+size="icon-lg"\s+aria-label="Mês anterior"/)
+        expect(grupo).toMatch(/variant="tertiary"\s+aria-label=\{pickerAriaLabel\}/)
+        expect(grupo).toContain("ChevronDownIcon")
+        expect(grupo).not.toContain("CalendarIcon")
         const a = grupo.indexOf('aria-label="Mês anterior"')
         const p = grupo.indexOf("PopoverTrigger")
         const n = grupo.indexOf('aria-label="Próximo mês"')
