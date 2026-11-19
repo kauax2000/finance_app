@@ -159,6 +159,10 @@ const drawerContentVariants = cva(
     // O raio e a borda ficam do lado que **não** encosta na tela.
     "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-modal data-[vaul-drawer-direction=bottom]:border-t",
     "data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:rounded-b-modal data-[vaul-drawer-direction=top]:border-b",
+    // A gaveta de baixo encosta no fim da tela: o conteúdo vai até a borda, sem a
+    // dissolução de baixo do corpo e do meio (pedido do dono, 19/11/2026). A de cima
+    // fica: ela é a borda com o cabeçalho.
+    "data-[vaul-drawer-direction=bottom]:[--scroll-fade-bottom-max:0px]",
   ],
   {
     variants: {

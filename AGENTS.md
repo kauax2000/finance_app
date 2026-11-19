@@ -1343,6 +1343,7 @@ declaração de `background-color` no trilho).
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
   - **Sem `fill`, a gaveta mede o conteúdo e cresce até a altura alta (`--drawer-h`) antes de o meio rolar** (o teto de 85% saiu: com espaço em cima, nada de rolagem no meio). **Passo a passo de tutorial mede o maior passo** (diálogo de formulário com passos, como Adicionar limite, acompanha a altura de cada passo) (`CaixaDoPasso`, em `components/account/passo-a-passo.tsx`): os outros passos ficam como fantasmas invisíveis e inertes na mesma célula da grade, sem imagem nem animação, e a caixa tem a altura do maior do abrir ao fechar — sem preencher a tela (nada de `layout="fixed"`) e sem mudar de altura a cada passo (a troca animada truncava na gaveta). Só um passo maior que `--drawer-h` faz o meio rolar.
+  - **A gaveta de baixo não dissolve o pé** (19/11/2026, pedido do dono): ela encosta no fim da tela, então o `DrawerContent` zera `--scroll-fade-bottom-max` e o corpo e o meio vão até a borda; a dissolução de cima, sob o cabeçalho, fica. `drawer-fim-sem-fade.test.ts`.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha, e a de trás encolhe e sobe como no iOS
