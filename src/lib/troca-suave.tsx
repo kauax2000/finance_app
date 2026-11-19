@@ -21,6 +21,12 @@ const TITULO_ACIMA = { opacity: 0, y: "-100%", rotateX: 60, filter: "blur(2px)",
 const TITULO_PRESENTE = { opacity: 1, y: "0%", rotateX: 0, filter: "blur(0px)", transformPerspective: 400 }
 const TROCA_DO_TITULO = { duration: 0.3, ease: [0.16, 1, 0.3, 1] } as const
 
+// O texto que sai lê a direção da troca de agora pelo `custom` do `AnimatePresence`
+// (o elemento que sai é o da renderização anterior): para trás, ele sai por baixo.
+const SAIDA_DO_TEXTO = {
+  sai: (direcao: number) => ({ ...(direcao < 0 ? TEXTO_ABAIXO : TEXTO_ACIMA), transition: SAIDA }),
+}
+
 /**
  * Troca um ícone ou um rótulo no lugar: o de antes sai no desfoque e o novo
  * chega na mola. Quem envolve precisa ser `relative`, porque o `popLayout` tira
@@ -32,6 +38,7 @@ function TrocaSuave({
   className,
   atraso = 0,
   forma = "icone",
+  direcao = 1,
   children,
 }: {
   chave: string
@@ -41,6 +48,11 @@ function TrocaSuave({
    * `titulo` gira como um tambor: sai pelo alto e o novo vem de baixo, em 300ms, os dois juntos.
    */
   forma?: "icone" | "texto" | "titulo"
+  /**
+   * Só na `texto`: `-1` inverte o rolar — o novo vem de cima e o de antes sai por baixo
+   * (um ano para trás). O padrão, `1`, é o novo subindo de baixo.
+   */
+  direcao?: 1 | -1
   /** Segundos de espera só na chegada (a saída é imediata): a escada de uma lista. */
   atraso?: number
   children: ReactNode
@@ -49,19 +61,24 @@ function TrocaSuave({
   const texto = forma === "texto"
   const titulo = forma === "titulo"
   const mola = titulo ? TROCA_DO_TITULO : texto ? MOLA_PALCO : MOLA
+  const textoEntra = direcao < 0 ? TEXTO_ACIMA : TEXTO_ABAIXO
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
+    <AnimatePresence mode="popLayout" initial={false} custom={direcao}>
       <motion.span
         key={chave}
         className={className}
-        initial={reduzido ? false : titulo ? TITULO_ABAIXO : texto ? TEXTO_ABAIXO : SUMIDO}
+        custom={direcao}
+        variants={SAIDA_DO_TEXTO}
+        initial={reduzido ? false : titulo ? TITULO_ABAIXO : texto ? textoEntra : SUMIDO}
         animate={titulo ? TITULO_PRESENTE : texto ? TEXTO_PRESENTE : PRESENTE}
         exit={
           reduzido
             ? { opacity: 0, transition: { duration: 0 } }
             : titulo
               ? { ...TITULO_ACIMA, transition: TROCA_DO_TITULO }
-              : { ...(texto ? TEXTO_ACIMA : SUMIDO), transition: SAIDA }
+              : texto
+                ? "sai"
+                : { ...SUMIDO, transition: SAIDA }
         }
         transition={reduzido || !atraso ? mola : { ...mola, delay: atraso }}
       >

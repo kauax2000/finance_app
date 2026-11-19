@@ -763,7 +763,11 @@ export function MonthGrid(props: MonthGridProps) {
   const [emitido, setEmitido] = React.useState<string | null>(null)
   if (chaveDoValor !== visto) {
     setVisto(chaveDoValor)
-    if (chaveDoValor !== emitido) setAncora(null)
+    if (chaveDoValor !== emitido) {
+      setAncora(null)
+      // Um valor de fora esquece o que foi emitido: voltar por fora à mesma chave também é seguido.
+      setEmitido(null)
+    }
   }
 
   // A grade segue o ano de um valor que muda por fora (as setas do rodapé de dezembro
@@ -869,7 +873,9 @@ export function MonthGrid(props: MonthGridProps) {
   return (
     <div
       data-slot="month-grid"
-      className={cn("flex w-64 flex-col gap-2 p-3 pointer-coarse:w-80 pointer-coarse:gap-3", className)}
+      // `overflow-x-clip`: a grade que desliza não alarga a rolagem do popover. O corte é
+      // na borda de fora; os anéis de foco moram dentro do `p-3`.
+      className={cn("flex w-64 overflow-x-clip flex-col gap-2 p-3 pointer-coarse:w-80 pointer-coarse:gap-3", className)}
     >
       <div className="flex items-center justify-between">
         <Button
@@ -885,7 +891,7 @@ export function MonthGrid(props: MonthGridProps) {
           <ChevronLeftIcon aria-hidden />
         </Button>
         <span className="relative text-sm font-medium nums pointer-coarse:text-base" aria-live="polite">
-          <TrocaSuave chave={String(ano)} forma="texto" className="inline-block">
+          <TrocaSuave chave={String(ano)} forma="texto" direcao={direcao < 0 ? -1 : 1} className="inline-block">
             {ano}
           </TrocaSuave>
         </span>
@@ -960,6 +966,16 @@ function GradeDoAno({
   const refs = useComposedRefs(ref, trilhaRef)
   const marcadorRef = React.useRef<HTMLSpanElement>(null)
   // Recua 1px: a borda transparente do `Button`, onde o `primary` não pinta (`bg-clip-padding`).
+  const saiu = React.useRef(false)
+  const [cortada, setCortada] = React.useState(false)
+  // A grade cortada que volta (o mesmo ano de novo, antes de as saídas acabarem: o
+  // `AnimatePresence` reusa a instância) remonta o nó e entra de novo; `vez` faz o
+  // marcador medir o nó novo.
+  const [vez, setVez] = React.useState(0)
+  if (presente && cortada) {
+    setCortada(false)
+    setVez((v) => v + 1)
+  }
   const pronto = useMarcador({
     trilha: trilhaRef,
     marcador: marcadorRef,
@@ -968,9 +984,8 @@ function GradeDoAno({
     prefixo: "month-grid-marker",
     insete: 1,
     viajar,
+    deps: [vez],
   })
-  const saiu = React.useRef(false)
-  const [cortada, setCortada] = React.useState(false)
 
   // A saída é à mão (`usePresence`), para um toque rápido cortar a grade que já saía:
   // a nova que sai remove a anterior na hora. Voltando ao mesmo ano no meio da saída,
@@ -1013,7 +1028,7 @@ function GradeDoAno({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presente])
 
-  if (cortada) return null
+  if (cortada && !presente) return null
 
   return (
     <motion.div

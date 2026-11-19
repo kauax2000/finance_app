@@ -13,3 +13,12 @@ describe("a forma título gira como um tambor", () => {
         expect(fonte).toContain("{ ...TITULO_ACIMA, transition: TROCA_DO_TITULO }")
     })
 })
+
+describe("a forma texto rola na direção da troca", () => {
+    it("direcao -1: o novo vem de cima e o de antes sai por baixo, lido pelo custom", () => {
+        expect(fonte).toContain("direcao = 1,")
+        expect(fonte).toContain("const textoEntra = direcao < 0 ? TEXTO_ACIMA : TEXTO_ABAIXO")
+        expect(fonte).toContain("sai: (direcao: number) => ({ ...(direcao < 0 ? TEXTO_ABAIXO : TEXTO_ACIMA), transition: SAIDA })")
+        expect(fonte).toContain('<AnimatePresence mode="popLayout" initial={false} custom={direcao}>')
+    })
+})

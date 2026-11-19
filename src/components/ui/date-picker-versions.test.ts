@@ -142,7 +142,7 @@ describe("MonthGrid: a âncora e o ano visível", () => {
   const GRADE = FONTE_DP.slice(FONTE_DP.indexOf("export function MonthGrid"))
 
   it("um valor que muda por fora (atalho, ano, Remover) apaga a âncora; o próprio toque não", () => {
-    expect(GRADE).toMatch(/if \(chaveDoValor !== visto\) \{[\s\S]*?if \(chaveDoValor !== emitido\) setAncora\(null\)/)
+    expect(GRADE).toMatch(/if \(chaveDoValor !== visto\) \{[\s\S]*?if \(chaveDoValor !== emitido\) \{\s*setAncora\(null\)/)
     expect(GRADE).toContain("setEmitido(chaveDe(proximo.range))")
   })
 
@@ -242,5 +242,29 @@ describe("MonthGrid: a grade desliza entre os anos e segue o valor de fora", () 
     expect(GRADE).toMatch(/useEffect\([\s\S]*?onYearChange\?\.\(ano\)/)
     const html = renderToStaticMarkup(h(MonthGrid, { value: new Date(2027, 0, 1), onChange: () => {} }))
     expect(html).toContain('aria-label="Meses de 2027"')
+  })
+})
+
+describe("MonthGrid: correções da revisão (rodada 1)", () => {
+  const FONTE_DP = semComentarios(lerFonte("src/components/ui/date-picker.tsx"), "linha-inteira")
+  const inicio = FONTE_DP.indexOf("export function MonthGrid")
+  const GRADE = FONTE_DP.slice(inicio, FONTE_DP.indexOf("const ALCANCE_PADRAO_ANOS", inicio))
+
+  it("a grade cortada que volta remonta e o marcador mede o nó novo", () => {
+    expect(GRADE).toContain("if (cortada && !presente) return null")
+    expect(GRADE).toMatch(/if \(presente && cortada\) \{\s*setCortada\(false\)\s*setVez/)
+    expect(GRADE).toContain("deps: [vez]")
+  })
+
+  it("a grade que desliza não alarga a rolagem do popover", () => {
+    expect(GRADE).toMatch(/data-slot="month-grid"[\s\S]*?className=\{cn\("[^"]*overflow-x-clip/)
+  })
+
+  it("o ano rola na direção da troca", () => {
+    expect(GRADE).toContain("direcao={direcao < 0 ? -1 : 1}")
+  })
+
+  it("um valor de fora esquece o emitido", () => {
+    expect(GRADE).toMatch(/if \(chaveDoValor !== emitido\) \{\s*setAncora\(null\)\s*setEmitido\(null\)/)
   })
 })
