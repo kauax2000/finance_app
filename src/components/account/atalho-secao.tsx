@@ -5,7 +5,7 @@ import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
-import { GATILHOS } from "@/components/account/gatilhos-do-atalho"
+import { rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
 import { SettingsSection } from "@/components/settings/settings-section"
@@ -47,7 +47,7 @@ const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_ver
 
 /** "Carteira · gatilho · uso", sem parte vazia. */
 export function legendaDoAparelho(t: CaptureToken, carteira: string): string {
-    const gatilho = GATILHOS.find((g) => g.valor === t.atalho_gatilho)?.rotulo
+    const gatilho = rotuloDoGatilho(t.atalho_gatilho)
     const uso = t.last_used_at ? `último gasto ${relativo(t.last_used_at)}` : "ainda não lançou nada"
     return [carteira, gatilho, uso].filter(Boolean).join(" · ")
 }
