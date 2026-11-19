@@ -36,8 +36,8 @@ const nextConfig: NextConfig = {
   // o guardava como "Lançar gasto.shortcut.html": o app Atalhos não o abria.
   // Com o anexo, o nome e o tipo binário declarados, ele chega como `.shortcut`.
   async headers() {
-    // Um nome por arquivo; o `source` casa o caminho já decodificado, e o
-    // `.` de `Lan.ar` cobre o `ç` sem depender da codificação.
+    // Um nome por arquivo; o `source` casa o caminho decodificado e o
+    // codificado (`Lan.*` cobre o `ç` ou o `%C3%A7`), e nenhum casa o do outro.
     const atalho = (source: string, ascii: string, utf8: string) => ({
       source,
       headers: [
@@ -50,8 +50,8 @@ const nextConfig: NextConfig = {
       ],
     })
     return [
-      atalho("/atalho/:arquivo(Lan.ar gasto\\.shortcut)", "Lancar gasto", "Lan%C3%A7ar%20gasto"),
-      atalho("/atalho/:arquivo(Lan.ar gasto r.pido\\.shortcut)", "Lancar gasto rapido", "Lan%C3%A7ar%20gasto%20r%C3%A1pido"),
+      atalho("/atalho/:arquivo(Lan.*gasto\\.shortcut)", "Lancar gasto", "Lan%C3%A7ar%20gasto"),
+      atalho("/atalho/:arquivo(Lan.*r.*pido\\.shortcut)", "Lancar gasto rapido", "Lan%C3%A7ar%20gasto%20r%C3%A1pido"),
     ]
   },
   async redirects() {
