@@ -45,8 +45,8 @@ import telaBloqueada from "./assets/atalho-14-tela-bloqueada.webp"
 /**
  * No app instalado do iPhone o download não passa pelo Safari: abre num visualizador que
  * salva "Lançar gasto.shortcut.html", mesmo com o servidor mandando nome e tipo certos, e o
- * Atalhos não o reconhece. Lá o botão entrega o link ao Safari (`x-safari-https://`, iOS 17+),
- * que baixa o `.shortcut`. Se o Safari não abrir (iOS antigo), o download segue no próprio app.
+ * Atalhos não o reconhece. Lá o botão entrega ao Safari o caminho do `href` do link (o arquivo
+ * do gatilho escolhido) por `x-safari-https://` (iOS 17+), que baixa o `.shortcut`. Se o Safari não abrir (iOS antigo), o download segue no próprio app.
  */
 function baixarPeloSafari(evento: MouseEvent<HTMLAnchorElement>) {
     const { protocol, host } = window.location

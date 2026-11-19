@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
 import { arquivoDoAtalho, GATILHOS } from "@/components/account/gatilhos-do-atalho"
+import { legendaDoAparelho } from "@/components/account/atalho-secao"
+import type { CaptureToken } from "@/lib/supabase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -87,7 +89,7 @@ describe("tokens de captura", () => {
         expect(g).not.toMatch(/localStorage|sessionStorage|console\./)
         expect(fonteTudo("atalho-secao.tsx", "guia-do-atalho.tsx")).not.toMatch(/setQueryData\(\s*\[\s*["']capture_tokens/)
     })
-    it("o passo 1 cria pelo formulário, e só o sucesso avança", () => {
+    it("o passo 2 cria o código pelo formulário, e só o sucesso avança", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toContain("Criar código")
         expect(g).toMatch(/<FormSubmit/)
@@ -113,7 +115,7 @@ describe("tokens de captura", () => {
     })
     it("trocar o gatilho com o código criado não cria outro código", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toMatch(/if \(codigo\) return irPara\(/)
+        expect(g).toMatch(/if \(codigo\) return irPara\(2\)/)
     })
     it("no app instalado do iPhone o download vai ao Safari, que salva o .shortcut", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
@@ -561,5 +563,13 @@ describe("Excluir conta: dois passos enxutos", () => {
         for (const t of ["Confirme com sua senha", "\"Sua conta e os dados acima serão apagados.\""]) expect(f).toContain(t)
         expect(confirmar).toContain('id="delete-password"')
         expect(confirmar).toContain("disabled={!password}")
+    })
+})
+
+describe("a lista de aparelhos", () => {
+    it("a linha do aparelho diz o gatilho; sem ele, fica como antes", () => {
+        const base = { last_used_at: null, atalho_gatilho: null } as CaptureToken
+        expect(legendaDoAparelho(base, "Casa")).toBe("Casa · ainda não lançou nada")
+        expect(legendaDoAparelho({ ...base, atalho_gatilho: "toque" }, "Casa")).toBe("Casa · Toque atrás · ainda não lançou nada")
     })
 })

@@ -5,6 +5,7 @@ import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
+import { GATILHOS } from "@/components/account/gatilhos-do-atalho"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
 import { SettingsSection } from "@/components/settings/settings-section"
@@ -43,6 +44,13 @@ const relativo = (iso: string) => {
 
 /** Já lançou, mas pelo atalho antigo (sem `X-Atalho-Versao`): falta o formulário. */
 const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_versao == null
+
+/** "Carteira · gatilho · uso", sem parte vazia. */
+export function legendaDoAparelho(t: CaptureToken, carteira: string): string {
+    const gatilho = GATILHOS.find((g) => g.valor === t.atalho_gatilho)?.rotulo
+    const uso = t.last_used_at ? `último gasto ${relativo(t.last_used_at)}` : "ainda não lançou nada"
+    return [carteira, gatilho, uso].filter(Boolean).join(" · ")
+}
 
 export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 
@@ -127,10 +135,7 @@ export function AtalhoSecao() {
                                                         />
                                                     ) : null}
                                                     <span className="truncate">
-                                                        {carteira?.name ?? "Carteira"} ·{" "}
-                                                        {t.last_used_at
-                                                            ? `último gasto ${relativo(t.last_used_at)}`
-                                                            : "ainda não lançou nada"}
+                                                        {legendaDoAparelho(t, carteira?.name ?? "Carteira")}
                                                     </span>
                                                     </div>
                                                 </Muted>
