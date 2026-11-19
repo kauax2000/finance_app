@@ -739,12 +739,24 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 <>
                     {incomeCategories.length > 0 ? (
                         <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {incomeCategories.map((category) => (
+                            {incomeCategories.map((category) => {
+                                const totaisDaReceita = incomeCategories.map((c) => {
+                                    const r = incomeByCategoryId[c.id]
+                                    return Math.max(0, (r?.recebido ?? 0) + (r?.previsto ?? 0))
+                                })
+                                const mes = incomeByCategoryId[category.id] ?? { recebido: 0, previsto: 0 }
+                                return (
                                 <IncomeCategoryCard
                                     key={category.id}
                                     category={category}
+                                    recebido={mes.recebido}
+                                    previsto={mes.previsto}
+                                    anterior={0}
+                                    totalDoMes={totaisDaReceita.reduce((a, b) => a + b, 0)}
+                                    maiorTotal={Math.max(0, ...totaisDaReceita)}
+                                    mesYm={budgetMonthYm}
+                                    historico={undefined}
                                     href={categoryDetailPath(category.id, { type: "income" })}
-                                    month={incomeByCategoryId[category.id] ?? { recebido: 0, previsto: 0 }}
                                     onEdit={podeEscrever ? () => openDialog(category) : undefined}
                                     onDelete={
                                         podeEscrever
@@ -752,7 +764,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                             : undefined
                                     }
                                 />
-                            ))}
+                                )
+                            })}
                         </div>
                     ) : (
                         <EmptyState variant="plain" size="sm">

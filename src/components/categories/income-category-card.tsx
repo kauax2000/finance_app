@@ -12,45 +12,114 @@ import {
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { CategoryCardContextMenu } from "@/components/categories/category-card-context-menu"
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
-import { TILE_INCOME_DEFAULT } from "@/lib/tile-palette"
+import { ChartSkeleton, ChartSparkline } from "@/components/ui/chart"
+import { Progress } from "@/components/ui/progress"
+import { shiftYearMonth } from "@/lib/budget-month"
+import {
+    mediaDosMeses,
+    rotuloDaVariacao,
+    participacao,
+    variacaoDoMes,
+    type Situacao,
+    type Variacao,
+} from "@/lib/categoria-situacao"
 import { currencyBRL } from "@/lib/formatters"
-import type { ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
+import { TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
+import { formatMonthShortPtBr } from "@/lib/transaction-date"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
 }
 
+const TOM_DA_VARIACAO: Record<Variacao["kind"], string> = {
+    up: "text-income",
+    down: "text-expense",
+    flat: "text-muted-foreground",
+    novo: "text-muted-foreground",
+    nenhum: "text-muted-foreground",
+}
+
+function variacaoPorExtenso(v: Variacao): string | undefined {
+    if (v.kind === "up") return `↑ ${v.pct}% vs mês anterior`
+    if (v.kind === "down") return `↓ ${v.pct}% vs mês anterior`
+    if (v.kind === "flat") return "Estável vs mês anterior"
+    if (v.kind === "novo") return "Sem receita no mês anterior"
+    return undefined
+}
+
+function mesCurto(ym: string): string {
+    const [y, m] = ym.split("-").map(Number)
+    return formatMonthShortPtBr(new Date(y, m - 1, 1))
+}
+
 export function IncomeCategoryCard({
     category,
+    recebido,
+    previsto,
+    anterior,
+    totalDoMes,
+    maiorTotal,
+    mesYm,
+    historico,
     href,
     onEdit,
     onDelete,
-    month,
 }: {
     category: { id: string; name: string; icon: string | null; color: string | null }
+    recebido: number
+    previsto: number
+    anterior: number
+    totalDoMes: number
+    maiorTotal: number
+    mesYm: string
+    /** Os 5 meses anteriores, do mais antigo ao mais recente; `undefined` enquanto carrega. */
+    historico: number[] | undefined
     href: string
     /** Sem eles (o convidado, Bloco 7A), o cartão é só leitura: sem o menu. */
     onEdit?: () => void
     onDelete?: () => void
-    /** Recebido e previsto do mês. Sem ele, o cartão é só o nome. */
-    month?: ReceitaDoMes
 }) {
-    const color = category.color || TILE_INCOME_DEFAULT
+    const color = tileColorFor(category.color) ?? TILE_INCOME_DEFAULT
+    // O estorno maior que a receita deixa o mês negativo: tudo lê como zero.
+    const recebidoNaTela = Math.max(0, recebido)
+    const previstoNaTela = Math.max(0, previsto)
+    const total = Math.max(0, recebido + previsto)
+
+    const variacao = variacaoDoMes(total, anterior)
+    const rotulo = rotuloDaVariacao(variacao, shiftYearMonth(mesYm, -1))
+    const frase = participacao(total, totalDoMes, "income")
+
+    const serie =
+        historico === undefined
+            ? null
+            : [...historico, total].map((v, i, todos) => ({
+                  name: mesCurto(shiftYearMonth(mesYm, i - (todos.length - 1))),
+                  total: Math.max(0, v),
+              }))
+    const media = historico === undefined ? 0 : mediaDosMeses(historico)
+    const valores = serie?.map((p) => p.total) ?? []
+    const descricaoDaSerie = serie
+        ? `de ${currencyBRL(Math.min(...valores))} a ${currencyBRL(Math.max(...valores))}; média ${currencyBRL(media)}`
+        : undefined
+
+    const barraLabel = `${category.name}: ${frase}`
 
     return (
-        // O cartão inteiro é clicável pelo `CardLink` no título (rodada 204),
-        // e não por um <a> em volta de tudo: o menu ficava dentro de um link.
+        // O cartão inteiro é clicável pelo `CardLink` no título (o link
+        // esticado do sistema, rodada 204), e não por um <a> em volta de tudo:
+        // o menu ficava dentro de um link, e o aria-label do link apagava o
+        // conteúdo do cartão.
         <CategoryCardContextMenu
             name={category.name}
-            description="Categoria de receita"
+            description={`${currencyBRL(total)} no mês`}
             href={href}
             onEdit={onEdit}
             onDelete={onDelete}
         >
-        <Card padding="sm" className="group h-full">
+            <Card padding="sm" className="group h-full">
                 <CardHeader
                     media={
                         <ColorTile size="lg" color={color}>
@@ -58,20 +127,28 @@ export function IncomeCategoryCard({
                         </ColorTile>
                     }
                 >
-                    <CardTitle className="min-w-0 self-center truncate font-semibold leading-tight @min-[360px]/card-header:max-w-none">
+                    <CardTitle className="min-w-0 self-center truncate leading-snug">
                         <CardLink asChild>
                             <Link href={href}>{category.name}</Link>
                         </CardLink>
                     </CardTitle>
-                    <CardAction>
-                        {onEdit && onDelete ? (
+
+                    {onEdit && onDelete ? (
+                        <CardAction>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
                                         variant="tertiary"
                                         size="icon-md"
-                                        className="text-muted-foreground hover:text-foreground active:text-foreground"
+                                        // No cursor, o ⋯ só aparece com ele sobre o cartão; o teclado o
+                                        // acha pelo foco. No toque não existe: o toque longo abre o menu de
+                                        // contexto. O `opacity-0` é cru, e não `[@media(hover:hover)]:`: a
+                                        // variante arbitrária sai depois do `group-hover:` no CSS e venceria.
+                                        className={cn(
+                                            "text-muted-foreground hover:text-foreground active:text-foreground",
+                                            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100 pointer-coarse:hidden",
+                                        )}
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}
                                         onPointerDown={(e) => e.stopPropagation()}
@@ -79,77 +156,73 @@ export function IncomeCategoryCard({
                                         <EllipsisVerticalIcon aria-hidden />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    size="sm"
-                                >
+                                <DropdownMenuContent align="end" size="sm">
                                     <DropdownMenuItem onSelect={onEdit}>
                                         <PencilIcon aria-hidden />
                                         Editar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive"
-                                        onSelect={onDelete}
-                                    >
+                                    <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                                         <TrashIcon aria-hidden />
                                         Excluir
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        ) : null}
-                    </CardAction>
+                        </CardAction>
+                    ) : null}
                 </CardHeader>
 
                 <CardContent className="flex flex-1 flex-col gap-3">
-                    {month ? (
-                        <>
-                            <div className="flex items-start justify-between gap-2">
-                                <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">
-                                    {currencyBRL(month.recebido + month.previsto)}
-                                </p>
-                                <div
-                                    className={cn(
-                                        "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors",
-                                        "group-hover:text-foreground group-active:text-foreground",
-                                    )}
-                                    aria-hidden
+                    <div>
+                        <div className="flex items-baseline justify-between gap-2">
+                            <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">
+                                {currencyBRL(total)}
+                            </p>
+                            {rotulo ? (
+                                <span
+                                    className={cn("shrink-0 text-xs font-medium", TOM_DA_VARIACAO[variacao.kind])}
+                                    title={variacaoPorExtenso(variacao)}
                                 >
-                                    Ver categoria
-                                    <ChevronRightIcon
-                                        className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
-                                        aria-hidden
-                                    />
-                                </div>
-                            </div>
-                            {month.previsto > 0 ? (
-                                <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-                                    Recebido <span className="tabular-nums">{currencyBRL(month.recebido)}</span>{" "}
-                                    <span className="text-muted-foreground/70">·</span> +{" "}
-                                    <span className="tabular-nums">{currencyBRL(month.previsto)}</span> previstos
-                                </p>
-                            ) : (
-                                <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-                                    Sem previsões no mês
-                                </p>
-                            )}
-                        </>
-                    ) : (
-                        <div
-                            className={cn(
-                                "inline-flex w-full items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors",
-                                "group-hover:text-foreground group-active:text-foreground",
-                                "mt-auto",
-                            )}
-                            aria-hidden
-                        >
-                            Ver categoria
-                            <ChevronRightIcon
-                                className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
-                                aria-hidden
-                            />
+                                    {rotulo}
+                                </span>
+                            ) : null}
                         </div>
+                        {previstoNaTela > 0 ? (
+                            <p className="text-xs text-muted-foreground tabular-nums">
+                                {currencyBRL(recebidoNaTela)} recebido + {currencyBRL(previstoNaTela)} previsto
+                            </p>
+                        ) : null}
+                    </div>
+
+                    {historico === undefined ? (
+                        <ChartSkeleton aspect="auto" bars={6} className="h-10 pb-0" />
+                    ) : (
+                        <ChartSparkline
+                            variant="area"
+                            y="total"
+                            className="h-10"
+                            data={serie ?? []}
+                            reference={media}
+                            config={{ total: { label: category.name, color } }}
+                            label={`Receita em ${category.name} nos últimos 6 meses`}
+                            description={descricaoDaSerie}
+                        />
                     )}
+
+                    <div className="mt-auto flex flex-col gap-1.5">
+                        <Progress
+                            size="sm"
+                            value={recebidoNaTela}
+                            projected={previstoNaTela}
+                            max={maiorTotal > 0 ? maiorTotal : 1}
+                            aria-label={barraLabel}
+                        />
+                        <p className="text-xs text-muted-foreground">{frase}</p>
+                    </div>
                 </CardContent>
-        </Card>
+            </Card>
         </CategoryCardContextMenu>
     )
 }
+
+/** Mantido o nome antigo: o osso é o mesmo da despesa. */
+export { CategoryCardSkeleton as IncomeCategoryCardSkeleton } from "@/components/categories/expense-category-card"

@@ -34,6 +34,6 @@ describe("o cabeçalho de Categorias", () => {
 
     it("a receita recebe o mês", () => {
         expect(f).toContain("receitasDoMesPorCategoria(")
-        expect(f).toContain("month={")
+        expect(f).toContain("recebido={")
     })
 })
