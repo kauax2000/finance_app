@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<!-- Diagnóstico temporário da geometria do app instalado no iOS (WebKit 301994). Apagar depois. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diag">
+<link rel="manifest" href="/diag/manifest.json">
+<title>Diag</title>
+<style>
+html{background:#400;color:#fff;font:14px -apple-system,system-ui}
+body{margin:0;background:#111}
+#m{padding:90px 14px 20px;white-space:pre-wrap;font:12px ui-monospace,monospace;line-height:1.5}
+#b{display:flex;gap:8px;padding:0 14px}
+#b button{font:600 14px -apple-system;padding:10px 12px;border-radius:10px;border:0;background:#fff;color:#000}
+.c{position:fixed;width:18%;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none}
+.c i{display:block;height:28px;font:700 11px -apple-system;font-style:normal;color:#000;text-align:center;line-height:28px}
+#A{left:1%;bottom:0} #A i{background:#f33}
+#B{left:21%;bottom:calc(100% - var(--vh))} #B i{background:#3d3}
+#C{left:41%;top:0;height:var(--vh)} #C i{background:#39f}
+#D{left:61%;top:0;height:100lvh} #D i{background:#fd0}
+#E{left:81%;top:0;height:100dvh} #E i{background:#c6f}
+.tall #sp{height:1600px}
+.lock,.lock body{overflow:hidden}
+</style></head><body>
+<div id="m"></div>
+<div id="b"><button id="t1">Página alta</button><button id="t2">Travar rolagem</button></div>
+<div id="sp"></div>
+<div class="c" id="A"><i>A</i></div><div class="c" id="B"><i>B</i></div><div class="c" id="C"><i>C</i></div><div class="c" id="D"><i>D</i></div><div class="c" id="E"><i>E</i></div>
+<script>
+const R=document.documentElement;
+function px(v){const d=document.createElement('div');d.style.cssText='position:fixed;top:0;visibility:hidden;height:'+v;document.body.appendChild(d);const h=Math.round(d.getBoundingClientRect().height);d.remove();return h}
+function bot(id){return Math.round(document.getElementById(id).getBoundingClientRect().bottom)}
+function upd(){
+  R.style.setProperty('--vh',innerHeight+'px');
+  document.getElementById('m').textContent=[
+  'standalone: '+matchMedia('(display-mode: standalone)').matches,
+  'tela: '+screen.width+'×'+screen.height,
+  'innerHeight: '+innerHeight+'   clientHeight: '+R.clientHeight,
+  'visualViewport: '+Math.round(visualViewport?visualViewport.height:0),
+  '100vh '+px('100vh')+' · lvh '+px('100lvh')+' · dvh '+px('100dvh')+' · svh '+px('100svh'),
+  'safe-area topo '+px('env(safe-area-inset-top,0px)')+' · pé '+px('env(safe-area-inset-bottom,0px)'),
+  'pé de cada barra: A '+bot('A')+' · B '+bot('B')+' · C '+bot('C')+' · D '+bot('D')+' · E '+bot('E'),
+  'página alta: '+R.classList.contains('tall')+' · rolagem travada: '+R.classList.contains('lock')+' · scrollY '+Math.round(scrollY),
+  '',
+  'A bottom:0 (hoje: gavetas)  B bottom:calc(100% − innerHeight)',
+  'C topo + innerHeight  D topo + 100lvh (hoje: barra)  E topo + 100dvh',
+  'A barra certa encosta no pé físico da tela.'].join('\n')}
+document.getElementById('t1').onclick=()=>{R.classList.toggle('tall');upd()};
+document.getElementById('t2').onclick=()=>{R.classList.toggle('lock');upd()};
+addEventListener('resize',upd);addEventListener('scroll',upd);upd();setInterval(upd,800);
+</script></body></html>
