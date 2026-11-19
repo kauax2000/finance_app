@@ -154,11 +154,13 @@ export function ExpenseCategoryCard({
                                         type="button"
                                         variant="tertiary"
                                         size="icon-md"
-                                        // No cursor, o ⋯ só aparece com ele sobre o cartão; o
-                                        // teclado o acha pelo foco, e o toque longo abre o menu de contexto.
+                                        // No cursor, o ⋯ só aparece com ele sobre o cartão; o teclado o
+                                        // acha pelo foco. No toque não existe: o toque longo abre o menu de
+                                        // contexto. O `opacity-0` é cru, e não `[@media(hover:hover)]:`: a
+                                        // variante arbitrária sai depois do `group-hover:` no CSS e venceria.
                                         className={cn(
                                             "text-muted-foreground hover:text-foreground active:text-foreground",
-                                            "[@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100",
+                                            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100 pointer-coarse:hidden",
                                         )}
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}

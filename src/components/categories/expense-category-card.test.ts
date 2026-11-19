@@ -34,9 +34,11 @@ describe("ExpenseCategoryCard pelo fonte", () => {
 
     it("o ⋯ só existe para quem escreve e só aparece no cursor", () => {
         expect(fonte).toContain("onEdit && onDelete")
-        expect(fonte).toContain("[@media(hover:hover)]:opacity-0")
-        expect(fonte).toContain("group-hover:opacity-100")
-        expect(fonte).toContain("group-focus-within:opacity-100")
+        // O `opacity-0` cru: o `[@media(hover:hover)]:opacity-0` sai depois do `group-hover:` no CSS e o venceria.
+        expect(fonte).toMatch(/"opacity-0 group-hover:opacity-100 group-focus-within:opacity-100/)
+        expect(fonte).not.toContain("[@media(hover:hover)]:opacity-0")
+        // No toque o ⋯ não existe: o toque longo abre o menu de contexto.
+        expect(fonte).toContain("pointer-coarse:hidden")
     })
 
     it("a série carregando vira o esqueleto do gráfico", () => {
