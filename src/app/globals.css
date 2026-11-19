@@ -2444,6 +2444,18 @@ html[data-subpagina]::view-transition-new(root) {
 ::view-transition-group(subpagina-conteudo) {
   animation: none;
 }
+/* As fotos já nascem onde a animação começa: o WebKit desenha alguns quadros antes de
+   ligar a animação, e sem o desvio a foto velha mostrava o topo nunca pintado da tela
+   (simulador, 19/11/2026). */
+html[data-subpagina]::view-transition-old(subpagina-conteudo) {
+  translate: 0 var(--subpagina-desvio, 0px);
+}
+html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
+  translate: 100% 0;
+}
+html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
+  translate: -30% 0;
+}
 html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo),
 html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
   z-index: 1;
@@ -2472,6 +2484,10 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   from {
     translate: 100% 0;
   }
+  /* Explícito: a foto nova já nasce em 100% (acima), e o `to` implícito ficaria lá. */
+  to {
+    translate: 0 0;
+  }
 }
 @keyframes subpagina-esquerda {
   from {
@@ -2494,6 +2510,9 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   from {
     translate: -30% 0;
     opacity: 0.85;
+  }
+  to {
+    translate: 0 0;
   }
 }
 

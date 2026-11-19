@@ -26,7 +26,7 @@ describe("a transição de subpágina", () => {
     })
 
     it("o gesto espera a tela nova: a navegação corre dentro da promessa, e há um teto", () => {
-        expect(T).toMatch(/startViewTransition\(async \(\) => \{\s+router\.push\([\s\S]+await telaPronta\(rotaDeAntes\)/)
+        expect(T).toMatch(/startViewTransition\(async \(\) => \{[\s\S]{0,160}?router\.push\([\s\S]+await telaPronta\(rotaDeAntes\)/)
         expect(T).toContain("const LIMITE_DA_ESPERA_MS = 1200")
         expect(T).toContain(`'[aria-busy="true"], [data-slot="skeleton"]'`)
     })
@@ -42,6 +42,27 @@ describe("a transição de subpágina", () => {
     it("o teto do esqueleto nasce na troca de rota, não no clique", () => {
         // o temporizador de 1,2s é armado dentro do ramo em que a rota já mudou
         expect(T).toMatch(/location\.pathname !== rotaDeAntes[\s\S]{0,300}setTimeout\([^,]+, LIMITE_DA_ESPERA_MS\)/)
+    })
+
+    // No WebKit, rolar com a promessa correndo mostra a página viva no lugar da foto
+    // parada: a Você rolada piscava em branco (simulador, 19/11/2026).
+    it("a navegação não rola durante a espera; a rolagem ao topo vem depois da tela pronta", () => {
+        expect(T).toContain("{ scroll: false }")
+        expect(T).toMatch(/await telaPronta\(rotaDeAntes\)[\s\S]{0,140}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)/)
+    })
+
+    // A tela nova mais curta encolhia o documento, e o navegador cortava a rolagem sozinho.
+    it("o conteúdo segura a altura durante a espera e a solta antes de rolar", () => {
+        expect(T).toMatch(/conteudo\.style\.minHeight = `\$\{conteudo\.offsetHeight\}px`[\s\S]+router\.push/)
+        expect(T).toMatch(/conteudo\.style\.minHeight = ""[\s\S]{0,60}window\.scrollTo/)
+    })
+
+    // O WebKit desenha as fotos alguns quadros antes de ligar a animação.
+    it("as fotos já nascem no quadro inicial, e os keyframes de entrada têm o `to` explícito", () => {
+        expect(CSS).toMatch(/html\[data-subpagina\]::view-transition-old\(subpagina-conteudo\) \{\s+translate: 0 var\(--subpagina-desvio, 0px\);/)
+        expect(CSS).toMatch(/html\[data-subpagina="entra"\]::view-transition-new\(subpagina-conteudo\) \{\s+translate: 100% 0;/)
+        expect(CSS).toMatch(/@keyframes subpagina-direita \{[\s\S]{0,200}to \{\s+translate: 0 0;/)
+        expect(CSS).toMatch(/@keyframes subpagina-vem-esquerda \{[\s\S]{0,120}to \{\s+translate: 0 0;/)
     })
 
     it("só o telefone, sem movimento reduzido, fora de diálogo e de link externo", () => {

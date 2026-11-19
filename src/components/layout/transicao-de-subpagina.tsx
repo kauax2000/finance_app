@@ -87,9 +87,17 @@ export function TransicaoDeSubpagina() {
             if (raiz.dataset.subpagina) return
             const rolagemDeAntes = window.scrollY
             raiz.dataset.subpagina = direcao
+            // A tela nova é mais curta, e o navegador corta a rolagem sozinho quando o
+            // documento encolhe — outra rolagem na espera. A altura fica até a troca.
+            const conteudo = document.querySelector<HTMLElement>("[data-workspace-content]")
             const transicao = doc.startViewTransition(async () => {
-                router.push(`${destino.pathname}${destino.search}${destino.hash}`)
+                if (conteudo) conteudo.style.minHeight = `${conteudo.offsetHeight}px`
+                // Sem rolar: no WebKit, rolar durante a espera troca a foto parada pela página
+                // viva, ainda não pintada, e a tela pisca em branco. A rolagem vem no fim.
+                router.push(`${destino.pathname}${destino.search}${destino.hash}`, { scroll: false })
                 if (!(await telaPronta(rotaDeAntes))) transicao.skipTransition()
+                if (conteudo) conteudo.style.minHeight = ""
+                window.scrollTo({ top: 0, behavior: "instant" })
                 raiz.style.setProperty("--subpagina-desvio", `${window.scrollY - rolagemDeAntes}px`)
             })
             void transicao.finished.finally(() => delete raiz.dataset.subpagina)
