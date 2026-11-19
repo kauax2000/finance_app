@@ -13,7 +13,7 @@ export interface ButtonGroupProps extends React.ComponentProps<"div"> {
     /**
      * `rail` veste o trilho do `Tabs floating` (placa, anel, recuo, 36 · 44 no
      * dedo) para um par de ações de navegação com um valor no meio (o mês). Não
-     * é escolha segmentada: isso é `Tabs`. Só horizontal (ignora `orientation`). Mede e arredonda só os filhos `<button>`: não `ButtonGroupText` nem link com `asChild`.
+     * é escolha segmentada: isso é `Tabs`. Só horizontal.
      */
     variant?: "rail"
 }
@@ -55,8 +55,6 @@ const RAIL = [
     "[&>button:not([data-size^=icon])]:h-8! pointer-coarse:[&>button:not([data-size^=icon])]:h-10!",
     "[&>button[data-size^=icon]]:size-8! pointer-coarse:[&>button[data-size^=icon]]:size-10!",
     "[&>button]:rounded-full",
-    // O alvo de 44 do dedo, como o gatilho do `Tabs` (o `Button` não tem `::after` de toque).
-    "[&>button]:relative pointer-coarse:[&>button]:after:absolute pointer-coarse:[&>button]:after:inset-x-0 pointer-coarse:[&>button]:after:top-1/2 pointer-coarse:[&>button]:after:h-11 pointer-coarse:[&>button]:after:-translate-y-1/2 pointer-coarse:[&>button]:after:content-['']",
 ]
 
 /** A mesma emenda, em pé: cantos de cima e de baixo, fio na horizontal. */
@@ -109,7 +107,7 @@ export function ButtonGroup({
         <div
             data-slot="button-group"
             data-size={size}
-            data-orientation={variant === "rail" ? "horizontal" : orientation}
+            data-orientation={orientation}
             data-variant={variant}
             className={cn(
                 "group/button-group",

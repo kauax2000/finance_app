@@ -26,13 +26,6 @@ describe("ButtonGroup variant=rail", () => {
     expect(rail).toContain("[&>button:not([data-size^=icon])]:h-8!")
   })
 
-  it("no dedo cada botão tem o alvo de 44 pelo ::after, como o gatilho do Tabs", () => {
-    expect(rail).toContain("[&>button]:relative")
-    expect(rail).toContain("pointer-coarse:[&>button]:after:h-11")
-    expect(rail).toContain("pointer-coarse:[&>button]:after:absolute")
-    expect(GRUPO).toContain('data-orientation={variant === "rail" ? "horizontal" : orientation}')
-  })
-
   it("sem emenda, filete nem canto achatado", () => {
     expect(rail).not.toMatch(/-ml-px|rounded-l-none|rounded-r-none|before:/)
     expect(GRUPO).toContain('variant !== "rail" && JUNTA')
