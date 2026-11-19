@@ -43,7 +43,6 @@ import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-re
 import { dividirDoMes, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
 import { useSerieDasCategorias } from "@/hooks/use-serie-das-categorias"
 import {
-    ContagemDoMes,
     OrdemDasCategorias,
     SemMovimentoNoMes,
     mesNaFrase,
@@ -699,7 +698,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 showMonthControls
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                contagem={mostrarOrdem ? <ContagemDoMes quantidade={doMes.comMovimento.length} /> : undefined}
+                contagem={mostrarOrdem ? doMes.comMovimento.length : undefined}
                 ordem={
                     mostrarOrdem ? (
                         <OrdemDasCategorias

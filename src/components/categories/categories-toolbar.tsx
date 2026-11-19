@@ -1,6 +1,6 @@
 "use client"
 
-import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
+import { Toolbar, ToolbarActions, ToolbarButton, ToolbarCount } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { useReducedMotion } from "motion/react"
@@ -354,7 +354,7 @@ export function CategoriesToolbar({
     className?: string
     includeAll?: boolean
     /** A contagem de categorias do mês: logo depois das abas, só no desktop. */
-    contagem?: React.ReactNode
+    contagem?: number
     /** A ordem da grade: no grupo da direita, antes do mês. */
     ordem?: React.ReactNode
 }) {
@@ -369,7 +369,13 @@ export function CategoriesToolbar({
                 className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 includeAll={includeAll}
             />
-            {contagem ? <div className="flex self-stretch max-md:hidden">{contagem}</div> : null}
+            {contagem != null ? (
+                <ToolbarCount
+                    count={contagem}
+                    noun={["categoria", "categorias"]}
+                    className="self-end max-md:hidden"
+                />
+            ) : null}
 
             <ToolbarActions>
                 {ordem}

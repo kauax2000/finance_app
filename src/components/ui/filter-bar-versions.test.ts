@@ -735,5 +735,7 @@ describe("o deslize da barra é medido contra ela", () => {
 describe("a contagem assenta no pé da linha", () => {
   it("o span do filter-bar-count leva self-end, para ficar rente à base dos tokens", () => {
     expect(CODIGO).toMatch(/data-slot="filter-bar-count"[^>]*className="[^"]*\sself-end\s[^"]*"/)
+    // No empilhado (coluna, items-stretch) o self-end jogaria a contagem à borda direita.
+    expect(CODIGO).toMatch(/data-slot="filter-bar-count"[^>]*@max-md\/filter-bar:self-auto/)
   })
 })

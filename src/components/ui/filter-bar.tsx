@@ -1358,7 +1358,7 @@ function FilterBar({
             data-slot="filter-bar-count"
             layout={deslizar}
             transition={SURGIR.transition}
-            className="ms-auto self-end shrink-0 text-sm whitespace-nowrap text-muted-foreground nums @max-md/filter-bar:ms-0"
+            className="ms-auto self-end @max-md/filter-bar:self-auto shrink-0 text-sm whitespace-nowrap text-muted-foreground nums @max-md/filter-bar:ms-0"
           >
             {/* Na barra estreita o nome sai da vista, e o leitor de tela ainda ouve "48 lançamentos". */}
             {menu ? (

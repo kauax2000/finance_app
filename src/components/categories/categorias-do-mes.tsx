@@ -27,15 +27,6 @@ export function mesNaFrase(ym: string, anoAtual: number): string {
 
 const mesDaFrase = (ym: string) => mesNaFrase(ym, new Date().getFullYear())
 
-/** "10 categorias" / "1 categoria": a contagem que mora na barra, rente ao pé das abas. */
-export function ContagemDoMes({ quantidade, className }: { quantidade: number; className?: string }) {
-    return (
-        <p className={cn("nums self-end text-sm text-muted-foreground", className)}>
-            {quantidade} {quantidade === 1 ? "categoria" : "categorias"}
-        </p>
-    )
-}
-
 const opcoesDeOrdem = (tipo: Tipo): { value: CriterioDeOrdem; label: string }[] => [
     { value: "maior", label: tipo === "income" ? "Maior receita" : "Maior gasto" },
     { value: "nome", label: "Nome" },
@@ -77,7 +68,7 @@ export function OrdemDasCategorias({
     }
     return (
         <Select value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
-            <SelectTrigger size="sm" aria-label="Ordenar categorias">
+            <SelectTrigger aria-label="Ordenar categorias">
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

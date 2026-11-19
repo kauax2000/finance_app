@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
-const { ContagemDoMes, OrdemDasCategorias, SemMovimentoNoMes, mesNaFrase } = await import("./categorias-do-mes")
+const { OrdemDasCategorias, SemMovimentoNoMes, mesNaFrase } = await import("./categorias-do-mes")
 
 beforeAll(() => {
     vi.useFakeTimers({ now: new Date(2026, 10, 19, 12) })
@@ -25,21 +25,12 @@ describe("mesNaFrase", () => {
     })
 })
 
-describe("ContagemDoMes", () => {
-    const html = (n: number) => renderToStaticMarkup(h(ContagemDoMes, { quantidade: n }))
-
-    it("conta as categorias, sem a frase do mês", () => {
-        expect(html(10)).toContain("10 categorias")
-        expect(html(10)).not.toContain("com gasto")
-    })
-
-    it("uma só no singular", () => {
-        expect(html(1)).toContain("1 categoria")
-        expect(html(1)).not.toContain("1 categorias")
-    })
-
-    it("cola no pé da linha", () => {
-        expect(html(3)).toContain("self-end")
+describe("a contagem do mês", () => {
+    it("é o ToolbarCount da barra, rente ao pé e escondido no telefone", () => {
+        const t = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"))
+        expect(t).toContain("<ToolbarCount")
+        expect(t).toContain('noun={["categoria", "categorias"]}')
+        expect(t).toContain('className="self-end max-md:hidden"')
     })
 })
 
