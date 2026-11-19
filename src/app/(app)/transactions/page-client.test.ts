@@ -143,7 +143,9 @@ describe("o esqueleto da página (spec §6.5)", () => {
         expect(esqueleto).toContain("<SkeletonGroup")
         expect(esqueleto).not.toContain("ResumoDasTransacoes")
         expect(esqueleto).toContain("<FilterBarSkeleton")
-        expect(esqueleto).toMatch(/<TableSkeleton[\s\S]*group=\{false\}/)
+        // Agrupado por dia, como a tela: a faixa do dia na tabela e um cartão por dia no telefone.
+        expect(esqueleto).toContain("<TableGroupRow")
+        expect(esqueleto).toContain("rounded-surface bg-card")
         expect([...esqueleto.matchAll(/function\s+([A-Z]\w*)/g)].map((m) => m[1])).toEqual(["TransactionsPageSkeleton"])
     })
 
