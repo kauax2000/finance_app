@@ -71,7 +71,7 @@ function MonthNavPicker({
                     variant="tertiary"
                     size={fullWidth ? undefined : "md"}
                     aria-label={pickerAriaLabel}
-                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "px-1.5 text-foreground")}
+                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "px-2.5 text-foreground")}
                 >
                     <span className="min-w-0 truncate">{monthLabel}</span>
                     {/* Na pílula do desktop o mês dispensa o chevron: as setas ao lado já dizem que ele muda. */}
