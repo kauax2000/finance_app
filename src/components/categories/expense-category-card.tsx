@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardHeader, CardLink, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,12 +37,13 @@ function stopLinkNavigation(e: React.MouseEvent) {
     e.stopPropagation()
 }
 
-const TOM_DA_VARIACAO: Record<Variacao["kind"], string> = {
-    up: "text-expense",
-    down: "text-income",
-    flat: "text-muted-foreground",
-    novo: "text-muted-foreground",
-    nenhum: "text-muted-foreground",
+// A variação mora num selo (Badge soft): o tom de dinheiro quando muda, neutro quando não.
+const TOM_DA_VARIACAO: Record<Variacao["kind"], "expense" | "income" | "neutral"> = {
+    up: "expense",
+    down: "income",
+    flat: "neutral",
+    novo: "neutral",
+    nenhum: "neutral",
 }
 
 const TOM_DA_SITUACAO: Record<Situacao["tom"], string> = {
@@ -192,12 +194,15 @@ export function ExpenseCategoryCard({
                                 {currencyBRL(total)}
                             </p>
                             {rotulo ? (
-                                <span
-                                    className={cn("shrink-0 text-xs font-medium", TOM_DA_VARIACAO[variacao.kind])}
+                                <Badge
+                                    variant="soft"
+                                    tone={TOM_DA_VARIACAO[variacao.kind]}
+                                    size="sm"
+                                    className="shrink-0 self-center"
                                     title={variacaoPorExtenso(variacao)}
                                 >
                                     {rotulo}
-                                </span>
+                                </Badge>
                             ) : null}
                         </div>
                         {previstoNaTela > 0 ? (
