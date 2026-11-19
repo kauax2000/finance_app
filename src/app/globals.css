@@ -2400,38 +2400,7 @@
   }
 }
 
-/* A subpágina do telefone (`TransicaoDeSubpagina`): a tela de cima corre sobre a de
-   baixo, que recua. O grupo não anima porque quem anda é cada foto, e as barras
-   ganham nome só durante a troca (`data-subpagina` no `<html>`) para ficar paradas
-   por cima: o nome faz da barra uma raiz de fundo, e o borrão sumiria em repouso. A
-   página rolada vira, antes da foto, uma janela do tamanho da tela (`data-janela`),
-   rolada por dentro, com a página em 0. A foto do conteúdo é
-   transparente: a de cima leva o fundo da página, e `normal` tira a soma de brilho do
-   cruzamento padrão. O gesto anda na curva das folhas do vaul (`--duration-spring` em
-   `--ease-emphasized`): 300ms em `--ease-out` acabavam nos quadros que o Safari perde
-   montando a tela, e o gesto sumia. A de baixo escurece (0,85) ao recuar, como no push do iOS. */
-html[data-subpagina] [data-workspace-content] {
-  view-transition-name: subpagina-conteudo;
-}
-/* A janela (a altura e o `flex: none` vêm do script): as peças de dentro não encolhem
-   para caber, senão nada transborda e a rolagem de dentro fica em 0. */
-html[data-subpagina] [data-workspace-content][data-janela] {
-  overflow: hidden;
-}
-html[data-subpagina] [data-workspace-content][data-janela] > * {
-  flex-shrink: 0;
-}
-html[data-subpagina] [data-slot="top-bar"] {
-  view-transition-name: barra-do-topo;
-}
-html[data-subpagina] [data-slot="bottom-bar"] {
-  view-transition-name: barra-de-baixo;
-}
-/* Com nome, o borrão de dentro da barra não alcança a página, e sem ele o texto
-   passaria pela pílula: nesse instante ela fica chapada. */
-html[data-subpagina] [data-slot="bottom-bar-tabs"] {
-  background-color: var(--bottom-bar-surface);
-}
+/* As barras da troca de carteira (`.workspace-switch`) ficam paradas por cima. */
 ::view-transition-group(barra-do-topo),
 ::view-transition-group(barra-de-baixo) {
   animation: none;
@@ -2445,89 +2414,10 @@ html[data-subpagina] [data-slot="bottom-bar-tabs"] {
 ::view-transition-new(barra-de-baixo) {
   animation: none;
 }
-/* Com nome, o borrão da barra de cima também não alcança a página: as camadas da borda
-   (`top-bar-edge`) viram só tinta, e o conteúdo passava nítido por baixo da barra durante
-   a troca (simulador, 19/11/2026). Nesse instante ela veste a borda do desktop, a placa
-   de `--background` com o degradê (`top-bar-fade`), que esconde o que o borrão escondia.
-   Um `backdrop-filter` nos pseudo-elementos da troca não serve: o WebKit não os desenha
-   no quadro parado da espera, que é onde o nítido aparecia. */
-html[data-subpagina] [data-slot="top-bar"] > [data-slot="top-bar-fade"] {
-  --top-bar-fade-tint: var(--background);
-  display: block;
-  opacity: 1;
-}
-html[data-subpagina]::view-transition-old(root),
-html[data-subpagina]::view-transition-new(root) {
-  animation: none;
-}
-::view-transition-group(subpagina-conteudo) {
-  animation: none;
-}
-/* As fotos novas já nascem onde a animação começa: o WebKit desenha alguns quadros
-   antes de ligar a animação (simulador, 19/11/2026). */
-html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
-  translate: 100% 0;
-}
-html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
-  translate: -30% 0;
-}
-html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo),
-html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
-  z-index: 1;
-  background-color: var(--background);
-  mix-blend-mode: normal;
-}
-html[data-subpagina="entra"]::view-transition-old(subpagina-conteudo) {
-  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-esquerda;
-}
-html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
-  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-direita;
-}
-html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
-  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-sai-direita;
-}
-html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
-  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-vem-esquerda;
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(subpagina-conteudo),
-  ::view-transition-new(subpagina-conteudo) {
-    animation: none;
-  }
-}
+/* A tela de cima entrando da direita (a subtela da gaveta). */
 @keyframes subpagina-direita {
   from {
     translate: 100% 0;
-  }
-  /* Explícito: a foto nova já nasce em 100% (acima), e o `to` implícito ficaria lá. */
-  to {
-    translate: 0 0;
-  }
-}
-@keyframes subpagina-esquerda {
-  from {
-    translate: 0 0;
-  }
-  to {
-    translate: -30% 0;
-    opacity: 0.85;
-  }
-}
-@keyframes subpagina-sai-direita {
-  from {
-    translate: 0 0;
-  }
-  to {
-    translate: 100% 0;
-  }
-}
-@keyframes subpagina-vem-esquerda {
-  from {
-    translate: -30% 0;
-    opacity: 0.85;
-  }
-  to {
-    translate: 0 0;
   }
 }
 

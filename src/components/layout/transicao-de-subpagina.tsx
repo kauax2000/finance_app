@@ -1,21 +1,13 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { defaultMobileBackHref } from "@/components/layout/app-header"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { direcaoDaTela } from "@/lib/direcao-da-tela"
+import { direcaoDaTela, type DirecaoDaTela } from "@/lib/direcao-da-tela"
 
-/** A rota nova tem este tempo para chegar. Sem ela, a troca acontece sem gesto. */
-const LIMITE_DA_ROTA_MS = 2500
-/**
- * A espera inteira, do clique ao gesto, nunca passa disto: o iOS desiste da promessa em
- * ~4s (`TimeoutError`) e aborta a troca, e a Você aparecia do topo antes da tela nova.
- */
-const PRAZO_TOTAL_MS = 3000
-
-/** Quando a troca em curso começou: a marca `data-subpagina` sozinha não diz a idade. */
-let trocaDesde = 0
+/** A rota nova tem este tempo para chegar. Sem ela, a cópia sai e a troca segue sem gesto. */
+const LIMITE_DA_ROTA_MS = 8000
 /** Depois da troca de rota, quanto a tela velha espera o esqueleto sumir. */
 const LIMITE_DA_ESPERA_MS = 1200
 /** Sem esqueleto e sem o DOM mudar por esse tempo, a tela nova está pronta. */
@@ -24,19 +16,11 @@ const SOSSEGO_MS = 80
 /** O bloco à espera e o osso solto, que uma seção desenha sem `SkeletonGroup`. */
 const ESPERANDO = '[aria-busy="true"], [data-slot="skeleton"]'
 
-type DocumentoComTransicao = Document & {
-    startViewTransition?: (trocar: () => Promise<void>) => {
-        finished: Promise<void>
-        ready: Promise<void>
-        skipTransition: () => void
-    }
-}
-
 /**
  * Duas fases: espera a rota mudar (`false` se passar de `LIMITE_DA_ROTA_MS`) e, mudada,
  * espera o esqueleto sumir (`true`, com teto de `LIMITE_DA_ESPERA_MS` contado da troca).
  */
-function telaPronta(rotaDeAntes: string, inicio: number): Promise<boolean> {
+function telaPronta(rotaDeAntes: string): Promise<boolean> {
     const conteudo = document.querySelector("[data-workspace-content]")
     if (!conteudo) return Promise.resolve(true)
     return new Promise((pronta) => {
@@ -54,8 +38,7 @@ function telaPronta(rotaDeAntes: string, inicio: number): Promise<boolean> {
             if (location.pathname !== rotaDeAntes) {
                 if (!limiteDaEspera) {
                     clearTimeout(limiteDaRota)
-                    const restante = PRAZO_TOTAL_MS - (performance.now() - inicio)
-                    limiteDaEspera = setTimeout(() => acabar(true), Math.max(0, Math.min(LIMITE_DA_ESPERA_MS, restante)))
+                    limiteDaEspera = setTimeout(() => acabar(true), LIMITE_DA_ESPERA_MS)
                 }
                 if (!conteudo.querySelector(ESPERANDO)) sossego = setTimeout(() => acabar(true), SOSSEGO_MS)
             }
@@ -68,30 +51,91 @@ function telaPronta(rotaDeAntes: string, inicio: number): Promise<boolean> {
 }
 
 /**
- * A transição das subpáginas do telefone. O navegador segura a tela velha enquanto a
- * promessa do `startViewTransition` corre: a tela nova monta e carrega por baixo, e só
- * pronta o gesto começa, sem esqueleto à vista. A espera tem duas fases (a rota mudar, e
- * o esqueleto sumir); sem rota nova em 2,5s (e nunca passando de 3s no total) a troca acontece sem gesto. Vale para todo link,
- * e nenhuma tela marca nada. O voltar do navegador fica de fora, porque o gesto do Safari já anima.
+ * Uma cópia parada do conteúdo, na mesma posição da tela, numa camada fixa por baixo das
+ * barras (a de cima em `--z-header`, a de baixo em `--z-modal`). Ela segura a tela velha à vista enquanto a nova
+ * monta por baixo, e anda no gesto.
+ */
+function fotografar(conteudo: HTMLElement): HTMLElement {
+    const caixa = conteudo.getBoundingClientRect()
+    const camada = document.createElement("div")
+    camada.dataset.slot = "subpagina-foto"
+    camada.setAttribute("aria-hidden", "true")
+    camada.inert = true
+    Object.assign(camada.style, {
+        position: "fixed",
+        inset: "0",
+        overflow: "hidden",
+        backgroundColor: "var(--background)",
+        zIndex: "30",
+    })
+    const copia = conteudo.cloneNode(true) as HTMLElement
+    copia.removeAttribute("data-workspace-content")
+    Object.assign(copia.style, {
+        position: "absolute",
+        top: `${caixa.top}px`,
+        left: `${caixa.left}px`,
+        width: `${caixa.width}px`,
+        margin: "0",
+    })
+    camada.append(copia)
+    // No mesmo contexto do conteúdo: o `SidebarInset` é `isolate`, e uma camada no `body`
+    // ficaria por cima da tela nova inteira, sem deixar o conteúdo passar por cima dela.
+    ;(conteudo.parentElement ?? document.body).append(camada)
+    return camada
+}
+
+/** O gesto do push do iOS: a tela de cima corre sobre a de baixo, que recua e escurece. */
+function animar(camada: HTMLElement, conteudo: HTMLElement, direcao: DirecaoDaTela): Promise<void> {
+    const css = getComputedStyle(document.documentElement)
+    // O navegador pode devolver o token em `s` ("0.5s") ou em `ms` ("500ms").
+    const bruto = css.getPropertyValue("--duration-spring").trim()
+    const duration = (Number.parseFloat(bruto) || 0.5) * (bruto.endsWith("ms") ? 1 : 1000)
+    const easing = css.getPropertyValue("--ease-emphasized").trim() || "cubic-bezier(0.32, 0.72, 0, 1)"
+    const opcoes: KeyframeAnimationOptions = { duration, easing, fill: "both" }
+    // A tela nova precisa de fundo e de camada para passar por cima da cópia (ou por baixo, no voltar).
+    Object.assign(conteudo.style, {
+        position: "relative",
+        zIndex: direcao === "entra" ? "31" : "29",
+        backgroundColor: "var(--background)",
+        minHeight: "100dvh",
+    })
+    if (direcao === "volta") camada.style.zIndex = "31"
+    // `transform`, e não `translate`: o Safari ignora `translate` em keyframes de `animate()`.
+    const recua = [
+        { transform: "translateX(0)", opacity: 1 },
+        { transform: "translateX(-30%)", opacity: 0.85 },
+    ]
+    const sai = [{ transform: "translateX(0)" }, { transform: "translateX(100%)" }]
+    const vem = [{ transform: "translateX(100%)" }, { transform: "translateX(0)" }]
+    const volta = [
+        { transform: "translateX(-30%)", opacity: 0.85 },
+        { transform: "translateX(0)", opacity: 1 },
+    ]
+    const animacoes =
+        direcao === "entra"
+            ? [camada.animate(recua, opcoes), conteudo.animate(vem, opcoes)]
+            : [camada.animate(sai, opcoes), conteudo.animate(volta, opcoes)]
+    return Promise.all(animacoes.map((a) => a.finished)).then(() => {
+        for (const a of animacoes) a.cancel()
+    })
+}
+
+/**
+ * A transição das subpáginas do telefone. Sem View Transitions: no iPhone, a foto de uma
+ * troca não desenha `backdrop-filter`, e a barra de cima perdia o borrão (o texto passava
+ * nítido, ou a barra virava placa). Aqui as barras ficam vivas, com o borrão de verdade, e
+ * nunca entram no gesto: uma cópia parada do conteúdo fica à vista na mesma rolagem enquanto
+ * a tela nova monta e carrega por baixo, e as duas correm quando ela fica pronta, sem
+ * esqueleto à vista. Vale para todo link, e nenhuma tela marca nada. O voltar do navegador
+ * fica de fora, porque o gesto do Safari já anima.
  */
 export function TransicaoDeSubpagina() {
     const router = useRouter()
     const isMobile = useIsMobile()
-    const pathname = usePathname()
-    // A troca que passou do teto segue sem gesto: a tela nova chega depois, e só então
-    // a página vai ao topo (antes, a Você saltava ao topo e a tela nova vinha em corte).
-    const topoNaProximaRota = useRef(false)
-
-    useEffect(() => {
-        if (!topoNaProximaRota.current) return
-        topoNaProximaRota.current = false
-        window.scrollTo({ top: 0, behavior: "instant" })
-    }, [pathname])
 
     useEffect(() => {
         if (!isMobile) return
-        const doc = document as DocumentoComTransicao
-        const raiz = document.documentElement
+        let emCurso = false
 
         const aoClicar = (e: MouseEvent) => {
             if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
@@ -102,78 +146,38 @@ export function TransicaoDeSubpagina() {
             if (destino.origin !== location.origin) return
             const rotaDeAntes = location.pathname
             const direcao = direcaoDaTela(rotaDeAntes, destino.pathname, defaultMobileBackHref)
-            if (!direcao || !doc.startViewTransition) return
+            if (!direcao || emCurso) return
             if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+            const conteudo = document.querySelector<HTMLElement>("[data-workspace-content]")
+            if (!conteudo) return
 
-            // Uma troca em curso: o clique segue o `Link`, sem gesto, e nunca é engolido. Uma
-            // marca mais velha que o prazo é resto de troca que o navegador largou, e sai.
-            if (raiz.dataset.subpagina) {
-                if (performance.now() - trocaDesde < PRAZO_TOTAL_MS + 2000) return
-                delete raiz.dataset.subpagina
-            }
             // O `Link` não navega com o padrão impedido, e o `onClick` de quem chama segue valendo.
             e.preventDefault()
-            trocaDesde = performance.now()
-            // Antes da foto, o conteúdo vira uma janela do tamanho da tela, rolada por dentro
-            // até o mesmo ponto, com a página em 0. No WebKit a foto de um conteúdo alto e
-            // rolado sai vazia (o voltar de uma página longa cortava seco), e rolar a página
-            // durante a espera troca a foto parada pela página viva, em branco. Com a página
-            // em 0 e a janela de altura fixa, a tela nova não encolhe o documento nem rola.
-            const conteudo = document.querySelector<HTMLElement>("[data-workspace-content]")
+            emCurso = true
+            const camada = fotografar(conteudo)
             const rolagem = window.scrollY
-            // Antes da janela: as regras dela no CSS moram sob `html[data-subpagina]`.
-            raiz.dataset.subpagina = direcao
-            if (conteudo && rolagem > 0) {
-                const topo = conteudo.getBoundingClientRect().top + rolagem
-                conteudo.dataset.janela = ""
-                // `flex: none`: o `flex-1` do conteúdo venceria a altura dada.
-                conteudo.style.flex = "none"
-                conteudo.style.height = `${window.innerHeight}px`
-                window.scrollTo({ top: 0, behavior: "instant" })
-                conteudo.scrollTop = rolagem - topo
-            }
-            const inicio = performance.now()
-            let resolvida = false
-            const soltar = () => {
-                if (!conteudo || !("janela" in conteudo.dataset)) return
-                delete conteudo.dataset.janela
-                conteudo.style.flex = ""
-                conteudo.style.height = ""
-                conteudo.scrollTop = 0
-            }
-            const transicao = doc.startViewTransition(async () => {
-                // Sem rolar: a rolagem ao topo vem no fim, com a tela nova pronta.
-                router.push(`${destino.pathname}${destino.search}${destino.hash}`, { scroll: false })
-                const pronta = await telaPronta(rotaDeAntes, inicio)
-                if (resolvida) return
-                resolvida = true
-                if (pronta) {
-                    soltar()
-                    window.scrollTo({ top: 0, behavior: "instant" })
-                    return
-                }
-                voltarAoLugar()
-                transicao.skipTransition()
-            })
-            // Sem a rota nova (teto vencido, ou o iOS abortou a troca): a tela velha volta à
-            // rolagem em que a pessoa a deixou, e o topo só vem com a rota nova montada.
-            const voltarAoLugar = () => {
-                soltar()
-                if (location.pathname === rotaDeAntes) {
-                    window.scrollTo({ top: rolagem, behavior: "instant" })
-                    topoNaProximaRota.current = true
-                } else window.scrollTo({ top: 0, behavior: "instant" })
-            }
-            transicao.ready.catch(() => {})
-            void transicao.finished
-                .catch(() => {})
-                .finally(() => {
-                    if (!resolvida) {
-                        resolvida = true
-                        voltarAoLugar()
+            let novo = conteudo
+
+            void (async () => {
+                try {
+                    // A página não rola sozinha: quem decide a rolagem é a troca.
+                    router.push(`${destino.pathname}${destino.search}${destino.hash}`, { scroll: false })
+                    const pronta = await telaPronta(rotaDeAntes)
+                    if (!pronta) {
+                        // Sem a rota nova: a tela velha fica onde a pessoa a deixou.
+                        window.scrollTo({ top: rolagem, behavior: "instant" })
+                        return
                     }
-                    delete raiz.dataset.subpagina
-                })
+                    window.scrollTo({ top: 0, behavior: "instant" })
+                    // A rota nova pode montar outro nó de conteúdo: anima o que está na tela agora.
+                    novo = document.querySelector<HTMLElement>("[data-workspace-content]") ?? conteudo
+                    await animar(camada, novo, direcao)
+                } finally {
+                    camada.remove()
+                    for (const p of ["position", "z-index", "background-color", "min-height"]) novo.style.removeProperty(p)
+                    emCurso = false
+                }
+            })()
         }
 
         document.addEventListener("click", aoClicar, true)
