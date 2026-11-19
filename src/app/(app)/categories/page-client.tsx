@@ -18,7 +18,6 @@ import { CategoriesPageGridSkeleton } from "@/components/categories/categories-p
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
-    CategoryAppearanceFields,
     normalizeCategoryIcon,
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
@@ -31,14 +30,14 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import { Card, CardContent, CardMessage } from "@/components/ui/card"
-import { CustomForm, FormInput, FormSubmit } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
+import { CategoryFormFields } from "@/components/categories/category-form-fields"
 import { Button } from "@/components/ui/button"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 import { CategoriesToolbar, useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ExpenseCategoryCard } from "@/components/categories/expense-category-card"
-import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
 import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
 import { dividirDoMes, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
@@ -51,13 +50,11 @@ import {
 import { ChartPieIcon, ReceiptPercentIcon, TagIcon } from "@heroicons/react/24/outline"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
 import { localYmdFromDate } from "@/lib/transaction-date"
-import {
-    TransactionFormTypeSegment,
-    type TransactionFilterType,
-} from "@/components/transactions/transaction-type-segment"
+import { type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
 import {
   Dialog,
   DialogBody,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -74,7 +71,6 @@ import {
 } from "@/components/ui/page-header"
 import { upsertCategoryBudget, deleteCategoryBudgetById, definirRepeticao } from "@/lib/category-budget-ops"
 import { useGarantirOrcamentosDoMes } from "@/hooks/use-garantir-orcamentos-do-mes"
-import { OrcamentoRepeteWireframe } from "@/components/wireframe/orcamento-repete-wireframe"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput, roundCents } from "@/lib/money-brl"
@@ -616,11 +612,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         criterio,
     )
 
-    const dialogBudgetPeriod = periodBoundsFromYearMonth(budgetMonthYm)
     const dialogExistingBudget =
         editingCategory && type === "expense" ? budgetForCategory(editingCategory.id) : null
 
-    const sheetTitle = editingCategory ? "Editar Categoria" : "Nova Categoria"
+    const sheetTitle = editingCategory ? "Editar categoria" : "Nova categoria"
     const sheetDescription = editingCategory
         ? type === "expense"
             ? "Atualize os dados da categoria e o orçamento do mês selecionado na barra."
@@ -630,65 +625,29 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
           : "Adicione uma nova categoria"
 
     const categoryFormFields = (
-        <div className="space-y-4 py-4">
-            <FormInput
-                id="name"
-                label="Nome"
-                value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                }
-                placeholder="Ex: Alimentação"
-                required
-            />
-
-            <Field>
-                <FieldTitle>Tipo</FieldTitle>
-                <TransactionFormTypeSegment
-                    aria-label="Tipo"
-                    value={type}
-                    onChange={setType}
-                />
-            </Field>
-
-            <CategoryAppearanceFields
-                color={color}
-                onColorChange={setColor}
-                icon={icon}
-                onIconChange={setIcon}
-            />
-
-            {type === "expense" ? (
-                <Card variant="muted" padding="sm" className="px-3">
-                    <p className="text-xs text-muted-foreground">
-                        Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
-                        {dialogBudgetPeriod.period_end}.
-                    </p>
-                    <FormInput
-                        money
-                        label="Valor limite (R$)"
-                        placeholder="Ex: 1.500,00"
-                        value={editBudgetAmount}
-                        onValueChange={setEditBudgetAmount}
-                    />
-                    <OrcamentoRepeteWireframe
-                        repeats={editBudgetRepeats}
-                        onChange={setEditBudgetRepeats}
-                    />
-                    {dialogExistingBudget ? (
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            className="w-full sm:w-auto"
-                            disabled={saving || editBudgetRemoving}
-                            onClick={() => void handleDialogBudgetRemove()}
-                        >
-                            {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
-                        </Button>
-                    ) : null}
-                </Card>
-            ) : null}
-        </div>
+        <CategoryFormFields
+            idPrefix="category"
+            name={name}
+            onNameChange={setName}
+            type={type}
+            onTypeChange={setType}
+            color={color}
+            onColorChange={setColor}
+            icon={icon}
+            onIconChange={setIcon}
+            budget={
+                type === "expense"
+                    ? {
+                          ym: budgetMonthYm,
+                          amount: editBudgetAmount,
+                          onAmountChange: setEditBudgetAmount,
+                          repeats: editBudgetRepeats,
+                          onRepeatsChange: setEditBudgetRepeats,
+                          defaultOpen: Boolean(dialogExistingBudget),
+                      }
+                    : undefined
+            }
+        />
     )
 
     if (listLoading) {
@@ -752,13 +711,25 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <DialogBody className="pb-2">
                             {categoryFormFields}
                         </DialogBody>
-                        <DialogFooter>
-                            <FormSubmit
-                                size="sm"
-                                disabled={editBudgetRemoving}
-                            >
-                                Salvar
-                            </FormSubmit>
+                        <DialogFooter
+                            start={
+                                dialogExistingBudget ? (
+                                    <Button
+                                        type="button"
+                                        variant="tertiary"
+                                        className="text-destructive"
+                                        disabled={saving || editBudgetRemoving}
+                                        onClick={() => void handleDialogBudgetRemove()}
+                                    >
+                                        Remover limite
+                                    </Button>
+                                ) : undefined
+                            }
+                        >
+                            <DialogClose asChild>
+                                <FormCancel>Cancelar</FormCancel>
+                            </DialogClose>
+                            <FormSubmit disabled={editBudgetRemoving}>Salvar</FormSubmit>
                         </DialogFooter>
                     </CustomForm>
                 </DialogContent>

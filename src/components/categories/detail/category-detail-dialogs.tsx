@@ -1,8 +1,5 @@
 "use client"
 
-import {
-    Card,
-} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,7 +14,6 @@ import {
 import {
     CustomForm,
     FormCancel,
-    FormInput,
     FormSubmit,
 } from "@/components/ui/form"
 import {
@@ -30,14 +26,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Field, FieldTitle } from "@/components/ui/field"
-import { TransactionFormTypeSegment } from "@/components/transactions/transaction-type-segment"
-import {
-    CategoryAppearanceFields,
-    type CategoryIconId,
-} from "@/components/categories/category-appearance-fields"
+import { type CategoryIconId } from "@/components/categories/category-appearance-fields"
+import { CategoryFormFields } from "@/components/categories/category-form-fields"
 import type { Budget, Category } from "@/lib/supabase"
-import { periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 
 type CategoryDetailDialogsProps = {
@@ -56,6 +47,8 @@ type CategoryDetailDialogsProps = {
     onEditIconChange: (v: CategoryIconId) => void
     editBudgetAmount: string
     onEditBudgetAmountChange: (v: string) => void
+    editBudgetRepeats: boolean
+    onEditBudgetRepeatsChange: (v: boolean) => void
     editSaving: boolean
     editBudgetRemoving: boolean
     onEditBudgetRemove: () => void
@@ -82,6 +75,8 @@ export function CategoryDetailDialogs({
     onEditIconChange,
     editBudgetAmount,
     onEditBudgetAmountChange,
+    editBudgetRepeats,
+    onEditBudgetRepeatsChange,
     editSaving,
     editBudgetRemoving,
     onEditBudgetRemove,
@@ -91,65 +86,31 @@ export function CategoryDetailDialogs({
     deleteDeleting,
     onDeleteConfirm,
 }: CategoryDetailDialogsProps) {
-    const { period_start: periodStart, period_end: periodEnd } = periodBoundsFromYearMonth(yearMonth)
-
     const editDescription =
         editType === "expense"
             ? "Atualize o nome, o tipo, a aparência e o orçamento do mês selecionado desta categoria."
             : "Atualize o nome, o tipo e a aparência desta categoria."
 
     const editFields = (
-        <div className="space-y-4 py-4">
-            <FormInput
-                id="category-edit-name"
-                label="Nome"
-                value={editName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    onEditNameChange(e.target.value)
-                }
-                placeholder="Ex: Alimentação"
-                required
-            />
-            <Field>
-                <FieldTitle>Tipo</FieldTitle>
-                <TransactionFormTypeSegment
-                    aria-label="Tipo"
-                    value={editType}
-                    onChange={onEditTypeChange}
-                />
-            </Field>
-            <CategoryAppearanceFields
-                color={editColor}
-                onColorChange={onEditColorChange}
-                icon={editIcon}
-                onIconChange={onEditIconChange}
-            />
-            {editType === "expense" ? (
-                <Card variant="muted" padding="sm" className="px-3">
-                    <p className="text-xs text-muted-foreground">
-                        Limite de despesas para {periodStart} a {periodEnd}.
-                    </p>
-                    <FormInput
-                        money
-                        label="Valor limite (R$)"
-                        placeholder="Ex: 1.500,00"
-                        value={editBudgetAmount}
-                        onValueChange={onEditBudgetAmountChange}
-                    />
-                    {budget ? (
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            className="w-full sm:w-auto"
-                            disabled={editSaving || editBudgetRemoving}
-                            onClick={() => void onEditBudgetRemove()}
-                        >
-                            {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
-                        </Button>
-                    ) : null}
-                </Card>
-            ) : null}
-        </div>
+        <CategoryFormFields
+            idPrefix="category-edit"
+            name={editName}
+            onNameChange={onEditNameChange}
+            type={editType}
+            onTypeChange={onEditTypeChange}
+            color={editColor}
+            onColorChange={onEditColorChange}
+            icon={editIcon}
+            onIconChange={onEditIconChange}
+            budget={{
+                ym: yearMonth,
+                amount: editBudgetAmount,
+                onAmountChange: onEditBudgetAmountChange,
+                repeats: editBudgetRepeats,
+                onRepeatsChange: onEditBudgetRepeatsChange,
+                defaultOpen: Boolean(budget),
+            }}
+        />
     )
 
     return (
@@ -177,7 +138,21 @@ export function CategoryDetailDialogs({
                         <DialogBody>
                             {editFields}
                         </DialogBody>
-                        <DialogFooter>
+                        <DialogFooter
+                            start={
+                                budget && editType === "expense" ? (
+                                    <Button
+                                        type="button"
+                                        variant="tertiary"
+                                        className="text-destructive"
+                                        disabled={editSaving || editBudgetRemoving}
+                                        onClick={() => void onEditBudgetRemove()}
+                                    >
+                                        Remover limite
+                                    </Button>
+                                ) : undefined
+                            }
+                        >
                             <DialogClose asChild>
                                 <FormCancel>Cancelar</FormCancel>
                             </DialogClose>

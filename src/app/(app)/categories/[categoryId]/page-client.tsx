@@ -16,7 +16,7 @@ import {
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
 import { formatYearMonth, parseYearMonthParam, periodBoundsFromYearMonth } from "@/lib/budget-month"
-import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
+import { upsertCategoryBudget, deleteCategoryBudgetById, definirRepeticao } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
 import { toastError } from "@/lib/toast"
@@ -134,6 +134,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const [editColor, setEditColor] = React.useState<string>(CATEGORY_COLORS[0])
     const [editIcon, setEditIcon] = React.useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = React.useState("")
+    const [editBudgetRepeats, setEditBudgetRepeats] = React.useState(true)
     const [editBudgetRemoving, setEditBudgetRemoving] = React.useState(false)
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
 
@@ -149,6 +150,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 ? formatMoneyBrlInput(Number(budget.amount))
                 : "",
         )
+        setEditBudgetRepeats(budget?.repeats ?? true)
         setEditDialogOpen(true)
     }, [category, budget])
 
@@ -246,6 +248,17 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
 
             if (editType === "expense") {
                 const raw = editBudgetAmount.trim()
+                // Sem valor novo o upsert não roda: só a repetição do orçamento já salvo muda.
+                if (raw.length === 0 && budget && budget.repeats !== editBudgetRepeats) {
+                    const r = await definirRepeticao(budget.id, editBudgetRepeats)
+                    if (!r.ok) {
+                        setEditSaving(false)
+                        toastError(r.erro ?? "Não foi possível salvar o orçamento", {
+                            id: "salvar-categoria",
+                        })
+                        return
+                    }
+                }
                 if (raw.length > 0) {
                     const amt = parseMoneyBrl(editBudgetAmount)
                     if (amt === null || amt <= 0) {
@@ -262,7 +275,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         yearMonth,
                         amount: amt,
                         previousAmount: budget ? Number(budget.amount) : null,
-                        repeats: budget?.repeats,
+                        repeats: editBudgetRepeats,
                     })
                     if (budErr) {
                         setEditSaving(false)
@@ -289,6 +302,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             editColor,
             editIcon,
             editBudgetAmount,
+            editBudgetRepeats,
+            budget,
             yearMonth,
             invalidateDetail,
             category?.type,
@@ -517,6 +532,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 onEditIconChange={setEditIcon}
                 editBudgetAmount={editBudgetAmount}
                 onEditBudgetAmountChange={setEditBudgetAmount}
+                editBudgetRepeats={editBudgetRepeats}
+                onEditBudgetRepeatsChange={setEditBudgetRepeats}
                 editSaving={editSaving}
                 editBudgetRemoving={editBudgetRemoving}
                 onEditBudgetRemove={handleEditBudgetRemove}

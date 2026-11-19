@@ -1,25 +1,17 @@
 "use client"
 
 import * as React from "react"
-import {
-    Card,
-} from "@/components/ui/card"
-import { Field, FieldTitle } from "@/components/ui/field"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
-    CategoryAppearanceFields,
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
-import {
-    TransactionFormTypeSegment,
-} from "@/components/transactions/transaction-type-segment"
+import { CategoryFormFields } from "@/components/categories/category-form-fields"
 import {
     CustomForm,
     FormCancel,
-    FormInput,
     FormSubmit,
 } from "@/components/ui/form"
 import {
@@ -35,10 +27,7 @@ import {
 import { supabase } from "@/lib/supabase"
 import { upsertCategoryBudget } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import {
-    formatYearMonth,
-    periodBoundsFromYearMonth,
-} from "@/lib/budget-month"
+import { formatYearMonth } from "@/lib/budget-month"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { toastError, toastErrorWithDescription, toastSuccess } from "@/lib/toast"
 import { categoryDetailPath } from "@/config/navigation"
@@ -61,16 +50,13 @@ export function CategoryCreateDialog({
 }: CategoryCreateDialogProps) {
     const router = useRouter()
     const budgetMonthYm = React.useMemo(() => formatYearMonth(new Date()), [])
-    const dialogBudgetPeriod = React.useMemo(
-        () => periodBoundsFromYearMonth(budgetMonthYm),
-        [budgetMonthYm]
-    )
 
     const [name, setName] = React.useState("")
     const [type, setType] = React.useState<"income" | "expense">("expense")
     const [color, setColor] = React.useState<string>(CATEGORY_COLORS[0])
     const [icon, setIcon] = React.useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = React.useState("")
+    const [editBudgetRepeats, setEditBudgetRepeats] = React.useState(true)
     const [saving, setSaving] = React.useState(false)
 
     const resetForm = React.useCallback(() => {
@@ -79,6 +65,7 @@ export function CategoryCreateDialog({
         setColor(CATEGORY_COLORS[0])
         setIcon(CATEGORY_ICONS[0])
         setEditBudgetAmount("")
+        setEditBudgetRepeats(true)
     }, [])
 
     React.useEffect(() => {
@@ -140,6 +127,7 @@ export function CategoryCreateDialog({
                 categoryId: inserted.id,
                 yearMonth: budgetMonthYm,
                 amount: budgetAmt,
+                repeats: editBudgetRepeats,
             })
             if (budErr) {
                 // A categoria existe: fecha o diálogo e diz onde terminar.
@@ -176,50 +164,25 @@ export function CategoryCreateDialog({
             : "Adicione uma nova categoria"
 
     const fieldsBlock = (
-        <div className="space-y-4 py-4">
-            <FormInput
-                id="global-cat-name"
-                label="Nome"
-                value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                }
-                placeholder="Ex: Alimentação"
-                required
-            />
-
-            <Field>
-                <FieldTitle>Tipo</FieldTitle>
-                <TransactionFormTypeSegment
-                    aria-label="Tipo"
-                    value={type}
-                    onChange={setType}
-                />
-            </Field>
-
-            <CategoryAppearanceFields
-                color={color}
-                onColorChange={setColor}
-                icon={icon}
-                onIconChange={setIcon}
-            />
-
-            {type === "expense" ? (
-                <Card variant="muted" padding="sm" className="px-3">
-                    <p className="text-xs text-muted-foreground">
-                        Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
-                        {dialogBudgetPeriod.period_end}.
-                    </p>
-                    <FormInput
-                        money
-                        label="Valor limite (R$)"
-                        placeholder="Ex: 1.500,00"
-                        value={editBudgetAmount}
-                        onValueChange={setEditBudgetAmount}
-                    />
-                </Card>
-            ) : null}
-        </div>
+        <CategoryFormFields
+            idPrefix="global-cat"
+            name={name}
+            onNameChange={setName}
+            type={type}
+            onTypeChange={setType}
+            color={color}
+            onColorChange={setColor}
+            icon={icon}
+            onIconChange={setIcon}
+            budget={{
+                ym: budgetMonthYm,
+                amount: editBudgetAmount,
+                onAmountChange: setEditBudgetAmount,
+                repeats: editBudgetRepeats,
+                onRepeatsChange: setEditBudgetRepeats,
+                defaultOpen: false,
+            }}
+        />
     )
 
     // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). Enquanto
