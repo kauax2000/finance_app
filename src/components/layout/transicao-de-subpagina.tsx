@@ -1,13 +1,17 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { defaultMobileBackHref } from "@/components/layout/app-header"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { direcaoDaTela } from "@/lib/direcao-da-tela"
 
-/** A rota nova tem este tempo para chegar. Sem ela, a troca acontece sem gesto. */
-const LIMITE_DA_ROTA_MS = 4000
+/**
+ * A rota nova tem este tempo para chegar. Sem ela, a troca acontece sem gesto. Somado
+ * ao `LIMITE_DA_ESPERA_MS`, fica abaixo dos ~4s em que o navegador desiste da promessa
+ * (`TimeoutError`, iOS 27): passou disso, a transição abortava e a tela nova não vinha.
+ */
+const LIMITE_DA_ROTA_MS = 2500
 /** Depois da troca de rota, quanto a tela velha espera o esqueleto sumir. */
 const LIMITE_DA_ESPERA_MS = 1200
 /** Sem esqueleto e sem o DOM mudar por esse tempo, a tela nova está pronta. */
@@ -58,12 +62,22 @@ function telaPronta(rotaDeAntes: string): Promise<boolean> {
  * A transição das subpáginas do telefone. O navegador segura a tela velha enquanto a
  * promessa do `startViewTransition` corre: a tela nova monta e carrega por baixo, e só
  * pronta o gesto começa, sem esqueleto à vista. A espera tem duas fases (a rota mudar, e
- * o esqueleto sumir); sem rota nova em 4s a troca acontece sem gesto. Vale para todo link,
+ * o esqueleto sumir); sem rota nova em 2,5s a troca acontece sem gesto. Vale para todo link,
  * e nenhuma tela marca nada. O voltar do navegador fica de fora, porque o gesto do Safari já anima.
  */
 export function TransicaoDeSubpagina() {
     const router = useRouter()
     const isMobile = useIsMobile()
+    const pathname = usePathname()
+    // A troca que passou do teto segue sem gesto: a tela nova chega depois, e só então
+    // a página vai ao topo (antes, a Você saltava ao topo e a tela nova vinha em corte).
+    const topoNaProximaRota = useRef(false)
+
+    useEffect(() => {
+        if (!topoNaProximaRota.current) return
+        topoNaProximaRota.current = false
+        window.scrollTo({ top: 0, behavior: "instant" })
+    }, [pathname])
 
     useEffect(() => {
         if (!isMobile) return
@@ -85,22 +99,51 @@ export function TransicaoDeSubpagina() {
             // O `Link` não navega com o padrão impedido, e o `onClick` de quem chama segue valendo.
             e.preventDefault()
             if (raiz.dataset.subpagina) return
-            const rolagemDeAntes = window.scrollY
-            raiz.dataset.subpagina = direcao
-            // A tela nova é mais curta, e o navegador corta a rolagem sozinho quando o
-            // documento encolhe — outra rolagem na espera. A altura fica até a troca.
+            // Antes da foto, o conteúdo vira uma janela do tamanho da tela, rolada por dentro
+            // até o mesmo ponto, com a página em 0. No WebKit a foto de um conteúdo alto e
+            // rolado sai vazia (o voltar de uma página longa cortava seco), e rolar a página
+            // durante a espera troca a foto parada pela página viva, em branco. Com a página
+            // em 0 e a janela de altura fixa, a tela nova não encolhe o documento nem rola.
             const conteudo = document.querySelector<HTMLElement>("[data-workspace-content]")
-            const transicao = doc.startViewTransition(async () => {
-                if (conteudo) conteudo.style.minHeight = `${conteudo.offsetHeight}px`
-                // Sem rolar: no WebKit, rolar durante a espera troca a foto parada pela página
-                // viva, ainda não pintada, e a tela pisca em branco. A rolagem vem no fim.
-                router.push(`${destino.pathname}${destino.search}${destino.hash}`, { scroll: false })
-                if (!(await telaPronta(rotaDeAntes))) transicao.skipTransition()
-                if (conteudo) conteudo.style.minHeight = ""
+            const rolagem = window.scrollY
+            // Antes da janela: as regras dela no CSS moram sob `html[data-subpagina]`.
+            raiz.dataset.subpagina = direcao
+            if (conteudo && rolagem > 0) {
+                const topo = conteudo.getBoundingClientRect().top + rolagem
+                conteudo.dataset.janela = ""
+                // `flex: none`: o `flex-1` do conteúdo venceria a altura dada.
+                conteudo.style.flex = "none"
+                conteudo.style.height = `${window.innerHeight}px`
                 window.scrollTo({ top: 0, behavior: "instant" })
-                raiz.style.setProperty("--subpagina-desvio", `${window.scrollY - rolagemDeAntes}px`)
+                conteudo.scrollTop = rolagem - topo
+            }
+            const soltar = () => {
+                if (!conteudo || !("janela" in conteudo.dataset)) return
+                delete conteudo.dataset.janela
+                conteudo.style.flex = ""
+                conteudo.style.height = ""
+                conteudo.scrollTop = 0
+            }
+            const transicao = doc.startViewTransition(async () => {
+                // Sem rolar: a rolagem ao topo vem no fim, com a tela nova pronta.
+                router.push(`${destino.pathname}${destino.search}${destino.hash}`, { scroll: false })
+                const pronta = await telaPronta(rotaDeAntes)
+                soltar()
+                if (pronta) {
+                    window.scrollTo({ top: 0, behavior: "instant" })
+                    return
+                }
+                // Sem a rota nova: a tela velha fica onde a pessoa a deixou.
+                window.scrollTo({ top: rolagem, behavior: "instant" })
+                if (location.pathname === rotaDeAntes) topoNaProximaRota.current = true
+                else window.scrollTo({ top: 0, behavior: "instant" })
+                transicao.skipTransition()
             })
-            void transicao.finished.finally(() => delete raiz.dataset.subpagina)
+            void transicao.finished.finally(() => {
+                // Se a troca abortou antes da promessa, o conteúdo não fica preso numa tela.
+                soltar()
+                delete raiz.dataset.subpagina
+            })
         }
 
         document.addEventListener("click", aoClicar, true)
