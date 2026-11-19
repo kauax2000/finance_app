@@ -16,20 +16,10 @@ import {
     FormCancel,
     FormSubmit,
 } from "@/components/ui/form"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { type CategoryIconId } from "@/components/categories/category-appearance-fields"
 import { CategoryFormFields } from "@/components/categories/category-form-fields"
 import type { Budget, Category } from "@/lib/supabase"
-import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
+import { ExcluirCategoriaDialog } from "@/components/categories/excluir-categoria-dialog"
 
 type CategoryDetailDialogsProps = {
     category: Category
@@ -164,31 +154,14 @@ export function CategoryDetailDialogs({
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog pending={deleteDeleting} open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir categoria?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            <CategoryDeleteAlertBody categoryName={category.name} />
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel type="button">
-                            Cancelar
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            pendingLabel="Excluindo…"
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                void onDeleteConfirm()
-                            }}
-                        >
-                            Excluir
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ExcluirCategoriaDialog
+                categoria={category}
+                limite={category.type === "expense" && budget ? Number(budget.amount) : null}
+                pending={deleteDeleting}
+                open={deleteDialogOpen}
+                onOpenChange={onDeleteDialogOpenChange}
+                onConfirm={() => void onDeleteConfirm()}
+            />
 
         </>
     )

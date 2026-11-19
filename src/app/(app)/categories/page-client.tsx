@@ -33,7 +33,7 @@ import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { CategoryFormFields } from "@/components/categories/category-form-fields"
 import { Button } from "@/components/ui/button"
-import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
+import { ExcluirCategoriaDialog } from "@/components/categories/excluir-categoria-dialog"
 import { CategoriesToolbar, useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
@@ -79,16 +79,6 @@ import { FINANCE_CATEGORIES_MUTATED_EVENT } from "@/lib/workspace-data-events"
 import { ROUTES, categoryDetailPath } from "@/config/navigation"
 import { categoriesKeys } from "@/lib/queries/keys"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import {
     formatYearMonth,
     parseYearMonthParam,
@@ -161,7 +151,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         },
         [router],
     )
-    const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null)
+    const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
     const [deleteDeleting, setDeleteDeleting] = useState(false)
 
     const [name, setName] = useState("")
@@ -787,7 +777,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                                 onEdit={podeEscrever ? () => openDialog(category) : undefined}
                                                 onDelete={
                                                     podeEscrever
-                                                        ? () => setPendingDelete({ id: category.id, name: category.name })
+                                                        ? () => setPendingDelete(category)
                                                         : undefined
                                                 }
                                             />
@@ -853,7 +843,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                                     onEdit={podeEscrever ? () => openDialog(category) : undefined}
                                                     onDelete={
                                                         podeEscrever
-                                                            ? () => setPendingDelete({ id: category.id, name: category.name })
+                                                            ? () => setPendingDelete(category)
                                                             : undefined
                                                     }
                                                 />
@@ -919,45 +909,28 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 </Card>
             )}
 
-            <AlertDialog
+            <ExcluirCategoriaDialog
+                categoria={pendingDelete}
+                limite={
+                    pendingDelete?.type === "expense"
+                        ? Number(budgetForCategory(pendingDelete.id)?.amount ?? 0) || null
+                        : null
+                }
                 pending={deleteDeleting}
                 open={Boolean(pendingDelete)}
                 onOpenChange={(open) => {
                     if (!open && !deleteDeleting) setPendingDelete(null)
                 }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir categoria?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {pendingDelete ? (
-                                <CategoryDeleteAlertBody categoryName={pendingDelete.name} />
-                            ) : null}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel type="button">
-                            Cancelar
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            pendingLabel="Excluindo…"
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                if (!pendingDelete) return
-                                void (async () => {
-                                    setDeleteDeleting(true)
-                                    const ok = await handleDeleteConfirmed(pendingDelete.id)
-                                    setDeleteDeleting(false)
-                                    if (ok) setPendingDelete(null)
-                                })()
-                            }}
-                        >
-                            Excluir
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={() => {
+                    if (!pendingDelete) return
+                    void (async () => {
+                        setDeleteDeleting(true)
+                        const ok = await handleDeleteConfirmed(pendingDelete.id)
+                        setDeleteDeleting(false)
+                        if (ok) setPendingDelete(null)
+                    })()
+                }}
+            />
         </div>
     )
 }
