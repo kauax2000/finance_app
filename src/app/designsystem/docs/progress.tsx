@@ -17,7 +17,7 @@ import {
 import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { DocNote, DocSection, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 const ORCAMENTO = [
   ["Mercado", 45],
@@ -358,16 +358,21 @@ export default function ProgressDoc() {
         <Progress className="mt-3 max-w-md [--progress-highlight:var(--color-warning)]" value={5} max={12} segments={12} highlight={{ from: 5, to: 6 }} aria-label="5 de 12 parcelas lançadas, a 6ª aberta" />
       </DocNote>
 
-      <DocNote title="projected: o trecho tracejado do previsto">
-        <code>projected</code> (na unidade do <code>value</code>) desenha, depois do cheio, um trecho tracejado na tinta do tom: o que ainda vem. O indicador continua medindo só o <code>value</code>; o tom (com <code>bands</code>) e a pastilha de excesso contam o total, e o tracejado para no fim do trilho. O leitor de tela ouve &ldquo;lançado, mais N% previsto&rdquo;. Ignorado com <code>segments</code>, <code>zones</code> e na <code>brand</code>.
-        <div className="mt-3 flex max-w-md flex-col gap-3">
-          <Interruptores rotulo="Previsto">
-            <Interruptor id="previsto" rotulo="Previsto" valor={comPrevisto} onChange={setComPrevisto} />
-          </Interruptores>
-          <Progress value={1180} projected={comPrevisto ? 220 : undefined} max={1500} bands={BUDGET_BANDS} marker={63} aria-label="Orçamento com previsto" />
-          <code>{"<Progress value={1180} projected={220} max={1500} bands={BUDGET_BANDS} marker={63} />"}</code>
-        </div>
-      </DocNote>
+      <DocSection
+        title="Orçamento com previsto"
+        description="projected (na unidade do value) desenha, depois do cheio, um trecho tracejado na tinta do tom: o que ainda vem. O indicador continua medindo só o value; o tom (com bands) e a pastilha de excesso contam o total, e o tracejado para no fim do trilho. O leitor de tela ouve “lançado, mais N% previsto”. Ignorado com segments, zones e na brand."
+        code={`<Progress value={1180} projected={220} max={1500} bands={BUDGET_BANDS} marker={63} />`}
+        previewClassName="flex-col items-stretch"
+      >
+        <Controles
+          fim={
+            <Interruptores rotulo="peças">
+              <Interruptor id="previsto" rotulo="Previsto" valor={comPrevisto} onChange={setComPrevisto} />
+            </Interruptores>
+          }
+        />
+        <Progress className="max-w-md" value={1180} projected={comPrevisto ? 220 : undefined} max={1500} bands={BUDGET_BANDS} marker={63} aria-label="Orçamento com previsto" />
+      </DocSection>
 
       <DocNote title="O valor real continua sendo anunciado">
         O Radix trata <code>value</code> acima de <code>max</code> como indeterminado; o componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>, nos dois formatos. O <code>ProgressValue</code> é visual (<code>aria-hidden</code>) e escreve o mesmo número bruto, 104% e não 100.
