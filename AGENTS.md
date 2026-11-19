@@ -1424,7 +1424,7 @@ declaração de `background-color` no trilho).
     ativa na barra); a outra em foco mostra a prévia do halo a 45%, e as demais
     esmaecem a tinta. Sem peso nem marcador no fim. **`DropdownMenuRadioItem
     indicator="check"`**: o tique à direita (`CheckIcon`, na tinta do texto) e a
-    linha escolhida acesa (`bg-foreground/9`), para o menu de ordem (19/11/2026).
+    linha escolhida acesa (`bg-foreground/9`), para o menu de ordem (19/11/2026); `indicatorIcon` troca o tique (a seta do sentido da ordem).
   - Teto vertical
     `max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))]`
     (288px) e horizontal `max-w-(--radix-dropdown-menu-content-available-width)`, escritos

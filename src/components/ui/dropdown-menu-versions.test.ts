@@ -117,6 +117,13 @@ describe("o rádio com tique", () => {
     expect(fonte).toContain('indicator === "dot" ? (')
     expect(fonte).toContain('indicator = "dot"')
   })
+
+  it("indicatorIcon troca o tique nos dois ramos (menu e folha)", () => {
+    const fonte = lerFonte("src/components/ui/dropdown-menu.tsx")
+    expect(fonte).toContain("indicatorIcon?: React.ReactNode")
+    expect(fonte).toContain('{indicatorIcon ?? <CheckIcon aria-hidden className="text-foreground" />}')
+    expect(fonte).toContain("indicatorIcon ?? <CheckMiniIcon")
+  })
 })
 
 describe("o painel veste a superfície das outras placas", () => {

@@ -924,6 +924,7 @@ function DropdownMenuRadioItem({
   children,
   inset,
   indicator = "dot",
+  indicatorIcon,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
   inset?: boolean
@@ -939,6 +940,8 @@ function DropdownMenuRadioItem({
    * (`bg-foreground/9`).
    */
   indicator?: "dot" | "media" | "check"
+  /** Só com `indicator="check"`: troca o tique por outro ícone (a seta do sentido da ordem). */
+  indicatorIcon?: React.ReactNode
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
   const naBusca = React.useContext(DropdownMenuBuscaContext)
@@ -954,14 +957,17 @@ function DropdownMenuRadioItem({
         disabled={props.disabled}
         className={cn(drawerActionClassName, className)}
         onClick={() => {
+          // Como no Radix: o `onSelect` pode segurar o menu aberto com `preventDefault`.
+          const e = new Event("select", { cancelable: true })
+          props.onSelect?.(e)
           radio?.onValueChange?.(props.value)
-          estado.fechar()
+          if (!e.defaultPrevented) estado.fechar()
         }}
       >
         <span className="min-w-0 flex-1">{children}</span>
         {marcado ? (
           indicator === "check" ? (
-            <CheckMiniIcon aria-hidden className="size-5 !text-foreground" />
+            (indicatorIcon ?? <CheckMiniIcon aria-hidden className="size-5 !text-foreground" />)
           ) : (
             <span aria-hidden className="size-2 rounded-full bg-current" />
           )
@@ -1017,7 +1023,7 @@ function DropdownMenuRadioItem({
       {indicator === "check" ? (
         <span className={menuIndicatorSlotClassName}>
           <DropdownMenuPrimitive.ItemIndicator>
-            <CheckIcon aria-hidden className="text-foreground" />
+            {indicatorIcon ?? <CheckIcon aria-hidden className="text-foreground" />}
           </DropdownMenuPrimitive.ItemIndicator>
         </span>
       ) : null}

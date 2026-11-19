@@ -67,7 +67,7 @@ export default function DropdownMenuDoc() {
 
       <DocSection
         title="Com estado"
-        description="Checkbox para várias opções independentes, radio para uma escolha entre alternativas. Marcar uma caixa não fecha o menu (closeOnSelect volta ao padrão do Radix, que fecha); escolher um rádio fecha. O rádio de um menu de ordem usa indicator='check': o tique à direita e a linha escolhida acesa."
+        description="Checkbox para várias opções independentes, radio para uma escolha entre alternativas. Marcar uma caixa não fecha o menu (closeOnSelect volta ao padrão do Radix, que fecha); escolher um rádio fecha. O rádio de um menu de ordem usa indicator='check': o tique à direita e a linha escolhida acesa; indicatorIcon troca o tique por outro ícone (a seta do sentido da ordem)."
         code={`<DropdownMenuCheckboxItem checked>Mostrar canceladas</DropdownMenuCheckboxItem>
 <DropdownMenuRadioGroup value="data">
   <DropdownMenuRadioItem value="data">Data</DropdownMenuRadioItem>
