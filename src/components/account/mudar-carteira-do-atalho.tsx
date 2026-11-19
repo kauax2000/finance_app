@@ -16,6 +16,7 @@ import {
 import { CustomForm, FormCancel, FormControl, FormError, FormField, FormSubmit } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useWorkspace } from "@/components/workspace-provider"
+import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 
 /** Troca a carteira de um atalho sem baixá-lo de novo: o código continua o mesmo. */
@@ -91,7 +92,8 @@ export function MudarCarteiraDoAtalho({
                                 <SelectContent>
                                     {workspaces.map((w) => (
                                         <SelectItem key={w.id} value={w.id}>
-                                            {w.name}
+                                            <WorkspaceBrandMark iconKey={w.icon} backgroundColor={w.icon_background_color} size="xs" />
+                                            <span className="truncate">{w.name}</span>
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

@@ -692,3 +692,10 @@ describe("o Voltar dos guias sobe ao ‹ do canto no telefone", () => {
         })
     }
 })
+
+it("os seletores de carteira do atalho mostram o ladrilho de cada carteira", () => {
+    for (const arquivo of ["guia-do-atalho.tsx", "mudar-carteira-do-atalho.tsx"]) {
+        const f = lerFonte(`src/components/account/${arquivo}`)
+        expect(f).toMatch(/<SelectItem key=\{w\.id\} value=\{w\.id\}>\s*<WorkspaceBrandMark iconKey=\{w\.icon\} backgroundColor=\{w\.icon_background_color\}/)
+    }
+})

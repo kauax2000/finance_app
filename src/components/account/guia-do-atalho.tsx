@@ -45,6 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
+import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { menuPanelTintClassName } from "@/lib/glass-classes"
@@ -459,7 +460,8 @@ export function GuiaDoAtalho({
                                     <SelectContent>
                                         {workspaces.map((w) => (
                                             <SelectItem key={w.id} value={w.id}>
-                                                {w.name}
+                                                <WorkspaceBrandMark iconKey={w.icon} backgroundColor={w.icon_background_color} size="xs" />
+                                                <span className="truncate">{w.name}</span>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
