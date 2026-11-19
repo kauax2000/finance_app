@@ -104,3 +104,14 @@ describe("os três diálogos", () => {
         expect(criar).toContain("upsertCategoryBudget(")
     })
 })
+
+describe("o formulário limpa ao abrir, não ao fechar", () => {
+    it("fechar não troca o conteúdo durante a saída", () => {
+        const pagina = semComentarios(lerFonte("src/app/(app)/categories/page-client.tsx"), "tudo")
+        expect(pagina).not.toMatch(/setDialogOpen\(false\)\s*resetForm\(\)/)
+        const global = semComentarios(lerFonte("src/components/categories/category-create-dialog.tsx"), "tudo")
+        expect(global).not.toMatch(/if \(!open\) resetForm\(\)/)
+        expect(global).not.toMatch(/onOpenChange\(false\)\s*resetForm\(\)/)
+        expect(global).toMatch(/if \(open\) resetForm\(\)/)
+    })
+})

@@ -518,8 +518,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         }
 
         setSaving(false)
+        // Sem `resetForm` aqui: o `openDialog` limpa ao abrir, e limpar agora trocaria
+        // o conteúdo durante a animação de saída.
         setDialogOpen(false)
-        resetForm()
         bumpCategories()
         void fetchBudgetsAndSpend()
     }

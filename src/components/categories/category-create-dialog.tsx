@@ -68,9 +68,14 @@ export function CategoryCreateDialog({
         setEditBudgetRepeats(true)
     }, [])
 
-    React.useEffect(() => {
-        if (!open) resetForm()
-    }, [open, resetForm])
+    // Limpa ao abrir, e não ao fechar: limpar no fechar trocava o conteúdo durante
+    // a animação de saída. No render, e não num efeito, para a abertura já nascer
+    // limpa, sem um quadro com o rascunho anterior.
+    const [abertoAntes, setAbertoAntes] = React.useState(open)
+    if (open !== abertoAntes) {
+        setAbertoAntes(open)
+        if (open) resetForm()
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -151,7 +156,6 @@ export function CategoryCreateDialog({
 
         setSaving(false)
         onOpenChange(false)
-        resetForm()
         dispatchFinanceCategoriesMutated()
         router.refresh()
     }
