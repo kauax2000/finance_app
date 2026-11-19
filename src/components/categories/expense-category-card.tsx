@@ -231,13 +231,13 @@ export function ExpenseCategoryCard({
                     </div>
 
                     {historico === undefined ? (
-                        <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 pb-0" />
+                        <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 w-auto pb-0" />
                     ) : (
                         <ChartSparkline
                             variant="area"
                             bleed
                             y="total"
-                            className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16"
+                            className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 w-auto"
                             data={serie ?? []}
                             reference={media}
                             config={{ total: { label: category.name, color } }}
@@ -269,7 +269,7 @@ export function CategoryCardSkeleton() {
                     <Skeleton className="h-1.5 w-full rounded-full" />
                     <Skeleton shape="text" className="w-48 max-w-full" />
                 </div>
-                <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 pb-0" />
+                <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 w-auto pb-0" />
             </CardContent>
         </Card>
     )
