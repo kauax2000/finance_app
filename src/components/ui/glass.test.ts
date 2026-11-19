@@ -585,8 +585,13 @@ describe("a superfície de vidro", () => {
             "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)"
         )
         expect(gaveta, "sem rodapé o meio leva o respiro por dentro").toContain(
-            "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[&_[data-drawer-meio]]:pb-(--drawer-safe)"
+            "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[&_[data-drawer-meio]]:pb-(--drawer-pe)"
         )
+        expect(gaveta, "o respiro do pé é publicado para quem rola por dentro").toContain(
+            "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[--drawer-pe:var(--drawer-safe)]"
+        )
+        const filtro = semComentariosDe("src/components/ui/filter-bar.tsx")
+        expect(filtro, "a lista do filtro leva o respiro no fim").toContain("[&:last-child>:last-child]:pb-[calc(--spacing(2)+var(--drawer-pe,0px))]")
         // `[^)]*` não serve: o `)` de `--spacing(6)` vem antes do `env(`.
         expect(gaveta, "a fórmula do env() não está aqui").toMatch(
             /--drawer-safe:calc\([\s\S]*?env\(safe-area-inset-bottom/

@@ -572,7 +572,14 @@ function useTrocas(texto: string) {
 
 /** O teto da lista na gaveta: o do `Command` (288) é do popover e mostrava cinco dos oito campos; 55% da altura (até 480) mostra os oito num iPhone de 815. */
 // A linha do menu é concêntrica à placa (22 − 8 = 14, a do `DropdownMenu` e da paleta), não à gaveta (28 − 16 = 12).
-const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]"
+// O respiro do pé da gaveta (`--drawer-pe`, área segura) mora no fim do que vem por último, e não
+// fora da lista: a lista vai até o pé do telefone, e o último item assenta acima da barra de gestos.
+const LISTA_NA_GAVETA = [
+  "[--command-list-max-h:calc(min(55dvh,--spacing(120))+var(--drawer-pe,0px))] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]",
+  "!pb-0 [&:last-child>:last-child]:pb-[calc(--spacing(2)+var(--drawer-pe,0px))]",
+].join(" ")
+/** O rodapé de contagem, quando é ele que fecha a gaveta, leva o respiro do pé. */
+const RODAPE_NA_GAVETA = "[&:last-child]:pb-[calc(var(--popover-strip-py)+var(--drawer-pe,0px))]"
 
 /** No dedo, só a lista e os editores do popover não focam ao abrir (o teclado cobriria a lista); na gaveta, Descrição e Valor focam. */
 const noDedo = () =>
@@ -1747,7 +1754,7 @@ function ListaDeCampos({
       </CommandList>
       {/* Sem filtro ligado não há rodapé: o "Ver" só fecharia sobre a mesma lista (fecha-se arrastando). */}
       {naGaveta && usados.length > 0 ? (
-        <div className="flex gap-2 px-2 pb-2">
+        <div className="flex gap-2 px-2 pb-[calc(--spacing(2)+var(--drawer-pe,0px))]">
           <Button type="button" variant="tertiary" className="flex-1" onClick={onLimparTudo}>
             Limpar tudo
           </Button>
@@ -1942,7 +1949,7 @@ function EditorDeValor(props: EditorProps) {
       ) : null}
 
       {existia && naGaveta ? (
-        <div className={cn("pb-3", recuo)}>
+        <div className={cn("pb-[calc(--spacing(3)+var(--drawer-pe,0px))]", recuo)}>
           <Button type="button" variant="destructive" className="w-full" onClick={onRemover}>
             Remover filtro
           </Button>
@@ -2537,7 +2544,7 @@ function EditorDeLista({ campo, operador, valores, opcoes, remoto, onGravar, onC
           })}
         </CommandList>
       </Command>
-      <PopoverFooter className="justify-between pt-0 text-xs text-muted-foreground">
+      <PopoverFooter className={cn("justify-between pt-0 text-xs text-muted-foreground", naGaveta && RODAPE_NA_GAVETA)}>
         <span className="nums">
           {multiple ? (n === 0 ? "Nenhum selecionado" : `${n} ${n === 1 ? "selecionado" : "selecionados"}`) : null}
         </span>

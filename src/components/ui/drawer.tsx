@@ -149,7 +149,10 @@ const drawerContentVariants = cva(
     // Sem rodapé a lista ia até uma faixa vazia de vidro: agora passa por trás da barra de
     // gestos, e o último item assenta acima dela.
     "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:pb-0",
-    "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[&_[data-drawer-meio]]:pb-(--drawer-safe)",
+    "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[&_[data-drawer-meio]]:pb-(--drawer-pe)",
+    // O respiro do pé, publicado para quem rola por dentro do meio (a lista do `FilterBar`)
+    // o pôr no próprio fim; só vale sem rodapé.
+    "data-[vaul-drawer-direction=bottom]:not-has-[[data-slot=dialog-footer]]:[--drawer-pe:var(--drawer-safe)]",
     "data-[vaul-drawer-direction=top]:pt-(--drawer-safe)",
     "data-[vaul-drawer-direction=bottom]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
     "data-[vaul-drawer-direction=top]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-top,0px))]",
