@@ -8,7 +8,7 @@ O último passo mostra a Siri ("E aí Siri, Lançar gasto") e, abaixo, as abas
 Botão, Costas, Bloqueio e Ícone. Não há link do iCloud nem variável de
 ambiente.
 
-O arquivo servido hoje é o da primeira versão de 19/nov/2026 (commit `33fad78e`, ainda com a condição "é" do formulário), a pedido do dono, e o `gerar-atalho.py` voltou junto com ele.
+O arquivo servido hoje parte da primeira versão de 19/nov/2026 (commit `33fad78e`), a que a Siri abre, sem a condição "é" e sem o formulário: sem Entrada do atalho, ele pergunta "Qual foi o gasto?" e manda a frase ao lançamento inteligente do app.
 
 Os arquivos são gerados e assinados por:
 
@@ -44,28 +44,14 @@ O atalho tem, nesta ordem:
 As telas do guia são capturas do iOS 27 na moldura do iPhone
 (`scripts/atalho/moldura.py`, sobre o PSD de `docs/design/mockups/`).
 
-### Versão 2: frase ou formulário (3/nov/2026)
+### Versão 2: frase ou formulário (3/nov/2026 a 19/nov/2026)
 
-Sem Entrada do atalho, a versão 2 começa com um `GET` na mesma URL da Edge
-`capture` (cabeçalhos `Authorization: Bearer <código>` e `X-Atalho-Versao: 2`).
-A resposta é `{ "modo": "frase" | "formulario", "categorias": [...], "pagamentos": [...] }`,
-com as categorias de despesa e os cartões da carteira padrão do código (as listas
-começam com "Sem categoria" e "Não informar"; nomes repetidos ganham " (2)").
-`modo` segue o Lançamento inteligente da conta (`user_settings.lancamento_inteligente`).
-
-- **frase**: pede a frase, como antes. Se a resposta vier com `codigo: "sem_valor"`,
-  o atalho abre o formulário.
-- **formulario**: pergunta "Qual o valor?" (teclado numérico), "Descrição (opcional)",
-  "Categoria" e "Forma de pagamento" (as listas do `GET`) e "Data" (Hoje ou Outro dia),
-  e manda `amount`, `merchant`, `category`, `payment` (os nomes escolhidos), `date` e
-  `source: "shortcut"`. Nome fora da lista: 422 com `codigo: "opcao_invalida"`.
-
-Erro no `GET` (código revogado, sem plano): a notificação mostra o `resumo` e o
-atalho para. Uma Edge sem o `GET` responde 405 com resumo, e o atalho também para:
-publique a Edge antes de servir o arquivo novo. A Edge grava a versão do atalho em
-`capture_tokens.atalho_versao` quando o cabeçalho vem; o app pede para baixar de
-novo nos aparelhos sem versão, e "Baixar o atalho de novo" cria um código novo
-para o mesmo aparelho e desliga o antigo.
+A versão 2 fazia um `GET` com o modo da conta e, no modo formulário, perguntava valor,
+descrição, categoria, pagamento e data. As condições "é" dela paravam no iOS 27
+("Escolha um valor para cada parâmetro"), e saíram em 19/nov/2026: o atalho de hoje só
+pergunta a frase e manda com `source: "shortcut"`, e a Edge (as regras e, se preciso, a
+IA) faz o resto. O `GET` continua na Edge, sem uso pelo atalho. O cabeçalho
+`X-Atalho-Versao: 2` segue indo, para o app não pedir para baixar de novo.
 
 O resto deste guia é a referência de quem monta à mão.
 
