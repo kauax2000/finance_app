@@ -1422,7 +1422,9 @@ declaração de `background-color` no trilho).
     opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
     5,6:1 no claro) e a linha acende na tinta (`bg-foreground/15`), como a página
     ativa na barra); a outra em foco mostra a prévia do halo a 45%, e as demais
-    esmaecem a tinta. Sem peso nem marcador no fim.
+    esmaecem a tinta. Sem peso nem marcador no fim. **`DropdownMenuRadioItem
+    indicator="check"`**: o tique à direita (`CheckIcon`, na tinta do texto) e a
+    linha escolhida acesa (`bg-foreground/9`), para o menu de ordem (19/11/2026).
   - Teto vertical
     `max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))]`
     (288px) e horizontal `max-w-(--radix-dropdown-menu-content-available-width)`, escritos

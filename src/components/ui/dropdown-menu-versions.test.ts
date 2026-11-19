@@ -107,6 +107,18 @@ describe("o rádio que marca a escolha atual", () => {
   })
 })
 
+describe("o rádio com tique", () => {
+  it('indicator="check": o tique à direita na tinta do texto e a linha acesa, sem o ponto', () => {
+    const fonte = lerFonte("src/components/ui/dropdown-menu.tsx")
+    expect(fonte).toContain('indicator?: "dot" | "media" | "check"')
+    expect(fonte).toContain('indicator === "check" && "data-[state=checked]:bg-foreground/9"')
+    expect(fonte).toMatch(/indicator === "check" \? \(\s*<span className=\{menuIndicatorSlotClassName\}>[\s\S]*?<CheckIcon aria-hidden className="text-foreground" \/>/)
+    // O ponto só nasce com `dot`, o padrão.
+    expect(fonte).toContain('indicator === "dot" ? (')
+    expect(fonte).toContain('indicator = "dot"')
+  })
+})
+
 describe("o painel veste a superfície das outras placas", () => {
   it("variant panel não troca o raio para a linha alta", () => {
     const painel = CODIGO.slice(CODIGO.indexOf("panel: ["), CODIGO.indexOf("].join(\" \"),", CODIGO.indexOf("panel: [")))

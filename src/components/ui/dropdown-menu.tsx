@@ -934,9 +934,11 @@ function DropdownMenuRadioItem({
    * (contorno de 2px, afastado 2px) na cor da própria opção puxada para a tinta, a
    * linha escolhida acende cheia nos tons da barra lateral (a passagem é a 50%), a
    * outra em foco mostra a prévia esmaecida do mesmo halo, e as demais esmaecem a
-   * tinta. Sem peso e sem marcador no fim da linha.
+   * tinta. Sem peso e sem marcador no fim da linha. `check` é o menu de ordem: o
+   * tique (`CheckIcon`) à direita, na tinta do texto, e a linha escolhida acesa
+   * (`bg-foreground/9`).
    */
-  indicator?: "dot" | "media"
+  indicator?: "dot" | "media" | "check"
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
   const naBusca = React.useContext(DropdownMenuBuscaContext)
@@ -957,7 +959,13 @@ function DropdownMenuRadioItem({
         }}
       >
         <span className="min-w-0 flex-1">{children}</span>
-        {marcado ? <span aria-hidden className="size-2 rounded-full bg-current" /> : null}
+        {marcado ? (
+          indicator === "check" ? (
+            <CheckMiniIcon aria-hidden className="size-5 !text-foreground" />
+          ) : (
+            <span aria-hidden className="size-2 rounded-full bg-current" />
+          )
+        ) : null}
       </button>
     )
   }
@@ -969,6 +977,7 @@ function DropdownMenuRadioItem({
       className={cn(
         menuIndicatorItemClassName,
         naBusca && "gap-2 pl-2 py-1.5",
+        indicator === "check" && "data-[state=checked]:bg-foreground/9",
         indicator === "media" && [
           // Sem marcador no fim, a linha não reserva o `pr-8` dele. `py-1.5`: o
           // ladrilho de 24 mais 6 de cada lado dá os 36 das outras linhas (com
@@ -1002,6 +1011,13 @@ function DropdownMenuRadioItem({
                 dentro do indicador o `span` é inline, e inline ignora o `size-2`
                 (o ponto media 0×0, como mede o `Menubar` sem ele). */}
             <span className="block size-2 rounded-full bg-current" />
+          </DropdownMenuPrimitive.ItemIndicator>
+        </span>
+      ) : null}
+      {indicator === "check" ? (
+        <span className={menuIndicatorSlotClassName}>
+          <DropdownMenuPrimitive.ItemIndicator>
+            <CheckIcon aria-hidden className="text-foreground" />
           </DropdownMenuPrimitive.ItemIndicator>
         </span>
       ) : null}
