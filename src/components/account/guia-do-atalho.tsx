@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 import baixar from "./assets/atalho-1-baixar.webp"
 import arquivos from "./assets/atalho-2-arquivos.webp"
@@ -42,6 +43,22 @@ import telaBloqueada from "./assets/atalho-14-tela-bloqueada.webp"
 
 /** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
 const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
+
+/**
+ * No app instalado do iPhone o download não passa pelo Safari: abre num visualizador que
+ * salva "Lançar gasto.shortcut.html", mesmo com o servidor mandando nome e tipo certos, e o
+ * Atalhos não o reconhece. Lá o botão entrega o link ao Safari (`x-safari-https://`, iOS 17+),
+ * que baixa o `.shortcut`. Se o Safari não abrir (iOS antigo), o download segue no próprio app.
+ */
+function baixarPeloSafari(evento: { preventDefault(): void }) {
+    const { protocol, host } = window.location
+    if (protocol !== "https:") return
+    evento.preventDefault()
+    window.location.href = `x-safari-https://${host}${ARQUIVO_DO_ATALHO}`
+    window.setTimeout(() => {
+        if (document.visibilityState === "visible") window.location.assign(ARQUIVO_DO_ATALHO)
+    }, 1500)
+}
 
 /*
  * Capturas do iOS 27 na moldura do PSD de `docs/design/mockups/` (`scripts/atalho/moldura.py`).
@@ -125,6 +142,8 @@ export function GuiaDoAtalho({
     const [copiado, setCopiado] = useState(false)
     const [como, setComo] = useState<ComoAbrir>("siri")
     const [criando, setCriando] = useState(false)
+    const { isStandalone } = useDisplayMode()
+    const noAppDoIphone = useIsIos() && isStandalone
     usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...COMO_ABRIR.map((c) => c.tela)])
 
     const [abertoAntes, setAbertoAntes] = useState(open)
@@ -202,9 +221,15 @@ export function GuiaDoAtalho({
 
     const textos = (comoDoPasso: ComoAbrir): ReactNode[] => [
         "O nome ajuda a reconhecer o aparelho na lista.",
-        <>
-            Toque em <strong>Baixar o atalho</strong> e depois em <strong>Baixar</strong>.
-        </>,
+        noAppDoIphone ? (
+            <>
+                Toque em <strong>Baixar o atalho</strong>: o Safari abre. Lá, toque em <strong>Baixar</strong>.
+            </>
+        ) : (
+            <>
+                Toque em <strong>Baixar o atalho</strong> e depois em <strong>Baixar</strong>.
+            </>
+        ),
         <>
             Toque em ⬇︎ na barra do Safari, ou abra o app <strong>Arquivos</strong>, e toque em{" "}
             <strong>Lançar gasto</strong>.
@@ -241,7 +266,7 @@ export function GuiaDoAtalho({
                 {i === 1 ? (
                     <PecaDoPasso className="flex flex-col">
                         <Button asChild variant="primary">
-                            <a href={ARQUIVO_DO_ATALHO} download>
+                            <a href={ARQUIVO_DO_ATALHO} download onClick={noAppDoIphone ? baixarPeloSafari : undefined}>
                                 Baixar o atalho
                             </a>
                         </Button>

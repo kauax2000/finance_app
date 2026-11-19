@@ -97,9 +97,17 @@ describe("tokens de captura", () => {
         for (const a of ["atalho-1-baixar", "atalho-2-arquivos", "atalho-3-configurar", "atalho-4-colar"])
             expect(g).toContain(`from "./assets/${a}.webp"`)
         expect(g).toContain('"/atalho/Lan%C3%A7ar%20gasto.shortcut"')
-        expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download>/)
+        expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
         expect(g).not.toMatch(/NEXT_PUBLIC_CAPTURE_SHORTCUT_URL|icloud\.com|DeviceFrame/)
         expect(g).not.toContain("Montar à mão")
+    })
+    it("no app instalado do iPhone o download vai ao Safari, que salva o .shortcut", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toMatch(/useIsIos\(\) && isStandalone/)
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain(
+            "x-safari-https://${host}${ARQUIVO_DO_ATALHO}",
+        )
+        expect(g).toMatch(/visibilityState === "visible"\) window\.location\.assign\(ARQUIVO_DO_ATALHO\)/)
     })
     it("a cópia automática não quebra sem permissão, e o texto só promete a cópia que houve", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
