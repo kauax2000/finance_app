@@ -11,6 +11,7 @@ import {
     PecaDoPasso,
     PontosDoPasso,
     type Tela,
+    usePreCarregarTelas,
 } from "@/components/account/passo-a-passo"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
@@ -124,6 +125,7 @@ export function GuiaDoAtalho({
     const [copiado, setCopiado] = useState(false)
     const [como, setComo] = useState<ComoAbrir>("siri")
     const [criando, setCriando] = useState(false)
+    usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...COMO_ABRIR.map((c) => c.tela)])
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {

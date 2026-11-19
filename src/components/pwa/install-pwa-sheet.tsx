@@ -144,6 +144,8 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                                     src={p.imagem}
                                     alt=""
                                     sizes="240px"
+                                    // O webp já sai no tamanho: do CDN como está, sem o otimizador sob demanda.
+                                    unoptimized
                                     placeholder="blur"
                                     className={cn(
                                         "absolute inset-0 h-auto w-60 max-w-none transition-opacity duration-(--duration-slow) ease-(--ease-out)",

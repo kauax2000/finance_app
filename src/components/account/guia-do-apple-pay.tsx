@@ -11,6 +11,7 @@ import {
     TELA_DA_NOTIFICACAO,
     TELAS_DO_APPLE_PAY,
     type Tela,
+    usePreCarregarTelas,
 } from "@/components/account/passo-a-passo"
 import { CheckCircleIcon } from "@heroicons/react/20/solid"
 import { Button } from "@/components/ui/button"
@@ -128,6 +129,7 @@ export function GuiaDoApplePay({
     const [passo, setPasso] = useState(0)
     // O primeiro passo ao abrir não anima: só a troca de passo.
     const [mudou, setMudou] = useState(false)
+    usePreCarregarTelas(open, PASSOS.map((p) => p.tela))
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {

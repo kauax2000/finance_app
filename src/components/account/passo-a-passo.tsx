@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useEffect, type ReactNode } from "react"
 import Image, { type StaticImageData } from "next/image"
 import { motion, type Variants } from "motion/react"
 import { cn } from "@/lib/utils"
@@ -30,6 +30,24 @@ export type Tela = {
 
 /** A notificação depois do Apple Pay: a tela do último passo do guia e a do vazio da seção. */
 export const TELA_DA_NOTIFICACAO: Tela = { imagem: applePay, ancora: "topo" }
+
+/**
+ * Baixa as telas de todos os passos quando o guia abre: trocar de passo mostra a
+ * imagem já no cache, em vez de esperar a rede a cada "Próximo".
+ */
+export function usePreCarregarTelas(aberto: boolean, telas: (Tela | undefined)[]) {
+    useEffect(() => {
+        if (!aberto) return
+        for (const tela of telas) {
+            if (!tela) continue
+            const img = new window.Image()
+            img.decoding = "async"
+            img.src = tela.imagem.src
+        }
+        // As listas são constantes de módulo: basta abrir.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [aberto])
+}
 
 /** Dentro de um fantasma da caixa do passo: só a forma conta, nada carrega nem anima. */
 const Fantasma = createContext(false)
@@ -85,6 +103,10 @@ export function JanelaDoAparelho({
                     src={tela.imagem}
                     alt=""
                     sizes={j.sizes}
+                    // O webp já sai no tamanho (720 de largura, 20 a 70KB): servido do CDN como
+                    // está, sem esperar o otimizador sob demanda a cada passo, e é o mesmo
+                    // endereço que `usePreCarregarTelas` aquece.
+                    unoptimized
                     placeholder="blur"
                     className={cn("absolute inset-0 h-auto max-w-none", j.imagem)}
                 />
