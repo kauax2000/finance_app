@@ -6,9 +6,9 @@ describe("o seletor de mês do desktop", () => {
     const ini = f.indexOf("function MonthNavPicker(")
     const picker = f.slice(ini, f.indexOf("function MonthNavPanel(", ini))
 
-    it("é um botão só, com fundo e borda, que abre a grade de meses", () => {
+    it("é um botão só, sem fundo, que abre a grade de meses", () => {
         expect(ini).toBeGreaterThan(-1)
-        expect(picker).toMatch(/variant="outline"\s+aria-label=\{pickerAriaLabel\}/)
+        expect(picker).toMatch(/variant="tertiary"\s+aria-label=\{pickerAriaLabel\}/)
         expect(picker).toContain("<MonthNavPanel")
         expect(picker).toContain("ChevronDownIcon")
         expect(picker).not.toContain("CalendarIcon")

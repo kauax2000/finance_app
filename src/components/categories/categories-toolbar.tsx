@@ -65,7 +65,7 @@ function MonthNavPicker({
             <PopoverTrigger asChild>
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="tertiary"
                     aria-label={pickerAriaLabel}
                     className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth && "flex-1")}
                 >
