@@ -70,6 +70,11 @@ describe("OrdemDasCategorias", () => {
         for (const t of ["indicatorIcon=", "ArrowDownIcon", "rotate-180", "preventDefault()", "text-xs text-muted-foreground"]) expect(fonte).toContain(t)
     })
 
+    it("o sentido fica à vista em todas as ordens: a escolhida, o atual; as outras, o inicial", () => {
+        const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
+        expect(fonte).toContain("{o.value === criterio ? sentido : o.sentidos[0]}")
+    })
+
     it("o menu tem título, tique, ícones e os seis sentidos", () => {
         const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
         expect(fonte).toContain('title="Ordenar por"')

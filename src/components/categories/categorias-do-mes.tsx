@@ -110,7 +110,10 @@ export function OrdemDasCategorias({
                             <o.icon aria-hidden />
                             <span className="flex min-w-0 flex-col">
                                 {o.label}
-                                {o.value === criterio ? <span className="text-xs text-muted-foreground">{sentido}</span> : null}
+                                {/* Sempre à vista: a escolhida diz o sentido atual; as outras, o sentido em que começam. */}
+                                <span className="text-xs text-muted-foreground">
+                                    {o.value === criterio ? sentido : o.sentidos[0]}
+                                </span>
                             </span>
                         </DropdownMenuRadioItem>
                     ))}
