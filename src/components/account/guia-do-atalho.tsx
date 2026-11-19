@@ -104,11 +104,11 @@ const COMO_ABRIR: Record<Gatilho, { texto: string; tela: Tela }> = {
     },
 }
 
-/** As abas do último passo no toque: onde o mesmo "Lançar gasto rápido" pode morar. */
+/** As abas do último passo no toque: onde o mesmo "Lançar gasto rápido" pode morar. Rótulos curtos: as quatro cabem em 343px; o nome inteiro está no texto da aba. */
 const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string }[] = [
-    { valor: "acao", rotulo: "Botão de Ação" },
-    { valor: "toque", rotulo: "Toque atrás" },
-    { valor: "bloqueio", rotulo: "Tela bloqueada" },
+    { valor: "acao", rotulo: "Botão" },
+    { valor: "toque", rotulo: "Costas" },
+    { valor: "bloqueio", rotulo: "Bloqueio" },
     { valor: "inicio", rotulo: "Ícone" },
 ]
 
@@ -160,6 +160,7 @@ export function GuiaDoAtalho({
             setPasso(0)
             // Baixar de novo abre com o modo do aparelho marcado; um aparelho novo começa no toque.
             setModo(modoDoGatilho(substituir?.atalho_gatilho ?? null))
+            setLugar("acao")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
             setNome(substituir?.name ?? nomeLivre(primeiro ? `iPhone de ${primeiro}` : "iPhone", nomesEmUso))
@@ -172,7 +173,6 @@ export function GuiaDoAtalho({
     const nomeDaCarteira = workspaces.find((w) => w.id === carteiraEscolhida)?.name ?? "sua carteira"
     const ultimo = passo === PASSOS.length - 1
     const atual = MODOS_DO_ATALHO.find((m) => m.valor === modo)!
-    const outro = MODOS_DO_ATALHO.find((m) => m.valor !== modo)!
 
     function irPara(n: number) {
         setMudou(true)
@@ -228,7 +228,8 @@ export function GuiaDoAtalho({
             navigator.clipboard.writeText(data).then(() => setCopiado(true)).catch(() => {})
     }
 
-    const textos: ReactNode[] = [
+    /** Os textos dos passos; o do último sai de `alvo`, para cada fantasma medir a própria combinação. */
+    const textos = (alvo: Gatilho): ReactNode[] => [
         "Os dois lançam na mesma carteira, com o mesmo código. Dá para ter os dois.",
         "O nome ajuda a reconhecer o aparelho na lista.",
         noAppDoIphone ? (
@@ -255,7 +256,7 @@ export function GuiaDoAtalho({
         </>,
         <>
             {/* A Siri também segue o Lançamento inteligente (frase ou formulário), só que por voz; a linha só vale para o toque. */}
-            {modo === "voz"
+            {alvo === "siri"
                 ? `${COMO_ABRIR.siri.texto} `
                 : "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular. "}
             O gasto cai em {nomeDaCarteira}.
@@ -267,6 +268,7 @@ export function GuiaDoAtalho({
      * que só dá altura à caixa: o campo dele nasce desligado, e nada nele envia.
      */
     function passoDe(i: number, alvo: Gatilho, fantasma = false) {
+        const outro = MODOS_DO_ATALHO.find((m) => m.valor !== modoDoGatilho(alvo))!
         return (
             <>
                 <PecaDoPasso>
@@ -274,7 +276,7 @@ export function GuiaDoAtalho({
                         {i + 1} · {PASSOS[i].titulo}
                         <span className="sr-only"> de {PASSOS.length}</span>
                     </P>
-                    <Muted>{textos[i]}</Muted>
+                    <Muted>{textos(alvo)[i]}</Muted>
                 </PecaDoPasso>
 
                 {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
@@ -340,6 +342,7 @@ export function GuiaDoAtalho({
                     </PecaDoPasso>
                 ) : null}
                 {i === PASSOS.length - 1 ? (
+                    // O "outro" sai do `alvo`, não do `modo`: o fantasma não muda com a escolha do passo 1.
                     <PecaDoPasso className="flex flex-col items-start">
                         <Muted>Quer o outro também? O mesmo código serve.</Muted>
                         <Button asChild variant="link">
