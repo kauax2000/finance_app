@@ -2414,118 +2414,14 @@
 ::view-transition-new(barra-de-baixo) {
   animation: none;
 }
-/* A tela de cima entrando da direita (a subtela da gaveta). */
-@keyframes subpagina-direita {
-  from {
-    translate: 100% 0;
-  }
-}
-
-/* A subtela de uma gaveta (o Ajustar colunas do Importar, `useTransicaoDaSubtela`): o
-   gesto da subpágina dentro da folha. Só o conteúdo dela anda; a placa de vidro, a alça
-   e a página ficam paradas (a raiz não anima). A placa é translúcida, então a tela de
-   baixo não leva fundo: ela recua e esmaece enquanto a de cima entra, e o grupo recorta
-   o que passa da caixa da tela nova. O nome só existe durante a troca. */
-html[data-subtela] [data-subtela-conteudo] {
-  view-transition-name: subtela-conteudo;
-}
-html[data-subtela]::view-transition-old(root),
-html[data-subtela]::view-transition-new(root) {
-  animation: none;
-}
-/* Os botões da barra não andam com a tela (a barra de navegação do iOS): o ⋯ e o × da direita
-   e o "‹ Cancelar" da esquerda ganham nome só durante a troca, ficam parados por cima e trocam
-   esmaecendo no lugar; o que entra ainda vem 12px da direita. O título continua na tela que
-   desliza. (O Editar do detalhe do lançamento, 18/11/2026.) */
-html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header-end"] {
-  view-transition-name: subtela-acoes;
-}
-html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header-start"] {
-  view-transition-name: subtela-voltar;
-}
-html[data-subtela]::view-transition-group(subtela-acoes),
-html[data-subtela]::view-transition-group(subtela-voltar) {
-  z-index: 2;
-  animation: none;
-}
-html[data-subtela]::view-transition-old(subtela-acoes),
-html[data-subtela]::view-transition-old(subtela-voltar) {
-  animation: var(--duration-base) var(--ease-out) both subtela-botao-sai;
-}
-html[data-subtela]::view-transition-new(subtela-acoes),
-html[data-subtela]::view-transition-new(subtela-voltar) {
-  animation: var(--duration-slow) var(--ease-out) both subtela-botao-entra;
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-subtela]::view-transition-old(subtela-acoes),
-  html[data-subtela]::view-transition-old(subtela-voltar),
-  html[data-subtela]::view-transition-new(subtela-acoes),
-  html[data-subtela]::view-transition-new(subtela-voltar) {
-    animation: none;
-  }
-}
-@keyframes subtela-botao-sai {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes subtela-botao-entra {
-  from {
-    opacity: 0;
-    translate: 12px 0;
-  }
-}
-/* Durante a troca de subtela, o fundo do cabeçalho translúcido não entra na foto: a tela nova
+/* A subtela de uma gaveta (`transicao-da-subtela.ts`): enquanto a troca dura, o fundo do
+   cabeçalho translúcido não entra no gesto, nem na tela nem na cópia da velha — a tela nova
    ainda não sabe se rola, e a placa aparecia escura no voo e sumia ao assentar (o Editar do
    detalhe do lançamento, 18/11/2026). */
-html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::before,
-html[data-subtela] [data-subtela-conteudo] [data-slot="dialog-header"]::after {
+html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot="dialog-header"]::before,
+html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot="dialog-header"]::after {
   opacity: 0 !important;
   animation: none !important;
-}
-html[data-subtela]::view-transition-group(subtela-conteudo) {
-  animation: none;
-  overflow: clip;
-}
-html[data-subtela="entra"]::view-transition-old(subtela-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subtela-recua-esquerda;
-}
-html[data-subtela="entra"]::view-transition-new(subtela-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
-}
-html[data-subtela="volta"]::view-transition-old(subtela-conteudo) {
-  z-index: 1;
-  animation: var(--duration-slow) var(--ease-out) both subtela-sai-direita;
-}
-html[data-subtela="volta"]::view-transition-new(subtela-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subtela-vem-esquerda;
-}
-html[data-subtela="parada"]::view-transition-old(subtela-conteudo),
-html[data-subtela="parada"]::view-transition-new(subtela-conteudo) {
-  animation: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(subtela-conteudo),
-  ::view-transition-new(subtela-conteudo) {
-    animation: none;
-  }
-}
-@keyframes subtela-recua-esquerda {
-  to {
-    translate: -30% 0;
-    opacity: 0;
-  }
-}
-@keyframes subtela-sai-direita {
-  to {
-    translate: 100% 0;
-  }
-}
-@keyframes subtela-vem-esquerda {
-  from {
-    translate: -30% 0;
-    opacity: 0;
-  }
 }
 
 /* As cores de identidade e de ladrilho têm duas versões: a viva (uma claridade, o

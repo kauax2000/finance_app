@@ -694,14 +694,20 @@ describe("entrar e sair da subtela de colunas é o gesto da subpágina", () => {
         expect(dialogo).not.toContain('<Form layout="none" data-subtela-conteudo=""')
     })
 
-    it("a espera não usa quadros, que o navegador suspende com a foto segura", () => {
+    it("a espera não usa quadros, e sem passo novo a troca não desliza", () => {
         expect(gesto).not.toContain("requestAnimationFrame")
-        expect(gesto).toContain('raiz.dataset.subtela = "parada"')
+        expect(gesto).toContain("return atual.current.passo !== passoDeAntes")
     })
 
-    it("o nome só existe durante a troca, e a tela nova entra pela direita", () => {
-        expect(css).toContain("html[data-subtela] [data-subtela-conteudo] {\n  view-transition-name: subtela-conteudo;")
-        expect(css).toMatch(/html\[data-subtela="entra"\]::view-transition-new\(subtela-conteudo\) \{\s*animation: var\(--duration-slow\) var\(--ease-out\) both subpagina-direita;/)
+    // No iPhone a foto de uma View Transition não desenha `backdrop-filter`: a gaveta de vidro
+    // ficava transparente durante a troca, com a página nítida atrás (19/11/2026).
+    it("sem View Transitions: uma cópia da tela velha fica à vista, e as duas correm", () => {
+        expect(gesto).not.toContain("startViewTransition")
+        expect(gesto).toContain("const copia = velho.cloneNode(true)")
+        expect(gesto).toContain("copia.inert = true")
+        expect(gesto).toMatch(/if \(andou && novo\) await animar\(foto\.copia, novo, direcao\)/)
+        expect(gesto).toMatch(/\} finally \{\s+foto\.soltar\(\)\s+delete raiz\.dataset\.subtela/)
+        expect(css).not.toContain("view-transition-name: subtela")
     })
 })
 
