@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowTrendingUpIcon, BanknotesIcon, BarsArrowDownIcon, LanguageIcon } from "@heroicons/react/16/solid"
+import { ArrowDownIcon, ArrowTrendingUpIcon, BanknotesIcon, BarsArrowDownIcon, LanguageIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { Fragment } from "react"
 import { Button } from "@/components/ui/button"
@@ -8,14 +8,13 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuHeader,
-    DropdownMenuLabel,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CriterioDeOrdem } from "@/lib/categoria-situacao"
+import { cn } from "@/lib/utils"
 import { formatMonthLongPtBr } from "@/lib/transaction-date"
 
 type Tipo = "expense" | "income"
@@ -38,11 +37,10 @@ const opcoesDeOrdem = (tipo: Tipo): Opcao[] => [
 ]
 
 /**
- * A ordem da grade: um menu com o título "Ordenar por", o critério (rádio com tique) e o
- * sentido numa segunda lista, "Sentido". No desktop o gatilho é só o ícone, sem fundo, com a
- * dica "Ordenar"; no telefone (`compacta`), um botão de ícone. O sentido é um segundo grupo de
- * rádio, e não um `ToggleGroup` no pé: o Radix prende o Tab no menu e só as setas andam, entre
- * itens do menu, então o trilho ficaria fora do alcance do teclado.
+ * A ordem da grade: um menu com o título "Ordenar por" e o critério (rádio). A escolhida mostra
+ * a seta do sentido no lugar do tique e o sentido por extenso sob o nome; tocar nela de novo
+ * inverte e mantém o menu aberto. No desktop o gatilho é só o ícone, sem fundo, com a dica
+ * "Ordenar"; no telefone (`compacta`), um botão de ícone.
  */
 export function OrdemDasCategorias({
     tipo,
@@ -90,20 +88,30 @@ export function OrdemDasCategorias({
             )}
             <DropdownMenuContent align="end" size="lg">
                 <DropdownMenuHeader title="Ordenar por" />
-                <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => onCriterioChange(v as CriterioDeOrdem)}>
+                {/* O Radix chama o onValueChange também ao tocar na já escolhida; só outra troca o critério. */}
+                <DropdownMenuRadioGroup value={criterio} onValueChange={(v) => v !== criterio && onCriterioChange(v as CriterioDeOrdem)}>
                     {opcoes.map((o) => (
-                        <DropdownMenuRadioItem key={o.value} value={o.value} indicator="check">
+                        <DropdownMenuRadioItem
+                            key={o.value}
+                            value={o.value}
+                            indicator="check"
+                            indicatorIcon={
+                                <ArrowDownIcon
+                                    aria-hidden
+                                    className={cn("text-foreground transition-transform duration-(--duration-fast)", invertida && "rotate-180")}
+                                />
+                            }
+                            onSelect={(e) => {
+                                if (o.value !== criterio) return
+                                e.preventDefault()
+                                onInvertidaChange(!invertida)
+                            }}
+                        >
                             <o.icon aria-hidden />
-                            {o.label}
-                        </DropdownMenuRadioItem>
-                    ))}
-                </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Sentido</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={invertida ? "inverter" : "normal"} onValueChange={(v) => onInvertidaChange(v === "inverter")}>
-                    {atual.sentidos.map((rotulo, i) => (
-                        <DropdownMenuRadioItem key={rotulo} value={i === 1 ? "inverter" : "normal"} indicator="check">
-                            {rotulo}
+                            <span className="flex min-w-0 flex-col">
+                                {o.label}
+                                {o.value === criterio ? <span className="text-xs text-muted-foreground">{sentido}</span> : null}
+                            </span>
                         </DropdownMenuRadioItem>
                     ))}
                 </DropdownMenuRadioGroup>

@@ -65,6 +65,11 @@ describe("OrdemDasCategorias", () => {
         expect(html).toContain('aria-label="Ordenar categorias: gasto, menor primeiro"')
     })
 
+    it("a escolhida mostra a seta do sentido e inverte ao tocar de novo, sem fechar", () => {
+        const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
+        for (const t of ["indicatorIcon=", "ArrowDownIcon", "rotate-180", "preventDefault()", "text-xs text-muted-foreground"]) expect(fonte).toContain(t)
+    })
+
     it("o menu tem título, tique, ícones e os seis sentidos", () => {
         const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
         expect(fonte).toContain('title="Ordenar por"')
@@ -73,6 +78,7 @@ describe("OrdemDasCategorias", () => {
         for (const t of ["Maior primeiro", "Menor primeiro", "A → Z", "Z → A", "Mais subiu", "Mais caiu"]) expect(fonte).toContain(`"${t}"`)
         for (const i of ["BanknotesIcon", "LanguageIcon", "ArrowTrendingUpIcon"]) expect(fonte).toContain(i)
         expect(fonte).not.toContain("CategoriasDoMesCabecalho")
+        expect(fonte).not.toContain("Sentido")
     })
 })
 
