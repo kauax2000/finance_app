@@ -322,15 +322,17 @@ export function GuiaDoAtalho({
                                     <P className="min-w-0 flex-1 truncate font-semibold">{ondeFica.nome}</P>
                                     <ToggleGroup
                                         type="single"
+                                        variant="floating"
                                         size="icon-sm"
                                         aria-label="Onde fica o atalho"
                                         value={alvo}
                                         disabled={fantasma}
-                                        onValueChange={(v) => setLugar(v as Exclude<Gatilho, "siri">)}
+                                        onValueChange={(v) => v && setLugar(v as Exclude<Gatilho, "siri">)}
                                         className="shrink-0"
                                     >
                                         {LUGARES.map((l) => (
-                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} />
+                                            // Só ícone: o `floating` dá o alvo de 44 no dedo, e o `px-0` devolve o quadrado de 28.
+                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} className="px-0" />
                                         ))}
                                     </ToggleGroup>
                                 </>
@@ -349,7 +351,7 @@ export function GuiaDoAtalho({
                                 aria-label="Como você vai usar o atalho"
                                 value={modoDoGatilho(alvo)}
                                 disabled={fantasma}
-                                onValueChange={(v) => setModo(v as Modo)}
+                                onValueChange={(v) => v && setModo(v as Modo)}
                             >
                                 {MODOS_DO_ATALHO.map((o) => (
                                     <ToggleGroupItem

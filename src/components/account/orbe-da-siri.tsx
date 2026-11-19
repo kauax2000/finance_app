@@ -23,7 +23,7 @@ export function OrbeDaSiri({ className }: { className?: string }) {
                     </radialGradient>
                 ))}
             </defs>
-            <circle cx="20" cy="20" r="19" className="fill-scrim" />
+            <circle cx="20" cy="20" r="19" className="fill-(--device-bezel)" />
             {brilhos.map((_, i) => (
                 <circle key={i} cx="20" cy="20" r="17" fill={`url(#${id}-${i})`} />
             ))}
