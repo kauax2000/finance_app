@@ -9,11 +9,15 @@ importação numa ação Texto, vazia de propósito), e a cada vez:
   texto dela com `source: apple_pay` e mostra o `resumo`;
 - sem entrada, pede uma descrição breve ("Qual foi o gasto?") e manda a frase
   com `source: shortcut`: o lançamento inteligente do app (as regras e, se não
-  entender, a IA) tira valor, descrição, categoria e pagamento dela. A resposta
-  sempre traz o `resumo` ("Gasto lançado: …" ou "Não lançado: …").
+  entender, a IA) tira valor, descrição, categoria e pagamento dela. Lançada, o
+  `resumo` vira a notificação. Se a resposta voltar com `codigo` (ex.:
+  `sem_valor`), pede campo a campo: "Qual o valor?", "Descrição (opcional)",
+  "Categoria" e "Forma de pagamento" (listas do `GET` da Edge) e "Data" ("Hoje"
+  ou "Outro dia"), num POST com `amount`, `merchant`, `category`, `payment`,
+  `date` e `source: shortcut`.
 
-Sem condição "é" nem formulário: a versão de 19/nov/2026 com eles parava no iOS
-27 ("Escolha um valor para cada parâmetro").
+Sem condição "é": a versão de 19/nov/2026 com ela parava no iOS 27 ("Escolha um
+valor para cada parâmetro"). Toda condição é "tem qualquer valor".
 
 Todo pedido vai à Edge `capture` com `Authorization: Bearer <código>` e
 `X-Atalho-Versao: 2`, e o `resumo` da resposta aparece numa notificação.
@@ -114,6 +118,16 @@ def notificar(de: str) -> dict:
     )
 
 
+def tem_valor(grupo: str, de: str) -> dict:
+    """Se o valor do dicionário `de` tem qualquer valor (100). Nunca o "é": no iOS 27 ele parava o atalho."""
+    return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=100,
+                WFInput={"Type": "Variable", "Variable": anexo(saida(de, "Valor do Dicionário"))})
+
+
+def senao(grupo: str) -> dict:
+    return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=1)
+
+
 def fim_se(grupo: str) -> dict:
     return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=2)
 
@@ -121,8 +135,11 @@ def fim_se(grupo: str) -> dict:
 def atalho(url: str, frase_de_teste: str | None = None) -> dict:
     u = lambda: str(uuid.uuid4()).upper()  # noqa: E731
     codigo, entrada_se = u(), u()
-    frase, r_frase, resumo_frase = u(), u(), u()
+    frase, r_frase, resumo_frase, cod_frase, cod_se = u(), u(), u(), u(), u()
     r_pay, resumo_pay = u(), u()
+    opcoes, erro_get, erro_se, menu = u(), u(), u(), u()
+    valor, desc, cats, cat, pags, pag, hoje, outro, outro_fmt = (u() for _ in range(9))
+    r_form, resumo_form = u(), u()
     acoes = [
         # 0: o código do aparelho, preenchido pela pergunta de importação.
         acao("gettext", UUID=codigo, WFTextActionText=texto("")),
@@ -136,13 +153,52 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         # No teste a frase fixa entra no lugar da pergunta, para o pedido sair sem ninguém digitar.
         acao("gettext", UUID=frase, WFTextActionText=texto(frase_de_teste))
         if frase_de_teste
-        else acao("ask", UUID=frase, WFInputType="Text", WFAskActionPrompt=texto("Qual foi o gasto? Ex.: 42 mercado nubank")),
+        else acao("ask", UUID=frase, WFInputType="Text", WFAskActionPrompt=texto("Qual foi o gasto?")),
         pedido(r_frase, url, codigo, "POST", [
             ("text", texto(VAR, {0: saida(frase, "Texto" if frase_de_teste else "Entrada Fornecida")})),
             ("source", texto("shortcut")),
         ]),
+        # A frase que não lançou volta com `codigo` (ex.: sem_valor): aí o atalho pede campo a campo.
+        chave(cod_frase, "codigo", r_frase),
+        tem_valor(cod_se, cod_frase),
+        # As listas de categoria e pagamento vêm do GET; erro nele (com `resumo`) vira a notificação.
+        pedido(opcoes, url, codigo, "GET"),
+        chave(erro_get, "resumo", opcoes),
+        tem_valor(erro_se, erro_get),
+        notificar(erro_get),
+        senao(erro_se),
+        acao("ask", UUID=valor, WFInputType="Number", WFAskActionPrompt=texto("Qual o valor?")),
+        # O espaço deixa o Pronto valer com o campo vazio; a Edge apara o `merchant`.
+        acao("ask", UUID=desc, WFInputType="Text", WFAskActionPrompt=texto("Descrição (opcional)"), WFAskActionDefaultAnswer=texto(" ")),
+        chave(cats, "categorias", opcoes),
+        acao("choosefromlist", UUID=cat, WFInput=anexo(saida(cats, "Valor do Dicionário")), WFChooseFromListActionPrompt=texto("Categoria")),
+        chave(pags, "pagamentos", opcoes),
+        acao("choosefromlist", UUID=pag, WFInput=anexo(saida(pags, "Valor do Dicionário")), WFChooseFromListActionPrompt=texto("Forma de pagamento")),
+        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=0, WFMenuPrompt="Data", WFMenuItems=["Hoje", "Outro dia"]),
+        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=1, WFMenuItemTitle="Hoje"),
+        acao("format.date", UUID=hoje, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: {"Type": "CurrentDate"}})),
+        acao("setvariable", WFVariableName="data", WFInput=anexo(saida(hoje, "Data Formatada"))),
+        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=1, WFMenuItemTitle="Outro dia"),
+        acao("ask", UUID=outro, WFInputType="Date", WFAskActionPrompt=texto("Data")),
+        acao("format.date", UUID=outro_fmt, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: saida(outro, "Entrada Fornecida")})),
+        acao("setvariable", WFVariableName="data", WFInput=anexo(saida(outro_fmt, "Data Formatada"))),
+        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=2),
+        pedido(r_form, url, codigo, "POST", [
+            ("amount", texto(VAR, {0: saida(valor, "Entrada Fornecida")})),
+            ("merchant", texto(VAR, {0: saida(desc, "Entrada Fornecida")})),
+            ("category", texto(VAR, {0: saida(cat, "Item Escolhido")})),
+            ("payment", texto(VAR, {0: saida(pag, "Item Escolhido")})),
+            ("date", texto(VAR, {0: {"Type": "Variable", "VariableName": "data"}})),
+            ("source", texto("shortcut")),
+        ]),
+        chave(resumo_form, "resumo", r_form),
+        notificar(resumo_form),
+        fim_se(erro_se),
+        # A frase que lançou só notifica.
+        senao(cod_se),
         chave(resumo_frase, "resumo", r_frase),
         notificar(resumo_frase),
+        fim_se(cod_se),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=2),
     ]
     return {
@@ -180,25 +236,43 @@ def verificar() -> None:
     codigo = alvo["WFWorkflowActionParameters"]["UUID"]
 
     pedidos = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "downloadurl"]
-    assert [p["WFHTTPMethod"] for p in pedidos] == ["POST", "POST"], pedidos
+    assert [p["WFHTTPMethod"] for p in pedidos] == ["POST", "POST", "GET", "POST"], pedidos
     for p in pedidos:
         itens = p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]
         cab = {i["WFKey"]["Value"]["string"]: i["WFValue"]["Value"] for i in itens}
         assert set(cab) == {"Authorization", "X-Atalho-Versao"}, cab
         assert cab["Authorization"]["string"].startswith("Bearer ")
         assert [v.get("OutputUUID") for v in cab["Authorization"]["attachmentsByRange"].values()] == [codigo]
-        assert p["WFHTTPBodyType"] == "JSON"
-        corpo = [i["WFKey"]["Value"]["string"] for i in p["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]]
-        assert corpo == ["text", "source"], corpo
+    corpos = [
+        [i["WFKey"]["Value"]["string"] for i in p["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]]
+        for p in pedidos if p["WFHTTPMethod"] == "POST"
+    ]
+    assert corpos == [["text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "date", "source"]], corpos
 
-    # Uma pergunta só, a descrição; nenhuma condição além do "tem qualquer valor" da Entrada.
     ids = [_id(a) for a in acoes]
-    assert ids.count("ask") == 1 and not {"choosefromlist", "choosefrommenu", "dictatetext", "showresult", "exit"} & set(ids), ids
+    prompts = [a["WFWorkflowActionParameters"]["WFAskActionPrompt"]["Value"]["string"] for a in acoes if _id(a) == "ask"]
+    assert prompts == ["Qual foi o gasto?", "Qual o valor?", "Descrição (opcional)", "Data"], prompts
+    assert not {"dictatetext", "showresult", "exit"} & set(ids), ids
+    # Toda condição é "tem qualquer valor" (100): nenhum "é".
     conds = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "conditional"]
-    assert [c["WFControlFlowMode"] for c in conds] == [0, 1, 2]
-    assert conds[0]["WFCondition"] == 100 and "WFConditionalActionString" not in conds[0]
-    assert len({c["GroupingIdentifier"] for c in conds}) == 1
-    assert ids[-3:] == ["getvalueforkey", "notification", "conditional"], ids
+    assert all(c["WFCondition"] == 100 and "WFConditionalActionString" not in c for c in conds if c["WFControlFlowMode"] == 0), conds
+    for tipo in ("conditional", "choosefrommenu"):
+        abertos: list[str] = []
+        for a in acoes:
+            if _id(a) != tipo:
+                continue
+            q = a["WFWorkflowActionParameters"]
+            if q["WFControlFlowMode"] == 0:
+                abertos.append(q["GroupingIdentifier"])
+            elif q["WFControlFlowMode"] == 2:
+                assert abertos.pop() == q["GroupingIdentifier"]
+            else:
+                assert abertos[-1] == q["GroupingIdentifier"]
+        assert not abertos
+    # O formulário só existe dentro do "codigo tem valor": a frase que lançou não pergunta mais nada.
+    i_cod = next(i for i, a in enumerate(acoes) if _id(a) == "getvalueforkey" and a["WFWorkflowActionParameters"]["WFDictionaryKey"] == "codigo")
+    i_valor = prompts and next(i for i, a in enumerate(acoes) if _id(a) == "ask" and a["WFWorkflowActionParameters"]["WFInputType"] == "Number")
+    assert i_cod < i_valor
     print("ok")
 
 
