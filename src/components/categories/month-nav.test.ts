@@ -6,26 +6,16 @@ describe("o seletor de mês do desktop", () => {
     const ini = f.indexOf("function MonthNavPicker(")
     const picker = f.slice(ini, f.indexOf("function MonthNavPanel(", ini))
 
-    it("é a pílula ‹ mês ›: o nome abre a grade e as setas andam um mês", () => {
+    it("é uma pílula só: o mês no centro com o chevron abre a grade, sem setas dos lados", () => {
         expect(ini).toBeGreaterThan(-1)
-        expect(picker).toContain("<ButtonGroup")
         expect(picker).toContain("<MonthNavPanel")
-        expect(picker).toContain('aria-label="Mês anterior"')
-        expect(picker).toContain('aria-label="Próximo mês"')
-        expect(picker).toContain("shiftYearMonth(budgetMonthYm, -1)")
-        expect(picker).toContain("shiftYearMonth(budgetMonthYm, 1)")
         expect(picker).toContain("aria-label={pickerAriaLabel}")
+        expect(picker).toContain('fullWidth ? "tertiary" : "floating"')
+        expect(picker).toContain("<ChevronDownIcon")
+        expect(picker).not.toContain("<ButtonGroup")
+        expect(picker).not.toContain('aria-label="Mês anterior"')
+        expect(picker).not.toContain('aria-label="Próximo mês"')
         expect(picker).not.toContain("CalendarIcon")
-    })
-
-    it("as três peças da pílula flutuam, e as setas são o círculo da escada", () => {
-        expect(picker.match(/variant="floating"/g)?.length).toBe(3)
-        expect(picker.match(/size="icon-lg"/g)?.length).toBe(2)
-    })
-
-    it("o ramo da fatura (fullWidth) devolve só o popover, sem setas", () => {
-        expect(picker).toContain("if (fullWidth) return popover")
-        expect(picker.indexOf("<ButtonGroup")).toBeGreaterThan(picker.indexOf("if (fullWidth) return popover"))
     })
 
     it("não tem atalho solto nem as setas antigas do rodapé fora do painel", () => {
@@ -34,6 +24,6 @@ describe("o seletor de mês do desktop", () => {
     })
 
     it("na fatura do telefone o botão ocupa a faixa", () => {
-        expect(picker).toMatch(/min-w-0 flex-1/)
+        expect(picker).toContain(`fullWidth ? "flex-1" : "text-foreground"`)
     })
 })

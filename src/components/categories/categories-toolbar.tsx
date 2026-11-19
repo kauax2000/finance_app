@@ -7,7 +7,6 @@ import { useReducedMotion } from "motion/react"
 import { TRAJETO_MACIO } from "@/lib/liquid-move"
 import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { MonthGrid } from "@/components/ui/date-picker"
 import {
     Popover,
@@ -43,9 +42,9 @@ function mesDoAnoMes(ym: string) {
 }
 
 /**
- * O mês do desktop: a pílula ‹ mês › (`ButtonGroup` de três `floating`). As setas andam um mês e
- * o nome abre a grade de meses; "Este mês" e as setas também moram no rodapé dela
- * (`MonthNavPanel`). Na fatura do telefone (`fullWidth`) segue o botão da faixa, sem setas.
+ * O mês do desktop: uma pílula só (`floating`), com o mês no centro e o chevron, que abre a grade
+ * de meses; as setas e "Este mês" moram no rodapé dela (`MonthNavPanel`). Na fatura do telefone
+ * (`fullWidth`) é o botão da faixa, sem fundo.
  */
 function MonthNavPicker({
     budgetMonthYm,
@@ -64,29 +63,18 @@ function MonthNavPicker({
     fullWidth?: boolean
 }) {
     const [aberto, setAberto] = React.useState(false)
-    const popover = (
+    return (
         <Popover open={aberto} onOpenChange={setAberto}>
             <PopoverTrigger asChild>
-                {fullWidth ? (
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        aria-label={pickerAriaLabel}
-                        className="min-w-0 flex-1 gap-2 font-medium tabular-nums"
-                    >
-                        <span className="min-w-0 truncate">{monthLabel}</span>
-                        <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
-                    </Button>
-                ) : (
-                    <Button
-                        type="button"
-                        variant="floating"
-                        aria-label={pickerAriaLabel}
-                        className="min-w-0 font-medium tabular-nums"
-                    >
-                        <span className="min-w-0 truncate">{monthLabel}</span>
-                    </Button>
-                )}
+                <Button
+                    type="button"
+                    variant={fullWidth ? "tertiary" : "floating"}
+                    aria-label={pickerAriaLabel}
+                    className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "text-foreground")}
+                >
+                    <span className="min-w-0 truncate">{monthLabel}</span>
+                    <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
+                </Button>
             </PopoverTrigger>
             <PopoverContent align="end" size="auto" padding="none" label="Escolher mês">
                 <MonthNavPanel
@@ -97,30 +85,6 @@ function MonthNavPicker({
                 />
             </PopoverContent>
         </Popover>
-    )
-    if (fullWidth) return popover
-    return (
-        <ButtonGroup>
-            <Button
-                type="button"
-                variant="floating"
-                size="icon-lg"
-                aria-label="Mês anterior"
-                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
-            >
-                <ChevronLeftIcon aria-hidden />
-            </Button>
-            {popover}
-            <Button
-                type="button"
-                variant="floating"
-                size="icon-lg"
-                aria-label="Próximo mês"
-                onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
-            >
-                <ChevronRightIcon aria-hidden />
-            </Button>
-        </ButtonGroup>
     )
 }
 
