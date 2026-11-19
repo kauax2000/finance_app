@@ -40,22 +40,26 @@ const render = (
 describe("CategoryFormFields", () => {
     it("fechado, o limite é só a linha", () => {
         const html = render("expense", { defaultOpen: false })
-        expect(html).toContain("Limite do mês")
+        expect(html).toContain("Limite de gasto")
         expect(html).toContain("Opcional")
-        expect(html).not.toContain("Repetir todo mês")
+        expect(html).not.toContain("Todo mês")
     })
 
-    it("aberto, o valor diz o mês e o interruptor diz o que repete", () => {
-        const ligado = render("expense", { defaultOpen: true, repeats: true })
-        expect(ligado).toContain("Vale para novembro de 2026")
-        expect(ligado).toContain("Repetir todo mês")
-        expect(ligado).toContain("Vale também nos próximos meses")
-        const desligado = render("expense", { defaultOpen: true, repeats: false })
-        expect(desligado).toContain("Desligado, vale só em novembro")
+    it("aberto, explica o limite e a escolha diz o que acontece no mês seguinte", () => {
+        const todo = render("expense", { defaultOpen: true, repeats: true })
+        expect(todo).toContain("Um teto para o que você gasta em Mercado por")
+        expect(todo).toContain("Avisamos em 80% e ao passar dele.")
+        expect(todo).toContain("Todo mês")
+        expect(todo).toMatch(/Só em novembro/)
+        expect(todo).toContain("O mesmo valor começa sozinho todo dia 1, até você mudar.")
+        expect(todo).not.toContain("Vale para")
+        expect(todo).not.toContain('role="switch"')
+        const so = render("expense", { defaultOpen: true, repeats: false })
+        expect(so).toMatch(/Vale só em novembro( de 2026)?\. Em dezembro( de 2026)?, Mercado fica sem limite\./)
     })
 
     it("receita não tem limite", () => {
-        expect(render("income", { defaultOpen: true })).not.toContain("Limite do mês")
+        expect(render("income", { defaultOpen: true })).not.toContain("Limite de gasto")
     })
 
     it("a prévia vem antes do nome", () => {

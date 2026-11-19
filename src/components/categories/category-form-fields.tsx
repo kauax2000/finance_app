@@ -8,7 +8,8 @@ import {
     CollapsibleRow,
 } from "@/components/ui/collapsible"
 import { Field, FieldTitle } from "@/components/ui/field"
-import { FormInput, FormSwitch } from "@/components/ui/form"
+import { FormInput } from "@/components/ui/form"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TransactionFormTypeSegment } from "@/components/transactions/transaction-type-segment"
 import {
     CategoryColorSwatches,
@@ -17,7 +18,8 @@ import {
     normalizeCategoryIcon,
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
-import { formatMonthLongPtBr } from "@/lib/transaction-date"
+import { mesNaFrase } from "@/components/categories/categorias-do-mes"
+import { shiftYearMonth } from "@/lib/budget-month"
 
 export type CategoryFormBudget = {
     /** YYYY-MM do mês do limite. */
@@ -33,7 +35,7 @@ export type CategoryFormBudget = {
 /**
  * O formulário de categoria, o mesmo nos três diálogos (a página, o "Nova
  * categoria" de fora e o editar do detalhe): a prévia ao lado do nome, o tipo,
- * a cor, o ícone e, só para despesa, o limite do mês recolhível. Quem salva é
+ * a cor, o ícone e, só para despesa, o limite de gasto recolhível. Quem salva é
  * o diálogo.
  */
 export function CategoryFormFields({
@@ -60,8 +62,10 @@ export function CategoryFormFields({
     /** Ausente: o diálogo não oferece limite. */
     budget?: CategoryFormBudget
 }) {
-    const [ano, mes] = (budget?.ym ?? "").split("-").map(Number)
-    const nomeDoMes = budget ? formatMonthLongPtBr(new Date(ano, mes - 1, 1)) : ""
+    const anoAtual = new Date().getFullYear()
+    const nomeDoMes = budget ? mesNaFrase(budget.ym, anoAtual) : ""
+    const proximoMes = budget ? mesNaFrase(shiftYearMonth(budget.ym, 1), anoAtual) : ""
+    const nomeDaCategoria = name.trim()
 
     return (
         <div className="space-y-4 py-4">
@@ -97,28 +101,41 @@ export function CategoryFormFields({
 
             {type === "expense" && budget ? (
                 <Collapsible variant="card" defaultOpen={budget.defaultOpen}>
-                    <CollapsibleRow trailing="Opcional">Limite do mês</CollapsibleRow>
+                    <CollapsibleRow trailing="Opcional" underline={false}>Limite de gasto</CollapsibleRow>
                     <CollapsibleContent className="space-y-4">
+                        <p className="text-xs text-muted-foreground">
+                            Um teto para o que você gasta {nomeDaCategoria ? `em ${nomeDaCategoria}` : "nesta categoria"} por
+                            mês. Avisamos em 80% e ao passar dele.
+                        </p>
                         <FormInput
                             id={`${idPrefix}-budget`}
                             money
                             label="Valor"
-                            description={`Vale para ${nomeDoMes} de ${ano}`}
                             placeholder="Ex: 1.500,00"
                             value={budget.amount}
                             onValueChange={budget.onAmountChange}
                         />
-                        <FormSwitch
-                            id={`${idPrefix}-repeats`}
-                            label="Repetir todo mês"
-                            description={
-                                budget.repeats
-                                    ? "Vale também nos próximos meses"
-                                    : `Desligado, vale só em ${nomeDoMes}`
-                            }
-                            checked={budget.repeats}
-                            onCheckedChange={budget.onRepeatsChange}
-                        />
+                        {/* Toggle, e não abas: a escolha não muda o formulário, só a frase. */}
+                        <div className="space-y-2">
+                            <ToggleGroup
+                                type="single"
+                                variant="segmented"
+                                stretch
+                                aria-label="Quando o limite vale"
+                                value={budget.repeats ? "todo-mes" : "so-este"}
+                                onValueChange={(v) => {
+                                    if (v) budget.onRepeatsChange(v === "todo-mes")
+                                }}
+                            >
+                                <ToggleGroupItem value="todo-mes">Todo mês</ToggleGroupItem>
+                                <ToggleGroupItem value="so-este">Só em {nomeDoMes}</ToggleGroupItem>
+                            </ToggleGroup>
+                            <p className="text-xs text-muted-foreground" aria-live="polite">
+                                {budget.repeats
+                                    ? "O mesmo valor começa sozinho todo dia 1, até você mudar."
+                                    : `Vale só em ${nomeDoMes}. Em ${proximoMes}, ${nomeDaCategoria || "a categoria"} fica sem limite.`}
+                            </p>
+                        </div>
                     </CollapsibleContent>
                 </Collapsible>
             ) : null}
