@@ -20,6 +20,12 @@ describe("a transição de subpágina", () => {
         expect(CSS).toMatch(/html\[data-subpagina\] \[data-slot="bottom-bar-tabs"\] \{\s+background-color: var\(--bottom-bar-surface\);/)
     })
 
+    // A barra de cima, com nome, perdia o borrão da borda, e o conteúdo passava nítido
+    // por baixo dela (simulador, 19/11/2026): nesse instante ela veste a placa cheia.
+    it("com nome, a barra de cima veste a placa do `top-bar-fade`, cheia", () => {
+        expect(CSS).toMatch(/html\[data-subpagina\] \[data-slot="top-bar"\] > \[data-slot="top-bar-fade"\] \{\s+--top-bar-fade-tint: var\(--background\);\s+display: block;\s+opacity: 1;/)
+    })
+
     it("a casca liga a transição, e quem chama não marca link", () => {
         expect(CASCA).toContain("<TransicaoDeSubpagina />")
         expect(T).toContain('document.addEventListener("click", aoClicar, true)')

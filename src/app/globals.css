@@ -2445,6 +2445,17 @@ html[data-subpagina] [data-slot="bottom-bar-tabs"] {
 ::view-transition-new(barra-de-baixo) {
   animation: none;
 }
+/* Com nome, o borrão da barra de cima também não alcança a página: as camadas da borda
+   (`top-bar-edge`) viram só tinta, e o conteúdo passava nítido por baixo da barra durante
+   a troca (simulador, 19/11/2026). Nesse instante ela veste a borda do desktop, a placa
+   de `--background` com o degradê (`top-bar-fade`), que esconde o que o borrão escondia.
+   Um `backdrop-filter` nos pseudo-elementos da troca não serve: o WebKit não os desenha
+   no quadro parado da espera, que é onde o nítido aparecia. */
+html[data-subpagina] [data-slot="top-bar"] > [data-slot="top-bar-fade"] {
+  --top-bar-fade-tint: var(--background);
+  display: block;
+  opacity: 1;
+}
 html[data-subpagina]::view-transition-old(root),
 html[data-subpagina]::view-transition-new(root) {
   animation: none;
