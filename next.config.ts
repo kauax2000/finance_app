@@ -36,19 +36,22 @@ const nextConfig: NextConfig = {
   // o guardava como "Lançar gasto.shortcut.html": o app Atalhos não o abria.
   // Com o anexo, o nome e o tipo binário declarados, ele chega como `.shortcut`.
   async headers() {
+    // Um nome por arquivo; o `source` casa o caminho já decodificado, e o
+    // `.` de `Lan.ar` cobre o `ç` sem depender da codificação.
+    const atalho = (source: string, ascii: string, utf8: string) => ({
+      source,
+      headers: [
+        { key: "Content-Type", value: "application/octet-stream" },
+        {
+          key: "Content-Disposition",
+          value: `attachment; filename="${ascii}.shortcut"; filename*=UTF-8''${utf8}.shortcut`,
+        },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+      ],
+    })
     return [
-      {
-        source: "/atalho/:arquivo*",
-        headers: [
-          { key: "Content-Type", value: "application/octet-stream" },
-          {
-            key: "Content-Disposition",
-            value:
-              "attachment; filename=\"Lancar gasto.shortcut\"; filename*=UTF-8''Lan%C3%A7ar%20gasto.shortcut",
-          },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-        ],
-      },
+      atalho("/atalho/:arquivo(Lan.ar gasto\\.shortcut)", "Lancar gasto", "Lan%C3%A7ar%20gasto"),
+      atalho("/atalho/:arquivo(Lan.ar gasto r.pido\\.shortcut)", "Lancar gasto rapido", "Lan%C3%A7ar%20gasto%20r%C3%A1pido"),
     ]
   },
   async redirects() {

@@ -40,10 +40,11 @@ import uuid
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
-SAIDA = RAIZ / "public" / "atalho" / "Lançar gasto.shortcut"
+PASTA = RAIZ / "public" / "atalho"
 VAR = "￼"
-# Cada gatilho tem o seu arquivo assinado; o cabeçalho diz à Edge qual foi baixado.
-GATILHOS = ("siri", "acao", "toque", "bloqueio", "inicio")
+# Dois arquivos assinados: modo -> (gatilho do cabeçalho, nome do arquivo).
+# A voz fala o resultado; o toque notifica.
+MODOS = {"voz": ("siri", "Lançar gasto"), "toque": ("toque", "Lançar gasto rápido")}
 
 
 def url_da_captura() -> str:
@@ -165,8 +166,9 @@ def fim_se(grupo: str) -> dict:
     return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=2)
 
 
-def atalho(url: str, gatilho: str | None = None, frase_de_teste: str | None = None) -> dict:
-    falar = gatilho == "siri"
+def atalho(url: str, modo: str | None = None, frase_de_teste: str | None = None) -> dict:
+    gatilho = MODOS[modo][0] if modo else None
+    falar = modo == "voz"
     pedido_ = lambda *a: pedido(*a, gatilho=gatilho)  # noqa: E731
     u = lambda: str(uuid.uuid4()).upper()  # noqa: E731
     codigo, entrada_se, menu = u(), u(), u()
@@ -388,21 +390,20 @@ def verificar() -> None:
         if _id(a) == "setvariable":
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"
 
-    # Uma variante por gatilho: o cabeçalho diz qual, e só a Siri fala o resultado.
-    for g in GATILHOS:
-        d = atalho("https://exemplo.supabase.co/functions/v1/capture", g)
-        a = d["WFWorkflowActions"]
+    # Dois modos: o cabeçalho diz qual, e só a voz fala o resultado.
+    for m, (g, _nome) in MODOS.items():
+        a = atalho("https://exemplo.supabase.co/functions/v1/capture", m)["WFWorkflowActions"]
         for p in (x["WFWorkflowActionParameters"] for x in a if _id(x) == "downloadurl"):
             cab = {_txt(i["WFKey"]): _txt(i["WFValue"]) for i in p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]}
             assert cab["X-Atalho-Gatilho"] == g and cab["X-Atalho-Versao"] == "2", cab
         fim_entrada = next(i for i, x in enumerate(a) if _id(x) == "conditional" and x["WFWorkflowActionParameters"]["WFControlFlowMode"] == 1)
         resto = [_id(x) for x in a[fim_entrada:]]
-        if g == "siri":
+        if m == "voz":
             assert "notification" not in resto and resto.count("showresult") == 3, resto
             assert [_id(x) for x in a[:fim_entrada]].count("notification") == 1  # Apple Pay segue notificando
         else:
             assert "showresult" not in resto
-    # A raiz (sem gatilho) não manda o cabeçalho.
+    # Sem modo (só o teste do pedido) não manda o cabeçalho.
     raiz = atalho("https://exemplo.supabase.co/functions/v1/capture")
     assert not any("X-Atalho-Gatilho" in str(x) for x in raiz["WFWorkflowActions"])
     print("ok")
@@ -425,11 +426,9 @@ def main() -> None:
         url, saida_ = sys.argv[2], Path(sys.argv[3])
         dados = atalho(url, frase_de_teste="42 mercado teste")
         return assinar(dados, saida_)
-    # Sem argumentos: a raiz (sem gatilho) e uma variante por gatilho.
     url = url_da_captura()
-    assinar(atalho(url), SAIDA)
-    for g in GATILHOS:
-        assinar(atalho(url, g), SAIDA.parent / g / SAIDA.name)
+    for m, (_g, nome) in MODOS.items():
+        assinar(atalho(url, m), PASTA / f"{nome}.shortcut")
 
 
 if __name__ == "__main__":
