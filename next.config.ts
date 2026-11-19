@@ -32,6 +32,25 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  // O atalho saía sem nome nem aviso de anexo, e o iPhone (no app instalado)
+  // o guardava como "Lançar gasto.shortcut.html": o app Atalhos não o abria.
+  // Com o anexo, o nome e o tipo binário declarados, ele chega como `.shortcut`.
+  async headers() {
+    return [
+      {
+        source: "/atalho/:arquivo*",
+        headers: [
+          { key: "Content-Type", value: "application/octet-stream" },
+          {
+            key: "Content-Disposition",
+            value:
+              "attachment; filename=\"Lancar gasto.shortcut\"; filename*=UTF-8''Lan%C3%A7ar%20gasto.shortcut",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       {
