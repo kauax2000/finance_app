@@ -34,9 +34,9 @@ describe("a transição de subpágina", () => {
     // No simulador (19/11/2026) o teto vencia com a rota velha: o gesto andava a Você
     // sobre ela mesma, e a tela nova chegava num corte seco.
     it("nunca anima sem a rota nova: o teto de 1,2s só conta depois da troca, e a rota tem o próprio teto", () => {
-        expect(T).toContain("const LIMITE_DA_ROTA_MS = 4000")
+        expect(T).toContain("const LIMITE_DA_ROTA_MS = 2500")
         expect(T).toMatch(/function telaPronta\(rotaDeAntes: string\): Promise<boolean>/)
-        expect(T).toMatch(/if \(!\(await telaPronta\(rotaDeAntes\)\)\) transicao\.skipTransition\(\)/)
+        expect(T).toMatch(/const pronta = await telaPronta\(rotaDeAntes\)[\s\S]{0,800}transicao\.skipTransition\(\)/)
     })
 
     it("o teto do esqueleto nasce na troca de rota, não no clique", () => {
@@ -51,15 +51,28 @@ describe("a transição de subpágina", () => {
         expect(T).toMatch(/await telaPronta\(rotaDeAntes\)[\s\S]{0,140}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)/)
     })
 
-    // A tela nova mais curta encolhia o documento, e o navegador cortava a rolagem sozinho.
-    it("o conteúdo segura a altura durante a espera e a solta antes de rolar", () => {
-        expect(T).toMatch(/conteudo\.style\.minHeight = `\$\{conteudo\.offsetHeight\}px`[\s\S]+router\.push/)
-        expect(T).toMatch(/conteudo\.style\.minHeight = ""[\s\S]{0,60}window\.scrollTo/)
+    // A troca que passou do teto deixava a Você saltar ao topo antes da tela nova chegar.
+    it("sem a rota nova a tempo, a tela velha fica na rolagem dela e o topo espera a rota", () => {
+        expect(T).toContain('window.scrollTo({ top: rolagem, behavior: "instant" })')
+        expect(T).toContain("topoNaProximaRota.current = true")
+        expect(T).toMatch(/useEffect\(\(\) => \{\s+if \(!topoNaProximaRota\.current\) return[\s\S]{0,120}\}, \[pathname\]\)/)
+    })
+
+    // No WebKit a foto de um conteúdo alto e rolado saía vazia (o voltar cortava seco), e a
+    // tela nova mais curta encolhia o documento, cortando a rolagem na espera.
+    it("antes da foto, a página rolada vira uma janela do tamanho da tela, rolada por dentro", () => {
+        expect(T).toMatch(/conteudo\.style\.height = `\$\{window\.innerHeight\}px`[\s\S]{0,120}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)[\s\S]{0,40}conteudo\.scrollTop = rolagem - topo[\s\S]+startViewTransition/)
+        // A janela só vale sob `html[data-subpagina]`: o atributo vem antes dela.
+        expect(T).toMatch(/raiz\.dataset\.subpagina = direcao[\s\S]{0,80}if \(conteudo && rolagem > 0\)/)
+        expect(T).toMatch(/await telaPronta\(rotaDeAntes\)[\s\S]{0,80}soltar\(\)/)
+        expect(T).toMatch(/transicao\.finished\.finally\(\(\) => \{[\s\S]{0,160}soltar\(\)/)
+        expect(CSS).toMatch(/\[data-workspace-content\]\[data-janela\] \{\s+overflow: hidden;/)
+        expect(T).toContain('conteudo.style.flex = "none"')
+        expect(CSS).toMatch(/\[data-workspace-content\]\[data-janela\] > \* \{\s+flex-shrink: 0;/)
     })
 
     // O WebKit desenha as fotos alguns quadros antes de ligar a animação.
     it("as fotos já nascem no quadro inicial, e os keyframes de entrada têm o `to` explícito", () => {
-        expect(CSS).toMatch(/html\[data-subpagina\]::view-transition-old\(subpagina-conteudo\) \{\s+translate: 0 var\(--subpagina-desvio, 0px\);/)
         expect(CSS).toMatch(/html\[data-subpagina="entra"\]::view-transition-new\(subpagina-conteudo\) \{\s+translate: 100% 0;/)
         expect(CSS).toMatch(/@keyframes subpagina-direita \{[\s\S]{0,200}to \{\s+translate: 0 0;/)
         expect(CSS).toMatch(/@keyframes subpagina-vem-esquerda \{[\s\S]{0,120}to \{\s+translate: 0 0;/)
@@ -74,14 +87,12 @@ describe("a transição de subpágina", () => {
 
     it("o estado dura a transição inteira, sem temporizador", () => {
         expect(T).toContain("raiz.dataset.subpagina = direcao")
-        expect(T).toContain("transicao.finished.finally(() => delete raiz.dataset.subpagina)")
+        expect(T).toMatch(/transicao\.finished\.finally\(\(\) => \{[\s\S]{0,160}delete raiz\.dataset\.subpagina/)
     })
 
-    it("a tela velha não pula: as duas fotos de saída descem o quanto a rolagem mudou", () => {
-        expect(T).toContain("window.scrollY - rolagemDeAntes")
-        expect(CSS).toContain("translate: 0 var(--subpagina-desvio, 0px);")
-        expect(CSS).toContain("translate: -30% var(--subpagina-desvio, 0px);")
-        expect(CSS).toContain("translate: 100% var(--subpagina-desvio, 0px);")
+    it("sem desvio de rolagem: a página já está em 0 na foto", () => {
+        expect(T).not.toContain("--subpagina-desvio")
+        expect(CSS).not.toContain("--subpagina-desvio")
     })
 
     it("as duas direções e o movimento reduzido estão no CSS", () => {

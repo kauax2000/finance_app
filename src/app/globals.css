@@ -2403,15 +2403,23 @@
 /* A subpágina do telefone (`TransicaoDeSubpagina`): a tela de cima corre sobre a de
    baixo, que recua. O grupo não anima porque quem anda é cada foto, e as barras
    ganham nome só durante a troca (`data-subpagina` no `<html>`) para ficar paradas
-   por cima: o nome faz da barra uma raiz de fundo, e o borrão sumiria em repouso. O
-   grupo fica no lugar da tela nova, então a foto velha desce o quanto a rolagem mudou
-   (`--subpagina-desvio`), para não pular. A foto do conteúdo é
+   por cima: o nome faz da barra uma raiz de fundo, e o borrão sumiria em repouso. A
+   página rolada vira, antes da foto, uma janela do tamanho da tela (`data-janela`),
+   rolada por dentro, com a página em 0. A foto do conteúdo é
    transparente: a de cima leva o fundo da página, e `normal` tira a soma de brilho do
    cruzamento padrão. O gesto anda na curva das folhas do vaul (`--duration-spring` em
    `--ease-emphasized`): 300ms em `--ease-out` acabavam nos quadros que o Safari perde
    montando a tela, e o gesto sumia. A de baixo escurece (0,85) ao recuar, como no push do iOS. */
 html[data-subpagina] [data-workspace-content] {
   view-transition-name: subpagina-conteudo;
+}
+/* A janela (a altura e o `flex: none` vêm do script): as peças de dentro não encolhem
+   para caber, senão nada transborda e a rolagem de dentro fica em 0. */
+html[data-subpagina] [data-workspace-content][data-janela] {
+  overflow: hidden;
+}
+html[data-subpagina] [data-workspace-content][data-janela] > * {
+  flex-shrink: 0;
 }
 html[data-subpagina] [data-slot="top-bar"] {
   view-transition-name: barra-do-topo;
@@ -2444,12 +2452,8 @@ html[data-subpagina]::view-transition-new(root) {
 ::view-transition-group(subpagina-conteudo) {
   animation: none;
 }
-/* As fotos já nascem onde a animação começa: o WebKit desenha alguns quadros antes de
-   ligar a animação, e sem o desvio a foto velha mostrava o topo nunca pintado da tela
-   (simulador, 19/11/2026). */
-html[data-subpagina]::view-transition-old(subpagina-conteudo) {
-  translate: 0 var(--subpagina-desvio, 0px);
-}
+/* As fotos novas já nascem onde a animação começa: o WebKit desenha alguns quadros
+   antes de ligar a animação (simulador, 19/11/2026). */
 html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
   translate: 100% 0;
 }
@@ -2491,19 +2495,19 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 }
 @keyframes subpagina-esquerda {
   from {
-    translate: 0 var(--subpagina-desvio, 0px);
+    translate: 0 0;
   }
   to {
-    translate: -30% var(--subpagina-desvio, 0px);
+    translate: -30% 0;
     opacity: 0.85;
   }
 }
 @keyframes subpagina-sai-direita {
   from {
-    translate: 0 var(--subpagina-desvio, 0px);
+    translate: 0 0;
   }
   to {
-    translate: 100% var(--subpagina-desvio, 0px);
+    translate: 100% 0;
   }
 }
 @keyframes subpagina-vem-esquerda {
