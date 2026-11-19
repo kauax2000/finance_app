@@ -13,7 +13,7 @@ import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
-import { modoDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
+import { mensagemDoErroDeToken, modoDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
 import { MudarCarteiraDoAtalho } from "@/components/account/mudar-carteira-do-atalho"
@@ -58,14 +58,6 @@ const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_ver
 export function legendaDoAtalho(t: CaptureToken, carteira: string): string {
     const uso = t.last_used_at ? `último gasto ${relativo(t.last_used_at)}` : "ainda não lançou nada"
     return `${carteira} · ${uso}`
-}
-
-/** O erro do banco (o `raise` das RPCs) na frase da tela. */
-export function mensagemDoErroDeToken(erro: { code?: string; message?: string }): string {
-    if (erro.message?.includes("nao_membro")) return "Você não é membro dessa carteira."
-    if (erro.message?.includes("nao_encontrado")) return "Este atalho não existe mais."
-    if (erro.message?.includes("limite_tokens")) return "Limite de 10 atalhos. Desconecte um para criar outro."
-    return "Não foi possível concluir. Tente de novo."
 }
 
 /**

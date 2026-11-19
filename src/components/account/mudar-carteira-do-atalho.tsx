@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 
-import { mensagemDoErroDeToken } from "@/components/account/atalho-secao"
-import { tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
+import { mensagemDoErroDeToken, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import {
     Dialog,
     DialogBody,
@@ -14,14 +13,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Form, FormCancel, FormControl, FormError, FormField, FormSubmit } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormControl, FormError, FormField, FormSubmit } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 
 /** Troca a carteira de um atalho sem baixá-lo de novo: o código continua o mesmo. */
 export function MudarCarteiraDoAtalho({
-    atalho,
+    atalho: aberto,
     onOpenChange,
     aoMudar,
 }: {
@@ -30,23 +29,29 @@ export function MudarCarteiraDoAtalho({
     aoMudar: () => void
 }) {
     const { workspaces } = useWorkspace()
+    // O último atalho fica depois de fechar: a folha sai com o texto dele, não em branco.
+    const [atalho, setAtalho] = useState(aberto)
+    if (aberto && aberto !== atalho) setAtalho(aberto)
     const [carteira, setCarteira] = useState("")
     const [salvando, setSalvando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
 
-    const escolhida = carteira || atalho?.workspace_id || ""
+    // A carteira do atalho só vale se a pessoa ainda a vê; senão o seletor abre no placeholder.
+    const daCarteira = workspaces.find((w) => w.id === atalho?.workspace_id)?.id ?? ""
+    const escolhida = carteira || daCarteira
 
-    function mudarAberto(aberto: boolean) {
-        if (!aberto) {
+    function mudarAberto(abrir: boolean) {
+        if (!abrir) {
             setCarteira("")
             setErro(null)
         }
-        onOpenChange(aberto)
+        onOpenChange(abrir)
     }
 
     async function salvar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         if (!atalho) return
+        if (!escolhida) return setErro("Escolha a carteira dos gastos.")
         if (escolhida === atalho.workspace_id) return mudarAberto(false)
         setSalvando(true)
         setErro(null)
@@ -58,15 +63,19 @@ export function MudarCarteiraDoAtalho({
     }
 
     return (
-        <Dialog surface="auto" pending={salvando} open={atalho != null} onOpenChange={mudarAberto}>
+        <Dialog surface="auto" pending={salvando} open={aberto != null} onOpenChange={mudarAberto}>
             <DialogContent>
-                <Form pending={salvando} onSubmit={(e) => void salvar(e)}>
-                    <DialogHeader>
-                        <DialogTitle>Mudar carteira</DialogTitle>
-                        <DialogDescription>
-                            {atalho ? `Os gastos de "${tituloDoAtalho(atalho)}" passam a cair na carteira escolhida.` : null}
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>Mudar carteira</DialogTitle>
+                    <DialogDescription>
+                        {atalho ? `Os gastos de "${tituloDoAtalho(atalho)}" passam a cair na carteira escolhida.` : null}
+                    </DialogDescription>
+                </DialogHeader>
+                <CustomForm
+                    pending={salvando}
+                    onSubmit={(e) => void salvar(e)}
+                    className="flex min-h-0 min-w-0 flex-1 flex-col"
+                >
                     <DialogBody className="flex flex-col gap-4">
                         <FormField label="Os gastos caem em">
                             <Select value={escolhida} onValueChange={setCarteira}>
@@ -92,7 +101,7 @@ export function MudarCarteiraDoAtalho({
                         </DialogClose>
                         <FormSubmit>Salvar</FormSubmit>
                     </DialogFooter>
-                </Form>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

@@ -12,8 +12,14 @@ import {
     Squares2X2Icon,
 } from "@heroicons/react/16/solid"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
-import { mensagemDoErroDeToken } from "@/components/account/atalho-secao"
-import { alvoDaTroca, type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
+import {
+    alvoDaTroca,
+    type Gatilho,
+    mensagemDoErroDeToken,
+    type Modo,
+    MODOS_DO_ATALHO,
+    modoDoGatilho,
+} from "@/components/account/gatilhos-do-atalho"
 import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,

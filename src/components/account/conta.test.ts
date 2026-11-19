@@ -228,7 +228,7 @@ describe("tokens de captura", () => {
         expect(s).not.toMatch(/>\s*Revogar|"[^"\n]*(\btokens?\b|Revog)[^"\n]*"/)
     })
     it("os erros do banco em português", async () => {
-        const { mensagemDoErroDeToken } = await import("./atalho-secao")
+        const { mensagemDoErroDeToken } = await import("./gatilhos-do-atalho")
         expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_membro" })).toBe("Você não é membro dessa carteira.")
         expect(mensagemDoErroDeToken({ message: "limite_tokens" })).toBe("Limite de 10 atalhos. Desconecte um para criar outro.")
         expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_encontrado" })).toBe("Este atalho não existe mais.")
@@ -621,6 +621,11 @@ describe("a lista de atalhos", () => {
         expect(m).toContain("set_capture_token_workspace")
         expect(m).toContain('surface="auto"')
         expect(m).toContain("<FormSubmit>Salvar</FormSubmit>")
+        expect(m).toMatch(/<\/DialogHeader>\s+<CustomForm/)
+        expect(m).toContain('className="flex min-h-0 min-w-0 flex-1 flex-col"')
+        // A frase do erro mora em gatilhos-do-atalho: o diálogo e o guia não importam a seção.
+        expect(m).not.toContain("atalho-secao")
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).not.toContain("atalho-secao")
     })
 })
 

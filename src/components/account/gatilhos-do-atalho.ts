@@ -41,3 +41,11 @@ export function alvoDaTroca(modo: Modo, substituir: CaptureToken | undefined, at
     if (substituir && (substituir.atalho_gatilho == null || modoDoGatilho(substituir.atalho_gatilho) === modo)) return substituir
     return atalhos.find((t) => t.atalho_gatilho != null && modoDoGatilho(t.atalho_gatilho) === modo)
 }
+
+/** O erro do banco (o `raise` das RPCs) na frase da tela. */
+export function mensagemDoErroDeToken(erro: { code?: string; message?: string }): string {
+    if (erro.message?.includes("nao_membro")) return "Você não é membro dessa carteira."
+    if (erro.message?.includes("nao_encontrado")) return "Este atalho não existe mais."
+    if (erro.message?.includes("limite_tokens")) return "Limite de 10 atalhos. Desconecte um para criar outro."
+    return "Não foi possível concluir. Tente de novo."
+}
