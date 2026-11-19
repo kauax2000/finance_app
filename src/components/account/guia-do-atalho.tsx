@@ -331,8 +331,8 @@ export function GuiaDoAtalho({
                                         className="shrink-0"
                                     >
                                         {LUGARES.map((l) => (
-                                            // Só ícone: o `floating` dá o alvo de 44 no dedo, e o `px-0` devolve o quadrado de 28.
-                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} className="px-0" />
+                                            // Só ícone: o `floating` dá 44 de altura no dedo, e o `pointer-coarse:w-11`, 44 de largura; no cursor, o quadrado de 28.
+                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} className="px-0 pointer-coarse:w-11" />
                                         ))}
                                     </ToggleGroup>
                                 </>
