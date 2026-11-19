@@ -18,6 +18,7 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/comp
 import { Muted } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import type { Category } from "@/lib/supabase"
+import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
 
 type CategoriaAExcluir = Pick<Category, "id" | "name" | "type" | "color" | "icon">
 
@@ -77,7 +78,11 @@ export function ExcluirCategoriaDialog({
           <Card padding="none" className="overflow-hidden">
             <ItemGroup variant="divided">
               <Item variant="flush" size="md">
-                <ColorTile size="md" color={atual.color}>
+                <ColorTile
+                  size="md"
+                  // A mesma cor do cartão da categoria: a da paleta, ou o padrão do tipo.
+                  color={tileColorFor(atual.color) ?? (atual.type === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)}
+                >
                   <CategoryIconPreview name={normalizeCategoryIcon(atual.icon)} />
                 </ColorTile>
                 <ItemContent className="min-w-0">
