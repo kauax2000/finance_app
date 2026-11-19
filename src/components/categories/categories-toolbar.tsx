@@ -3,6 +3,8 @@
 import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { useReducedMotion } from "motion/react"
+import { TRAJETO_MACIO } from "@/lib/liquid-move"
 import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { Button } from "@/components/ui/button"
 import { MonthGrid } from "@/components/ui/date-picker"
@@ -97,13 +99,21 @@ function MonthNavPanel({
     onJump: () => void
     fechar: () => void
 }) {
+    const reduzido = useReducedMotion() ?? false
+    const fecharDepois = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    React.useEffect(() => () => {
+        if (fecharDepois.current) clearTimeout(fecharDepois.current)
+    }, [])
     return (
         <>
             <MonthGrid
                 value={mesDoAnoMes(budgetMonthYm)}
                 onChange={(d) => {
                     onBudgetMonthYmChange(formatYearMonth(d))
-                    fechar()
+                    // Primeiro o marcador viaja até o mês tocado, depois o painel fecha: fechando
+                    // junto, a saída do painel cortava a viagem.
+                    if (fecharDepois.current) clearTimeout(fecharDepois.current)
+                    fecharDepois.current = setTimeout(fechar, reduzido ? 0 : TRAJETO_MACIO.duration)
                 }}
             />
             {/* 12 embaixo, como dos lados e no topo da grade: as setas dos cantos

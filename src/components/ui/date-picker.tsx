@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { AnimatePresence, animate, motion, usePresence, usePresenceData, useReducedMotion } from "motion/react"
+import { TRAJETO_MACIO } from "@/lib/liquid-move"
 import { useComposedRefs } from "radix-ui/internal"
 import type { DateRange } from "react-day-picker"
 import {
@@ -254,8 +255,19 @@ function dentroDosLimites(d: Date, min?: Date, max?: Date) {
 /** A casca da grade: popover no desktop, gaveta no telefone. */
 function useSuperficie() {
   const [open, setOpen] = React.useState(false)
+  // No modo mês, o marcador viaja até o mês tocado antes de o painel fechar.
+  const reduzidoNoPainel = useReducedMotion() ?? false
+  const fecharDepois = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  React.useEffect(() => () => {
+    if (fecharDepois.current) clearTimeout(fecharDepois.current)
+  }, [])
   const isMobile = useIsMobile()
-  return { open, setOpen, isMobile }
+  /** Fecha depois da viagem do marcador do mês (na hora com movimento reduzido). */
+  const fecharAposViagem = React.useCallback(() => {
+    if (fecharDepois.current) clearTimeout(fecharDepois.current)
+    fecharDepois.current = setTimeout(() => setOpen(false), reduzidoNoPainel ? 0 : TRAJETO_MACIO.duration)
+  }, [reduzidoNoPainel])
+  return { open, setOpen, isMobile, fecharAposViagem }
 }
 
 function gatilhoClassName(size: DatePickerSize) {
@@ -287,7 +299,7 @@ export function DatePicker(props: DatePickerProps) {
     popoverClassName,
   } = props
 
-  const { open, setOpen, isMobile } = useSuperficie()
+  const { open, setOpen, isMobile, fecharAposViagem } = useSuperficie()
   // O rascunho do intervalo com `confirm`: nasce do valor a cada abertura.
   const [rascunho, setRascunho] = React.useState<DateRange | undefined>()
 
@@ -364,7 +376,7 @@ export function DatePicker(props: DatePickerProps) {
         className={naGaveta ? "w-full" : undefined}
         onChange={(d) => {
           props.onChange(d)
-          setOpen(false)
+          fecharAposViagem()
         }}
       />
     ) : props.mode === "range" ? (
@@ -839,9 +851,15 @@ export function MonthGrid(props: MonthGridProps) {
             // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
             // `relative`: pinta por cima do marcador.
             "relative font-normal pointer-coarse:h-11 pointer-coarse:text-base",
-            // A tinta da tecla sobre o marcador; o realce é o do `primary`.
+            // A tinta da tecla sobre o marcador. O botão não pinta fundo próprio, nem no
+            // cursor: quem é branco é só o marcador. Com o realce do `primary` aqui, o mês
+            // tocado (ainda sob o cursor) ficava branco na hora, antes de o marcador chegar.
             marcado &&
-              "text-primary-foreground hover:text-primary-foreground active:text-primary-foreground [--button-hover-fill:var(--primary-hover)] dark:[--button-hover-fill:var(--primary-hover)]",
+              "text-primary-foreground hover:text-primary-foreground active:text-primary-foreground [--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",
+            // A tinta escura só vem quando o marcador chega (a viagem é de 480ms): trocando na
+            // hora, o rótulo sumia no fundo escuro enquanto o branco ainda viajava. Quem sai
+            // volta à tinta clara sem esperar.
+            marcado && pronto && "delay-300 motion-reduce:delay-0",
             // Antes da primeira medida (e sem JavaScript) o escolhido se pinta sozinho.
             marcado && !pronto && "bg-primary",
             // O atual mantém um sinal em todo estado: no meio do intervalo o fundo dele é o da faixa.
@@ -854,12 +872,12 @@ export function MonthGrid(props: MonthGridProps) {
           )}
           onClick={() => escolher(mes)}
         >
-          <span className="capitalize">{formatMonthShortPtBr(mes)}</span>
+          <span className="relative z-20 capitalize">{formatMonthShortPtBr(mes)}</span>
           {legenda != null ? (
             <span
               data-slot="month-grid-caption"
               className={cn(
-                "text-2xs leading-tight nums",
+                "relative z-20 text-2xs leading-tight nums",
                 escolhido ? "text-primary-foreground" : "text-muted-foreground"
               )}
             >
@@ -1041,7 +1059,7 @@ function GradeDoAno({
       initial={reduzido ? false : { x: 24 * direcao, opacity: 0, filter: "blur(6px)" }}
       animate={{ x: 0, opacity: 1, filter: "blur(0px)" }}
       transition={MOLA}
-      className="relative grid grid-cols-3 gap-1"
+      className="relative isolate grid grid-cols-3 gap-1"
     >
       {pronto ? (
         <span
@@ -1049,9 +1067,10 @@ function GradeDoAno({
           aria-hidden
           data-slot="month-grid-marker"
           className={cn(
-            // Vem antes dos meses e não declara camada: os meses são `relative`
-            // e pintam por cima por ordem de documento. Quem anda é a viagem líquida.
-            "pointer-events-none absolute top-0 left-0 rounded-full bg-primary",
+            // Acima do fundo dos meses (`z-10`), para não passar por trás do cinza do mês
+            // atual ao viajar, e abaixo do texto deles (`z-20` no rótulo). A grade é `isolate`.
+            // Quem anda é a viagem líquida.
+            "pointer-events-none absolute top-0 left-0 z-10 rounded-full bg-primary",
             "translate-x-(--month-grid-marker-x) translate-y-(--month-grid-marker-y)",
             "w-(--month-grid-marker-w) h-(--month-grid-marker-h)"
           )}
