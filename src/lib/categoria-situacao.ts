@@ -90,6 +90,27 @@ export function mediaDosMeses(valores: number[]): number {
 
 export type CriterioDeOrdem = "maior" | "nome" | "variacao"
 
+/**
+ * Por aba: quem teve movimento vai à grade, na ordem escolhida; o resto, ao rodapé.
+ * O total de quem chama já vem em centavos (`roundCents`), senão o resto de ponto
+ * flutuante (5,55e-17) passa por "maior que zero".
+ */
+export function dividirDoMes<T extends { nome: string; total: number; anterior: number }>(
+  itens: T[],
+  criterio: CriterioDeOrdem,
+) {
+  const comMovimento = ordenarCategorias(
+    itens.filter((i) => i.total > 0),
+    criterio,
+  )
+  return {
+    comMovimento,
+    semMovimento: itens.filter((i) => i.total <= 0),
+    totalDoMes: comMovimento.reduce((soma, i) => soma + i.total, 0),
+    maiorTotal: Math.max(0, ...comMovimento.map((i) => i.total)),
+  }
+}
+
 export function ordenarCategorias<T extends { nome: string; total: number; anterior: number }>(
   itens: T[],
   criterio: CriterioDeOrdem,

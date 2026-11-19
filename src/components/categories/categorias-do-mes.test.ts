@@ -80,7 +80,8 @@ describe("a grade na page-client", () => {
 
     it("liga a série, a ordem e o rodapé", () => {
         expect(fonte).toContain("useSerieDasCategorias(")
-        expect(fonte).toContain("ordenarCategorias(")
+        expect(fonte).toContain("dividirDoMes(")
+        expect(fonte).toContain("roundCents(lancado + previsto)")
         expect(fonte).toContain("<SemMovimentoNoMes")
     })
 

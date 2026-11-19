@@ -85,8 +85,9 @@ export function IncomeCategoryCard({
     const color = tileColorFor(category.color) ?? TILE_INCOME_DEFAULT
     // O estorno maior que a receita deixa o mês negativo: tudo lê como zero.
     const recebidoNaTela = Math.max(0, recebido)
-    const previstoNaTela = Math.max(0, previsto)
     const total = Math.max(0, recebido + previsto)
+    // As partes sempre somam o total: recebido negativo come do previsto.
+    const previstoNaTela = Math.max(0, total - recebidoNaTela)
 
     const variacao = variacaoDoMes(total, anterior)
     const rotulo = rotuloDaVariacao(variacao, shiftYearMonth(mesYm, -1))
@@ -223,6 +224,3 @@ export function IncomeCategoryCard({
         </CategoryCardContextMenu>
     )
 }
-
-/** Mantido o nome antigo: o osso é o mesmo da despesa. */
-export { CategoryCardSkeleton as IncomeCategoryCardSkeleton } from "@/components/categories/expense-category-card"

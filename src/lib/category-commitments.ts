@@ -184,19 +184,6 @@ export function buildCategoryCommitmentsForMonth(args: {
 }
 
 /**
- * O total do mês da tela de Categorias: só as categorias de despesa. O estorno
- * antigo, gravado numa de receita, deixaria um balde negativo abatendo o total.
- */
-export function totalDasDespesas(
-    categories: Pick<Category, "id" | "type">[],
-    spendByCategoryId: Record<string, number>,
-): number {
-    return categories
-        .filter((c) => c.type === "expense")
-        .reduce((sum, c) => sum + (spendByCategoryId[c.id] ?? 0), 0)
-}
-
-/**
  * O gráfico "Despesa por categoria" do Painel: as linhas já no mês (o estorno no
  * cartão pelo fechamento). O estorno abate a categoria de despesa dele; sem
  * categoria ele não tem de onde abater.

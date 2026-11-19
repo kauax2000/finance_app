@@ -1,6 +1,7 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
+import { currencyBRL } from "@/lib/formatters"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
@@ -75,6 +76,11 @@ describe("IncomeCategoryCard no render", () => {
         expect(html).toContain("R$ 1.200,00")
         expect(html).toContain("R$ 1.000,00 recebido + R$ 200,00 previsto")
         expect(html).toContain("50% das receitas do mês")
+    })
+
+    it("recebido negativo com previsto: as partes somam o total", () => {
+        const html = limpo(cartao({ recebido: -30, previsto: 100 }))
+        expect(html).toContain(limpo(`${currencyBRL(0)} recebido + ${currencyBRL(70)} previsto`))
     })
 
     it("sem previsão, não repete a linha do previsto", () => {

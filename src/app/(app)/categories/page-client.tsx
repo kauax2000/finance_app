@@ -43,7 +43,7 @@ import { ExpenseCategoryCard } from "@/components/categories/expense-category-ca
 import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
 import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
-import { ordenarCategorias, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
+import { dividirDoMes, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
 import { useSerieDasCategorias } from "@/hooks/use-serie-das-categorias"
 import {
     CategoriasDoMesCabecalho,
@@ -79,7 +79,7 @@ import { useGarantirOrcamentosDoMes } from "@/hooks/use-garantir-orcamentos-do-m
 import { OrcamentoRepeteWireframe } from "@/components/wireframe/orcamento-repete-wireframe"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
+import { parseMoneyBrl, formatMoneyBrlInput, roundCents } from "@/lib/money-brl"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { FINANCE_CATEGORIES_MUTATED_EVENT } from "@/lib/workspace-data-events"
 import { ROUTES, categoryDetailPath } from "@/config/navigation"
@@ -605,21 +605,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const ritmo = ritmoDoMes(budgetMonthYm, hojeYmd)
     const mesDaGrade = mesNaFrase(budgetMonthYm, Number(hojeYmd.slice(0, 4)))
 
-    // Por aba: quem teve movimento vai à grade, na ordem escolhida; o resto, ao rodapé.
-    const dividirDoMes = <T extends { category: Category; nome: string; total: number; anterior: number }>(
-        itens: T[],
-    ) => {
-        const comMovimento = ordenarCategorias(
-            itens.filter((i) => i.total > 0),
-            criterio,
-        )
-        return {
-            comMovimento,
-            semMovimento: itens.filter((i) => i.total <= 0),
-            totalDoMes: comMovimento.reduce((soma, i) => soma + i.total, 0),
-            maiorTotal: Math.max(0, ...comMovimento.map((i) => i.total)),
-        }
-    }
     const despesas = dividirDoMes(
         expenseFiltered.map((category) => {
             const lancado = postedByCategoryId[category.id] ?? 0
@@ -631,10 +616,11 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 nome: category.name,
                 lancado,
                 previsto,
-                total: Math.max(0, lancado + previsto),
+                total: Math.max(0, roundCents(lancado + previsto)),
                 anterior: prevSpendByCategoryId[category.id] ?? 0,
             }
         }),
+        criterio,
     )
     const receitas = dividirDoMes(
         incomeCategories.map((category) => {
@@ -647,10 +633,11 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 nome: category.name,
                 recebido,
                 previsto,
-                total: Math.max(0, recebido + previsto),
+                total: Math.max(0, roundCents(recebido + previsto)),
                 anterior: (antes?.recebido ?? 0) + (antes?.previsto ?? 0),
             }
         }),
+        criterio,
     )
 
     const dialogBudgetPeriod = periodBoundsFromYearMonth(budgetMonthYm)

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { currencyBRL } from "@/lib/formatters"
+import { roundCents } from "@/lib/money-brl"
 import {
+  dividirDoMes,
   mediaDosMeses,
   ordenarCategorias,
   participacao,
@@ -156,5 +158,25 @@ describe("ordenarCategorias", () => {
       { nome: "A", total: 100, anterior: 0 },
     ]
     expect(ordenarCategorias(empatados, "maior").map((i) => i.nome)).toEqual(["B", "A"])
+  })
+})
+
+describe("dividirDoMes", () => {
+  it("o resto de ponto flutuante, já em centavos, vai ao rodapé", () => {
+    const sobra = roundCents(0.1 + 0.2 - 0.3)
+    const r = dividirDoMes(
+      [
+        { nome: "Estornada", total: Math.max(0, sobra), anterior: 0 },
+        { nome: "Mercado", total: 50, anterior: 0 },
+      ],
+      "maior",
+    )
+    expect(r.semMovimento.map((i) => i.nome)).toEqual(["Estornada"])
+    expect(r.comMovimento.map((i) => i.nome)).toEqual(["Mercado"])
+  })
+
+  it("sem arredondar, 5,55e-17 passaria na grade (o porquê do roundCents)", () => {
+    expect(0.1 + 0.2 - 0.3).toBeGreaterThan(0)
+    expect(roundCents(0.1 + 0.2 - 0.3)).toBe(0)
   })
 })

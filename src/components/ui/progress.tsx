@@ -144,7 +144,9 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
     /**
      * O trecho tracejado depois do cheio, na unidade do `value`: o que ainda vem (a conta
      * a pagar do mês). O indicador mede só o `value`; o tom (com `bands`) e a pastilha de
-     * excesso contam o total. Para no fim do trilho. Ignorado com `segments`, `zones` e na marca.
+     * excesso contam o total. Para no fim do trilho. `ProgressValue` mostra só o lançado
+     * (`value`), não valor + previsto. Não vale com `zones` (o tipo cobra), nem com
+     * `segments` (ignorado em execução, porque `segments` vem da `Base`) nem na marca.
      */
     projected?: number
   }
@@ -162,7 +164,14 @@ type ProgressProps =
        * Pinta no trilho a faixa de aviso e a de perigo, para ver onde a barra vai
        * entrar antes de chegar lá. Substitui o traço do corte.
        */
-      zones?: boolean
+      zones: true
+      projected?: never
+      tone?: never
+      variant?: "default"
+    })
+  | (Base & {
+      bands: ProgressBands
+      zones?: false
       tone?: never
       variant?: "default"
     })
@@ -532,7 +541,7 @@ function ProgressLabel({ className, id, ...props }: React.ComponentProps<"span">
 }
 
 /**
- * O número. Sem filhos, escreve a porcentagem do valor **bruto** (104% numa
+ * O número. Mostra só o lançado (`value`), nunca valor + `projected`. Sem filhos, escreve a porcentagem do valor **bruto** (104% numa
  * categoria que estourou, não os 100 da barra); com filhos, o que receber. É
  * visual: quem anuncia é a barra.
  */

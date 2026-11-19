@@ -97,8 +97,9 @@ export function ExpenseCategoryCard({
     const color = tileColorFor(category.color) ?? TILE_EXPENSE_DEFAULT
     // O estorno maior que as compras deixa o mês negativo: tudo lê como zero.
     const lancadoNaTela = Math.max(0, lancado)
-    const previstoNaTela = Math.max(0, previsto)
     const total = Math.max(0, lancado + previsto)
+    // As partes sempre somam o total: lançado negativo come do previsto.
+    const previstoNaTela = Math.max(0, total - lancadoNaTela)
     const comLimite = limite > 0
 
     const variacao = variacaoDoMes(total, anterior)

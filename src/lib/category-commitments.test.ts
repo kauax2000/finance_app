@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildCategoryCommitmentsForMonth, despesaPorCategoria, totalDasDespesas } from "./category-commitments"
+import { buildCategoryCommitmentsForMonth, despesaPorCategoria } from "./category-commitments"
 
 const creditCards = [{ id: "card", closing_day: 28 }]
 
@@ -305,17 +305,6 @@ describe("buildCategoryCommitmentsForMonth recurring income", () => {
 
     it("an absent kind still counts as expense", () => {
         expect(run(base).c1?.projectedSubscriptionsTotal).toBe(5000)
-    })
-})
-
-describe("totalDasDespesas", () => {
-    it("soma só as categorias de despesa: o estorno antigo numa de receita não abate", () => {
-        const categorias = [
-            { id: "mercado", type: "expense" as const },
-            { id: "lazer", type: "expense" as const },
-            { id: "salario", type: "income" as const },
-        ]
-        expect(totalDasDespesas(categorias, { mercado: 70, salario: -30, sumida: 5 })).toBe(70)
     })
 })
 

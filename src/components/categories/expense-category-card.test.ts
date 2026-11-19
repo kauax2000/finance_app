@@ -1,6 +1,7 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
+import { currencyBRL } from "@/lib/formatters"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 vi.mock("next/link", () => ({ default: (p: Record<string, unknown>) => h("a", p) }))
@@ -65,7 +66,14 @@ function cartao(p: Partial<Parameters<typeof ExpenseCategoryCard>[0]> = {}) {
     )
 }
 
+const limpo = (s: string) => s.replace(/\u00a0/g, " ").replace(/<!-- -->/g, "")
+
 describe("ExpenseCategoryCard no render", () => {
+    it("lançado negativo com previsto: as partes somam o total", () => {
+        const html = limpo(cartao({ lancado: -30, previsto: 100 }))
+        expect(html).toContain(limpo(`${currencyBRL(0)} lançado + ${currencyBRL(70)} previsto`))
+    })
+
     it("com a série carregando e o gasto negativo, nada sai NaN nem -R$", () => {
         for (const limite of [500, 0]) {
             const html = cartao({ historico: undefined, lancado: -30, limite })
