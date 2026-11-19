@@ -32,7 +32,7 @@ describe("a transição de subpágina", () => {
     })
 
     it("o gesto espera a tela nova: a navegação corre dentro da promessa, e há um teto", () => {
-        expect(T).toMatch(/startViewTransition\(async \(\) => \{[\s\S]{0,160}?router\.push\([\s\S]+await telaPronta\(rotaDeAntes\)/)
+        expect(T).toMatch(/startViewTransition\(async \(\) => \{[\s\S]{0,160}?router\.push\([\s\S]+await telaPronta\(rotaDeAntes, inicio\)/)
         expect(T).toContain("const LIMITE_DA_ESPERA_MS = 1200")
         expect(T).toContain(`'[aria-busy="true"], [data-slot="skeleton"]'`)
     })
@@ -41,20 +41,20 @@ describe("a transição de subpágina", () => {
     // sobre ela mesma, e a tela nova chegava num corte seco.
     it("nunca anima sem a rota nova: o teto de 1,2s só conta depois da troca, e a rota tem o próprio teto", () => {
         expect(T).toContain("const LIMITE_DA_ROTA_MS = 2500")
-        expect(T).toMatch(/function telaPronta\(rotaDeAntes: string\): Promise<boolean>/)
-        expect(T).toMatch(/const pronta = await telaPronta\(rotaDeAntes\)[\s\S]{0,800}transicao\.skipTransition\(\)/)
+        expect(T).toMatch(/function telaPronta\(rotaDeAntes: string, inicio: number\): Promise<boolean>/)
+        expect(T).toMatch(/const pronta = await telaPronta\(rotaDeAntes, inicio\)[\s\S]{0,800}transicao\.skipTransition\(\)/)
     })
 
     it("o teto do esqueleto nasce na troca de rota, não no clique", () => {
         // o temporizador de 1,2s é armado dentro do ramo em que a rota já mudou
-        expect(T).toMatch(/location\.pathname !== rotaDeAntes[\s\S]{0,300}setTimeout\([^,]+, LIMITE_DA_ESPERA_MS\)/)
+        expect(T).toMatch(/location\.pathname !== rotaDeAntes[\s\S]{0,300}setTimeout\([\s\S]{0,40}Math\.min\(LIMITE_DA_ESPERA_MS, restante\)/)
     })
 
     // No WebKit, rolar com a promessa correndo mostra a página viva no lugar da foto
     // parada: a Você rolada piscava em branco (simulador, 19/11/2026).
     it("a navegação não rola durante a espera; a rolagem ao topo vem depois da tela pronta", () => {
         expect(T).toContain("{ scroll: false }")
-        expect(T).toMatch(/await telaPronta\(rotaDeAntes\)[\s\S]{0,140}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)/)
+        expect(T).toMatch(/await telaPronta\(rotaDeAntes, inicio\)[\s\S]{0,200}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)/)
     })
 
     // A troca que passou do teto deixava a Você saltar ao topo antes da tela nova chegar.
@@ -70,8 +70,8 @@ describe("a transição de subpágina", () => {
         expect(T).toMatch(/conteudo\.style\.height = `\$\{window\.innerHeight\}px`[\s\S]{0,120}window\.scrollTo\(\{ top: 0, behavior: "instant" \}\)[\s\S]{0,40}conteudo\.scrollTop = rolagem - topo[\s\S]+startViewTransition/)
         // A janela só vale sob `html[data-subpagina]`: o atributo vem antes dela.
         expect(T).toMatch(/raiz\.dataset\.subpagina = direcao[\s\S]{0,80}if \(conteudo && rolagem > 0\)/)
-        expect(T).toMatch(/await telaPronta\(rotaDeAntes\)[\s\S]{0,80}soltar\(\)/)
-        expect(T).toMatch(/transicao\.finished\.finally\(\(\) => \{[\s\S]{0,160}soltar\(\)/)
+        expect(T).toMatch(/await telaPronta\(rotaDeAntes, inicio\)[\s\S]{0,160}soltar\(\)/)
+        expect(T).toMatch(/\.finally\(\(\) => \{[\s\S]{0,160}voltarAoLugar\(\)/)
         expect(CSS).toMatch(/\[data-workspace-content\]\[data-janela\] \{\s+overflow: hidden;/)
         expect(T).toContain('conteudo.style.flex = "none"')
         expect(CSS).toMatch(/\[data-workspace-content\]\[data-janela\] > \* \{\s+flex-shrink: 0;/)
@@ -84,6 +84,19 @@ describe("a transição de subpágina", () => {
         expect(CSS).toMatch(/@keyframes subpagina-vem-esquerda \{[\s\S]{0,120}to \{\s+translate: 0 0;/)
     })
 
+    // No iPhone, com a tela nova lenta, o iOS abortava a troca (~4s) com a página já em 0
+    // pela janela: a Você aparecia do topo antes da tela nova (19/11/2026).
+    it("a espera inteira fica abaixo do teto do iOS, e a troca abortada devolve a Você ao lugar", () => {
+        expect(T).toContain("const PRAZO_TOTAL_MS = 3000")
+        expect(T).toMatch(/\.finally\(\(\) => \{\s+if \(!resolvida\) \{\s+resolvida = true\s+voltarAoLugar\(\)/)
+        expect(T).toMatch(/const voltarAoLugar = \(\) => \{\s+soltar\(\)\s+if \(location\.pathname === rotaDeAntes\) \{\s+window\.scrollTo\(\{ top: rolagem/)
+        expect(T).toContain("transicao.ready.catch(() => {})")
+    })
+
+    it("um clique durante a troca nunca é engolido, e marca velha sai", () => {
+        expect(T).toMatch(/if \(raiz\.dataset\.subpagina\) \{\s+if \(performance\.now\(\) - trocaDesde < PRAZO_TOTAL_MS \+ 2000\) return\s+delete raiz\.dataset\.subpagina\s+\}\s+[\s\S]{0,120}e\.preventDefault\(\)/)
+    })
+
     it("só o telefone, sem movimento reduzido, fora de diálogo e de link externo", () => {
         expect(T).toContain("if (!isMobile) return")
         expect(T).toContain('"(prefers-reduced-motion: reduce)"')
@@ -93,7 +106,7 @@ describe("a transição de subpágina", () => {
 
     it("o estado dura a transição inteira, sem temporizador", () => {
         expect(T).toContain("raiz.dataset.subpagina = direcao")
-        expect(T).toMatch(/transicao\.finished\.finally\(\(\) => \{[\s\S]{0,160}delete raiz\.dataset\.subpagina/)
+        expect(T).toMatch(/transicao\.finished[\s\S]{0,80}\.finally\(\(\) => \{[\s\S]{0,200}delete raiz\.dataset\.subpagina/)
     })
 
     it("sem desvio de rolagem: a página já está em 0 na foto", () => {
