@@ -20,7 +20,6 @@ import {
     MODOS_DO_ATALHO,
     modoDoGatilho,
 } from "@/components/account/gatilhos-do-atalho"
-import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
     JanelaDoAparelho,
@@ -347,7 +346,10 @@ export function GuiaDoAtalho({
                                 </>
                             ) : (
                                 <>
-                                    <OrbeDaSiri className="size-8 shrink-0" />
+                                    {/* O ícone da voz: o microfone em cor num círculo neutro (o logo da Siri é da Apple). */}
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-info">
+                                        <MicrophoneIcon aria-hidden className="size-4" />
+                                    </span>
                                     <P className="min-w-0 flex-1 truncate font-semibold">“E aí Siri, Lançar gasto”</P>
                                 </>
                             )}

@@ -180,7 +180,8 @@ describe("tokens de captura", () => {
         expect(g).toMatch(/<ToggleGroup\b[^>]*variant="segmented"/)
         expect(g).toContain('tamanho="palco"')
         expect(p).toMatch(/\bpalco: \{/)
-        expect(g).toContain("<OrbeDaSiri")
+        expect(g).not.toContain("OrbeDaSiri")
+        expect(g).toMatch(/rounded-full bg-muted text-info">\s*<MicrophoneIcon aria-hidden className="size-4" \/>/)
         expect(g).toContain("E aí Siri, Lançar gasto")
         expect(g).toMatch(/Continuar com \$\{/)
         for (const l of ["Botão de Ação", "Costas", "Bloqueio", "Ícone"]) expect(g).toContain(`nome: "${l}"`)
@@ -188,10 +189,6 @@ describe("tokens de captura", () => {
         expect(g).toContain("menuPanelTintClassName")
         // O passo 1 em Voz e em Toque estão entre os fantasmas: a caixa não muda de altura com a escolha.
         expect(g).toMatch(/passoDe\(0, "siri", true\)/)
-        const orbe = lerFonte("src/components/account/orbe-da-siri.tsx")
-        expect(orbe).toContain("aria-hidden")
-        expect(orbe).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(/i)
-        expect(lerFonte(".claude/skills/design-system-guard/scripts/audit.mjs")).toContain('"account/orbe-da-siri"')
     })
     it("os pontos ficam depois dos passos e antes do rodapé", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
