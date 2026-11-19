@@ -129,7 +129,15 @@ def se(grupo: str, de: str | dict, condicao: int, valor: str | None = None) -> d
     params = dict(GroupingIdentifier=grupo, WFControlFlowMode=0, WFCondition=condicao,
                   WFInput={"Type": "Variable", "Variable": anexo(alvo)})
     if valor is not None:
-        params["WFConditionalActionString"] = valor
+        # O iOS 27 não lê o texto cru: o "é" ficava sem valor ("Escolha um valor para cada parâmetro").
+        params["WFConditionalActionString"] = texto(valor)
+        params["WFConditions"] = {
+            "WFSerializationType": "WFContentPredicateTableTemplate",
+            "Value": {"WFActionParameterFilterPrefix": 1, "WFContentPredicateBoundedDate": False,
+                      "WFActionParameterFilterTemplates": [{
+                          "WFCondition": condicao, "WFInput": params["WFInput"],
+                          "WFConditionalActionString": texto(valor)}]},
+        }
     return acao("conditional", **params)
 
 
@@ -307,7 +315,7 @@ def verificar() -> None:
     # Só condições positivas: nenhum "não é" (5) sobre um valor que pode vir vazio.
     conds = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "conditional" and a["WFWorkflowActionParameters"]["WFControlFlowMode"] == 0]
     assert all(c["WFCondition"] in (4, 100) for c in conds), [c["WFCondition"] for c in conds]
-    por_valor = {c.get("WFConditionalActionString"): c for c in conds}
+    por_valor = {_txt(c.get("WFConditionalActionString")): c for c in conds}
     origem = lambda c: c["WFInput"]["Variable"]["Value"]  # noqa: E731
     leitura = lambda c: next(a["WFWorkflowActionParameters"] for a in acoes if a["WFWorkflowActionParameters"].get("UUID") == origem(c).get("OutputUUID"))  # noqa: E731
     assert leitura(por_valor["formulario"])["WFDictionaryKey"] == "modo"
