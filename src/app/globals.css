@@ -195,7 +195,7 @@
    metade "clara" da amostra herda os valores do escuro e as duas ficam iguais. */
 :root,
 .light {
-  --background: oklch(0.985 0 0);
+  --background: oklch(0.96 0 0); /* O cinza agrupado do iOS: o cartão branco se separa da página (era 0.985, 1.04:1; 19/11/2026). */
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);

@@ -312,8 +312,11 @@ describe("as telas", () => {
       expect(codigo, arquivo).toContain('state={')
       expect(codigo, arquivo).toContain("TableEmpty")
     }
+    // O de Transações é agrupado por dia, o que o `TableSkeleton` não desenha: ele compõe as peças da `Table`.
+    const transacoes = lerFonte("src/components/transactions/transactions-page-skeleton.tsx")
+    expect(transacoes).toContain("<TableGroupRow")
+    expect(transacoes).not.toContain('className="bg-muted/50"')
     for (const arquivo of [
-      "src/components/transactions/transactions-page-skeleton.tsx",
       "src/components/subscriptions/subscriptions-page-skeleton.tsx",
       "src/components/categories/detail/category-detail-skeleton.tsx",
       "src/components/credit-cards/credit-card-detail-skeleton.tsx",
