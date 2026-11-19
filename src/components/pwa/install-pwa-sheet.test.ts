@@ -57,4 +57,11 @@ describe("InstallPwaSheet", () => {
     expect(f).toContain("useReducedMotion()")
     expect(f).toContain("reduzido ? { duration: 0 } : MOLA")
   })
+  it("o Voltar do passo 2 em diante é o FormCancel, e no telefone sobe ao ‹ do canto", () => {
+    expect(f).toContain("<FormCancel onClick={() => setPasso(passo - 1)}>Voltar</FormCancel>")
+    expect(f).toContain('aria-label="Voltar"')
+    expect(f).toContain("top-2.5 left-2.5")
+    expect(f).toMatch(/celular && passo > 0 \?/)
+    expect(f).toContain("<DialogFooter>")
+  })
 })

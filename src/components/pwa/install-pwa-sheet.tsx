@@ -11,10 +11,14 @@ import {
   DialogBody,
   DialogCloseButton,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { FormCancel } from "@/components/ui/form"
+import { ChevronLeftIcon } from "@heroicons/react/16/solid"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { MOLA, SAIDA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 import { P, Muted } from "@/components/ui/typography"
@@ -91,6 +95,7 @@ const SUBIDA_DO_APARELHO = -208
 
 export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
     const [passo, setPasso] = useState(0)
+    const celular = useIsMobile()
     const reduzido = useReducedMotion()
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
@@ -191,21 +196,30 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                         </AnimatePresence>
                     </div>
                 </DialogBody>
-                <div className="flex shrink-0 gap-2 px-(--dialog-px)">
-                    {passo > 0 && (
-                        <Button type="button" variant="tertiary" onClick={() => setPasso(passo - 1)}>
-                            Voltar
-                        </Button>
-                    )}
+                <DialogFooter>
+                    {passo > 0 && <FormCancel onClick={() => setPasso(passo - 1)}>Voltar</FormCancel>}
                     <Button
                         type="button"
                         variant="primary"
-                        className="flex-1"
                         onClick={ultimo ? handleDismiss : () => setPasso(passo + 1)}
                     >
                         {ultimo ? "Entendi" : "Próximo"}
                     </Button>
-                </div>
+                </DialogFooter>
+                {/* O ‹ é o espelho do ✕: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
+                {/* O ‹ é o espelho do ✕, como no Importar: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
+                {celular && passo > 0 ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar"
+                        className="absolute top-2.5 left-2.5 z-20"
+                        onClick={() => setPasso(passo - 1)}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
                 <DialogCloseButton />
             </SheetContent>
         </Sheet>

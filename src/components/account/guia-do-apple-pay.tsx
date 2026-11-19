@@ -14,6 +14,7 @@ import {
     usePreCarregarTelas,
 } from "@/components/account/passo-a-passo"
 import { CheckCircleIcon } from "@heroicons/react/20/solid"
+import { ChevronLeftIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -25,8 +26,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { FormCancel } from "@/components/ui/form"
 import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Muted, P } from "@/components/ui/typography"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 /** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
 export const DESCRICAO_DA_AUTOMACAO =
@@ -126,6 +129,7 @@ export function GuiaDoApplePay({
     onConcluir?: () => void
 }) {
     const reduzido = useReducedMotion()
+    const celular = useIsMobile()
     const [passo, setPasso] = useState(0)
     // O primeiro passo ao abrir não anima: só a troca de passo.
     const [mudou, setMudou] = useState(false)
@@ -190,19 +194,7 @@ export function GuiaDoApplePay({
                 </DialogBody>
                 <PontosDoPasso total={PASSOS.length} atual={passo} />
                 <DialogFooter>
-                    {/* No primeiro passo o Voltar guarda o lugar, invisível: o rodapé tem a mesma
-                        altura em todos os passos, e a gaveta não muda de tamanho. */}
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        disabled={passo === 0}
-                        aria-hidden={passo === 0 || undefined}
-                        tabIndex={passo === 0 ? -1 : undefined}
-                        className={passo === 0 ? "invisible" : undefined}
-                        onClick={() => irPara(passo - 1)}
-                    >
-                        Voltar
-                    </Button>
+                    {passo > 0 ? <FormCancel onClick={() => irPara(passo - 1)}>Voltar</FormCancel> : null}
                     <Button
                         type="button"
                         variant="primary"
@@ -218,6 +210,19 @@ export function GuiaDoApplePay({
                         {ultimo ? "Pronto" : "Próximo"}
                     </Button>
                 </DialogFooter>
+                {/* O ‹ é o espelho do ✕, como no Importar: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
+                {celular && passo > 0 ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar"
+                        className="absolute top-2.5 left-2.5 z-20"
+                        onClick={() => irPara(passo - 1)}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
             </DialogContent>
         </Dialog>
     )

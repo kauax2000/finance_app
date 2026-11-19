@@ -2,13 +2,14 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
-import { ShieldCheckIcon } from "@heroicons/react/16/solid"
+import { ChevronLeftIcon, ShieldCheckIcon } from "@heroicons/react/16/solid"
 import { LinkIcon } from "@heroicons/react/20/solid"
 import { urlDoMcp } from "@/components/account/ias-secao"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { Capa, GARANTIAS, type Marca } from "@/components/account/marcas-de-ia"
 import { CaixaDoPasso, PecaDoPasso, PontosDoPasso } from "@/components/account/passo-a-passo"
 import { Button } from "@/components/ui/button"
+import { FormCancel } from "@/components/ui/form"
 import {
     Dialog,
     DialogBody,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Muted, P } from "@/components/ui/typography"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
     brotarPasso,
     chegarAEscolha,
@@ -128,6 +130,7 @@ export function ConectarIaDialog({
 }) {
     const url = urlDoMcp(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
     const reduzido = useReducedMotion()
+    const celular = useIsMobile()
     const [passo, setPasso] = useState(0)
     const [ia, setIa] = useState<Ia | null>(null)
     // O primeiro passo ao abrir não anima: só a troca de passo.
@@ -346,19 +349,11 @@ export function ConectarIaDialog({
                 </DialogBody>
                 <PontosDoPasso total={TOTAL} atual={passo} />
                 <DialogFooter key={passo === 0 ? "rodape-escolha" : "rodape-guia"} ref={rodapeRef}>
-                    {/* No primeiro passo o Voltar guarda o lugar, invisível: o rodapé tem a mesma
-                        altura em todos os passos, e a gaveta não muda de tamanho. */}
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        disabled={passo === 0 || trocando}
-                        aria-hidden={passo === 0 || undefined}
-                        tabIndex={passo === 0 ? -1 : undefined}
-                        className={passo === 0 ? "invisible" : undefined}
-                        onClick={() => void irPara(passo - 1)}
-                    >
-                        Voltar
-                    </Button>
+                    {passo > 0 ? (
+                        <FormCancel disabled={trocando} onClick={() => void irPara(passo - 1)}>
+                            Voltar
+                        </FormCancel>
+                    ) : null}
                     <Button
                         type="button"
                         variant="primary"
@@ -369,6 +364,20 @@ export function ConectarIaDialog({
                         {ultimo ? "Concluir" : "Próximo"}
                     </Button>
                 </DialogFooter>
+                {/* O ‹ é o espelho do ✕, como no Importar: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
+                {celular && passo > 0 ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar"
+                        disabled={trocando}
+                        className="absolute top-2.5 left-2.5 z-20"
+                        onClick={() => void irPara(passo - 1)}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
             </DialogContent>
         </Dialog>
     )

@@ -678,3 +678,17 @@ describe("o guia cria um atalho de cada modo, na carteira escolhida", () => {
         expect(g).toContain("<ChevronLeftIcon />")
     })
 })
+
+describe("o Voltar dos guias sobe ao ‹ do canto no telefone", () => {
+    for (const arq of ["guia-do-apple-pay", "conectar-ia-dialog"]) {
+        it(arq, () => {
+            const g = semComentarios(lerFonte(`src/components/account/${arq}.tsx`))
+            expect(g).toContain('aria-label="Voltar"')
+            expect(g).toContain("top-2.5 left-2.5")
+            expect(g).toMatch(/celular && passo > 0 \?/)
+            expect(g).toContain("<ChevronLeftIcon />")
+            expect(g).toMatch(/<FormCancel[\s\S]*?>\s*Voltar\s*<\/FormCancel>/)
+            expect(g).not.toContain('className={passo === 0 ? "invisible"')
+        })
+    }
+})
