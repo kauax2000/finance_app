@@ -236,9 +236,9 @@ describe("Onboarding — o card, o ponto, a mídia e o esqueleto", () => {
 })
 
 describe("Onboarding — o mecanismo, pela fonte", () => {
-  it("o diálogo: gaveta no telefone, um índice só (o carrossel), o clique fora não pula", () => {
+  it("o diálogo: gaveta no telefone, um índice só (o carrossel), o clique fora fecha, como todo diálogo", () => {
     expect(CODIGO).toContain('surface="auto"')
-    expect(CODIGO).toContain("onPointerDownOutside={(e) => e.preventDefault()}")
+    expect(CODIGO).not.toContain("onPointerDownOutside={(e) => e.preventDefault()}")
     expect(CODIGO).toContain("data-vaul-no-drag")
     expect(CODIGO).toContain("setApi={setApi}")
     expect(CODIGO).toContain('api.on("select"')

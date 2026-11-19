@@ -116,3 +116,12 @@ describe("AlertDialog", () => {
     expect(codigo).toContain("dialogTitleClassName")
   })
 })
+
+describe("o clique fora (19/11/2026)", () => {
+  const f = semComentarios(FONTE)
+  it("o véu fecha a confirmação, menos com a ação correndo", () => {
+    expect(f).toContain("useControllableState")
+    expect(f).toMatch(/fecharPorFora: \(\) => \{\s*if \(!pending\) setOpen\(false\)/)
+    expect(f).toMatch(/if \(!event\.defaultPrevented\) fecharPorFora\(\)/)
+  })
+})

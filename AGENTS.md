@@ -1289,6 +1289,7 @@ declaração de `background-color` no trilho).
     09/11). Durante a viagem o `max-width` do degrau sai, senão o encolher
     saltava. Abaixo de 768px só a altura anda; a gaveta é do `vaul`.
     `dialog-versions.test.ts`.
+- **`AlertDialog` fecha ao clicar fora** (no véu), como todo diálogo do app, menos com `pending` (19/11/2026); o aberto mora no `AlertDialog` por `useControllableState`.
 - **`AlertDialog`** mora na camada da folha (`--z-sheet`, véu e placa), para a
   confirmação aberta de dentro de uma folha ficar por cima dela.
 - **`AlertDialog`** mede pela régua do `Dialog` e veste a cromagem dele; não

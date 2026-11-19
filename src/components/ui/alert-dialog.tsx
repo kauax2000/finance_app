@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
+import { useControllableState } from "radix-ui/internal"
 import { type VariantProps } from "class-variance-authority"
 
 import {
@@ -38,29 +39,50 @@ type AlertDialogContextValue = {
   /** Um `AlertDialogConfirmInput` montado e ainda sem o texto certo. */
   bloqueado: boolean
   setBloqueado: (v: boolean) => void
+  /** Fecha pelo véu (clicar fora), como Cancelar; com a ação correndo, nada. */
+  fecharPorFora: () => void
 }
 
 const AlertDialogContext = React.createContext<AlertDialogContextValue>({
   pending: false,
   bloqueado: false,
   setBloqueado: () => {},
+  fecharPorFora: () => {},
 })
 
 function AlertDialog({
   pending = false,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root> & {
-  /** A ação está correndo: trava os dois botões e o Esc. */
+  /** A ação está correndo: trava os dois botões, o Esc e o clique fora. */
   pending?: boolean
 }) {
   const [bloqueado, setBloqueado] = React.useState(false)
+  // O Radix não fecha a confirmação pelo véu; o app fecha (decisão do dono, 19/11/2026),
+  // e por isso o aberto mora aqui, controlado ou não.
+  const [open, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen ?? false,
+    onChange: onOpenChange,
+    caller: "AlertDialog",
+  })
   const ctx = React.useMemo(
-    () => ({ pending, bloqueado, setBloqueado }),
-    [pending, bloqueado]
+    () => ({
+      pending,
+      bloqueado,
+      setBloqueado,
+      fecharPorFora: () => {
+        if (!pending) setOpen(false)
+      },
+    }),
+    [pending, bloqueado, setOpen]
   )
   return (
     <AlertDialogContext.Provider value={ctx}>
-      <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
+      <AlertDialogPrimitive.Root data-slot="alert-dialog" open={open} onOpenChange={setOpen} {...props} />
     </AlertDialogContext.Provider>
   )
 }
@@ -83,11 +105,17 @@ function AlertDialogPortal({
 
 function AlertDialogOverlay({
   className,
+  onClick,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
+  const { fecharPorFora } = React.useContext(AlertDialogContext)
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
+      onClick={(event) => {
+        onClick?.(event)
+        if (!event.defaultPrevented) fecharPorFora()
+      }}
       // A camada da folha, e não a do modal: uma confirmação aberta de dentro de uma
       // folha (o "Excluir todas" das notificações) abria por baixo dela. Na mesma
       // camada, quem abre depois pinta por cima — o mesmo do "Descartar alterações?".

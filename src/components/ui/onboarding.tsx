@@ -587,9 +587,7 @@ function OnboardingDialog({
       <DialogContent
         data-slot="onboarding-dialog"
         showCloseButton={false}
-        // Um clique fora não pula as boas-vindas: Esc e o × pulam. O vaul respeita o
-        // mesmo `preventDefault`.
-        onPointerDownOutside={(e) => e.preventDefault()}
+        // Clicar fora fecha, como em todo diálogo do app (decisão do dono, 19/11/2026).
         // O foco vai ao botão principal, e não ao primeiro focável da árvore —
         // que podia ser um slide fora da vista.
         onOpenAutoFocus={(e) => {

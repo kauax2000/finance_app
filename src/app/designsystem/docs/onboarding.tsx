@@ -791,7 +791,7 @@ export default function OnboardingDoc() {
 
       <DocSection
         title="Diálogo de boas-vindas"
-        description="Cada passo traz a própria ilustração, que desliza de lado — com arraste, pela mão do Carousel. O texto dos quatro passos mora na mesma célula da grade e cruza: a janela tem a altura do mais alto e não pula. A pílula ativa alarga na mola. Pular é o × do canto (e o Esc); o clique fora não pula. Fica numa seção própria porque o Dialog do desktop não abre dentro de uma moldura."
+        description="Cada passo traz a própria ilustração, que desliza de lado — com arraste, pela mão do Carousel. O texto dos quatro passos mora na mesma célula da grade e cruza: a janela tem a altura do mais alto e não pula. A pílula ativa alarga na mola. Pular é o × do canto, o Esc ou o clique fora. Fica numa seção própria porque o Dialog do desktop não abre dentro de uma moldura."
         code={`<OnboardingDialog defaultOpen storageKey="boas-vindas" steps={[
   { title: "Tudo num lugar só", description: "…", media: { type: "image", src: "/boas-vindas/1.png", alt: "…" } },
   { title: "Cartões e faturas", description: "…", media: { type: "video", src: "/boas-vindas/2.mp4" } },
