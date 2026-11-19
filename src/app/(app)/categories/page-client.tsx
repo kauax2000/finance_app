@@ -5,6 +5,7 @@ import {
     EmptyStateActions,
     EmptyStateDescription,
     EmptyStateGhost,
+    EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
@@ -42,7 +43,14 @@ import { ExpenseCategoryCard } from "@/components/categories/expense-category-ca
 import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
 import { receitasDoMesPorCategoria, type ReceitaDoMes } from "@/lib/categoria-receitas-do-mes"
-import { ritmoDoMes } from "@/lib/categoria-situacao"
+import { ordenarCategorias, ritmoDoMes, type CriterioDeOrdem } from "@/lib/categoria-situacao"
+import { useSerieDasCategorias } from "@/hooks/use-serie-das-categorias"
+import {
+    CategoriasDoMesCabecalho,
+    SemMovimentoNoMes,
+    mesNaFrase,
+} from "@/components/categories/categorias-do-mes"
+import { ChartPieIcon, ReceiptPercentIcon, TagIcon } from "@heroicons/react/24/outline"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import {
@@ -93,7 +101,7 @@ import {
     periodBoundsFromYearMonth,
     shiftYearMonth,
 } from "@/lib/budget-month"
-import { buildCategoryCommitmentsForMonth, totalDasDespesas } from "@/lib/category-commitments"
+import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 
 export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNew?: boolean }) {
     const pathname = usePathname()
@@ -119,7 +127,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     )
     const categories = categoriesQuery.data ?? []
     const [budgets, setBudgets] = useState<Budget[]>([])
-    const [spendByCategoryId, setSpendByCategoryId] = useState<Record<string, number>>({})
     const [postedByCategoryId, setPostedByCategoryId] = useState<Record<string, number>>({})
     const [projectedInstallmentsByCategoryId, setProjectedInstallmentsByCategoryId] =
         useState<Record<string, number>>({})
@@ -127,6 +134,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         useState<Record<string, number>>({})
     const [prevSpendByCategoryId, setPrevSpendByCategoryId] = useState<Record<string, number>>({})
     const [incomeByCategoryId, setIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
+    const [prevIncomeByCategoryId, setPrevIncomeByCategoryId] = useState<Record<string, ReceitaDoMes>>({})
+    const [criterio, setCriterio] = useState<CriterioDeOrdem>("maior")
     const listLoading = categoriesQuery.isPending && !categoriesQuery.data
     const [, setBudgetsLoading] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(() => shouldOpenNew)
@@ -134,6 +143,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
     const [budgetMonthYm, setBudgetMonthYm] = useState(() => formatYearMonth(new Date()))
     const hojeYmd = useHojeYmd()
+    // Memorizado: a série refaz as contas quando a identidade da lista muda.
+    const categoriasDaSerie = useMemo(
+        () => (categoriesQuery.data ?? []).map((c) => ({ id: c.id, type: c.type })),
+        [categoriesQuery.data],
+    )
+    const { historico } = useSerieDasCategorias(currentWorkspaceId, budgetMonthYm, categoriasDaSerie)
     useEffect(() => {
         const ym = parseYearMonthParam(searchParams?.get("month") ?? null)
         if (ym) {
@@ -280,12 +295,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
             if (txRes.error) {
                 console.error(txRes.error)
-                setSpendByCategoryId({})
                 setPostedByCategoryId({})
                 setProjectedInstallmentsByCategoryId({})
                 setProjectedSubscriptionsByCategoryId({})
                 setPrevSpendByCategoryId({})
                 setIncomeByCategoryId({})
+                setPrevIncomeByCategoryId({})
             } else {
                 const monthTx = (txRes.data ?? []) as Pick<
                     Transaction,
@@ -316,17 +331,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     creditCards,
                 })
 
-                const committed: Record<string, number> = {}
                 const posted: Record<string, number> = {}
                 const projInst: Record<string, number> = {}
                 const projSubs: Record<string, number> = {}
                 for (const [cid, t] of Object.entries(commitments)) {
-                    committed[cid] = t.committedTotal
                     posted[cid] = t.postedTotal
                     projInst[cid] = t.projectedInstallmentsTotal
                     projSubs[cid] = t.projectedSubscriptionsTotal
                 }
-                setSpendByCategoryId(committed)
                 setPostedByCategoryId(posted)
                 setProjectedInstallmentsByCategoryId(projInst)
                 setProjectedSubscriptionsByCategoryId(projSubs)
@@ -339,6 +351,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 setIncomeByCategoryId(
                     receitasDoMesPorCategoria({
                         yearMonth: budgetMonthYm,
+                        hojeYmd: localYmdFromDate(new Date()),
+                        transactions: monthTx,
+                        subscriptions: subs,
+                    }),
+                )
+                setPrevIncomeByCategoryId(
+                    receitasDoMesPorCategoria({
+                        yearMonth: prevYm,
                         hojeYmd: localYmdFromDate(new Date()),
                         transactions: monthTx,
                         subscriptions: subs,
@@ -582,10 +602,56 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         void fetchBudgetsAndSpend()
     }
 
-    const totalMonthSpend = totalDasDespesas(categories, spendByCategoryId)
-
-    const maiorTotalDoMes = Math.max(0, ...Object.values(spendByCategoryId))
     const ritmo = ritmoDoMes(budgetMonthYm, hojeYmd)
+    const mesDaGrade = mesNaFrase(budgetMonthYm, Number(hojeYmd.slice(0, 4)))
+
+    // Por aba: quem teve movimento vai à grade, na ordem escolhida; o resto, ao rodapé.
+    const dividirDoMes = <T extends { category: Category; nome: string; total: number; anterior: number }>(
+        itens: T[],
+    ) => {
+        const comMovimento = ordenarCategorias(
+            itens.filter((i) => i.total > 0),
+            criterio,
+        )
+        return {
+            comMovimento,
+            semMovimento: itens.filter((i) => i.total <= 0),
+            totalDoMes: comMovimento.reduce((soma, i) => soma + i.total, 0),
+            maiorTotal: Math.max(0, ...comMovimento.map((i) => i.total)),
+        }
+    }
+    const despesas = dividirDoMes(
+        expenseFiltered.map((category) => {
+            const lancado = postedByCategoryId[category.id] ?? 0
+            const previsto =
+                (projectedInstallmentsByCategoryId[category.id] ?? 0) +
+                (projectedSubscriptionsByCategoryId[category.id] ?? 0)
+            return {
+                category,
+                nome: category.name,
+                lancado,
+                previsto,
+                total: Math.max(0, lancado + previsto),
+                anterior: prevSpendByCategoryId[category.id] ?? 0,
+            }
+        }),
+    )
+    const receitas = dividirDoMes(
+        incomeCategories.map((category) => {
+            const mes = incomeByCategoryId[category.id]
+            const antes = prevIncomeByCategoryId[category.id]
+            const recebido = mes?.recebido ?? 0
+            const previsto = mes?.previsto ?? 0
+            return {
+                category,
+                nome: category.name,
+                recebido,
+                previsto,
+                total: Math.max(0, recebido + previsto),
+                anterior: (antes?.recebido ?? 0) + (antes?.previsto ?? 0),
+            }
+        }),
+    )
 
     const dialogBudgetPeriod = periodBoundsFromYearMonth(budgetMonthYm)
     const dialogExistingBudget =
@@ -738,35 +804,59 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             {filterType === "income" ? (
                 <>
                     {incomeCategories.length > 0 ? (
-                        <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {incomeCategories.map((category) => {
-                                const totaisDaReceita = incomeCategories.map((c) => {
-                                    const r = incomeByCategoryId[c.id]
-                                    return Math.max(0, (r?.recebido ?? 0) + (r?.previsto ?? 0))
-                                })
-                                const mes = incomeByCategoryId[category.id] ?? { recebido: 0, previsto: 0 }
-                                return (
-                                <IncomeCategoryCard
-                                    key={category.id}
-                                    category={category}
-                                    recebido={mes.recebido}
-                                    previsto={mes.previsto}
-                                    anterior={0}
-                                    totalDoMes={totaisDaReceita.reduce((a, b) => a + b, 0)}
-                                    maiorTotal={Math.max(0, ...totaisDaReceita)}
-                                    mesYm={budgetMonthYm}
-                                    historico={undefined}
-                                    href={categoryDetailPath(category.id, { type: "income" })}
-                                    onEdit={podeEscrever ? () => openDialog(category) : undefined}
-                                    onDelete={
-                                        podeEscrever
-                                            ? () => setPendingDelete({ id: category.id, name: category.name })
-                                            : undefined
-                                    }
-                                />
-                                )
-                            })}
-                        </div>
+                        <>
+                            {receitas.comMovimento.length > 0 ? (
+                                <>
+                                    <CategoriasDoMesCabecalho
+                                        quantidade={receitas.comMovimento.length}
+                                        mesYm={budgetMonthYm}
+                                        tipo="income"
+                                        criterio={criterio}
+                                        onCriterioChange={setCriterio}
+                                    />
+                                    <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                        {receitas.comMovimento.map(({ category, recebido, previsto, anterior }) => (
+                                            <IncomeCategoryCard
+                                                key={category.id}
+                                                category={category}
+                                                recebido={recebido}
+                                                previsto={previsto}
+                                                anterior={anterior}
+                                                totalDoMes={receitas.totalDoMes}
+                                                maiorTotal={receitas.maiorTotal}
+                                                mesYm={budgetMonthYm}
+                                                historico={historico?.[category.id]}
+                                                href={categoryDetailPath(category.id, { type: "income" })}
+                                                onEdit={podeEscrever ? () => openDialog(category) : undefined}
+                                                onDelete={
+                                                    podeEscrever
+                                                        ? () => setPendingDelete({ id: category.id, name: category.name })
+                                                        : undefined
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <EmptyState>
+                                    <EmptyStateIcon variant="stack">
+                                        <TagIcon aria-hidden />
+                                        <ChartPieIcon aria-hidden />
+                                        <ReceiptPercentIcon aria-hidden />
+                                    </EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhuma receita em {mesDaGrade}</EmptyStateTitle>
+                                </EmptyState>
+                            )}
+                            <SemMovimentoNoMes
+                                categorias={receitas.semMovimento.map(({ category }) => ({
+                                    id: category.id,
+                                    name: category.name,
+                                    href: categoryDetailPath(category.id, { type: "income" }),
+                                }))}
+                                mesYm={budgetMonthYm}
+                                tipo="income"
+                            />
+                        </>
                     ) : (
                         <EmptyState variant="plain" size="sm">
                             <EmptyStateTitle>Nenhuma categoria de receita</EmptyStateTitle>
@@ -776,42 +866,70 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             ) : (
                 <>
                     {expenseFiltered.length > 0 ? (
-                        <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {expenseFiltered.map((category) => {
-                                const bud = budgetForCategory(category.id)
-                                const posted = postedByCategoryId[category.id] ?? 0
-                                const projectedInstallments =
-                                    projectedInstallmentsByCategoryId[category.id] ?? 0
-                                const projectedSubscriptions =
-                                    projectedSubscriptionsByCategoryId[category.id] ?? 0
-                                const limit = bud ? Number(bud.amount) : 0
-                                return (
-                                    <ExpenseCategoryCard
-                                        key={category.id}
-                                        category={category}
-                                        lancado={posted}
-                                        previsto={projectedInstallments + projectedSubscriptions}
-                                        anterior={prevSpendByCategoryId[category.id] ?? 0}
-                                        limite={limit}
-                                        totalDoMes={totalMonthSpend}
-                                        maiorTotal={maiorTotalDoMes}
-                                        ritmo={ritmo}
+                        <>
+                            {despesas.comMovimento.length > 0 ? (
+                                <>
+                                    <CategoriasDoMesCabecalho
+                                        quantidade={despesas.comMovimento.length}
                                         mesYm={budgetMonthYm}
-                                        historico={undefined}
-                                        href={categoryDetailPath(category.id, {
-                                            type: "expense",
-                                            month: budgetMonthYm,
-                                        })}
-                                        onEdit={podeEscrever ? () => openDialog(category) : undefined}
-                                        onDelete={
-                                            podeEscrever
-                                                ? () => setPendingDelete({ id: category.id, name: category.name })
-                                                : undefined
-                                        }
+                                        tipo="expense"
+                                        criterio={criterio}
+                                        onCriterioChange={setCriterio}
                                     />
-                                )
-                            })}
-                        </div>
+                                    <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                        {despesas.comMovimento.map(({ category, lancado, previsto, anterior }) => {
+                                            const bud = budgetForCategory(category.id)
+                                            return (
+                                                <ExpenseCategoryCard
+                                                    key={category.id}
+                                                    category={category}
+                                                    lancado={lancado}
+                                                    previsto={previsto}
+                                                    anterior={anterior}
+                                                    limite={bud ? Number(bud.amount) : 0}
+                                                    totalDoMes={despesas.totalDoMes}
+                                                    maiorTotal={despesas.maiorTotal}
+                                                    ritmo={ritmo}
+                                                    mesYm={budgetMonthYm}
+                                                    historico={historico?.[category.id]}
+                                                    href={categoryDetailPath(category.id, {
+                                                        type: "expense",
+                                                        month: budgetMonthYm,
+                                                    })}
+                                                    onEdit={podeEscrever ? () => openDialog(category) : undefined}
+                                                    onDelete={
+                                                        podeEscrever
+                                                            ? () => setPendingDelete({ id: category.id, name: category.name })
+                                                            : undefined
+                                                    }
+                                                />
+                                            )
+                                        })}
+                                    </div>
+                                </>
+                            ) : (
+                                <EmptyState>
+                                    <EmptyStateIcon variant="stack">
+                                        <TagIcon aria-hidden />
+                                        <ChartPieIcon aria-hidden />
+                                        <ReceiptPercentIcon aria-hidden />
+                                    </EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhum gasto em {mesDaGrade}</EmptyStateTitle>
+                                </EmptyState>
+                            )}
+                            <SemMovimentoNoMes
+                                categorias={despesas.semMovimento.map(({ category }) => ({
+                                    id: category.id,
+                                    name: category.name,
+                                    href: categoryDetailPath(category.id, {
+                                        type: "expense",
+                                        month: budgetMonthYm,
+                                    }),
+                                }))}
+                                mesYm={budgetMonthYm}
+                                tipo="expense"
+                            />
+                        </>
                     ) : (
                         <EmptyState variant="plain" size="sm">
                             <EmptyStateTitle>Nenhuma categoria de despesa</EmptyStateTitle>
