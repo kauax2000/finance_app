@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { AnimatePresence, animate, motion, usePresence, usePresenceData, useReducedMotion } from "motion/react"
+import { useComposedRefs } from "radix-ui/internal"
 import type { DateRange } from "react-day-picker"
 import {
   CalendarIcon,
@@ -25,6 +27,8 @@ import {
 import { formatYearMonth, labelYearMonthPt } from "@/lib/budget-month"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useMarcador } from "@/hooks/use-marcador"
+import { MOLA, SAIDA } from "@/lib/spring"
+import { TrocaSuave } from "@/lib/troca-suave"
 import { Button } from "@/components/ui/button"
 import {
   Calendar,
@@ -726,10 +730,23 @@ export function MonthGrid(props: MonthGridProps) {
   const intervalo = props.mode === "range" ? props.value : undefined
   const unico = props.mode === "range" ? undefined : props.value
   const [ano, setAnoInterno] = React.useState(() => (unico ?? intervalo?.from ?? agora).getFullYear())
+  // A direção da última troca: +1 para frente, -1 para trás. A grade sai para o lado oposto.
+  const [direcao, setDirecao] = React.useState(1)
+  // O último ano avisado a quem chama: o toque avisa na hora; o ano que veio de fora, no efeito.
+  const avisado = React.useRef(ano)
   const setAno = (a: number) => {
     setAnoInterno(a)
-    if (a !== ano) onYearChange?.(a)
+    if (a !== ano) {
+      setDirecao(a > ano ? 1 : -1)
+      avisado.current = a
+      onYearChange?.(a)
+    }
   }
+  React.useEffect(() => {
+    if (ano === avisado.current) return
+    avisado.current = ano
+    onYearChange?.(ano)
+  }, [ano, onYearChange])
   const [ancora, setAncora] = React.useState<Date | null>(null)
   const { startMonth, endMonth } = limitesNavegacao(min, max)
   const anoMin = startMonth.getFullYear()
@@ -747,6 +764,19 @@ export function MonthGrid(props: MonthGridProps) {
   if (chaveDoValor !== visto) {
     setVisto(chaveDoValor)
     if (chaveDoValor !== emitido) setAncora(null)
+  }
+
+  // A grade segue o ano de um valor que muda por fora (as setas do rodapé de dezembro
+  // a janeiro, "Este mês", um atalho), deslizando na direção certa. O intervalo que
+  // este grid acabou de gravar não conta: a âncora pode estar em outro ano.
+  const anoDoValor = (unico ?? intervalo?.from)?.getFullYear()
+  const [anoVisto, setAnoVisto] = React.useState(anoDoValor)
+  if (anoDoValor !== anoVisto) {
+    setAnoVisto(anoDoValor)
+    if (anoDoValor !== undefined && anoDoValor !== ano && chaveDoValor !== emitido) {
+      setDirecao(anoDoValor > ano ? 1 : -1)
+      setAnoInterno(anoDoValor)
+    }
   }
 
   const escolher = (mes: Date) => {
@@ -771,23 +801,70 @@ export function MonthGrid(props: MonthGridProps) {
     return i > de && i < ate ? "middle" : undefined
   }
 
-  // O mês escolhido do modo único é um marcador só, que viaja de um mês ao outro
-  // como o do `ToggleGroup segmented` (`useMarcador`, viagem líquida). Recua 1px:
-  // a borda transparente do `Button`, onde o `primary` não pinta (`bg-clip-padding`).
-  // Os botões são chaveados pelo ano, então cruzar o ano não viaja: o marcador
-  // só aparece no lugar novo.
-  const trilhaRef = React.useRef<HTMLDivElement>(null)
-  const marcadorRef = React.useRef<HTMLSpanElement>(null)
-  const marcadorPronto = useMarcador({
-    trilha: trilhaRef,
-    marcador: marcadorRef,
-    ativo: (t) => t.querySelector<HTMLElement>("[data-selected]"),
-    atributos: ["data-selected"],
-    prefixo: "month-grid-marker",
-    insete: 1,
-    viajar: props.mode !== "range",
-    mesmaViagem: (de) => de.isConnected,
-  })
+  const reduzido = useReducedMotion() ?? false
+  // A grade que está saindo, para um toque rápido cortá-la: uma presente e no máximo uma saindo.
+  const saindo = React.useRef<(() => void) | null>(null)
+
+  /** Os doze meses de um ano; `pronto` diz se o marcador da grade já mediu. */
+  const meses = (pronto: boolean) =>
+    Array.from({ length: 12 }, (_, m) => {
+      const mes = new Date(ano, m, 1)
+      const posicao = noIntervalo(indice(mes))
+      const ponta = posicao !== undefined && posicao !== "middle"
+      const escolhido = intervalo
+        ? ponta
+        : unico?.getFullYear() === ano && unico.getMonth() === m
+      // O escolhido do modo único: o marcador pinta por baixo, e o botão só leva a tinta.
+      const marcado = !intervalo && escolhido
+      const atual = agora.getFullYear() === ano && agora.getMonth() === m
+      const nome = labelYearMonthPt(formatYearMonth(mes))
+      const legenda = caption?.(mes)
+      return (
+        <Button
+          key={m}
+          type="button"
+          size="sm"
+          variant={ponta ? "primary" : atual && !posicao && !escolhido ? "secondary" : "tertiary"}
+          aria-pressed={escolhido}
+          aria-current={atual ? "date" : undefined}
+          aria-label={nome}
+          data-range={posicao}
+          data-selected={marcado || undefined}
+          disabled={foraDoLimite(ano, m)}
+          className={cn(
+            // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
+            // `relative`: pinta por cima do marcador.
+            "relative font-normal pointer-coarse:h-11 pointer-coarse:text-base",
+            // A tinta da tecla sobre o marcador; o realce é o do `primary`.
+            marcado &&
+              "text-primary-foreground hover:text-primary-foreground active:text-primary-foreground [--button-hover-fill:var(--primary-hover)] dark:[--button-hover-fill:var(--primary-hover)]",
+            // Antes da primeira medida (e sem JavaScript) o escolhido se pinta sozinho.
+            marcado && !pronto && "bg-primary",
+            // O atual mantém um sinal em todo estado: no meio do intervalo o fundo dele é o da faixa.
+            atual && "font-semibold",
+            // O meio do intervalo é a faixa do `Calendar` (`range_middle`).
+            posicao === "middle" && "bg-muted text-foreground",
+            // Com legenda o mês cresce em altura: as duas linhas já passam dos 28 do degrau; no toque, o piso de 44.
+            legenda != null &&
+              "h-auto flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11"
+          )}
+          onClick={() => escolher(mes)}
+        >
+          <span className="capitalize">{formatMonthShortPtBr(mes)}</span>
+          {legenda != null ? (
+            <span
+              data-slot="month-grid-caption"
+              className={cn(
+                "text-2xs leading-tight nums",
+                escolhido ? "text-primary-foreground" : "text-muted-foreground"
+              )}
+            >
+              {legenda}
+            </span>
+          ) : null}
+        </Button>
+      )
+    })
 
   return (
     <div
@@ -807,8 +884,10 @@ export function MonthGrid(props: MonthGridProps) {
         >
           <ChevronLeftIcon aria-hidden />
         </Button>
-        <span className="text-sm font-medium nums pointer-coarse:text-base" aria-live="polite">
-          {ano}
+        <span className="relative text-sm font-medium nums pointer-coarse:text-base" aria-live="polite">
+          <TrocaSuave chave={String(ano)} forma="texto" className="inline-block">
+            {ano}
+          </TrocaSuave>
         </span>
         <Button
           type="button"
@@ -822,79 +901,17 @@ export function MonthGrid(props: MonthGridProps) {
           <ChevronRightIcon aria-hidden />
         </Button>
       </div>
-      <div ref={trilhaRef} role="group" aria-label={`Meses de ${ano}`} className="relative grid grid-cols-3 gap-1">
-        {marcadorPronto ? (
-          <span
-            ref={marcadorRef}
-            aria-hidden
-            data-slot="month-grid-marker"
-            className={cn(
-              // Vem antes dos meses e não declara camada: os meses são `relative`
-              // e pintam por cima por ordem de documento. Quem anda é a viagem líquida.
-              "pointer-events-none absolute top-0 left-0 rounded-full bg-primary",
-              "translate-x-(--month-grid-marker-x) translate-y-(--month-grid-marker-y)",
-              "w-(--month-grid-marker-w) h-(--month-grid-marker-h)"
-            )}
+      <div className="relative">
+        <AnimatePresence mode="popLayout" initial={false} custom={direcao}>
+          <GradeDoAno
+            key={ano}
+            ano={ano}
+            viajar={props.mode !== "range"}
+            reduzido={reduzido}
+            saindo={saindo}
+            meses={meses}
           />
-        ) : null}
-        {Array.from({ length: 12 }, (_, m) => {
-          const mes = new Date(ano, m, 1)
-          const posicao = noIntervalo(indice(mes))
-          const ponta = posicao !== undefined && posicao !== "middle"
-          const escolhido = intervalo
-            ? ponta
-            : unico?.getFullYear() === ano && unico.getMonth() === m
-          // O escolhido do modo único: o marcador pinta por baixo, e o botão só leva a tinta.
-          const marcado = !intervalo && escolhido
-          const atual = agora.getFullYear() === ano && agora.getMonth() === m
-          const nome = labelYearMonthPt(formatYearMonth(mes))
-          const legenda = caption?.(mes)
-          return (
-            <Button
-              key={`${ano}-${m}`}
-              type="button"
-              size="sm"
-              variant={ponta ? "primary" : atual && !posicao && !escolhido ? "secondary" : "tertiary"}
-              aria-pressed={escolhido}
-              aria-current={atual ? "date" : undefined}
-              aria-label={nome}
-              data-range={posicao}
-              data-selected={marcado || undefined}
-              disabled={foraDoLimite(ano, m)}
-              className={cn(
-                // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
-                // `relative`: pinta por cima do marcador.
-                "relative font-normal pointer-coarse:h-11 pointer-coarse:text-base",
-                // A tinta da tecla sobre o marcador; o realce é o do `primary`.
-                marcado &&
-                  "text-primary-foreground hover:text-primary-foreground active:text-primary-foreground [--button-hover-fill:var(--primary-hover)] dark:[--button-hover-fill:var(--primary-hover)]",
-                // Antes da primeira medida (e sem JavaScript) o escolhido se pinta sozinho.
-                marcado && !marcadorPronto && "bg-primary",
-                // O atual mantém um sinal em todo estado: no meio do intervalo o fundo dele é o da faixa.
-                atual && "font-semibold",
-                // O meio do intervalo é a faixa do `Calendar` (`range_middle`).
-                posicao === "middle" && "bg-muted text-foreground",
-                // Com legenda o mês cresce em altura: as duas linhas já passam dos 28 do degrau; no toque, o piso de 44.
-                legenda != null &&
-                  "h-auto flex-col gap-0 py-1 pointer-coarse:h-auto pointer-coarse:min-h-11"
-              )}
-              onClick={() => escolher(mes)}
-            >
-              <span className="capitalize">{formatMonthShortPtBr(mes)}</span>
-              {legenda != null ? (
-                <span
-                  data-slot="month-grid-caption"
-                  className={cn(
-                    "text-2xs leading-tight nums",
-                    escolhido ? "text-primary-foreground" : "text-muted-foreground"
-                  )}
-                >
-                  {legenda}
-                </span>
-              ) : null}
-            </Button>
-          )
-        })}
+        </AnimatePresence>
       </div>
       {showToday ? (
         <Button
@@ -912,6 +929,121 @@ export function MonthGrid(props: MonthGridProps) {
         </Button>
       ) : null}
     </div>
+  )
+}
+
+/**
+ * A grade de um ano, filha do `AnimatePresence` da `MonthGrid`: entra do lado da
+ * seta tocada na `MOLA` e sai para o outro na `SAIDA`, 24px com desfoque de 6px. A
+ * direção vem do `custom` do `AnimatePresence`, que a grade que sai lê já atualizado.
+ * Cada grade tem o seu marcador do mês escolhido, que viaja como o do
+ * `ToggleGroup segmented` (`useMarcador`) e vai junto quando a grade desliza.
+ */
+function GradeDoAno({
+  ref,
+  ano,
+  viajar,
+  reduzido,
+  saindo,
+  meses,
+}: {
+  ref?: React.Ref<HTMLDivElement>
+  ano: number
+  viajar: boolean
+  reduzido: boolean
+  saindo: React.RefObject<(() => void) | null>
+  meses: (pronto: boolean) => React.ReactNode
+}) {
+  const [presente, remover] = usePresence()
+  const direcao = (usePresenceData() as number | undefined) ?? 1
+  const trilhaRef = React.useRef<HTMLDivElement>(null)
+  const refs = useComposedRefs(ref, trilhaRef)
+  const marcadorRef = React.useRef<HTMLSpanElement>(null)
+  // Recua 1px: a borda transparente do `Button`, onde o `primary` não pinta (`bg-clip-padding`).
+  const pronto = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (t) => t.querySelector<HTMLElement>("[data-selected]"),
+    atributos: ["data-selected"],
+    prefixo: "month-grid-marker",
+    insete: 1,
+    viajar,
+  })
+  const saiu = React.useRef(false)
+  const [cortada, setCortada] = React.useState(false)
+
+  // A saída é à mão (`usePresence`), para um toque rápido cortar a grade que já saía:
+  // a nova que sai remove a anterior na hora. Voltando ao mesmo ano no meio da saída,
+  // a grade volta na mola de onde estava.
+  React.useEffect(() => {
+    const el = trilhaRef.current
+    if (presente) {
+      if (saiu.current && el) {
+        saiu.current = false
+        animate(el, { x: 0, opacity: 1, filter: "blur(0px)" }, reduzido ? { duration: 0 } : MOLA)
+      }
+      return
+    }
+    saiu.current = true
+    saindo.current?.()
+    if (reduzido || !el) {
+      remover?.()
+      return
+    }
+    const controle = animate(el, { x: -24 * direcao, opacity: 0, filter: "blur(6px)" }, SAIDA)
+    let feito = false
+    // Cortada, a grade sai do DOM na hora: o `AnimatePresence` só remove as que saem
+    // quando todas acabam, e parada no meio ela ficaria à vista.
+    const fim = (cortada: boolean) => {
+      if (feito) return
+      feito = true
+      controle.stop()
+      if (saindo.current === cortar) saindo.current = null
+      if (cortada) setCortada(true)
+      remover?.()
+    }
+    const cortar = () => fim(true)
+    saindo.current = cortar
+    void controle.then(() => fim(false))
+    return () => {
+      controle.stop()
+      if (saindo.current === cortar) saindo.current = null
+    }
+    // A saída começa e acaba com a presença; a direção e o resto são lidos nesse instante.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presente])
+
+  if (cortada) return null
+
+  return (
+    <motion.div
+      ref={refs}
+      role="group"
+      aria-label={`Meses de ${ano}`}
+      // A grade que sai não recebe foco nem é lida.
+      inert={!presente}
+      aria-hidden={!presente || undefined}
+      initial={reduzido ? false : { x: 24 * direcao, opacity: 0, filter: "blur(6px)" }}
+      animate={{ x: 0, opacity: 1, filter: "blur(0px)" }}
+      transition={MOLA}
+      className="relative grid grid-cols-3 gap-1"
+    >
+      {pronto ? (
+        <span
+          ref={marcadorRef}
+          aria-hidden
+          data-slot="month-grid-marker"
+          className={cn(
+            // Vem antes dos meses e não declara camada: os meses são `relative`
+            // e pintam por cima por ordem de documento. Quem anda é a viagem líquida.
+            "pointer-events-none absolute top-0 left-0 rounded-full bg-primary",
+            "translate-x-(--month-grid-marker-x) translate-y-(--month-grid-marker-y)",
+            "w-(--month-grid-marker-w) h-(--month-grid-marker-h)"
+          )}
+        />
+      ) : null}
+      {meses(pronto)}
+    </motion.div>
   )
 }
 

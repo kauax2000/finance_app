@@ -172,7 +172,8 @@ describe("o mês atual no intervalo (revisão final)", () => {
 describe("MonthGrid: o mês escolhido viaja como o marcador das abas", () => {
   const FONTE_DP = semComentarios(lerFonte("src/components/ui/date-picker.tsx"), "linha-inteira")
   const inicio = FONTE_DP.indexOf("export function MonthGrid")
-  const GRADE = FONTE_DP.slice(inicio, FONTE_DP.indexOf("\nfunction ", inicio))
+  // A grade de cada ano mora numa peça logo depois da \`MonthGrid\`: o trecho vai até o alcance.
+  const GRADE = FONTE_DP.slice(inicio, FONTE_DP.indexOf("const ALCANCE_PADRAO_ANOS", inicio))
   const botao = (html: string, rotulo: string) =>
     html.match(new RegExp(`<button[^>]*aria-label="${rotulo}"[^>]*>`))?.[0] ?? ""
 
@@ -180,7 +181,7 @@ describe("MonthGrid: o mês escolhido viaja como o marcador das abas", () => {
     expect(GRADE).toContain("useMarcador(")
     expect(GRADE).toContain('data-slot="month-grid-marker"')
     expect(GRADE).toMatch(/data-slot="month-grid-marker"[\s\S]*?bg-primary/)
-    expect(GRADE).toContain("viajar: props.mode !== \"range\"")
+    expect(GRADE).toContain('props.mode !== "range"')
   })
 
   it("no modo single o escolhido é tertiary com a tinta de cima; o range segue nas pontas", () => {
@@ -202,5 +203,44 @@ describe("MonthGrid: o mês escolhido viaja como o marcador das abas", () => {
     expect(html).not.toContain('data-slot="month-grid-marker"')
     expect(botao(html, "Março de 2026")).toContain("bg-primary")
     expect(botao(html, "Abril de 2026")).not.toContain("bg-primary")
+  })
+})
+
+describe("MonthGrid: a grade desliza entre os anos e segue o valor de fora", () => {
+  const FONTE_DP = semComentarios(lerFonte("src/components/ui/date-picker.tsx"), "linha-inteira")
+  const inicio = FONTE_DP.indexOf("export function MonthGrid")
+  const GRADE = FONTE_DP.slice(inicio, FONTE_DP.indexOf("const ALCANCE_PADRAO_ANOS", inicio))
+
+  it("a grade de cada ano entra e sai pelo AnimatePresence, na direção da troca", () => {
+    expect(GRADE).toContain("<AnimatePresence")
+    expect(GRADE).toMatch(/<AnimatePresence[^>]*custom=\{direcao\}/)
+    expect(GRADE).toContain('mode="popLayout"')
+    expect(GRADE).toContain("key={ano}")
+    expect(GRADE).toContain("SAIDA")
+    expect(GRADE).toContain("MOLA")
+    expect(GRADE).toContain('"blur(6px)"')
+    expect(GRADE).toMatch(/24 \* /)
+  })
+
+  it("movimento reduzido troca na hora, e a grade que sai fica inerte e calada", () => {
+    expect(GRADE).toContain("useReducedMotion()")
+    expect(GRADE).toContain("inert={!presente}")
+    expect(GRADE).toContain("aria-hidden={!presente || undefined}")
+  })
+
+  it("toques rápidos: a grade que já saía é cortada, e só uma sai por vez", () => {
+    expect(GRADE).toContain("usePresence()")
+    expect(GRADE).toMatch(/saindo\.current\?\.\(\)[\s\S]*?saindo\.current = /)
+  })
+
+  it("o ano troca no lugar com a TrocaSuave", () => {
+    expect(GRADE).toMatch(/<TrocaSuave[^>]*chave=\{String\(ano\)\}/)
+  })
+
+  it("a grade segue o ano de um valor que muda por fora, e avisa o ano novo", () => {
+    expect(GRADE).toMatch(/if \(anoDoValor !== anoVisto\) \{[\s\S]*?setAnoVisto\(anoDoValor\)[\s\S]*?chaveDoValor !== emitido/)
+    expect(GRADE).toMatch(/useEffect\([\s\S]*?onYearChange\?\.\(ano\)/)
+    const html = renderToStaticMarkup(h(MonthGrid, { value: new Date(2027, 0, 1), onChange: () => {} }))
+    expect(html).toContain('aria-label="Meses de 2027"')
   })
 })

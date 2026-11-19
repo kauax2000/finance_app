@@ -113,7 +113,11 @@ export default function DatePickerDoc() {
             recomeça. Trocar de ano no meio não perde o primeiro mês.{" "}
             <code>caption</code> põe uma segunda linha sob o nome, como o total
             do mês. O mês atual fica em negrito em todo estado, também no meio
-            de um intervalo, onde o fundo dele é o da faixa.
+            de um intervalo, onde o fundo dele é o da faixa. Trocar de ano faz a
+            grade deslizar para o lado da seta, com desfoque, e a grade segue o
+            ano de um valor que muda por fora; o mês escolhido é um marcador só,
+            que viaja de um mês ao outro como o das abas. Com movimento
+            reduzido, a troca é na hora.
           </>
         }
         code={`<DatePicker mode="month" showToday value={mes} onChange={setMes} />

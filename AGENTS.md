@@ -1591,7 +1591,9 @@ declaração de `background-color` no trilho).
 - **`DatePicker`**: `presets` (`DATE_RANGE_PRESETS`), `showToday`, `markers`,
   `displayStyle="relative"`, `variant="input"`, `mode="month"` e a **`MonthGrid`**
   sozinha; no telefone a grade abre numa gaveta; `confirm` guarda o intervalo
-  até Aplicar; o calendário brota do campo (`date-picker-bloom`).
+  até Aplicar; o calendário brota do campo (`date-picker-bloom`); a
+  `MonthGrid` troca de ano deslizando para o lado com desfoque, e o mês
+  escolhido viaja como o marcador das abas (19/11/2026).
   `date-picker-versions.test.ts`.
 - **`Calendar`**: `markers`, `variant="agenda"` + `renderDay`, `showToday`,
   `presets`, `stretch`. **O dia só é botão com `mode` ou `onDayClick`.** A
