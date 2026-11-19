@@ -809,7 +809,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code>, <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> (com <code>bleed</code>, que zera a margem interna para a faísca encostar nas bordas da caixa), <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection

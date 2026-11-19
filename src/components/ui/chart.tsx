@@ -3106,11 +3106,14 @@ function ChartSparkline({
   tooltip = false,
   format = "currency",
   reference,
+  bleed = false,
 }: Omit<ChartFormProps, "series" | "children" | "aspect" | "legend" | "dataTable"> & {
   variant?: "line" | "area" | "bars"
   y: string
   /** A média, na unidade de `y`: a linha tracejada atrás da série. Zero, ausente ou não finito não desenha; em `bars` é ignorada. */
   reference?: number
+  /** Zera a margem interna do gráfico, para a faísca encostar nas bordas da caixa (o pé de um cartão). Vale nas três formas. */
+  bleed?: boolean
 }) {
   const cor = serieColor(y, 0, config)
   // A faísca não entra (dez numa lista seriam ruído): o primeiro quadro desenha parado e só a troca anima.
@@ -3128,9 +3131,11 @@ function ChartSparkline({
       />
     ) : null
 
+  const margin = bleed ? { top: 0, right: 0, bottom: 0, left: 0 } : undefined
+
   const marca =
     variant === "bars" ? (
-      <BarChart data={data} accessibilityLayer>
+      <BarChart data={data} margin={margin} accessibilityLayer>
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
@@ -3142,7 +3147,7 @@ function ChartSparkline({
         />
       </BarChart>
     ) : variant === "area" ? (
-      <AreaChart data={data} accessibilityLayer>
+      <AreaChart data={data} margin={margin} accessibilityLayer>
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
@@ -3159,7 +3164,7 @@ function ChartSparkline({
         />
       </AreaChart>
     ) : (
-      <LineChart data={data} accessibilityLayer>
+      <LineChart data={data} margin={margin} accessibilityLayer>
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}

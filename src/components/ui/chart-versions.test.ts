@@ -336,6 +336,15 @@ describe("as versões do Chart", () => {
       expect(trecho).toContain("var(--color-muted-foreground)")
     })
 
+    it("bleed: opt-in, zera a margem nas três formas e só com ele", () => {
+      expect(trecho).toContain("bleed?: boolean")
+      expect(trecho).toContain("bleed = false")
+      expect(trecho).toContain("bleed ? { top: 0, right: 0, bottom: 0, left: 0 } : undefined")
+      for (const c of ["BarChart", "AreaChart", "LineChart"]) {
+        expect(trecho).toContain(`<${c} data={data} margin={margin}`)
+      }
+    })
+
     it("a linha da média vem antes da série", () => {
       const ref = trecho.indexOf("<ReferenceLine")
       expect(ref).toBeGreaterThan(-1)
