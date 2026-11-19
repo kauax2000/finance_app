@@ -42,6 +42,8 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 SAIDA = RAIZ / "public" / "atalho" / "Lançar gasto.shortcut"
 VAR = "￼"
+# Cada gatilho tem o seu arquivo assinado; o cabeçalho diz à Edge qual foi baixado.
+GATILHOS = ("siri", "acao", "toque", "bloqueio", "inicio")
 
 
 def url_da_captura() -> str:
@@ -94,15 +96,16 @@ def acao(ident: str, **params) -> dict:
     return {"WFWorkflowActionIdentifier": f"is.workflow.actions.{ident}", "WFWorkflowActionParameters": params}
 
 
-def cabecalhos(codigo: str) -> dict:
+def cabecalhos(codigo: str, gatilho: str | None = None) -> dict:
     return dicionario([
         ("Authorization", texto(f"Bearer {VAR}", {7: saida(codigo, "Texto")})),
         ("X-Atalho-Versao", texto("2")),
+        *([("X-Atalho-Gatilho", texto(gatilho))] if gatilho else []),
     ])
 
 
-def pedido(uid: str, url: str, codigo: str, metodo: str, corpo: list[tuple[str, dict]] | None = None) -> dict:
-    params = dict(UUID=uid, WFURL=url, WFHTTPMethod=metodo, ShowHeaders=True, WFHTTPHeaders=cabecalhos(codigo))
+def pedido(uid: str, url: str, codigo: str, metodo: str, corpo: list[tuple[str, dict]] | None = None, gatilho: str | None = None) -> dict:
+    params = dict(UUID=uid, WFURL=url, WFHTTPMethod=metodo, ShowHeaders=True, WFHTTPHeaders=cabecalhos(codigo, gatilho))
     if corpo is not None:
         params.update(WFHTTPBodyType="JSON", WFJSONValues=dicionario(corpo))
     return acao("downloadurl", **params)
@@ -112,11 +115,14 @@ def chave(uid: str, nome: str, de: str) -> dict:
     return acao("getvalueforkey", UUID=uid, WFDictionaryKey=nome, WFInput=anexo(saida(de, "Conteúdo do URL")))
 
 
-def notificar(de: str) -> dict:
+def notificar(de: str, falar: bool = False) -> dict:
+    corpo = texto(VAR, {0: saida(de, "Valor do Dicionário")})
+    if falar:  # a Siri lê o resultado em voz alta, no lugar da notificação
+        return acao("showresult", Text=corpo)
     return acao(
         "notification",
         WFNotificationActionTitle=texto("Finance"),
-        WFNotificationActionBody=texto(VAR, {0: saida(de, "Valor do Dicionário")}),
+        WFNotificationActionBody=corpo,
     )
 
 
@@ -159,7 +165,9 @@ def fim_se(grupo: str) -> dict:
     return acao("conditional", GroupingIdentifier=grupo, WFControlFlowMode=2)
 
 
-def atalho(url: str, frase_de_teste: str | None = None) -> dict:
+def atalho(url: str, gatilho: str | None = None, frase_de_teste: str | None = None) -> dict:
+    falar = gatilho == "siri"
+    pedido_ = lambda *a: pedido(*a, gatilho=gatilho)  # noqa: E731
     u = lambda: str(uuid.uuid4()).upper()  # noqa: E731
     codigo, entrada_se, menu = u(), u(), u()
     opcoes, erro_get, erro_se, modo, modo_se = u(), u(), u(), u(), u()
@@ -173,15 +181,15 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         acao("gettext", UUID=codigo, WFTextActionText=texto("")),
         # Com Entrada (a transação da Carteira, no Apple Pay): manda o texto dela.
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=0, WFCondition=100, WFInput={"Type": "Variable", "Variable": anexo(ENTRADA)}),
-        pedido(r_pay, url, codigo, "POST", [("text", texto(VAR, {0: ENTRADA})), ("source", texto("apple_pay"))]),
+        pedido_(r_pay, url, codigo, "POST", [("text", texto(VAR, {0: ENTRADA})), ("source", texto("apple_pay"))]),
         chave(resumo_pay, "resumo", r_pay),
         notificar(resumo_pay),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=1),
         # Sem Entrada: o GET diz o modo da conta e traz as listas do formulário.
-        pedido(opcoes, url, codigo, "GET"),
+        pedido_(opcoes, url, codigo, "GET"),
         chave(erro_get, "resumo", opcoes),
         se(erro_se, erro_get, 100),
-        notificar(erro_get),
+        notificar(erro_get, falar),
         acao("exit"),
         fim_se(erro_se),
         chave(modo, "modo", opcoes),
@@ -195,7 +203,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         acao("gettext", UUID=frase, WFTextActionText=texto(frase_de_teste))
         if frase_de_teste
         else acao("ask", UUID=frase, WFInputType="Text", WFAskActionPrompt=texto("Qual foi o gasto? Ex.: 42 mercado nubank")),
-        pedido(r_frase, url, codigo, "POST", [
+        pedido_(r_frase, url, codigo, "POST", [
             ("text", texto(VAR, {0: saida(frase, "Texto" if frase_de_teste else "Entrada Fornecida")})),
             ("source", texto("shortcut")),
         ]),
@@ -205,7 +213,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         *marcar(sim_frase, "sim"),
         senao(cod_se),
         chave(resumo_frase, "resumo", r_frase),
-        notificar(resumo_frase),
+        notificar(resumo_frase, falar),
         fim_se(cod_se),
         fim_se(modo_se),
         # O formulário, campo a campo.
@@ -226,7 +234,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         acao("format.date", UUID=outro_fmt, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: saida(outro, "Entrada Fornecida")})),
         acao("setvariable", WFVariableName="data", WFInput=anexo(saida(outro_fmt, "Data Formatada"))),
         acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=2),
-        pedido(r_form, url, codigo, "POST", [
+        pedido_(r_form, url, codigo, "POST", [
             ("amount", texto(VAR, {0: saida(valor, "Entrada Fornecida")})),
             ("merchant", texto(VAR, {0: saida(desc, "Entrada Fornecida")})),
             ("category", texto(VAR, {0: saida(cat, "Item Escolhido")})),
@@ -235,7 +243,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
             ("source", texto("shortcut")),
         ]),
         chave(resumo_form, "resumo", r_form),
-        notificar(resumo_form),
+        notificar(resumo_form, falar),
         fim_se(form_se),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=2),
     ]
@@ -379,7 +387,34 @@ def verificar() -> None:
     for a in acoes:
         if _id(a) == "setvariable":
             assert a["WFWorkflowActionParameters"]["WFInput"].get("WFSerializationType") != "WFTextTokenString"
+
+    # Uma variante por gatilho: o cabeçalho diz qual, e só a Siri fala o resultado.
+    for g in GATILHOS:
+        d = atalho("https://exemplo.supabase.co/functions/v1/capture", g)
+        a = d["WFWorkflowActions"]
+        for p in (x["WFWorkflowActionParameters"] for x in a if _id(x) == "downloadurl"):
+            cab = {_txt(i["WFKey"]): _txt(i["WFValue"]) for i in p["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]}
+            assert cab["X-Atalho-Gatilho"] == g and cab["X-Atalho-Versao"] == "2", cab
+        fim_entrada = next(i for i, x in enumerate(a) if _id(x) == "conditional" and x["WFWorkflowActionParameters"]["WFControlFlowMode"] == 1)
+        resto = [_id(x) for x in a[fim_entrada:]]
+        if g == "siri":
+            assert "notification" not in resto and resto.count("showresult") == 3, resto
+            assert [_id(x) for x in a[:fim_entrada]].count("notification") == 1  # Apple Pay segue notificando
+        else:
+            assert "showresult" not in resto
+    # A raiz (sem gatilho) não manda o cabeçalho.
+    raiz = atalho("https://exemplo.supabase.co/functions/v1/capture")
+    assert not any("X-Atalho-Gatilho" in str(x) for x in raiz["WFWorkflowActions"])
     print("ok")
+
+
+def assinar(dados: dict, saida_: Path) -> None:
+    saida_.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as d:
+        cru = Path(d) / "Lançar gasto.shortcut"
+        plistlib.dump(dados, cru.open("wb"), fmt=plistlib.FMT_BINARY)
+        subprocess.run(["shortcuts", "sign", "--mode", "anyone", "--input", str(cru), "--output", str(saida_)], check=True)
+    print(saida_)
 
 
 def main() -> None:
@@ -388,16 +423,13 @@ def main() -> None:
     # `--teste URL SAIDA`: o mesmo atalho contra outro endereço e com uma frase fixa, para conferir o pedido.
     if sys.argv[1:2] == ["--teste"]:
         url, saida_ = sys.argv[2], Path(sys.argv[3])
-        dados = atalho(url, "42 mercado teste")
-    else:
-        url, saida_ = url_da_captura(), SAIDA
-        dados = atalho(url)
-    saida_.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as d:
-        cru = Path(d) / "Lançar gasto.shortcut"
-        plistlib.dump(dados, cru.open("wb"), fmt=plistlib.FMT_BINARY)
-        subprocess.run(["shortcuts", "sign", "--mode", "anyone", "--input", str(cru), "--output", str(saida_)], check=True)
-    print(saida_)
+        dados = atalho(url, frase_de_teste="42 mercado teste")
+        return assinar(dados, saida_)
+    # Sem argumentos: a raiz (sem gatilho) e uma variante por gatilho.
+    url = url_da_captura()
+    assinar(atalho(url), SAIDA)
+    for g in GATILHOS:
+        assinar(atalho(url, g), SAIDA.parent / g / SAIDA.name)
 
 
 if __name__ == "__main__":
