@@ -33,7 +33,6 @@ import {
     Dialog,
     DialogBody,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -487,10 +486,10 @@ export function GuiaDoAtalho({
 
     return (
         <Dialog surface="auto" pending={criando} open={open} onOpenChange={handleOpenChange}>
-            <DialogContent>
+            {/* Sem descrição: o passo diz o que fazer (pedido do dono, 19/11/2026). */}
+            <DialogContent aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>Adicionar atalho</DialogTitle>
-                    <DialogDescription>Lance gastos pela Siri, pelo Botão de Ação ou com um toque, sem abrir o app.</DialogDescription>
                 </DialogHeader>
                 <CustomForm
                     onSubmit={(e) => {

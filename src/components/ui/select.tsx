@@ -186,6 +186,10 @@ function SelectItem({
         // O texto da opção (ícone, ladrilho e nome em linha), achado pelo `data-slot`
         // em qualquer profundidade: com a descrição ele não é filho direto do item.
         "**:data-[slot=select-item-text]:flex **:data-[slot=select-item-text]:min-w-0 **:data-[slot=select-item-text]:items-center **:data-[slot=select-item-text]:gap-2",
+        // O ladrilho de cor (carteira, categoria) guarda a tinta dele no foco: o
+        // `focus:**:text-accent-foreground` acima pintava o ícone de branco. As mesmas
+        // condições dele, mais o atributo do ladrilho: a especificidade vence a dele.
+        "not-data-[variant=destructive]:not-data-[variant=none]:focus:[&_[data-slot=color-tile]]:text-(--tile-ink) not-data-[variant=destructive]:not-data-[variant=none]:focus:[&_[data-slot=color-tile]_*]:text-inherit",
         // O acender dos menus — ver `menuItemFadeClassName`.
         menuItemFadeClassName,
         variant === "destructive" &&

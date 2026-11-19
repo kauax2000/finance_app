@@ -696,3 +696,10 @@ it("os seletores de carteira do atalho mostram o ladrilho de cada carteira", () 
         expect(f).toMatch(/<SelectItem key=\{w\.id\} value=\{w\.id\}>\s*<WorkspaceBrandMark iconKey=\{w\.icon\} backgroundColor=\{w\.icon_background_color\}/)
     }
 })
+
+it("o guia não tem descrição sob o título, e o ladrilho do Select guarda a tinta no foco", () => {
+    const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+    expect(g).not.toContain("<DialogDescription")
+    expect(g).toContain("<DialogContent aria-describedby={undefined}>")
+    expect(lerFonte("src/components/ui/select.tsx")).toContain("not-data-[variant=none]:focus:[&_[data-slot=color-tile]]:text-(--tile-ink)")
+})
