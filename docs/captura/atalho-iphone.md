@@ -8,7 +8,7 @@ O último passo mostra a Siri ("E aí Siri, Lançar gasto") e, abaixo, as abas
 Botão, Costas, Bloqueio e Ícone. Não há link do iCloud nem variável de
 ambiente.
 
-O arquivo servido hoje parte da primeira versão de 19/nov/2026 (commit `33fad78e`), a que a Siri abre, sem a condição "é": sem Entrada do atalho, ele pergunta "Qual foi o gasto?" e manda a frase ao lançamento inteligente do app; se ela não for lançada (a resposta traz `codigo`, como `sem_valor`), pede campo a campo (valor, descrição, categoria, forma de pagamento e data, com as listas do `GET`). Toda condição é "tem qualquer valor".
+O arquivo servido hoje parte da primeira versão de 19/nov/2026 (commit `33fad78e`), a que a Siri abre, sem a condição "é": sem Entrada do atalho, ele pergunta "Qual foi o gasto?" e manda a frase ao lançamento inteligente do app; se ela não for lançada (a resposta traz `codigo`, como `sem_valor`), pede campo a campo (valor, descrição, categoria e forma de pagamento, com as listas do `GET`; a data é sempre hoje). Toda condição é "tem qualquer valor".
 
 Os arquivos são gerados e assinados por:
 

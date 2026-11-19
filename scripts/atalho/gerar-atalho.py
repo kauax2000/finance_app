@@ -12,9 +12,9 @@ importação numa ação Texto, vazia de propósito), e a cada vez:
   entender, a IA) tira valor, descrição, categoria e pagamento dela. Lançada, o
   `resumo` vira a notificação. Se a resposta voltar com `codigo` (ex.:
   `sem_valor`), pede campo a campo: "Qual o valor?", "Descrição (opcional)",
-  "Categoria" e "Forma de pagamento" (listas do `GET` da Edge) e "Data" ("Hoje"
-  ou "Outro dia"), num POST com `amount`, `merchant`, `category`, `payment`,
-  `date` e `source: shortcut`.
+  "Categoria" e "Forma de pagamento" (listas do `GET` da Edge), num POST com
+  `amount`, `merchant`, `category`, `payment` e `source: shortcut`. A data é
+  sempre hoje: sem `date`, a Edge usa o dia de Brasília.
 
 Sem condição "é": a versão de 19/nov/2026 com ela parava no iOS 27 ("Escolha um
 valor para cada parâmetro"). Toda condição é "tem qualquer valor".
@@ -137,8 +137,8 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
     codigo, entrada_se = u(), u()
     frase, r_frase, resumo_frase, cod_frase, cod_se = u(), u(), u(), u(), u()
     r_pay, resumo_pay = u(), u()
-    opcoes, erro_get, erro_se, menu = u(), u(), u(), u()
-    valor, desc, cats, cat, pags, pag, hoje, outro, outro_fmt = (u() for _ in range(9))
+    opcoes, erro_get, erro_se = u(), u(), u()
+    valor, desc, cats, cat, pags, pag = (u() for _ in range(6))
     r_form, resumo_form = u(), u()
     acoes = [
         # 0: o código do aparelho, preenchido pela pergunta de importação.
@@ -174,21 +174,11 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         acao("choosefromlist", UUID=cat, WFInput=anexo(saida(cats, "Valor do Dicionário")), WFChooseFromListActionPrompt=texto("Categoria")),
         chave(pags, "pagamentos", opcoes),
         acao("choosefromlist", UUID=pag, WFInput=anexo(saida(pags, "Valor do Dicionário")), WFChooseFromListActionPrompt=texto("Forma de pagamento")),
-        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=0, WFMenuPrompt="Data", WFMenuItems=["Hoje", "Outro dia"]),
-        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=1, WFMenuItemTitle="Hoje"),
-        acao("format.date", UUID=hoje, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: {"Type": "CurrentDate"}})),
-        acao("setvariable", WFVariableName="data", WFInput=anexo(saida(hoje, "Data Formatada"))),
-        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=1, WFMenuItemTitle="Outro dia"),
-        acao("ask", UUID=outro, WFInputType="Date", WFAskActionPrompt=texto("Data")),
-        acao("format.date", UUID=outro_fmt, WFDateFormatStyle="Custom", WFDateFormat="yyyy-MM-dd", WFDate=texto(VAR, {0: saida(outro, "Entrada Fornecida")})),
-        acao("setvariable", WFVariableName="data", WFInput=anexo(saida(outro_fmt, "Data Formatada"))),
-        acao("choosefrommenu", GroupingIdentifier=menu, WFControlFlowMode=2),
         pedido(r_form, url, codigo, "POST", [
             ("amount", texto(VAR, {0: saida(valor, "Entrada Fornecida")})),
             ("merchant", texto(VAR, {0: saida(desc, "Entrada Fornecida")})),
             ("category", texto(VAR, {0: saida(cat, "Item Escolhido")})),
             ("payment", texto(VAR, {0: saida(pag, "Item Escolhido")})),
-            ("date", texto(VAR, {0: {"Type": "Variable", "VariableName": "data"}})),
             ("source", texto("shortcut")),
         ]),
         chave(resumo_form, "resumo", r_form),
@@ -247,16 +237,16 @@ def verificar() -> None:
         [i["WFKey"]["Value"]["string"] for i in p["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]]
         for p in pedidos if p["WFHTTPMethod"] == "POST"
     ]
-    assert corpos == [["text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "date", "source"]], corpos
+    assert corpos == [["text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "source"]], corpos
 
     ids = [_id(a) for a in acoes]
     prompts = [a["WFWorkflowActionParameters"]["WFAskActionPrompt"]["Value"]["string"] for a in acoes if _id(a) == "ask"]
-    assert prompts == ["Qual foi o gasto?", "Qual o valor?", "Descrição (opcional)", "Data"], prompts
-    assert not {"dictatetext", "showresult", "exit"} & set(ids), ids
+    assert prompts == ["Qual foi o gasto?", "Qual o valor?", "Descrição (opcional)"], prompts
+    assert not {"dictatetext", "showresult", "exit", "choosefrommenu", "format.date"} & set(ids), ids
     # Toda condição é "tem qualquer valor" (100): nenhum "é".
     conds = [a["WFWorkflowActionParameters"] for a in acoes if _id(a) == "conditional"]
     assert all(c["WFCondition"] == 100 and "WFConditionalActionString" not in c for c in conds if c["WFControlFlowMode"] == 0), conds
-    for tipo in ("conditional", "choosefrommenu"):
+    for tipo in ("conditional",):
         abertos: list[str] = []
         for a in acoes:
             if _id(a) != tipo:
