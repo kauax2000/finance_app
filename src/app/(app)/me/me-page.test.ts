@@ -101,7 +101,7 @@ describe("os cartões e as linhas de Você", () => {
         expect(semComentarios(lerFonte("src/components/me/cartao-de-lancar.tsx"))).not.toMatch(/GuiaDoAtalho|refetch/)
         expect(GRUPO).toContain("href={ROUTES.SETTINGS_LANCAR}")
         expect(GRUPO.indexOf(">Tema<")).toBeLessThan(GRUPO.indexOf("href={ROUTES.SETTINGS_LANCAR}"))
-        expect(GRUPO).toContain('descricaoDaLista(aparelhos.ativos.map((t) => t.name), "aparelhos")')
+        expect(GRUPO).toContain('descricaoDaLista(aparelhos.ativos.map(tituloDoAtalho), "atalhos")')
         // Com o convite, a linha e o botão de instalar saem: o convite já instala.
         expect(GRUPO).toMatch(/lancar === "convite" \? null : \(\s+<>\s+<SettingsRow\s+titulo="Instalar o app"/)
         expect(GRUPO).toContain('instalarNoIphone && lancar !== "convite"')

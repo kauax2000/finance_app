@@ -2,8 +2,8 @@ import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
-import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho, tituloDoAtalho, alvoDaTroca } from "@/components/account/gatilhos-do-atalho"
-import { legendaDoAparelho } from "@/components/account/atalho-secao"
+import { MODOS_DO_ATALHO, modoDoGatilho, tituloDoAtalho, alvoDaTroca } from "@/components/account/gatilhos-do-atalho"
+import { legendaDoAtalho } from "@/components/account/atalho-secao"
 import type { CaptureToken } from "@/lib/supabase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -223,18 +223,16 @@ describe("tokens de captura", () => {
     })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
-        expect(s).toContain("Desconectar este aparelho?")
+        expect(s).toContain("Desconectar este atalho?")
         // Revogar saiu do texto; nenhuma frase (entre aspas, numa linha só) fala em token.
         expect(s).not.toMatch(/>\s*Revogar|"[^"\n]*(\btokens?\b|Revog)[^"\n]*"/)
     })
     it("os erros do banco em português", async () => {
         const { mensagemDoErroDeToken } = await import("./atalho-secao")
         expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_membro" })).toBe("Você não é membro dessa carteira.")
-        expect(mensagemDoErroDeToken({ code: "P0001", message: "limite_tokens" })).toBe(
-            "Limite de 10 aparelhos conectados. Desconecte um para conectar outro.",
-        )
-        expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
-        expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
+        expect(mensagemDoErroDeToken({ message: "limite_tokens" })).toBe("Limite de 10 atalhos. Desconecte um para criar outro.")
+        expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_encontrado" })).toBe("Este atalho não existe mais.")
+        expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Não foi possível concluir. Tente de novo.")
     })
     it("só tokens ativos, e revogar pede confirmação de verdade", () => {
         const f = lerFonte("src/components/account/atalho-secao.tsx")
@@ -348,17 +346,18 @@ describe("CampoDeCopiar", () => {
 })
 
 describe("Lançar pelo iPhone: o vazio", () => {
-    it("o vazio convida a conectar; com aparelho, a última linha da lista adiciona outro", () => {
+    it("o vazio convida a adicionar; com atalho, a última linha da lista adiciona outro", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
         const vazio = semComentarios(lerFonte("src/components/account/lancar-pelo-iphone-vazio.tsx"))
         expect(s).toContain("<LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />")
         expect(vazio).toContain("Lance gastos sem abrir o app")
-        expect(vazio).toContain("Conectar o iPhone")
+        expect(vazio).toContain("Adicionar atalho")
+        expect(vazio).not.toContain("Conecte o iPhone")
         expect(vazio).toMatch(/<EmptyState/)
         expect(s).not.toContain("Nenhum aparelho conectado.")
-        expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?[\s\S]*Adicionar iPhone/)
+        expect(s).toMatch(/lista\.isError \|\| tokens\.length > 0 \?[\s\S]*Adicionar atalho/)
         expect(s).not.toContain("Conectar aparelho")
-        expect(s).toContain("<PageSectionTitle>iPhones conectados</PageSectionTitle>")
+        expect(s).toContain("<PageSectionTitle>Atalhos</PageSectionTitle>")
         expect(s).toContain("<PageSectionTitle>Apple Pay</PageSectionTitle>")
     })
 })
@@ -454,8 +453,8 @@ describe("Linha do aparelho e da IA", () => {
             expect(f.indexOf("<AlertDialog")).toBeGreaterThan(f.lastIndexOf("</Card>"))
         })
     }
-    it("aparelho: ícone, marca da carteira e último gasto", () => {
-        for (const s of ["DevicePhoneMobileIcon", "BadgeDot", "formatRelativeTimePtBr", '"ainda não lançou nada"', "último gasto"])
+    it("atalho: ícone do modo, marca da carteira e último gasto", () => {
+        for (const s of ["MicrophoneIcon", "CursorArrowRippleIcon", "BadgeDot", "formatRelativeTimePtBr", '"ainda não lançou nada"', "último gasto"])
             expect(atalho).toContain(s)
         expect(atalho).not.toContain("formatDateTimeShortPtBr")
         expect(atalho).not.toContain('"nunca usado"')
@@ -604,16 +603,24 @@ describe("Excluir conta: dois passos enxutos", () => {
     })
 })
 
-describe("a lista de aparelhos", () => {
-    it("a linha do aparelho diz o gatilho; sem ele, fica como antes", () => {
+describe("a lista de atalhos", () => {
+    it("a legenda é carteira · uso; o modo fica no título e no ícone", () => {
         const base = { last_used_at: null, atalho_gatilho: null } as CaptureToken
-        expect(legendaDoAparelho(base, "Casa")).toBe("Casa · ainda não lançou nada")
-        expect(legendaDoAparelho({ ...base, atalho_gatilho: "inicio" }, "Casa")).toBe("Casa · Toque · ainda não lançou nada")
-        expect(legendaDoAparelho({ ...base, name: "iPhone · Toque", atalho_gatilho: "toque" }, "Casa")).toBe("Casa · ainda não lançou nada")
-        expect(legendaDoAparelho({ ...base, name: "iPhone · Voz", atalho_gatilho: "toque" }, "Casa")).toContain("Toque")
-        expect(rotuloDoGatilho("bloqueio")).toBe("Toque")
-        expect(rotuloDoGatilho("siri")).toBe("Siri")
-        expect(rotuloDoGatilho(null)).toBeNull()
+        expect(legendaDoAtalho({ ...base, atalho_gatilho: "siri" }, "Casa")).toBe("Casa · ainda não lançou nada")
+        expect(legendaDoAtalho(base, "Casa")).toBe("Casa · ainda não lançou nada")
+        expect(legendaDoAtalho({ ...base, last_used_at: new Date().toISOString() }, "Casa")).toMatch(/^Casa · último gasto /)
+    })
+    it("a lista fala de atalho, e cada um muda de carteira sem reinstalar", () => {
+        const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
+        for (const t of ["Adicionar atalho", ">Atalhos<", "Mudar carteira", "Desconectar este atalho?", "tituloDoAtalho(t)", "MicrophoneIcon"])
+            expect(s).toContain(t)
+        expect(s).toContain("Não foi possível listar os atalhos.")
+        expect(s).toMatch(/workspaces\.length > 1 \?[\s\S]*Mudar carteira[\s\S]*Desconectar/)
+        expect(s).not.toContain("NOME_INVALIDO")
+        const m = lerFonte("src/components/account/mudar-carteira-do-atalho.tsx")
+        expect(m).toContain("set_capture_token_workspace")
+        expect(m).toContain('surface="auto"')
+        expect(m).toContain("<FormSubmit>Salvar</FormSubmit>")
     })
 })
 

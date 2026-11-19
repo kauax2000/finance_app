@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { DevicePhoneMobileIcon, SparklesIcon, SwatchIcon } from "@heroicons/react/20/solid"
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
+import { tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { CartaoDeLancar } from "@/components/me/cartao-de-lancar"
 import { descricaoDaLista, lancarNaVoce } from "@/components/me/estado-na-voce"
@@ -85,7 +86,7 @@ export function NesteCelularGrupo() {
         erro: aparelhos.isError,
         quantos: aparelhos.ativos.length,
     })
-    const descricaoDosAparelhos = descricaoDaLista(aparelhos.ativos.map((t) => t.name), "aparelhos")
+    const descricaoDosAtalhos = descricaoDaLista(aparelhos.ativos.map(tituloDoAtalho), "atalhos")
 
     return (
         <>
@@ -118,7 +119,7 @@ export function NesteCelularGrupo() {
                                     </ItemMedia>
                                     <ItemContent>
                                         <ItemTitle className="pointer-coarse:text-base">Lançar pelo iPhone</ItemTitle>
-                                        {descricaoDosAparelhos ? <ItemDescription>{descricaoDosAparelhos}</ItemDescription> : null}
+                                        {descricaoDosAtalhos ? <ItemDescription>{descricaoDosAtalhos}</ItemDescription> : null}
                                     </ItemContent>
                                     <ItemChevron />
                                 </Link>

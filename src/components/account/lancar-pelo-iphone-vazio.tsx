@@ -16,11 +16,11 @@ export function LancarPeloIphoneVazio({ onConectar }: { onConectar: () => void }
             <JanelaDoAparelho tela={TELA_DA_NOTIFICACAO} tamanho="compacta" />
             <EmptyStateTitle>Lance gastos sem abrir o app</EmptyStateTitle>
             <EmptyStateDescription>
-                Conecte o iPhone uma vez. Depois, pela Siri, pelo Botão de Ação ou com um toque, o gasto entra em segundos.
+                Adicione o atalho uma vez. Depois, pela Siri, pelo Botão de Ação ou com um toque, o gasto entra em segundos.
             </EmptyStateDescription>
             <EmptyStateActions>
                 <Button type="button" variant="primary" onClick={onConectar}>
-                    Conectar o iPhone
+                    Adicionar atalho
                 </Button>
             </EmptyStateActions>
         </EmptyState>

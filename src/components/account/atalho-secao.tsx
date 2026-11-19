@@ -1,14 +1,22 @@
 "use client"
 
-import { ArrowDownTrayIcon, DevicePhoneMobileIcon, EllipsisHorizontalIcon, LinkSlashIcon, PlusIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowDownTrayIcon,
+    CursorArrowRippleIcon,
+    EllipsisHorizontalIcon,
+    LinkSlashIcon,
+    MicrophoneIcon,
+    PlusIcon,
+    WalletIcon,
+} from "@heroicons/react/16/solid"
 import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
-import { modoDoGatilho, rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
-import { nomeTemModo } from "@/components/account/nome-livre"
+import { modoDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
+import { MudarCarteiraDoAtalho } from "@/components/account/mudar-carteira-do-atalho"
 import { SettingsSection } from "@/components/settings/settings-section"
 import {
     AlertDialog,
@@ -46,22 +54,17 @@ const relativo = (iso: string) => {
 /** Já lançou, mas pelo atalho antigo (sem `X-Atalho-Versao`): falta o formulário. */
 const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_versao == null
 
-/** "Carteira · gatilho · uso", sem parte vazia. */
-export function legendaDoAparelho(t: CaptureToken, carteira: string): string {
-    // O sufixo só dispensa o rótulo se concorda com o gatilho do aparelho.
-    const sufixo = modoDoGatilho(t.atalho_gatilho) === "voz" ? " · Voz" : " · Toque"
-    const gatilho = nomeTemModo(t.name) && t.name.endsWith(sufixo) ? null : rotuloDoGatilho(t.atalho_gatilho)
+/** "Carteira · uso": o modo já está no título e no ícone. */
+export function legendaDoAtalho(t: CaptureToken, carteira: string): string {
     const uso = t.last_used_at ? `último gasto ${relativo(t.last_used_at)}` : "ainda não lançou nada"
-    return [carteira, gatilho, uso].filter(Boolean).join(" · ")
+    return `${carteira} · ${uso}`
 }
 
-export const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
-
-/** O erro do banco (check, not null ou o `raise` das RPCs) na frase da tela. */
+/** O erro do banco (o `raise` das RPCs) na frase da tela. */
 export function mensagemDoErroDeToken(erro: { code?: string; message?: string }): string {
-    if (erro.code === "23514" || erro.code === "23502") return NOME_INVALIDO
     if (erro.message?.includes("nao_membro")) return "Você não é membro dessa carteira."
-    if (erro.message?.includes("limite_tokens")) return "Limite de 10 aparelhos conectados. Desconecte um para conectar outro."
+    if (erro.message?.includes("nao_encontrado")) return "Este atalho não existe mais."
+    if (erro.message?.includes("limite_tokens")) return "Limite de 10 atalhos. Desconecte um para criar outro."
     return "Não foi possível concluir. Tente de novo."
 }
 
@@ -74,9 +77,10 @@ export function AtalhoSecao() {
     const lista = useAparelhosDeCaptura()
     const [guiaAberto, setGuiaAberto] = useState(false)
     const [baixarDeNovo, setBaixarDeNovo] = useState(false)
-    // Fica depois de fechar: a folha sai com o texto do aparelho, não o do guia novo.
+    // Fica depois de fechar: a folha sai com o texto do atalho, não o do guia novo.
     const [substituir, setSubstituir] = useState<CaptureToken>()
     const [alvo, setAlvo] = useState<CaptureToken | null>(null)
+    const [mudando, setMudando] = useState<CaptureToken | null>(null)
     const [revogando, setRevogando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
 
@@ -103,11 +107,11 @@ export function AtalhoSecao() {
         <SettingsSection titulo="Lançar pelo iPhone">
             <PageSection>
                 <PageSectionHeader>
-                    <PageSectionTitle>iPhones conectados</PageSectionTitle>
+                    <PageSectionTitle>Atalhos</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
                     {lista.isLoading ? (
-                        <SkeletonGroup label="Carregando aparelhos…" delay>
+                        <SkeletonGroup label="Carregando atalhos…" delay>
                             <div className="flex flex-col gap-1 px-4 py-3">
                                 <Skeleton className="h-4 w-40 max-w-full" />
                                 <Skeleton className="h-3 w-56 max-w-full" />
@@ -116,7 +120,7 @@ export function AtalhoSecao() {
                     ) : (
                         <ItemGroup variant="divided">
                             {lista.isError ? (
-                                <CardMessage tone="destructive">Não foi possível listar os aparelhos.</CardMessage>
+                                <CardMessage tone="destructive">Não foi possível listar os atalhos.</CardMessage>
                             ) : tokens.length === 0 ? (
                                 <LancarPeloIphoneVazio onConectar={() => setGuiaAberto(true)} />
                             ) : (
@@ -125,10 +129,14 @@ export function AtalhoSecao() {
                                     return (
                                         <Item key={t.id} variant="flush" size="lg" className="px-4">
                                             <ItemMedia variant="tile" className="rounded-row">
-                                                <DevicePhoneMobileIcon aria-hidden />
+                                                {modoDoGatilho(t.atalho_gatilho) === "voz" ? (
+                                                    <MicrophoneIcon aria-hidden />
+                                                ) : (
+                                                    <CursorArrowRippleIcon aria-hidden />
+                                                )}
                                             </ItemMedia>
                                             <ItemContent className="min-w-0">
-                                                <ItemTitle className="truncate text-base">{t.name}</ItemTitle>
+                                                <ItemTitle className="truncate text-base">{tituloDoAtalho(t)}</ItemTitle>
                                                 <Muted asChild>
                                                     <div className="flex min-w-0 items-center gap-1.5">
                                                     {carteira ? (
@@ -138,7 +146,7 @@ export function AtalhoSecao() {
                                                         />
                                                     ) : null}
                                                     <span className="truncate">
-                                                        {legendaDoAparelho(t, carteira?.name ?? "Carteira")}
+                                                        {legendaDoAtalho(t, carteira?.name ?? "Carteira")}
                                                     </span>
                                                     </div>
                                                 </Muted>
@@ -151,7 +159,7 @@ export function AtalhoSecao() {
                                                             type="button"
                                                             variant="tertiary"
                                                             size="icon-md"
-                                                            aria-label={`Mais opções para ${t.name}`}
+                                                            aria-label={`Mais opções para ${tituloDoAtalho(t)}`}
                                                         >
                                                             <EllipsisHorizontalIcon aria-hidden />
                                                         </Button>
@@ -164,6 +172,12 @@ export function AtalhoSecao() {
                                                                 }}>
                                                                 <ArrowDownTrayIcon aria-hidden />
                                                                 Baixar o atalho de novo
+                                                            </DropdownMenuItem>
+                                                        ) : null}
+                                                        {workspaces.length > 1 ? (
+                                                            <DropdownMenuItem onSelect={() => setMudando(t)}>
+                                                                <WalletIcon aria-hidden />
+                                                                Mudar carteira
                                                             </DropdownMenuItem>
                                                         ) : null}
                                                         <DropdownMenuItem variant="destructive" onSelect={() => setAlvo(t)}>
@@ -185,7 +199,7 @@ export function AtalhoSecao() {
                                             <PlusIcon aria-hidden />
                                         </ItemMedia>
                                         <ItemContent>
-                                            <ItemTitle className="text-base">Adicionar iPhone</ItemTitle>
+                                            <ItemTitle className="text-base">Adicionar atalho</ItemTitle>
                                         </ItemContent>
                                     </button>
                                 </Item>
@@ -195,7 +209,7 @@ export function AtalhoSecao() {
                 </Card>
             </PageSection>
 
-            {/* Com um aparelho conectado, o passo seguinte: lançar ao pagar com Apple Pay. */}
+            {/* Com um atalho conectado, o passo seguinte: lançar ao pagar com Apple Pay. */}
             {!lista.isError && tokens.length > 0 ? (
                 <PageSection>
                     <PageSectionHeader>
@@ -220,12 +234,18 @@ export function AtalhoSecao() {
                 atalhos={tokens}
             />
 
+            <MudarCarteiraDoAtalho
+                atalho={mudando}
+                onOpenChange={(aberto) => !aberto && setMudando(null)}
+                aoMudar={() => void lista.refetch()}
+            />
+
             <AlertDialog pending={revogando} open={alvo != null} onOpenChange={fecharRevogar}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Desconectar este aparelho?</AlertDialogTitle>
+                        <AlertDialogTitle>Desconectar este atalho?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {alvo ? `"${alvo.name}" para de lançar gastos. Para usar de novo, conecte outra vez.` : null}
+                            {alvo ? `"${tituloDoAtalho(alvo)}" para de lançar gastos. Para usar de novo, conecte outra vez.` : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     {erro ? <AlertDialogError>{erro}</AlertDialogError> : null}

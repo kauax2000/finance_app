@@ -27,12 +27,6 @@ export function modoDoGatilho(g: CaptureToken["atalho_gatilho"]): Modo {
     return g === "siri" ? "voz" : "toque"
 }
 
-/** O rótulo na lista de aparelhos; nulo = o atalho nunca informou. */
-export function rotuloDoGatilho(g: CaptureToken["atalho_gatilho"]): string | null {
-    if (g == null) return null
-    return g === "siri" ? "Siri" : "Toque"
-}
-
 /** O nome do atalho na lista: o da Siri e o de toque são os dos arquivos; sem gatilho informado, o nome guardado. */
 export function tituloDoAtalho(t: Pick<CaptureToken, "name" | "atalho_gatilho">): string {
     if (t.atalho_gatilho == null) return t.name
