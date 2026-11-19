@@ -160,7 +160,7 @@ export function GuiaDoAtalho({
             setPasso(0)
             // Baixar de novo abre com o modo do aparelho marcado; um aparelho novo começa no toque.
             setModo(modoDoGatilho(substituir?.atalho_gatilho ?? null))
-            setLugar("acao")
+            setLugar(LUGARES.find((l) => l.valor === substituir?.atalho_gatilho)?.valor ?? "acao")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
             setNome(substituir?.name ?? nomeLivre(primeiro ? `iPhone de ${primeiro}` : "iPhone", nomesEmUso))

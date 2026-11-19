@@ -108,6 +108,7 @@ describe("tokens de captura", () => {
         expect(g).not.toMatch(/<TabsList aria-label="Como abrir o atalho">/)
         expect(g).toMatch(/<TabsList aria-label="Onde pôr o atalho">/)
         expect(g).toMatch(/setModo\(modoDoGatilho\(substituir\?\.atalho_gatilho \?\? null\)\)/)
+        expect(g).toMatch(/setLugar\(LUGARES\.find\(\(l\) => l\.valor === substituir\?\.atalho_gatilho\)\?\.valor \?\? "acao"\)/)
         for (const t of ["Quer o outro também?", "O mesmo código serve.", "Baixar {outro.nome}"]) expect(g).toContain(t)
         for (const a of ["atalho-1-baixar", "atalho-2-arquivos", "atalho-3-configurar", "atalho-4-colar"])
             expect(g).toContain(`from "./assets/${a}.webp"`)
