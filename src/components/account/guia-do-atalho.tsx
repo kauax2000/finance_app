@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, type MouseEvent, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
+import { arquivoDoAtalho, GATILHOS, type Gatilho } from "@/components/account/gatilhos-do-atalho"
 import { nomeLivre } from "@/components/account/nome-livre"
 import {
     CaixaDoPasso,
@@ -25,8 +26,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, FormSubmit } from "@/components/ui/form"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
@@ -41,22 +42,21 @@ import acessibilidade from "./assets/atalho-12-acessibilidade.webp"
 import telaDeInicio from "./assets/atalho-13-tela-de-inicio.webp"
 import telaBloqueada from "./assets/atalho-14-tela-bloqueada.webp"
 
-/** O atalho assinado por `scripts/atalho/gerar-atalho.py`, servido de `public/atalho/`. */
-const ARQUIVO_DO_ATALHO = "/atalho/Lan%C3%A7ar%20gasto.shortcut"
-
 /**
  * No app instalado do iPhone o download não passa pelo Safari: abre num visualizador que
  * salva "Lançar gasto.shortcut.html", mesmo com o servidor mandando nome e tipo certos, e o
  * Atalhos não o reconhece. Lá o botão entrega o link ao Safari (`x-safari-https://`, iOS 17+),
  * que baixa o `.shortcut`. Se o Safari não abrir (iOS antigo), o download segue no próprio app.
  */
-function baixarPeloSafari(evento: { preventDefault(): void }) {
+function baixarPeloSafari(evento: MouseEvent<HTMLAnchorElement>) {
     const { protocol, host } = window.location
-    if (protocol !== "https:") return
+    // O caminho é o do próprio link: o arquivo do gatilho escolhido (`arquivoDoAtalho`).
+    const caminho = evento.currentTarget.getAttribute("href")
+    if (protocol !== "https:" || !caminho) return
     evento.preventDefault()
-    window.location.href = `x-safari-https://${host}${ARQUIVO_DO_ATALHO}`
+    window.location.href = `x-safari-https://${host}${caminho}`
     window.setTimeout(() => {
-        if (document.visibilityState === "visible") window.location.assign(ARQUIVO_DO_ATALHO)
+        if (document.visibilityState === "visible") window.location.assign(caminho)
     }, 1500)
 }
 
@@ -66,6 +66,7 @@ function baixarPeloSafari(evento: { preventDefault(): void }) {
  * não tem Siri nem Apple Pay. shortcut: montagens, não capturas; trocar pelo print do iPhone quando houver.
  */
 const PASSOS: { titulo: string; tela?: Tela }[] = [
+    { titulo: "Como você vai abrir?" },
     { titulo: "Dê um nome a este iPhone" },
     { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
     { titulo: "Abra o arquivo", tela: { imagem: arquivos, ponto: { x: 50, y: 29.7 }, ancora: "topo" } },
@@ -74,42 +75,35 @@ const PASSOS: { titulo: string; tela?: Tela }[] = [
         tela: { imagem: configurar, ponto: { x: 50, y: 92.4 }, ancora: "baixo" },
     },
     { titulo: "Cole o código", tela: { imagem: colar, ponto: { x: 50, y: 29.8 }, ancora: "topo" } },
-    { titulo: "Como abrir o atalho" },
+    { titulo: "Ligue o gatilho" },
 ]
 
-/** As cinco maneiras de abrir o atalho: a escolha da pessoa, uma frase cada. */
-type ComoAbrir = "siri" | "acao" | "toque" | "bloqueio" | "inicio"
-
-const COMO_ABRIR: { valor: ComoAbrir; rotulo: string; texto: string; tela: Tela }[] = [
-    { valor: "siri", rotulo: "Siri", texto: 'Diga "E aí Siri, Lançar gasto".', tela: { imagem: siri, ancora: "topo" } },
-    {
-        valor: "acao",
-        rotulo: "Botão",
+/** Como ligar cada gatilho: o caminho em Ajustes (ou a frase da Siri) e a tela dele. */
+const COMO_ABRIR: Record<Gatilho, { texto: string; tela: Tela }> = {
+    siri: {
+        texto: 'Diga "E aí Siri, Lançar gasto". Ela pergunta e responde falando.',
+        tela: { imagem: siri, ancora: "topo" },
+    },
+    acao: {
         texto: "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
         tela: { imagem: botaoDeAcao, ponto: { x: 50, y: 71.9 }, ancora: "baixo" },
     },
-    {
-        valor: "toque",
-        rotulo: "Toque",
+    toque: {
         texto: "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
         tela: { imagem: acessibilidade, ponto: { x: 30, y: 41.1 }, ancora: "topo" },
     },
-    {
-        valor: "bloqueio",
-        rotulo: "Bloqueio",
+    bloqueio: {
         texto: "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto.",
         tela: { imagem: telaBloqueada, ponto: { x: 16.7, y: 52.7 }, ancora: "baixo" },
     },
-    {
-        valor: "inicio",
-        rotulo: "Ícone",
+    inicio: {
         texto: "No app Atalhos, toque e segure Lançar gasto › Compartilhar › Adicionar à Tela de Início.",
         tela: { imagem: telaDeInicio, ponto: { x: 32, y: 67 }, ancora: "baixo" },
     },
-]
+}
 
 /**
- * O guia para conectar o iPhone: cria o código do aparelho, baixa o atalho
+ * O guia para conectar o iPhone: escolhe o gatilho, cria o código do aparelho, baixa o atalho daquele gatilho
  * assinado, ensina a colar o código nele e a abrir o atalho. O código vive só no estado deste guia: fechar por qualquer caminho
  * o descarta. Com `substituir`, o guia troca o código daquele aparelho: o antigo não pode ser mostrado de novo (só o hash é
  * guardado), então cria um novo com o mesmo nome e carteira e só então desconecta o antigo.
@@ -140,11 +134,11 @@ export function GuiaDoAtalho({
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
     const [copiado, setCopiado] = useState(false)
-    const [como, setComo] = useState<ComoAbrir>("siri")
+    const [gatilho, setGatilho] = useState<Gatilho>("siri")
     const [criando, setCriando] = useState(false)
     const { isStandalone } = useDisplayMode()
     const noAppDoIphone = useIsIos() && isStandalone
-    usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...COMO_ABRIR.map((c) => c.tela)])
+    usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...Object.values(COMO_ABRIR).map((c) => c.tela)])
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
@@ -153,7 +147,8 @@ export function GuiaDoAtalho({
         setCopiado(false)
         if (open) {
             setPasso(0)
-            setComo("siri")
+            // Baixar de novo abre com o gatilho do aparelho marcado.
+            setGatilho(substituir?.atalho_gatilho ?? "siri")
             setMudou(false)
             const primeiro = (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
             setNome(substituir?.name ?? nomeLivre(primeiro ? `iPhone de ${primeiro}` : "iPhone", nomesEmUso))
@@ -182,8 +177,9 @@ export function GuiaDoAtalho({
     }
 
     async function criar() {
-        // Voltar ao passo 1 com o código criado só segue: criar de novo faria outro aparelho.
-        if (codigo) return irPara(1)
+        // Voltar ao passo 2 com o código criado só segue: criar de novo faria outro aparelho.
+        // Trocar o gatilho depois disso muda só o arquivo do passo 3; o código é o mesmo.
+        if (codigo) return irPara(2)
         const n = nome.trim()
         if (n.length < 1 || n.length > 60) return setErro(NOME_INVALIDO)
         if (!carteiraEscolhida) return setErro("Escolha a carteira dos gastos.")
@@ -211,7 +207,7 @@ export function GuiaDoAtalho({
         // A carteira do código fica fixa: o último passo nomeia a que foi usada.
         setCarteira(carteiraEscolhida)
         if (erroDaTroca) setErro(`O código antigo continua valendo. ${mensagemDoErroDeToken(erroDaTroca)}`)
-        irPara(1)
+        irPara(2)
         aoCriar()
         // Sem permissão ou sem área de transferência, o código segue à vista para copiar.
         // No Safari a cópia depois da espera costuma ser recusada: o texto só promete o que houve.
@@ -219,7 +215,8 @@ export function GuiaDoAtalho({
             navigator.clipboard.writeText(data).then(() => setCopiado(true)).catch(() => {})
     }
 
-    const textos = (comoDoPasso: ComoAbrir): ReactNode[] => [
+    const textos = (gatilhoDoPasso: Gatilho): ReactNode[] => [
+        "O atalho que você baixa já vem pronto para o jeito escolhido.",
         "O nome ajuda a reconhecer o aparelho na lista.",
         noAppDoIphone ? (
             <>
@@ -242,16 +239,20 @@ export function GuiaDoAtalho({
             Depois, <strong>Adicionar Atalho</strong>.
         </>,
         <>
-            {COMO_ABRIR.find((o) => o.valor === comoDoPasso)?.texto} O atalho pergunta a frase ou um formulário, conforme o
-            Lançamento inteligente, em Você › Neste celular. Ele cai em {nomeDaCarteira}.
+            {COMO_ABRIR[gatilhoDoPasso].texto}{" "}
+            {/* A Siri só fala: a frase ou o formulário é dos outros gatilhos. */}
+            {gatilhoDoPasso === "siri"
+                ? null
+                : "O atalho pergunta a frase ou um formulário, conforme o Lançamento inteligente, em Você › Neste celular. "}
+            O gasto cai em {nomeDaCarteira}.
         </>,
     ]
 
     /**
-     * O passo `i`, com a maneira de abrir `comoDoPasso` no último. `fantasma` é a cópia
+     * O passo `i`, com o gatilho `gatilhoDoPasso` no último. `fantasma` é a cópia
      * que só dá altura à caixa: o campo dele nasce desligado, e nada nele envia.
      */
-    function passoDe(i: number, comoDoPasso: ComoAbrir, fantasma = false) {
+    function passoDe(i: number, gatilhoDoPasso: Gatilho, fantasma = false) {
         return (
             <>
                 <PecaDoPasso>
@@ -259,37 +260,45 @@ export function GuiaDoAtalho({
                         {i + 1} · {PASSOS[i].titulo}
                         <span className="sr-only"> de {PASSOS.length}</span>
                     </P>
-                    <Muted>{textos(comoDoPasso)[i]}</Muted>
+                    <Muted>{textos(gatilhoDoPasso)[i]}</Muted>
                 </PecaDoPasso>
 
                 {/* A ação do passo vem antes da imagem: no telefone ela fica à vista sem rolar. */}
-                {i === 1 ? (
+                {i === 0 ? (
+                    <PecaDoPasso>
+                        <RadioGroup
+                            aria-label="Como você vai abrir o atalho"
+                            variant="card"
+                            value={gatilho}
+                            disabled={fantasma}
+                            onValueChange={(v) => setGatilho(v as Gatilho)}
+                        >
+                            {GATILHOS.map((o) => (
+                                <RadioGroupItem key={o.valor} value={o.valor} description={o.descricao}>
+                                    {o.rotulo}
+                                </RadioGroupItem>
+                            ))}
+                        </RadioGroup>
+                    </PecaDoPasso>
+                ) : null}
+                {i === 2 ? (
                     <PecaDoPasso className="flex flex-col">
                         <Button asChild variant="primary">
-                            <a href={ARQUIVO_DO_ATALHO} download onClick={noAppDoIphone ? baixarPeloSafari : undefined}>
+                            <a href={arquivoDoAtalho(gatilho)} download onClick={noAppDoIphone ? baixarPeloSafari : undefined}>
                                 Baixar o atalho
                             </a>
                         </Button>
                     </PecaDoPasso>
                 ) : null}
-                {i === 4 ? (
+                {i === 5 ? (
                     <PecaDoPasso>
                         <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
                     </PecaDoPasso>
                 ) : null}
 
                 {i === PASSOS.length - 1 ? (
-                    <PecaDoPasso className="flex min-w-0 flex-col gap-4">
-                        <Tabs value={comoDoPasso} onValueChange={(v) => setComo(v as typeof como)}>
-                            <TabsList aria-label="Como abrir o atalho">
-                                {COMO_ABRIR.map((o) => (
-                                    <TabsTrigger key={o.valor} value={o.valor} className="flex-auto">
-                                        {o.rotulo}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                        </Tabs>
-                        <JanelaDoAparelho key={comoDoPasso} tela={COMO_ABRIR.find((o) => o.valor === comoDoPasso)!.tela} />
+                    <PecaDoPasso>
+                        <JanelaDoAparelho key={gatilhoDoPasso} tela={COMO_ABRIR[gatilhoDoPasso].tela} />
                     </PecaDoPasso>
                 ) : null}
 
@@ -299,7 +308,7 @@ export function GuiaDoAtalho({
                     </PecaDoPasso>
                 ) : null}
 
-                {i === 0 ? (
+                {i === 1 ? (
                     <PecaDoPasso className="flex flex-col gap-4">
                         <FormInput
                             label="Nome do aparelho"
@@ -339,10 +348,10 @@ export function GuiaDoAtalho({
         )
     }
 
-    // Todo passo, e o último em cada maneira de abrir: a caixa tem a altura do maior.
+    // Todo passo, e o último em cada gatilho: a caixa tem a altura do maior.
     const fantasmas = [
-        ...PASSOS.slice(0, -1).map((_, i) => passoDe(i, como, true)),
-        ...COMO_ABRIR.map((o) => passoDe(PASSOS.length - 1, o.valor, true)),
+        ...PASSOS.slice(0, -1).map((_, i) => passoDe(i, gatilho, true)),
+        ...GATILHOS.map((o) => passoDe(PASSOS.length - 1, o.valor, true)),
     ]
 
     return (
@@ -355,8 +364,9 @@ export function GuiaDoAtalho({
                 <CustomForm
                     onSubmit={(e) => {
                         e.preventDefault()
-                        // Só o passo 1 envia: nos outros o Enter num campo de copiar não faz nada.
-                        if (passo === 0) return criar()
+                        // O passo 1 avança, o 2 cria o código; nos outros o Enter num campo de copiar não faz nada.
+                        if (passo === 0) return irPara(1)
+                        if (passo === 1) return criar()
                     }}
                     className="flex min-h-0 min-w-0 flex-1 flex-col"
                 >
@@ -369,7 +379,7 @@ export function GuiaDoAtalho({
                             entrar={!reduzido && mudou}
                             fantasmas={fantasmas}
                         >
-                            {passoDe(passo, como)}
+                            {passoDe(passo, gatilho)}
                             {erro ? (
                                 <PecaDoPasso>
                                     <FormError>{erro}</FormError>
@@ -383,6 +393,13 @@ export function GuiaDoAtalho({
                         {passo === 0 ? (
                             <>
                                 <FormCancel onClick={fechar}>Cancelar</FormCancel>
+                                <FormSubmit>Próximo</FormSubmit>
+                            </>
+                        ) : passo === 1 ? (
+                            <>
+                                <Button type="button" variant="tertiary" onClick={() => irPara(0)}>
+                                    Voltar
+                                </Button>
                                 <FormSubmit>{codigo ? "Próximo" : "Criar código"}</FormSubmit>
                             </>
                         ) : (
@@ -392,7 +409,7 @@ export function GuiaDoAtalho({
                                 </Button>
                                 <Button
                                     type="button"
-                                    variant={passo === 1 ? "secondary" : "primary"}
+                                    variant={passo === 2 ? "secondary" : "primary"}
                                     onClick={ultimo ? fechar : () => irPara(passo + 1)}
                                 >
                                     {ultimo ? "Pronto" : "Próximo"}

@@ -2,6 +2,7 @@ import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
+import { arquivoDoAtalho, GATILHOS } from "@/components/account/gatilhos-do-atalho"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
@@ -92,22 +93,35 @@ describe("tokens de captura", () => {
         expect(g).toMatch(/<FormSubmit/)
         expect(g).toMatch(/if \(error\) return setErro\(mensagemDoErroDeToken\(error\)\)/)
     })
-    it("o atalho assinado é baixado daqui, com as telas reais do iPhone", () => {
-        const g = lerFonte("src/components/account/guia-do-atalho.tsx")
+    it("o gatilho vem antes do código, e o arquivo baixado é o dele", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toMatch(/titulo: "Como você vai abrir\?"/)
+        expect(g.indexOf('"Como você vai abrir?"')).toBeLessThan(g.indexOf('"Dê um nome a este iPhone"'))
+        expect(g).toMatch(/<a href=\{arquivoDoAtalho\(gatilho\)\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
+        expect(g).toMatch(/<RadioGroup[^>]*variant="card"/)
+        expect(g).not.toMatch(/<TabsList aria-label="Como abrir o atalho">/)
+        expect(g).toMatch(/setGatilho\(substituir\?\.atalho_gatilho \?\? "siri"\)/)
         for (const a of ["atalho-1-baixar", "atalho-2-arquivos", "atalho-3-configurar", "atalho-4-colar"])
             expect(g).toContain(`from "./assets/${a}.webp"`)
-        expect(g).toContain('"/atalho/Lan%C3%A7ar%20gasto.shortcut"')
-        expect(g).toMatch(/<a href=\{ARQUIVO_DO_ATALHO\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
         expect(g).not.toMatch(/NEXT_PUBLIC_CAPTURE_SHORTCUT_URL|icloud\.com|DeviceFrame/)
         expect(g).not.toContain("Montar à mão")
+    })
+    it("o arquivo de cada gatilho mora na pasta dele, com o mesmo nome", () => {
+        expect(arquivoDoAtalho("toque")).toBe("/atalho/toque/Lan%C3%A7ar%20gasto.shortcut")
+        for (const { valor } of GATILHOS)
+            expect(existsSync(`public/atalho/${valor}/Lançar gasto.shortcut`)).toBe(true)
+    })
+    it("trocar o gatilho com o código criado não cria outro código", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toMatch(/if \(codigo\) return irPara\(/)
     })
     it("no app instalado do iPhone o download vai ao Safari, que salva o .shortcut", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toMatch(/useIsIos\(\) && isStandalone/)
         expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain(
-            "x-safari-https://${host}${ARQUIVO_DO_ATALHO}",
+            "x-safari-https://${host}${caminho}",
         )
-        expect(g).toMatch(/visibilityState === "visible"\) window\.location\.assign\(ARQUIVO_DO_ATALHO\)/)
+        expect(g).toMatch(/visibilityState === "visible"\) window\.location\.assign\(caminho\)/)
     })
     it("a cópia automática não quebra sem permissão, e o texto só promete a cópia que houve", () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
@@ -132,12 +146,11 @@ describe("tokens de captura", () => {
         expect(g).toContain("fantasmas={fantasmas}")
         expect(p).toContain("staggerChildren: 0.03")
     })
-    it("o guia do iPhone tem 6 passos, e o 7 virou outra seção", async () => {
+    it("o guia do iPhone tem 7 passos: o gatilho, e depois os de antes", async () => {
         const g = lerFonte("src/components/account/guia-do-atalho.tsx")
         const lista = g.slice(g.indexOf("const PASSOS"), g.indexOf("]\n", g.indexOf("const PASSOS")))
-        expect(lista.match(/titulo: "/g)).toHaveLength(6)
+        expect(lista.match(/titulo: "/g)).toHaveLength(7)
         expect(g).not.toContain("Lance ao pagar")
-        expect(g).not.toMatch(/de 7/)
     })
     it("os pontos ficam depois dos passos e antes do rodapé", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
@@ -150,10 +163,10 @@ describe("tokens de captura", () => {
     })
     it("o último passo ensina a abrir o atalho", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
-        expect(g).toContain("Como abrir o atalho")
-        for (const o of ["Siri", "Botão", "Toque", "Bloqueio", "Ícone"]) expect(g).toContain(`rotulo: "${o}"`)
+        expect(g).toContain("Ligue o gatilho")
+        expect(GATILHOS.map((o) => o.rotulo)).toEqual(["Siri", "Botão de Ação", "Toque atrás", "Tela bloqueada", "Ícone"])
         for (const x of [
-            "Diga \"E aí Siri, Lançar gasto\".",
+            "Diga \"E aí Siri, Lançar gasto\". Ela pergunta e responde falando.",
             "Ajustes › Botão de Ação › deslize até Atalho › Escolher um Atalho › Lançar gasto.",
             "Ajustes › Acessibilidade › Toque › Toque traseiro › Toque triplo › Lançar gasto.",
             "Toque e segure a Tela Bloqueada › Personalizar › toque no + de baixo › Executar Atalho › Lançar gasto.",
@@ -166,7 +179,7 @@ describe("tokens de captura", () => {
             expect(g).toContain(`from "./assets/${a}.webp"`)
         expect(g).toMatch(/tela=\{[^}]*COMO_ABRIR[^}]*\.tela\}/)
         expect(g).not.toContain('como === "siri"')
-        expect(g).not.toMatch(/<TabsList[^>]*scrollable/)
+        expect(g).not.toMatch(/<Tabs\b/)
     })
     it("a seção não fala em token na tela", () => {
         const s = semComentarios(lerFonte("src/components/account/atalho-secao.tsx"))
