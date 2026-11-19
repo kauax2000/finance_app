@@ -209,7 +209,7 @@ export function AtalhoSecao() {
                 open={guiaAberto}
                 onOpenChange={setGuiaAberto}
                 aoCriar={() => void lista.refetch()}
-                nomesEmUso={tokens.map((t) => t.name)}
+                atalhos={tokens}
             />
             {/* O código antigo não pode ser mostrado de novo: o guia cria outro e desconecta o antigo. */}
             <GuiaDoAtalho

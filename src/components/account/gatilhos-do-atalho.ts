@@ -32,3 +32,9 @@ export function rotuloDoGatilho(g: CaptureToken["atalho_gatilho"]): string | nul
     if (g == null) return null
     return g === "siri" ? "Siri" : "Toque"
 }
+
+/** O nome do atalho na lista: o da Siri e o de toque são os dos arquivos; sem gatilho informado, o nome guardado. */
+export function tituloDoAtalho(t: Pick<CaptureToken, "name" | "atalho_gatilho">): string {
+    if (t.atalho_gatilho == null) return t.name
+    return MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(t.atalho_gatilho))!.nome
+}

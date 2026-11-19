@@ -2,9 +2,8 @@ import { existsSync } from "node:fs"
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { TELAS_DO_APPLE_PAY } from "@/components/account/passo-a-passo"
-import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
+import { MODOS_DO_ATALHO, modoDoGatilho, rotuloDoGatilho, tituloDoAtalho } from "@/components/account/gatilhos-do-atalho"
 import { legendaDoAparelho } from "@/components/account/atalho-secao"
-import { nomeComModo, nomeSugerido } from "@/components/account/nome-livre"
 import type { CaptureToken } from "@/lib/supabase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
@@ -54,21 +53,24 @@ describe("tokens de captura", () => {
         expect(f).not.toContain("passoInicial")
     })
 
-    it("baixar de novo cria um código novo com o nome e a carteira do aparelho, e só depois desconecta o antigo", () => {
+    it("o atalho novo troca o do mesmo modo (ou o de baixar de novo), e só depois desconecta o antigo", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).not.toContain("passoInicial")
         expect(g).toContain("substituir?: CaptureToken")
-        expect(g).toContain("setNome(substituir?.name ??")
+        expect(g).toContain("atalhos?: CaptureToken[]")
+        expect(g).not.toContain("nomesEmUso")
         expect(g).toContain('setCarteira(substituir?.workspace_id ?? "")')
-        expect(g).toContain("O código antigo para de funcionar quando você criar este.")
+        expect(g).toMatch(
+            /substituir \?\? atalhos\.find\(\(t\) => t\.atalho_gatilho != null && modoDoGatilho\(t\.atalho_gatilho\) === modo\)/,
+        )
         const criar = g.indexOf('rpc("create_capture_token"')
         const revogar = g.indexOf('rpc("revoke_capture_token"')
         expect(criar).toBeGreaterThan(0)
         expect(revogar).toBeGreaterThan(criar)
-        expect(g.slice(criar, revogar)).toContain("if (!resposta.error && substituir)")
+        expect(g.slice(criar, revogar)).toContain("if (!resposta.error && trocado)")
         // Só o antigo, e uma vez só.
         expect(g.match(/rpc\("revoke_capture_token"/g)).toHaveLength(1)
-        expect(g).toContain('rpc("revoke_capture_token", { p_id: substituir.id })')
+        expect(g).toContain('rpc("revoke_capture_token", { p_id: trocado.id })')
         expect(g).toMatch(/if \(erroDaTroca\) setErro\(`[^`]*\$\{mensagemDoErroDeToken\(erroDaTroca\)\}`\)/)
         // O último passo nomeia a carteira usada no código.
         expect(g).toContain("setCarteira(carteiraEscolhida)")
@@ -99,7 +101,7 @@ describe("tokens de captura", () => {
     it("o modo vem antes do código, e o arquivo baixado é o dele", () => {
         const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
         expect(g).toMatch(/titulo: "Como você vai usar\?"/)
-        expect(g.indexOf('"Como você vai usar?"')).toBeLessThan(g.indexOf('"Dê um nome a este iPhone"'))
+        expect(g.indexOf('"Como você vai usar?"')).toBeLessThan(g.indexOf('"Escolha a carteira"'))
         expect(g).toMatch(/<a href=\{atual\.arquivo\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
         expect(g).toMatch(/<a href=\{outro\.arquivo\} download onClick=\{noAppDoIphone \? baixarPeloSafari : undefined\}>/)
         expect(g).toMatch(/icon=\{o\.valor === "voz" \? MicrophoneIcon : CursorArrowRippleIcon\}/)
@@ -616,20 +618,35 @@ describe("a lista de aparelhos", () => {
     })
 })
 
-describe("o modo no nome do aparelho", () => {
-    it("acrescenta ou troca o sufixo, e evita nome repetido", () => {
-        expect(nomeComModo("iPhone de Kauã", "voz")).toBe("iPhone de Kauã · Voz")
-        expect(nomeComModo("iPhone de Kauã · Voz", "toque")).toBe("iPhone de Kauã · Toque")
-        expect(nomeSugerido("iPhone", "voz", ["iPhone · Voz"])).toBe("iPhone 2 · Voz")
-        expect(nomeSugerido("iPhone", "toque", ["iPhone · Voz"])).toBe("iPhone · Toque")
-        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain("O atalho se chama")
+describe("o guia cria um atalho de cada modo, na carteira escolhida", () => {
+    it("o título do atalho sai do gatilho; sem ele, o nome guardado", () => {
+        expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: "siri" })).toBe("Lançar gasto")
+        for (const g of ["bloqueio", "acao", "toque", "inicio"] as const)
+            expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: g })).toBe("Lançar gasto rápido")
+        expect(tituloDoAtalho({ name: "iPhone de Kauã", atalho_gatilho: null })).toBe("iPhone de Kauã")
     })
-    it("o nome sugerido nunca passa de 60 e a troca de modo guarda o texto editado", () => {
-        const n = nomeSugerido(`iPhone de ${"a".repeat(70)}`, "toque", [])
-        expect(n.length).toBeLessThanOrEqual(60)
-        expect(n.endsWith(" · Toque")).toBe(true)
-        const longo = `iPhone de ${"a".repeat(70)}`
-        expect(nomeSugerido(longo, "voz", [nomeSugerido(longo, "voz", [])]).length).toBeLessThanOrEqual(60)
-        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain("nomeComModo(nome, v as Modo)")
+    it("sem nome de aparelho: o passo 2 escolhe a carteira, e o código leva o modo", () => {
+        const g = lerFonte("src/components/account/guia-do-atalho.tsx")
+        expect(g).toContain("p_gatilho")
+        expect(g).toContain("p_name: atual.nome")
+        expect(g).toContain("<DialogTitle>Adicionar atalho</DialogTitle>")
+        expect(g).toContain("Escolha a carteira")
+        expect(g).toContain("Substitui o seu atalho de")
+        expect(g).toContain("O atalho se chama")
+        expect(g).toContain("Os gastos caem em {nomeDaCarteira}.")
+        expect(g).not.toContain('label="Nome do aparelho"')
+        expect(g).not.toContain("Conectar o iPhone")
+        expect(existsSync("src/components/account/nome-livre.ts") ? lerFonte("src/components/account/nome-livre.ts") : "").not.toMatch(
+            /nomeSugerido|nomeComModo/,
+        )
+    })
+    it("o Voltar dos passos seguintes é o FormCancel, e no telefone sobe ao ‹ do canto", () => {
+        const g = semComentarios(lerFonte("src/components/account/guia-do-atalho.tsx"))
+        expect(g).toContain("<FormCancel onClick={() => irPara(passo - 1)}>Voltar</FormCancel>")
+        expect(g).not.toContain('<Button type="button" variant="tertiary" onClick={() => irPara(')
+        expect(g).toContain('aria-label="Voltar"')
+        expect(g).toContain("top-2.5 left-2.5")
+        expect(g).toMatch(/celular && passo > 0 \?/)
+        expect(g).toContain("<ChevronLeftIcon />")
     })
 })

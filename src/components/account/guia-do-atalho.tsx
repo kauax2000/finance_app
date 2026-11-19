@@ -3,6 +3,7 @@
 import { useState, type MouseEvent, type ReactNode } from "react"
 import { useReducedMotion } from "motion/react"
 import {
+    ChevronLeftIcon,
     CursorArrowRippleIcon,
     DevicePhoneMobileIcon,
     HandRaisedIcon,
@@ -11,9 +12,8 @@ import {
     Squares2X2Icon,
 } from "@heroicons/react/16/solid"
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
-import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
+import { mensagemDoErroDeToken } from "@/components/account/atalho-secao"
 import { type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
-import { nomeComModo, nomeSugerido, nomeTemModo } from "@/components/account/nome-livre"
 import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
@@ -23,7 +23,6 @@ import {
     type Tela,
     usePreCarregarTelas,
 } from "@/components/account/passo-a-passo"
-import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -34,13 +33,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { CustomForm, FormCancel, FormControl, FormError, FormField, FormInput, FormSubmit } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormControl, FormError, FormField, FormSubmit } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Muted, P } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useDisplayMode, useIsIos } from "@/hooks/use-display-mode"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { menuPanelTintClassName } from "@/lib/glass-classes"
 import { supabase, type CaptureToken } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -79,7 +79,7 @@ function baixarPeloSafari(evento: MouseEvent<HTMLAnchorElement>) {
  */
 const PASSOS: { titulo: string; tela?: Tela }[] = [
     { titulo: "Como você vai usar?" },
-    { titulo: "Dê um nome a este iPhone" },
+    { titulo: "Escolha a carteira" },
     { titulo: "Baixe o atalho", tela: { imagem: baixar, ponto: { x: 82.2, y: 50.3 }, ancora: "baixo" } },
     { titulo: "Abra o arquivo", tela: { imagem: arquivos, ponto: { x: 50, y: 29.7 }, ancora: "topo" } },
     {
@@ -126,35 +126,31 @@ const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string; nome: string; 
 ]
 
 /**
- * O guia para conectar o iPhone: escolhe voz ou toque, cria o código do aparelho, baixa o atalho daquele modo
+ * O guia para adicionar um atalho: escolhe voz ou toque e a carteira, cria o código do atalho, baixa o atalho daquele modo
  * assinado, ensina a colar o código nele e a abrir o atalho. O código vive só no estado deste guia: fechar por qualquer caminho
- * o descarta. Com `substituir`, o guia troca o código daquele aparelho: o antigo não pode ser mostrado de novo (só o hash é
- * guardado), então cria um novo com o mesmo nome e carteira e só então desconecta o antigo.
+ * o descarta. Há um atalho de cada modo: criar o de um modo que já existe (ou o de `substituir`, o Baixar de novo) cria o novo
+ * e só então desconecta o antigo, cujo código não pode ser mostrado de novo (só o hash é guardado).
  */
 export function GuiaDoAtalho({
     open,
     onOpenChange,
     aoCriar,
     substituir,
-    nomesEmUso = [],
+    atalhos = [],
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     aoCriar: () => void
-    /** O aparelho cujo código este guia troca: nome e carteira vêm dele, e ele é desconectado depois que o novo existe. */
+    /** O atalho cujo código este guia troca: modo e carteira vêm dele, e ele é desconectado depois que o novo existe. */
     substituir?: CaptureToken
-    /** Os nomes dos aparelhos já conectados: a sugestão de um aparelho novo não repete nenhum. */
-    nomesEmUso?: string[]
+    /** Os atalhos ativos: o do modo escolhido é trocado pelo novo. */
+    atalhos?: CaptureToken[]
 }) {
-    const { profile, user } = useAuth()
     const { workspaces, currentWorkspaceId } = useWorkspace()
     const reduzido = useReducedMotion()
     const [passo, setPasso] = useState(0)
     // O primeiro passo ao abrir não entra pelo lado: só a troca de passo anda.
     const [mudou, setMudou] = useState(false)
-    const [nome, setNome] = useState("")
-    // Enquanto a pessoa não mexe no campo, trocar o modo troca o sufixo do nome sugerido.
-    const [nomeEditado, setNomeEditado] = useState(false)
     const [carteira, setCarteira] = useState("")
     const [erro, setErro] = useState<string | null>(null)
     const [codigo, setCodigo] = useState<string | null>(null)
@@ -164,10 +160,8 @@ export function GuiaDoAtalho({
     const [criando, setCriando] = useState(false)
     const { isStandalone } = useDisplayMode()
     const noAppDoIphone = useIsIos() && isStandalone
+    const celular = useIsMobile()
     usePreCarregarTelas(open, [...PASSOS.map((p) => p.tela), ...Object.values(COMO_ABRIR).map((c) => c.tela)])
-
-    const primeiroNome = () => (profile?.full_name || user?.user_metadata?.full_name || "").trim().split(/\s+/)[0]
-    const baseDoNome = (primeiro: string) => (primeiro ? `iPhone de ${primeiro}` : "iPhone")
 
     const [abertoAntes, setAbertoAntes] = useState(open)
     if (open !== abertoAntes) {
@@ -176,13 +170,10 @@ export function GuiaDoAtalho({
         setCopiado(false)
         if (open) {
             setPasso(0)
-            // Baixar de novo abre com o modo do aparelho marcado; um aparelho novo começa no toque.
+            // Baixar de novo abre com o modo do atalho marcado; um atalho novo começa no toque.
             setModo(modoDoGatilho(substituir?.atalho_gatilho ?? null))
             setLugar(LUGARES.find((l) => l.valor === substituir?.atalho_gatilho)?.valor ?? "acao")
             setMudou(false)
-            const primeiro = primeiroNome()
-            setNomeEditado(false)
-            setNome(substituir?.name ?? nomeSugerido(baseDoNome(primeiro), modoDoGatilho(substituir?.atalho_gatilho ?? null), nomesEmUso))
             setCarteira(substituir?.workspace_id ?? "")
             setErro(null)
         }
@@ -192,6 +183,9 @@ export function GuiaDoAtalho({
     const nomeDaCarteira = workspaces.find((w) => w.id === carteiraEscolhida)?.name ?? "sua carteira"
     const ultimo = passo === PASSOS.length - 1
     const atual = MODOS_DO_ATALHO.find((m) => m.valor === modo)!
+    // Um atalho de cada modo: o novo troca o do mesmo modo. Sem gatilho informado, não se sabe o modo, e ele fica.
+    const trocado =
+        substituir ?? atalhos.find((t) => t.atalho_gatilho != null && modoDoGatilho(t.atalho_gatilho) === modo)
 
     function irPara(n: number) {
         setMudou(true)
@@ -209,22 +203,24 @@ export function GuiaDoAtalho({
     }
 
     async function criar() {
-        // Voltar ao passo 2 com o código criado só segue: criar de novo faria outro aparelho.
+        // Voltar ao passo 2 com o código criado só segue: criar de novo faria outro atalho.
         // Trocar o modo depois disso muda só o arquivo do passo 3; o código é o mesmo.
         if (codigo) return irPara(2)
-        const n = nome.trim()
-        if (n.length < 1 || n.length > 60) return setErro(NOME_INVALIDO)
         if (!carteiraEscolhida) return setErro("Escolha a carteira dos gastos.")
         setCriando(true)
         setErro(null)
         let resposta
         let erroDaTroca: { code?: string; message?: string } | null = null
         try {
-            resposta = await supabase.rpc("create_capture_token", { p_workspace_id: carteiraEscolhida, p_name: n })
+            resposta = await supabase.rpc("create_capture_token", {
+                p_workspace_id: carteiraEscolhida,
+                p_name: atual.nome,
+                p_gatilho: modo === "voz" ? "siri" : "toque",
+            })
             // Só com o código novo criado o antigo sai; se a desconexão falhar, o novo funciona do mesmo jeito.
-            if (!resposta.error && substituir) {
+            if (!resposta.error && trocado) {
                 try {
-                    erroDaTroca = (await supabase.rpc("revoke_capture_token", { p_id: substituir.id })).error
+                    erroDaTroca = (await supabase.rpc("revoke_capture_token", { p_id: trocado.id })).error
                 } catch {
                     erroDaTroca = {}
                 }
@@ -253,7 +249,9 @@ export function GuiaDoAtalho({
             {MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(alvo))!.descricao} Instala{" "}
             <strong>{MODOS_DO_ATALHO.find((m) => m.valor === modoDoGatilho(alvo))!.nome}</strong>.
         </>,
-        "O nome ajuda a reconhecer o aparelho na lista.",
+        <>
+            O atalho se chama <strong>{atual.nome}</strong>.
+        </>,
         noAppDoIphone ? (
             <>
                 O atalho é o <strong>{atual.nome}</strong>. Toque em <strong>Baixar o atalho</strong>: o Safari abre. Lá,
@@ -360,10 +358,6 @@ export function GuiaDoAtalho({
                                 onValueChange={(v) => {
                                     if (!v) return
                                     setModo(v as Modo)
-                                    if (substituir || codigo != null) return
-                                    // Nome editado com sufixo de modo: troca só o sufixo e guarda o texto da pessoa.
-                                    if (!nomeEditado) setNome(nomeSugerido(baseDoNome(primeiroNome()), v as Modo, nomesEmUso))
-                                    else if (nomeTemModo(nome)) setNome(nomeComModo(nome, v as Modo))
                                 }}
                             >
                                 {MODOS_DO_ATALHO.map((o) => (
@@ -393,7 +387,7 @@ export function GuiaDoAtalho({
                 ) : null}
                 {i === 5 ? (
                     <PecaDoPasso>
-                        <CampoDeCopiar rotulo="Código do aparelho" valor={codigo ?? ""} />
+                        <CampoDeCopiar rotulo="Código do atalho" valor={codigo ?? ""} />
                     </PecaDoPasso>
                 ) : null}
 
@@ -441,20 +435,7 @@ export function GuiaDoAtalho({
 
                 {i === 1 ? (
                     <PecaDoPasso className="flex flex-col gap-4">
-                        <FormInput
-                            label="Nome do aparelho"
-                            value={nome}
-                            maxLength={60}
-                            disabled={fantasma || codigo != null}
-                            onChange={(e) => {
-                                setNomeEditado(true)
-                                setNome(e.target.value)
-                            }}
-                        />
-                        <Muted>O atalho se chama {atual.nome}.</Muted>
-                        {substituir ? (
-                            <Muted>O código antigo para de funcionar quando você criar este.</Muted>
-                        ) : null}
+                        {trocado && codigo == null ? <Muted>Substitui o seu atalho de {modo} atual.</Muted> : null}
                         {workspaces.length > 1 ? (
                             <FormField label="Os gastos caem em">
                                 <Select
@@ -476,7 +457,9 @@ export function GuiaDoAtalho({
                                     </SelectContent>
                                 </Select>
                             </FormField>
-                        ) : null}
+                        ) : (
+                            <Muted>Os gastos caem em {nomeDaCarteira}.</Muted>
+                        )}
                     </PecaDoPasso>
                 ) : null}
             </>
@@ -494,7 +477,7 @@ export function GuiaDoAtalho({
         <Dialog surface="auto" pending={criando} open={open} onOpenChange={handleOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Conectar o iPhone</DialogTitle>
+                    <DialogTitle>Adicionar atalho</DialogTitle>
                     <DialogDescription>Lance gastos pela Siri, pelo Botão de Ação ou com um toque, sem abrir o app.</DialogDescription>
                 </DialogHeader>
                 <CustomForm
@@ -533,16 +516,12 @@ export function GuiaDoAtalho({
                             </>
                         ) : passo === 1 ? (
                             <>
-                                <Button type="button" variant="tertiary" onClick={() => irPara(0)}>
-                                    Voltar
-                                </Button>
+                                <FormCancel onClick={() => irPara(passo - 1)}>Voltar</FormCancel>
                                 <FormSubmit>{codigo ? "Próximo" : "Criar código"}</FormSubmit>
                             </>
                         ) : (
                             <>
-                                <Button type="button" variant="tertiary" onClick={() => irPara(passo - 1)}>
-                                    Voltar
-                                </Button>
+                                <FormCancel onClick={() => irPara(passo - 1)}>Voltar</FormCancel>
                                 <Button
                                     type="button"
                                     variant={passo === 2 ? "secondary" : "primary"}
@@ -554,6 +533,20 @@ export function GuiaDoAtalho({
                         )}
                     </DialogFooter>
                 </CustomForm>
+                {/* O ‹ é o espelho do ✕, como no Importar: no telefone o Voltar do rodapé (`FormCancel`) some, e ele sobe ao canto. */}
+                {celular && passo > 0 ? (
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        aria-label="Voltar"
+                        disabled={criando}
+                        className="absolute top-2.5 left-2.5 z-20"
+                        onClick={() => irPara(passo - 1)}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                ) : null}
             </DialogContent>
         </Dialog>
     )

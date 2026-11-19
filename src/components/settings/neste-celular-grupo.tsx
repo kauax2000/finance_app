@@ -203,7 +203,7 @@ export function NesteCelularGrupo() {
                 open={guiaAberto}
                 onOpenChange={setGuiaAberto}
                 aoCriar={() => void aparelhos.refetch()}
-                nomesEmUso={aparelhos.ativos.map((t) => t.name)}
+                atalhos={aparelhos.ativos}
             />
         </>
     )
