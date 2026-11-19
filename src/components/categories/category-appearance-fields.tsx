@@ -53,9 +53,6 @@ import {
 } from "@heroicons/react/20/solid"
 import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
 import type { HeroIcon } from "@/types/navigation"
-import {
-    FieldTitle,
-} from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
 import {
@@ -322,37 +319,5 @@ export function CategoryIconGrid({
                 </ToggleGroupItem>
             ))}
         </ToggleGroup>
-    )
-}
-
-/** Labels + Cor + Ícone blocks for dialogs and sheets (parent supplies name + tipo UI). */
-export function CategoryAppearanceFields({
-    color,
-    onColorChange,
-    icon,
-    onIconChange,
-    colorLabelId = "category-appearance-color",
-    iconLabelId = "category-appearance-icon",
-}: {
-    color: string
-    onColorChange: (c: string) => void
-    icon: string
-    onIconChange: (i: CategoryIconId) => void
-    colorLabelId?: string
-    iconLabelId?: string
-}) {
-    return (
-        <>
-            {/* Títulos, e não `label`: as grades são grupos com o próprio
-                `aria-label`, e um `label` sem alvo não rotula nada. */}
-            <div className="space-y-2">
-                <FieldTitle id={colorLabelId}>Cor</FieldTitle>
-                <CategoryColorSwatches value={color} onChange={onColorChange} />
-            </div>
-            <div className="space-y-2">
-                <FieldTitle id={iconLabelId}>Ícone</FieldTitle>
-                <CategoryIconGrid value={icon} onChange={onIconChange} />
-            </div>
-        </>
     )
 }

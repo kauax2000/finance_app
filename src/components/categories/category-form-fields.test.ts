@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
@@ -74,8 +75,12 @@ describe("os três diálogos", () => {
         "tudo",
     )
 
+    it("editar receita zera o valor e religa o repete do orçamento", () => {
+        expect(pagina).toMatch(/setEditBudgetAmount\(""\)\s*setEditBudgetRepeats\(true\)/)
+    })
+
     it("o wireframe do Bloco 5 saiu", () => {
-        expect(existsSync("src/components/wireframe/orcamento-repete-wireframe.tsx")).toBe(false)
+        expect(existsSync(join(process.cwd(), "src/components/wireframe/orcamento-repete-wireframe.tsx"))).toBe(false)
         for (const arquivo of arquivosTsx("src")) {
             expect(lerFonte(arquivo), arquivo).not.toContain("orcamento-repete-wireframe")
         }

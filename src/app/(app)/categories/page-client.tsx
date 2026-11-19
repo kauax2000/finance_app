@@ -211,6 +211,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     setEditBudgetRepeats(bud?.repeats ?? true)
                 } else {
                     setEditBudgetAmount("")
+                    setEditBudgetRepeats(true)
                 }
             } else {
                 resetForm()
