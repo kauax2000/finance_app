@@ -157,11 +157,18 @@ function CollapsibleRow({
   size = "md",
   markerSide = "end",
   trailing,
+  underline = true,
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.Trigger> & {
   size?: DisclosureSize
   markerSide?: "start" | "end"
   trailing?: React.ReactNode
+  /**
+   * `false` tira o sublinhado do rótulo no cursor e no toque; o marcador que se
+   * desloca continua sendo o realce. Para a linha que mora dentro de um
+   * formulário (o "Limite do mês" da categoria), onde o traço lia como link.
+   */
+  underline?: boolean
 }) {
   const marker = <CollapsibleMarker />
   return (
@@ -177,7 +184,13 @@ function CollapsibleRow({
       {...props}
     >
       {markerSide === "start" ? marker : null}
-      <span data-slot="collapsible-row-label" className={disclosureLabelClassName}>
+      <span
+        data-slot="collapsible-row-label"
+        className={cn(
+          disclosureLabelClassName,
+          !underline && "group-hover/disclosure:no-underline group-active/disclosure:no-underline"
+        )}
+      >
         {children}
       </span>
       {trailing ? (

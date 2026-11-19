@@ -1871,7 +1871,7 @@ declaração de `background-color` no trilho).
 - **`Accordion`**: `variant` `plain` | `contained` | `separated` (**não entra
   num `Card`**), `size`, `markerSide`; `AccordionTrigger` `trailing` (prop),
   `icon`, `description`; `AccordionContent findable`; `AccordionToggleAll`.
-- **`Collapsible`**: `CollapsibleRow` — **nenhuma tela escreve a linha à mão**;
+- **`Collapsible`**: `CollapsibleRow` — **nenhuma tela escreve a linha à mão**; `underline={false}` tira o sublinhado do rótulo (o "Limite do mês" do formulário de categoria);
   `variant="card"`; `CollapsibleLabel`; `findable`; `peek` (a espiada; a altura
   é inline, por `useEspiada`).
 

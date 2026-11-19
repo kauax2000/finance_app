@@ -36,3 +36,11 @@ describe("o collapsible", () => {
     expect(FONTE).not.toMatch(/cartao && "[^"]*\bpb-/)
   })
 })
+
+describe("CollapsibleRow underline", () => {
+  it("underline={false} tira o sublinhado no cursor e no toque, e o padrão segue sublinhando", () => {
+    const fonte = semComentarios(FONTE, "tudo")
+    expect(fonte).toMatch(/underline = true/)
+    expect(fonte).toMatch(/!underline && "group-hover\/disclosure:no-underline group-active\/disclosure:no-underline"/)
+  })
+})

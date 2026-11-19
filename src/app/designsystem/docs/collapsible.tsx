@@ -174,6 +174,12 @@ export default function CollapsibleDoc() {
             description: "O que vai na outra ponta, e de que lado fica a seta.",
           },
           {
+            prop: "CollapsibleRow · underline",
+            type: "boolean",
+            default: "true",
+            description: "false tira o sublinhado do rótulo no cursor; o marcador que se desloca segue como realce. Para a linha dentro de um formulário.",
+          },
+          {
             prop: "CollapsibleContent · peek",
             type: '"none" | "sm" | "md" | "lg"',
             default: '"none"',
