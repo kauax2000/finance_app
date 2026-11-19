@@ -70,4 +70,12 @@ describe("a transição de subpágina", () => {
         }
         expect(CSS).toMatch(/prefers-reduced-motion: reduce\)[\s\S]{0,200}subpagina-conteudo/)
     })
+
+    it("o gesto anda na curva das folhas, e a tela de baixo escurece ao recuar", () => {
+        const regras = [...CSS.matchAll(/html\[data-subpagina="(?:entra|volta)"\]::view-transition-(?:old|new)\(subpagina-conteudo\) \{\s+animation: ([^;]+);/g)].map((m) => m[1])
+        expect(regras).toHaveLength(4)
+        for (const a of regras) expect(a).toMatch(/^var\(--duration-spring\) var\(--ease-emphasized\) both subpagina-/)
+        expect(CSS).toMatch(/@keyframes subpagina-esquerda \{[\s\S]{0,200}opacity: 0\.85;/)
+        expect(CSS).toMatch(/@keyframes subpagina-vem-esquerda \{[\s\S]{0,120}opacity: 0\.85;/)
+    })
 })

@@ -2407,7 +2407,9 @@
    grupo fica no lugar da tela nova, então a foto velha desce o quanto a rolagem mudou
    (`--subpagina-desvio`), para não pular. A foto do conteúdo é
    transparente: a de cima leva o fundo da página, e `normal` tira a soma de brilho do
-   cruzamento padrão. */
+   cruzamento padrão. O gesto anda na curva das folhas do vaul (`--duration-spring` em
+   `--ease-emphasized`): 300ms em `--ease-out` acabavam nos quadros que o Safari perde
+   montando a tela, e o gesto sumia. A de baixo escurece (0,85) ao recuar, como no push do iOS. */
 html[data-subpagina] [data-workspace-content] {
   view-transition-name: subpagina-conteudo;
 }
@@ -2449,16 +2451,16 @@ html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
   mix-blend-mode: normal;
 }
 html[data-subpagina="entra"]::view-transition-old(subpagina-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subpagina-esquerda;
+  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-esquerda;
 }
 html[data-subpagina="entra"]::view-transition-new(subpagina-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subpagina-direita;
+  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-direita;
 }
 html[data-subpagina="volta"]::view-transition-old(subpagina-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subpagina-sai-direita;
+  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-sai-direita;
 }
 html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
-  animation: var(--duration-slow) var(--ease-out) both subpagina-vem-esquerda;
+  animation: var(--duration-spring) var(--ease-emphasized) both subpagina-vem-esquerda;
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(subpagina-conteudo),
@@ -2477,6 +2479,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
   }
   to {
     translate: -30% var(--subpagina-desvio, 0px);
+    opacity: 0.85;
   }
 }
 @keyframes subpagina-sai-direita {
@@ -2490,6 +2493,7 @@ html[data-subpagina="volta"]::view-transition-new(subpagina-conteudo) {
 @keyframes subpagina-vem-esquerda {
   from {
     translate: -30% 0;
+    opacity: 0.85;
   }
 }
 
