@@ -14,7 +14,8 @@ import { CategoryCardContextMenu } from "@/components/categories/category-card-c
 import { cn } from "@/lib/utils"
 import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
-import { ChartSkeleton, ChartSparkline } from "@/components/ui/chart"
+import { ChartSparkline } from "@/components/ui/chart"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Progress } from "@/components/ui/progress"
 import { shiftYearMonth } from "@/lib/budget-month"
 import {
@@ -206,7 +207,10 @@ export function IncomeCategoryCard({
                     </div>
 
                     {historico === undefined ? (
-                        <ChartSkeleton aspect="auto" bars={6} className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 w-auto pb-0" />
+                        <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex h-16 items-end">
+                    {/* O osso da faísca de área: a faixa preenchida do pé, e não barras. */}
+                    <Skeleton className="h-10 w-full rounded-none" />
+                </div>
                     ) : (
                         <ChartSparkline
                             variant="area"

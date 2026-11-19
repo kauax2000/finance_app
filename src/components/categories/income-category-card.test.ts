@@ -56,7 +56,7 @@ describe("IncomeCategoryCard pelo fonte", () => {
     })
 
     it("a série carregando vira o esqueleto do gráfico", () => {
-        expect(fonte).toMatch(/historico === undefined[\s\S]{0,80}ChartSkeleton/)
+        expect(fonte).toMatch(/historico === undefined[\s\S]{0,80}data-osso="faisca"/)
     })
 })
 
@@ -100,6 +100,6 @@ describe("IncomeCategoryCard no render", () => {
         const html = cartao({ historico: undefined, recebido: -30, totalDoMes: 0 })
         expect(html).not.toContain("NaN")
         expect(html).not.toMatch(/[-−]\s?R\$/)
-        expect(html).toContain('data-slot="chart-skeleton"')
+        expect(html).toContain('data-osso="faisca"')
     })
 })

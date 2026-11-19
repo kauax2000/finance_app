@@ -52,7 +52,7 @@ describe("ExpenseCategoryCard pelo fonte", () => {
     })
 
     it("a série carregando vira o esqueleto do gráfico", () => {
-        expect(fonte).toMatch(/historico === undefined[\s\S]{0,80}ChartSkeleton/)
+        expect(fonte).toMatch(/historico === undefined[\s\S]{0,80}data-osso="faisca"/)
     })
 })
 
@@ -80,7 +80,7 @@ const limpo = (s: string) => s.replace(/\u00a0/g, " ").replace(/<!-- -->/g, "")
 describe("CategoryCardSkeleton pelo fonte", () => {
     it("a barra sobe e o esqueleto da faísca fica no pé, de borda a borda", () => {
         const osso = fonte.slice(fonte.indexOf("export function CategoryCardSkeleton"))
-        expect(osso.indexOf("h-1.5")).toBeLessThan(osso.indexOf("<ChartSkeleton"))
+        expect(osso.indexOf("h-1.5")).toBeLessThan(osso.indexOf('data-osso="faisca"'))
         expect(osso).toContain("-mx-(--card-px) -mb-(--card-py)")
         expect(osso).toContain("h-16")
     })
@@ -97,7 +97,7 @@ describe("ExpenseCategoryCard no render", () => {
             const html = cartao({ historico: undefined, lancado: -30, limite })
             expect(html).not.toContain("NaN")
             expect(html).not.toMatch(/[-−]\s?R\$/)
-            expect(html).toContain('data-slot="chart-skeleton"')
+            expect(html).toContain('data-osso="faisca"')
         }
     })
 })
