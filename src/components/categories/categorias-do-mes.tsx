@@ -2,7 +2,7 @@
 
 import { ArrowDownIcon, ArrowTrendingUpIcon, BanknotesIcon, BarsArrowDownIcon, LanguageIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
-import { Fragment } from "react"
+import { Fragment, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -61,8 +61,20 @@ export function OrdemDasCategorias({
     const atual = opcoes.find((o) => o.value === criterio) ?? opcoes[0]
     const sentido = atual.sentidos[invertida ? 1 : 0]
     const nome = `Ordenar categorias: ${atual.label.toLocaleLowerCase("pt-BR")}, ${sentido.toLocaleLowerCase("pt-BR")}`
+    // A dica fica calada com o menu aberto e depois de fechar: o Radix devolve o foco ao gatilho, e
+    // o foco abriria o "Ordenar" de novo. Ela volta quando o cursor ou o foco saem do botão.
+    const [menuAberto, setMenuAberto] = useState(false)
+    const [dica, setDica] = useState(false)
+    const calada = useRef(false)
     return (
-        <DropdownMenu>
+        <DropdownMenu
+            open={menuAberto}
+            onOpenChange={(aberto) => {
+                setMenuAberto(aberto)
+                setDica(false)
+                if (!aberto) calada.current = true
+            }}
+        >
             {compacta ? (
                 <DropdownMenuTrigger asChild>
                     <Button type="button" variant="floating" size="icon-md" aria-label={nome}>
@@ -70,7 +82,13 @@ export function OrdemDasCategorias({
                     </Button>
                 </DropdownMenuTrigger>
             ) : (
-                <Tooltip>
+                <Tooltip
+                    open={dica}
+                    onOpenChange={(aberta) => {
+                        if (aberta && (menuAberto || calada.current)) return
+                        setDica(aberta)
+                    }}
+                >
                     <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -78,6 +96,8 @@ export function OrdemDasCategorias({
                                 variant="tertiary"
                                 size="icon-lg"
                                 aria-label={nome}
+                                onPointerLeave={() => (calada.current = false)}
+                                onBlur={() => (calada.current = false)}
                             >
                                 <BarsArrowDownIcon aria-hidden />
                             </Button>

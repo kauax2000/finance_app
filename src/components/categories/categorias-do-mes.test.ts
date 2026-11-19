@@ -75,6 +75,13 @@ describe("OrdemDasCategorias", () => {
         expect(fonte).toContain("{o.value === criterio ? sentido : o.sentidos[0]}")
     })
 
+    it("a dica não reabre quando o menu fecha e devolve o foco ao botão", () => {
+        const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
+        expect(fonte).toContain("if (aberta && (menuAberto || calada.current)) return")
+        expect(fonte).toContain("if (!aberto) calada.current = true")
+        expect(fonte).toContain("onPointerLeave={() => (calada.current = false)}")
+    })
+
     it("o menu tem título, tique, ícones e os seis sentidos", () => {
         const fonte = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
         expect(fonte).toContain('title="Ordenar por"')
