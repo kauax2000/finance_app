@@ -11,6 +11,7 @@ describe("o seletor de mês do desktop", () => {
         expect(picker).toMatch(/variant="outline"\s+aria-label=\{pickerAriaLabel\}/)
         expect(picker).toContain("<MonthNavPanel")
         expect(picker).toContain("ChevronDownIcon")
+        expect(picker).not.toContain("CalendarIcon")
     })
 
     it("não tem setas nem atalho soltos: moram no rodapé da grade", () => {

@@ -69,7 +69,6 @@ function MonthNavPicker({
                     aria-label={pickerAriaLabel}
                     className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth && "flex-1")}
                 >
-                    <CalendarIcon className="shrink-0 opacity-80" aria-hidden />
                     <span className="min-w-0 truncate">{monthLabel}</span>
                     <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
                 </Button>
