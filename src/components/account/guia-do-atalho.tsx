@@ -13,7 +13,7 @@ import {
 import { CampoDeCopiar } from "@/components/account/campo-de-copiar"
 import { mensagemDoErroDeToken, NOME_INVALIDO } from "@/components/account/atalho-secao"
 import { type Gatilho, type Modo, MODOS_DO_ATALHO, modoDoGatilho } from "@/components/account/gatilhos-do-atalho"
-import { nomeSugerido } from "@/components/account/nome-livre"
+import { nomeComModo, nomeSugerido, nomeTemModo } from "@/components/account/nome-livre"
 import { OrbeDaSiri } from "@/components/account/orbe-da-siri"
 import {
     CaixaDoPasso,
@@ -118,9 +118,9 @@ const COMO_ABRIR: Record<Gatilho, { texto: string; tela: Tela }> = {
  * Onde o mesmo "Lançar gasto rápido" pode morar: os ícones da legenda do passo 1 (com `nome`)
  * e as abas do último passo. Rótulos curtos nas abas: as quatro cabem em 343px; o nome inteiro está no texto da aba.
  */
-const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string; nome: string; icone: typeof MicrophoneIcon }[] = [
+const LUGARES: { valor: Exclude<Gatilho, "siri">; rotulo: string; nome: string; aria?: string; icone: typeof MicrophoneIcon }[] = [
     { valor: "acao", rotulo: "Botão", nome: "Botão de Ação", icone: DevicePhoneMobileIcon },
-    { valor: "toque", rotulo: "Costas", nome: "Costas", icone: HandRaisedIcon },
+    { valor: "toque", rotulo: "Costas", nome: "Costas", aria: "Toque nas costas", icone: HandRaisedIcon },
     { valor: "bloqueio", rotulo: "Bloqueio", nome: "Bloqueio", icone: LockClosedIcon },
     { valor: "inicio", rotulo: "Ícone", nome: "Ícone", icone: Squares2X2Icon },
 ]
@@ -338,7 +338,7 @@ export function GuiaDoAtalho({
                                     >
                                         {LUGARES.map((l) => (
                                             // Só ícone: o `floating` dá 44 de altura no dedo, e o `pointer-coarse:w-11`, 44 de largura; no cursor, o quadrado de 28.
-                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.nome} icon={l.icone} className="px-0 pointer-coarse:w-11" />
+                                            <ToggleGroupItem key={l.valor} value={l.valor} aria-label={l.aria ?? l.nome} icon={l.icone} className="px-0 pointer-coarse:w-11" />
                                         ))}
                                     </ToggleGroup>
                                 </>
@@ -360,8 +360,10 @@ export function GuiaDoAtalho({
                                 onValueChange={(v) => {
                                     if (!v) return
                                     setModo(v as Modo)
-                                    if (!nomeEditado && !substituir && codigo == null)
-                                        setNome(nomeSugerido(baseDoNome(primeiroNome()), v as Modo, nomesEmUso))
+                                    if (substituir || codigo != null) return
+                                    // Nome editado com sufixo de modo: troca só o sufixo e guarda o texto da pessoa.
+                                    if (!nomeEditado) setNome(nomeSugerido(baseDoNome(primeiroNome()), v as Modo, nomesEmUso))
+                                    else if (nomeTemModo(nome)) setNome(nomeComModo(nome, v as Modo))
                                 }}
                             >
                                 {MODOS_DO_ATALHO.map((o) => (

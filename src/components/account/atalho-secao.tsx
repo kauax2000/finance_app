@@ -5,7 +5,7 @@ import { useState, type CSSProperties } from "react"
 
 import { useAparelhosDeCaptura } from "@/components/account/aparelhos-de-captura"
 import { ApplePayConvite } from "@/components/account/apple-pay-convite"
-import { rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
+import { modoDoGatilho, rotuloDoGatilho } from "@/components/account/gatilhos-do-atalho"
 import { nomeTemModo } from "@/components/account/nome-livre"
 import { GuiaDoAtalho } from "@/components/account/guia-do-atalho"
 import { LancarPeloIphoneVazio } from "@/components/account/lancar-pelo-iphone-vazio"
@@ -48,7 +48,9 @@ const atalhoAntigo = (t: CaptureToken) => t.last_used_at != null && t.atalho_ver
 
 /** "Carteira · gatilho · uso", sem parte vazia. */
 export function legendaDoAparelho(t: CaptureToken, carteira: string): string {
-    const gatilho = nomeTemModo(t.name) ? null : rotuloDoGatilho(t.atalho_gatilho)
+    // O sufixo só dispensa o rótulo se concorda com o gatilho do aparelho.
+    const sufixo = modoDoGatilho(t.atalho_gatilho) === "voz" ? " · Voz" : " · Toque"
+    const gatilho = nomeTemModo(t.name) && t.name.endsWith(sufixo) ? null : rotuloDoGatilho(t.atalho_gatilho)
     const uso = t.last_used_at ? `último gasto ${relativo(t.last_used_at)}` : "ainda não lançou nada"
     return [carteira, gatilho, uso].filter(Boolean).join(" · ")
 }

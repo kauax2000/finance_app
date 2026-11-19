@@ -183,7 +183,7 @@ describe("tokens de captura", () => {
         expect(g).toContain("E aí Siri, Lançar gasto")
         expect(g).toMatch(/Continuar com \$\{/)
         for (const l of ["Botão de Ação", "Costas", "Bloqueio", "Ícone"]) expect(g).toContain(`nome: "${l}"`)
-        expect(g).toMatch(/aria-label=\{l\.nome\}/)
+        expect(g).toMatch(/aria-label=\{l\.aria \?\? l\.nome\}/)
         expect(g).toContain("menuPanelTintClassName")
         // O passo 1 em Voz e em Toque estão entre os fantasmas: a caixa não muda de altura com a escolha.
         expect(g).toMatch(/passoDe\(0, "siri", true\)/)
@@ -609,6 +609,7 @@ describe("a lista de aparelhos", () => {
         expect(legendaDoAparelho(base, "Casa")).toBe("Casa · ainda não lançou nada")
         expect(legendaDoAparelho({ ...base, atalho_gatilho: "inicio" }, "Casa")).toBe("Casa · Toque · ainda não lançou nada")
         expect(legendaDoAparelho({ ...base, name: "iPhone · Toque", atalho_gatilho: "toque" }, "Casa")).toBe("Casa · ainda não lançou nada")
+        expect(legendaDoAparelho({ ...base, name: "iPhone · Voz", atalho_gatilho: "toque" }, "Casa")).toContain("Toque")
         expect(rotuloDoGatilho("bloqueio")).toBe("Toque")
         expect(rotuloDoGatilho("siri")).toBe("Siri")
         expect(rotuloDoGatilho(null)).toBeNull()
@@ -622,5 +623,13 @@ describe("o modo no nome do aparelho", () => {
         expect(nomeSugerido("iPhone", "voz", ["iPhone · Voz"])).toBe("iPhone 2 · Voz")
         expect(nomeSugerido("iPhone", "toque", ["iPhone · Voz"])).toBe("iPhone · Toque")
         expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain("O atalho se chama")
+    })
+    it("o nome sugerido nunca passa de 60 e a troca de modo guarda o texto editado", () => {
+        const n = nomeSugerido(`iPhone de ${"a".repeat(70)}`, "toque", [])
+        expect(n.length).toBeLessThanOrEqual(60)
+        expect(n.endsWith(" · Toque")).toBe(true)
+        const longo = `iPhone de ${"a".repeat(70)}`
+        expect(nomeSugerido(longo, "voz", [nomeSugerido(longo, "voz", [])]).length).toBeLessThanOrEqual(60)
+        expect(lerFonte("src/components/account/guia-do-atalho.tsx")).toContain("nomeComModo(nome, v as Modo)")
     })
 })
