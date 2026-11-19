@@ -53,11 +53,12 @@ describe("a grade espera os números do mês", () => {
         expect(f.match(/!numerosProntos \? \(\s*<CategoriesGridLoading \/>/g)?.length).toBe(2)
     })
 
-    it("a contagem e a ordem moram na barra, guardadas pelo mês pronto e por haver movimento", () => {
+    it("a contagem espera o mês e o movimento; a ordem fica parada ao trocar de mês", () => {
         const f = semComentarios(lerFonte("src/app/(app)/categories/page-client.tsx"), "tudo")
         expect(f).not.toContain("CategoriasDoMesCabecalho")
-        expect(f).toMatch(/const mostrarOrdem = numerosProntos && doMes\.comMovimento\.length > 0/)
-        expect(f).toMatch(/contagem=\{mostrarOrdem \?/)
+        expect(f).toMatch(/const mostrarContagem = numerosProntos && doMes\.comMovimento\.length > 0/)
+        expect(f).toMatch(/const mostrarOrdem = \(filterType === "income" \? incomeCategories : expenseFiltered\)\.length > 0/)
+        expect(f).toMatch(/contagem=\{mostrarContagem \?/)
         expect(f).toMatch(/ordem=\{\s*mostrarOrdem \?/)
         expect(f).toContain("compacta={isMobile}")
     })

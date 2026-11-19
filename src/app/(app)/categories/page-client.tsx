@@ -666,7 +666,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     }
 
     const doMes = filterType === "income" ? receitas : despesas
-    const mostrarOrdem = numerosProntos && doMes.comMovimento.length > 0
+    const mostrarContagem = numerosProntos && doMes.comMovimento.length > 0
+    // A ordem fica parada ao trocar de mês: depende só de a aba ter categoria, não dos números do mês.
+    const mostrarOrdem = (filterType === "income" ? incomeCategories : expenseFiltered).length > 0
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-4">
@@ -698,7 +700,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 showMonthControls
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                contagem={mostrarOrdem ? doMes.comMovimento.length : undefined}
+                contagem={mostrarContagem ? doMes.comMovimento.length : undefined}
                 ordem={
                     mostrarOrdem ? (
                         <OrdemDasCategorias
