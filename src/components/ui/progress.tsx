@@ -46,6 +46,16 @@ const TOM_FUNDO = {
   expense: "bg-expense",
 } as const
 
+/** A tinta do tom, para o que desenha em `currentColor` (o tracejado do previsto). */
+const TOM_TEXTO = {
+  default: "text-foreground",
+  success: "text-success",
+  warning: "text-warning",
+  destructive: "text-destructive",
+  income: "text-income",
+  expense: "text-expense",
+} as const
+
 const TOM_TRACO = {
   default: "stroke-primary",
   success: "stroke-success",
@@ -131,6 +141,12 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
      * casa cujo trecho cruza `[from, to]` pinta nessa cor: a parcela aberta. Não vale na marca.
      */
     highlight?: { from: number; to: number }
+    /**
+     * O trecho tracejado depois do cheio, na unidade do `value`: o que ainda vem (a conta
+     * a pagar do mês). O indicador mede só o `value`; o tom (com `bands`) e a pastilha de
+     * excesso contam o total. Para no fim do trilho. Ignorado com `segments`, `zones` e na marca.
+     */
+    projected?: number
   }
 
 /**
@@ -150,7 +166,13 @@ type ProgressProps =
       tone?: never
       variant?: "default"
     })
-  | (Base & { variant: "brand"; tone?: never; bands?: never; zones?: never })
+  | (Base & {
+      variant: "brand"
+      tone?: never
+      bands?: never
+      zones?: never
+      projected?: never
+    })
 
 /**
  * O que as peças de texto leem: o rótulo registra o `id` para a barra apontar
@@ -190,6 +212,7 @@ function Progress({
   footer,
   marker,
   highlight,
+  projected,
   ...props
 }: ProgressProps) {
   const { tone, bands, zones, variant = "default", ...rest } = props as Base & {
@@ -210,7 +233,15 @@ function Progress({
   // como indeterminado, zerando o `aria-valuenow`, justamente na categoria que
   // estourou. O valor enviado ao primitivo é limitado; o real vai no `aria-valuetext`.
   const clamped = value != null ? Math.min(max, Math.max(0, value)) : value
-  const excedeu = value != null && value > max
+
+  // As casas, as zonas e a marca não desenham o previsto: o total é só o `value`.
+  const casas =
+    segments && segments > 1 && segments <= MAX_CASAS ? Math.floor(segments) : null
+  const previsto =
+    projected != null && projected > 0 && !casas && !zones && variant !== "brand" ? projected : 0
+  const total = (value ?? 0) + previsto
+  const excedeu = value != null && total > max
+  const { bruto: brutoTotal, pct: pctTotal } = porcentagem(total, max)
 
   // O tom é derivado quando a tela entrega os cortes, e o estouro vence os dois.
   const tomFinal: Tom | undefined =
@@ -219,7 +250,7 @@ function Progress({
       : bands
         ? excedeu
           ? "destructive"
-          : progressToneForBands(pct, bands)
+          : progressToneForBands(pctTotal, bands)
         : tone
 
   // O arco-íris é do trilho, e o preenchimento o revela: o degradê tem a largura
@@ -249,8 +280,6 @@ function Progress({
   // As casas: cada uma acende quando o valor a cobre inteira (7 de 12 são sete
   // casas); o `1e-9` absorve o erro de ponto flutuante. Acima de 24 a barra volta
   // a ser contínua: casas de 2px entre 47 frestas leem como tracejado.
-  const casas =
-    segments && segments > 1 && segments <= MAX_CASAS ? Math.floor(segments) : null
   const cheias = casas ? Math.floor((pct / 100) * casas + 1e-9) : 0
 
   const barra = (
@@ -270,7 +299,15 @@ function Progress({
       max={max}
       aria-labelledby={nomeado ? undefined : hasLabel ? labelId : undefined}
       // Só quando excede: um `undefined` explícito apagaria o texto padrão do Radix.
-      {...(excedeu ? { "aria-valuetext": `${Math.round(bruto)}%` } : {})}
+      {...(previsto > 0
+        ? {
+            "aria-valuetext": `${Math.round(bruto)}% lançado, mais ${Math.round(
+              (Math.min(previsto, Math.max(0, max - (value ?? 0))) / max) * 100
+            )}% previsto`,
+          }
+        : excedeu
+          ? { "aria-valuetext": `${Math.round(bruto)}%` }
+          : {})}
       {...rest}
     >
       {casas ? (
@@ -330,6 +367,20 @@ function Progress({
             )}
             style={{ width: `${pct}%`, ...fundoDaMarca }}
           />
+          {previsto > 0 && pct < 100 && (
+            <span
+              data-slot="progress-projected"
+              aria-hidden
+              className={cn(
+                "progress-projected absolute inset-y-0",
+                TOM_TEXTO[tomFinal ?? "default"]
+              )}
+              style={{
+                left: `${pct}%`,
+                width: `${Math.min((previsto / max) * 100, 100 - pct)}%`,
+              }}
+            />
+          )}
           {fatia && (
             <span
               data-slot="progress-highlight"
@@ -380,7 +431,7 @@ function Progress({
             "shrink-0 rounded-full bg-destructive",
             size === "sm" ? "h-1.5" : "h-2"
           )}
-          style={{ width: `${Math.min(28, 4 + (bruto - 100) * 0.22)}px` }}
+          style={{ width: `${Math.min(28, 4 + (brutoTotal - 100) * 0.22)}px` }}
         />
       )}
     </div>

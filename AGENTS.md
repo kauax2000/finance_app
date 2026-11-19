@@ -1170,7 +1170,7 @@ declaração de `background-color` no trilho).
   (orçamento `[85, 100]`, limite de cartão `[30, 70]`). **O excesso vira uma
   pastilha fora do trilho**, que vale sempre o total. Peças `ProgressHeader` /
   `ProgressLabel` / `ProgressValue` / `ProgressFooter` (pelas props `header` e
-  `footer`), `segments`, `zones`, `ProgressRing`. `brand` é para progresso sem
+  `footer`), `segments`, `zones`, `ProgressRing`. `projected` é o trecho tracejado do previsto, depois do cheio, e o tom e a pastilha contam o total. `brand` é para progresso sem
   limiar (o degradê é do trilho). Passos com data são `Timeline`; um total
   dividido, `ChartSplit`.
 - **`Timeline`**: o fim é CSS (`:last-child`; `isLast={false}` é a exceção),

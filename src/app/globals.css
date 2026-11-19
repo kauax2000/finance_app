@@ -1368,6 +1368,16 @@
   }
 }
 
+/* O trecho previsto do `Progress`: listras na tinta do tom (`currentColor`), a 45%
+   para ler como "ainda não" ao lado do cheio. */
+@utility progress-projected {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, currentColor 45%, transparent) 0 3px,
+    transparent 3px 6px
+  );
+}
+
 /* ── O raio concêntrico ──────────────────────────────────────────────────────
    O `ConcentricRectangle` do iOS 26: o raio de quem está dentro é o do contêiner
    menos o recuo, com um mínimo. Quem contém publica `--radius-parent` e

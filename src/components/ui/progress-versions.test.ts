@@ -85,3 +85,44 @@ describe("Progress highlight nas casas", () => {
     expect(marca).not.toContain("data-highlight")
   })
 })
+
+describe("Progress projected", () => {
+  const html = (p: Record<string, unknown>) =>
+    renderToStaticMarkup(createElement(Progress, p as never))
+
+  it("desenha o previsto depois do cheio", () => {
+    const h = html({ value: 60, max: 100, projected: 20 })
+    expect(h).toContain('data-slot="progress-projected"')
+    expect(h).toMatch(/left:\s*60%/)
+    expect(h).toMatch(/width:\s*20%/)
+  })
+
+  it("o previsto para no fim do trilho", () => {
+    const h = html({ value: 90, max: 100, projected: 40, bands: [85, 100] })
+    expect(h).toMatch(/data-slot="progress-projected"[^>]*width:\s*10%/)
+    expect(h).toContain('data-tone="destructive"')
+    expect(h).toContain('data-slot="progress-over"')
+  })
+
+  it("sem tracejado com o cheio no teto", () => {
+    expect(html({ value: 120, max: 100, projected: 10 })).not.toContain("progress-projected")
+  })
+
+  it("ignora com segments, zones e brand", () => {
+    expect(html({ value: 2, max: 5, segments: 5, projected: 1 })).not.toContain("progress-projected")
+    expect(html({ value: 50, bands: [85, 100], zones: true, projected: 10 })).not.toContain(
+      "progress-projected"
+    )
+    expect(html({ value: 50, variant: "brand", projected: 10 })).not.toContain("progress-projected")
+  })
+
+  it("aria-valuetext diz lançado e previsto", () => {
+    expect(html({ value: 60, max: 100, projected: 20 })).toContain(
+      'aria-valuetext="60% lançado, mais 20% previsto"'
+    )
+  })
+
+  it("a página do catálogo mostra o previsto", () => {
+    expect(readFileSync("src/app/designsystem/docs/progress.tsx", "utf8")).toContain("projected")
+  })
+})
