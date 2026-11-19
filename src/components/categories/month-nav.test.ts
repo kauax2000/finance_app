@@ -18,6 +18,11 @@ describe("o seletor de mês do desktop", () => {
         expect(picker).not.toContain("CalendarIcon")
     })
 
+    it("as três peças da pílula flutuam, e as setas são o círculo da escada", () => {
+        expect(picker.match(/variant="floating"/g)?.length).toBe(3)
+        expect(picker.match(/size="icon-lg"/g)?.length).toBe(2)
+    })
+
     it("o ramo da fatura (fullWidth) devolve só o popover, sem setas", () => {
         expect(picker).toContain("if (fullWidth) return popover")
         expect(picker.indexOf("<ButtonGroup")).toBeGreaterThan(picker.indexOf("if (fullWidth) return popover"))
