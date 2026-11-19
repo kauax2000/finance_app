@@ -18,6 +18,9 @@ function createQueryClient() {
         queryCache: new QueryCache({
             onError: (error, query) => {
                 if (query.meta?.errorToast === false) return
+                // Pré-carregamento em segundo plano (ninguém na tela olha a consulta)
+                // falha calado: a tela que a usar busca de novo e avisa ali.
+                if (query.getObserversCount() === 0) return
                 if (typeof navigator !== "undefined" && !navigator.onLine) return
                 // Repetidos viram ×2, ×3 na mesma bolha (lib/toast).
                 toastError(
