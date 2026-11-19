@@ -68,9 +68,12 @@ export function CategoryFormFields({
     const nomeDaCategoria = name.trim()
 
     return (
-        <div className="space-y-4 py-4">
-            <div className="flex items-end gap-3">
-                <ColorTile size="xl" color={color} className="shrink-0">
+        <div className="space-y-4">
+            {/* O ladrilho acompanha o campo, e não a base da linha: com a mensagem de
+                erro embaixo do campo, a base desce e levava o ladrilho junto. `mt-7`
+                é a altura do rótulo; a caixa tem a altura do campo (36, 44 no dedo). */}
+            <div className="flex items-start gap-3">
+                <ColorTile size="lg" color={color} className="mt-7 shrink-0 pointer-coarse:size-11">
                     <CategoryIconPreview name={normalizeCategoryIcon(icon)} size="mini" />
                 </ColorTile>
                 <FormInput
@@ -100,7 +103,7 @@ export function CategoryFormFields({
             </div>
 
             {type === "expense" && budget ? (
-                <Collapsible variant="card" defaultOpen={budget.defaultOpen}>
+                <Collapsible variant="card" defaultOpen={budget.defaultOpen} className="bg-card/50">
                     <CollapsibleRow trailing="Opcional" underline={false}>Limite de gasto</CollapsibleRow>
                     <CollapsibleContent className="space-y-4">
                         <p className="text-xs text-muted-foreground">
