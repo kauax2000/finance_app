@@ -42,8 +42,8 @@ function mesDoAnoMes(ym: string) {
 }
 
 /**
- * O mês do desktop: uma pílula só, com ‹ e › dentro dela e o mês no centro, com o chevron, que abre
- * a grade de meses (`MonthNavPanel`, com as setas e "Este mês" no rodapé). Na fatura do telefone
+ * O mês do desktop: uma pílula só, com ‹ e › dentro dela e o mês no centro, que abre
+ * a grade de meses (sem chevron; `MonthNavPanel`, com as setas e "Este mês" no rodapé). Na fatura do telefone
  * (`fullWidth`) é o botão da faixa, sem fundo e sem setas.
  */
 function MonthNavPicker({
@@ -74,7 +74,10 @@ function MonthNavPicker({
                     className={cn("min-w-0 gap-2 font-medium tabular-nums", fullWidth ? "flex-1" : "text-foreground")}
                 >
                     <span className="min-w-0 truncate">{monthLabel}</span>
-                    <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
+                    {/* Na pílula do desktop o mês dispensa o chevron: as setas ao lado já dizem que ele muda. */}
+                    {fullWidth ? (
+                        <ChevronDownIcon data-icon="inline-end" className="text-muted-foreground" aria-hidden />
+                    ) : null}
                 </Button>
             </PopoverTrigger>
             <PopoverContent align="end" size="auto" padding="none" label="Escolher mês">

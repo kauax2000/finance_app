@@ -18,6 +18,7 @@ describe("o seletor de mês do desktop", () => {
         expect(picker).not.toContain("<ButtonGroup")
         expect(picker).not.toContain('variant="floating"')
         expect(picker.match(/variant="tertiary"/g)?.length).toBe(3)
+        expect(picker).toMatch(/fullWidth \? \(\s*<ChevronDownIcon/)
     })
 
     it("na fatura (fullWidth) só o botão da faixa, sem setas", () => {
