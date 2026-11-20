@@ -107,6 +107,7 @@ import { paymentMethodLabel, type PaymentMethod } from "@/lib/payment-methods"
 import { searchFieldSurfaceClassName } from "@/lib/search-field-classes"
 import { MOLA, MOLA_PALCO, SAIDA, SEPARACAO } from "@/lib/spring"
 import { addDaysYmd, formatYmdPtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { naoFecharPorForaNoTelefone } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 type Leitura = ReturnType<typeof useLeituraDoLancamento>
@@ -736,6 +737,11 @@ export function LancamentoInteligente({
                     // O vão entre o vidro e o resto é do véu: tocar nele fecha. Vai no
                     // `style` porque o Radix escreve `pointer-events: auto` inline.
                     style={{ pointerEvents: "none" }}
+                    // Com a revisão aberta, no telefone, o véu não fecha: a saída é o ×
+                    // (um toque sem querer perdia a leitura). Só com o campo, sem ×, ele fecha.
+                    onInteractOutside={(e) => {
+                        if (placa) naoFecharPorForaNoTelefone(e)
+                    }}
                     // O foco vai ao campo sem rolar a página (o `autoFocus` deixava o iOS rolá-la).
                     onOpenAutoFocus={(e) => {
                         e.preventDefault()

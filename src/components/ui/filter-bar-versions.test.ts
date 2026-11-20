@@ -97,11 +97,11 @@ describe("a escada e as superfícies", () => {
     expect(moldura).toContain("<ToqueEmulado />")
   })
 
-  it("na moldura do iPhone a gaveta não é modal, mas tem véu e fecha no toque fora", () => {
+  it("na moldura do iPhone a gaveta não é modal, mas tem véu (que, como no telefone, não fecha no toque)", () => {
     const gaveta = lerFonte("src/components/ui/drawer.tsx")
     // Só quando a falta de modal é da moldura — `modal={false}` de quem chama continua sem véu.
     expect(gaveta).toContain("const veuEmulado = modalDaMoldura === false && modalProp === undefined")
-    expect(gaveta).toContain("onPointerDown={() => raiz.fechar()}")
+    expect(gaveta).toContain("if (!naoFecharPorForaNoTelefone(e.nativeEvent)) raiz.fechar()")
     expect(gaveta).toContain("pointer-events-auto")
   })
 

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sheet"
 import { DrawerRaizContext, overlayClassName } from "@/components/ui/drawer"
 import { ignorarToqueNoToast } from "@/lib/toast-interact"
+import { naoFecharPorForaNoTelefone } from "@/lib/pointer"
 
 /**
  * O recuo que desvia do botão de fechar: `--dialog-close` é o território do × e
@@ -512,6 +513,7 @@ function DialogContent({
         aria-busy={pending || undefined}
         onInteractOutside={(e) => {
           ignorarToqueNoToast(e)
+          naoFecharPorForaNoTelefone(e)
           onInteractOutside?.(e)
         }}
         {...revelacao}

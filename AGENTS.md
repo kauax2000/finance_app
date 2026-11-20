@@ -695,8 +695,8 @@ declaração de `background-color` no trilho).
 - **Na moldura a gaveta não é modal, mas se comporta como se fosse**: dentro do
   iframe o `Drawer` não é modal (o `RemoveScroll` travaria a página de fora), e
   quando a falta de modal é da moldura — não de um `modal={false}` de quem
-  chama — o `DrawerContent` desenha o véu e tocar nele fecha. No app a gaveta
-  continua modal.
+  chama — o `DrawerContent` desenha o véu (que, como no telefone, não fecha ao
+  toque). No app a gaveta continua modal.
 - **Dentro da moldura, os portais vão ao `body` da janela do
   `ViewportWindowProvider`** (`Popover`, `Tooltip`, `Drawer`, `Sheet`). Um
   clique na página de **fora** da moldura não fecha o que está aberto dentro
@@ -1290,6 +1290,7 @@ declaração de `background-color` no trilho).
     saltava. Abaixo de 768px só a altura anda; a gaveta é do `vaul`.
     `dialog-versions.test.ts`.
 - **`AlertDialog` fecha ao clicar fora** (no véu), como todo diálogo do app, menos com `pending` (19/11/2026); o aberto mora no `AlertDialog` por `useControllableState`.
+- **No telefone, tocar fora não fecha diálogo nenhum** (20/11/2026): abaixo de 768px a saída é o ×, o Cancelar, o Esc ou o arraste da gaveta. Quem decide é `naoFecharPorForaNoTelefone` (`lib/pointer`), no `onInteractOutside` do `Dialog`, do `Sheet`, do `DrawerContent` e da busca do telefone (`command-search`), e no véu do `AlertDialog` e da moldura; a largura é a da janela do alvo. O lançamento inteligente só barra com a revisão aberta (só com o campo não há ×). O `Seal` aberto, sem ×, segue fechando no toque. `fora-no-telefone.test.ts`.
 - **`AlertDialog`** mora na camada da folha (`--z-sheet`, véu e placa), para a
   confirmação aberta de dentro de uma folha ficar por cima dela.
 - **`AlertDialog`** mede pela régua do `Dialog` e veste a cromagem dele; não

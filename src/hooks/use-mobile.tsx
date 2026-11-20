@@ -3,7 +3,7 @@
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
-const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+export const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
 
 /**
  * A janela que decide a largura. `null` é a janela real (todo o app); o

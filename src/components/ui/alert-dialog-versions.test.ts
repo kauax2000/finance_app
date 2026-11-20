@@ -122,6 +122,6 @@ describe("o clique fora (19/11/2026)", () => {
   it("o véu fecha a confirmação, menos com a ação correndo", () => {
     expect(f).toContain("useControllableState")
     expect(f).toMatch(/fecharPorFora: \(\) => \{\s*if \(!pending\) setOpen\(false\)/)
-    expect(f).toMatch(/if \(!event\.defaultPrevented\) fecharPorFora\(\)/)
+    expect(f).toMatch(/if \(event\.defaultPrevented \|\| naoFecharPorForaNoTelefone\(event\.nativeEvent\)\) return\s*fecharPorFora\(\)/)
   })
 })

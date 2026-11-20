@@ -13,7 +13,7 @@ import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
 import { lerp, preso, quandoPintar, suave, TINTA_DO_VOO } from "@/lib/header-morph"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { ehCursor } from "@/lib/pointer"
+import { ehCursor, naoFecharPorForaNoTelefone } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
 import { Caption, P } from "@/components/ui/typography"
@@ -843,6 +843,8 @@ function CommandDialog({
           <DialogPrimitive.Content
             ref={setCamada}
             data-slot="command-search"
+            // No telefone, tocar fora não fecha a busca: a saída é o ×.
+            onInteractOutside={(e) => naoFecharPorForaNoTelefone(e)}
             // A casca não recebe toque, para o vão entre a linha e a placa
             // chegar ao véu. Vai no `style` porque o Radix escreve
             // `pointer-events: auto` inline e o espalha antes do nosso.

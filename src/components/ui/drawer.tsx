@@ -6,6 +6,7 @@ import { Slot } from "radix-ui"
 import { useComposedRefs } from "radix-ui/internal"
 import { Drawer as DrawerPrimitive } from "vaul"
 
+import { naoFecharPorForaNoTelefone } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
@@ -717,6 +718,7 @@ function DrawerContent({
   size,
   showHandle = true,
   ref,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> &
   VariantProps<typeof drawerContentVariants> & {
@@ -805,7 +807,9 @@ function DrawerContent({
             SHEET_OVERLAY_CLASS,
             "pointer-events-auto animate-in fade-in-0 animation-duration-(--duration-base)"
           )}
-          onPointerDown={() => raiz.fechar()}
+          onPointerDown={(e) => {
+            if (!naoFecharPorForaNoTelefone(e.nativeEvent)) raiz.fechar()
+          }}
         />
       ) : null}
       <DrawerPrimitive.Content
@@ -827,6 +831,10 @@ function DrawerContent({
           MEIO_CLASSES,
           className
         )}
+        onInteractOutside={(e) => {
+          naoFecharPorForaNoTelefone(e)
+          onInteractOutside?.(e)
+        }}
         {...props}
       >
         {/* Com ✕ e sem degraus o ✕ é a saída: a alça some, mas guarda os 26px da barra. A ação da

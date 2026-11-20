@@ -12,6 +12,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/16/solid"
 
+import { naoFecharPorForaNoTelefone } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
@@ -114,7 +115,8 @@ function AlertDialogOverlay({
       data-slot="alert-dialog-overlay"
       onClick={(event) => {
         onClick?.(event)
-        if (!event.defaultPrevented) fecharPorFora()
+        if (event.defaultPrevented || naoFecharPorForaNoTelefone(event.nativeEvent)) return
+        fecharPorFora()
       }}
       // A camada da folha, e não a do modal: uma confirmação aberta de dentro de uma
       // folha (o "Excluir todas" das notificações) abria por baixo dela. Na mesma

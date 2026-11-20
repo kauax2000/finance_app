@@ -73,7 +73,7 @@ export default function DrawerDoc() {
             <DialogHeader>
               <DialogTitle>Filtros</DialogTitle>
               <DialogDescription>
-                Arraste a alça para baixo para fechar, ou toque fora.
+                Arraste a alça para baixo para fechar. No telefone, tocar fora não fecha.
               </DialogDescription>
             </DialogHeader>
             <DialogBody>
@@ -226,7 +226,7 @@ export default function DrawerDoc() {
       </DocSection>
 
       <DocNote title="A alça é da superfície, e é o gesto — não o desenho dele">
-        <code>DrawerContent</code> e o <code>Sheet</code> no telefone a compõem, como compõem a borda e a sombra. Uma tela que escrevesse a própria alça teria duas, e só uma arrastaria. Ela <strong>não fecha no clique</strong>: numa gaveta comum (sem <code>snapPoints</code>, com <code>dismissible</code>) tocar nela é um no-op, e quem fecha é o ×, o véu e o <kbd>Esc</kbd>. Por isso <code>showHandle</code> só se desliga junto com <code>dismissible={"{false}"}</code> — alça sem gesto promete o que não existe. Ela é <code>aria-hidden</code>: um leitor de tela não tem o que fazer com ela, e a superfície sempre traz outra saída. Com ✕ e sem <code>snapPoints</code> ela fica <code>invisible</code> (guarda os 26px da barra): o ✕ é a saída e o arraste para fechar continua sendo da gaveta inteira; com degraus, ou sem ✕, ela aparece.
+        <code>DrawerContent</code> e o <code>Sheet</code> no telefone a compõem, como compõem a borda e a sombra. Uma tela que escrevesse a própria alça teria duas, e só uma arrastaria. Ela <strong>não fecha no clique</strong>: numa gaveta comum (sem <code>snapPoints</code>, com <code>dismissible</code>) tocar nela é um no-op, e quem fecha é o ×, o <kbd>Esc</kbd> e, só acima de 768px, o véu. Por isso <code>showHandle</code> só se desliga junto com <code>dismissible={"{false}"}</code> — alça sem gesto promete o que não existe. Ela é <code>aria-hidden</code>: um leitor de tela não tem o que fazer com ela, e a superfície sempre traz outra saída. Com ✕ e sem <code>snapPoints</code> ela fica <code>invisible</code> (guarda os 26px da barra): o ✕ é a saída e o arraste para fechar continua sendo da gaveta inteira; com degraus, ou sem ✕, ela aparece.
       </DocNote>
 
       <DocNote title="Toda medida da alça leva !, e a tinta é 75%">
