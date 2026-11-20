@@ -527,6 +527,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             {isMobile ? null : (
                 <PageHeader collapse>
                     <PageHeaderTitleRow
+                        back={`${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`}
+                        backLabel="Voltar para Categorias"
                         media={
                             <ColorTile color={tileColorFor(category.color) || (category.type === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)}>
                                 <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
