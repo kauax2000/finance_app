@@ -29,7 +29,7 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
 
             <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
                 {showMonth ? (
-                    <Skeleton shape="control" className="w-56" />
+                    <Skeleton shape="control" className="w-56 pointer-coarse:h-12" />
                 ) : null}
                 <Skeleton shape="control" className="w-39" />
             </div>

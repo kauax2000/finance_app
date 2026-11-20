@@ -6,7 +6,7 @@ function ToolbarSkeleton() {
     return (
         <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
             <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
-                <Skeleton shape="control" className="min-w-0 flex-1 md:w-60 md:flex-none" aria-hidden />
+                <Skeleton shape="control" className="min-w-0 flex-1 md:w-60 md:flex-none" />
                 <Skeleton shape="control" className="aspect-square md:hidden" />
             </div>
             <div className="hidden min-w-0 shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">

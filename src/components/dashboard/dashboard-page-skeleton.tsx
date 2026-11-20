@@ -61,7 +61,7 @@ function DashboardToolbarSkeleton() {
     return (
         <div className="hidden min-w-0 max-w-full md:flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3">
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
-                <Skeleton shape="control" className="w-52" />
+                <Skeleton shape="control" className="w-52 pointer-coarse:h-12" />
             </div>
         </div>
     )

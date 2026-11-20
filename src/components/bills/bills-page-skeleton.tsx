@@ -19,8 +19,8 @@ function ToolbarSkeleton() {
             aria-hidden
         >
             <Skeleton shape="control" className="w-44" />
-            <div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
-                <Skeleton shape="control" size="sm" className="w-44" />
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+                <Skeleton shape="control" size="sm" className="hidden w-44 md:block" />
                 <Skeleton shape="control" className="w-32" />
             </div>
         </div>

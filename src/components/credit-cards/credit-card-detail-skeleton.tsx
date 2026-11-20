@@ -48,7 +48,7 @@ function SectionTitleRow({
                     <Skeleton className={titleClassName} />
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-1">
-                    <Skeleton shape="control" className="w-44" />
+                    <Skeleton shape="control" className="w-44 pointer-coarse:h-12" />
                 </div>
             </div>
         )
