@@ -1434,11 +1434,7 @@ function Revisao({
                                 {rotuloDoTipo}
                             </Badge>
                             {campos.motivoDoTipo ? <Caption>por causa de “{campos.motivoDoTipo}”</Caption> : null}
-                            {leuComIA ? (
-                                <Badge tone="info">
-                                    IA
-                                </Badge>
-                            ) : null}
+                            {/* Sem selo "IA" aqui: o do valor, logo abaixo, já diz que a IA leu. */}
                         </div>
 
                         {/* O valor em destaque; tocá-lo edita o valor. */}
