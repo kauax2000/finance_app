@@ -37,6 +37,8 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toContain("height: var(--dialog-header-solid)")
     expect(u).toContain("--dialog-header-fade-over: calc(var(--spacing) * 4)")
     expect(u).toContain("top: var(--dialog-header-solid)")
+    // O degradê para a 16px da borda, e não 56px depois da placa (20/11/2026).
+    expect(u).toContain("height: calc(100% + var(--dialog-header-fade-over) - var(--dialog-header-solid))")
     expect(u).not.toContain("animation-range")
   })
 

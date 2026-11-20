@@ -4276,7 +4276,10 @@ html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot
     }
     &::after {
       top: var(--dialog-header-solid);
-      height: var(--dialog-header-fade-h);
+      /* O degradê termina sempre a 16px da borda (`fade-over`), qualquer que seja a placa: com a
+         placa até o fim do texto, os 56px inteiros passavam 40px da borda e cobriam a primeira
+         linha do corpo (as notificações, 20/11/2026). */
+      height: calc(100% + var(--dialog-header-fade-over) - var(--dialog-header-solid));
       /* Uma curva suave (mais paradas, a queda espalhada), e não três retas: a borda
          não aparece como degrau. */
       background-image: linear-gradient(
