@@ -25,10 +25,10 @@ export function CategoryDetailLayout({
     return (
         <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
             {resumo}
-            <Tabs defaultValue="resumo" className="gap-6">
+            <Tabs defaultValue="resumo">
                 <TabsList aria-label="Seções da categoria" className="w-full md:w-fit">
-                    <TabsTrigger value="resumo">Resumo</TabsTrigger>
-                    <TabsTrigger value="lancamentos" count={totalLancamentos}>
+                    <TabsTrigger value="resumo" className="md:flex-none">Resumo</TabsTrigger>
+                    <TabsTrigger value="lancamentos" count={totalLancamentos} className="md:flex-none">
                         Lançamentos
                     </TabsTrigger>
                 </TabsList>
