@@ -101,8 +101,14 @@ export function ReguaDoMes({
                             <Progress
                                 value={Math.max(0, lancado)}
                                 max={escala.max}
-                                marker={marcador}
                                 aria-label={`${currencyBRL(lancado)} em ${mes}, contra a média de ${currencyBRL(media ?? 0)}`}
+                            />
+                            {/* O traço da média passa da barra e leva um anel da cor do fundo: o `marker` do
+                                `Progress` mora dentro do trilho e some sobre a parte cheia. */}
+                            <span
+                                aria-hidden="true"
+                                className="absolute -top-1.5 h-5 w-1 -translate-x-1/2 rounded-full bg-foreground ring-2 ring-background"
+                                style={{ insetInlineStart: `${marcador}%` }}
                             />
                             <Caption
                                 aria-hidden="true"
