@@ -36,9 +36,9 @@ describe("DialogHeader translúcido (B3, 13/11/2026)", () => {
     expect(u).toMatch(/--dialog-header-solid: max\(\s*calc\(100% - var\(--dialog-header-fade-h\) \+ var\(--dialog-header-fade-over\)\),\s*calc\(100% - var\(--spacing\) \* 4\)\s*\)/)
     expect(u).toContain("height: var(--dialog-header-solid)")
     expect(u).toContain("--dialog-header-fade-over: calc(var(--spacing) * 4)")
-    // Os 56px do degradê descem com a rolagem: parados, terminam 16px depois da borda (20/11/2026).
-    expect(u).toContain("height: var(--dialog-header-fade-h)")
-    expect(u).toContain("(1 - var(--dialog-header-rolagem, 1))")
+    expect(u).toContain("top: var(--dialog-header-solid)")
+    // O degradê para a 16px da borda, e não 56px depois da placa (20/11/2026).
+    expect(u).toContain("height: calc(100% + var(--dialog-header-fade-over) - var(--dialog-header-solid))")
     expect(u).not.toContain("animation-range")
   })
 
