@@ -49,8 +49,9 @@ export function CategoryDetailLayout({
         )
     }
 
+    // O conteúdo começa onde começa o ladrilho do cabeçalho (38px depois da borda, com o voltar), e recua o mesmo à direita.
     return (
-        <div className="flex min-w-0 flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6 px-9.5">
             {resumo}
             <div className="grid grid-cols-5 items-start gap-6">
                 <div className="col-span-3 flex min-w-0 flex-col gap-6">{analise}</div>
