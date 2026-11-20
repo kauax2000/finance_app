@@ -27,9 +27,19 @@ function borrao(estilo: CSSStyleDeclaration) {
     return f && f !== "none" ? f : null
 }
 
+/**
+ * Só o WebKit perde o borrão na foto (`GestureEvent` só existe no Safari, no macOS e no iOS, onde
+ * todo navegador é WebKit). O Chrome já desenha o vidro na foto, e lá o borrão nos grupos travava
+ * a troca por ~575ms, congelando o polegar do seletor de tema.
+ */
+function fotoPerdeOBorrao(janela: Window) {
+    return "GestureEvent" in janela
+}
+
 /** Dá nome a cada vidro à vista e devolve como desfazer. Chame antes de `startViewTransition`. */
 export function nomearVidros(doc: Document) {
     const janela = doc.defaultView ?? window
+    if (!fotoPerdeOBorrao(janela)) return { vidros: [], desfazer() {} }
     const vidros: Vidro[] = []
     const regras: string[] = []
     // Tira o nome que ficou de uma troca pulada antes de nomear de novo.

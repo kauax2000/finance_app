@@ -126,7 +126,10 @@ export function ThemeToggle({
         /* eslint-enable react-hooks/set-state-in-effect */
     }, [])
 
-    const indice = montado ? indiceDe(theme) : 0
+    // A parada escolhida antes de o tema trocar: na revelação, o polegar sai no toque e o tema
+    // troca depois, dentro da View Transition.
+    const [pedido, setPedido] = useState<Tema | null>(null)
+    const indice = montado ? indiceDe(pedido ?? theme) : 0
 
     const raizRef = useRef<HTMLDivElement>(null)
     // `montado` entra na condição porque o hook liga o ponteiro num efeito, na
@@ -167,6 +170,9 @@ export function ThemeToggle({
         revelacao.current = esta
         html.classList.add("theme-reveal")
         const vidros = nomearVidros(document)
+        // O polegar sai já, fora da transição: no WebKit, a animação criada dentro do callback
+        // dela recomeçava do início quando ela acabava (o polegar voltava e viajava de novo).
+        flushSync(() => setPedido(valor))
         const transicao = doc.startViewTransition(() => {
             flushSync(() => setTheme(valor))
         })
@@ -188,6 +194,7 @@ export function ThemeToggle({
             // A transição pulada não limpa o que a seguinte já preparou.
             if (revelacao.current !== esta) return
             revelacao.current = null
+            setPedido(null)
             html.classList.remove("theme-reveal")
             vidros.desfazer()
         })

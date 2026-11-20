@@ -20,6 +20,15 @@ describe("o recorte de fora do círculo", () => {
     })
 })
 
+describe("só no WebKit", () => {
+    it("fora do WebKit não nomeia nada: o Chrome já desenha o vidro na foto, e o borrão nos grupos travava a troca", () => {
+        const fonte = lerFonte("src/lib/vidro-na-revelacao.ts")
+        // `GestureEvent` só existe no Safari (macOS e iOS, onde todo navegador é WebKit).
+        expect(fonte).toContain('"GestureEvent" in janela')
+        expect(fonte).toMatch(/if \(!fotoPerdeOBorrao\(janela\)\) return \{ vidros: \[\], desfazer\(\) \{\} \}/)
+    })
+})
+
 describe("a folha dos vidros", () => {
     it("é uma só, por id: uma troca pulada não deixa folha órfã", () => {
         const fonte = lerFonte("src/lib/vidro-na-revelacao.ts")

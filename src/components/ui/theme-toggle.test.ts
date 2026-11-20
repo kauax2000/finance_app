@@ -246,6 +246,15 @@ describe("o trilho de tema", () => {
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")
     })
 
+    it("o polegar sai no toque, fora da View Transition: só o tema troca dentro dela", () => {
+        // No WebKit, a animação criada dentro do callback da transição recomeça do início quando
+        // ela acaba: o polegar chegava, voltava à parada de antes e viajava de novo.
+        expect(CODIGO).toContain("indiceDe(pedido ?? theme)")
+        const i = CODIGO.indexOf("flushSync(() => setPedido(valor))")
+        expect(i).toBeGreaterThan(-1)
+        expect(i).toBeLessThan(CODIGO.indexOf("doc.startViewTransition("))
+    })
+
     it("um toque é uma transição: o foco e o clique da mesma parada não abrem duas", () => {
         // O toque foca a parada (o `onFocus` escolhe) e depois clica (o `onValueChange`): a segunda
         // transição pulava a primeira, e o `finally` dela tirava o `.theme-reveal` no meio da segunda.
