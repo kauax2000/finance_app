@@ -1928,7 +1928,7 @@ declaração de `background-color` no trilho).
   ponto da linha tem `fill`. **Nenhuma tela monta tooltip à mão nem usa
   `ResponsiveContainer` cru**; `ChartTooltipContent` sem `format` escreve
   número. `chart-versions.test.ts`.
-- **`ChartSparkline reference`** é a linha tracejada da média, em `--color-muted-foreground`, atrás da série (zero ou ausente não desenha; `bars` ignora). A faísca de Categorias pinta na cor da categoria (`tileColorFor`), a exceção do dono à cor da pessoa só no ladrilho: só traço e área, nunca sob texto. `bleed` zera a margem interna, para a faísca encostar nas bordas (o pé do cartão de categoria, 19/11/2026).
+- **`ChartSparkline reference`** é a linha tracejada da média, em `--color-muted-foreground`, atrás da série (zero ou ausente não desenha; `bars` ignora). A faísca de Categorias pinta na cor da categoria (`tileColorFor`), a exceção do dono à cor da pessoa só no ladrilho: só traço e área, nunca sob texto. `bleed` zera a margem interna, para a faísca encostar nas bordas (o pé do cartão de categoria, 19/11/2026). Sem `tooltip`, a faísca não acende o ponto sob o cursor (`activeDot`), 20/11/2026.
 - **O desenho**: a ponta da barra é 8px (`CHART_BAR_TIP`); o hover apaga as
   outras a 45% (`CHART_HOVER_DIM_OPACITY`), sem retângulo atrás.
   `chart-design.test.ts`.

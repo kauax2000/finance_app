@@ -362,3 +362,13 @@ describe("as versões do Chart", () => {
     })
   })
 }
+
+describe("ChartSparkline sem dica (20/11/2026)", () => {
+  it("o ponto ativo só acende quando há dica", async () => {
+    const { lerFonte, semComentarios } = await import("@/test/fonte")
+    const f = semComentarios(lerFonte("src/components/ui/chart.tsx"))
+    const ini = f.indexOf("function ChartSparkline(")
+    const trecho = f.slice(ini, f.indexOf("\nfunction ", ini + 10))
+    expect(trecho.match(/activeDot=\{tooltip \? undefined : false\}/g)?.length).toBe(2)
+  })
+})

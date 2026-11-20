@@ -3161,6 +3161,8 @@ function ChartSparkline({
           fill={cor}
           fillOpacity={0.15}
           dot={false}
+          // Sem a dica, o ponto que acende sob o cursor não diz nada: só existe junto dela.
+          activeDot={tooltip ? undefined : false}
         />
       </AreaChart>
     ) : (
@@ -3175,6 +3177,7 @@ function ChartSparkline({
           stroke={cor}
           strokeWidth={2}
           dot={false}
+          activeDot={tooltip ? undefined : false}
           {...movimento}
         />
       </LineChart>
