@@ -260,7 +260,7 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).toContain(">Toque para ver<")
         expect(fonte).toContain('aria-label="Ver a foto do recibo"')
         expect(fonte).toContain('aria-label="Tirar a foto"')
-        expect(fonte).toMatch(/<ItemMedia variant="image"[^>]*h-14 w-11 rounded-row/)
+        expect(fonte).toMatch(/<ItemMedia\s+variant="image"\s+className="h-14 w-11 rounded-row group-data-\[size=sm\]\/item:h-14 group-data-\[size=sm\]\/item:w-11/)
         expect(fonte).toMatch(/onTrocarFoto=\{\(\) => arquivoRef\.current\?\.click\(\)\}/)
         expect(fonte).not.toMatch(/<MiniaturaDoRecibo[\s\S]{0,400}<Avatar/)
     })
