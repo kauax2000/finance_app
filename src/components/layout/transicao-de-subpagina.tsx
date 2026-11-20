@@ -51,6 +51,19 @@ function telaPronta(rotaDeAntes: string): Promise<boolean> {
 }
 
 /**
+ * A cópia é uma foto: nada nela transiciona nem anima. Cada nó clonado é novo no DOM, e o que
+ * entra por `@starting-style` (a bolha do sino, `starting:scale-30 starting:opacity-0`) ou por
+ * `animate-in` tocaria de novo: o selo de não lidas sumia e enchia outra vez (20/11/2026).
+ */
+function parada(copia: HTMLElement): HTMLElement {
+    for (const el of [copia, ...copia.querySelectorAll<HTMLElement>("*")]) {
+        el.style.transition = "none"
+        el.style.animation = "none"
+    }
+    return copia
+}
+
+/**
  * Uma cópia parada do conteúdo, na mesma posição da tela, numa camada fixa por baixo das
  * barras (a de cima em `--z-header`, a de baixo em `--z-modal`). Ela segura a tela velha à vista enquanto a nova
  * monta por baixo, e anda no gesto.
@@ -68,7 +81,7 @@ function fotografar(conteudo: HTMLElement): HTMLElement {
         backgroundColor: "var(--background)",
         zIndex: "30",
     })
-    const copia = conteudo.cloneNode(true) as HTMLElement
+    const copia = parada(conteudo.cloneNode(true) as HTMLElement)
     copia.removeAttribute("data-workspace-content")
     Object.assign(copia.style, {
         position: "absolute",
@@ -93,7 +106,7 @@ function fotografar(conteudo: HTMLElement): HTMLElement {
 function congelarCabecalho(): () => void {
     const barra = document.querySelector<HTMLElement>('[data-slot="top-bar"]')
     if (!barra) return () => {}
-    const copia = barra.cloneNode(true) as HTMLElement
+    const copia = parada(barra.cloneNode(true) as HTMLElement)
     copia.removeAttribute("data-slot")
     copia.setAttribute("aria-hidden", "true")
     copia.inert = true

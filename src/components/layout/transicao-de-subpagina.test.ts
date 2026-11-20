@@ -22,7 +22,7 @@ describe("a transição de subpágina", () => {
     })
 
     it("uma cópia parada do conteúdo fica à vista na mesma posição enquanto a tela nova monta", () => {
-        expect(T).toMatch(/const copia = conteudo\.cloneNode\(true\)/)
+        expect(T).toMatch(/const copia = parada\(conteudo\.cloneNode\(true\)/)
         expect(T).toMatch(/top: `\$\{caixa\.top\}px`/)
         expect(T).toContain("camada.inert = true")
         // Abaixo das barras (`--z-header` 40, `--z-modal` 50), no contexto do conteúdo.
@@ -76,5 +76,11 @@ describe("a transição de subpágina", () => {
         expect(T).toContain("destino.origin !== location.origin")
         expect(T).toContain("if (!direcao || emCurso) return")
         expect(T).toMatch(/emCurso = false\s+\}/)
+    })
+
+    it("as cópias (cabeçalho e conteúdo) não transicionam: o selo do sino não some e volta", () => {
+        expect(T).toMatch(/el\.style\.transition = "none"\s+el\.style\.animation = "none"/)
+        expect(T).toContain("const copia = parada(conteudo.cloneNode(true) as HTMLElement)")
+        expect(T).toContain("const copia = parada(barra.cloneNode(true) as HTMLElement)")
     })
 })
