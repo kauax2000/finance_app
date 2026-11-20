@@ -12,9 +12,9 @@ export function SettingsPageSkeleton() {
                     {[0, 1, 2].map((i) => (
                         <Card key={i} padding="none">
                             <CardContent className="space-y-3 p-4">
-                                <Skeleton className="h-4 w-40 max-w-full" />
-                                <Skeleton className="h-3 w-64 max-w-full" />
-                                <Skeleton className="h-9 w-full" />
+                                <Skeleton shape="text" className="w-40 max-w-full text-sm" />
+                                <Skeleton shape="text" className="w-64 max-w-full text-xs" />
+                                <Skeleton shape="control" className="w-full" />
                             </CardContent>
                         </Card>
                     ))}

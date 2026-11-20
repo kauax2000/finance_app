@@ -120,9 +120,9 @@ export function WorkspaceDeleteDialog({
 
     const resumo = impactLoading ? (
         <div className="space-y-2" aria-busy="true">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-2/3" />
+            <Skeleton shape="text" className="w-full text-sm" />
+            <Skeleton shape="text" className="w-3/4 text-sm" />
+            <Skeleton shape="text" className="w-2/3 text-sm" />
         </div>
     ) : impactError ? (
         <AlertDialogError>{impactError}</AlertDialogError>

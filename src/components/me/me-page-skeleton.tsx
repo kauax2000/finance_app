@@ -6,7 +6,7 @@ function LinhaEsqueleto() {
     return (
         <div className="flex items-center gap-2.5 px-4 py-3 min-h-12">
             <Skeleton className="size-5 shrink-0 rounded" />
-            <Skeleton className="h-4 w-36 max-w-full" />
+            <Skeleton shape="text" className="w-36 max-w-full text-base" />
             <Skeleton className="ml-auto size-4 shrink-0 rounded" />
         </div>
     )
@@ -24,7 +24,7 @@ export function MePageSkeleton() {
                 <Skeleton shape="circle" size="xl" />
                 <div className="flex w-full flex-col items-center space-y-2">
                     <Skeleton className="h-6 w-40 max-w-full" />
-                    <Skeleton className="h-4 w-48 max-w-full" />
+                    <Skeleton shape="text" className="w-48 max-w-full text-sm" />
                 </div>
             </div>
             {[5, 4].map((linhas) => (

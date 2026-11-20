@@ -83,11 +83,11 @@ export function AuthFormSkeleton({ fields = 2 }: { fields?: number }) {
         <div className="flex flex-col gap-(--space-block)" aria-hidden>
             {Array.from({ length: fields }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-10 w-full rounded-full" />
+                    <Skeleton shape="text" className="w-20 text-sm" />
+                    <Skeleton shape="control" size="xl" className="w-full" />
                 </div>
             ))}
-            <Skeleton className="h-10 w-full rounded-full" />
+            <Skeleton shape="control" size="xl" className="w-full" />
         </div>
     )
 }

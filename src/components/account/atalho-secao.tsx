@@ -105,8 +105,8 @@ export function AtalhoSecao() {
                     {lista.isLoading ? (
                         <SkeletonGroup label="Carregando atalhos…" delay>
                             <div className="flex flex-col gap-1 px-4 py-3">
-                                <Skeleton className="h-4 w-40 max-w-full" />
-                                <Skeleton className="h-3 w-56 max-w-full" />
+                                <Skeleton shape="text" className="w-40 max-w-full text-sm" />
+                                <Skeleton shape="text" className="w-56 max-w-full text-xs" />
                             </div>
                         </SkeletonGroup>
                     ) : (

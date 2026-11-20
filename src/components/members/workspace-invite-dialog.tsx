@@ -369,7 +369,7 @@ export function WorkspaceInviteDialog({
                                         </p>
                                     ) : null}
                                     {linksPendentes ? (
-                                        <Skeleton shape="pill" className="h-9 w-full sm:w-48 pointer-coarse:h-11" />
+                                        <Skeleton shape="control" className="w-full sm:w-48" />
                                     ) : linkDoPapel && linkUrl ? (
                                         <div className="space-y-1.5 pt-1">
                                             <div className="flex min-w-0 flex-row items-center gap-2">

@@ -16,7 +16,7 @@ import { getPushSupportState } from "@/lib/push/subscribe"
 function ChaveSkeleton() {
     return (
         <div className="flex items-center justify-between gap-4 px-4 py-3">
-            <Skeleton className="h-4 w-40 max-w-full" />
+            <Skeleton shape="text" className="w-40 max-w-full text-sm" />
             <Skeleton className="h-5 w-9 shrink-0 rounded-full" />
         </div>
     )

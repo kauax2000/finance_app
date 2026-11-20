@@ -412,7 +412,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     // O esqueleto guarda o lugar das abas e do dia preso: quando a lista
                     // chega, o cabeçalho não cresce e a primeira linha não se move.
                     <>
-                        <Skeleton className="mt-3 h-9 w-full rounded-full" />
+                        <Skeleton shape="control" className="mt-3 w-full" />
                         <div aria-hidden className="h-9 pt-2">
                             <div className="py-1.5">
                                 <Skeleton shape="text" className="w-12 text-xs" />

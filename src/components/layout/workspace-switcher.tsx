@@ -55,7 +55,7 @@ export function WorkspaceSwitcher({
                     )}
                 >
                     {loading ? (
-                        <Skeleton className="h-5 w-32" />
+                        <Skeleton shape="text" className="w-32 text-base" />
                     ) : (
                         <>
                             <IconeDaCarteira className="size-5 shrink-0" aria-hidden />
@@ -90,7 +90,7 @@ export function WorkspaceSwitcher({
                     )}
                     <div className="min-w-0 flex-1 text-left">
                         {loading ? (
-                            <Skeleton className="h-4 w-full max-w-36" />
+                            <Skeleton shape="text" className="w-full max-w-36 text-sm" />
                         ) : (
                             <p className="truncate text-sm font-medium leading-tight">
                                 {currentWorkspace?.name ?? "Carteiras"}
