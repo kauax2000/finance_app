@@ -68,7 +68,7 @@ export function ReguaDoMes({
         .join(" · ")
 
     const valor = (
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <MoneyDisplay value={lancado} size="3xl" />
             {frase ? (
                 <Muted>
@@ -87,7 +87,7 @@ export function ReguaDoMes({
                 <div className="grid gap-3">
                     <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
                     {fatosNaLinha ? (
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
                             {valor}
                             {fatosNaLinha}
                         </div>
