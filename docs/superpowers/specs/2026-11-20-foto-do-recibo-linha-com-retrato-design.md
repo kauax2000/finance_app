@@ -35,7 +35,7 @@ painel (continua logo abaixo do valor).
     nem variante nova no DS.
   - **Texto:** `ItemTitle` "Foto do recibo" e `ItemDescription` "Toque para ver".
     O alvo é um `ItemLink` (a linha inteira toca), `aria-label` "Ver a foto do recibo".
-  - **Ações:** `Button variant="secondary" size="sm"` "Trocar" (abre a câmera,
+  - **Ações:** `Button variant="tertiary" size="md"` "Trocar" (sem fundo, 44px no dedo; abre a câmera,
     o mesmo `arquivoRef` da pílula) e `Button variant="tertiary" size="icon-md"`
     com `TrashIcon`, `aria-label` "Tirar a foto" (o `leitura.tirarFoto` de hoje).
     As duas desabilitam com `saving`.
