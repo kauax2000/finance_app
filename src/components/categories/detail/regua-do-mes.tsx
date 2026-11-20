@@ -10,6 +10,7 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageSection } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
 import { Caption, Muted } from "@/components/ui/typography"
 import type { Comparacao, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import { currencyBRL, percentBR } from "@/lib/formatters"
@@ -132,7 +133,8 @@ export function ReguaDoMes({
                     {children}
                 </div>
                 {fatosNaLinha ? (
-                    <div className="hidden self-stretch border-s border-border ps-12 2xl:flex 2xl:items-center">
+                    <div className="hidden items-center gap-12 2xl:flex">
+                        <Separator orientation="vertical" className="h-16" />
                         {fatosNaLinha}
                     </div>
                 ) : null}
