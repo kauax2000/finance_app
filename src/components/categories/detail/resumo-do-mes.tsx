@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
@@ -38,6 +39,7 @@ export function ResumoDoMes({
     limite,
     pesoNoTotal,
     aberto,
+    acoes,
 }: {
     tipo: TipoDaCategoria
     yearMonth: string
@@ -48,6 +50,8 @@ export function ResumoDoMes({
     pesoNoTotal: number | null
     /** O mês corrente: desenha o traço do ritmo. */
     aberto: boolean
+    /** O ⋯ da categoria, quando não há `PageHeader` (o telefone). */
+    acoes?: ReactNode
 }) {
     const despesa = tipo === "expense"
     const comLimite = despesa && limite != null && limite > 0
@@ -56,7 +60,7 @@ export function ResumoDoMes({
 
     return (
         <PageSection>
-            <PageSectionHeader>
+            <PageSectionHeader actions={acoes}>
                 <PageSectionTitle>{aberto ? "Este mês" : labelYearMonthPt(yearMonth)}</PageSectionTitle>
             </PageSectionHeader>
             <div className="grid gap-3">

@@ -63,6 +63,7 @@ export function HistoricoDosMeses({
                         {comLimite ? (
                             <ChartReferenceLine
                                 y={limite}
+                                tone="average"
                                 ifOverflow="extendDomain"
                                 label={{ value: "Limite atual", position: "insideTopRight", className: "fill-muted-foreground" }}
                             />

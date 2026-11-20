@@ -59,16 +59,16 @@ describe("só leitura para quem não é adulto (Ruling 8)", () => {
 
     it("o detalhe da categoria: sem editar nem excluir (e com eles, a folha do orçamento)", () => {
         const f = fonte("src/app/(app)/categories/[categoryId]/page-client.tsx")
-        expect(f).toContain("onEdit={podeEscrever ? openEditDialog : undefined}")
-        expect(f).toContain("onDelete={podeEscrever ? () => setDeleteDialogOpen(true) : undefined}")
+        // O ⋯ (editar, limite, excluir) e o "+ Lançar" só existem para quem escreve.
+        expect(f).toContain("const abrirMenu = podeEscrever ? (")
+        expect(f).toMatch(/\{podeEscrever \? \(\s*<Button[\s\S]*?Lançar/)
     })
 
-    it("os cartões da categoria e o herói escondem o menu sem as ações", () => {
+    it("os cartões da categoria escondem o menu sem as ações", () => {
         for (const arquivo of [
             "src/components/categories/expense-category-card.tsx",
             "src/components/categories/income-category-card.tsx",
             "src/components/categories/category-card-context-menu.tsx",
-            "src/components/categories/detail/category-detail-hero.tsx",
         ]) {
             expect(fonte(arquivo), arquivo).toContain("onEdit && onDelete ? (")
         }

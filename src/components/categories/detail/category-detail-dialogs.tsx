@@ -25,6 +25,8 @@ type CategoryDetailDialogsProps = {
     category: Category
     yearMonth: string
     budget: Budget | null
+    /** "Definir limite": o diálogo abre com o limite à vista. */
+    limiteAberto?: boolean
     editDialogOpen: boolean
     onEditDialogOpenChange: (open: boolean) => void
     editName: string
@@ -53,6 +55,7 @@ export function CategoryDetailDialogs({
     category,
     yearMonth,
     budget,
+    limiteAberto = false,
     editDialogOpen,
     onEditDialogOpenChange,
     editName,
@@ -98,7 +101,7 @@ export function CategoryDetailDialogs({
                 onAmountChange: onEditBudgetAmountChange,
                 repeats: editBudgetRepeats,
                 onRepeatsChange: onEditBudgetRepeatsChange,
-                defaultOpen: Boolean(budget),
+                defaultOpen: Boolean(budget) || limiteAberto,
             }}
         />
     )

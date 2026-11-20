@@ -8,8 +8,6 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import {
-} from "@/components/categories/detail/category-detail-utils"
-import {
     periodBoundsFromYearMonth,
     shiftYearMonth,
 } from "@/lib/budget-month"

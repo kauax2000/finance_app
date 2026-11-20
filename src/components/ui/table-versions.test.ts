@@ -318,7 +318,6 @@ describe("as telas", () => {
     expect(transacoes).not.toContain('className="bg-muted/50"')
     for (const arquivo of [
       "src/components/subscriptions/subscriptions-page-skeleton.tsx",
-      "src/components/categories/detail/category-detail-skeleton.tsx",
       "src/components/credit-cards/credit-card-detail-skeleton.tsx",
     ]) {
       const codigo = lerFonte(arquivo)

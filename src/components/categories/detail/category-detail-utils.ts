@@ -1,5 +1,5 @@
 import type { CreditCard, Transaction } from "@/lib/supabase"
-import { periodBoundsFromYearMonth, shiftYearMonth } from "@/lib/budget-month"
+import { shiftYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
     expenseYearMonthKey,
@@ -7,44 +7,6 @@ import {
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
 import { formatYearMonthShortPtBr, monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
-
-export function hexToRgba(hex: string, alpha: number) {
-    const raw = hex.replace("#", "").trim()
-    if (raw.length !== 6) return `rgba(0,0,0,${alpha})`
-    const r = parseInt(raw.slice(0, 2), 16)
-    const g = parseInt(raw.slice(2, 4), 16)
-    const b = parseInt(raw.slice(4, 6), 16)
-    if (![r, g, b].every(Number.isFinite)) return `rgba(0,0,0,${alpha})`
-    return `rgba(${r},${g},${b},${alpha})`
-}
-
-
-export function buildDailySeries(
-    yearMonth: string,
-    txs: Pick<Transaction, "date" | "amount" | "type" | "category_id">[],
-    categoryId: string,
-    typeFilter: "income" | "expense" | null,
-) {
-    const { period_start, period_end } = periodBoundsFromYearMonth(yearMonth)
-    const start = new Date(`${period_start}T00:00:00.000Z`)
-    const end = new Date(`${period_end}T00:00:00.000Z`)
-
-    const byDay: Record<string, number> = {}
-    for (const t of txs) {
-        if (t.category_id !== categoryId) continue
-        if (typeFilter && t.type !== typeFilter) continue
-        const day = t.date.slice(0, 10)
-        byDay[day] = (byDay[day] ?? 0) + Number(t.amount)
-    }
-
-    const out: { day: string; total: number }[] = []
-    for (let d = start; d <= end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
-        const iso = d.toISOString().slice(0, 10)
-        const label = iso.slice(8, 10)
-        out.push({ day: label, total: byDay[iso] ?? 0 })
-    }
-    return out
-}
 
 export function buildMonthlySeries(
     baseYm: string,
@@ -82,32 +44,4 @@ export function buildMonthlySeries(
     }
 
     return months.map((ym) => ({ name: formatYearMonthShortPtBr(ym), total: totals[ym] ?? 0 }))
-}
-
-export function computeAmountStats(amounts: number[]) {
-    const n = amounts.length
-    if (n === 0) {
-        return { count: 0, avg: 0, max: 0, min: 0 }
-    }
-    const sum = amounts.reduce((a, b) => a + b, 0)
-    return {
-        count: n,
-        avg: sum / n,
-        max: Math.max(...amounts),
-        min: Math.min(...amounts),
-    }
-}
-
-export function sumWorkspaceMonthByType(
-    rows: { amount: number | string; type: string }[] | null,
-): { income: number; expense: number } {
-    let income = 0
-    let expense = 0
-    for (const r of rows ?? []) {
-        const v = Number(r.amount)
-        if (!Number.isFinite(v)) continue
-        if (r.type === "income") income += v
-        else if (r.type === "expense") expense += v
-    }
-    return { income, expense }
 }

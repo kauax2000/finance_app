@@ -89,7 +89,7 @@ describe("as versões do StatCard", () => {
   })
 
   it("o resumo da categoria e as contas usam as peças", () => {
-    const categoria = lerFonte("src/components/categories/detail/category-detail-summary-section.tsx")
+    const categoria = lerFonte("src/components/categories/detail/comparacoes.tsx")
     expect(categoria).not.toContain("function SummaryMetricCard")
     expect(categoria).not.toContain("function buildMomBadgeModel")
     expect(categoria).toContain("StatCardDelta")

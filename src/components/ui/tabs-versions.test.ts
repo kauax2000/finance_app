@@ -175,7 +175,7 @@ describe("o app", () => {
       "src/components/transactions/transaction-type-segment.tsx",
       "src/components/bills/bill-detail-history-list.tsx",
       "src/components/bills/bills-toolbar.tsx",
-      "src/components/categories/detail/category-detail-trends.tsx",
+      "src/components/categories/detail/category-detail-layout.tsx",
     ]) {
       const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toMatch(/<TabsList[^>]*variant="solid"/)
