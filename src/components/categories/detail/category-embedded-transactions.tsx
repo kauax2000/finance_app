@@ -29,7 +29,22 @@ import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
 import { ExcluirLancamentosDialog } from "@/components/transactions/excluir-lancamentos-dialog"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
-import { Card, CardContent, CardMessage } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardMessage, CardToolbar } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemDescription,
+    ItemGroup,
+    ItemGroupLabel,
+    ItemLink,
+    ItemTitle,
+} from "@/components/ui/item"
+import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
+import { paymentMethodLabel } from "@/lib/payment-methods"
+import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 import { Button } from "@/components/ui/button"
 
 const PAGE_SIZE = 100
@@ -39,12 +54,15 @@ export function CategoryEmbeddedTransactions({
     controller,
     expenseMonthRows = null,
     yearMonth,
+    forma = "tabela",
 }: {
     categoryType: "income" | "expense"
     controller: ReturnType<typeof useTransactionsListController>
     /** Expense categories: posted + projected rows from category detail bundle. */
     expenseMonthRows?: Transaction[] | null
     yearMonth?: string
+    /** `lista`: a forma compacta da coluna estreita (sem toolbar, chips nem paginação). */
+    forma?: "tabela" | "lista"
 }) {
     const c = controller
 
@@ -258,6 +276,7 @@ export function CategoryEmbeddedTransactions({
     return (
         <section className="min-w-0 max-w-full space-y-3" aria-label="Lançamentos do mês">
             <div className="min-w-0 max-w-full space-y-3">
+                    {forma === "tabela" ? (
                     <TransactionsToolbar
                         filterType={filterType}
                         onFilterTypeChange={setFilterType}
@@ -379,6 +398,7 @@ export function CategoryEmbeddedTransactions({
                             syncPeriodDraftToApplied()
                         }}
                     />
+                    ) : null}
 
                     <TransactionFormDialog
                         open={dialogOpen && editingTransaction !== null}
@@ -424,7 +444,65 @@ export function CategoryEmbeddedTransactions({
                         />
                     ) : null}
 
-                    {!displayHasNoTransactions && !displayHasNoMatches ? (
+                    {forma === "lista" && !displayHasNoTransactions && !displayHasNoMatches ? (
+                        <Card padding="none">
+                            <CardToolbar variant="title">
+                                Lançamentos ({displayTotalCount})
+                            </CardToolbar>
+                            {groupByLocalDay(displayTransactions, (t) => t.date).map((g) => (
+                                <ItemGroup key={g.chave}>
+                                    <ItemGroupLabel sticky>
+                                        {formatDayHeadingPtBr(g.data)}
+                                    </ItemGroupLabel>
+                                    {g.itens.map((t) => {
+                                        const previsto = isProjectedTransactionRow(t)
+                                        const formaDePagar = paymentMethodLabel(t.payment_method)
+                                        return (
+                                            <Item
+                                                key={t.id}
+                                                variant="flush"
+                                                size="sm"
+                                                interactive={!previsto}
+                                            >
+                                                <ItemContent className="min-w-0">
+                                                    <ItemTitle className="truncate">
+                                                        {previsto ? (
+                                                            <span className="truncate">
+                                                                {t.description || t.category?.name || "Sem descrição"}
+                                                            </span>
+                                                        ) : (
+                                                            <ItemLink onClick={() => openTransactionDetail(t)}>
+                                                                {t.description || t.category?.name || "Sem descrição"}
+                                                            </ItemLink>
+                                                        )}
+                                                        {previsto ? <Badge tone="warning">Previsto</Badge> : null}
+                                                    </ItemTitle>
+                                                    {formaDePagar ? (
+                                                        <ItemDescription className="truncate">{formaDePagar}</ItemDescription>
+                                                    ) : null}
+                                                </ItemContent>
+                                                <ItemActions>
+                                                    <MoneyDisplay
+                                                        value={t.type === "income" ? Number(t.amount) : -Number(t.amount)}
+                                                        signed
+                                                        size="sm"
+                                                    />
+                                                </ItemActions>
+                                            </Item>
+                                        )
+                                    })}
+                                </ItemGroup>
+                            ))}
+                            <CardFooter>
+                                <Button asChild variant="outline" className="min-w-0 flex-1">
+                                    <Link href={transactionsListHref}>
+                                        <ArrowTopRightOnSquareIcon aria-hidden />
+                                        <span className="truncate">Ver em Transações</span>
+                                    </Link>
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ) : !displayHasNoTransactions && !displayHasNoMatches ? (
                         <TransactionsTable
                             transactions={displayTransactions}
                             selectedIds={selectedIds}
