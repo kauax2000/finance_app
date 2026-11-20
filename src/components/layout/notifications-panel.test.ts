@@ -106,9 +106,9 @@ describe("painel de notificações (fonte)", () => {
 
     it("o ícone e a 1ª linha do título dividem o centro (20/11/2026)", () => {
         const f = semComentarios(lerFonte("src/components/layout/notification-row.tsx"))
-        expect(f).toContain('<div className="flex min-h-8 items-start gap-2">')
+        expect(f).toContain('<div className="flex items-start gap-2">')
         expect(f).toContain("pt-[calc((--spacing(8)_-_1lh)/2)]")
-        expect(f).toContain('<ItemActions className="relative h-8 shrink-0 gap-1">')
+        expect(f).toContain('<ItemActions className="relative -mb-[calc((--spacing(8)_-_1lh)/2)] h-8 shrink-0 gap-1 leading-snug">')
         expect(f).toContain("group-has-data-[slot=item-description]/item:translate-y-0")
         expect(f).not.toContain("flex min-h-6 items-center gap-2")
     })

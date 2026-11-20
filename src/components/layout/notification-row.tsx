@@ -86,7 +86,8 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
     return (
         // Lida e sem destino, o clique não tem o que fazer: a linha não acende.
         // `items-start`: o ladrilho acompanha o título, e não o meio de um texto de duas linhas;
-        // o ícone centra na 1ª linha do título (fileira de 32, título com o recuo que a centra).
+        // o ícone centra na 1ª linha do título (o título com o recuo que a centra nos 32, e as
+        // ações nos 32, transbordando para baixo: a descrição vem logo depois do título, com 1 ou 2 linhas).
         // Os tons da barra lateral, como o seletor de carteira: a passagem é o hover de
         // uma linha dela (`--sidebar-accent` a 50%, ainda translúcido sobre o vidro) e o
         // toque é o tom cheio dela, mais forte que a passagem.
@@ -107,7 +108,7 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                 {getNotificationIcon(n)}
             </ItemMedia>
             <ItemContent>
-                <div className="flex min-h-8 items-start gap-2">
+                <div className="flex items-start gap-2">
                     <ItemTitle
                         className={cn(
                             "w-auto min-w-0 flex-1 pt-[calc((--spacing(8)_-_1lh)/2)]",
@@ -136,7 +137,7 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                             titulo
                         )}
                     </ItemTitle>
-                    <ItemActions className="relative h-8 shrink-0 gap-1">
+                    <ItemActions className="relative -mb-[calc((--spacing(8)_-_1lh)/2)] h-8 shrink-0 gap-1 leading-snug">
                         <span className={META_SOME}>
                             <time dateTime={n.created_at} className="nums text-xs text-muted-foreground">
                                 {hora}

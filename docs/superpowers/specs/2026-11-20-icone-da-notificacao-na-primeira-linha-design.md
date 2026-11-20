@@ -22,11 +22,13 @@ sobretudo com o título de uma linha.
 
 Só em `notification-row.tsx`, nada em `src/components/ui/`:
 
-- A fileira do título mede o ladrilho (32, `min-h-8`) e alinha pelo topo
+- A fileira do título alinha pelo topo (`items-start`), sem altura mínima
   (`items-start`); o título ganha recuo de cima de `(32 − 1 linha) / 2`, para a 1ª linha
   centrar nos 16 do ícone; as linhas seguintes descem dali.
-- A hora, o ponto e o ⋯ (e o ✓ e o excluir no cursor) ficam centrados na altura do
-  ícone (32).
+- A hora, o ponto e o ⋯ (e o ✓ e o excluir no cursor) ficam numa caixa de 32 centrada no
+  ícone, que transborda para baixo (`-mb` do mesmo recuo): a fileira não cresce, e a
+  descrição vem logo depois do título com 1 ou 2 linhas (com `min-h-8` ela descia ~6px a
+  mais sob o título de uma linha).
 - O `ItemMedia variant="tile"` desce 2px quando a linha tem descrição
   (`group-has-data-[slot=item-description]/item:translate-y-0.5`, do `Item`); nesta linha
   o deslocamento sai, para o ícone e a fileira do título começarem no mesmo topo.
