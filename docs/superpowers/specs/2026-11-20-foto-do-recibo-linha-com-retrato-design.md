@@ -28,7 +28,7 @@ painel (continua logo abaixo do valor).
 
 `MiniaturaDoRecibo`, em `src/components/transactions/lancamento-inteligente.tsx`:
 
-- `Item variant="flush" size="sm" interactive`, como hoje, mas:
+- `Item size="sm" interactive` (realce com o raio da linha, 12px, passando 10px para fora com `-mx-2.5 w-auto`):
   - **Mídia:** `ItemMedia variant="image"` com a foto em pé, `h-14 w-11`,
     `rounded-row`, `object-cover` alinhado ao topo (onde fica o nome da loja).
     *Minha decisão:* classe local sobre a variante que existe, sem componente
