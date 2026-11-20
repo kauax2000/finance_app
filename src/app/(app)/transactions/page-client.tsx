@@ -117,17 +117,18 @@ export default function TransactionsPageClient() {
                         </PageHeaderTitle>
                     </PageHeaderTitleRow>
                     {/* Criar mora no "+ Adicionar" da barra lateral; o cabeçalho só importa e exporta. Regra do dono
-                        (20/11/2026): no cabeçalho, a primeira ação leva fundo (`secondary`) e as outras ficam
-                        sem fundo (`tertiary`). Estreito, o `overflow` as leva ao ⋯. */}
+                        (20/11/2026): a ação mais usada mora na ponta direita, com fundo (`secondary`); as outras, à
+                        esquerda dela, sem fundo (`tertiary`). Importar é a de todo mês; exportar é eventual.
+                        Estreito, o `overflow` as leva ao ⋯. */}
                     {convidado ? null : (
                         <PageHeaderActions overflow="menu">
-                            <Button type="button" variant="secondary" onClick={() => pedidos.setImportar(true)}>
-                                <ArrowUpTrayIcon aria-hidden />
-                                Importar
-                            </Button>
                             <Button type="button" variant="tertiary" onClick={() => void exportar()} disabled={exportando}>
                                 <ArrowDownTrayIcon aria-hidden />
                                 Exportar
+                            </Button>
+                            <Button type="button" variant="secondary" onClick={() => pedidos.setImportar(true)}>
+                                <ArrowUpTrayIcon aria-hidden />
+                                Importar
                             </Button>
                         </PageHeaderActions>
                     )}

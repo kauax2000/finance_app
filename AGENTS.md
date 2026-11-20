@@ -366,10 +366,10 @@ escrever.
 ### Ações do cabeçalho da página sem `primary`
 
 Decisão do dono (20/11/2026): no `PageHeaderActions`, quando nenhuma ação é
-`primary`, a primeira leva fundo (`secondary`) e a segunda, a terceira e as
-seguintes ficam sem fundo (`tertiary`). Ação única é `secondary`. (Transações:
-Importar `secondary`, Exportar `tertiary`; Categorias: "Nova categoria"
-`secondary`.)
+`primary`, a mais usada mora na **ponta direita** com fundo (`secondary`), e as
+outras ficam à esquerda dela, sem fundo (`tertiary`). Ação única é `secondary`.
+(Transações: Exportar `tertiary` · Importar `secondary`; Categorias: "Nova
+categoria" `secondary`.)
 
 ### Três ações juntas: três pesos, sempre
 
