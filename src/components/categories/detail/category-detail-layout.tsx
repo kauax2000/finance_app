@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 type FormaDaLista = "tabela" | "lista"
 
 /**
- * O casco do detalhe da categoria. Desktop: análise à esquerda (3/5) e os
+ * O casco do detalhe da categoria. Desktop: o resumo do mês em faixa no topo, e abaixo a análise à esquerda (3/5) e os
  * lançamentos presos sob a barra, rolando na própria coluna (2/5). Telefone: o
  * resumo do mês no topo e abas Resumo · Lançamentos. `useIsMobile` troca só o
  * arranjo (exceção consciente): uma instância da lista por vez.
@@ -50,14 +50,14 @@ export function CategoryDetailLayout({
     }
 
     return (
-        <div className="grid min-w-0 grid-cols-5 items-start gap-6">
-            <div className="col-span-3 flex min-w-0 flex-col gap-6">
-                {resumo}
-                {analise}
-            </div>
-            {/* O `sticky` mora fora: a raiz do `ScrollArea` é `relative`. */}
-            <div className="sticky top-(--top-bar-bottom) col-span-2 h-[calc(100dvh_-_var(--top-bar-bottom))]">
-                <ScrollArea className="h-full">{lancamentos("lista")}</ScrollArea>
+        <div className="flex min-w-0 flex-col gap-6">
+            {resumo}
+            <div className="grid grid-cols-5 items-start gap-6">
+                <div className="col-span-3 flex min-w-0 flex-col gap-6">{analise}</div>
+                {/* O `sticky` mora fora: a raiz do `ScrollArea` é `relative`. */}
+                <div className="sticky top-(--top-bar-bottom) col-span-2 h-[calc(100dvh_-_var(--top-bar-bottom))]">
+                    <ScrollArea className="h-full">{lancamentos("lista")}</ScrollArea>
+                </div>
             </div>
         </div>
     )

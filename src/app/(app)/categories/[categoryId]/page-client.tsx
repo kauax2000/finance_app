@@ -567,6 +567,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         pesoNoTotal={pesoNoTotal}
                         aberto={aberto}
                         acoes={isMobile ? abrirMenu : undefined}
+                        destaque={!isMobile}
                     />
                 }
                 analise={

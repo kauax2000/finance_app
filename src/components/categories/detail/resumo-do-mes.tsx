@@ -40,6 +40,7 @@ export function ResumoDoMes({
     pesoNoTotal,
     aberto,
     acoes,
+    destaque = false,
 }: {
     tipo: TipoDaCategoria
     yearMonth: string
@@ -52,11 +53,43 @@ export function ResumoDoMes({
     aberto: boolean
     /** O ⋯ da categoria, quando não há `PageHeader` (o telefone). */
     acoes?: ReactNode
+    /** A faixa do desktop, sob o `PageHeader`: sem título, a legenda ao lado do valor. */
+    destaque?: boolean
 }) {
     const despesa = tipo === "expense"
     const comLimite = despesa && limite != null && limite > 0
     const frases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
     const aindaVem = previsto > 0 && !frases?.aviso ? `Ainda vem ${currencyBRL(previsto)}` : null
+
+    if (destaque) {
+        const mes = labelYearMonthPt(yearMonth).toLowerCase()
+        const peso =
+            pesoNoTotal != null && lancado !== 0
+                ? `${percentBR(pesoNoTotal, { maximumFractionDigits: 0 })} ${despesa ? "do gasto da carteira" : "da receita da carteira"}`
+                : null
+        const linha = [frases?.principal, frases?.aviso, aindaVem, peso].filter(Boolean).join(" · ")
+        return (
+            <PageSection aria-label={`Resumo de ${mes}`}>
+                <div className="grid gap-3">
+                    <div className="flex flex-wrap items-baseline gap-x-3">
+                        <MoneyDisplay value={lancado} size="3xl" />
+                        <Muted>{`${despesa ? "gastos" : "recebidos"} em ${mes}`}</Muted>
+                    </div>
+                    {comLimite ? (
+                        <Progress
+                            value={Math.max(0, lancado)}
+                            max={limite}
+                            projected={previsto}
+                            bands={BUDGET_BANDS}
+                            marker={aberto ? ritmoDoMes(yearMonth) : undefined}
+                            aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
+                        />
+                    ) : null}
+                    {linha ? <Muted>{linha}</Muted> : null}
+                </div>
+            </PageSection>
+        )
+    }
 
     return (
         <PageSection>
