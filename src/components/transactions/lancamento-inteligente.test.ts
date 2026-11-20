@@ -254,4 +254,14 @@ describe("a leitura do lançamento inteligente", () => {
         expect(fonte).toMatch(/<div ref=\{rodapeRef\}[^>]*>\s*<AnimatePresence initial=\{false\}>[\s\S]{0,200}id="lancamento-motivo"/)
         expect(fonte).not.toMatch(/<AnimatePresence mode="popLayout"[^>]*>[\s\S]{0,200}lancamento-motivo/)
     })
+
+    it("a foto do recibo é uma linha com retrato, Trocar e lixeira, e abre grande", () => {
+        expect(fonte).toContain('"Foto do recibo"')
+        expect(fonte).toContain('"Toque para ver"')
+        expect(fonte).toContain('aria-label="Ver a foto do recibo"')
+        expect(fonte).toContain('aria-label="Tirar a foto"')
+        expect(fonte).toMatch(/<ItemMedia variant="image"[^>]*h-14 w-11 rounded-row/)
+        expect(fonte).toMatch(/onTrocarFoto=\{\(\) => arquivoRef\.current\?\.click\(\)\}/)
+        expect(fonte).not.toMatch(/<MiniaturaDoRecibo[\s\S]{0,400}<Avatar/)
+    })
 })

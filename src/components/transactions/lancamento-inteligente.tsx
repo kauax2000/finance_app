@@ -16,12 +16,10 @@ import {
     CameraIcon,
     CreditCardIcon,
     PencilIcon,
-    PhotoIcon,
     QueueListIcon,
     TagIcon,
-    XMarkIcon,
+    TrashIcon,
 } from "@heroicons/react/16/solid"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -58,7 +56,9 @@ import {
     ItemActions,
     ItemChevron,
     ItemContent,
+    ItemDescription,
     ItemGroup,
+    ItemLink,
     ItemMedia,
     ItemSeparator,
     ItemTitle,
@@ -829,6 +829,7 @@ export function LancamentoInteligente({
                                             cartoes={cartoes}
                                             saving={saving}
                                             onAbrirFormulario={onAbrirFormulario}
+                                            onTrocarFoto={() => arquivoRef.current?.click()}
                                         />
                                     </div>
                                 </div>
@@ -979,44 +980,6 @@ const PILULA_SAI = cn(
     "group-data-closed/lancamento:animate-out group-data-closed/lancamento:fade-out-0 group-data-closed/lancamento:zoom-out-95 group-data-closed/lancamento:animation-duration-(--duration-fast) group-data-closed/lancamento:ease-(--ease-out) group-data-closed/lancamento:fill-mode-forwards"
 )
 
-/** A miniatura do recibo no topo da revisão, com o × que a tira. */
-function MiniaturaDoRecibo({ foto, onTirar, disabled }: { foto: File; onTirar: () => void; disabled: boolean }) {
-    const [url, setUrl] = useState<string | null>(null)
-    /* eslint-disable react-hooks/set-state-in-effect -- a URL do arquivo nasce e é revogada com ele */
-    useEffect(() => {
-        const criada = URL.createObjectURL(foto)
-        setUrl(criada)
-        return () => URL.revokeObjectURL(criada)
-    }, [foto])
-    /* eslint-enable react-hooks/set-state-in-effect */
-    return (
-        <Item variant="flush" size="sm" data-revela className="px-0">
-            <ItemMedia>
-                <Avatar size="md">
-                    {url ? <AvatarImage src={url} alt="Foto do recibo" /> : null}
-                    <AvatarFallback>
-                        <PhotoIcon aria-hidden />
-                    </AvatarFallback>
-                </Avatar>
-            </ItemMedia>
-            <ItemContent>
-                <ItemTitle>Recibo</ItemTitle>
-            </ItemContent>
-            <ItemActions>
-                <Button
-                    variant="tertiary"
-                    size="icon-md"
-                    aria-label="Tirar a foto"
-                    disabled={disabled}
-                    onClick={onTirar}
-                >
-                    <XMarkIcon aria-hidden />
-                </Button>
-            </ItemActions>
-        </Item>
-    )
-}
-
 /** O anel de foco do sistema numa peça clicável que não é um `Button` (a pílula do tipo, o valor). */
 const FOCO = "outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
 
@@ -1048,6 +1011,7 @@ function Revisao({
     cartoes,
     saving,
     onAbrirFormulario,
+    onTrocarFoto,
 }: {
     campos: CamposDaFrase
     leitura: Leitura
@@ -1055,6 +1019,7 @@ function Revisao({
     cartoes: CartaoParaCasar[]
     saving: boolean
     onAbrirFormulario: () => void
+    onTrocarFoto: () => void
 }) {
     const telefone = useIsMobile()
     const [editando, setEditando] = useState<CampoDoLancamento | null>(null)
@@ -1521,7 +1486,12 @@ function Revisao({
                         <AnimatePresence initial={false}>
                             {leitura.foto ? (
                                 <Presenca key="recibo" {...presenca}>
-                                    <MiniaturaDoRecibo foto={leitura.foto} onTirar={leitura.tirarFoto} disabled={saving} />
+                                    <MiniaturaDoRecibo
+                                        foto={leitura.foto}
+                                        onTirar={leitura.tirarFoto}
+                                        onTrocar={onTrocarFoto}
+                                        disabled={saving}
+                                    />
                                 </Presenca>
                             ) : null}
                         </AnimatePresence>
@@ -1669,6 +1639,64 @@ function Revisao({
                     formulário completo
                 </Button>
             </DialogFooter>
+        </>
+    )
+}
+
+/** A foto do recibo: a linha com o retrato em pé, "Trocar" e a lixeira; tocar na linha abre a foto grande. */
+function MiniaturaDoRecibo({
+    foto,
+    onTirar,
+    onTrocar,
+    disabled,
+}: {
+    foto: File
+    onTirar: () => void
+    onTrocar: () => void
+    disabled: boolean
+}) {
+    const [url, setUrl] = useState<string | null>(null)
+    const [aberto, setAberto] = useState(false)
+    /* eslint-disable react-hooks/set-state-in-effect -- a URL do arquivo nasce e é revogada com ele */
+    useEffect(() => {
+        const criada = URL.createObjectURL(foto)
+        setUrl(criada)
+        return () => URL.revokeObjectURL(criada)
+    }, [foto])
+    /* eslint-enable react-hooks/set-state-in-effect */
+    return (
+        <>
+            <Item variant="flush" size="sm" interactive data-revela className="px-0">
+                {/* O retrato em pé, alinhado ao topo (onde fica o nome da loja). */}
+                <ItemMedia variant="image" className="h-14 w-11 rounded-row">
+                    {url ? <img src={url} alt="" className="size-full object-cover object-top" /> : null}
+                </ItemMedia>
+                <ItemContent>
+                    <ItemLink aria-label="Ver a foto do recibo" onClick={() => setAberto(true)}>
+                        <ItemTitle>Foto do recibo</ItemTitle>
+                    </ItemLink>
+                    <ItemDescription>{"Toque para ver"}</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                    <Button variant="secondary" size="sm" disabled={disabled} onClick={onTrocar}>
+                        Trocar
+                    </Button>
+                    <Button variant="tertiary" size="icon-md" aria-label="Tirar a foto" disabled={disabled} onClick={onTirar}>
+                        <TrashIcon aria-hidden />
+                    </Button>
+                </ItemActions>
+            </Item>
+            <Dialog open={aberto && url != null} onOpenChange={setAberto} surface="auto">
+                <DialogContent size="xl">
+                    <DialogHeader>
+                        <DialogTitle>Foto do recibo</DialogTitle>
+                        <DialogDescription className="sr-only">A foto inteira do recibo.</DialogDescription>
+                    </DialogHeader>
+                    <DialogBody>
+                        <img src={url ?? undefined} alt="Foto do recibo" className="w-full rounded-row-lg object-contain" />
+                    </DialogBody>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
