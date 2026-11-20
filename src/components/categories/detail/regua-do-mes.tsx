@@ -81,17 +81,17 @@ export function ReguaDoMes({
 
     return (
         <PageSection aria-label={`Resumo de ${mes}`}>
-            {/* Na tela larga (xl) os fatos saem da linha do valor e ocupam uma coluna à direita, da
+            {/* Na tela larga (2xl, 1536px) os fatos saem da linha do valor e ocupam uma coluna à direita, da
                 sobrancelha até a régua: a barra para antes deles e não atravessa a tela inteira. A
                 cópia escondida é `display: none`, então o leitor de tela lê os fatos uma vez só. */}
-            <div className="grid gap-x-12 gap-y-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+            <div className="grid gap-x-12 gap-y-5 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
                 <div className="grid min-w-0 gap-5">
                     <div className="grid gap-3">
                         <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
                         {fatosNaLinha ? (
                             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
                                 {valor}
-                                <div className="xl:hidden">{fatosNaLinha}</div>
+                                <div className="2xl:hidden">{fatosNaLinha}</div>
                             </div>
                         ) : (
                             valor
@@ -132,7 +132,7 @@ export function ReguaDoMes({
                     {children}
                 </div>
                 {fatosNaLinha ? (
-                    <div className="hidden self-stretch border-s border-border ps-12 xl:flex xl:items-center">
+                    <div className="hidden self-stretch border-s border-border ps-12 2xl:flex 2xl:items-center">
                         {fatosNaLinha}
                     </div>
                 ) : null}
