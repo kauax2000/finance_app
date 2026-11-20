@@ -60,6 +60,25 @@ export function ResumoDoMes({
     const comLimite = despesa && limite != null && limite > 0
     const frases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
     const aindaVem = previsto > 0 && !frases?.aviso ? `Ainda vem ${currencyBRL(previsto)}` : null
+    // Sem limite, a barra mede o peso na carteira, como o cartão da lista de Categorias.
+    const totalDaCarteira = pesoNoTotal && lancado > 0 ? lancado / pesoNoTotal : 0
+    const barra = comLimite ? (
+        <Progress
+            value={Math.max(0, lancado)}
+            max={limite}
+            projected={previsto}
+            bands={BUDGET_BANDS}
+            marker={aberto ? ritmoDoMes(yearMonth) : undefined}
+            aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
+        />
+    ) : totalDaCarteira > 0 ? (
+        <Progress
+            value={lancado}
+            max={totalDaCarteira}
+            projected={previsto}
+            aria-label={`${currencyBRL(lancado)} de ${currencyBRL(totalDaCarteira)} da carteira no mês`}
+        />
+    ) : null
 
     if (destaque) {
         const mes = labelYearMonthPt(yearMonth).toLowerCase()
@@ -75,16 +94,7 @@ export function ResumoDoMes({
                         <MoneyDisplay value={lancado} size="3xl" />
                         <Muted>{`${despesa ? "gastos" : "recebidos"} em ${mes}`}</Muted>
                     </div>
-                    {comLimite ? (
-                        <Progress
-                            value={Math.max(0, lancado)}
-                            max={limite}
-                            projected={previsto}
-                            bands={BUDGET_BANDS}
-                            marker={aberto ? ritmoDoMes(yearMonth) : undefined}
-                            aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
-                        />
-                    ) : null}
+                    {barra}
                     {linha ? <Muted>{linha}</Muted> : null}
                 </div>
             </PageSection>
@@ -101,16 +111,7 @@ export function ResumoDoMes({
                     <Caption>{despesa ? "Gasto" : "Entrou"}</Caption>
                     <MoneyDisplay value={lancado} size="3xl" />
                 </div>
-                {comLimite ? (
-                    <Progress
-                        value={Math.max(0, lancado)}
-                        max={limite}
-                        projected={previsto}
-                        bands={BUDGET_BANDS}
-                        marker={aberto ? ritmoDoMes(yearMonth) : undefined}
-                        aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
-                    />
-                ) : null}
+                {barra}
                 {frases || aindaVem ? (
                     <div>
                         {frases ? <P>{frases.principal}</P> : null}
