@@ -99,8 +99,8 @@ describe("painel de notificações (fonte)", () => {
         expect(lista).toMatch(/seq !== fetchSeq\.current \|\| escritasEmVoo\.current > 0/)
     })
 
-    it("com o dia preso, o degradê do cabeçalho nasce com a rolagem (parado, não cobre o primeiro cartão)", () => {
-        expect(painel).toContain("after:opacity-[var(--notificacoes-degrade,0)]")
+    it("com o dia preso, a placa e o degradê do cabeçalho nascem com a rolagem (parado, sem linha e sem cobrir o primeiro cartão)", () => {
+        expect(painel).toContain("before:opacity-[var(--notificacoes-degrade,0)] after:opacity-[var(--notificacoes-degrade,0)]")
         expect(painel).toMatch(/setProperty\("--notificacoes-degrade", String\(Math\.min\(corpo\.scrollTop \/ 56, 1\)\)\)/)
     })
 
