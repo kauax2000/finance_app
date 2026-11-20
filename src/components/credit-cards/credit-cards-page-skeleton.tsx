@@ -11,7 +11,7 @@ export function CreditCardsHistoryChartSkeleton() {
             className="aspect-video min-h-60 w-full items-center justify-center"
             aria-hidden
         >
-            <Skeleton className="h-40 w-full max-w-md rounded-surface" />
+            <Skeleton shape="surface" className="h-40 w-full max-w-md" />
         </Card>
     )
 }

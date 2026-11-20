@@ -22,7 +22,7 @@ export function MePageSkeleton() {
         <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando a página Você…" delay>
             <div className="flex flex-col items-center gap-3">
                 <Skeleton shape="circle" size="xl" />
-                <div className="flex w-full flex-col items-center space-y-2">
+                <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-6 w-40 max-w-full" />
                     <Skeleton shape="text" className="w-48 max-w-full text-sm" />
                 </div>

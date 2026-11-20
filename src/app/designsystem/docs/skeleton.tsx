@@ -54,7 +54,7 @@ export default function SkeletonDoc() {
 <Skeleton shape="pill" size="sm" />
 <Skeleton shape="control" className="w-28" />
 <Skeleton shape="surface" className="h-24 w-full" />
-<Skeleton className="h-24 w-full rounded-surface" />`}
+<Skeleton className="h-24 w-full rounded-md" />`}
         previewClassName="flex-col items-stretch gap-5"
       >
         {(

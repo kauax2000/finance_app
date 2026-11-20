@@ -300,9 +300,9 @@ export function BillDetailSheet({
                 <DialogBody>
                     {loading ? (
                         <div className="space-y-3">
-                            <Skeleton className="h-24 w-full rounded-surface" />
-                            <Skeleton className="h-16 w-full rounded-surface" />
-                            <Skeleton className="h-40 w-full rounded-surface" />
+                            <Skeleton shape="surface" className="h-24 w-full" />
+                            <Skeleton shape="surface" className="h-16 w-full" />
+                            <Skeleton shape="surface" className="h-40 w-full" />
                         </div>
                     ) : !bill ? (
                         <p className="text-sm text-muted-foreground">

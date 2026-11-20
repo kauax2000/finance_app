@@ -37,7 +37,7 @@ function HeroSkeleton() {
 
                 <div className="flex min-h-10 min-w-0 max-w-[min(100%,24rem)] items-center justify-end">
                     <div className="flex w-full min-w-0 items-center justify-between gap-2">
-                        <Skeleton shape="control" className="flex-1" />
+                        <Skeleton shape="control" className="flex-1 pointer-coarse:h-12" />
                     </div>
                 </div>
 

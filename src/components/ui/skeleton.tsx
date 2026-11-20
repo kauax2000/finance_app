@@ -75,7 +75,7 @@ function Skeleton({
 }: React.ComponentProps<"div"> & {
   /** A forma da peça que o osso substitui. */
   shape?: SkeletonShape
-  /** O degrau da peça: Avatar no `circle`, ColorTile no `tile`, Badge no `pill`. */
+  /** O degrau da peça: Avatar no `circle`, ColorTile no `tile`, Badge no `pill`, a escada de controle no `control`. */
   size?: SkeletonSize
 }) {
   const forma = FORMAS[shape]

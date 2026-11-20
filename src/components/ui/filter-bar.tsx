@@ -2580,6 +2580,7 @@ function FilterBarSkeleton({
   group?: boolean
   className?: string
 }) {
+  const compacto = size === "sm" ? "pointer-coarse:h-11" : undefined
   const linha = (
     <div
       aria-hidden
@@ -2591,10 +2592,10 @@ function FilterBarSkeleton({
           key={i}
           shape="control"
           size={size}
-          className={i % 2 ? "w-36" : "w-52"}
+          className={cn(i % 2 ? "w-36" : "w-52", compacto)}
         />
       ))}
-      <Skeleton shape="control" size={size} className="w-20" />
+      <Skeleton shape="control" size={size} className={cn("w-20", compacto)} />
       {count ? <Skeleton shape="text" className="ms-auto w-28" /> : null}
     </div>
   )

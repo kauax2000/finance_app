@@ -30,12 +30,12 @@ export function MembersSectionSkeleton() {
                             <div className="rounded-row border border-border/80 bg-muted/30 p-3 sm:p-3.5">
                                 <div className="flex items-center gap-3">
                                     <Skeleton shape="circle" size="sm" />
-                                    <div className="min-w-0 flex-1 space-y-2">
+                                    <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <Skeleton shape="text" className="w-28 max-w-full text-sm" />
                                             <Skeleton shape="pill" />
                                         </div>
-                                        <Skeleton shape="text" className="w-40 max-w-full text-xs" />
+                                        <Skeleton shape="text" className="w-40 max-w-full text-sm" />
                                     </div>
                                     <Skeleton shape="tile" />
                                 </div>

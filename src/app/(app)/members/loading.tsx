@@ -14,9 +14,9 @@ export default function Loading() {
                         {[1, 2, 3].map((i) => (
                             <li key={i} className="flex items-center gap-3 px-4 py-3">
                                 <Skeleton shape="circle" className="size-9 shrink-0" />
-                                <div className="min-w-0 flex-1 space-y-2">
+                                <div className="min-w-0 flex-1">
                                     <Skeleton shape="text" className="w-48 max-w-full text-sm" />
-                                    <Skeleton shape="text" className="w-36 max-w-full text-xs" />
+                                    <Skeleton shape="text" className="w-36 max-w-full text-sm" />
                                 </div>
                             </li>
                         ))}
