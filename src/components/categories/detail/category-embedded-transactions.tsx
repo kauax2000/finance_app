@@ -20,6 +20,7 @@ import {
 import type { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
 import {
     applyCategoryTransactionListFilters,
+    isProjectedTransactionRow,
     sortCategoryExpenseMonthRows,
 } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
@@ -42,7 +43,6 @@ import {
     ItemLink,
     ItemTitle,
 } from "@/components/ui/item"
-import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 import { Button } from "@/components/ui/button"
@@ -194,6 +194,9 @@ export function CategoryEmbeddedTransactions({
               page * PAGE_SIZE + PAGE_SIZE,
           )
         : transactions
+
+    // A lista não pagina: no pacote do mês mostra todas as filtradas, para a contagem e as linhas concordarem.
+    const listaRows = useBundleExpenseRows ? (bundleFilteredRows ?? []) : transactions
 
     const displayTotalCount = useBundleExpenseRows
         ? (bundleFilteredRows?.length ?? 0)
@@ -447,15 +450,20 @@ export function CategoryEmbeddedTransactions({
                     {forma === "lista" && !displayHasNoTransactions && !displayHasNoMatches ? (
                         <Card padding="none">
                             <CardToolbar variant="title">
-                                Lançamentos ({displayTotalCount})
+                                Lançamentos (
+                                {listaRows.length === displayTotalCount
+                                    ? displayTotalCount
+                                    : `${listaRows.length} de ${displayTotalCount}`}
+                                )
                             </CardToolbar>
-                            {groupByLocalDay(displayTransactions, (t) => t.date).map((g) => (
+                            {groupByLocalDay(listaRows, (t) => t.date).map((g) => (
                                 <ItemGroup key={g.chave}>
                                     <ItemGroupLabel sticky>
                                         {formatDayHeadingPtBr(g.data)}
                                     </ItemGroupLabel>
                                     {g.itens.map((t) => {
                                         const previsto = isProjectedTransactionRow(t)
+                                        const titulo = t.description || t.category?.name || "Sem descrição"
                                         const formaDePagar = paymentMethodLabel(t.payment_method)
                                         return (
                                             <Item
@@ -467,12 +475,10 @@ export function CategoryEmbeddedTransactions({
                                                 <ItemContent className="min-w-0">
                                                     <ItemTitle className="truncate">
                                                         {previsto ? (
-                                                            <span className="truncate">
-                                                                {t.description || t.category?.name || "Sem descrição"}
-                                                            </span>
+                                                            <span className="truncate">{titulo}</span>
                                                         ) : (
                                                             <ItemLink onClick={() => openTransactionDetail(t)}>
-                                                                {t.description || t.category?.name || "Sem descrição"}
+                                                                {titulo}
                                                             </ItemLink>
                                                         )}
                                                         {previsto ? <Badge tone="warning">Previsto</Badge> : null}
