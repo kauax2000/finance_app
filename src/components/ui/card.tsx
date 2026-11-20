@@ -564,8 +564,8 @@ function CardSkeleton({
       </CardContent>
       {footer ? (
         <CardFooter className="justify-end">
-          <Skeleton shape="control" size="md" className="w-20" />
-          <Skeleton shape="control" size="md" className="w-24" />
+          <Skeleton shape="control" className="w-20" />
+          <Skeleton shape="control" className="w-24" />
         </CardFooter>
       ) : null}
     </Card>

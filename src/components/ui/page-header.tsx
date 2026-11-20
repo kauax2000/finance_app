@@ -631,7 +631,6 @@ function PageHeaderSkeleton({
             <Skeleton
               key={i}
               shape="control"
-              size="md"
               className={i === actions - 1 ? "aspect-square sm:aspect-auto sm:w-32" : "aspect-square"}
             />
           ))}
