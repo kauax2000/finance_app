@@ -1152,7 +1152,7 @@ declaração de `background-color` no trilho).
   passe por `asChild` num server component). `layout="inline"` é o vazio de
   formulário. **`EmptyStateActions` passa o degrau aos botões**: nenhum declara
   `size` (`sm` e `md` passam 32, `lg` e `page` passam 40). Animação em `@utility`, nunca em `animate-[…]`.
-- **`Skeleton`**: `shape` (`block`, `text`, `circle`, `tile`, `pill`) e `size`;
+- **`Skeleton`**: `shape` (`block`, `text`, `circle`, `tile`, `pill`, `control` — a cápsula na escada de controle, 44 no toque, `aspect-square` no de ícone —, `surface` — o raio do `Card`) e `size`;
   `SkeletonText lines`. **Um movimento só, o pulso** (a `wave` do
   `ChartSkeleton` é a exceção). **O bloco que espera é o `SkeletonGroup`**
   (`role="status"`, `aria-busy`, `label`; `delay` esconde os primeiros 300ms);

@@ -13,12 +13,15 @@ import { cn } from "@/lib/utils"
  * - `circle`: o `Avatar` (xs 24 … xl 56).
  * - `tile`: o `ColorTile` (xs 24 … 2xl 44).
  * - `pill`: o `Badge` (xs 14 · sm 18 · md 22).
+ * - `control`: a cápsula da escada de controle (xs 24 … xl 40, `lg` o padrão; 44 no toque de `md` a `xl`).
+ *   A largura é de quem chama; o botão de ícone leva `aspect-square` e a largura deriva da altura.
+ * - `surface`: o que contém (`Card`, painel, tabela), no raio do `Card`.
  * Um movimento só, o pulso (o bloco global de movimento reduzido o isenta): dois
  * movimentos para o mesmo estado deixariam cada tela escolher o seu.
  * `SkeletonGroup` é o bloco que espera: o contêiner anuncia (`role="status"`,
  * `aria-busy`, rótulo) e guarda o `delay`, para uma resposta rápida não piscar esqueleto.
  */
-type SkeletonShape = "block" | "text" | "circle" | "tile" | "pill"
+type SkeletonShape = "block" | "text" | "circle" | "tile" | "pill" | "control" | "surface"
 
 /** O corpo de cada forma, por degrau. Literal por extenso: o Tailwind lê texto. */
 const FORMAS = {
@@ -48,6 +51,18 @@ const FORMAS = {
     sizes: { xs: "h-3.5", sm: "h-4.5", md: "h-5.5" } as Record<string, string>,
     padrao: "md",
   },
+  control: {
+    base: "shrink-0 rounded-full",
+    sizes: {
+      xs: "h-6",
+      sm: "h-7",
+      md: "h-8 pointer-coarse:h-11",
+      lg: "h-9 pointer-coarse:h-11",
+      xl: "h-10 pointer-coarse:h-11",
+    } as Record<string, string>,
+    padrao: "lg",
+  },
+  surface: { base: "rounded-surface", sizes: {} as Record<string, string> },
 } as const
 
 type SkeletonSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl"

@@ -33,3 +33,22 @@ describe("o osso do avatar é o círculo do Avatar", () => {
     expect(lerFonte("src/components/ui/sidebar.tsx")).toContain('{ shape: "circle" as const, size: "sm" as const }')
   })
 })
+
+describe("as formas control e surface", () => {
+  const forma = (nome: string) => SRC.slice(SRC.indexOf(`  ${nome}: {`)).split("\n  },\n")[0]
+  const controle = forma("control")
+
+  it("control: cápsula, lg por padrão, 44 no toque de md a xl", () => {
+    expect(controle).toContain('base: "shrink-0 rounded-full"')
+    expect(controle).toContain('padrao: "lg"')
+    expect(controle).toContain('xs: "h-6"')
+    expect(controle).toContain('sm: "h-7"')
+    expect(controle).toContain('md: "h-8 pointer-coarse:h-11"')
+    expect(controle).toContain('lg: "h-9 pointer-coarse:h-11"')
+    expect(controle).toContain('xl: "h-10 pointer-coarse:h-11"')
+  })
+
+  it("surface: o raio do Card, sem degrau", () => {
+    expect(SRC).toContain('surface: { base: "rounded-surface"')
+  })
+})

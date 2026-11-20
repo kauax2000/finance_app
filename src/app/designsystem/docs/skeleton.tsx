@@ -47,11 +47,13 @@ export default function SkeletonDoc() {
 
       <DocSection
         title="As formas"
-        description="shape nomeia a peça que o osso substitui, e size fala a escada dela: circle a do Avatar (24 a 56), tile a do ColorTile (24 a 44), pill a do Badge (14, 18 e 22, medidos). text é uma linha — a caixa tem a entrelinha do corpo e o osso pinta 0,8em no meio. block é o retângulo medido por className."
+        description="shape nomeia a peça que o osso substitui, e size fala a escada dela: circle a do Avatar (24 a 56), tile a do ColorTile (24 a 44), pill a do Badge (14, 18 e 22, medidos), control a cápsula da escada de controle (24 a 40; 44 no toque de md a xl; a largura é de quem chama e o botão de ícone leva aspect-square), surface o raio do Card. text é uma linha — a caixa tem a entrelinha do corpo e o osso pinta 0,8em no meio. block é o retângulo medido por className."
         code={`<Skeleton shape="text" className="w-40 text-sm" />
 <Skeleton shape="circle" size="sm" />
 <Skeleton shape="tile" />
 <Skeleton shape="pill" size="sm" />
+<Skeleton shape="control" className="w-28" />
+<Skeleton shape="surface" className="h-24 w-full" />
 <Skeleton className="h-24 w-full rounded-surface" />`}
         previewClassName="flex-col items-stretch gap-5"
       >
@@ -60,6 +62,7 @@ export default function SkeletonDoc() {
             ["circle", ["xs", "sm", "md", "lg", "xl"]],
             ["tile", ["xs", "md", "lg", "xl", "2xl"]],
             ["pill", ["xs", "sm", "md"]],
+            ["control", ["xs", "sm", "md", "lg", "xl"]],
           ] as const
         ).map(([forma, degraus]) => (
           <div key={forma} className="flex flex-wrap items-center gap-4">
@@ -68,7 +71,7 @@ export default function SkeletonDoc() {
             </Code>
             {degraus.map((d) => (
               <div key={d} className="flex flex-col items-center gap-1.5">
-                <Skeleton shape={forma} size={d} />
+                <Skeleton shape={forma} size={d} className={forma === "control" ? "w-16" : undefined} />
                 <Caption>{d}</Caption>
               </div>
             ))}
@@ -84,7 +87,13 @@ export default function SkeletonDoc() {
           <Code variant="inline" className="w-12 text-muted-foreground">
             block
           </Code>
-          <Skeleton className="h-16 w-full max-w-sm rounded-surface" />
+          <Skeleton className="h-16 w-full max-w-sm rounded-md" />
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <Code variant="inline" className="w-12 text-muted-foreground">
+            surface
+          </Code>
+          <Skeleton shape="surface" className="h-16 w-full max-w-sm" />
         </div>
       </DocSection>
 
@@ -149,7 +158,7 @@ export default function SkeletonDoc() {
         rows={[
           {
             prop: "shape",
-            type: '"block" | "text" | "circle" | "tile" | "pill"',
+            type: '"block" | "text" | "circle" | "tile" | "pill" | "control" | "surface"',
             default: '"block"',
             description: "A peça que o osso substitui. text tem a entrelinha do corpo em volta.",
           },
@@ -157,7 +166,7 @@ export default function SkeletonDoc() {
             prop: "size",
             type: '"xs" | "sm" | "md" | "lg" | "xl" | "2xl"',
             default: '"md"',
-            description: "O degrau da peça: Avatar no circle, ColorTile no tile, Badge no pill.",
+            description: "O degrau da peça: Avatar no circle, ColorTile no tile, Badge no pill, controle no control.",
           },
           {
             prop: "SkeletonText lines",
