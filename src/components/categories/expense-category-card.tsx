@@ -289,19 +289,26 @@ export function CategoryCardSkeleton() {
                 <CardTitle className="min-w-0 self-center">
                     <Skeleton shape="text" className="w-32 max-w-full" />
                 </CardTitle>
+                {/* O lugar do ⋯, sem osso (ele é um ícone solto): 32 no cursor, 44 no toque. Sem
+                    ele o cabeçalho media 36 e o resto do cartão subia 4px no desktop e 8 no telefone. */}
+                <CardAction>
+                    <span className="block size-8 pointer-coarse:size-11" />
+                </CardAction>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-3">
-                <div className="flex items-baseline justify-between gap-2">
+                {/* `items-end`, e não a base: osso não tem texto, e a base o empurrava 4px. */}
+                <div className="flex items-end justify-between gap-2">
                     <Skeleton className="h-8 w-36 max-w-full" />
-                    <Skeleton shape="text" className="w-14 shrink-0" />
+                    <Skeleton shape="text" className="w-14 shrink-0 text-xs" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                     <Skeleton className="h-1.5 w-full rounded-full" />
-                    <Skeleton shape="text" className="w-48 max-w-full" />
+                    <Skeleton shape="text" className="w-48 max-w-full text-xs" />
                 </div>
                 <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
-                    {/* O osso da faísca de área: a faixa preenchida do pé, e não barras. */}
-                    <Skeleton className="h-10 w-full rounded-none" />
+                    {/* O osso da faísca de área: a faixa preenchida do pé (a linha mora nos 45% de
+                        cima, e a área enche o resto), e não barras. */}
+                    <Skeleton className="h-3/5 w-full rounded-none" />
                 </div>
             </CardContent>
         </Card>

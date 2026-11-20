@@ -131,3 +131,25 @@ describe("o menu de contexto do cartão de categoria", () => {
         expect(f).toContain("<ContextMenuTrigger asChild disabled={telefone}>")
     })
 })
+
+describe("o esqueleto da página Categorias na forma da tela (20/11/2026)", () => {
+    const cartao = lerFonte("src/components/categories/expense-category-card.tsx")
+    const osso = cartao.slice(cartao.indexOf("export function CategoryCardSkeleton"))
+    const pagina = lerFonte("src/components/categories/categories-page-grid-skeleton.tsx")
+
+    it("o cartão guarda o lugar do ⋯ e mede as linhas como o cartão real", () => {
+        expect(osso).toContain('<span className="block size-8 pointer-coarse:size-11" />')
+        expect(osso).toContain('<div className="flex items-end justify-between gap-2">')
+        expect(osso).toContain('className="w-14 shrink-0 text-xs"')
+        expect(osso).toContain('className="w-48 max-w-full text-xs"')
+        expect(osso).toContain('<Skeleton className="h-3/5 w-full rounded-none" />')
+    })
+
+    it("a barra: abas, a cápsula de dois ícones no telefone, ordenar e mês no desktop", () => {
+        expect(pagina).toContain('<Skeleton shape="control" className="min-w-0 flex-1 md:w-45 md:flex-none" />')
+        expect(pagina).toContain('<Skeleton shape="control" className="w-22 md:hidden" />')
+        expect(pagina).toContain('<Skeleton shape="control" className="aspect-square max-md:hidden" />')
+        expect(pagina).toContain('<Skeleton shape="control" className="w-54 max-md:hidden" />')
+        expect(pagina).not.toContain("w-39")
+    })
+})

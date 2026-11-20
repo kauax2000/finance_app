@@ -3,7 +3,6 @@
 import { CategoryCardSkeleton } from "@/components/categories/expense-category-card"
 import { PageHeaderSkeleton } from "@/components/ui/page-header"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
 
 const GRID_PLACEHOLDER_COUNT = 6
 
@@ -19,19 +18,17 @@ type Props = {
 function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeletonVariant }) {
     const showMonth = variant === "expense"
 
+    // A barra real: as abas Despesas | Receitas à esquerda. À direita, no telefone, a cápsula
+    // de dois ícones (ordenar e nova categoria, 88); no desktop, o ícone de ordenar e a pílula
+    // do mês (só na despesa). O "Nova categoria" do desktop mora no cabeçalho.
     return (
-        <div
-            className={cn(
-                "flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3",
-            )}
-        >
-            <Skeleton shape="control" className="w-full md:w-40" />
+        <div className="flex min-w-0 max-w-full items-center justify-between gap-2 md:gap-3">
+            <Skeleton shape="control" className="min-w-0 flex-1 md:w-45 md:flex-none" />
 
-            <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
-                {showMonth ? (
-                    <Skeleton shape="control" className="w-56 pointer-coarse:h-12" />
-                ) : null}
-                <Skeleton shape="control" className="w-39" />
+            <div className="flex shrink-0 items-center gap-2">
+                <Skeleton shape="control" className="w-22 md:hidden" />
+                <Skeleton shape="control" className="aspect-square max-md:hidden" />
+                {showMonth ? <Skeleton shape="control" className="w-54 max-md:hidden" /> : null}
             </div>
         </div>
     )
