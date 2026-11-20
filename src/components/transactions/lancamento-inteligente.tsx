@@ -1666,7 +1666,9 @@ function MiniaturaDoRecibo({
     /* eslint-enable react-hooks/set-state-in-effect */
     return (
         <>
-            <Item variant="flush" size="sm" interactive data-revela className="px-0">
+            {/* O realce do toque e do cursor tem os cantos da linha (`sm`, 12px) e passa 10px
+                para fora, para o conteúdo seguir alinhado ao valor e à lista. */}
+            <Item size="sm" interactive data-revela className="-mx-2.5 w-auto">
                 {/* O retrato em pé, alinhado ao topo (onde fica o nome da loja). A medida repete no
                     modificador do degrau `sm`, que a variante `image` crava em 32 e venceria a classe solta. */}
                 <ItemMedia
