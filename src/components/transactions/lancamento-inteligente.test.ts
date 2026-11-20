@@ -68,7 +68,9 @@ describe("a tela do lançamento inteligente (v2)", () => {
     it("no telefone o campo não fica sem teclado: o ✓ lê a frase ou fecha", () => {
         expect(fonte).toMatch(/onBlur=\{\(\) => \{[\s\S]{0,200}if \(texto\.trim\(\)\) leitura\.interpretar\(\)\s*else onOpenChange\(false\)/)
         expect(fonte).toMatch(/addEventListener\("pointerdown", marcar, true\)/)
-        expect(fonte).toMatch(/addEventListener\("cancel", voltar\)/)
+        expect(fonte).toMatch(/addEventListener\("cancel", cancelou\)/)
+        expect(fonte).toMatch(/const cancelou = \(\) => \{[\s\S]{0,300}onOpenChange\(false\)/)
+        expect(fonte).not.toContain('addEventListener("cancel", voltar)')
     })
 
     it("o teclado do iOS assenta: a linha mede de novo depois da barra do teclado", () => {

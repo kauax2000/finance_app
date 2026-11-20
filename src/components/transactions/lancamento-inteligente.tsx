@@ -325,6 +325,12 @@ export function LancamentoInteligente({
     // toque (na câmera, no véu) também tira, mas resolve sozinho: marca `tocou`, e
     // o blur dele não conta.
     const tocou = useRef(false)
+    // O ouvinte do `cancel` mora num efeito que não pode re-rodar a cada tecla
+    // (ele também registra o pointerdown): lê o estado vivo por ref.
+    const vivo = useRef({ placa, lendoIA, saving, texto, leitura, onOpenChange })
+    useLayoutEffect(() => {
+        vivo.current = { placa, lendoIA, saving, texto, leitura, onOpenChange }
+    })
     useEffect(() => {
         if (!open || !telefone) return
         let espera = 0
@@ -334,13 +340,18 @@ export function LancamentoInteligente({
             espera = window.setTimeout(() => (tocou.current = false), 400)
         }
         document.addEventListener("pointerdown", marcar, true)
-        // Câmera cancelada: o campo volta ao foco (sem teclado ele não fica na tela).
+        // Câmera cancelada: segue a regra do ✓ do teclado (focar fora de um gesto
+        // não abre o teclado no iOS): com frase lê, vazio fecha.
         const arquivo = arquivoRef.current
-        const voltar = () =>
-            casca?.querySelector<HTMLInputElement>("[data-slot=search-input-control]")?.focus({ preventScroll: true })
-        arquivo?.addEventListener("cancel", voltar)
+        const cancelou = () => {
+            const v = vivo.current
+            if (v.placa || v.lendoIA || v.saving) return
+            if (v.texto.trim()) v.leitura.interpretar()
+            else v.onOpenChange(false)
+        }
+        arquivo?.addEventListener("cancel", cancelou)
         return () => {
-            arquivo?.removeEventListener("cancel", voltar)
+            arquivo?.removeEventListener("cancel", cancelou)
             document.removeEventListener("pointerdown", marcar, true)
             window.clearTimeout(espera)
             tocou.current = false
