@@ -107,7 +107,7 @@ export function ReguaDoMes({
                                 `Progress` mora dentro do trilho e some sobre a parte cheia. */}
                             <span
                                 aria-hidden="true"
-                                className="absolute -top-1.5 h-5 w-1 -translate-x-1/2 rounded-full bg-foreground ring-2 ring-background"
+                                className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-muted-foreground ring-2 ring-background"
                                 style={{ insetInlineStart: `${marcador}%` }}
                             />
                             <Caption
