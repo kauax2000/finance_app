@@ -34,6 +34,7 @@ import { toastError } from "@/lib/toast"
 import { CategoryDetailSkeleton } from "@/components/categories/detail/category-detail-skeleton"
 import { CategoryDetailLayout } from "@/components/categories/detail/category-detail-layout"
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
+import { FaixaDoMesTeste } from "@/components/categories/detail/faixa-do-mes-teste"
 import { Comparacoes } from "@/components/categories/detail/comparacoes"
 import { HistoricoDosMeses } from "@/components/categories/detail/historico-dos-meses"
 import { OndeEQuem } from "@/components/categories/detail/onde-e-quem"
@@ -436,6 +437,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
             porMembro: divisaoPorMembro(txs, tipo, membros),
             maiores: maioresLancamentos(txs, tipo),
+            maior: attachPaymentCards(maioresLancamentos(txs, tipo, 1), txController.creditCards)[0] ?? null,
             repetidas: descricoesRepetidas(txs, tipo),
             parcelas: installmentPlans.filter((p) => p.category_id === categoryId),
             assinaturas: subscriptions.filter((s) => s.category_id === categoryId),
@@ -527,6 +529,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         </DropdownMenu>
     ) : null
 
+    const totalLancamentos = expenseMonthRows?.length ?? txController.totalCount ?? 0
+
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-6">
             {confirmDialog}
@@ -554,24 +558,44 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             )}
 
             <CategoryDetailLayout
-                totalLancamentos={expenseMonthRows?.length ?? txController.totalCount ?? 0}
+                totalLancamentos={totalLancamentos}
                 resumo={
-                    <ResumoDoMes
-                        tipo={tipo}
-                        yearMonth={yearMonth}
-                        lancado={mes.lancado}
-                        previsto={mes.previsto}
-                        limite={limite}
-                        pesoNoTotal={pesoNoTotal}
-                        aberto={aberto}
-                        acoes={isMobile ? abrirMenu : undefined}
-                        destaque={!isMobile}
-                    />
+                    isMobile || !analise ? (
+                        <ResumoDoMes
+                            tipo={tipo}
+                            yearMonth={yearMonth}
+                            lancado={mes.lancado}
+                            previsto={mes.previsto}
+                            limite={limite}
+                            pesoNoTotal={pesoNoTotal}
+                            aberto={aberto}
+                            acoes={isMobile ? abrirMenu : undefined}
+                            destaque={!isMobile}
+                        />
+                    ) : (
+                        <FaixaDoMesTeste
+                            tipo={tipo}
+                            yearMonth={yearMonth}
+                            aberto={aberto}
+                            hojeYmd={hojeYmd}
+                            lancado={mes.lancado}
+                            previsto={mes.previsto}
+                            limite={limite}
+                            pesoNoTotal={pesoNoTotal}
+                            comparacao={analise.comparacao}
+                            media={analise.media}
+                            quantidade={totalLancamentos}
+                            maior={analise.maior}
+                        />
+                    )
                 }
                 analise={
                     analise ? (
                         <>
-                            <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={analise.media} />
+                            {/* No desktop a comparação mora na faixa do mês. */}
+                            {isMobile ? (
+                                <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={analise.media} />
+                            ) : null}
                             <HistoricoDosMeses tipo={tipo} serie={analise.serie} limite={limite} />
                             <OndeEQuem tipo={tipo} porPagamento={analise.porPagamento} porMembro={analise.porMembro} />
                             <ParaOndeVai

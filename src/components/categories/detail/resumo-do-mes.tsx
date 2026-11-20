@@ -12,13 +12,13 @@ import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import { currencyBRL, percentBR } from "@/lib/formatters"
 
 /** Onde o mês está (0–100): o traço do ritmo no `Progress`. */
-function ritmoDoMes(yearMonth: string, hoje = new Date()): number {
+export function ritmoDoMes(yearMonth: string, hoje = new Date()): number {
     const { y, m } = parseYearMonth(yearMonth)
     return (hoje.getDate() / new Date(y, m, 0).getDate()) * 100
 }
 
 /** "Sobra R$ X de R$ Y" / "Passou R$ X do limite de R$ Y", e o aviso do previsto que passaria do limite. */
-function frasesDoLimite(lancado: number, previsto: number, limite: number) {
+export function frasesDoLimite(lancado: number, previsto: number, limite: number) {
     const principal =
         lancado <= limite
             ? `Sobra ${currencyBRL(limite - lancado)} de ${currencyBRL(limite)}`
@@ -28,6 +28,53 @@ function frasesDoLimite(lancado: number, previsto: number, limite: number) {
             ? `Com o previsto, passa ${currencyBRL(lancado + previsto - limite)}`
             : null
     return { principal, aviso }
+}
+
+/** A barra do mês: contra o limite (com o previsto e o ritmo) ou, sem limite, o peso na carteira. */
+export function BarraDoMes({
+    tipo,
+    yearMonth,
+    lancado,
+    previsto,
+    limite,
+    pesoNoTotal,
+    aberto,
+    className,
+}: {
+    tipo: TipoDaCategoria
+    yearMonth: string
+    lancado: number
+    previsto: number
+    limite: number | null
+    pesoNoTotal: number | null
+    aberto: boolean
+    className?: string
+}) {
+    if (tipo === "expense" && limite != null && limite > 0) {
+        return (
+            <Progress
+                value={Math.max(0, lancado)}
+                max={limite}
+                projected={previsto}
+                bands={BUDGET_BANDS}
+                marker={aberto ? ritmoDoMes(yearMonth) : undefined}
+                aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
+                className={className}
+            />
+        )
+    }
+    // Sem limite, a barra mede o peso na carteira, como o cartão da lista de Categorias.
+    const totalDaCarteira = pesoNoTotal && lancado > 0 ? lancado / pesoNoTotal : 0
+    if (totalDaCarteira <= 0) return null
+    return (
+        <Progress
+            value={lancado}
+            max={totalDaCarteira}
+            projected={previsto}
+            aria-label={`${currencyBRL(lancado)} de ${currencyBRL(totalDaCarteira)} da carteira no mês`}
+            className={className}
+        />
+    )
 }
 
 /** O topo do detalhe: quanto foi no mês, o limite com o previsto e o peso na carteira. */
@@ -60,25 +107,17 @@ export function ResumoDoMes({
     const comLimite = despesa && limite != null && limite > 0
     const frases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
     const aindaVem = previsto > 0 && !frases?.aviso ? `Ainda vem ${currencyBRL(previsto)}` : null
-    // Sem limite, a barra mede o peso na carteira, como o cartão da lista de Categorias.
-    const totalDaCarteira = pesoNoTotal && lancado > 0 ? lancado / pesoNoTotal : 0
-    const barra = comLimite ? (
-        <Progress
-            value={Math.max(0, lancado)}
-            max={limite}
-            projected={previsto}
-            bands={BUDGET_BANDS}
-            marker={aberto ? ritmoDoMes(yearMonth) : undefined}
-            aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
+    const barra = (
+        <BarraDoMes
+            tipo={tipo}
+            yearMonth={yearMonth}
+            lancado={lancado}
+            previsto={previsto}
+            limite={limite}
+            pesoNoTotal={pesoNoTotal}
+            aberto={aberto}
         />
-    ) : totalDaCarteira > 0 ? (
-        <Progress
-            value={lancado}
-            max={totalDaCarteira}
-            projected={previsto}
-            aria-label={`${currencyBRL(lancado)} de ${currencyBRL(totalDaCarteira)} da carteira no mês`}
-        />
-    ) : null
+    )
 
     if (destaque) {
         const mes = labelYearMonthPt(yearMonth).toLowerCase()
