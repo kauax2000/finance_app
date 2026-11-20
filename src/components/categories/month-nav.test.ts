@@ -14,7 +14,8 @@ describe("o seletor de mês do desktop", () => {
         expect(picker).toContain('aria-label="Próximo mês"')
         expect(picker).toContain("shiftYearMonth(budgetMonthYm, -1)")
         expect(picker).toContain("shiftYearMonth(budgetMonthYm, 1)")
-        expect(picker).toContain("rounded-full bg-popover")
+        // Teste do dono (20/11/2026): a pílula sem placa.
+        expect(picker).toContain('<div className="flex items-center rounded-full p-0.5">')
         expect(picker).not.toContain("<ButtonGroup")
         expect(picker).not.toContain('variant="floating"')
         expect(picker.match(/variant="tertiary"/g)?.length).toBe(3)

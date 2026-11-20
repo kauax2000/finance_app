@@ -92,10 +92,10 @@ function MonthNavPicker({
         </Popover>
     )
     if (fullWidth) return popover
-    // Uma pílula só, na pele do `floating`: as setas e o mês moram dentro dela, terciários (o fundo
+    // Teste (20/11/2026): a pílula sem placa nem anel; as setas e o mês, terciários (o fundo
     // de cada um só acende no cursor e no toque). Não é `ButtonGroup`: sem emendas entre as peças.
     return (
-        <div className="flex items-center rounded-full bg-popover p-0.5 shadow-sm ring-1 ring-foreground/10">
+        <div className="flex items-center rounded-full p-0.5">
             <Button
                 type="button"
                 variant="tertiary"
