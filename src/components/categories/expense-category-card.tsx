@@ -249,6 +249,7 @@ export function ExpenseCategoryCard({
                         <ChartSparkline
                             variant="area"
                             bleed
+                            band={0.45}
                             y="total"
                             className="w-full max-md:h-26 md:h-16"
                             data={serie ?? []}

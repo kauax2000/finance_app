@@ -3094,6 +3094,20 @@ function ChartBarList({
   )
 }
 
+/** O domínio do eixo Y que prende a linha na faixa de cima: o máximo (com a média válida) fica no topo e o mínimo a `band` da altura. Sem valores, `undefined`. */
+function dominioDaFaixa(
+  valores: number[],
+  band: number,
+  reference?: number,
+): [number, number] | undefined {
+  const v = valores.filter(Number.isFinite)
+  if (v.length === 0 || !(band > 0)) return undefined
+  const min = Math.min(...v)
+  const ref = reference !== undefined && Number.isFinite(reference) && reference > 0 ? reference : undefined
+  const hi = Math.max(...v, ...(ref === undefined ? [] : [ref]))
+  return hi === min ? [hi - 1, hi] : [hi - (hi - min) / band, hi]
+}
+
 /** A tendência sem eixo, para dentro de um `StatCard` ou de uma linha: sem grade, eixo, legenda nem tooltip por padrão (a forma da curva, não os números). O nome acessível continua obrigatório. */
 function ChartSparkline({
   variant = "line",
@@ -3107,6 +3121,7 @@ function ChartSparkline({
   format = "currency",
   reference,
   bleed = false,
+  band,
 }: Omit<ChartFormProps, "series" | "children" | "aspect" | "legend" | "dataTable"> & {
   variant?: "line" | "area" | "bars"
   y: string
@@ -3114,6 +3129,8 @@ function ChartSparkline({
   reference?: number
   /** Zera a margem interna do gráfico, para a faísca encostar nas bordas da caixa (o pé de um cartão). Vale nas três formas. */
   bleed?: boolean
+  /** 0..1, desligado por padrão: a linha fica na fração de cima da altura e a área cheia embaixo. Em `bars` é ignorada. */
+  band?: number
 }) {
   const cor = serieColor(y, 0, config)
   // A faísca não entra (dez numa lista seriam ruído): o primeiro quadro desenha parado e só a troca anima.
@@ -3131,6 +3148,15 @@ function ChartSparkline({
       />
     ) : null
 
+  const dominio =
+    band === undefined
+      ? undefined
+      : dominioDaFaixa(
+          data.map((d) => Number(d[y])),
+          band,
+          reference,
+        )
+  const eixo = dominio ? <YAxis hide domain={dominio} /> : null
   const margin = bleed ? { top: 0, right: 0, bottom: 0, left: 0 } : undefined
 
   const marca =
@@ -3151,6 +3177,7 @@ function ChartSparkline({
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
+        {eixo}
         {media}
         <Area
           {...movimento}
@@ -3170,6 +3197,7 @@ function ChartSparkline({
         {tooltip ? (
           <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} hideLabel />} />
         ) : null}
+        {eixo}
         {media}
         <Line
           dataKey={y}
@@ -3397,6 +3425,7 @@ function getPayloadConfigFromPayload(
 
 export {
   chartContainerVariants,
+  dominioDaFaixa,
   ChartAnnotation,
   ChartArea,
   ChartBarList,

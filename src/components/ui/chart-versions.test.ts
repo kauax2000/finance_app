@@ -8,6 +8,7 @@ import {
   waterfallSteps,
   chartContainerVariants,
   chartSeriesColor,
+  dominioDaFaixa,
   formatChartValue,
   type ChartFormat,
 } from "./chart"
@@ -355,6 +356,21 @@ describe("as versões do Chart", () => {
     it("zero ou ausente não desenha", () => {
       expect(trecho).toContain("Number.isFinite(reference)")
       expect(trecho).toContain("reference > 0")
+    })
+
+    it("band: o domínio prende a linha na faixa de cima", () => {
+      expect(dominioDaFaixa([100, 200], 0.5)).toEqual([0, 200])
+      expect(dominioDaFaixa([150, 150], 0.5)).toEqual([149, 150])
+      expect(dominioDaFaixa([100, 200], 0.5, 300)).toEqual([-100, 300])
+      expect(dominioDaFaixa([], 0.5)).toBeUndefined()
+      expect(trecho).toContain("band?: number")
+      expect(trecho).toContain("<YAxis hide domain={dominio}")
+    })
+
+    it("os cartões de categoria passam band={0.45}", () => {
+      for (const f of ["expense", "income"]) {
+        expect(lerFonte(`src/components/categories/${f}-category-card.tsx`)).toContain("band={0.45}")
+      }
     })
 
     it("a página do catálogo mostra o reference", () => {
