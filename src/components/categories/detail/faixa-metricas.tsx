@@ -67,7 +67,7 @@ export function FaixaMetricas(props: FaixaDoMesProps) {
                 </div>
                 <div className="flex flex-1 flex-wrap items-stretch gap-x-8 gap-y-6">
                     <Separator orientation="vertical" className="h-auto self-stretch" />
-                    <div className="grid content-start gap-1">
+                    <div className="grid min-w-36 flex-1 content-start gap-1">
                         <Caption>{comparacao.mesmoPonto ? `vs mesmo dia de ${mesAnterior}` : `vs ${mesAnterior}`}</Caption>
                         <MoneyDisplay value={comparacao.anterior} size="xl" />
                         <StatCardDelta
@@ -81,7 +81,7 @@ export function FaixaMetricas(props: FaixaDoMesProps) {
                     {media != null && contraMedia != null ? (
                         <>
                             <Separator orientation="vertical" className="h-auto self-stretch" />
-                            <div className="grid content-start gap-1">
+                            <div className="grid min-w-36 flex-1 content-start gap-1">
                                 <Caption>Média de 6 meses</Caption>
                                 <MoneyDisplay value={media} size="xl" />
                                 <Caption>
@@ -93,7 +93,7 @@ export function FaixaMetricas(props: FaixaDoMesProps) {
                         </>
                     ) : null}
                     <Separator orientation="vertical" className="h-auto self-stretch" />
-                    <div className="grid content-start gap-1">
+                    <div className="grid min-w-36 flex-1 content-start gap-1">
                         <Caption>Lançamentos</Caption>
                         <span className="nums text-lg font-semibold">{quantidade}</span>
                         {maior ? (
