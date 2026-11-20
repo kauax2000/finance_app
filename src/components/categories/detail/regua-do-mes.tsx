@@ -82,25 +82,25 @@ export function ReguaDoMes({
 
     return (
         <PageSection aria-label={`Resumo de ${mes}`}>
-            {/* Na tela larga (2xl, 1536px) os fatos saem da linha do valor e ocupam uma coluna à direita, da
-                sobrancelha até a régua: a barra para antes deles e não atravessa a tela inteira. A
-                cópia escondida é `display: none`, então o leitor de tela lê os fatos uma vez só. */}
-            <div className="grid gap-x-12 gap-y-5 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
-                <div className="grid min-w-0 gap-5">
-                    <div className="grid gap-3">
-                        <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
-                        {fatosNaLinha ? (
-                            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-                                {valor}
-                                <div className="2xl:hidden">{fatosNaLinha}</div>
-                            </div>
-                        ) : (
-                            valor
-                        )}
-                    </div>
-                    <div className="mt-5">
+            {/* Na tela larga (2xl, 1536px) os fatos saem da linha do valor e vão para a linha da
+                barra, à direita, centrados nela: a barra para antes deles e não atravessa a tela
+                inteira. A cópia escondida é `display: none`, então o leitor de tela lê os fatos uma vez só. */}
+            <div className="grid min-w-0 gap-5">
+                <div className="grid gap-3">
+                    <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
+                    {fatosNaLinha ? (
+                        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+                            {valor}
+                            <div className="2xl:hidden">{fatosNaLinha}</div>
+                        </div>
+                    ) : (
+                        valor
+                    )}
+                </div>
+                <div className="mt-5">
+                    <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", marcador != null ? "mb-8" : "mb-3")}>
                         {marcador != null ? (
-                            <div className="relative mb-8">
+                            <div className="relative min-w-0 2xl:flex-1">
                                 <Progress
                                     value={Math.max(0, lancado)}
                                     max={escala.max}
@@ -126,18 +126,18 @@ export function ReguaDoMes({
                                 </Caption>
                             </div>
                         ) : (
-                            <BarraDoMes {...props} className="mb-3" />
+                            <BarraDoMes {...props} className="min-w-0 2xl:flex-1" />
                         )}
-                        {veredito ? <Muted>{veredito}</Muted> : null}
+                        {fatosNaLinha ? (
+                            <div className="hidden shrink-0 items-center gap-12 2xl:flex">
+                                <Separator orientation="vertical" className="h-12" />
+                                {fatosNaLinha}
+                            </div>
+                        ) : null}
                     </div>
-                    {children}
+                    {veredito ? <Muted>{veredito}</Muted> : null}
                 </div>
-                {fatosNaLinha ? (
-                    <div className="hidden items-center gap-12 2xl:flex">
-                        <Separator orientation="vertical" className="h-16" />
-                        {fatosNaLinha}
-                    </div>
-                ) : null}
+                {children}
             </div>
         </PageSection>
     )
