@@ -1262,13 +1262,12 @@ flowchart TD
     detail -->|"⋯ Editar"| catForm
     detail -->|"⋯ Definir limite, só despesa"| catForm
     detail -->|"⋯ Excluir"| delDetail(["Excluir categoria?"]) -->|"Excluir"| listView
-    detail -->|"+ Lançar, só adulto"| txForm(("G5b Formulário, sem categoria marcada"))
     analysis -->|"linha de Para onde vai"| txDetail(("G5b Detalhe"))
     sideList -->|"linha"| txDetail
     phoneTabs -->|"linha"| txDetail
     sideList -->|"Ver em Transações"| G5(("G5 /transactions?cats=id"))
     phoneTabs -->|"Ver em Transações"| G5
-    sideList -->|"vazio: Nova transação"| txForm
+    sideList -->|"vazio: Nova transação"| txForm(("G5b Formulário"))
 
     budget[("Edge evaluate-budgets")] -.->|"limite atingido, pelo mês do fechamento da fatura"| notifBudget(("G3 Notificação budget_threshold"))
 
@@ -1283,7 +1282,7 @@ flowchart TD
 
 | Ponto | Regra | Onde |
 |---|---|---|
-| Detalhe | `rpc_fetch_category_detail_bundle`. Desktop: PageHeader (mês, "+ Lançar", ⋯ Editar, Definir limite e Excluir) e duas colunas, a análise e a lista "Lançamentos (N)" fixa; telefone: Resumo do mês no topo e as abas Resumo e Lançamentos (N). "Definir limite" abre o Editar com a seção do limite aberta; "+ Lançar" abre o formulário global sem categoria marcada; o convidado não vê o ⋯ nem o "+ Lançar". A linha da lista e a de "Para onde vai" abrem o detalhe do lançamento | `src/lib/queries/fetch-category-detail-bundle.ts`, `src/components/categories/detail/` |
+| Detalhe | `rpc_fetch_category_detail_bundle`. Desktop: PageHeader (mês, ⋯ Editar, Definir limite e Excluir) e duas colunas, a análise e a lista "Lançamentos (N)" fixa; telefone: Resumo do mês no topo e as abas Resumo e Lançamentos (N). "Definir limite" abre o Editar com a seção do limite aberta; o convidado não vê o ⋯. Para lançar, o "+ Adicionar" global (o "+ Lançar" do cabeçalho saiu em 20 nov 2026). O valor do mês fica numa faixa de largura inteira sob o cabeçalho, com a barra também sem limite (o peso na carteira). A linha da lista e a de "Para onde vai" abrem o detalhe do lançamento | `src/lib/queries/fetch-category-detail-bundle.ts`, `src/components/categories/detail/` |
 | "Ver" do toast | Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a `/categories/id?type=`; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar | `src/components/categories/category-create-dialog.tsx`, `src/app/(app)/categories/page-client.tsx` |
 | Entradas no detalhe | Lista de categorias (cartão ou rodapé "Sem gasto"), gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
 | Grade do mês | Por aba, só a categoria com movimento no mês (lançado + previsto acima de zero) entra na grade, ordenada por Maior gasto (ou Maior receita), Nome ou Variação (`ordenarCategorias`; só em memória, abre em Maior). A sem movimento sai da grade e vai ao rodapé "Sem gasto em <mês>:" (na receita, "Sem receita em <mês>:"), cada nome um link para o detalhe dela (`categoryDetailPath`, com o mês na despesa). Sem nenhuma com movimento, a grade vira o vazio "Nenhum gasto em <mês>" (ou "Nenhuma receita em <mês>"), com o rodapé abaixo. O mês sai por extenso e em minúscula, com o ano só fora do ano corrente. A faísca de cada cartão lê os 5 meses anteriores (`useSerieDasCategorias`) | `src/app/(app)/categories/page-client.tsx`, `src/components/categories/categorias-do-mes.tsx`, `src/lib/categoria-situacao.ts`, `src/hooks/use-serie-das-categorias.ts` |

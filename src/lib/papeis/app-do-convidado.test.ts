@@ -59,9 +59,8 @@ describe("só leitura para quem não é adulto (Ruling 8)", () => {
 
     it("o detalhe da categoria: sem editar nem excluir (e com eles, a folha do orçamento)", () => {
         const f = fonte("src/app/(app)/categories/[categoryId]/page-client.tsx")
-        // O ⋯ (editar, limite, excluir) e o "+ Lançar" só existem para quem escreve.
+        // O ⋯ (editar, limite, excluir) só existe para quem escreve.
         expect(f).toContain("const abrirMenu = podeEscrever ? (")
-        expect(f).toMatch(/\{podeEscrever \? \(\s*<Button[\s\S]*?Lançar/)
     })
 
     it("os cartões da categoria escondem o menu sem as ações", () => {

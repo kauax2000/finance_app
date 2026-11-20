@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
-import { ChartPieIcon, EllipsisHorizontalIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ChartPieIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -540,16 +540,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     </PageHeaderTitleRow>
                     <PageHeaderActions>
                         <MonthNav budgetMonthYm={yearMonth} onBudgetMonthYmChange={handleMonthChange} dense />
-                        {podeEscrever ? (
-                            <Button
-                                type="button"
-                                variant="primary"
-                                onClick={() => txController.openDialog(undefined, category.type)}
-                            >
-                                <PlusIcon aria-hidden />
-                                Lançar
-                            </Button>
-                        ) : null}
                         {abrirMenu}
                     </PageHeaderActions>
                 </PageHeader>
