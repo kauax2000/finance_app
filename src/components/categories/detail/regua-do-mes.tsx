@@ -3,7 +3,6 @@
 import type { ReactNode } from "react"
 import {
     DescriptionDetails,
-    DescriptionHint,
     DescriptionList,
     DescriptionListItem,
     DescriptionTerm,
@@ -14,7 +13,6 @@ import { Progress } from "@/components/ui/progress"
 import { Caption, Muted } from "@/components/ui/typography"
 import type { Comparacao, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import { currencyBRL, percentBR } from "@/lib/formatters"
-import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { Transaction } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { escalaDaRegua, fraseDaComparacao, nomeDoMes, reaisInteiros, vereditoDaMedia } from "./regua-do-mes-contas"
@@ -133,24 +131,13 @@ export function ReguaDoMes({
     )
 }
 
-/** Os fatos do mês: em quatro colunas com fio (1A) ou em linha, sem a média por lançamento (1C). */
-export function FatosDoMes({
-    tipo,
-    lancado,
-    pesoNoTotal,
-    quantidade,
-    maior,
-    layout,
-}: FaixaDoMesProps & { layout: "colunas" | "linha" }) {
+/** Os fatos do mês, em linha ao lado do valor: lançamentos, o maior e o peso na carteira. */
+export function FatosDoMes({ tipo, lancado, pesoNoTotal, quantidade, maior }: FaixaDoMesProps) {
     const despesa = tipo === "expense"
-    const forma = maior ? (maior.payment_card?.name ?? paymentMethodLabel(maior.payment_method)) : ""
-    const fatos: { termo: string; valor: ReactNode; dica?: string }[] = [
+    const fatos: { termo: string; valor: ReactNode }[] = [
         { termo: "Lançamentos", valor: quantidade },
         ...(maior
-            ? [{ termo: despesa ? "Maior gasto" : "Maior entrada", valor: <MoneyDisplay value={Number(maior.amount)} size="lg" />, dica: forma }]
-            : []),
-        ...(layout === "colunas" && quantidade > 0
-            ? [{ termo: "Média por lançamento", valor: <MoneyDisplay value={lancado / quantidade} size="lg" /> }]
+            ? [{ termo: despesa ? "Maior gasto" : "Maior entrada", valor: <MoneyDisplay value={Number(maior.amount)} size="lg" /> }]
             : []),
         ...(pesoNoTotal != null && lancado !== 0
             ? [
@@ -161,24 +148,17 @@ export function FatosDoMes({
               ]
             : []),
     ]
-    const colunas = layout === "colunas"
 
     return (
-        <DescriptionList className={colunas ? "flex-row gap-0" : "flex-row gap-9"}>
-            {fatos.map((f, i) => (
-                <DescriptionListItem
-                    key={f.termo}
-                    className={colunas ? cn("flex-1", i > 0 && "border-s border-border ps-6") : undefined}
-                >
+        <DescriptionList className="flex-row gap-9">
+            {fatos.map((f) => (
+                <DescriptionListItem key={f.termo}>
                     <DescriptionTerm>{f.termo}</DescriptionTerm>
                     <DescriptionDetails size="lg" className="font-mono font-semibold">
                         {f.valor}
-                        {colunas && f.dica ? <DescriptionHint className="font-sans">{f.dica}</DescriptionHint> : null}
                     </DescriptionDetails>
                 </DescriptionListItem>
             ))}
-            {/* 1A guarda as quatro colunas mesmo quando um fato some. */}
-            {colunas ? Array.from({ length: Math.max(0, 4 - fatos.length) }, (_, i) => <div key={i} className="flex-1" />) : null}
         </DescriptionList>
     )
 }
