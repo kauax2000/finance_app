@@ -191,7 +191,7 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                     <Skeleton className="h-3 w-36" />
                 </div>
                 <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-2">
-                    <Skeleton shape="control" className="w-full md:w-56 pointer-coarse:h-12" />
+                    <Skeleton shape="control" className="w-full md:w-56" />
                     <Skeleton shape="control" className="w-full md:w-32" />
                 </div>
             </div>
