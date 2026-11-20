@@ -66,7 +66,7 @@ export function ReguaDoMes({
         .join(" · ")
 
     const valor = (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <MoneyDisplay value={lancado} size="3xl" />
             {frase ? (
                 <Muted>
