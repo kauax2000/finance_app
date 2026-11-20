@@ -99,6 +99,11 @@ describe("painel de notificações (fonte)", () => {
         expect(lista).toMatch(/seq !== fetchSeq\.current \|\| escritasEmVoo\.current > 0/)
     })
 
+    it("com o dia preso, o degradê do cabeçalho nasce com a rolagem (parado, não cobre o primeiro cartão)", () => {
+        expect(painel).toContain("after:opacity-[var(--notificacoes-degrade,0)]")
+        expect(painel).toMatch(/setProperty\("--notificacoes-degrade", String\(Math\.min\(corpo\.scrollTop \/ 56, 1\)\)\)/)
+    })
+
     it("a seção de preferências é a âncora do menu", () => {
         expect(lerFonte("src/components/settings/notification-preferences.tsx")).toContain('id="notificacoes"')
     })

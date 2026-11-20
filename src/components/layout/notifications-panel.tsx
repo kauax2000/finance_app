@@ -306,6 +306,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     // dias iguais à vista nem um lugar vazio.
     const acompanharDia = (e: React.UIEvent<HTMLDivElement>) => {
         const corpo = e.currentTarget
+        // O degradê do cabeçalho nasce com a rolagem: parado no topo ele cobria o primeiro
+        // cartão (a placa vai até o dia preso e a lista não tem respiro); cheio aos 56px.
+        corpo.parentElement?.style.setProperty("--notificacoes-degrade", String(Math.min(corpo.scrollTop / 56, 1)))
         const base = corpo.getBoundingClientRect().top + parseFloat(getComputedStyle(corpo).paddingTop) + 1
         let atual: string | null = null
         for (const g of corpo.querySelectorAll<HTMLElement>("[data-dia]")) {
@@ -543,7 +546,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     (comTrilho || carregando) && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0",
                     // O dia preso mora no fim do cabeçalho: a placa vai cheia até a base dele, e o
                     // degradê começa abaixo, senão a lista passaria visível por trás do dia.
-                    comDia && "[--dialog-header-solid:100%]!"
+                    comDia && "[--dialog-header-solid:100%]! after:opacity-[var(--notificacoes-degrade,0)]"
                 )}
             >
                 {cabecalho}
