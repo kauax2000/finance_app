@@ -498,7 +498,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const abrirMenu = podeEscrever ? (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button type="button" variant="tertiary" size="icon-md" aria-label={`Opções da categoria ${category.name}`}>
+                {/* No desktop o ⋯ mora ao lado da pílula do mês (36, com fio): mesma altura e mesmo fio, para a fileira ler como uma só. */}
+                <Button
+                    type="button"
+                    variant={isMobile ? "tertiary" : "outline"}
+                    size={isMobile ? "icon-md" : "icon-lg"}
+                    aria-label={`Opções da categoria ${category.name}`}
+                >
                     <EllipsisHorizontalIcon aria-hidden />
                 </Button>
             </DropdownMenuTrigger>
