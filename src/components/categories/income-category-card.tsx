@@ -12,7 +12,7 @@ import {
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { CategoryCardContextMenu } from "@/components/categories/category-card-context-menu"
 import { cn } from "@/lib/utils"
-import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { ChartSparkline } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -121,7 +121,10 @@ export function IncomeCategoryCard({
             onEdit={onEdit}
             onDelete={onDelete}
         >
-            <Card padding="sm" className="group h-full">
+            <Card
+                padding="sm"
+                className="group h-full hover:border-foreground/20 hover:bg-muted/40 active:border-foreground/20 active:bg-muted/40"
+            >
                 <CardHeader
                     media={
                         <ColorTile size="lg" color={color}>
@@ -129,10 +132,16 @@ export function IncomeCategoryCard({
                         </ColorTile>
                     }
                 >
-                    <CardTitle className="min-w-0 self-center truncate leading-snug">
+                    <CardTitle className="flex min-w-0 items-center gap-1 self-center leading-snug">
                         <CardLink asChild>
-                            <Link href={href}>{category.name}</Link>
+                            <Link href={href} className="min-w-0 truncate">
+                                {category.name}
+                            </Link>
                         </CardLink>
+                        <ChevronRightIcon
+                            aria-hidden
+                            className="shrink-0 text-muted-foreground opacity-0 transition-[opacity,translate,color] duration-(--duration-fast) group-hover:translate-x-0.5 group-hover:text-foreground group-hover:opacity-100 group-active:translate-x-0.5 group-active:text-foreground group-active:opacity-100 group-focus-within:translate-x-0.5 group-focus-within:text-foreground group-focus-within:opacity-100 max-md:hidden"
+                        />
                     </CardTitle>
 
                     {onEdit && onDelete ? (
@@ -207,22 +216,31 @@ export function IncomeCategoryCard({
                     </div>
 
                     {historico === undefined ? (
-                        <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex h-16 items-end">
+                        <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
                     {/* O osso da faísca de área: a faixa preenchida do pé, e não barras. */}
                     <Skeleton className="h-10 w-full rounded-none" />
                 </div>
                     ) : (
+                        <div className="relative -mx-(--card-px) -mb-(--card-py) mt-auto">
                         <ChartSparkline
                             variant="area"
                             bleed
                             y="total"
-                            className="-mx-(--card-px) -mb-(--card-py) mt-auto h-16 w-auto"
+                            className="w-full max-md:h-26 md:h-16"
                             data={serie ?? []}
                             reference={media}
                             config={{ total: { label: category.name, color } }}
                             label={`Receita em ${category.name} nos últimos 6 meses`}
                             description={descricaoDaSerie}
                         />
+                            <span
+                                aria-hidden
+                                className="pointer-events-none absolute inset-x-(--card-px) bottom-2.5 flex h-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-foreground transition-colors group-active:bg-foreground/12 md:hidden"
+                            >
+                                Ver lançamentos
+                                <ChevronRightIcon aria-hidden className="text-muted-foreground" />
+                            </span>
+                        </div>
                     )}
                 </CardContent>
             </Card>

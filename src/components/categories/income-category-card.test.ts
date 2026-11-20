@@ -11,13 +11,21 @@ const { IncomeCategoryCard } = await import("./income-category-card")
 const fonte = semComentarios(lerFonte("src/components/categories/income-category-card.tsx"))
 
 describe("IncomeCategoryCard pelo fonte", () => {
+    it("o chevron aparece no hover e o telefone tem o botão fantasma sobre a faísca", () => {
+        expect(fonte).toContain("ChevronRightIcon")
+        for (const c of ["opacity-0", "group-hover:opacity-100", "max-md:hidden"]) expect(fonte).toContain(c)
+        for (const c of ["Ver lançamentos", "pointer-events-none", "group-active:bg-foreground/12", "md:hidden", "h-11"])
+            expect(fonte).toContain(c)
+    })
+
     it("a barra vem antes da faísca, que é o pé do cartão, de borda a borda", () => {
         expect(fonte.indexOf("<Progress")).toBeLessThan(fonte.indexOf("<ChartSparkline"))
-        const faisca = fonte.slice(fonte.indexOf("<ChartSparkline"))
+        const faisca = fonte.slice(fonte.indexOf("relative -mx-(--card-px)"))
         expect(faisca).toContain("bleed")
         expect(faisca).toContain("-mx-(--card-px)")
         expect(faisca).toContain("-mb-(--card-py)")
-        expect(faisca).toContain("h-16")
+        expect(faisca).toContain("max-md:h-26")
+        expect(faisca).toContain("md:h-16")
     })
 
     it("a faísca é a área com a média", () => {
