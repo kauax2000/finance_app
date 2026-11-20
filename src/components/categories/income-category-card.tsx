@@ -140,7 +140,7 @@ export function IncomeCategoryCard({
                         </CardLink>
                         <ChevronRightIcon
                             aria-hidden
-                            className="shrink-0 text-muted-foreground opacity-0 transition-[opacity,translate,color] duration-(--duration-fast) group-hover:translate-x-0.5 group-hover:text-foreground group-hover:opacity-100 group-active:translate-x-0.5 group-active:text-foreground group-active:opacity-100 group-focus-within:translate-x-0.5 group-focus-within:text-foreground group-focus-within:opacity-100 max-md:hidden"
+                            className="size-4 shrink-0 text-muted-foreground opacity-0 transition-[opacity,translate,color] duration-(--duration-fast) group-hover:translate-x-0.5 group-hover:text-foreground group-hover:opacity-100 group-active:translate-x-0.5 group-active:text-foreground group-active:opacity-100 group-focus-within:translate-x-0.5 group-focus-within:text-foreground group-focus-within:opacity-100 max-md:hidden"
                         />
                     </CardTitle>
 
@@ -238,7 +238,7 @@ export function IncomeCategoryCard({
                                 className="pointer-events-none absolute inset-x-(--card-px) bottom-2.5 flex h-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-foreground transition-colors group-active:bg-foreground/12 md:hidden"
                             >
                                 Ver lançamentos
-                                <ChevronRightIcon aria-hidden className="text-muted-foreground" />
+                                <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
                             </span>
                         </div>
                     )}
