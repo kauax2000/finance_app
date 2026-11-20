@@ -1690,7 +1690,7 @@ function MiniaturaDoRecibo({
                     </Button>
                 </ItemActions>
             </Item>
-            <Dialog open={aberto && url != null} onOpenChange={setAberto} surface="auto">
+            <Dialog open={aberto && url != null} onOpenChange={setAberto}>
                 <DialogContent size="xl">
                     <DialogHeader>
                         <DialogTitle>Foto do recibo</DialogTitle>

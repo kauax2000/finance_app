@@ -39,7 +39,7 @@ painel (continua logo abaixo do valor).
     o mesmo `arquivoRef` da pílula) e `Button variant="tertiary" size="icon-md"`
     com `TrashIcon`, `aria-label` "Tirar a foto" (o `leitura.tirarFoto` de hoje).
     As duas desabilitam com `saving`.
-- **Ver grande:** um `Dialog surface="auto"` (`size="xl"`) aberto pela linha,
+- **Ver grande:** um `Dialog` (`size="xl"`, diálogo também no celular, sem gaveta) aberto pela linha,
   título "Foto do recibo", a foto inteira (`object-contain`), só com o × para
   fechar. Mesma forma do `VisualizadorDeAnexo`, mas lendo a URL local do
   `File` (o anexo ainda não existe).
