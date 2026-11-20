@@ -17,8 +17,8 @@ function HeroSkeleton() {
                     <Skeleton className="h-5 w-40 max-w-full" />
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                    <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
-                    <Skeleton shape="tile" size="lg" />
+                    <Skeleton shape="pill" className="w-20" />
+                    <Skeleton shape="control" size="md" className="aspect-square" />
                 </div>
             </div>
 
@@ -29,7 +29,7 @@ function HeroSkeleton() {
                             <Skeleton shape="tile" />
                             <div className="flex min-w-0 items-center gap-2">
                                 <Skeleton className="h-6 w-56 max-w-full" />
-                                <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
+                                <Skeleton shape="pill" className="w-20" />
                             </div>
                         </div>
                     </div>
@@ -37,15 +37,12 @@ function HeroSkeleton() {
 
                 <div className="flex min-h-10 min-w-0 max-w-[min(100%,24rem)] items-center justify-end">
                     <div className="flex w-full min-w-0 items-center justify-between gap-2">
-                        <Skeleton className="h-8 w-16 shrink-0 rounded-full" />
-                        <Skeleton shape="tile" />
-                        <Skeleton className="h-8 flex-1 rounded-full" />
-                        <Skeleton shape="tile" />
+                        <Skeleton shape="control" className="flex-1" />
                     </div>
                 </div>
 
                 <div className="flex min-h-10 shrink-0 items-center justify-end">
-                    <Skeleton shape="tile" size="lg" />
+                    <Skeleton shape="control" size="md" className="aspect-square" />
                 </div>
             </div>
         </div>
@@ -78,7 +75,7 @@ function SummaryIncomeSkeleton() {
     return (
         <section className="space-y-3" aria-label="Resumo do mês (skeleton)">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                <MetricCardSkeleton headerRight={<Skeleton className="h-5 w-14 rounded-full" />} />
+                <MetricCardSkeleton headerRight={<Skeleton shape="pill" className="w-14" />} />
                 <MetricCardSkeleton />
                 <MetricCardSkeleton />
                 <MetricCardSkeleton />
@@ -113,7 +110,7 @@ function SummaryExpenseSkeleton() {
                     <div className="flex w-full min-w-0 flex-col items-start gap-2 md:ml-auto md:w-auto md:min-w-0 md:flex-row md:items-center md:justify-end">
                         <BudgetMoMMobileCardSkeleton />
                         <div className="hidden md:block">
-                            <Skeleton className="h-5 w-24 rounded-full" />
+                            <Skeleton shape="pill" className="w-24" />
                         </div>
                     </div>
                 </div>
@@ -157,12 +154,7 @@ function TrendsSkeleton() {
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className="h-4 w-24" />
                 </div>
-                <div className="inline-flex h-8 w-40 shrink-0 items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11">
-                    <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
-                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-full" />
-                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-full" />
-                    </div>
-                </div>
+                <Skeleton shape="control" className="w-40" />
             </div>
 
             <Card padding="none">
@@ -199,8 +191,8 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                     <Skeleton className="h-3 w-36" />
                 </div>
                 <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-2">
-                    <Skeleton className="h-8 w-full rounded-full pointer-coarse:h-11 md:w-56" />
-                    <Skeleton className="h-8 w-full rounded-full pointer-coarse:h-11 md:w-32" />
+                    <Skeleton shape="control" className="w-full md:w-56" />
+                    <Skeleton shape="control" className="w-full md:w-32" />
                 </div>
             </div>
 
@@ -210,7 +202,7 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                 footer={
                     <TablePanelFooter>
                         <Skeleton className="h-4 w-full max-w-48" />
-                        <Skeleton className="h-8 w-40 self-end rounded-full sm:self-auto" />
+                        <Skeleton shape="control" size="sm" className="w-40 self-end sm:self-auto" />
                     </TablePanelFooter>
                 }
             >

@@ -46,7 +46,7 @@ function SectionTitleRow({
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-8 w-32 shrink-0 rounded-full pointer-coarse:h-11" />
+                <Skeleton shape="control" size="sm" className="w-32" />
             </div>
         )
     }
@@ -61,12 +61,7 @@ function DashboardToolbarSkeleton() {
     return (
         <div className="hidden min-w-0 max-w-full md:flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3">
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
-                <Skeleton className="h-8 w-20 shrink-0 rounded-full" />
-                <Skeleton shape="tile" />
-                <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:max-w-64">
-                    <Skeleton className="h-8 w-44 rounded-full" />
-                </div>
-                <Skeleton shape="tile" />
+                <Skeleton shape="control" className="w-52" />
             </div>
         </div>
     )
@@ -281,7 +276,7 @@ function DashboardInvoicesSkeleton() {
                                         <div className="space-y-2">
                                             <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
                                                 <Skeleton className="h-3 w-24 rounded-md" />
-                                                <Skeleton className="h-7 w-28 rounded-full min-[480px]:ml-auto" />
+                                                <Skeleton shape="control" size="sm" className="w-28 min-[480px]:ml-auto" />
                                             </div>
                                             <div className="space-y-1 border-t border-border/50 pt-3">
                                                 <Skeleton className="h-3 w-full max-w-56 rounded-md" />
@@ -320,7 +315,7 @@ function DashboardInstallmentsSkeleton() {
                                 <Skeleton className="h-4 w-28 shrink-0 rounded-md" />
                             </div>
                             <div className="flex min-w-0 items-center gap-2">
-                                <Skeleton className="h-5 w-10 shrink-0 rounded-full" />
+                                <Skeleton shape="pill" className="w-10" />
                                 <Skeleton className="h-1.5 min-w-0 flex-1 rounded-full" />
                             </div>
                         </div>

@@ -49,8 +49,8 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
             {/* A mesma quebra da barra real: abaixo de 48rem da linha, as abas esticam em cima e os filtros descem. */}
             <div className="@container/transacoes min-w-0">
                 <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
-                    <Skeleton className="h-9 w-60 shrink-0 rounded-row-lg pointer-coarse:h-11 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
-                    <Skeleton className="hidden size-11 shrink-0 rounded-row-lg max-md:block" />
+                    <Skeleton shape="control" className="w-60 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
+                    <Skeleton shape="control" className="hidden aspect-square max-md:block" />
                     <div className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
                         <FilterBarSkeleton tokens={0} group={false} />
                     </div>
@@ -105,7 +105,7 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
                                                 <Skeleton shape="text" className="ms-auto w-18" />
                                             </TableCell>
                                             <TableCell actions>
-                                                <Skeleton className="ms-auto size-7 rounded-row" />
+                                                <Skeleton shape="control" size="md" className="ms-auto aspect-square" />
                                             </TableCell>
                                         </TableRow>
                                     ))}
