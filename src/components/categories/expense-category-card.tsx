@@ -251,7 +251,7 @@ export function ExpenseCategoryCard({
                             bleed
                             band={0.45}
                             y="total"
-                            className="w-full max-md:h-26 md:h-16"
+                            className="w-full max-md:h-26 md:h-16 max-md:[&_.recharts-reference-line]:hidden"
                             data={serie ?? []}
                             reference={media}
                             config={{ total: { label: category.name, color } }}

@@ -109,3 +109,11 @@ describe("ExpenseCategoryCard no render", () => {
         }
     })
 })
+
+describe("a média no telefone (20/11/2026)", () => {
+  it("a linha tracejada da média some abaixo do md", async () => {
+    const { lerFonte } = await import("@/test/fonte")
+    const nome = import.meta.url.includes("income") ? "income" : "expense"
+    expect(lerFonte(`src/components/categories/${nome}-category-card.tsx`)).toContain("max-md:[&_.recharts-reference-line]:hidden")
+  })
+})
