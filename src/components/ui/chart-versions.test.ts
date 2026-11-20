@@ -388,3 +388,11 @@ describe("ChartSparkline sem dica (20/11/2026)", () => {
     expect(trecho.match(/activeDot=\{tooltip \? undefined : false\}/g)?.length).toBe(2)
   })
 })
+
+describe("ChartSparkline band: a área enche até o pé (20/11/2026)", () => {
+  it("a base da área é o fundo do domínio da faixa", async () => {
+    const { lerFonte, semComentarios } = await import("@/test/fonte")
+    const f = semComentarios(lerFonte("src/components/ui/chart.tsx"))
+    expect(f).toContain("baseValue={dominio ? dominio[0] : undefined}")
+  })
+})

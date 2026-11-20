@@ -3187,6 +3187,8 @@ function ChartSparkline({
           strokeWidth={2}
           fill={cor}
           fillOpacity={0.15}
+          // Com a faixa, a área desce até o pé da caixa (o fundo do domínio), e não para no zero.
+          baseValue={dominio ? dominio[0] : undefined}
           dot={false}
           // Sem a dica, o ponto que acende sob o cursor não diz nada: só existe junto dela.
           activeDot={tooltip ? undefined : false}
