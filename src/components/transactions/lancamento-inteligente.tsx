@@ -1681,7 +1681,8 @@ function MiniaturaDoRecibo({
                     <ItemDescription>Toque para ver</ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                    <Button variant="secondary" size="sm" disabled={disabled} onClick={onTrocar}>
+                    {/* `md`: 32 no cursor e 44 no dedo, como a lixeira ao lado (o `sm` não cresce no toque). */}
+                    <Button variant="secondary" size="md" disabled={disabled} onClick={onTrocar}>
                         Trocar
                     </Button>
                     <Button variant="tertiary" size="icon-md" aria-label="Tirar a foto" disabled={disabled} onClick={onTirar}>
