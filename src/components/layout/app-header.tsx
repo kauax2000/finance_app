@@ -3,7 +3,10 @@
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellButton, useUnreadBellCount } from "@/components/layout/notification-bell-link"
-import { CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { CalendarIcon, ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { Button } from "@/components/ui/button"
+import { usePageTitleDock } from "@/hooks/use-page-title-dock"
+import { labelYearMonthPt, shortLabelYearMonthPt } from "@/lib/budget-month"
 import { FilterLinesIcon } from "@/components/icons/filter-lines-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PageHeaderBack } from "@/components/ui/page-header"
@@ -174,6 +177,40 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             {filtro.active && !filtro.count ? <ToolbarFilterIndicator className="top-2 right-2" /> : null}
         </TopBarAction>
     ) : null
+    // Do `md` para cima, o mês da tela sobe à barra com o título (o mesmo
+    // desfoque), à esquerda da lupa e do sino: só o mês curto e o chevron, sem
+    // placa. Abre a mesma grade do mês. Fora do encaixe, invisível e inerte.
+    const dock = usePageTitleDock(typeof document === "undefined" ? null : document)
+    const mesSubiu = Boolean(dock?.docked)
+    const [mesAberto, setMesAberto] = React.useState(false)
+    const mesNaBarra =
+        filtro?.month && filtro.popover ? (
+            <span
+                inert={!mesSubiu || undefined}
+                data-docked={mesSubiu || undefined}
+                className={cn(
+                    "flex shrink-0 transition-[opacity,translate,filter] duration-(--duration-base) ease-(--ease-out)",
+                    mesSubiu ? "translate-y-0 opacity-100 blur-none" : "pointer-events-none translate-y-1.5 opacity-0 blur-xs"
+                )}
+            >
+                <Popover open={mesAberto && mesSubiu} onOpenChange={setMesAberto}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="tertiary"
+                            className="nums gap-1 px-2.5"
+                            aria-label={`Escolher mês: ${labelYearMonthPt(filtro.month).toLocaleLowerCase("pt-BR")}`}
+                        >
+                            {/* Num elemento, o rótulo fica em minúscula ("nov 2026"). */}
+                            <span>{shortLabelYearMonthPt(filtro.month).toLocaleLowerCase("pt-BR")}</span>
+                            <ChevronDownIcon className="opacity-60" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" size="auto" padding="none" label={filtro.label}>
+                        {filtro.popover(() => setMesAberto(false))}
+                    </PopoverContent>
+                </Popover>
+            </span>
+        ) : null
     const filtroNoCabecalho =
         filtro?.popover && botaoDoFiltro ? (
             <Popover open={filtroAberto} onOpenChange={setFiltroAberto}>
@@ -293,6 +330,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 {/* Do `md` para cima, o sino; a lupa cola nele numa cápsula com a
                     busca em "Botão", e também em "Barra" abaixo do `lg`, onde a
                     pílula não cabe. */}
+                {mesNaBarra}
                 {busca === "botao" || !pilulaCabe ? (
                     <TopBarActionGroup>
                         {lupa()}

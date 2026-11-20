@@ -33,6 +33,8 @@ export type PageChromeFilter = {
     inerte?: boolean
     /** `filter` (o ajuste da folha de filtros) ou `month` (o calendário do mês). */
     icon?: "filter" | "month"
+    /** O mês da tela (`YYYY-MM`), com `icon: "month"`: no desktop ele sobe à barra com o título. */
+    month?: string
     /** Abre a folha da tela. */
     onOpen?: () => void
     /** No lugar da folha, um popover ancorado no botão; `fechar` o fecha. */
@@ -144,7 +146,7 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
     const pathname = usePathname()
     const ref = React.useRef(filter)
     ref.current = filter
-    const { label, active, count, disabled, icon } = filter
+    const { label, active, count, disabled, icon, month } = filter
     const temPopover = Boolean(filter.popover)
 
     React.useLayoutEffect(() => {
@@ -161,10 +163,11 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
                 count,
                 disabled,
                 icon,
+                month,
                 onOpen: () => ref.current.onOpen?.(),
                 popover: temPopover ? (fechar) => ref.current.popover?.(fechar) : undefined,
             },
         })
         return () => setFilter(null)
-    }, [setFilter, pathname, enabled, label, active, count, disabled, icon, temPopover])
+    }, [setFilter, pathname, enabled, label, active, count, disabled, icon, month, temPopover])
 }

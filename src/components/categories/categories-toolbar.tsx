@@ -191,7 +191,8 @@ function MonthNavPanel({
 /**
  * O mês da tela no cabeçalho do telefone: o calendário colado à lupa, que abre
  * a grade de meses (`usePageChromeFilter`). O ponto acende fora do mês atual.
- * No desktop o mês segue na barra da tela.
+ * No desktop o mês segue na barra da tela e, quando o título sobe à barra do
+ * topo, sobe junto, à esquerda da lupa (`AppHeader`).
  */
 export function useMonthInHeader({
     budgetMonthYm,
@@ -211,6 +212,7 @@ export function useMonthInHeader({
             label: `Mês: ${labelYearMonthPt(budgetMonthYm)}`,
             active: budgetMonthYm !== formatYearMonth(new Date()),
             icon: "month",
+            month: budgetMonthYm,
             popover: (fechar) => (
                 <MonthNavPanel
                     budgetMonthYm={budgetMonthYm}
