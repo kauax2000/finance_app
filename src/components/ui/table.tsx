@@ -1102,7 +1102,7 @@ function TableSkeleton({
                   {c.selection ? (
                     <Skeleton className="size-4 rounded-sm" />
                   ) : c.actions ? (
-                    <Skeleton className="ms-auto size-7 rounded-full" />
+                    <Skeleton shape="control" size="md" className="ms-auto aspect-square" />
                   ) : (
                     <Skeleton
                       shape="text"

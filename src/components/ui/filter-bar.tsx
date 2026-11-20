@@ -2589,10 +2589,12 @@ function FilterBarSkeleton({
       {Array.from({ length: tokens }, (_, i) => (
         <Skeleton
           key={i}
-          className={cn("rounded-full", fieldControlHeightClassName[size], i % 2 ? "w-36" : "w-52")}
+          shape="control"
+          size={size}
+          className={i % 2 ? "w-36" : "w-52"}
         />
       ))}
-      <Skeleton className={cn("w-20 rounded-full", fieldControlHeightClassName[size])} />
+      <Skeleton shape="control" size={size} className="w-20" />
       {count ? <Skeleton shape="text" className="ms-auto w-28" /> : null}
     </div>
   )

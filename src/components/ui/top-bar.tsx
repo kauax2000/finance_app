@@ -1183,11 +1183,11 @@ function TopBarSkeleton({
       label="Carregando a barra…"
       className={cn(topBarVariants({ size, position: "static" }), className)}
     >
-      {start ? <Skeleton className="size-7 shrink-0 rounded-full" /> : null}
+      {start ? <Skeleton shape="control" className="aspect-square" /> : null}
       <Skeleton shape="text" className="w-32" />
       <div className="ms-auto flex shrink-0 items-center gap-2">
         {Array.from({ length: actions }, (_, i) => (
-          <Skeleton key={i} className="size-7 rounded-full" />
+          <Skeleton key={i} shape="control" className="aspect-square" />
         ))}
       </div>
     </SkeletonGroup>

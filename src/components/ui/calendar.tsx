@@ -1112,9 +1112,9 @@ function CalendarSkeleton({
           <Skeleton className="h-5 w-32" />
           {/* O "Hoje" e as duas setas, na forma do cabeçalho da agenda. */}
           <div className="flex items-center gap-1">
-            <Skeleton className="h-7 w-14 rounded-full" />
-            <Skeleton className="size-8 rounded-full" />
-            <Skeleton className="size-8 rounded-full" />
+            <Skeleton shape="control" size="sm" className="w-14" />
+            <Skeleton shape="control" size="md" className="aspect-square" />
+            <Skeleton shape="control" size="md" className="aspect-square" />
           </div>
         </div>
         <div className="overflow-hidden rounded-surface border border-border bg-card bg-clip-padding">

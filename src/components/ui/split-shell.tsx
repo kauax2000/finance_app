@@ -417,10 +417,10 @@ function SplitShellSkeleton({
               {Array.from({ length: fields }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2">
                   <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-10 w-full" />
+                  <Skeleton shape="control" size="xl" className="w-full" />
                 </div>
               ))}
-              <Skeleton className="h-10 w-full" />
+              <Skeleton shape="control" size="xl" className="w-full" />
             </div>
           </Container>
         </div>
