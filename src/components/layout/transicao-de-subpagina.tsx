@@ -15,6 +15,18 @@ const SOSSEGO_MS = 80
 
 /** O bloco à espera e o osso solto, que uma seção desenha sem `SkeletonGroup`. */
 const ESPERANDO = '[aria-busy="true"], [data-slot="skeleton"]'
+/**
+ * O que se redesenha a cada quadro ao montar e não é carregamento: o gráfico do Recharts e o
+ * número que conta até o valor. Sem ignorá-los, o DOM nunca sossegava e a troca esperava o
+ * teto (1,3s no detalhe da categoria, 20/11/2026); e eles animavam escondidos atrás da foto.
+ */
+const ANIMANDO = '[data-slot="chart"], [data-slot="stat-card-number"], [data-slot="chart-number"]'
+
+/** Uma mudança que conta para o sossego: fora do que anima sozinho. */
+function mudancaDeVerdade(m: MutationRecord): boolean {
+    const no = m.target.nodeType === Node.ELEMENT_NODE ? (m.target as Element) : m.target.parentElement
+    return !no?.closest(ANIMANDO)
+}
 
 /**
  * Duas fases: espera a rota mudar (`false` se passar de `LIMITE_DA_ROTA_MS`) e, mudada,
@@ -44,7 +56,9 @@ function telaPronta(rotaDeAntes: string): Promise<boolean> {
             }
         }
         const limiteDaRota = setTimeout(() => acabar(false), LIMITE_DA_ROTA_MS)
-        const observador = new MutationObserver(conferir)
+        const observador = new MutationObserver((mudancas) => {
+            if (mudancas.some(mudancaDeVerdade)) conferir()
+        })
         observador.observe(conteudo, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-busy"] })
         conferir()
     })

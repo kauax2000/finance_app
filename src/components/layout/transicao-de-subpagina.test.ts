@@ -83,4 +83,9 @@ describe("a transição de subpágina", () => {
         expect(T).toContain("const copia = parada(conteudo.cloneNode(true) as HTMLElement)")
         expect(T).toContain("const copia = parada(barra.cloneNode(true) as HTMLElement)")
     })
+
+    it("o sossego ignora o gráfico e o número que conta: a troca não espera o teto", () => {
+        expect(T).toContain(`const ANIMANDO = '[data-slot="chart"], [data-slot="stat-card-number"], [data-slot="chart-number"]'`)
+        expect(T).toMatch(/new MutationObserver\(\(mudancas\) => \{\s*if \(mudancas\.some\(mudancaDeVerdade\)\) conferir\(\)/)
+    })
 })
