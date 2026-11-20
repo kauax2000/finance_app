@@ -687,6 +687,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
                 onNewCategory={podeEscrever && isMobile ? () => openDialog() : undefined}
+                compacta={isMobile}
                 includeAll={false}
                 showMonthControls
                 budgetMonthYm={budgetMonthYm}

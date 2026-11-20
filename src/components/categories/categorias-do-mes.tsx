@@ -4,6 +4,7 @@ import { ArrowDownIcon, ArrowTrendingUpIcon, BanknotesIcon, BarsArrowDownIcon, L
 import Link from "next/link"
 import { Fragment, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { TopBarAction } from "@/components/ui/top-bar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,7 +41,7 @@ const opcoesDeOrdem = (tipo: Tipo): Opcao[] => [
  * A ordem da grade: um menu com o título "Ordenar por" e o critério (rádio). A escolhida mostra
  * a seta do sentido no lugar do tique e o sentido por extenso sob o nome; tocar nela de novo
  * inverte e mantém o menu aberto. No desktop o gatilho é só o ícone, sem fundo, com a dica
- * "Ordenar"; no telefone (`compacta`), um botão de ícone.
+ * "Ordenar"; no telefone (`compacta`), um `TopBarAction` de vidro, que a barra de Categorias cola ao "+".
  */
 export function OrdemDasCategorias({
     tipo,
@@ -77,9 +78,9 @@ export function OrdemDasCategorias({
         >
             {compacta ? (
                 <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="floating" size="icon-md" aria-label={nome}>
-                        <BarsArrowDownIcon aria-hidden />
-                    </Button>
+                    <TopBarAction type="button" label={nome} plate tooltip={false}>
+                        <BarsArrowDownIcon className="size-4" aria-hidden />
+                    </TopBarAction>
                 </DropdownMenuTrigger>
             ) : (
                 <Tooltip

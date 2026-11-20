@@ -33,6 +33,22 @@ describe("a contagem do mês", () => {
     })
 })
 
+describe("a cápsula do telefone", () => {
+    const t = semComentarios(lerFonte("src/components/categories/categories-toolbar.tsx"))
+    it("ordenar e nova categoria dividem um TopBarActionGroup de vidro", () => {
+        expect(t).toContain("<TopBarActionGroup>")
+        expect(t).toMatch(/<TopBarAction[^>]*label="Nova categoria"[^>]*plate/)
+        expect(t).not.toContain("<ToolbarButton")
+    })
+    it("sem onNewCategory só a ordem entra no grupo", () => {
+        expect(t).toContain("ordem && nova ? [ordem, nova] : (ordem ?? nova)")
+    })
+    it("o gatilho da ordem no telefone é um TopBarAction plate", () => {
+        const o = semComentarios(lerFonte("src/components/categories/categorias-do-mes.tsx"))
+        expect(o).toMatch(/<TopBarAction[^>]*label=\{nome\}[^>]*plate/)
+    })
+})
+
 describe("OrdemDasCategorias", () => {
     it("compacta é o botão de ícone do menu", () => {
         const html = renderToStaticMarkup(

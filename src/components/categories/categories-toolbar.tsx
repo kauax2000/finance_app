@@ -1,6 +1,7 @@
 "use client"
 
-import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
+import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
+import { TopBarAction, TopBarActionGroup } from "@/components/ui/top-bar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { useReducedMotion } from "motion/react"
@@ -374,6 +375,7 @@ export function CategoriesToolbar({
     className,
     includeAll = true,
     ordem,
+    compacta,
 }: {
     filterType: TransactionFilterType
     onFilterTypeChange: (v: TransactionFilterType) => void
@@ -387,7 +389,16 @@ export function CategoriesToolbar({
     includeAll?: boolean
     /** A ordem da grade: no grupo da direita, antes do mês. */
     ordem?: React.ReactNode
+    /** O telefone: ordenar e nova categoria numa cápsula de vidro só, `[⇅ | +]`. */
+    compacta?: boolean
 }) {
+    const nova = onNewCategory ? (
+        <TopBarAction type="button" label="Nova categoria" plate tooltip={false} onClick={onNewCategory}>
+            <PlusIcon className="size-4" aria-hidden />
+        </TopBarAction>
+    ) : null
+    // O grupo aceita um ou dois filhos (um é o círculo): sem a ordem ou sem o "+", sobra um só.
+    const capsula = ordem && nova ? [ordem, nova] : (ordem ?? nova)
     // O `justify-between` saiu: com o `ms-auto` do `ToolbarActions` o grupo da
     // direita vai à borda sozinho, e com um grupo só ele continua lá — que é o
     // caso desta barra quando o seletor de mês não aparece.
@@ -401,7 +412,7 @@ export function CategoriesToolbar({
             />
 
             <ToolbarActions>
-                {ordem}
+                {compacta ? (capsula ? <TopBarActionGroup>{capsula}</TopBarActionGroup> : null) : ordem}
                 {showMonthControls ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
@@ -409,16 +420,6 @@ export function CategoriesToolbar({
                         onJumpToCurrentMonth={onJumpToCurrentMonth}
                         dense
                         className="hidden md:flex"
-                    />
-                ) : null}
-                {onNewCategory ? (
-                    <ToolbarButton
-                        type="button"
-                        variant="tertiary"
-                        collapse
-                        icon={<PlusIcon aria-hidden />}
-                        label="Nova categoria"
-                        onClick={onNewCategory}
                     />
                 ) : null}
             </ToolbarActions>
