@@ -135,7 +135,7 @@ export function ExpenseCategoryCard({
         >
             <Card
                 padding="sm"
-                className="group h-full hover:border-foreground/20 hover:bg-muted/40 active:border-foreground/20 active:bg-muted/40"
+                className="group h-full hover:border-foreground/20 hover:bg-muted/40 md:active:border-foreground/20 md:active:bg-muted/40"
             >
                 <CardHeader
                     media={
@@ -145,7 +145,9 @@ export function ExpenseCategoryCard({
                     }
                 >
                     <CardTitle className="flex min-w-0 items-center gap-1 self-center leading-snug">
-                        <CardLink asChild>
+                        {/* No telefone o cartão não é clicável: a película e o link do título
+                            ficam só no desktop, e quem leva à categoria é o "Ver lançamentos". */}
+                        <CardLink asChild className="max-md:pointer-events-none max-md:after:hidden">
                             <Link href={href} className="min-w-0 truncate">
                                 {category.name}
                             </Link>
@@ -245,7 +247,9 @@ export function ExpenseCategoryCard({
                     <Skeleton className="h-10 w-full rounded-none" />
                 </div>
                     ) : (
-                        <div className="relative -mx-(--card-px) -mb-(--card-py) mt-auto">
+                        <div className="pointer-events-none relative -mx-(--card-px) -mb-(--card-py) mt-auto">
+                            {/* O pé não recebe toque (a faísca não tem dica): no desktop o clique passa ao link do
+                                cartão; só o "Ver lançamentos" do telefone volta a receber. */}
                         <ChartSparkline
                             variant="area"
                             bleed
@@ -258,13 +262,17 @@ export function ExpenseCategoryCard({
                             label={`Gasto em ${category.name} nos últimos 6 meses`}
                             description={descricaoDaSerie}
                         />
-                            <span
-                                aria-hidden
-                                className="pointer-events-none absolute inset-x-(--card-px) bottom-2.5 flex h-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-foreground transition-colors group-active:bg-foreground/12 md:hidden"
-                            >
-                                Ver lançamentos
-                                <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
-                            </span>
+                            {/* O alvo do telefone: um link de verdade, por cima do gráfico. O
+                                invólucro é que se posiciona (o cartão ergue botões e links a
+                                `relative z-10`, e isso tiraria o `absolute` do próprio botão). */}
+                            <div className="pointer-events-auto absolute inset-x-(--card-px) bottom-2.5 md:hidden">
+                                <Button asChild variant="tertiary" size="md" className="w-full">
+                                    <Link href={href}>
+                                        Ver lançamentos
+                                        <ChevronRightIcon aria-hidden data-icon="inline-end" className="text-muted-foreground" />
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </CardContent>

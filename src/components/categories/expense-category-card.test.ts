@@ -14,8 +14,13 @@ describe("ExpenseCategoryCard pelo fonte", () => {
     it("o chevron aparece no hover e o telefone tem o botão fantasma sobre a faísca", () => {
         expect(fonte).toContain("ChevronRightIcon")
         for (const c of ["opacity-0", "group-hover:opacity-100", "max-md:hidden"]) expect(fonte).toContain(c)
-        for (const c of ["Ver lançamentos", "pointer-events-none", "group-active:bg-foreground/12", "md:hidden", "h-11"])
-            expect(fonte).toContain(c)
+        // 20/11/2026: o "Ver lançamentos" é um link de verdade (o cartão inteiro só clica no desktop).
+        expect(fonte).toMatch(/<Button asChild variant="tertiary" size="md" className="w-full">\s*<Link href=\{href\}>\s*Ver lançamentos/)
+        expect(fonte).toContain('<CardLink asChild className="max-md:pointer-events-none max-md:after:hidden">')
+        expect(fonte).toContain("md:active:bg-muted/40")
+        expect(fonte).toContain('<div className="pointer-events-none relative -mx-(--card-px) -mb-(--card-py) mt-auto">')
+        expect(fonte).toContain('<div className="pointer-events-auto absolute inset-x-(--card-px) bottom-2.5 md:hidden">')
+        expect(fonte).not.toMatch(/(?<![\w:])active:bg-muted\/40/)
     })
 
     it("a faísca é a área com a média", () => {
@@ -117,4 +122,12 @@ describe("a média no telefone (20/11/2026)", () => {
     const nome = import.meta.url.includes("income") ? "income" : "expense"
     expect(lerFonte(`src/components/categories/${nome}-category-card.tsx`)).toContain("max-md:[&_.recharts-reference-line]:hidden")
   })
+})
+
+describe("o menu de contexto do cartão de categoria", () => {
+    it("no telefone o toque longo não abre menu", () => {
+        const f = lerFonte("src/components/categories/category-card-context-menu.tsx")
+        expect(f).toContain("const telefone = useIsMobile()")
+        expect(f).toContain("<ContextMenuTrigger asChild disabled={telefone}>")
+    })
 })

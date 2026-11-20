@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
     ArrowRightIcon,
     ArrowTopRightOnSquareIcon,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/context-menu"
 
 /**
- * O botão direito (e o toque longo) num cartão de categoria: as ações do
+ * O botão direito num cartão de categoria: as ações do
  * menu de três pontos, mais abrir. O cartão é um link esticado, e o menu
  * toma o lugar do menu do navegador sobre ele — por isso "Abrir em nova
  * aba" está aqui. O menu de três pontos continua: este é atalho. Sem
@@ -39,9 +40,14 @@ export function CategoryCardContextMenu({
     children: React.ReactNode
 }) {
     const router = useRouter()
+    // No telefone não há menu de contexto: o toque longo o abria sem motivo, e as
+    // ações já estão no ⋯ do cartão (decisão do dono, 20/11/2026).
+    const telefone = useIsMobile()
     return (
         <ContextMenu>
-            <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+            <ContextMenuTrigger asChild disabled={telefone}>
+                {children}
+            </ContextMenuTrigger>
             <ContextMenuContent
                 size="xl"
                 header={<ContextMenuHeader title={name} description={description} />}
