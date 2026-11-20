@@ -22,4 +22,5 @@ Rules:
 - When positioning content above the keyboard, account for the toolbar bar above the keyboard too, so content never sits behind it.
 - When three buttons appear together in the app, give each a different visual weight: first plain, second with background, third may be unstyled.
 - Before implementing a change, search the codebase for an existing similar feature and mirror its pattern instead of inventing a new approach.
+- In this app, clicking outside any dialog should close it.
 <!-- end claude-reflect -->
