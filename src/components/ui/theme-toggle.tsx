@@ -19,6 +19,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
+import { nomearVidros, revelarVidros } from "@/lib/vidro-na-revelacao"
 
 /**
  * As três paradas, na ordem do trilho (a do menu de tema do macOS, por decisão
@@ -83,7 +84,8 @@ const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
  * `flushSync` faz o tema trocar dentro do callback, antes da foto nova. Sem a
  * API, sem a parada, com `reveal={false}` ou com movimento reduzido, troca como
  * sempre. O CSS que desliga o esmaecer padrão mora em `globals.css`, escopado por
- * `.theme-reveal` no `<html>` enquanto a transição dura.
+ * `.theme-reveal` no `<html>` enquanto a transição dura. O vidro à vista ganha nome
+ * só durante a troca, e o círculo passa por ele (`lib/vidro-na-revelacao`).
  */
 const REVELACAO = { duration: 320, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
 
@@ -135,6 +137,7 @@ export function ThemeToggle({
     const anterior = useRef(indice)
     const emCurso = useRef<Animation[]>([])
     const jaPintou = useRef(false)
+    const revelacao = useRef<{ valor: Tema } | null>(null)
 
     const trocar = (valor: Tema) => {
         const doc = document as DocumentoComTransicao
@@ -150,6 +153,8 @@ export function ThemeToggle({
             setTheme(valor)
             return
         }
+        // O toque chama duas vezes, pelo foco e pelo clique: a segunda é a mesma troca.
+        if (revelacao.current?.valor === valor) return
         const r = origem.getBoundingClientRect()
         const x = r.left + r.width / 2
         const y = r.top + r.height / 2
@@ -158,7 +163,10 @@ export function ThemeToggle({
             Math.max(y, window.innerHeight - y),
         )
         const html = document.documentElement
+        const esta = { valor }
+        revelacao.current = esta
         html.classList.add("theme-reveal")
+        const vidros = nomearVidros(document)
         const transicao = doc.startViewTransition(() => {
             flushSync(() => setTheme(valor))
         })
@@ -173,9 +181,16 @@ export function ThemeToggle({
                     },
                     { ...REVELACAO, pseudoElement: "::view-transition-new(root)" },
                 )
+                revelarVidros(html, vidros.vidros, x, y, raio, REVELACAO)
             })
             .catch(() => {})
-        transicao.finished.finally(() => html.classList.remove("theme-reveal"))
+        transicao.finished.finally(() => {
+            // A transição pulada não limpa o que a seguinte já preparou.
+            if (revelacao.current !== esta) return
+            revelacao.current = null
+            html.classList.remove("theme-reveal")
+            vidros.desfazer()
+        })
     }
 
     useLayoutEffect(() => {

@@ -2353,20 +2353,6 @@
   animation: none;
   mix-blend-mode: normal;
 }
-/* No iPhone a foto da View Transition não desenha `backdrop-filter`: durante a
-   revelação, os vidros do telefone (a barra de baixo, os botões de cima e a barra de
-   seleção, todos na tinta da barra) viravam só tinta a 60%, com a página nítida por
-   trás. Enquanto a troca dura, eles ficam opacos, como na troca de carteira. */
-@media (width < 48rem) {
-  .theme-reveal
-    .glass-surface:is(
-      [data-slot="bottom-bar-tabs"],
-      [data-slot^="top-bar-action"],
-      [data-slot="data-table-selection-bar"]
-    ) {
-    background-color: var(--bottom-bar-surface);
-  }
-}
 
 /* A troca de carteira, numa View Transition (`trocarComTransicao` do
    `WorkspaceProvider`), escopada por `.workspace-switch` no `<html>`. Só duas

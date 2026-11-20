@@ -237,4 +237,19 @@ describe("o trilho de tema", () => {
         // feita no código, e a resposta é não animar.
         expect(CODIGO).toContain('matchMedia("(prefers-reduced-motion: reduce)")')
     })
+
+    it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
+        expect(CODIGO).toContain("nomearVidros(document)")
+        expect(CODIGO).toContain("revelarVidros(html, vidros.vidros, x, y, raio, REVELACAO)")
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
+        const css = lerFonte("src/app/globals.css")
+        expect(css).not.toContain(".theme-reveal\n    .glass-surface")
+    })
+
+    it("um toque é uma transição: o foco e o clique da mesma parada não abrem duas", () => {
+        // O toque foca a parada (o `onFocus` escolhe) e depois clica (o `onValueChange`): a segunda
+        // transição pulava a primeira, e o `finally` dela tirava o `.theme-reveal` no meio da segunda.
+        expect(CODIGO).toMatch(/if \(revelacao\.current\?\.valor === valor\) return/)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{\s*if \(revelacao\.current !== esta\) return/)
+    })
 })
