@@ -1667,15 +1667,20 @@ function MiniaturaDoRecibo({
     return (
         <>
             <Item variant="flush" size="sm" interactive data-revela className="px-0">
-                {/* O retrato em pé, alinhado ao topo (onde fica o nome da loja). */}
-                <ItemMedia variant="image" className="h-14 w-11 rounded-row">
+                {/* O retrato em pé, alinhado ao topo (onde fica o nome da loja). A medida repete no
+                    modificador do degrau `sm`, que a variante `image` crava em 32 e venceria a classe solta. */}
+                <ItemMedia
+                    variant="image"
+                    className="h-14 w-11 rounded-row group-data-[size=sm]/item:h-14 group-data-[size=sm]/item:w-11 group-data-[size=sm]/item:rounded-row"
+                >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- URL local do arquivo, fora do otimizador */}
                     {url ? <img src={url} alt="" className="size-full object-cover object-top" /> : null}
                 </ItemMedia>
                 <ItemContent>
                     <ItemLink aria-label="Ver a foto do recibo" onClick={() => setAberto(true)}>
                         <ItemTitle>Foto do recibo</ItemTitle>
                     </ItemLink>
-                    <ItemDescription>{"Toque para ver"}</ItemDescription>
+                    <ItemDescription>Toque para ver</ItemDescription>
                 </ItemContent>
                 <ItemActions>
                     <Button variant="secondary" size="sm" disabled={disabled} onClick={onTrocar}>
@@ -1693,6 +1698,7 @@ function MiniaturaDoRecibo({
                         <DialogDescription className="sr-only">A foto inteira do recibo.</DialogDescription>
                     </DialogHeader>
                     <DialogBody>
+                        {/* eslint-disable-next-line @next/next/no-img-element -- URL local do arquivo, fora do otimizador */}
                         <img src={url ?? undefined} alt="Foto do recibo" className="w-full rounded-row-lg object-contain" />
                     </DialogBody>
                 </DialogContent>

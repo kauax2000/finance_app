@@ -257,7 +257,7 @@ describe("a leitura do lançamento inteligente", () => {
 
     it("a foto do recibo é uma linha com retrato, Trocar e lixeira, e abre grande", () => {
         expect(fonte).toContain('"Foto do recibo"')
-        expect(fonte).toContain('"Toque para ver"')
+        expect(fonte).toContain(">Toque para ver<")
         expect(fonte).toContain('aria-label="Ver a foto do recibo"')
         expect(fonte).toContain('aria-label="Tirar a foto"')
         expect(fonte).toMatch(/<ItemMedia variant="image"[^>]*h-14 w-11 rounded-row/)
