@@ -832,6 +832,15 @@ export function LancamentoInteligente({
                                         />
                                     </div>
                                 </div>
+                                {/* O aviso da leitura ("Lido pela IA. Confira: cartão") logo abaixo do
+                                    painel, rente à esquerda. Fora do fluxo, para não mover o painel; o
+                                    anúncio é da legenda de baixo, que fica só para o leitor de tela. */}
+                                <Caption
+                                    aria-hidden
+                                    className="pointer-events-none absolute top-full left-2 mt-2 empty:hidden"
+                                >
+                                    {open ? leitura.aviso : null}
+                                </Caption>
                             </div>
                         </div>
                     ) : null}
@@ -943,8 +952,9 @@ export function LancamentoInteligente({
                         }}
                     />
 
-                    {/* Cota, rede, imagem que não abre, "Lendo com IA…": vazio, não ocupa lugar. No telefone, acima da linha. */}
-                    <Caption role="status" className="shrink-0 px-4 empty:hidden max-md:-order-1">
+                    {/* Cota, rede, imagem que não abre, "Lendo com IA…": vazio, não ocupa lugar. No telefone, acima da linha.
+                        Com o painel, quem se vê é a cópia logo abaixo dele, e esta fica só para o leitor de tela. */}
+                    <Caption role="status" className={cn("shrink-0 px-4 empty:hidden max-md:-order-1", placa && "sr-only")}>
                         {lendoIA ? (foto ? "Lendo o recibo com IA…" : "Lendo com IA…") : leitura.aviso}
                     </Caption>
                 </DialogPrimitive.Content>
