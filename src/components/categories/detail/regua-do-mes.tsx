@@ -59,8 +59,11 @@ export function ReguaDoMes({
     const marcador = !comLimite && media != null ? escala.marcador : null
 
     const limiteFrases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
+    // A média mora na frase (e não num rótulo sob o traço): a frase diz o que o traço marca.
+    const vereditoDaMediaTexto = vereditoDaMedia(lancado, media)
+    const vereditoComValor = vereditoDaMediaTexto && media ? `${vereditoDaMediaTexto} de ${reaisInteiros(media)}` : vereditoDaMediaTexto
     const veredito = [
-        ...(limiteFrases ? [limiteFrases.principal, limiteFrases.aviso] : [vereditoDaMedia(lancado, media)]),
+        ...(limiteFrases ? [limiteFrases.principal, limiteFrases.aviso] : [vereditoComValor]),
         sufixo,
     ]
         .filter(Boolean)
@@ -85,7 +88,7 @@ export function ReguaDoMes({
             {/* Na tela larga (2xl, 1536px) os fatos saem da linha do valor e vão para a linha da
                 barra, à direita, centrados nela: a barra para antes deles e não atravessa a tela
                 inteira. A cópia escondida é `display: none`, então o leitor de tela lê os fatos uma vez só. */}
-            <div className="grid min-w-0 gap-5">
+            <div className="grid min-w-0 gap-4">
                 <div className="grid gap-3">
                     <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
                     {fatosNaLinha ? (
@@ -97,8 +100,8 @@ export function ReguaDoMes({
                         valor
                     )}
                 </div>
-                <div className="mt-5">
-                    <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", marcador != null ? "mb-8" : "mb-3")}>
+                <div>
+                    <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", "mb-3")}>
                         {marcador != null ? (
                             <div className="relative min-w-0 2xl:flex-1">
                                 <Progress
@@ -113,17 +116,6 @@ export function ReguaDoMes({
                                     className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-muted-foreground ring-2 ring-background"
                                     style={{ insetInlineStart: `${marcador}%` }}
                                 />
-                                <Caption
-                                    aria-hidden="true"
-                                    className={cn(
-                                        "absolute top-full mt-2 whitespace-nowrap",
-                                        // Perto das bordas o rótulo encosta no traço por dentro, para não vazar.
-                                        marcador < 8 ? "" : marcador > 92 ? "-translate-x-full" : "-translate-x-1/2",
-                                    )}
-                                    style={{ insetInlineStart: `${marcador}%` }}
-                                >
-                                    {`média de 6 meses ${reaisInteiros(media ?? 0)}`}
-                                </Caption>
                             </div>
                         ) : (
                             <BarraDoMes {...props} className="min-w-0 2xl:flex-1" />
