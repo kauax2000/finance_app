@@ -50,13 +50,14 @@ describe("ExpenseCategoryCard pelo fonte", () => {
         expect(fonte).not.toContain("MomComparisonBadge")
     })
 
-    it("o ⋯ só existe para quem escreve e só aparece no cursor", () => {
+    it("o ⋯ só existe para quem escreve, aparece no cursor e fica à vista no toque", () => {
         expect(fonte).toContain("onEdit && onDelete")
         // O `opacity-0` cru: o `[@media(hover:hover)]:opacity-0` sai depois do `group-hover:` no CSS e o venceria.
         expect(fonte).toMatch(/"opacity-0 group-hover:opacity-100 group-focus-within:opacity-100/)
         expect(fonte).not.toContain("[@media(hover:hover)]:opacity-0")
-        // No toque o ⋯ não existe: o toque longo abre o menu de contexto.
-        expect(fonte).toContain("pointer-coarse:hidden")
+        // No toque, sem cursor, o ⋯ fica sempre à vista.
+        expect(fonte).toContain("pointer-coarse:opacity-100")
+        expect(fonte).not.toContain("pointer-coarse:hidden")
     })
 
     it("a série carregando vira o esqueleto do gráfico", () => {

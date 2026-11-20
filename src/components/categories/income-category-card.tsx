@@ -153,12 +153,12 @@ export function IncomeCategoryCard({
                                         variant="tertiary"
                                         size="icon-md"
                                         // No cursor, o ⋯ só aparece com ele sobre o cartão; o teclado o
-                                        // acha pelo foco. No toque não existe: o toque longo abre o menu de
-                                        // contexto. O `opacity-0` é cru, e não `[@media(hover:hover)]:`: a
+                                        // acha pelo foco. No toque, sem cursor, ele fica sempre à vista (20/11/2026;
+                                        // o toque longo continua abrindo o menu de contexto). O `opacity-0` é cru, e não `[@media(hover:hover)]:`: a
                                         // variante arbitrária sai depois do `group-hover:` no CSS e venceria.
                                         className={cn(
                                             "text-muted-foreground hover:text-foreground active:text-foreground",
-                                            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100 pointer-coarse:hidden",
+                                            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100 pointer-coarse:opacity-100",
                                         )}
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}

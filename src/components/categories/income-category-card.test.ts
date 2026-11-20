@@ -56,11 +56,12 @@ describe("IncomeCategoryCard pelo fonte", () => {
         expect(fonte).not.toContain("Ver categoria")
     })
 
-    it("o ⋯ só existe para quem escreve e só aparece no cursor", () => {
+    it("o ⋯ só existe para quem escreve, aparece no cursor e fica à vista no toque", () => {
         expect(fonte).toContain("onEdit && onDelete")
         expect(fonte).toMatch(/"opacity-0 group-hover:opacity-100 group-focus-within:opacity-100/)
         expect(fonte).not.toContain("[@media(hover:hover)]:opacity-0")
-        expect(fonte).toContain("pointer-coarse:hidden")
+        expect(fonte).toContain("pointer-coarse:opacity-100")
+        expect(fonte).not.toContain("pointer-coarse:hidden")
     })
 
     it("a série carregando vira o esqueleto do gráfico", () => {
