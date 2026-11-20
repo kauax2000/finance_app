@@ -42,9 +42,16 @@ describe("totalNoMes", () => {
         ]
         expect(totalNoMes(rows, "expense", "2026-11", lookup)).toBe(30)
     })
-    it("ateDia exclui compra do dia 6", () => {
+    it("ateYmd exclui compra depois da data", () => {
         const rows = [tx({ date: "2026-11-06", amount: 7 }), tx({ date: "2026-11-05", amount: 3 })]
-        expect(totalNoMes(rows, "expense", "2026-11", lookup, 5)).toBe(3)
+        expect(totalNoMes(rows, "expense", "2026-11", lookup, "2026-11-05")).toBe(3)
+    })
+    it("receita: pix conta, cartão não", () => {
+        const rows = [
+            tx({ type: "income", amount: 40, payment_method: "pix" }),
+            tx({ type: "income", amount: 9, payment_method: "credit_card", payment_credit_card_id: "c1" }),
+        ]
+        expect(totalNoMes(rows, "income", "2026-11", lookup)).toBe(40)
     })
 })
 
@@ -133,5 +140,40 @@ describe("maioresLancamentos e descricoesRepetidas", () => {
             "expense",
         )
         expect(r).toEqual([{ descricao: "iFood", vezes: 2, total: 15 }])
+    })
+})
+
+describe("mesmo ponto pela data inteira", () => {
+    const card = { payment_method: "credit_card", payment_credit_card_id: "c1" } as const
+    it("compra de 28/out no cartão que cai em nov entra no atual em 20/nov", () => {
+        const rows = [tx({ date: "2026-10-28", amount: 80, ...card })]
+        const c = comparacaoComMesAnterior({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-20", lookup })
+        expect(c).toMatchObject({ mesmoPonto: true, atual: 80 })
+    })
+    it("anterior corta no dia do mês anterior, preso ao último dia (31/mar → 28/fev)", () => {
+        const rows = [tx({ date: "2026-02-28", amount: 6 }), tx({ date: "2026-03-31", amount: 2 })]
+        const c = comparacaoComMesAnterior({ rows, tipo: "expense", yearMonth: "2026-03", hojeYmd: "2026-03-31", lookup })
+        expect(c).toMatchObject({ mesAnterior: "2026-02", anterior: 6, atual: 2 })
+    })
+    it("anterior corta no dia 15 quando hoje é 15", () => {
+        const rows = [tx({ date: "2026-10-15", amount: 1 }), tx({ date: "2026-10-16", amount: 50 })]
+        const c = comparacaoComMesAnterior({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-15", lookup })
+        expect(c.anterior).toBe(1)
+    })
+})
+
+describe("receita e Sem forma", () => {
+    it("maioresLancamentos de receita só devolve receita", () => {
+        const rows = [tx({ id: "a", type: "income", amount: 5 }), tx({ id: "b", type: "expense", amount: 99 })]
+        expect(maioresLancamentos(rows, "income").map((t) => t.id)).toEqual(["a"])
+    })
+    it("sem forma de pagar → Sem forma", () => {
+        const rows = [tx({ amount: 7, payment_method: null })]
+        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "sem-forma", nome: "Sem forma", valor: 7 }])
+    })
+    it("estorno no cartão abate a divisão", () => {
+        const card = { payment_method: "credit_card", payment_credit_card_id: "c1" } as const
+        const rows = [tx({ amount: 50, ...card }), tx({ amount: 20, type: "income", ...card })]
+        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "c1", nome: "Nubank", valor: 30 }])
     })
 })

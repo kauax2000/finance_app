@@ -70,7 +70,7 @@ export function ResumoDoMes({
                 </div>
                 {comLimite ? (
                     <Progress
-                        value={lancado}
+                        value={Math.max(0, lancado)}
                         max={limite}
                         projected={previsto}
                         bands={BUDGET_BANDS}
@@ -85,7 +85,7 @@ export function ResumoDoMes({
                         {aindaVem ? <Muted>{aindaVem}</Muted> : null}
                     </div>
                 ) : null}
-                {pesoNoTotal != null ? (
+                {pesoNoTotal != null && lancado !== 0 ? (
                     <Badge tone="neutral" size="sm" className="w-fit">
                         {percentBR(pesoNoTotal, { maximumFractionDigits: 0 })}{" "}
                         {despesa ? "do gasto da carteira" : "da receita da carteira"}

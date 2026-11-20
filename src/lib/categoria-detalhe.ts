@@ -1,4 +1,4 @@
-import { shiftYearMonth } from "@/lib/budget-month"
+import { parseYearMonth, shiftYearMonth } from "@/lib/budget-month"
 import {
     sinalNaDespesa,
     transactionCountsInExpenseMonth,
@@ -32,21 +32,21 @@ function peso(t: LinhaDeValor, tipo: TipoDaCategoria): number {
 
 const reais = (n: number) => Math.round(n * 100) / 100
 
-/** Soma com sinal (estorno abate na despesa); `ateDia` corta pela data da compra (dia ≤ ateDia). */
+/** Soma com sinal (estorno abate na despesa); `ateYmd` corta pela data inteira da compra (YYYY-MM-DD ≤ ateYmd). */
 export function totalNoMes(
     rows: LinhaDeValor[],
     tipo: TipoDaCategoria,
     yearMonth: string,
     lookup: CreditCardClosingLookup,
-    ateDia?: number,
+    ateYmd?: string,
 ): number {
     let cents = 0
     for (const t of rows) {
         const p = peso(t, tipo)
         if (p === 0 || !transactionCountsInExpenseMonth(t, yearMonth, lookup)) continue
-        if (ateDia != null) {
-            const dia = Number(transactionLocalYmd(t.date)?.slice(8, 10))
-            if (!(dia <= ateDia)) continue
+        if (ateYmd != null) {
+            const ymd = transactionLocalYmd(t.date)
+            if (!ymd || ymd > ateYmd) continue
         }
         cents += p * Math.round(Number(t.amount || 0) * 100)
     }
@@ -76,9 +76,16 @@ export function comparacaoComMesAnterior(args: {
     const { rows, tipo, yearMonth, hojeYmd, lookup } = args
     const mesAnterior = shiftYearMonth(yearMonth, -1)
     const mesmoPonto = hojeYmd.slice(0, 7) === yearMonth
-    const ateDia = mesmoPonto ? Number(hojeYmd.slice(8, 10)) : undefined
-    const atual = totalNoMes(rows, tipo, yearMonth, lookup, ateDia)
-    const anterior = totalNoMes(rows, tipo, mesAnterior, lookup, ateDia)
+    const { y, m } = parseYearMonth(mesAnterior)
+    const diaAnterior = Math.min(Number(hojeYmd.slice(8, 10)), new Date(y, m, 0).getDate())
+    const atual = totalNoMes(rows, tipo, yearMonth, lookup, mesmoPonto ? hojeYmd : undefined)
+    const anterior = totalNoMes(
+        rows,
+        tipo,
+        mesAnterior,
+        lookup,
+        mesmoPonto ? `${mesAnterior}-${String(diaAnterior).padStart(2, "0")}` : undefined,
+    )
     return {
         mesAnterior,
         anterior,
