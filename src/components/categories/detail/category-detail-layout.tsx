@@ -1,17 +1,15 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 type FormaDaLista = "tabela" | "lista"
 
 /**
- * O casco do detalhe da categoria. Desktop: o resumo do mês em faixa no topo, e abaixo a análise à esquerda (3/5) e os
- * lançamentos presos sob a barra, rolando na própria coluna (2/5). Telefone: o
- * resumo do mês no topo e abas Resumo · Lançamentos. `useIsMobile` troca só o
- * arranjo (exceção consciente): uma instância da lista por vez.
+ * O casco do detalhe da categoria, igual no telefone e no desktop: o resumo do
+ * mês no topo e abas Resumo · Lançamentos. No desktop o conteúdo começa onde
+ * começa o ladrilho do cabeçalho (38px depois da borda, com o voltar), e recua
+ * o mesmo à direita.
  */
 export function CategoryDetailLayout({
     resumo,
@@ -24,42 +22,24 @@ export function CategoryDetailLayout({
     lancamentos: (forma: FormaDaLista) => ReactNode
     totalLancamentos: number
 }) {
-    const isMobile = useIsMobile()
-
-    if (isMobile) {
-        return (
-            <div className="flex min-w-0 flex-col gap-6">
-                {resumo}
-                <Tabs defaultValue="resumo">
-                    <TabsList>
-                        <TabsTrigger value="resumo">Resumo</TabsTrigger>
-                        <TabsTrigger value="lancamentos" count={totalLancamentos}>
-                            Lançamentos
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="resumo" className="flex flex-col gap-6">
-                        {analise}
-                    </TabsContent>
-                    {/* Montada sempre: a folha do lançamento mora nela e abre também do Resumo. */}
-                    <TabsContent value="lancamentos" forceMount>
-                        {lancamentos("tabela")}
-                    </TabsContent>
-                </Tabs>
-            </div>
-        )
-    }
-
-    // O conteúdo começa onde começa o ladrilho do cabeçalho (38px depois da borda, com o voltar), e recua o mesmo à direita.
     return (
-        <div className="flex min-w-0 flex-col gap-6 px-9.5">
+        <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
             {resumo}
-            <div className="grid grid-cols-5 items-start gap-6">
-                <div className="col-span-3 flex min-w-0 flex-col gap-6">{analise}</div>
-                {/* O `sticky` mora fora: a raiz do `ScrollArea` é `relative`. */}
-                <div className="sticky top-(--top-bar-bottom) col-span-2 h-[calc(100dvh_-_var(--top-bar-bottom))]">
-                    <ScrollArea className="h-full">{lancamentos("lista")}</ScrollArea>
-                </div>
-            </div>
+            <Tabs defaultValue="resumo">
+                <TabsList>
+                    <TabsTrigger value="resumo">Resumo</TabsTrigger>
+                    <TabsTrigger value="lancamentos" count={totalLancamentos}>
+                        Lançamentos
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="resumo" className="flex flex-col gap-6">
+                    {analise}
+                </TabsContent>
+                {/* Montada sempre: a folha do lançamento mora nela e abre também do Resumo. */}
+                <TabsContent value="lancamentos" forceMount>
+                    {lancamentos("tabela")}
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
