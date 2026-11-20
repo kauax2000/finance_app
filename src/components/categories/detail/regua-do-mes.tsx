@@ -59,13 +59,14 @@ export function ReguaDoMes({
     const marcador = !comLimite && media != null ? escala.marcador : null
 
     const limiteFrases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
-    // A média mora na frase (e não num rótulo sob o traço): a frase diz o que o traço marca.
+    // Sem limite, a régua leva a legenda nas pontas (o veredito à esquerda, a média à direita),
+    // como uma régua; com limite, a frase do limite segue embaixo.
     const vereditoDaMediaTexto = vereditoDaMedia(lancado, media)
-    const vereditoComValor = vereditoDaMediaTexto && media ? `${vereditoDaMediaTexto} de ${reaisInteiros(media)}` : vereditoDaMediaTexto
-    const veredito = [
-        ...(limiteFrases ? [limiteFrases.principal, limiteFrases.aviso] : [vereditoComValor]),
-        sufixo,
-    ]
+    const [vereditoForte, vereditoResto] = partirVeredito(vereditoDaMediaTexto)
+    const despesaAcima = despesa ? "text-warning" : "text-success"
+    const despesaAbaixo = despesa ? "text-success" : "text-warning"
+    const tomDoVeredito = vereditoDaMediaTexto?.includes("acima") ? despesaAcima : vereditoDaMediaTexto?.includes("abaixo") ? despesaAbaixo : undefined
+    const veredito = [...(limiteFrases ? [limiteFrases.principal, limiteFrases.aviso] : []), sufixo]
         .filter(Boolean)
         .join(" · ")
 
@@ -104,6 +105,18 @@ export function ReguaDoMes({
                     <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", "mb-3")}>
                         {marcador != null ? (
                             <div className="relative min-w-0 2xl:flex-1">
+                                <div className="mb-2 flex items-baseline justify-between gap-4">
+                                    {vereditoDaMediaTexto ? (
+                                        <Caption>
+                                            <span className={tomDoVeredito}>{vereditoForte}</span>
+                                            {vereditoResto}
+                                        </Caption>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    <Caption>{`média de 6 meses ${reaisInteiros(media ?? 0)}`}</Caption>
+                                </div>
+                                <div className="relative">
                                 <Progress
                                     value={Math.max(0, lancado)}
                                     max={escala.max}
@@ -116,6 +129,7 @@ export function ReguaDoMes({
                                     className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-muted-foreground ring-2 ring-background"
                                     style={{ insetInlineStart: `${marcador}%` }}
                                 />
+                                </div>
                             </div>
                         ) : (
                             <BarraDoMes {...props} className="min-w-0 2xl:flex-1" />
@@ -135,11 +149,12 @@ export function ReguaDoMes({
     )
 }
 
-/** Os fatos do mês, em linha ao lado do valor: lançamentos, o maior e o peso na carteira. */
+/** Os fatos do mês, em linha: lançamentos, a média por lançamento, o maior e o peso na carteira. */
 export function FatosDoMes({ tipo, lancado, pesoNoTotal, quantidade, maior }: FaixaDoMesProps) {
     const despesa = tipo === "expense"
     const fatos: { termo: string; valor: ReactNode }[] = [
         { termo: "Lançamentos", valor: quantidade },
+        ...(quantidade > 0 ? [{ termo: "Por lançamento", valor: <MoneyDisplay value={lancado / quantidade} size="lg" /> }] : []),
         ...(maior
             ? [{ termo: despesa ? "Maior gasto" : "Maior entrada", valor: <MoneyDisplay value={Number(maior.amount)} size="lg" /> }]
             : []),
@@ -165,4 +180,11 @@ export function FatosDoMes({ tipo, lancado, pesoNoTotal, quantidade, maior }: Fa
             ))}
         </DescriptionList>
     )
+}
+
+/** "5% acima da sua média" → ["5% acima", " da sua média"]: a parte forte leva o tom. */
+function partirVeredito(texto: string | null): [string, string] {
+    if (!texto) return ["", ""]
+    const i = texto.indexOf(" da sua média")
+    return i > 0 ? [texto.slice(0, i), texto.slice(i)] : [texto, ""]
 }
