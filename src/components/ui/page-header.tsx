@@ -217,7 +217,18 @@ function PageHeaderTitleRow({
   /** O que mora na ponta da linha — um link, um rótulo de categoria. */
   endAdornment?: React.ReactNode
 }) {
+  // O voltar e a mídia sobem com o título para a barra: o título os lê daqui.
+  // O voltar é memorizado (a loja compara por identidade); a mídia vem da tela.
+  const voltar = React.useMemo(
+    () => (back ? <PageHeaderBack href={back} label={backLabel} history={backHistory} /> : null),
+    [back, backLabel, backHistory]
+  )
+  const linha = React.useRef<LinhaDoTitulo>({ back: null, media: null })
+  React.useLayoutEffect(() => {
+    linha.current = { back: voltar, media: media ?? null }
+  })
   return (
+    <LinhaDoTituloContext.Provider value={linha}>
     <div
       data-slot="page-header-title-row"
       className={cn("flex min-w-0 items-baseline gap-4", className)}
@@ -276,8 +287,12 @@ function PageHeaderTitleRow({
         </span>
       ) : null}
     </div>
+    </LinhaDoTituloContext.Provider>
   )
 }
+
+type LinhaDoTitulo = { back: React.ReactNode; media: React.ReactNode }
+const LinhaDoTituloContext = React.createContext<React.RefObject<LinhaDoTitulo> | null>(null)
 
 /** O título não cabe na linha: quem pede `truncate` mostra o resto numa dica. */
 function useCortado(el: HTMLElement | null, ativo: boolean) {
@@ -299,6 +314,7 @@ function useCortado(el: HTMLElement | null, ativo: boolean) {
  * descontada no `rootMargin`), então funciona no iframe da prévia.
  */
 function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
+  const linha = React.useContext(LinhaDoTituloContext)
   React.useEffect(() => {
     if (!ativo || !el) return
     // O documento é o do título — no iframe da prévia, o dele.
@@ -310,7 +326,12 @@ function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
     const io = new janela.IntersectionObserver(
       ([e]) => {
         const acima = e.boundingClientRect.top < (e.rootBounds?.top ?? base)
-        publishPageTitle(doc, { text: el.textContent ?? "", docked: !e.isIntersecting && acima })
+        publishPageTitle(doc, {
+          text: el.textContent ?? "",
+          docked: !e.isIntersecting && acima,
+          back: linha?.current.back,
+          media: linha?.current.media,
+        })
       },
       { root: doc, rootMargin: `-${base}px 0px 0px 0px` }
     )
@@ -319,7 +340,7 @@ function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
       io.disconnect()
       publishPageTitle(doc, null)
     }
-  }, [el, ativo])
+  }, [el, ativo, linha])
 }
 
 function PageHeaderTitle({

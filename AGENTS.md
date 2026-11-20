@@ -1840,7 +1840,7 @@ declaração de `background-color` no trilho).
   `PageHeaderStat` (**nenhuma tela escreve `dt`/`dd` à mão**), `PageHeaderNav`,
   `PageHeaderSkeleton`; `collapse`, `PageHeaderActions overflow="menu"`, o
   voltar pelo histórico (`history={false}`; ligá-lo no `app-header` é mudança
-  de jornada), `PageHeaderTitle truncate`. O telefone dele é um primeiro
+  de jornada), `PageHeaderTitle truncate`. No desktop, o `back` e a `media` do `PageHeaderTitleRow` sobem com o título para a barra (`[‹] [mídia a 24] nome`; o voltar inerte até subir), e no telefone não. O telefone dele é um primeiro
   desenho.
 - **`PageSection`**: **a ação não declara `size`** (nenhuma tela escreve `h-8
   text-xs pointer-coarse:h-10` num botão de seção). `reveal` (desligado por

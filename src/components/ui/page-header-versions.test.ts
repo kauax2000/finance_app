@@ -94,7 +94,16 @@ describe("o alinhamento", () => {
 
 describe("os comportamentos", () => {
   it("o título sobe para a barra, medido contra o documento dele", () => {
-    expect(CODIGO).toContain("publishPageTitle(doc, { text: el.textContent ?? \"\", docked: !e.isIntersecting && acima })")
+    expect(CODIGO).toContain("docked: !e.isIntersecting && acima,")
+    expect(CODIGO).toContain("{ root: doc, rootMargin: `-${base}px 0px 0px 0px` }")
+  })
+
+  it("o voltar e a mídia da linha do título sobem com ele, e só do md para cima", () => {
+    expect(CODIGO).toContain("back: linha?.current.back,")
+    expect(CODIGO).toContain("media: linha?.current.media,")
+    const barra = lerFonte("src/components/ui/top-bar.tsx")
+    expect(barra).toContain("inert={!subiu || undefined}")
+    expect(barra).toContain("group-data-docked/top-bar-title:pointer-events-auto max-md:hidden")
     expect(CODIGO).toContain("{ root: doc, rootMargin: `-${base}px 0px 0px 0px` }")
     expect(lerFonte("src/components/ui/top-bar.tsx")).toContain("usePageTitleDock(doc)")
   })

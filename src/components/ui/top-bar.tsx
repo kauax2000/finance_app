@@ -425,6 +425,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
   const medir = React.useCallback((no: HTMLDivElement | null) => setDoc(no?.ownerDocument ?? null), [])
   const dock = usePageTitleDock(doc)
   const subiu = Boolean(dock?.docked)
+  const linha = Boolean(dock?.back || dock?.media)
   return (
     <div
       ref={medir}
@@ -448,16 +449,43 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
           {children}
         </span>
       ) : null}
-      <span
-        aria-hidden
-        className={cn(
-          TROCA_DO_TITULO,
-          // Mora na mesma célula, por cima do controle que cede o lugar: não pega o toque.
-          "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none"
-        )}
-      >
-        {dock?.text}
-      </span>
+      {linha ? (
+        <span
+          className={cn(
+            TROCA_DO_TITULO,
+            "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none",
+            // Do `md` para cima: [voltar] [mídia] nome. No telefone a barra tem o próprio voltar.
+            "md:flex md:items-center md:gap-2 md:overflow-visible"
+          )}
+        >
+          {dock?.back ? (
+            // Fora de alcance enquanto o título não subiu; ao subir, o único que pega o toque.
+            <span inert={!subiu || undefined} className="flex shrink-0 group-data-docked/top-bar-title:pointer-events-auto max-md:hidden">
+              {dock.back}
+            </span>
+          ) : null}
+          {dock?.media ? (
+            // A identidade da linha do título (32) cabe na barra a 24.
+            <span aria-hidden className="flex size-6 shrink-0 items-center justify-center [&>*]:scale-75 max-md:hidden">
+              {dock.media}
+            </span>
+          ) : null}
+          <span aria-hidden className="md:min-w-0 md:truncate">
+            {dock?.text}
+          </span>
+        </span>
+      ) : (
+        <span
+          aria-hidden
+          className={cn(
+            TROCA_DO_TITULO,
+            // Mora na mesma célula, por cima do controle que cede o lugar: não pega o toque.
+            "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none"
+          )}
+        >
+          {dock?.text}
+        </span>
+      )}
     </div>
   )
 }
