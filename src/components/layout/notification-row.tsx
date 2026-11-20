@@ -85,7 +85,8 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
 
     return (
         // Lida e sem destino, o clique não tem o que fazer: a linha não acende.
-        // `items-start`: o ladrilho acompanha o título, e não o meio de um texto de duas linhas.
+        // `items-start`: o ladrilho acompanha o título, e não o meio de um texto de duas linhas;
+        // o ícone centra na 1ª linha do título (fileira de 32, título com o recuo que a centra).
         // Os tons da barra lateral, como o seletor de carteira: a passagem é o hover de
         // uma linha dela (`--sidebar-accent` a 50%, ainda translúcido sobre o vidro) e o
         // toque é o tom cheio dela, mais forte que a passagem.
@@ -97,14 +98,19 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
             // `px-2`: com o recuo de 8 da lista, o texto fica nos 16 do cabeçalho.
             className="items-start rounded-surface px-2 hover:bg-foreground/9 active:bg-foreground/15"
         >
-            <ItemMedia variant="tile" tint="vivid" tone={notificationTone(n)}>
+            <ItemMedia
+                variant="tile"
+                tint="vivid"
+                tone={notificationTone(n)}
+                className="group-has-data-[slot=item-description]/item:translate-y-0"
+            >
                 {getNotificationIcon(n)}
             </ItemMedia>
             <ItemContent>
-                <div className="flex min-h-6 items-center gap-2">
+                <div className="flex min-h-8 items-start gap-2">
                     <ItemTitle
                         className={cn(
-                            "w-auto min-w-0 flex-1",
+                            "w-auto min-w-0 flex-1 pt-[calc((--spacing(8)_-_1lh)/2)]",
                             TITULO_SOB_ACOES,
                             unread ? "font-semibold" : "font-medium text-muted-foreground"
                         )}
@@ -130,7 +136,7 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                             titulo
                         )}
                     </ItemTitle>
-                    <ItemActions className="relative shrink-0 gap-1">
+                    <ItemActions className="relative h-8 shrink-0 gap-1">
                         <span className={META_SOME}>
                             <time dateTime={n.created_at} className="nums text-xs text-muted-foreground">
                                 {hora}

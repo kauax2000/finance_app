@@ -104,6 +104,15 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toMatch(/setProperty\("--notificacoes-degrade", String\(Math\.min\(corpo\.scrollTop \/ 56, 1\)\)\)/)
     })
 
+    it("o ícone e a 1ª linha do título dividem o centro (20/11/2026)", () => {
+        const f = semComentarios(lerFonte("src/components/layout/notification-row.tsx"))
+        expect(f).toContain('<div className="flex min-h-8 items-start gap-2">')
+        expect(f).toContain("pt-[calc((--spacing(8)_-_1lh)/2)]")
+        expect(f).toContain('<ItemActions className="relative h-8 shrink-0 gap-1">')
+        expect(f).toContain("group-has-data-[slot=item-description]/item:translate-y-0")
+        expect(f).not.toContain("flex min-h-6 items-center gap-2")
+    })
+
     it("a seção de preferências é a âncora do menu", () => {
         expect(lerFonte("src/components/settings/notification-preferences.tsx")).toContain('id="notificacoes"')
     })
