@@ -102,7 +102,7 @@ export function ReguaDoMes({
                     )}
                 </div>
                 <div>
-                    <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", "mb-3")}>
+                    <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", veredito && "mb-3")}>
                         {marcador != null ? (
                             <div className="relative min-w-0 2xl:flex-1">
                                 <div className="mb-2 flex items-baseline justify-between gap-4">
