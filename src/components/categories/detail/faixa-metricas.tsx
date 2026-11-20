@@ -57,7 +57,7 @@ export function FaixaMetricas(props: FaixaDoMesProps) {
     return (
         <PageSection aria-label={`Resumo de ${mes}`}>
             <div className="flex flex-wrap items-stretch gap-x-8 gap-y-6">
-                <div className="grid w-96 gap-3">
+                <div className="grid w-md gap-3">
                     <div>
                         <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
                         <MoneyDisplay value={lancado} size="3xl" />
