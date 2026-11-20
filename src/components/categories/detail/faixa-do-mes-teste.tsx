@@ -3,26 +3,28 @@
 import * as React from "react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
-import { FaixaBarras } from "./faixa-barras"
-import { FaixaMetricas, type FaixaDoMesProps } from "./faixa-metricas"
+import { Faixa1A } from "./faixa-1a"
+import { Faixa1C } from "./faixa-1c"
+import type { FaixaDoMesProps } from "./regua-do-mes"
 
-export type VersaoDaFaixa = "B" | "F"
-const CHAVE = "detalhe-categoria:faixa"
+export type VersaoDaFaixa = "A" | "C"
+// Chave nova: a antiga guardava "B"/"F".
+const CHAVE = "detalhe-categoria:faixa-regua"
 
-/** Provisória: o dono alterna B e F no uso e escolhe; a escolha fica no aparelho. */
+/** Provisória: o dono alterna 1A e 1C no uso e escolhe; a escolha fica no aparelho. */
 export function useVersaoDaFaixa() {
-    const [versao, setVersao] = React.useState<VersaoDaFaixa>("B")
+    const [versao, setVersao] = React.useState<VersaoDaFaixa>("A")
 
     React.useEffect(() => {
         try {
-            if (localStorage.getItem(CHAVE) === "F") setVersao("F")
+            if (localStorage.getItem(CHAVE) === "C") setVersao("C")
         } catch {
-            // Sem armazenamento: abre em B e só não lembra.
+            // Sem armazenamento: abre em 1A e só não lembra.
         }
     }, [])
 
     const trocar = React.useCallback((v: string) => {
-        if (v !== "B" && v !== "F") return
+        if (v !== "A" && v !== "C") return
         setVersao(v)
         try {
             localStorage.setItem(CHAVE, v)
@@ -38,7 +40,10 @@ export function useVersaoDaFaixa() {
 export function ChaveDaFaixa({ versao, onTrocar }: { versao: VersaoDaFaixa; onTrocar: (v: string) => void }) {
     return (
         <div className="flex items-center gap-3">
-            <Caption id="faixa-teste-rotulo">Teste de layout</Caption>
+            {/* Abaixo de 1280px o rótulo sairia por cima do título; o leitor de tela ainda o lê. */}
+            <Caption id="faixa-teste-rotulo" className="hidden xl:block">
+                Teste de layout
+            </Caption>
             <ToggleGroup
                 type="single"
                 variant="segmented"
@@ -47,13 +52,13 @@ export function ChaveDaFaixa({ versao, onTrocar }: { versao: VersaoDaFaixa; onTr
                 onValueChange={onTrocar}
                 aria-labelledby="faixa-teste-rotulo"
             >
-                <ToggleGroupItem value="B">B · Métricas</ToggleGroupItem>
-                <ToggleGroupItem value="F">F · Barras</ToggleGroupItem>
+                <ToggleGroupItem value="A">1A · Fatos embaixo</ToggleGroupItem>
+                <ToggleGroupItem value="C">1C · Fatos no topo</ToggleGroupItem>
             </ToggleGroup>
         </div>
     )
 }
 
 export function FaixaDoMesTeste({ versao, ...props }: FaixaDoMesProps & { versao: VersaoDaFaixa }) {
-    return versao === "B" ? <FaixaMetricas {...props} /> : <FaixaBarras {...props} />
+    return versao === "A" ? <Faixa1A {...props} /> : <Faixa1C {...props} />
 }
