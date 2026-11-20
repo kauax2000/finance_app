@@ -34,7 +34,7 @@ import { toastError } from "@/lib/toast"
 import { CategoryDetailSkeleton } from "@/components/categories/detail/category-detail-skeleton"
 import { CategoryDetailLayout } from "@/components/categories/detail/category-detail-layout"
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
-import { FaixaDoMesTeste } from "@/components/categories/detail/faixa-do-mes-teste"
+import { ChaveDaFaixa, FaixaDoMesTeste, useVersaoDaFaixa } from "@/components/categories/detail/faixa-do-mes-teste"
 import { Comparacoes } from "@/components/categories/detail/comparacoes"
 import { HistoricoDosMeses } from "@/components/categories/detail/historico-dos-meses"
 import { OndeEQuem } from "@/components/categories/detail/onde-e-quem"
@@ -458,6 +458,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     ])
 
     const isMobile = useIsMobile()
+    const [versaoDaFaixa, trocarFaixa] = useVersaoDaFaixa()
 
     if (workspaceError) {
         return (
@@ -551,6 +552,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         </PageHeaderTitle>
                     </PageHeaderTitleRow>
                     <PageHeaderActions>
+                        <ChaveDaFaixa versao={versaoDaFaixa} onTrocar={trocarFaixa} />
                         <MonthNav budgetMonthYm={yearMonth} onBudgetMonthYmChange={handleMonthChange} dense />
                         {abrirMenu}
                     </PageHeaderActions>
@@ -574,6 +576,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         />
                     ) : (
                         <FaixaDoMesTeste
+                            versao={versaoDaFaixa}
                             tipo={tipo}
                             yearMonth={yearMonth}
                             aberto={aberto}
