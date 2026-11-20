@@ -498,10 +498,10 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const abrirMenu = podeEscrever ? (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                {/* No desktop o ⋯ mora ao lado da pílula do mês (36, com fio): mesma altura e mesmo fio, para a fileira ler como uma só. */}
+                {/* No desktop o ⋯ mora ao lado da pílula do mês (36): a mesma altura, sem fundo, para alinhar sem competir com ela. */}
                 <Button
                     type="button"
-                    variant={isMobile ? "tertiary" : "outline"}
+                    variant="tertiary"
                     size={isMobile ? "icon-md" : "icon-lg"}
                     aria-label={`Opções da categoria ${category.name}`}
                 >
