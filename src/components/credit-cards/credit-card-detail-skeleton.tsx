@@ -37,7 +37,7 @@ function SectionTitleRow({
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-8 w-40 shrink-0 rounded-full pointer-coarse:h-11" />
+                <Skeleton shape="control" size="sm" className="w-40 pointer-coarse:h-11" />
             </div>
         )
     }
@@ -48,9 +48,7 @@ function SectionTitleRow({
                     <Skeleton className={titleClassName} />
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-1">
-                    <Skeleton shape="tile" />
-                    <Skeleton className="h-8 w-full max-w-36 rounded-full" />
-                    <Skeleton shape="tile" />
+                    <Skeleton shape="control" className="w-44" />
                 </div>
             </div>
         )
@@ -79,7 +77,7 @@ function CategorySpendSectionSkeleton() {
                         className="rounded-row border border-border/50 px-3 py-2.5"
                     >
                         <div className="flex min-w-0 items-center gap-2">
-                            <Skeleton className="size-8 shrink-0 rounded-md sm:size-9" />
+                            <Skeleton shape="tile" className="sm:size-9" />
                             <div className="min-w-0 flex-1 space-y-1">
                                 <Skeleton className="h-4 w-full max-w-40" />
                                 <Skeleton className="h-3 w-24 max-w-full" />
@@ -113,7 +111,7 @@ function InvoicePanelSkeleton() {
                                 <Skeleton className="h-3 w-12" />
                                 <Skeleton className="h-9 w-full max-w-44 tabular-nums md:h-10 md:w-44" />
                             </div>
-                            <Skeleton className="h-6 w-18 shrink-0 rounded-full" />
+                            <Skeleton shape="pill" size="sm" className="w-18" />
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <Skeleton className="h-3 w-28 max-w-full" />
@@ -135,9 +133,9 @@ function InvoicePanelSkeleton() {
                 <CardContent className="space-y-5 pb-4 pt-5">
                     <CategorySpendSectionSkeleton />
 
-                    <div className="rounded-row border border-border/50 bg-muted/20 px-2.5 py-2 dark:bg-muted/10">
+                    <div className="rounded-surface border border-border/50 bg-muted/20 px-2.5 py-2 dark:bg-muted/10">
                         <div className="flex items-start gap-2">
-                            <Skeleton className="size-7 shrink-0 rounded-full" />
+                            <Skeleton shape="circle" size="xs" />
                             <div className="min-w-0 flex-1 space-y-2 pt-0.5">
                                 <Skeleton className="h-3 w-full max-w-lg" />
                                 <Skeleton className="h-3 w-full max-w-md" />
@@ -258,7 +256,7 @@ export function CreditCardDetailSkeleton() {
                 <div className="mx-auto w-full max-w-sm">
                     <Skeleton className="aspect-[1.586] w-full rounded-2xl" />
                 </div>
-                <Skeleton className="h-8 w-full max-w-64 rounded-full" />
+                <Skeleton shape="control" size="md" className="w-full max-w-64 pointer-coarse:h-8" />
             </div>
 
             <Card padding="none">
@@ -268,13 +266,13 @@ export function CreditCardDetailSkeleton() {
                             <Skeleton className="h-4 w-full max-w-48" />
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 pl-1">
-                            <Skeleton shape="pill" />
-                            <Skeleton shape="tile" />
+                            <Skeleton shape="pill" size="sm" />
+                            <Skeleton shape="control" size="md" className="aspect-square" />
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="border-t border-border/50 px-4 py-3">
-                    <Skeleton className="h-8 w-full rounded-full" />
+                    <Skeleton shape="control" size="md" className="w-full pointer-coarse:h-8" />
                 </CardContent>
             </Card>
 

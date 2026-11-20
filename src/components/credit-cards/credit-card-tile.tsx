@@ -221,7 +221,7 @@ export function CreditCardTileSkeleton() {
                     <Skeleton className="h-4 w-full max-w-56" />
                 </CardTitle>
                 <CardAction>
-                    <Skeleton shape="pill" />
+                    <Skeleton shape="pill" size="sm" />
                 </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">

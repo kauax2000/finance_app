@@ -1,7 +1,6 @@
 import { CreditCardTileSkeleton } from "@/components/credit-cards/credit-card-tile"
 import { Card } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
 
 const DEFAULT_CARD_COUNT = 4
 
@@ -31,20 +30,9 @@ export function CreditCardsPageSkeleton({
 
     return (
         <SkeletonGroup className="space-y-4" label="Carregando cartões de crédito…" delay>
-            <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div
-                    className={cn(
-                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11 md:w-auto",
-                        "max-w-full shrink-0",
-                    )}
-                    aria-hidden
-                >
-                    <div className="flex h-full min-h-0 w-full items-stretch gap-0.5 md:w-auto">
-                        <Skeleton className="h-8 flex-1 rounded-full md:h-7 md:min-w-17 md:flex-none" />
-                        <Skeleton className="h-8 flex-1 rounded-full md:h-7 md:min-w-17 md:flex-none" />
-                    </div>
-                </div>
-                <Skeleton className="hidden h-8 min-w-30 rounded-full md:inline-flex md:w-auto" />
+            <div className="flex items-center gap-2 md:justify-between md:gap-3" aria-hidden>
+                <Skeleton shape="control" className="min-w-0 flex-1 md:w-44 md:flex-none" />
+                <Skeleton shape="control" className="aspect-square md:aspect-auto md:min-w-30" />
             </div>
 
             {view === "history" ? (

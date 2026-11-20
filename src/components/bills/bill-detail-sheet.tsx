@@ -178,7 +178,7 @@ export function BillDetailSheet({
                         )}
                     >
                         {loading && !bill ? (
-                            <Skeleton className="size-11 shrink-0 rounded-lg" />
+                            <Skeleton shape="tile" size="2xl" />
                         ) : bill ? (
                             <ColorTile size="2xl" color={headerColor}>
                                 {/* `lg` desenha o ícone a 20px, e a 20 o conjunto é o mini. */}

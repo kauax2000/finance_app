@@ -1,31 +1,17 @@
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { TableSkeleton, type TableSkeletonColumn } from "@/components/ui/table"
 import { TablePanel } from "@/components/ui/data-table"
-import { cn } from "@/lib/utils"
 
 function ToolbarSkeleton() {
     return (
         <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
             <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
-                <div
-                    className={cn(
-                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11 md:w-auto",
-                        "min-w-0 flex-1 md:flex-initial md:shrink-0"
-                    )}
-                    aria-hidden
-                >
-                    <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5 md:w-auto">
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
-                    </div>
-                </div>
-                <Skeleton className="size-10 shrink-0 rounded-full md:hidden" />
+                <Skeleton shape="control" className="min-w-0 flex-1 md:w-60 md:flex-none" aria-hidden />
+                <Skeleton shape="control" className="aspect-square md:hidden" />
             </div>
             <div className="hidden min-w-0 shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
-                <Skeleton shape="tile" />
-                <Skeleton className="h-8 w-36 rounded-full" />
-                <Skeleton className="h-8 w-34 rounded-full" />
+                <Skeleton shape="control" className="w-28" />
+                <Skeleton shape="control" className="w-40" />
             </div>
         </div>
     )
