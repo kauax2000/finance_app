@@ -116,11 +116,12 @@ export default function TransactionsPageClient() {
                             <p aria-hidden="true">Transações</p>
                         </PageHeaderTitle>
                     </PageHeaderTitleRow>
-                    {/* Criar mora no "+ Adicionar" da barra lateral; o cabeçalho só importa e exporta, em dois
-                        terciários (de vez em quando, sem fundo para não pesar). Estreito, o `overflow` os leva ao ⋯. */}
+                    {/* Criar mora no "+ Adicionar" da barra lateral; o cabeçalho só importa e exporta. Regra do dono
+                        (20/11/2026): no cabeçalho, a primeira ação leva fundo (`secondary`) e as outras ficam
+                        sem fundo (`tertiary`). Estreito, o `overflow` as leva ao ⋯. */}
                     {convidado ? null : (
                         <PageHeaderActions overflow="menu">
-                            <Button type="button" variant="tertiary" onClick={() => pedidos.setImportar(true)}>
+                            <Button type="button" variant="secondary" onClick={() => pedidos.setImportar(true)}>
                                 <ArrowUpTrayIcon aria-hidden />
                                 Importar
                             </Button>

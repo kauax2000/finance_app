@@ -363,6 +363,14 @@ o par é de **duas ações do mesmo peso**, sem `primary` nenhum. O nome é
 `tertiary`: `variant="ghost"` saiu do tipo, e o compilador acusa quem o
 escrever.
 
+### Ações do cabeçalho da página sem `primary`
+
+Decisão do dono (20/11/2026): no `PageHeaderActions`, quando nenhuma ação é
+`primary`, a primeira leva fundo (`secondary`) e a segunda, a terceira e as
+seguintes ficam sem fundo (`tertiary`). Ação única é `secondary`. (Transações:
+Importar `secondary`, Exportar `tertiary`; Categorias: "Nova categoria"
+`secondary`.)
+
 ### Três ações juntas: três pesos, sempre
 
 Decisão do dono (07/11/2026): quando três ações aparecem juntas, cada uma

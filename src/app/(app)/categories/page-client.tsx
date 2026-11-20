@@ -675,7 +675,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     </PageHeaderTitleRow>
                     {podeEscrever ? (
                         <PageHeaderActions>
-                            <Button type="button" variant="tertiary" onClick={() => openDialog()}>
+                            {/* Ação única do cabeçalho: leva fundo (regra do dono, 20/11/2026). */}
+                            <Button type="button" variant="secondary" onClick={() => openDialog()}>
                                 <PlusIcon aria-hidden />
                                 Nova categoria
                             </Button>

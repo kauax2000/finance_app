@@ -43,7 +43,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         expect(f).not.toContain("TransactionNewSplitButton")
         expect(f).toMatch(/convidado \? null : \(\s*<PageHeaderActions overflow="menu">/)
         const acoes = f.slice(f.indexOf("<PageHeaderActions"), f.indexOf("</PageHeaderActions>"))
-        expect(acoes).toMatch(/<Button type="button" variant="tertiary" onClick=\{\(\) => pedidos\.setImportar\(true\)\}>[\s\S]{0,140}?Importar/)
+        expect(acoes).toMatch(/<Button type="button" variant="secondary" onClick=\{\(\) => pedidos\.setImportar\(true\)\}>[\s\S]{0,140}?Importar/)
         expect(acoes).toMatch(/<Button type="button" variant="tertiary" onClick=\{\(\) => void exportar\(\)\} disabled=\{exportando\}>[\s\S]{0,140}?Exportar/)
         expect(acoes).not.toContain('variant="primary"')
         // A barra da lista não tem os botões: o ⋯ dela é só do telefone.

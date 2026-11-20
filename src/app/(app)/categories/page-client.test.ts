@@ -11,7 +11,7 @@ describe("o cabeçalho de Categorias", () => {
     })
 
     it("Nova categoria mora no cabeçalho, primária, só para quem escreve", () => {
-        expect(f).toMatch(/podeEscrever \? \(\s*<PageHeaderActions>[\s\S]*?variant="tertiary"[\s\S]*?Nova categoria/)
+        expect(f).toMatch(/podeEscrever \? \(\s*<PageHeaderActions>[\s\S]*?variant="secondary"[\s\S]*?Nova categoria/)
     })
 
     it("a barra só cria categoria no telefone", () => {
