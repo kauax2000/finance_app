@@ -688,6 +688,9 @@ function usePlacaPorRolagem(el: HTMLDivElement | null, ligado: boolean, lado: "t
       const sobra = corpo.scrollHeight - corpo.clientHeight
       const acesa = sobra > 1 && (lado === "topo" || corpo.scrollTop < sobra - 24)
       el.toggleAttribute("data-placa", acesa)
+      // O degradê do cabeçalho desce com a rolagem: parado, termina logo depois da borda (não
+      // cobre a primeira linha); nos primeiros 40px rolados, chega à altura inteira (20/11/2026).
+      if (lado === "topo") el.style.setProperty("--dialog-header-rolagem", String(Math.min(1, corpo.scrollTop / 40)))
     }
     conferir()
     corpo.addEventListener("scroll", conferir, { passive: true })
@@ -700,6 +703,7 @@ function usePlacaPorRolagem(el: HTMLDivElement | null, ligado: boolean, lado: "t
       tamanho.disconnect()
       conteudo.disconnect()
       el.removeAttribute("data-placa")
+      el.style.removeProperty("--dialog-header-rolagem")
     }
   }, [el, ligado, lado])
 }

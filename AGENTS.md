@@ -1236,7 +1236,7 @@ declaração de `background-color` no trilho).
   - **O `DialogHeader` é translúcido em todas as folhas** (`translucent`, ligado; `false` é a
     saída, que o painel de notificações usa): o corpo rola por trás do cabeçalho, a placa a 95%, sem desfoque e a borda descendo num degradê
     de 56px, sem linha reta (`@utility dialog-header-translucent`, 13/11/2026). A placa cheia vai até o fim do
-    texto quando ele desce mais que isso (`--dialog-header-solid`, 19/11/2026), e o degradê termina sempre 16px depois da borda (`--dialog-header-fade-over`, 20/11/2026): passar dela os 56px inteiros cobria a primeira linha do corpo. O vidro de
+    texto quando ele desce mais que isso (`--dialog-header-solid`, 19/11/2026), e o degradê de 56px desce com a rolagem (`--dialog-header-rolagem`, que o `DialogHeader` escreve): parado, termina 16px depois da borda e não cobre a primeira linha; rolados 40px, assenta abaixo da placa (20/11/2026). O vidro de
     24px em todas as folhas (12/11) foi recusado. **O `DialogFooter` é o espelho** (`translucent`,
     ligado; rodada 382, 17/11/2026): o corpo rola por trás do rodapé, a mesma placa a 95% e o
     degradê de 56px subindo; na gaveta de baixo a placa
