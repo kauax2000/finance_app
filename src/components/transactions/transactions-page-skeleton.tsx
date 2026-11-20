@@ -50,7 +50,7 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
             <div className="@container/transacoes min-w-0">
                 <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
                     <Skeleton shape="control" className="w-60 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
-                    <Skeleton shape="control" className="hidden aspect-square max-md:block" />
+                    <Skeleton shape="control" size="md" className="hidden aspect-square max-md:block" />
                     <div className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
                         <FilterBarSkeleton tokens={0} group={false} />
                     </div>

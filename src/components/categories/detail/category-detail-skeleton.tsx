@@ -202,7 +202,7 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                 footer={
                     <TablePanelFooter>
                         <Skeleton className="h-4 w-full max-w-48" />
-                        <Skeleton shape="control" size="sm" className="w-40 self-end sm:self-auto" />
+                        <Skeleton shape="control" size="xs" className="w-40 self-end sm:self-auto" />
                     </TablePanelFooter>
                 }
             >

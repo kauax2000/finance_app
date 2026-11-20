@@ -46,7 +46,7 @@ function SectionTitleRow({
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton shape="control" size="sm" className="w-32" />
+                <Skeleton shape="control" size="sm" className="w-32 pointer-coarse:h-11" />
             </div>
         )
     }
@@ -276,7 +276,7 @@ function DashboardInvoicesSkeleton() {
                                         <div className="space-y-2">
                                             <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
                                                 <Skeleton className="h-3 w-24 rounded-md" />
-                                                <Skeleton shape="control" size="sm" className="w-28 min-[480px]:ml-auto" />
+                                                <Skeleton className="h-7 w-28 min-[480px]:ml-auto" />
                                             </div>
                                             <div className="space-y-1 border-t border-border/50 pt-3">
                                                 <Skeleton className="h-3 w-full max-w-56 rounded-md" />

@@ -443,7 +443,7 @@ function PageSectionSkeleton({
         <div className="flex h-(--page-section-title-line) items-center">
           <Skeleton className="h-[calc(var(--page-section-title)*0.8)] w-40 max-w-full" />
         </div>
-        {actions ? <Skeleton shape="control" size="sm" className="w-24" /> : null}
+        {actions ? <Skeleton shape="control" size="sm" className="w-24 pointer-coarse:h-11" /> : null}
         {description ? <Skeleton shape="text" className="col-start-1 w-72 max-w-full" /> : null}
       </div>
       {children ?? <Skeleton shape="surface" className="h-40 w-full" />}
