@@ -138,8 +138,9 @@ export function WorkspaceSwitcher({
             {acoes.dialogos}
             {appearance === "header" ? (
                 // Encolhe com a caixa do centro da barra: o nome trunca em vez de
-                // passar por cima das ações.
-                <div className="flex min-w-0 max-w-full">{menu}</div>
+                // passar por cima das ações. Dentro do TopBarTitle o embrulho ocupa a
+                // largura toda, e o justify-center mantém o botão no meio dela.
+                <div className="flex min-w-0 max-w-full justify-center">{menu}</div>
             ) : (
                 <SidebarHeader className="min-w-0">
                     {menu}
