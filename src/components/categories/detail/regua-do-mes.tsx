@@ -81,51 +81,61 @@ export function ReguaDoMes({
 
     return (
         <PageSection aria-label={`Resumo de ${mes}`}>
-            <div className="grid gap-5">
-                <div className="grid gap-3">
-                    <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
-                    {fatosNaLinha ? (
-                        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-                            {valor}
-                            {fatosNaLinha}
-                        </div>
-                    ) : (
-                        valor
-                    )}
+            {/* Na tela larga (xl) os fatos saem da linha do valor e ocupam uma coluna à direita, da
+                sobrancelha até a régua: a barra para antes deles e não atravessa a tela inteira. A
+                cópia escondida é `display: none`, então o leitor de tela lê os fatos uma vez só. */}
+            <div className="grid gap-x-12 gap-y-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                <div className="grid min-w-0 gap-5">
+                    <div className="grid gap-3">
+                        <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
+                        {fatosNaLinha ? (
+                            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+                                {valor}
+                                <div className="xl:hidden">{fatosNaLinha}</div>
+                            </div>
+                        ) : (
+                            valor
+                        )}
+                    </div>
+                    <div className="mt-5">
+                        {marcador != null ? (
+                            <div className="relative mb-8">
+                                <Progress
+                                    value={Math.max(0, lancado)}
+                                    max={escala.max}
+                                    aria-label={`${currencyBRL(lancado)} em ${mes}, contra a média de ${currencyBRL(media ?? 0)}`}
+                                />
+                                {/* O traço da média passa da barra e leva um anel da cor do fundo: o `marker` do
+                                    `Progress` mora dentro do trilho e some sobre a parte cheia. */}
+                                <span
+                                    aria-hidden="true"
+                                    className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-muted-foreground ring-2 ring-background"
+                                    style={{ insetInlineStart: `${marcador}%` }}
+                                />
+                                <Caption
+                                    aria-hidden="true"
+                                    className={cn(
+                                        "absolute top-full mt-2 whitespace-nowrap",
+                                        // Perto das bordas o rótulo encosta no traço por dentro, para não vazar.
+                                        marcador < 8 ? "" : marcador > 92 ? "-translate-x-full" : "-translate-x-1/2",
+                                    )}
+                                    style={{ insetInlineStart: `${marcador}%` }}
+                                >
+                                    {`média de 6 meses ${reaisInteiros(media ?? 0)}`}
+                                </Caption>
+                            </div>
+                        ) : (
+                            <BarraDoMes {...props} className="mb-3" />
+                        )}
+                        {veredito ? <Muted>{veredito}</Muted> : null}
+                    </div>
+                    {children}
                 </div>
-                <div className="mt-5">
-                    {marcador != null ? (
-                        <div className="relative mb-8">
-                            <Progress
-                                value={Math.max(0, lancado)}
-                                max={escala.max}
-                                aria-label={`${currencyBRL(lancado)} em ${mes}, contra a média de ${currencyBRL(media ?? 0)}`}
-                            />
-                            {/* O traço da média passa da barra e leva um anel da cor do fundo: o `marker` do
-                                `Progress` mora dentro do trilho e some sobre a parte cheia. */}
-                            <span
-                                aria-hidden="true"
-                                className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-muted-foreground ring-2 ring-background"
-                                style={{ insetInlineStart: `${marcador}%` }}
-                            />
-                            <Caption
-                                aria-hidden="true"
-                                className={cn(
-                                    "absolute top-full mt-2 whitespace-nowrap",
-                                    // Perto das bordas o rótulo encosta no traço por dentro, para não vazar.
-                                    marcador < 8 ? "" : marcador > 92 ? "-translate-x-full" : "-translate-x-1/2",
-                                )}
-                                style={{ insetInlineStart: `${marcador}%` }}
-                            >
-                                {`média de 6 meses ${reaisInteiros(media ?? 0)}`}
-                            </Caption>
-                        </div>
-                    ) : (
-                        <BarraDoMes {...props} className="mb-3" />
-                    )}
-                    {veredito ? <Muted>{veredito}</Muted> : null}
-                </div>
-                {children}
+                {fatosNaLinha ? (
+                    <div className="hidden self-stretch border-s border-border ps-12 xl:flex xl:items-center">
+                        {fatosNaLinha}
+                    </div>
+                ) : null}
             </div>
         </PageSection>
     )
