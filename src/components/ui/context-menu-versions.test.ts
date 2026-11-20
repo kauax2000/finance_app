@@ -56,7 +56,7 @@ describe("as versões do ContextMenu", () => {
       "src/components/categories/expense-category-card.tsx",
       "src/components/categories/income-category-card.tsx",
     ]) {
-      expect(lerFonte(arquivo), arquivo).toMatch(/<CategoryCardContextMenu[\s\S]*?<Card /)
+      expect(lerFonte(arquivo), arquivo).toMatch(/<CategoryCardContextMenu[\s\S]*?<Card\s/)
     }
   })
 })
