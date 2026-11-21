@@ -103,6 +103,14 @@ describe("os três diálogos", () => {
         }
     })
 
+    it("o ⋯ Definir limite do detalhe abre o diálogo só do limite, com os mesmos campos", () => {
+        const pagina = semComentarios(lerFonte("src/app/(app)/categories/[categoryId]/page-client.tsx"), "tudo")
+        expect(pagina).toContain("onSelect={openLimitDialog}")
+        expect(pagina).not.toContain("limiteAberto")
+        expect(detalhe).toContain("<CategoryBudgetFields")
+        expect(detalhe).toMatch(/<DialogFooter start=\{removerLimite\}>/)
+    })
+
     it("o diálogo de fora grava a repetição", () => {
         expect(criar).toMatch(/repeats[,:]/)
         expect(criar).toContain("upsertCategoryBudget(")

@@ -62,11 +62,6 @@ export function CategoryFormFields({
     /** Ausente: o diálogo não oferece limite. */
     budget?: CategoryFormBudget
 }) {
-    const anoAtual = new Date().getFullYear()
-    const nomeDoMes = budget ? mesNaFrase(budget.ym, anoAtual) : ""
-    const proximoMes = budget ? mesNaFrase(shiftYearMonth(budget.ym, 1), anoAtual) : ""
-    const nomeDaCategoria = name.trim()
-
     return (
         <div className="space-y-4">
             {/* O ladrilho acompanha o campo, e não a base da linha: com a mensagem de
@@ -105,43 +100,76 @@ export function CategoryFormFields({
             {type === "expense" && budget ? (
                 <Collapsible variant="card" defaultOpen={budget.defaultOpen} className="bg-card/50">
                     <CollapsibleRow trailing="Opcional" underline={false}>Limite de gasto</CollapsibleRow>
-                    <CollapsibleContent className="space-y-4">
-                        <p className="text-xs text-muted-foreground">
-                            Um teto para o que você gasta {nomeDaCategoria ? `em ${nomeDaCategoria}` : "nesta categoria"} por
-                            mês. Avisamos em 80% e ao passar dele.
-                        </p>
-                        <FormInput
-                            id={`${idPrefix}-budget`}
-                            money
-                            label="Valor"
-                            placeholder="Ex: 1.500,00"
-                            value={budget.amount}
-                            onValueChange={budget.onAmountChange}
-                        />
-                        {/* Toggle, e não abas: a escolha não muda o formulário, só a frase. */}
-                        <div className="space-y-2">
-                            <ToggleGroup
-                                type="single"
-                                variant="segmented"
-                                stretch
-                                aria-label="Quando o limite vale"
-                                value={budget.repeats ? "todo-mes" : "so-este"}
-                                onValueChange={(v) => {
-                                    if (v) budget.onRepeatsChange(v === "todo-mes")
-                                }}
-                            >
-                                <ToggleGroupItem value="todo-mes">Todo mês</ToggleGroupItem>
-                                <ToggleGroupItem value="so-este">Só em {nomeDoMes}</ToggleGroupItem>
-                            </ToggleGroup>
-                            <p className="text-xs text-muted-foreground" aria-live="polite">
-                                {budget.repeats
-                                    ? "O mesmo valor começa sozinho todo dia 1, até você mudar."
-                                    : `Vale só em ${nomeDoMes}. Em ${proximoMes}, ${nomeDaCategoria || "a categoria"} fica sem limite.`}
-                            </p>
-                        </div>
+                    <CollapsibleContent>
+                        <CategoryBudgetFields idPrefix={idPrefix} name={name} budget={budget} />
                     </CollapsibleContent>
                 </Collapsible>
             ) : null}
+        </div>
+    )
+}
+
+/** A frase que explica o limite: no formulário, acima do valor; no diálogo do limite, a descrição dele. */
+export function explicacaoDoLimite(name: string) {
+    const nomeDaCategoria = name.trim()
+    return `Um teto para o que você gasta ${nomeDaCategoria ? `em ${nomeDaCategoria}` : "nesta categoria"} por mês. Avisamos em 80% e ao passar dele.`
+}
+
+/**
+ * O limite de gasto: a explicação, o valor e quando ele vale. Mora no
+ * recolhível do formulário de categoria e, sozinho, no diálogo do limite do
+ * detalhe (que leva a explicação na descrição: `explicacao={false}`).
+ */
+export function CategoryBudgetFields({
+    idPrefix,
+    name,
+    budget,
+    explicacao = true,
+}: {
+    idPrefix: string
+    name: string
+    budget: Omit<CategoryFormBudget, "defaultOpen">
+    explicacao?: boolean
+}) {
+    const anoAtual = new Date().getFullYear()
+    const nomeDoMes = mesNaFrase(budget.ym, anoAtual)
+    const proximoMes = mesNaFrase(shiftYearMonth(budget.ym, 1), anoAtual)
+    const nomeDaCategoria = name.trim()
+
+    return (
+        <div className="space-y-4">
+            {explicacao ? (
+                <p className="text-xs text-muted-foreground">{explicacaoDoLimite(name)}</p>
+            ) : null}
+            <FormInput
+                id={`${idPrefix}-budget`}
+                money
+                label="Valor"
+                placeholder="Ex: 1.500,00"
+                value={budget.amount}
+                onValueChange={budget.onAmountChange}
+            />
+            {/* Toggle, e não abas: a escolha não muda o formulário, só a frase. */}
+            <div className="space-y-2">
+                <ToggleGroup
+                    type="single"
+                    variant="segmented"
+                    stretch
+                    aria-label="Quando o limite vale"
+                    value={budget.repeats ? "todo-mes" : "so-este"}
+                    onValueChange={(v) => {
+                        if (v) budget.onRepeatsChange(v === "todo-mes")
+                    }}
+                >
+                    <ToggleGroupItem value="todo-mes">Todo mês</ToggleGroupItem>
+                    <ToggleGroupItem value="so-este">Só em {nomeDoMes}</ToggleGroupItem>
+                </ToggleGroup>
+                <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {budget.repeats
+                        ? "O mesmo valor começa sozinho todo dia 1, até você mudar."
+                        : `Vale só em ${nomeDoMes}. Em ${proximoMes}, ${nomeDaCategoria || "a categoria"} fica sem limite.`}
+                </p>
+            </div>
         </div>
     )
 }

@@ -17,7 +17,11 @@ import {
     FormSubmit,
 } from "@/components/ui/form"
 import { type CategoryIconId } from "@/components/categories/category-appearance-fields"
-import { CategoryFormFields } from "@/components/categories/category-form-fields"
+import {
+    CategoryBudgetFields,
+    CategoryFormFields,
+    explicacaoDoLimite,
+} from "@/components/categories/category-form-fields"
 import type { Budget, Category } from "@/lib/supabase"
 import { ExcluirCategoriaDialog } from "@/components/categories/excluir-categoria-dialog"
 
@@ -25,8 +29,6 @@ type CategoryDetailDialogsProps = {
     category: Category
     yearMonth: string
     budget: Budget | null
-    /** "Definir limite": o diálogo abre com o limite à vista. */
-    limiteAberto?: boolean
     editDialogOpen: boolean
     onEditDialogOpenChange: (open: boolean) => void
     editName: string
@@ -45,6 +47,10 @@ type CategoryDetailDialogsProps = {
     editBudgetRemoving: boolean
     onEditBudgetRemove: () => void
     onEditSubmit: (e: React.FormEvent) => void
+    /** "Definir limite" / "Editar limite" do ⋯: o diálogo só do limite. */
+    limitDialogOpen: boolean
+    onLimitDialogOpenChange: (open: boolean) => void
+    onLimitSubmit: (e: React.FormEvent) => void
     deleteDialogOpen: boolean
     onDeleteDialogOpenChange: (open: boolean) => void
     deleteDeleting: boolean
@@ -55,7 +61,6 @@ export function CategoryDetailDialogs({
     category,
     yearMonth,
     budget,
-    limiteAberto = false,
     editDialogOpen,
     onEditDialogOpenChange,
     editName,
@@ -74,6 +79,9 @@ export function CategoryDetailDialogs({
     editBudgetRemoving,
     onEditBudgetRemove,
     onEditSubmit,
+    limitDialogOpen,
+    onLimitDialogOpenChange,
+    onLimitSubmit,
     deleteDialogOpen,
     onDeleteDialogOpenChange,
     deleteDeleting,
@@ -83,6 +91,14 @@ export function CategoryDetailDialogs({
         editType === "expense"
             ? "Atualize o nome, o tipo, a aparência e o orçamento do mês selecionado desta categoria."
             : "Atualize o nome, o tipo e a aparência desta categoria."
+
+    const budgetFields = {
+        ym: yearMonth,
+        amount: editBudgetAmount,
+        onAmountChange: onEditBudgetAmountChange,
+        repeats: editBudgetRepeats,
+        onRepeatsChange: onEditBudgetRepeatsChange,
+    }
 
     const editFields = (
         <CategoryFormFields
@@ -95,16 +111,21 @@ export function CategoryDetailDialogs({
             onColorChange={onEditColorChange}
             icon={editIcon}
             onIconChange={onEditIconChange}
-            budget={{
-                ym: yearMonth,
-                amount: editBudgetAmount,
-                onAmountChange: onEditBudgetAmountChange,
-                repeats: editBudgetRepeats,
-                onRepeatsChange: onEditBudgetRepeatsChange,
-                defaultOpen: Boolean(budget) || limiteAberto,
-            }}
+            budget={{ ...budgetFields, defaultOpen: Boolean(budget) }}
         />
     )
+
+    const removerLimite = budget ? (
+        <Button
+            type="button"
+            variant="tertiary"
+            className="text-destructive"
+            disabled={editSaving || editBudgetRemoving}
+            onClick={() => void onEditBudgetRemove()}
+        >
+            Remover limite
+        </Button>
+    ) : undefined
 
     return (
         <>
@@ -131,25 +152,52 @@ export function CategoryDetailDialogs({
                         <DialogBody>
                             {editFields}
                         </DialogBody>
-                        <DialogFooter
-                            start={
-                                budget && editType === "expense" ? (
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        className="text-destructive"
-                                        disabled={editSaving || editBudgetRemoving}
-                                        onClick={() => void onEditBudgetRemove()}
-                                    >
-                                        Remover limite
-                                    </Button>
-                                ) : undefined
-                            }
+                        <DialogFooter start={editType === "expense" ? removerLimite : undefined}
                         >
                             <DialogClose asChild>
                                 <FormCancel>Cancelar</FormCancel>
                             </DialogClose>
                             <FormSubmit disabled={editBudgetRemoving}>
+                                Salvar
+                            </FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                </DialogContent>
+            </Dialog>
+
+            {/* O ⋯ "Definir limite": só o limite, sem o resto da categoria. O
+                título repete o item do menu, como o "Editar categoria" repete o
+                "Editar". Salva pelo mesmo caminho do orçamento do editar. */}
+            <Dialog
+                surface="auto"
+                pending={editSaving || editBudgetRemoving}
+                open={limitDialogOpen}
+                onOpenChange={onLimitDialogOpenChange}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{budget ? "Editar limite" : "Definir limite"}</DialogTitle>
+                        <DialogDescription>{explicacaoDoLimite(category.name)}</DialogDescription>
+                    </DialogHeader>
+                    <CustomForm
+                        pending={editSaving}
+                        onSubmit={onLimitSubmit}
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
+                        <DialogBody>
+                            <CategoryBudgetFields
+                                idPrefix="category-limit"
+                                name={category.name}
+                                budget={budgetFields}
+                                explicacao={false}
+                            />
+                        </DialogBody>
+                        <DialogFooter start={removerLimite}>
+                            <DialogClose asChild>
+                                <FormCancel>Cancelar</FormCancel>
+                            </DialogClose>
+                            {/* Sem limite e sem valor, não há o que salvar. */}
+                            <FormSubmit disabled={editBudgetRemoving || (!budget && !editBudgetAmount.trim())}>
                                 Salvar
                             </FormSubmit>
                         </DialogFooter>

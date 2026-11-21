@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
-import { ChartPieIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, FlagIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -166,23 +166,29 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const [editBudgetRemoving, setEditBudgetRemoving] = React.useState(false)
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
 
-    const [limiteAberto, setLimiteAberto] = React.useState(false)
-    const openEditDialog = React.useCallback((abrirLimite = false) => {
-        if (!category) return
-        setLimiteAberto(abrirLimite)
+    const [limitDialogOpen, setLimitDialogOpen] = React.useState(false)
+    const preencherLimite = React.useCallback(() => {
         setEditBudgetRemoving(false)
-        setEditName(category.name)
-        setEditType(category.type)
-        setEditColor(category.color || CATEGORY_COLORS[0])
-        setEditIcon(normalizeCategoryIcon(category.icon))
         setEditBudgetAmount(
-            category.type === "expense" && budget
+            category?.type === "expense" && budget
                 ? formatMoneyBrlInput(Number(budget.amount))
                 : "",
         )
         setEditBudgetRepeats(budget?.repeats ?? true)
+    }, [category?.type, budget])
+    const openLimitDialog = React.useCallback(() => {
+        preencherLimite()
+        setLimitDialogOpen(true)
+    }, [preencherLimite])
+    const openEditDialog = React.useCallback(() => {
+        if (!category) return
+        preencherLimite()
+        setEditName(category.name)
+        setEditType(category.type)
+        setEditColor(category.color || CATEGORY_COLORS[0])
+        setEditIcon(normalizeCategoryIcon(category.icon))
         setEditDialogOpen(true)
-    }, [category, budget])
+    }, [category, preencherLimite])
 
     const { period_start: periodStart, period_end: periodEnd } = periodBoundsFromYearMonth(yearMonth)
 
@@ -224,6 +230,57 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         txController.creditCards,
         yearMonth,
     ])
+
+    /** O orçamento do mês, o mesmo no editar e no diálogo do limite. Falhou: avisa e devolve `false`. */
+    const salvarLimite = React.useCallback(async (): Promise<boolean> => {
+        if (!user || !currentWorkspaceId) return false
+        const raw = editBudgetAmount.trim()
+        // Sem valor novo o upsert não roda: só a repetição do orçamento já salvo muda.
+        if (raw.length === 0 && budget && budget.repeats !== editBudgetRepeats) {
+            const r = await definirRepeticao(budget.id, editBudgetRepeats)
+            if (!r.ok) {
+                toastError(r.erro ?? "Não foi possível salvar o orçamento", { id: "salvar-categoria" })
+                return false
+            }
+        }
+        if (raw.length > 0) {
+            const amt = parseMoneyBrl(editBudgetAmount)
+            if (amt === null || amt <= 0) {
+                toastError("Informe um valor válido em reais, maior que zero", { id: "salvar-categoria" })
+                return false
+            }
+            const { error: budErr } = await upsertCategoryBudget({
+                userId: user.id,
+                workspaceId: currentWorkspaceId,
+                categoryId,
+                yearMonth,
+                amount: amt,
+                previousAmount: budget ? Number(budget.amount) : null,
+                repeats: editBudgetRepeats,
+            })
+            if (budErr) {
+                toastError(
+                    formatSupabasePostgrestError(budErr) ?? "Não foi possível salvar o orçamento",
+                    { id: "salvar-categoria" },
+                )
+                return false
+            }
+        }
+        return true
+    }, [user, currentWorkspaceId, editBudgetAmount, editBudgetRepeats, budget, categoryId, yearMonth])
+
+    const handleLimitSubmit = React.useCallback(
+        async (e: React.FormEvent) => {
+            e.preventDefault()
+            setEditSaving(true)
+            const ok = await salvarLimite()
+            setEditSaving(false)
+            if (!ok) return
+            setLimitDialogOpen(false)
+            invalidateDetail()
+        },
+        [salvarLimite, invalidateDetail],
+    )
 
     const handleEditSubmit = React.useCallback(
         async (e: React.FormEvent) => {
@@ -276,47 +333,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
             }
 
-            if (editType === "expense") {
-                const raw = editBudgetAmount.trim()
-                // Sem valor novo o upsert não roda: só a repetição do orçamento já salvo muda.
-                if (raw.length === 0 && budget && budget.repeats !== editBudgetRepeats) {
-                    const r = await definirRepeticao(budget.id, editBudgetRepeats)
-                    if (!r.ok) {
-                        setEditSaving(false)
-                        toastError(r.erro ?? "Não foi possível salvar o orçamento", {
-                            id: "salvar-categoria",
-                        })
-                        return
-                    }
-                }
-                if (raw.length > 0) {
-                    const amt = parseMoneyBrl(editBudgetAmount)
-                    if (amt === null || amt <= 0) {
-                        setEditSaving(false)
-                        toastError("Informe um valor válido em reais, maior que zero", {
-                            id: "salvar-categoria",
-                        })
-                        return
-                    }
-                    const { error: budErr } = await upsertCategoryBudget({
-                        userId: user.id,
-                        workspaceId: currentWorkspaceId,
-                        categoryId,
-                        yearMonth,
-                        amount: amt,
-                        previousAmount: budget ? Number(budget.amount) : null,
-                        repeats: editBudgetRepeats,
-                    })
-                    if (budErr) {
-                        setEditSaving(false)
-                        toastError(
-                            formatSupabasePostgrestError(budErr) ??
-                                "Não foi possível salvar o orçamento",
-                            { id: "salvar-categoria" },
-                        )
-                        return
-                    }
-                }
+            if (editType === "expense" && !(await salvarLimite())) {
+                setEditSaving(false)
+                return
             }
 
             setEditSaving(false)
@@ -331,10 +350,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             editType,
             editColor,
             editIcon,
-            editBudgetAmount,
-            editBudgetRepeats,
-            budget,
-            yearMonth,
+            salvarLimite,
             invalidateDetail,
             category?.type,
             confirmAction,
@@ -366,6 +382,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         }
         setEditBudgetAmount("")
         setEditDialogOpen(false)
+        setLimitDialogOpen(false)
         invalidateDetail()
     }, [budget, user, currentWorkspaceId, confirmAction, invalidateDetail])
 
@@ -511,13 +528,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" size="sm">
-                <DropdownMenuItem onSelect={() => openEditDialog()}>
+                <DropdownMenuItem onSelect={openEditDialog}>
                     <PencilIcon aria-hidden />
                     Editar
                 </DropdownMenuItem>
                 {category.type === "expense" ? (
-                    <DropdownMenuItem onSelect={() => openEditDialog(true)}>
-                        <ChartPieIcon aria-hidden />
+                    <DropdownMenuItem onSelect={openLimitDialog}>
+                        <FlagIcon aria-hidden />
                         {budget ? "Editar limite" : "Definir limite"}
                     </DropdownMenuItem>
                 ) : null}
@@ -629,7 +646,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 category={category}
                 yearMonth={yearMonth}
                 budget={budget}
-                limiteAberto={limiteAberto}
                 editDialogOpen={editDialogOpen}
                 onEditDialogOpenChange={setEditDialogOpen}
                 editName={editName}
@@ -648,6 +664,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 editBudgetRemoving={editBudgetRemoving}
                 onEditBudgetRemove={handleEditBudgetRemove}
                 onEditSubmit={handleEditSubmit}
+                limitDialogOpen={limitDialogOpen}
+                onLimitDialogOpenChange={setLimitDialogOpen}
+                onLimitSubmit={handleLimitSubmit}
                 deleteDialogOpen={deleteDialogOpen}
                 onDeleteDialogOpenChange={handleDeleteDialogOpenChange}
                 deleteDeleting={deleteDeleting}
