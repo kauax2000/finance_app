@@ -599,7 +599,7 @@ function ChartTooltipContent({
       <div
         data-slot="chart-tooltip-content"
         data-variant="single"
-        className={cn("grid min-w-32 items-start gap-0.5 px-2.5 py-1.5 text-xs", menuPanelSurfaceClassName, className)}
+        className={cn("grid min-w-32 items-start gap-1 px-3.5 py-2.5 text-xs", menuPanelSurfaceClassName, className)}
       >
         {tooltipLabel}
         {valor !== undefined ? (
