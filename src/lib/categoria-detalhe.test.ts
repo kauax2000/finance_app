@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
     comparacaoComMesAnterior,
     descricoesRepetidas,
-    divisaoPorMembro,
     divisaoPorPagamento,
     maioresLancamentos,
     mediaDosMeses,
@@ -108,22 +107,6 @@ describe("divisaoPorPagamento", () => {
             ["PIX", 30],
             ["Nubank", 20],
             ["Cartão", 10],
-        ])
-    })
-})
-
-describe("divisaoPorMembro", () => {
-    const membros = [{ user_id: "u1", email: "a@x.com", full_name: "Ana" }, { user_id: "u2", email: "b@x.com", full_name: null }]
-    it("paid_by vence user_id; ausente vira Outros", () => {
-        const txs = [
-            tx({ amount: 5, paid_by: "u2", user_id: "u1" }),
-            tx({ amount: 9, user_id: "u9" }),
-            tx({ amount: 1, user_id: "u1" }),
-        ]
-        expect(divisaoPorMembro(txs, "expense", membros).map((f) => [f.nome, f.valor])).toEqual([
-            ["Outros", 9],
-            ["b@x.com", 5],
-            ["Ana", 1],
         ])
     })
 })

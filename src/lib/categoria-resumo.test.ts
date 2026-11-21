@@ -67,6 +67,12 @@ describe("ritmoDoMes", () => {
         expect(r).toHaveLength(30)
         expect(r[29].atual).toBe(0)
     })
+    it("mês anterior mais longo: ainda chega ao total final no último dia", () => {
+        const rows = [tx({ date: "2026-01-05", amount: 10 }), tx({ date: "2026-01-31", amount: 20 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-02", hojeYmd: "2026-03-10", lookup })
+        expect(r).toHaveLength(28)
+        expect(r[27].anterior).toBe(30)
+    })
     it("estorno abate", () => {
         const rows = [tx({ date: "2026-11-02", amount: 100 }), estorno({ date: "2026-11-03", amount: 30 })]
         const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-30", lookup })
@@ -249,6 +255,7 @@ const base = {
     previsto: 3000,
     media: 3000,
     maior: null,
+    compras: 5,
     proximoMes: 0,
 }
 
@@ -278,6 +285,23 @@ describe("fraseDoResumo", () => {
         const fechado = texto(fraseDoResumo({ ...base, aberto: false, previsto: 3000, proximoMes: 0 }))
         expect(fechado).not.toContain("Ainda")
     })
+    it("mês aberto com previsto: o veredito é da projeção e diz isso", () => {
+        // lançado 2.500 < média 3.000 < lançado + previsto 3.600
+        const t = texto(fraseDoResumo({ ...base, lancado: 2500, previsto: 3600, media: 3000 }))
+        expect(t).toContain("deve fechar acima da média")
+        expect(t).not.toContain("abaixo da média")
+        const sem = texto(fraseDoResumo({ ...base, lancado: 2500, previsto: 2500, media: 3000 }))
+        expect(sem).toContain("abaixo da média")
+    })
+    it("o maior só puxa com 2 compras ou mais", () => {
+        const maior = tx({ description: "Consórcio", amount: 2000 })
+        expect(texto(fraseDoResumo({ ...base, maior, compras: 1 }))).not.toContain("puxou")
+        expect(texto(fraseDoResumo({ ...base, maior, compras: 2 }))).toContain("puxou")
+    })
+    it("lançado negativo não vira frase de veredito", () => {
+        const t = texto(fraseDoResumo({ ...base, lancado: -50, previsto: -50, media: 3000 }))
+        expect(t).not.toContain("média")
+    })
     it("receita usa entrada", () => {
         expect(texto(fraseDoResumo({ ...base, tipo: "income" }))).toContain("entrou")
     })
@@ -298,6 +322,10 @@ describe("insights", () => {
         const c = r.find((i) => i.id === "concentracao")
         expect(c?.tom).toBe("warning")
         expect(c?.texto.map((p) => p.texto).join("")).toContain(currencyBRL(2910 - 2442.54))
+    })
+    it("concentração não aparece se os 2 maiores passam do lançado", () => {
+        const r = insights({ tipo: "expense", lancado: 1000, media: null, limite: 100, txs: carro.slice(0, 3), compromissos: semCompromisso })
+        expect(r.find((i) => i.id === "concentracao")).toBeUndefined()
     })
     it("sugere limite em centenas para despesa sem limite", () => {
         const r = insights({ tipo: "expense", lancado: 10, media: 2342.5, limite: null, txs: [], compromissos: semCompromisso })

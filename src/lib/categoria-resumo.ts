@@ -56,7 +56,8 @@ export function ritmoDoMes(args: {
     return Array.from({ length: n }, (_, i) => ({
         dia: i + 1,
         atual: i + 1 <= ate ? atual[i + 1] : null,
-        anterior: anterior[Math.min(i + 1, anterior.length - 1)],
+        // o anterior mais longo que o atual: o último dia mostrado leva o total final dele
+        anterior: anterior[i + 1 === n ? anterior.length - 1 : Math.min(i + 1, anterior.length - 1)],
     }))
 }
 
@@ -236,9 +237,11 @@ export function fraseDoResumo(args: {
     previsto: number
     media: number | null
     maior: Transaction | null
+    /** Quantas compras o mês tem (o "puxou o mês" pede 2 ou mais). */
+    compras: number
     proximoMes: number
 }): { partes: Parte[] } {
-    const { nomeDaCategoria: nome, tipo, yearMonth, aberto, lancado, previsto, media, maior, proximoMes } = args
+    const { nomeDaCategoria: nome, tipo, yearMonth, aberto, lancado, previsto, media, maior, compras, proximoMes } = args
     const mes = labelYearMonthPt(yearMonth).toLocaleLowerCase("pt-BR")
     const despesa = tipo === "expense"
     if (lancado === 0 && previsto === 0) {
@@ -255,12 +258,14 @@ export function fraseDoResumo(args: {
         { texto: currencyBRL(lancado), forte: true },
         { texto: despesa ? ` com ${nome}` : ` em ${nome}` },
     ]
-    if (media != null && media > 0) {
-        const razao = (aberto ? previsto : lancado) / media
+    if (lancado > 0 && media != null && media > 0) {
+        // Com o que vem pela frente, o veredito é da projeção e a frase diz isso.
+        const projeta = aberto && previsto - lancado > 0.005
+        const razao = (projeta ? previsto : lancado) / media
         const veredito = razao > 1.1 ? "acima da" : razao < 0.9 ? "abaixo da" : "em linha com a"
-        partes.push({ texto: `, ${veredito} média de ${currencyBRL(media)}.` })
+        partes.push({ texto: `${projeta ? ", e deve fechar" : ","} ${veredito} média de ${currencyBRL(media)}.` })
     } else partes.push({ texto: "." })
-    if (maior && lancado > 0 && Number(maior.amount) / lancado > 0.4) {
+    if (maior && lancado > 0 && compras >= 2 && Number(maior.amount) / lancado > 0.4) {
         partes.push({ texto: ` ${maior.description?.trim() || "O maior lançamento"} (` })
         partes.push({ texto: currencyBRL(Number(maior.amount)), forte: true })
         partes.push({ texto: ") puxou o mês." })
@@ -307,7 +312,7 @@ export function insights(args: {
     }
     const maiores = maioresLancamentos(txs, tipo, 2)
     const dois = maiores.reduce((s, t) => s + Number(t.amount || 0), 0)
-    if (lancado > 0 && txs.filter((t) => peso(t, tipo) === 1).length >= 3 && maiores.length === 2 && dois / lancado > 0.7) {
+    if (lancado > 0 && txs.filter((t) => peso(t, tipo) === 1).length >= 3 && maiores.length === 2 && dois <= lancado && dois / lancado > 0.7) {
         r.push({
             id: "concentracao",
             tom: "warning",

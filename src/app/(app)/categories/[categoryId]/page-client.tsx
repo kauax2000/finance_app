@@ -48,6 +48,7 @@ import {
     divisaoPorPagamento,
     maioresLancamentos,
     mediaDosMeses,
+    peso,
     serieDosMeses,
 } from "@/lib/categoria-detalhe"
 import {
@@ -464,7 +465,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const analise = React.useMemo(() => {
         if (!category) return null
         const media = mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at })
-        const maior = attachPaymentCards(maioresLancamentos(txs, tipo, 1), txController.creditCards)[0] ?? null
+        const maior = maioresLancamentos(txs, tipo, 1)[0] ?? null
+        const compras = txs.filter((t) => peso(t, tipo) === 1).length
         const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
         return {
             comparacao: comparacaoComMesAnterior({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
@@ -475,7 +477,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
             diasDaSemana: porDiaDaSemana(txs, tipo),
             faixas: porFaixaDeValor(txs, tipo),
-            tipica: compraTipica(txs, tipo),
+            // com menos de 3 compras a mediana repete o maior e o total
+            tipica: compras >= 3 ? compraTipica(txs, tipo) : null,
             frequente: maisFrequente(txs, tipo),
             diaDeMais: diaDeMaisGasto(txs, tipo),
             compromissos: c,
@@ -489,6 +492,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 previsto: mes.lancado + mes.previsto,
                 media,
                 maior,
+                compras,
                 proximoMes,
             }),
             // O convidado não mexe no limite: a sugestão fica, sem o botão.
@@ -652,7 +656,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         <>
                             {/* No desktop a comparação mora na faixa do mês; no telefone, aqui. */}
                             {isMobile ? (
-                                <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={analise.media} />
+                                <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={null} />
                             ) : null}
                             <ResumoDaCategoria
                                 tipo={tipo}

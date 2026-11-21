@@ -5,7 +5,6 @@ import {
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
 import { paymentMethodLabel } from "@/lib/payment-methods"
-import type { MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 import type { CreditCard, Transaction } from "@/lib/supabase"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 
@@ -151,19 +150,6 @@ export function divisaoPorPagamento(
         }
         if (!t.payment_method) return { chave: "sem-forma", nome: "Sem forma" }
         return { chave: t.payment_method, nome: paymentMethodLabel(t.payment_method) }
-    })
-}
-
-export function divisaoPorMembro(
-    txs: Transaction[],
-    tipo: TipoDaCategoria,
-    membros: MemberDirectoryRow[],
-): Fatia[] {
-    return dividir(txs, tipo, (t) => {
-        const m = membros.find((x) => x.user_id === (t.paid_by ?? t.user_id))
-        return m
-            ? { chave: m.user_id, nome: m.full_name ?? m.email }
-            : { chave: "outros", nome: "Outros" }
     })
 }
 

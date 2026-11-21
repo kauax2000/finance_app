@@ -1,6 +1,6 @@
 "use client"
 
-import { SparklesIcon } from "@heroicons/react/20/solid"
+import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
 import { Card, CardHeader } from "@/components/ui/card"
 import { ItemMedia } from "@/components/ui/item"
 import type { fraseDoResumo } from "@/lib/categoria-resumo"
@@ -13,7 +13,7 @@ export function FraseDoResumo({ frase }: { frase: ReturnType<typeof fraseDoResum
                 media={
                     // O ladrilho força `[&_svg]:size-4`: o 20 vem do pai; o `size-5` no ícone diz o conjunto ao auditor.
                     <ItemMedia variant="tile" tone="neutral" className="size-10 [&_svg]:size-5">
-                        <SparklesIcon aria-hidden className="size-5" />
+                        <ChatBubbleLeftEllipsisIcon aria-hidden className="size-5" />
                     </ItemMedia>
                 }
             >

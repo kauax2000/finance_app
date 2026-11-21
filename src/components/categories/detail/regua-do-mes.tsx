@@ -32,7 +32,7 @@ export type FaixaDoMesProps = {
     comparacao: Comparacao
     media: number | null
     quantidade: number
-    /** O maior lançamento do mês, com `payment_card` anexado. */
+    /** O maior lançamento do mês. */
     maior: Transaction | null
 }
 
