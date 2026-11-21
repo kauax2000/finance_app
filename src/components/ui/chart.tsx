@@ -2003,7 +2003,8 @@ function ChartDonut({
                   // `config` não existem: a cor declarada entra direto.
                   style={{ backgroundColor: corDoPonto(i) }}
                 />
-                <span className="min-w-0 flex-1 truncate">
+                {/* O nome quebra em até duas linhas: cortado, "Bradesco Visa Infi…" não dizia qual cartão. */}
+                <span className="line-clamp-2 min-w-0 flex-1 break-words">
                   {config[chaves[i]]?.label ?? chaves[i]}
                 </span>
                 {/* Abaixo de 20rem de cartão o valor sai (fica no miolo e no tooltip) e o nome ganha o espaço. */}

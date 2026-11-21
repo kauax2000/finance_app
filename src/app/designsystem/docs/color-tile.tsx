@@ -107,13 +107,14 @@ export default function ColorTileDoc() {
       </DocNote>
 
       <DocSection
-        title="Duas versões — a construção do Avatar"
-        description="tint=&quot;vivid&quot; (o padrão) é a cor na claridade 0,76 com o croma cheio e a tinta escura; tint=&quot;soft&quot; é quase branca (0,95), com o ícone no tom forte do mesmo matiz. Um valor só nos dois temas, e as cores arbitrárias leem como família porque compartilham a claridade e o croma, não o matiz."
+        title="Três versões — a construção do Avatar"
+        description="tint=&quot;vivid&quot; (o padrão) é a cor na claridade 0,76 com o croma cheio e a tinta escura; tint=&quot;soft&quot; é quase branca (0,95), com o ícone no tom forte do mesmo matiz; ambas têm um valor só nos dois temas. tint=&quot;tonal&quot; é a suave no claro e, no escuro, a superfície funda (0,3) com o ícone aceso (0,82): o ladrilho em cima de um cartão escuro, onde a suave virava um quadrado quase branco (os cartões do resumo da categoria); medida no escuro de 7,32 a 7,91, no claro igual à suave. As vivas e as suaves e as cores arbitrárias leem como família porque compartilham a claridade e o croma, não o matiz."
         code={`<ColorTile color="#B7E18C" />
-<ColorTile color="#B7E18C" tint="soft" />`}
+<ColorTile color="#B7E18C" tint="soft" />
+<ColorTile color="#B7E18C" tint="tonal" />`}
         previewClassName="flex-col items-start gap-3"
       >
-        {(["vivid", "soft"] as const).map((tint) => (
+        {(["vivid", "soft", "tonal"] as const).map((tint) => (
           <div key={tint} className="flex flex-wrap gap-2">
             {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
               <ColorTile key={nome} color={cor} tint={tint}>

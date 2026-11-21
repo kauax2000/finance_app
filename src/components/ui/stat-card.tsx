@@ -147,7 +147,7 @@ function StatCardIcon({
   size?: "sm" | "lg"
   /**
    * Uma cor da paleta de ladrilhos (`TILE_PALETTE`, ou a de uma categoria): o
-   * ladrilho vira o `ColorTile tint="soft"` naquele matiz, e o tom do cartão
+   * ladrilho vira o `ColorTile tint="tonal"` naquele matiz (quase branco no claro, fundo no escuro), e o tom do cartão
    * fica só no número. Para uma fileira de cartões que se distinguem pela cor.
    */
   color?: string | null
@@ -164,7 +164,7 @@ function StatCardIcon({
           ? "size-9 rounded-row [&_svg:not([class*='size-'])]:size-5"
           : "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3.5",
         cor
-          ? "tile-soft bg-(--tile-surface) text-(--tile-ink)"
+          ? "tile-tonal bg-(--tile-surface) text-(--tile-ink)"
           : "bg-(--stat-tile) text-(--stat-tile-ink)",
         className
       )}

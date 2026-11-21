@@ -79,13 +79,13 @@ for (const tema of TEMAS) {
             palco.id = "palco"
             palco.style.cssText =
                 "position:fixed;left:0;top:0;z-index:99999;display:flex;flex-wrap:wrap;gap:16px;padding:16px;background:var(--background)"
-            for (const tint of ["vivid", "soft"])
+            for (const tint of ["vivid", "soft", "tonal"])
             for (let i = 0; i < cores.length; i++) {
                 for (const [nome, cls] of Object.entries(tamanhos)) {
                     const no = modelo.cloneNode(true)
                     no.className = no.className
                         .replace(/\bsize-\d+\b/, cls)
-                        .replace(/\btile-(vivid|soft)\b/, `tile-${tint}`)
+                        .replace(/\btile-(vivid|soft|tonal)\b/, `tile-${tint}`)
                     no.style.setProperty("--tile-color", cores[i].valor)
                     no.dataset.probe = `${tint}-${i}-${nome}`
                     palco.appendChild(no)
@@ -115,7 +115,7 @@ for (const tema of TEMAS) {
     )
     await page.waitForTimeout(400)
 
-    for (const tint of ["vivid", "soft"])
+    for (const tint of ["vivid", "soft", "tonal"])
     for (let i = 0; i < CORES.length; i++) {
         for (const nome of Object.keys(TAMANHOS)) {
             const probe = `${tint}-${i}-${nome}`

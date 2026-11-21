@@ -2486,6 +2486,17 @@ html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot
   --tile-surface: oklch(from var(--tile-color) 0.95 min(c, 0.05) h);
   --tile-ink: oklch(from var(--tile-color) 0.42 clamp(0, (c - 0.02) * 10, 0.13) h);
 }
+/* A suave que segue o tema: igual à `soft` no claro; no escuro, a superfície
+   afunda (0,3) e o ícone acende no matiz (0,82), em vez de um quadrado quase
+   branco sobre o cartão escuro. Medida em `scripts/tile-contrast.mjs`. */
+@utility tile-tonal {
+  --tile-surface: oklch(from var(--tile-color) 0.95 min(c, 0.05) h);
+  --tile-ink: oklch(from var(--tile-color) 0.42 clamp(0, (c - 0.02) * 10, 0.13) h);
+  &:is(.dark *) {
+    --tile-surface: oklch(from var(--tile-color) 0.3 clamp(0, (c - 0.02) * 10, 0.06) h);
+    --tile-ink: oklch(from var(--tile-color) 0.82 clamp(0, (c - 0.02) * 10, 0.13) h);
+  }
+}
 @utility identity-1 {
   --identity-surface: var(--identity-1);
   --identity-surface-soft: var(--identity-1-soft);

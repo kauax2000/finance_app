@@ -101,10 +101,10 @@ describe("as versões do StatCard", () => {
 })
 
 describe("StatCardIcon lg com cor e StatCardLabel plain", () => {
-  it("o ladrilho grande com cor vira o ColorTile suave naquele matiz", () => {
+  it("o ladrilho grande com cor vira o ColorTile tonal naquele matiz", () => {
     const out = renderToStaticMarkup(h(StatCardIcon, { size: "lg", color: "#6EE2FF" }, "i"))
     expect(out).toContain("size-9")
-    expect(out).toContain("tile-soft")
+    expect(out).toContain("tile-tonal")
     expect(out).toMatch(/--tile-color:\s*#6EE2FF/)
     expect(out).not.toContain("bg-(--stat-tile)")
   })
@@ -113,7 +113,7 @@ describe("StatCardIcon lg com cor e StatCardLabel plain", () => {
     const out = renderToStaticMarkup(h(StatCardIcon, null, "i"))
     expect(out).toContain("size-6")
     expect(out).toContain("bg-(--stat-tile)")
-    expect(out).not.toContain("tile-soft")
+    expect(out).not.toContain("tile-tonal")
   })
 
   it("o rótulo plain é a frase em 12px, sem caixa alta; o padrão segue a sobrancelha", () => {

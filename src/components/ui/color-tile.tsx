@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 const colorTileVariants = cva(
   [
     "flex shrink-0 items-center justify-center overflow-hidden",
-    // `tile-vivid` / `tile-soft` publicam a superfície e a tinta a partir de
+    // `tile-vivid` / `tile-soft` / `tile-tonal` publicam a superfície e a tinta a partir de
     // `--tile-color`.
     "bg-(--tile-surface) text-(--tile-ink)",
   ].join(" "),
@@ -28,10 +28,11 @@ const colorTileVariants = cva(
        * alinha com um botão `md`. Só `2xl` alcança o alvo de toque de 44px. O
        * ícone acompanha o corpo (`size-4` micro, `size-5` mini).
        */
-      /** `vivid` (padrão): cor cheia com tinta escura. `soft`: quase branca, com o ícone no tom forte. */
+      /** `vivid` (padrão): cor cheia com tinta escura. `soft`: quase branca, com o ícone no tom forte. `tonal`: a `soft` no claro e, no escuro, a superfície funda com o ícone aceso (o ladrilho sobre um cartão escuro). */
       tint: {
         vivid: "tile-vivid",
         soft: "tile-soft",
+        tonal: "tile-tonal",
       },
       size: {
         // O degrau de dentro de uma linha de lista e do gatilho de um campo.

@@ -257,7 +257,8 @@ function TablePanelToolbar({
     <CardToolbar
       data-slot="table-panel-toolbar"
       // A barra fica fora da moldura e ocupa a largura dela inteira, sem o recuo do cartão (pedido do dono, 07/11/2026).
-      className={cn("min-h-7 px-0 py-0", className)}
+      // A barra e a tabela são blocos diferentes: o `mb` soma ao `gap` do grupo (inline) e dá `--space-block`, como em Categorias (21/11/2026).
+      className={cn("mb-(--space-inline) min-h-7 px-0 py-0", className)}
       {...props}
     >
       {/* A barra da tabela tem filtros e ações de verdade: não herda o `sm` da tira do cartão. */}

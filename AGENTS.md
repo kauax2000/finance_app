@@ -388,6 +388,15 @@ e o `FormActions` com `start` e mais duas ações ligam o `TresAcoesContext`
 link) fica sem fundo. A tela não escreve `variant="secondary"` à mão para
 isso. `tres-acoes.test.ts`.
 
+### Barra e conteúdo: `--space-block`
+
+Decisão do dono (21/11/2026): entre a barra de abas ou filtros de uma tela e o
+primeiro conteúdo abaixo dela vão **16px** (`--space-block`), em toda tela —
+Categorias, Transações, Contas a pagar, Assinaturas, Cartões e o detalhe da
+categoria. A barra e a lista são blocos diferentes: nada de `space-y-3`, nem do
+`gap-2` padrão do `Tabs` quando o painel é a tela. Na `TablePanel`, a
+`TablePanelToolbar` soma `mb-(--space-inline)` ao `gap` do grupo e dá os 16.
+
 ### Par de identidade: sem gap
 
 Nome sobre e-mail, título sobre legenda, rótulo sobre valor — sempre que dois
@@ -641,7 +650,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
     `.map()` no mesmo arquivo e o corpo cravado ali, vale a régua do tamanho.
     `components.json` declara `heroicons`.
 - **Fonts**: [`src/app/layout.tsx`](src/app/layout.tsx) define `--font-sans`
-  (Inter), `--font-display` (Ledger, só em `.page-title`, `.wordmark` e no
+  (Inter), `--font-display` (Ledger, só em `.page-title`, `.wordmark`, na frase do resumo da categoria (`FraseDoResumo`, 21/11/2026) e no
   numeral do `EmptyStateCode`), `--font-heading` (aponta para a sans),
   `--font-mono` (Geist Mono).
 - **Utilitários**: `.nums` (tabular figures) e `.page-title`.
@@ -872,7 +881,9 @@ declaração de `background-color` no trilho).
     nos dois temas, em duas versões — `tint="vivid"` (o padrão, `@utility
     tile-vivid`, tinta escura) e `tint="soft"` (`tile-soft`). As utilities
     publicam `--tile-surface` e `--tile-ink`, e o componente pinta com
-    `bg-(--tile-surface)`. **A cor não entra crua.** `scripts/tile-contrast.mjs`
+    `bg-(--tile-surface)`. `tint="tonal"` (21/11/2026) é a suave no claro e, no
+    escuro, a superfície funda com o ícone aceso (`@utility tile-tonal`), para o
+    ladrilho sobre cartão escuro. **A cor não entra crua.** `scripts/tile-contrast.mjs`
     é a guarda (piso 4,5).
   - **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em
     [`lib/tile-palette.ts`](src/lib/tile-palette.ts), servindo categoria **e**
@@ -1126,7 +1137,7 @@ declaração de `background-color` no trilho).
   estado (`statCardDelta()`). Peças: `StatCardChart`, `StatCardProgress`,
   `StatCardRange`, `StatCardSplit`, `StatCardGroup` (`separate` | `joined`).
   `StatCardIcon size="lg" color` é o ladrilho de 36 em cima do cartão (filho
-  direto), no `ColorTile` suave do matiz dado; `StatCardLabel variant="plain"`
+  direto), no `ColorTile tint="tonal"` do matiz dado (suave no claro, fundo com o ícone aceso no escuro); `StatCardLabel variant="plain"`
   é o rótulo em frase, sem sobrancelha (21/11/2026).
   **Nenhuma tela declara `KpiCard`, `DeltaBadge` nem a conta de variação.**
 - **`Alert`**: `tone` é a cor (`default` | `info` | `success` | `warning` |
