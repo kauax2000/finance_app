@@ -25,7 +25,7 @@ export type Comparacao = {
 }
 
 /** Despesa: estorno no cartão abate (−1). Receita: só a que não é do cartão. */
-function peso(t: LinhaDeValor, tipo: TipoDaCategoria): number {
+export function peso(t: LinhaDeValor, tipo: TipoDaCategoria): number {
     if (tipo === "expense") return sinalNaDespesa(t)
     return t.type === "income" && t.payment_method !== "credit_card" ? 1 : 0
 }
