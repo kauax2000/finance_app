@@ -6,6 +6,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import {
   toastError,
   toastInfo,
+  toastPersistentAction,
   toastPill,
   toastProgress,
   toastPromise,
@@ -110,6 +111,20 @@ toastInfo("Nova versão disponível", {
           }
         >
           duas ações
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() =>
+            toastPersistentAction("Nova versão do app", {
+              id: "demo-versao",
+              label: "Atualizar agora",
+              description: "Atualize para ver as novidades. O que você já salvou continua aqui.",
+              stacked: true,
+              onClick: () => toastPill("Atualizado"),
+            })
+          }
+        >
+          versão nova
         </Button>
       </DocSection>
 
@@ -231,7 +246,7 @@ toastSuccess("Cartão salvo", { id: "salvar-cartao" }) // a mesma bolha`}
           { prop: "toastProgress", type: "(id, message, value, { description? })", default: "—", description: "A porcentagem na mesma bolha; termine com toastSuccess(…, { id })." },
           { prop: "toastPill", type: "(message, tipo?)", default: "2000 ms", description: "A confirmação de uma palavra, no canto dos outros avisos." },
           { prop: "toastPageFetchError", type: "(pageId, message)", default: "6000 ms", description: "Substitui o erro anterior daquela página." },
-          { prop: "toastPersistentAction", type: "(message, { id, label, onClick })", default: "sem fim", description: "O aviso que espera uma decisão." },
+          { prop: "toastPersistentAction", type: "(message, { id, label, onClick, description?, stacked? })", default: "sem fim", description: "O aviso que espera uma decisão; stacked empilha o botão largo no telefone." },
         ]}
       />
     </>

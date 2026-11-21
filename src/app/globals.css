@@ -1208,6 +1208,28 @@
   width: 100%;
 }
 
+/* A forma empilhada (`toastPersistentAction` com `stacked`): no telefone o
+   texto fica em cima e o botão, o `primary` de 44, ocupa a linha de baixo. O
+   conteúdo deixa 40px para o ícone (24 + o vão); o botão quebra para a linha
+   seguinte com `flex: 1 1 100%`. Acima de 48rem o toast segue em linha. */
+@media (width < 48rem) {
+  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-content] {
+    flex-basis: calc(100% - 40px);
+  }
+  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button] {
+    flex: 1 1 100%;
+    margin-inline: 0;
+    height: 44px;
+    font-size: var(--text-sm);
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button]:hover,
+  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button]:active {
+    background: var(--primary-hover);
+  }
+}
+
 /* ── A dissolução das bordas de uma região rolável ───────────────────────────
    Quem aplica isto é o elemento que rola, e ele não pode desenhar nada (sem `bg`,
    `ring`, `radius`, `shadow`): a máscara recorta o alfa do elemento inteiro.

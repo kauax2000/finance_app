@@ -86,7 +86,7 @@ function ativo(id: string) {
   return sonnerToast.getToasts().some((t) => t.id === id)
 }
 
-function emitir(tipo: Tipo, mensagem: string, duracaoPadrao: number, opts: ToastOptions = {}) {
+function emitir(tipo: Tipo, mensagem: string, duracaoPadrao: number, opts: ToastOptions = {}, className?: string) {
   const duracao = opts.duration ?? duracaoPadrao
   const chave = opts.id ?? `${tipo}:${mensagem}`
   const anterior = repetidos.get(chave)
@@ -104,7 +104,7 @@ function emitir(tipo: Tipo, mensagem: string, duracaoPadrao: number, opts: Toast
     duration: temporizado ? duracao + fase : duracao,
     // A bolha que um `id` substitui deixa a classe da anterior (a roda do
     // Desfazer): o sonner mescla o toast novo sobre o velho.
-    className: undefined,
+    className,
     action: paraAcao(opts.action),
     cancel: opts.cancel
       ? { label: opts.cancel.label, onClick: opts.cancel.onClick ?? (() => undefined) }
@@ -153,17 +153,17 @@ export function dismissPageFetchError(pageId: string) {
 
 /**
  * O aviso que espera uma decisão — hoje a nova versão do app. Não some
- * sozinho: sem o clique nada acontece.
+ * sozinho: sem o clique nada acontece. `stacked` empilha o botão largo no telefone.
  */
 export function toastPersistentAction(
   message: string,
-  opts: { id: string; label: string; onClick: () => void; description?: ReactNode }
+  opts: { id: string; label: string; onClick: () => void; description?: ReactNode; stacked?: boolean }
 ) {
   return emitir("info", message, Infinity, {
     id: opts.id,
     description: opts.description,
     action: { label: opts.label, onClick: opts.onClick },
-  })
+  }, opts.stacked ? "toast-stacked" : undefined)
 }
 
 /**

@@ -148,3 +148,24 @@ describe("o app", () => {
     expect(fora).toEqual([])
   })
 })
+
+describe("a forma empilhada", () => {
+  it("toastPersistentAction pede a forma empilhada por opção, e o resto segue sem classe", () => {
+    expect(LIB).toMatch(/stacked\?: boolean/)
+    expect(LIB).toContain('opts.stacked ? "toast-stacked" : undefined')
+  })
+
+  it("só no telefone: texto em cima, botão primário de 44 na linha inteira", () => {
+    const inicio = BLOCO.indexOf("/* A forma empilhada")
+    expect(inicio).toBeGreaterThan(-1)
+    const regra = BLOCO.slice(inicio)
+    // Toda ocorrência da classe mora depois do @media do telefone.
+    expect(BLOCO.indexOf(".toast-stacked")).toBeGreaterThan(BLOCO.indexOf("@media (width < 48rem)", inicio))
+    expect(regra).toContain("flex-basis: calc(100% - 40px);")
+    expect(regra).toContain("flex: 1 1 100%;")
+    expect(regra).toContain("height: 44px;")
+    expect(regra).toContain("background: var(--primary);")
+    expect(regra).toContain("color: var(--primary-foreground);")
+    expect(regra).toContain("background: var(--primary-hover);")
+  })
+})
