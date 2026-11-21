@@ -1,0 +1,63 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 22px;max-width:1000px}.lead b{color:#ddd;font-weight:500}
+.grid{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.opt{width:375px}.tag{font:600 12px Inter;color:#ff6a45;margin:0 0 4px}.why{color:#9a9a9a;font-size:13px;margin:0 0 12px;min-height:96px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px;width:375px}
+.hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:12px}.t{font-weight:600}.cap{color:#8f8f8f;font-size:12px}
+.m{font:600 13px "Geist Mono",monospace;color:#fff}.mm{font:500 12px "Geist Mono",monospace}
+.mut{color:#9a9a9a}.ok{color:#7fdca6}.wr{color:#f0c27a}
+.tile{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;flex:none}
+.row{display:flex;align-items:center;gap:10px}.row .nm{flex:1;min-width:0}.nm .a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.visa{font:800 9px Inter;font-style:italic;letter-spacing:.02em;color:#fff;background:#1a1f71;border-radius:5px;padding:3px 5px}
+.bar{height:6px;border-radius:99px;background:#232323;overflow:hidden;display:flex}
+.note{color:#888;font-size:13px;margin-top:26px;max-width:1000px}
+</style></head><body>
+<h1>"Como foi pago" — novas opções</h1>
+<p class="lead">Dados reais da Carro em novembro. Achados no cartão de hoje: <b>o miolo repete o total</b> que já está no topo da página, e em fonte mono apertada; <b>o nome do cartão quebra em duas linhas</b> e o % fica solto na ponta direita; <b>"−R$ 15" não diz contra o quê</b> (é contra outubro); as formas são só bolinhas de cor, <b>sem o ícone do PIX nem a bandeira</b>; e sobra espaço vazio embaixo e à direita.</p>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="pix" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></symbol>
+</defs></svg>
+
+<div class="grid">
+
+<div class="opt"><div class="tag">HOJE</div><p class="why">Rosca com o total no miolo; legenda com bolinha, nome, valor · diferença e %.</p>
+<div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;align-items:center;gap:22px;padding:4px 0 8px">
+<svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#1b8299" stroke-width="9" stroke-dasharray="160 252" transform="rotate(-90 48 48)" stroke-linecap="round"/><circle cx="48" cy="48" r="40" fill="none" stroke="#6f6ae8" stroke-width="9" stroke-dasharray="80 252" stroke-dashoffset="-168" transform="rotate(-90 48 48)" stroke-linecap="round"/><text x="48" y="47" text-anchor="middle" fill="#fff" font-family="Geist Mono" font-size="9" font-weight="600">R$ 3.062,54</text><text x="48" y="60" text-anchor="middle" fill="#999" font-size="9">no mês</text></svg>
+<div style="flex:1;display:grid;gap:12px">
+<div style="display:flex;gap:8px"><span style="width:8px;height:8px;border-radius:9px;background:#1b8299;margin-top:6px"></span><div style="flex:1">PIX<div class="mut" style="font-size:13px">R$ 2.000 · <span class="ok">−R$ 15</span></div></div><span class="mut">65%</span></div>
+<div style="display:flex;gap:8px"><span style="width:8px;height:8px;border-radius:9px;background:#6f6ae8;margin-top:6px"></span><div style="flex:1">Bradesco Visa<br>Infinity<div class="mut" style="font-size:13px">R$ 1.063 · <span class="ok">−R$ 663</span></div></div><span class="mut">35%</span></div>
+</div></div></div></div>
+
+<div class="opt"><div class="tag">A · ROSCA COM O DESTAQUE NO MIOLO</div><p class="why">O miolo diz o que a rosca mostra: "65% no PIX". Cada forma vira uma linha com o ícone (o PIX, a bandeira do cartão), o nome inteiro numa linha e, embaixo, "R$ 2.000 · 65% · −R$ 15". O cabeçalho diz "vs outubro" uma vez.</p>
+<div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap">vs outubro</span></div>
+<div style="display:flex;align-items:center;gap:18px">
+<svg width="112" height="112" viewBox="0 0 112 112" style="flex:none"><circle cx="56" cy="56" r="46" fill="none" stroke="#1b8299" stroke-width="12" stroke-dasharray="183 289" transform="rotate(-90 56 56)" stroke-linecap="round"/><circle cx="56" cy="56" r="46" fill="none" stroke="#6f6ae8" stroke-width="12" stroke-dasharray="92 289" stroke-dashoffset="-193" transform="rotate(-90 56 56)" stroke-linecap="round"/><text x="56" y="56" text-anchor="middle" fill="#fff" font-family="Inter" font-size="20" font-weight="600">65%</text><text x="56" y="72" text-anchor="middle" fill="#999" font-size="11">no PIX</text></svg>
+<div style="flex:1;min-width:0;display:grid;gap:14px">
+<div class="row"><span class="tile" style="background:rgba(27,130,153,.18);color:#4fc3d9"><svg width="16" height="16"><use href="#pix"/></svg></span><div class="nm"><div class="a">PIX</div><div style="font-size:12px"><span class="m" style="font-size:12px">R$ 2.000</span> <span class="mut">· 65% · </span><span class="ok">−R$ 15</span></div></div></div>
+<div class="row"><span class="tile" style="background:rgba(111,106,232,.18)"><span class="visa">VISA</span></span><div class="nm"><div class="a">Bradesco Visa Infinity</div><div style="font-size:12px"><span class="m" style="font-size:12px">R$ 1.063</span> <span class="mut">· 35% · </span><span class="ok">−R$ 663</span></div></div></div>
+</div></div></div></div>
+
+<div class="opt"><div class="tag">B · BARRA DIVIDIDA E LISTA</div><p class="why">Sai a rosca: uma barra na largura toda, dividida pelas formas, com o "65% no PIX" em cima. Embaixo, a lista com ícone, nome inteiro, valor e a diferença. Usa a largura do cartão, nenhum nome quebra, e cabe uma terceira e quarta forma sem apertar.</p>
+<div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap">vs outubro</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span><span style="font-size:20px;font-weight:600">65%</span> <span class="mut" style="font-size:13px">no PIX</span></span><span class="mut" style="font-size:12px">2 formas</span></div>
+<div class="bar" style="height:10px;gap:3px;background:none"><span style="width:65%;background:#1b8299;border-radius:99px"></span><span style="width:35%;background:#6f6ae8;border-radius:99px"></span></div>
+<div style="display:grid;gap:12px;margin-top:16px">
+<div class="row"><span class="tile" style="background:rgba(27,130,153,.18);color:#4fc3d9"><svg width="16" height="16"><use href="#pix"/></svg></span><div class="nm"><div class="a">PIX</div><div class="mut" style="font-size:12px">65% · <span class="ok">−R$ 15</span></div></div><span class="m">R$ 2.000</span></div>
+<div class="row"><span class="tile" style="background:rgba(111,106,232,.18)"><span class="visa">VISA</span></span><div class="nm"><div class="a">Bradesco Visa Infinity</div><div class="mut" style="font-size:12px">35% · <span class="ok">−R$ 663</span></div></div><span class="m">R$ 1.063</span></div>
+</div></div></div>
+
+<div class="opt"><div class="tag">C · RANKING COM BARRAS</div><p class="why">Cada forma é uma linha com ícone, nome e valor, e uma barra fina embaixo na cor dela, do tamanho da parte. A diferença vira um selo à direita da barra. Lê como um ranking: quem pagou mais fica em cima. Sem rosca nem miolo.</p>
+<div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap">vs outubro</span></div>
+<div style="display:grid;gap:16px">
+<div><div class="row"><span class="tile" style="background:rgba(27,130,153,.18);color:#4fc3d9"><svg width="16" height="16"><use href="#pix"/></svg></span><div class="nm a">PIX</div><span class="m">R$ 2.000</span></div>
+<div style="display:flex;align-items:center;gap:8px;margin:6px 0 0 42px"><div class="bar" style="flex:1"><span style="width:65%;background:#1b8299;border-radius:99px"></span></div><span class="mut mm" style="width:34px;text-align:right">65%</span><span class="mm ok" style="width:64px;text-align:right">−R$ 15</span></div></div>
+<div><div class="row"><span class="tile" style="background:rgba(111,106,232,.18)"><span class="visa">VISA</span></span><div class="nm a">Bradesco Visa Infinity</div><span class="m">R$ 1.063</span></div>
+<div style="display:flex;align-items:center;gap:8px;margin:6px 0 0 42px"><div class="bar" style="flex:1"><span style="width:35%;background:#6f6ae8;border-radius:99px"></span></div><span class="mut mm" style="width:34px;text-align:right">35%</span><span class="mm ok" style="width:64px;text-align:right">−R$ 663</span></div></div>
+</div></div></div>
+
+</div>
+<p class="note">Minha escolha: <b style="color:#ddd">A</b>. Fica com a rosca que você escolheu (C2), mas o miolo passa a dizer algo novo, os nomes não quebram e cada forma tem o seu ícone. A <b style="color:#ddd">B</b> é melhor se a categoria costuma ter 3 ou mais formas.</p>
+</body></html>
