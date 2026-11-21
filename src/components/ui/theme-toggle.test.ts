@@ -260,7 +260,9 @@ describe("o trilho de tema", () => {
         // A faixa sai quando a animação dela acaba, 50ms antes da transição: tirada só no
         // `finished`, a faixa de verdade podia pintar um quadro no topo.
         // A faixa é a primeira animação devolvida; o aro sai com ela.
-        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros, aurora\?\.aro\)\[0\]\.finished\.then\(/)
+        // O brilho da parada entra no fim do array, e a faixa segue a primeira.
+        expect(CODIGO).toContain("const anims = animarAurora(html, altura, largura, sentido, vidros.vidros, aurora?.aro)")
+        expect(CODIGO).toContain("return anims[0].finished.then(")
         expect(CODIGO).not.toContain("REVELACAO")
         expect(CODIGO).not.toContain("circle(")
         const css = lerFonte("src/app/globals.css")
@@ -301,5 +303,44 @@ describe("o trilho de tema", () => {
         // transição pulava a primeira, e o `finally` dela tirava o `.theme-reveal` no meio da segunda.
         expect(CODIGO).toMatch(/if \(revelacao\.current\?\.valor === valor\) return/)
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{\s*if \(revelacao\.current !== esta\) return/)
+    })
+
+    it("a parada tocada acende: nome só na troca, achada pela raiz deste seletor", () => {
+        const callback = CODIGO.indexOf("doc.startViewTransition(")
+        const tema = CODIGO.indexOf("flushSync(() => setTheme(valor))", callback)
+        const fimDoCallback = CODIGO.indexOf("transicao.ready", callback)
+        const nome = CODIGO.indexOf('parada.style.viewTransitionName = "theme-aurora-parada"', callback)
+        expect(nome).toBeGreaterThan(tema)
+        expect(nome).toBeLessThan(fimDoCallback)
+        // A parada é a deste seletor, e não a primeira do documento.
+        expect(CODIGO).toContain("raizRef.current?.querySelector<HTMLElement>(`[data-parada=\"${valor}\"]`)")
+        expect(CODIGO).not.toMatch(/document\.querySelector/)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*parada\?\.style\.removeProperty\("view-transition-name"\)/)
+    })
+
+    it("o brilho da parada: três quadros, o pico em 25%, no ritmo do sentido, junto da troca", () => {
+        const brilho = CODIGO.slice(CODIGO.indexOf("parada.animate("), CODIGO.indexOf("parada.animate(") + 400)
+        expect(brilho).toContain("offset: 0.25")
+        expect(brilho).toContain("0 0 0 3px var(--aurora-3)")
+        expect(brilho).toContain("0 0 18px 4px var(--aurora-1)")
+        expect(brilho.match(/boxShadow:/g)).toHaveLength(3)
+        expect(brilho).toContain("duration: RITMO[sentido].duracao")
+        expect(CODIGO).toMatch(/anims\.push\(\s*parada\.animate\(/)
+    })
+
+    it("tocar de volta no meio inverte a aurora de onde ela está, sem nova transição", () => {
+        const i = CODIGO.indexOf("atual.anims.length > 0 && valor === atual.antes")
+        expect(i).toBeGreaterThan(-1)
+        const volta = CODIGO.slice(i, CODIGO.indexOf("return", i))
+        expect(volta).toContain("flushSync(() => setTheme(valor))")
+        expect(volta).toContain("a.reverse()")
+        expect(volta).toContain("atual.antes = atual.valor")
+        expect(volta).toContain("atual.valor = valor")
+        expect(volta).toContain("setPedido(valor)")
+        expect(volta).not.toContain("startViewTransition")
+        // A volta vem antes de abrir uma transição; sem animações (antes do `ready`), segue o caminho de hoje.
+        expect(i).toBeLessThan(CODIGO.indexOf("doc.startViewTransition("))
+        expect(CODIGO).toContain("revelacao.current = { valor, antes, anims: [] }")
+        expect(CODIGO).toMatch(/esta\.anims = anims/)
     })
 })

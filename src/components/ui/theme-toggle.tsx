@@ -18,7 +18,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
-import { animarAurora, criarAro, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
+import { animarAurora, criarAro, criarFaixa, RITMO, type Sentido } from "@/lib/aurora-do-tema"
 import { nomearVidros } from "@/lib/vidro-na-revelacao"
 
 /**
@@ -90,7 +90,9 @@ const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
  * ou com movimento reduzido, troca como sempre. O CSS que desliga o esmaecer padrão e
  * desenha a faixa mora em `globals.css`, escopado por `.theme-reveal` no `<html>`
  * enquanto a transição dura. O vidro à vista ganha nome só durante a troca, e a
- * máscara passa por ele (`lib/vidro-na-revelacao`).
+ * máscara passa por ele (`lib/vidro-na-revelacao`). A parada tocada também ganha nome só
+ * durante a troca e fica por cima, viva, com um brilho na paleta do destino. Tocar de volta a
+ * parada de onde se veio, com a aurora andando, inverte todas as animações de onde estão.
  */
 type DocumentoComTransicao = Document & {
     startViewTransition?: (cb: () => void) => {
@@ -137,12 +139,14 @@ export function ThemeToggle({
     // `montado` entra na condição porque o hook liga o ponteiro num efeito, na
     // montagem: antes dela quem está na tela é o `Skeleton`, o ref é nulo e o brilho
     // nunca acenderia.
-    const glowRef = useBrandGlow<HTMLDivElement>(variant === "brand" && montado)
+    // O mesmo ref é a raiz do trilho: a parada acesa é procurada nela, e não no documento.
+    const raizRef = useBrandGlow<HTMLDivElement>(variant === "brand" && montado)
     const cabecaRef = useRef<HTMLSpanElement>(null)
     const anterior = useRef(indice)
     const emCurso = useRef<Animation[]>([])
     const jaPintou = useRef(false)
-    const revelacao = useRef<{ valor: Tema } | null>(null)
+    // A troca em curso: o destino, a parada de onde ela saiu e as animações dela (vazias até o `ready`).
+    const revelacao = useRef<{ valor: Tema; antes: Tema; anims: Animation[] } | null>(null)
 
     const trocar = (valor: Tema) => {
         const doc = document as DocumentoComTransicao
@@ -156,11 +160,24 @@ export function ThemeToggle({
         }
         // O toque chama duas vezes, pelo foco e pelo clique: a segunda é a mesma troca.
         if (revelacao.current?.valor === valor) return
+        // Tocar de volta no meio: o DOM vivo está escondido sob a transição, então o tema volta já
+        // e cada animação toca ao contrário de onde está; no fim, a página viva é a de antes. Antes
+        // do `ready` não há o que inverter, e segue o caminho de hoje.
+        const atual = revelacao.current
+        if (atual && atual.anims.length > 0 && valor === atual.antes) {
+            flushSync(() => setTheme(valor))
+            for (const a of atual.anims) a.reverse()
+            atual.antes = atual.valor
+            atual.valor = valor
+            setPedido(valor)
+            return
+        }
+        const antes = PARADAS[indice].valor
         const altura = window.innerHeight
         const largura = window.innerWidth
         const html = document.documentElement
-        const esta = { valor }
-        revelacao.current = esta
+        revelacao.current = { valor, antes, anims: [] }
+        const esta = revelacao.current
         html.classList.add("theme-reveal")
         const vidros = nomearVidros(document)
         // O polegar sai já, fora da transição: no WebKit, a animação criada dentro do callback
@@ -168,6 +185,7 @@ export function ThemeToggle({
         flushSync(() => setPedido(valor))
         let tirarFaixa: (() => void) | undefined
         let aurora: ReturnType<typeof criarAro> | undefined
+        let parada: HTMLElement | null | undefined
         // O sentido é do destino, lido depois da troca ("sistema" vira o tema que resultou): o
         // escuro cai de cima, o claro sobe de baixo.
         let sentido: Sentido = "desce"
@@ -177,14 +195,36 @@ export function ThemeToggle({
             html.dataset.aurora = sentido
             tirarFaixa = criarFaixa(document, altura, sentido)
             aurora = criarAro(document, altura, largura)
+            // A parada tocada fica por cima, viva. Uma troca pulada no meio deixou o nome noutra
+            // parada deste trilho, e dois nomes iguais abortariam a transição.
+            for (const p of raizRef.current?.querySelectorAll<HTMLElement>("[data-parada]") ?? []) {
+                p.style.removeProperty("view-transition-name")
+            }
+            parada = raizRef.current?.querySelector<HTMLElement>(`[data-parada="${valor}"]`)
+            if (parada) parada.style.viewTransitionName = "theme-aurora-parada"
         })
         transicao.ready
-            .then(() =>
-                animarAurora(html, altura, largura, sentido, vidros.vidros, aurora?.aro)[0].finished.then(() => {
+            .then(() => {
+                const anims = animarAurora(html, altura, largura, sentido, vidros.vidros, aurora?.aro)
+                if (parada) {
+                    // O brilho acende até 25% e some: o anel na terceira cor da paleta, o halo na primeira.
+                    anims.push(
+                        parada.animate(
+                            [
+                                { boxShadow: "0 0 0 0 transparent" },
+                                { offset: 0.25, boxShadow: "0 0 0 3px var(--aurora-3), 0 0 18px 4px var(--aurora-1)" },
+                                { boxShadow: "0 0 0 0 transparent" },
+                            ],
+                            { duration: RITMO[sentido].duracao, easing: "linear" },
+                        ),
+                    )
+                }
+                esta.anims = anims
+                return anims[0].finished.then(() => {
                     tirarFaixa?.()
                     aurora?.tirar()
-                }),
-            )
+                })
+            })
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
@@ -197,6 +237,7 @@ export function ThemeToggle({
             // novo não faz nada.
             tirarFaixa?.()
             aurora?.tirar()
+            parada?.style.removeProperty("view-transition-name")
             vidros.desfazer()
         })
     }
@@ -265,7 +306,7 @@ export function ThemeToggle({
 
     return (
         <RadioGroupPrimitive.Root
-            ref={glowRef}
+            ref={raizRef}
             value={PARADAS[indice].valor}
             onValueChange={(v) => trocar(v as Tema)}
             orientation="horizontal"
