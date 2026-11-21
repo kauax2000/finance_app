@@ -338,6 +338,35 @@ export default function ColorsDoc() {
 
       <Group
         layout="flow"
+        title="Formas de pagamento"
+        description="Uma cor fixa por forma, a mesma em qualquer categoria: a barra, o ponto e o ladrilho do “Como foi pago”. Marca não textual, todas a 3:1 contra o cartão (scripts/payment-contrast.mjs). Não são income nem success: o dinheiro é dourado e o TED é rosa. A cor sai de paymentMethodColor, e a segunda forma do mesmo tipo vai a 60%, a terceira a 35%."
+      >
+        <SpecimenPanel>
+          <Ramp
+            label="Formas de pagamento"
+            tokens={[
+              { token: "--payment-pix", name: "pix" },
+              { token: "--payment-credit", name: "crédito" },
+              { token: "--payment-debit", name: "débito" },
+              { token: "--payment-cash", name: "dinheiro" },
+              { token: "--payment-ted", name: "TED" },
+              { token: "--payment-other", name: "outro" },
+            ]}
+          />
+        </SpecimenPanel>
+
+        <TokenGrid label="Formas de pagamento">
+          <TokenTile name="PIX" token="--payment-pix" rule="ui" />
+          <TokenTile name="Cartão de crédito" token="--payment-credit" rule="ui" />
+          <TokenTile name="Cartão de débito" token="--payment-debit" rule="ui" />
+          <TokenTile name="Dinheiro" token="--payment-cash" rule="ui" />
+          <TokenTile name="TED / débito em conta" token="--payment-ted" rule="ui" />
+          <TokenTile name="Outro e sem forma" token="--payment-other" rule="ui" />
+        </TokenGrid>
+      </Group>
+
+      <Group
+        layout="flow"
         title="Identidade"
         description="Distinguem uma pessoa da outra e nada mais: seis cores chapadas, uma família cada, com as iniciais em tinta escura por cima. Uma receita só nos dois temas."
       >

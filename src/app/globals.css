@@ -85,6 +85,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-payment-pix: var(--payment-pix);
+  --color-payment-credit: var(--payment-credit);
+  --color-payment-debit: var(--payment-debit);
+  --color-payment-cash: var(--payment-cash);
+  --color-payment-ted: var(--payment-ted);
+  --color-payment-other: var(--payment-other);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -368,6 +374,16 @@
      (fluxo de caixa, faturas), a série usa estes e não a rampa acima. */
   --chart-income: var(--income);
   --chart-expense: var(--expense);
+  /* Uma cor por forma de pagamento, a mesma em qualquer categoria. Marca não
+     textual (barra, ponto, ladrilho): ≥3:1 contra `--card` e ΔE entre pares por
+     `scripts/payment-contrast.mjs`. Não são `income`/`success`: o dinheiro é
+     dourado (85) e o TED é rosa (350), longe do verde e do âmbar de estado. */
+  --payment-pix: oklch(0.58 0.1 185);
+  --payment-credit: oklch(0.55 0.19 290);
+  --payment-debit: oklch(0.5 0.14 250);
+  --payment-cash: oklch(0.6 0.12 85);
+  --payment-ted: oklch(0.58 0.18 350);
+  --payment-other: var(--muted-foreground);
   /* Tons de identidade: distinguem uma pessoa de outra e nada mais. Seis cores
      chapadas, uma família cada (ember, gold, grove, ocean, iris, bloom), com os
      matizes de 42° a 100° uns dos outros (58, 100, 175, 230, 275, 318). A viva
@@ -698,6 +714,12 @@
   --chart-5: oklch(0.8 0.16 340);
   --chart-income: var(--income);
   --chart-expense: var(--expense);
+  --payment-pix: oklch(0.74 0.12 185);
+  --payment-credit: oklch(0.68 0.17 290);
+  --payment-debit: oklch(0.62 0.14 250);
+  --payment-cash: oklch(0.8 0.13 85);
+  --payment-ted: oklch(0.72 0.16 350);
+  --payment-other: var(--muted-foreground);
   /* `--identity-*` não se repete: é um valor só nos dois temas. */
   --skeleton: oklch(0.3 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);

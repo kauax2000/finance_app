@@ -535,6 +535,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   Contraste por `scripts/identity-contrast.mjs` (piso 4,5). Um `var()` dentro
   de um token do `:root` é substituído lá, não no elemento que o veste: não
   gire cor pelo ângulo do gradiente.
+- **Formas de pagamento**: `--payment-pix` (verde-água), `-credit` (violeta), `-debit` (azul), `-cash` (dourado), `-ted` (rosa) e `-other` (o `--muted-foreground`), com par em `.dark`: uma cor fixa por forma, marca não textual a 3:1 contra `--card` (`scripts/payment-contrast.mjs`). **Não são `income`/`success`** nem estado. A tela pede a cor a `paymentMethodColor` (`lib/payment-methods`); a forma repetida vai a 60% e depois 35% (`color-mix`). Hoje só o "Como foi pago" do detalhe da categoria as usa.
 - Os demais tokens: `--skeleton`, `--input-fill`, `--overlay`, a rampa
   `--chart-1..5` mais `--chart-income` / `--chart-expense`, a escala `--z-*`, os
   tokens de movimento `--duration-*` / `--ease-*`, `--scrim` e

@@ -50,3 +50,25 @@ const CHIP_LABELS: Record<PaymentMethod, string> = {
 export function paymentMethodChipOptions(): { value: PaymentMethod; label: string }[] {
     return CHIP_ORDER.map((value) => ({ value, label: CHIP_LABELS[value] }))
 }
+
+/**
+ * A cor fixa de cada forma (`--payment-*` em `globals.css`), a mesma em qualquer
+ * categoria. "Outro", sem forma e o que não se reconhece caem no cinza.
+ * A forma chega como `string` porque a fatia do resumo também traz "sem-forma".
+ */
+const COLORS: Record<PaymentMethod, string> = {
+    pix: "var(--payment-pix)",
+    credit_card: "var(--payment-credit)",
+    debit_card: "var(--payment-debit)",
+    cash: "var(--payment-cash)",
+    ted: "var(--payment-ted)",
+    other: "var(--payment-other)",
+}
+
+const isPaymentMethod = (m: string | null | undefined): m is PaymentMethod =>
+    m != null && (PAYMENT_METHOD_VALUES as readonly string[]).includes(m)
+
+export function paymentMethodColor(method: string | null | undefined): string {
+    return isPaymentMethod(method) ? COLORS[method] : COLORS.other
+}
+

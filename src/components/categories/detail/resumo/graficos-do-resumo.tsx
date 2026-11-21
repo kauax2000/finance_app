@@ -38,6 +38,7 @@ import {
     type ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
+import { paymentMethodColor } from "@/lib/payment-methods"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
@@ -46,8 +47,8 @@ import { mesCurto, mesPorExtenso } from "./rotulos"
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
 const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
 const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
-// A rosca pula o `--chart-1`: é verde, e verde lê como entrada.
-const RAMPA_DO_PAGAMENTO = ["var(--chart-2)", "var(--chart-3)", "var(--chart-5)", "var(--chart-4)"]
+// A segunda forma do mesmo tipo (dois cartões de crédito) sai a 60% da cor, a terceira em diante a 35%.
+const ESMAECER_A_REPETIDA = [100, 60, 35]
 // O miolo da rosca de uma forma só que não é cartão de crédito.
 const ICONE_DA_FORMA: Record<string, typeof BanknotesIcon> = {
     pix: QrCodeIcon,
@@ -200,10 +201,21 @@ export function GraficosDoResumo({
     const comPagamento = porPagamento.length > 0
     // O mesmo arredondamento da barra, para o destaque e a lista baterem com ela.
     const pctsPagamento = splitPercents(porPagamento.map((f) => f.valor))
-    // Pela chave, e não pelo nome: dois cartões com o mesmo nome dividiriam a cor.
-    const configPagamento = Object.fromEntries(
-        porPagamento.map((f, i) => [f.chave, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
-    ) satisfies ChartConfig
+    // Cada forma tem a sua cor fixa; pela chave, e não pelo nome, para a repetida esmaecer pela ordem do valor.
+    const configPagamento = useMemo(() => {
+        const vistas: Record<string, number> = {}
+        return Object.fromEntries(
+            porPagamento.map((f) => {
+                const n = vistas[f.forma] ?? 0
+                vistas[f.forma] = n + 1
+                const pct = ESMAECER_A_REPETIDA[Math.min(n, ESMAECER_A_REPETIDA.length - 1)]
+                const cor = paymentMethodColor(f.forma)
+                return [f.chave, { label: f.nome, color: pct === 100 ? cor : `color-mix(in oklab, ${cor} ${pct}%, transparent)` }]
+            }),
+        ) satisfies ChartConfig
+    }, [porPagamento])
+    // O ladrilho veste a cor da forma a 16%; o ícone fica na tinta normal.
+    const superficieDaForma = (chave: string) => ({ backgroundColor: `color-mix(in oklab, ${configPagamento[chave].color} 16%, transparent)` })
     // Sem nada no mês anterior não há contra o que comparar: nenhuma forma é "nova".
     const diferencas = porPagamentoAnterior.length > 0 ? diferencaPorForma(porPagamento, porPagamentoAnterior) : null
     const formaUnica = porPagamento.length === 1 ? porPagamento[0] : null
@@ -463,11 +475,11 @@ export function GraficosDoResumo({
                                                 <li key={f.chave} className="flex items-center gap-3 text-sm">
                                                     {f.forma === "credit_card" ? (
                                                         // O `tile` força 16px em todo `svg` de dentro, e a bandeira tem a largura dela.
-                                                        <ItemMedia className="size-8 rounded-full bg-muted">
+                                                        <ItemMedia className="size-8 rounded-full" style={superficieDaForma(f.chave)}>
                                                             <CreditCardBrandChip brand={cartoes.find((c) => c.id === f.cardId)?.brand ?? null} />
                                                         </ItemMedia>
                                                     ) : (
-                                                        <ItemMedia variant="tile">
+                                                        <ItemMedia variant="tile" style={superficieDaForma(f.chave)}>
                                                             <Icone aria-hidden />
                                                         </ItemMedia>
                                                     )}
