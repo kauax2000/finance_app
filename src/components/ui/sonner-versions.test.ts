@@ -103,6 +103,11 @@ describe("os helpers", () => {
     expect(BLOCO).toContain(".toast-pill {\n  width: fit-content;\n  margin-inline: auto 0;")
     expect(LIB).toContain("export const TOAST_PILL_MS = 2000")
   })
+
+  it("a pílula cabe numa linha e, no telefone, para onde os outros toasts param", () => {
+    expect(BLOCO).toContain(".toast-pill [data-content] {\n  max-width: none;")
+    expect(BLOCO).toMatch(/@media \(max-width: 600px\) \{\s*\[data-sonner-toaster\] \[data-sonner-toast\]\[data-styled="true"\]\.toast-pill \{\s*margin-inline: auto calc\(var\(--mobile-offset-left\) \* 2\);/)
+  })
 })
 
 describe("as duas ações", () => {

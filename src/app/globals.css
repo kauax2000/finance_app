@@ -1202,6 +1202,20 @@
   width: 24px;
   height: 24px;
 }
+/* A faixa de 40px que o texto deixa ao poço (`max-width: calc(100% - 40px)`) se
+   resolve contra a largura da própria pílula, que é a do conteúdo: o texto perdia
+   40px e quebrava em duas linhas ("Atualiza/do"). Aqui o texto mede o que precisa. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-pill [data-content] {
+  max-width: none;
+}
+/* No telefone o sonner estica a pilha a 100% a partir do recuo da esquerda, e o
+   toast tem 100% menos os dois recuos: a margem automática encostava a pílula na
+   borda da pilha, 16px fora da tela. Ela para onde os outros toasts param. */
+@media (max-width: 600px) {
+  [data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-pill {
+    margin-inline: auto calc(var(--mobile-offset-left) * 2);
+  }
+}
 
 /* O progresso (`toastProgress`): a descrição ocupa a largura toda. */
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-progress [data-description] {
