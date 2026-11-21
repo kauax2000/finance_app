@@ -20,8 +20,8 @@ import { diaEMes } from "./rotulos"
 
 const paleta = (nome: string) => TILE_PALETTE.find((p) => p.nome === nome)?.hex ?? null
 
-/** Os quatro números do mês com ícone; cada um some sem dado, e sem nenhum o grupo não aparece. */
-export function CartoesDoGasto({
+/** Os destaques do mês: quatro números com ícone; cada um some sem dado, e sem nenhum o grupo não aparece. */
+export function DestaquesDoMes({
     tipo,
     cor,
     maior,

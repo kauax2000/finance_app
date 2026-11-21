@@ -1,58 +1,28 @@
 "use client"
 
-import { createElement, useMemo } from "react"
+import { useMemo } from "react"
 import { ArrowLongRightIcon, ArrowTrendingDownIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
-import { CreditCardBrandChip } from "@/components/credit-cards/credit-card-brand-chip"
+import { ComoFoiPago } from "@/components/analise-do-mes/como-foi-pago"
+import { oQueSeMede } from "@/components/analise-do-mes/compartilhado"
+import { DiasDaSemana } from "@/components/analise-do-mes/dias-da-semana"
+import { RitmoDoMes } from "@/components/analise-do-mes/ritmo-do-mes"
+import { mesCurto, mesPorExtenso } from "@/components/analise-do-mes/rotulos"
+import { TamanhoDasCompras } from "@/components/analise-do-mes/tamanho-das-compras"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ItemContent, ItemMedia } from "@/components/ui/item"
-import {
-    ChartAnnotation,
-    ChartArea,
-    ChartDonut,
-    ChartHeatStrip,
-    ChartLine,
-    ChartReferenceDot,
-    ChartReferenceLine,
-    ChartSplit,
-    ChartStrip,
-    ChartSwatch,
-    splitPercents,
-    type ChartConfig,
-} from "@/components/ui/chart"
+import { ChartArea, ChartReferenceDot, ChartReferenceLine, type ChartConfig } from "@/components/ui/chart"
 import { Caption } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
-import { shiftYearMonth } from "@/lib/budget-month"
-import { diferencaPorForma, type FatiaDePagamento, type TipoDaCategoria } from "@/lib/categoria-detalhe"
+import type { FatiaDePagamento, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import {
-    diasUteisEFimDeSemana,
-    resumoDoRitmo,
     tendenciaDosMeses,
     type concentracaoDasCompras,
     type porDiaDaSemana,
     type ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
-import { paymentMethodColor } from "@/lib/payment-methods"
-import { paymentMethodIcon } from "@/lib/payment-method-icon"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
-import { diaDeMesPorExtenso, diaEMes, diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
-
-// A segunda forma do mesmo tipo (dois cartões de crédito) sai a 60% da cor, a terceira em diante a 35%.
-const ESMAECER_A_REPETIDA = [100, 60, 35]
-
-/** A diferença de uma forma contra o mês anterior: "+R$ 312" no tom do veredito, "igual" ou "novo" (null). */
-function diferencaDaForma(diferenca: number | null, despesa: boolean) {
-    if (diferenca == null) return { texto: "novo", classe: undefined }
-    if (Math.round(diferenca) === 0) return { texto: "igual", classe: undefined }
-    const bom = despesa ? diferenca < 0 : diferenca > 0
-    return {
-        texto: `${diferenca > 0 ? "+" : "−"}${reaisInteiros(Math.abs(diferenca))}`,
-        classe: bom ? "text-success-muted-foreground" : "text-warning-muted-foreground",
-    }
-}
 
 /** O selo do mês contra a média: a mesma faixa de ±2% da `vereditoDaMedia`; o tom diz se é bom (gastar menos, receber mais). */
 function seloDaMedia(valor: number, media: number | null, despesa: boolean) {
@@ -64,44 +34,6 @@ function seloDaMedia(valor: number, media: number | null, despesa: boolean) {
         texto: `${delta > 0 ? "+" : "−"}${percentBR(Math.abs(delta), { maximumFractionDigits: 0 })} vs média`,
         tom: bom ? ("success" as const) : ("warning" as const),
     }
-}
-
-/** O selo do ritmo: a diferença em reais contra o mês anterior no mesmo dia, com a faixa de ±2% do selo da média. */
-function seloDoRitmo(diferenca: number | null, anteriorHoje: number, mesAnterior: string, despesa: boolean) {
-    if (diferenca == null) return null
-    if (Math.abs(diferenca) <= Math.abs(anteriorHoje) * 0.02) return { texto: `igual a ${mesAnterior}`, tom: "neutral" as const }
-    const bom = despesa ? diferenca < 0 : diferenca > 0
-    return {
-        texto: `${reaisInteiros(Math.abs(diferenca))} a ${diferenca < 0 ? "menos" : "mais"} que ${mesAnterior}`,
-        tom: bom ? ("success" as const) : ("warning" as const),
-    }
-}
-
-function CartaoDoGrafico({
-    titulo,
-    apoio,
-    className,
-    children,
-}: {
-    titulo: string
-    apoio?: React.ReactNode
-    className?: string
-    children: React.ReactNode
-}) {
-    return (
-        <Card className={cn("min-w-0", className)}>
-            <CardHeader>
-                <CardTitle size="sm">{titulo}</CardTitle>
-                {apoio ? (
-                    <CardAction>
-                        <Caption>{apoio}</Caption>
-                    </CardAction>
-                ) : null}
-            </CardHeader>
-            {/* Coluna que cresce: na fileira de três, o último bloco de cada cartão (`mt-auto`) assenta no pé, e os pés se alinham. */}
-            <CardContent className="flex flex-1 flex-col">{children}</CardContent>
-        </Card>
-    )
 }
 
 /** Os gráficos do mês: últimos meses e ritmo em cima; forma de pagamento, dias da semana e tamanho das compras embaixo. Cada um some sem dado. */
@@ -139,7 +71,7 @@ export function GraficosDoResumo({
     const despesa = tipo === "expense"
     // A série tem a cor que o ladrilho desenha, e não a parada crua da paleta.
     const corDaSerie = tileVividColor(tileColorFor(cor) ?? (despesa ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT))
-    const oQue = despesa ? "Gasto" : "Entrada"
+    const oQue = oQueSeMede(despesa)
 
     // Os meses zerados do começo achatariam a curva: ela abre no primeiro mês com valor, com no mínimo 3 pontos.
     const { meses, parcial } = useMemo(() => {
@@ -160,90 +92,12 @@ export function GraficosDoResumo({
         () => ({ total: { label: nomeDaCategoria, color: corDaSerie } }) satisfies ChartConfig,
         [nomeDaCategoria, corDaSerie],
     )
-    const mesAtual = mesPorExtenso(yearMonth)
-    const mesAnterior = mesPorExtenso(shiftYearMonth(yearMonth, -1))
-    const configRitmo = useMemo(
-        () =>
-            ({
-                atual: { label: mesAtual, color: corDaSerie },
-                anterior: { label: mesAnterior, color: "var(--muted-foreground)", dashed: true },
-            }) satisfies ChartConfig,
-        [mesAtual, mesAnterior, corDaSerie],
-    )
 
     const comMeses = serie.some((p) => p.total !== 0)
     const comRitmo = ritmo.some((d) => (d.atual ?? 0) !== 0 || d.anterior !== 0)
-    const contaDoRitmo = resumoDoRitmo(ritmo, { aberto })
-    const hoje = contaDoRitmo.hoje
-    const pontoDeHoje = ritmo[hoje - 1]
-    const ultimoDoRitmo = ritmo.at(-1)
-    const seloRitmo = pontoDeHoje ? seloDoRitmo(contaDoRitmo.diferenca, pontoDeHoje.anterior, mesAnterior, despesa) : null
-    // Fechado, os dois pontos dividem o último dia: o rótulo do maior sobe e o do menor desce, para não se cruzarem.
-    const atualEmCima = !aberto && (pontoDeHoje?.atual ?? 0) >= (contaDoRitmo.anteriorFinal ?? 0)
-    const corDoVeu = seloRitmo?.tom === "success" ? "var(--success)" : seloRitmo?.tom === "warning" ? "var(--warning)" : null
-    // O acumulado parte do zero antes do dia 1: as duas linhas nascem na base, como a área ao lado.
-    const ritmoDesdeZero = useMemo(() => [{ dia: 0, atual: 0, anterior: 0, faixa: [0, 0] as [number, number], projecao: null }, ...ritmo], [ritmo])
     const comDias = diasDaSemana.some((d) => d.total > 0)
-    const lados = diasUteisEFimDeSemana(diasDaSemana)
     const comCompras = concentracao.quantidade > 0
-    // A fileira: cada compra um bloco, da maior para a menor; o rabo acima de 40 vira "outras M compras".
-    const umaOuMais = (n: number) => `${n} ${despesa ? "compra" : "entrada"}${n === 1 ? "" : "s"}`
-    const comprasPagas = porPagamento.reduce((acc, f) => acc + f.compras, 0)
-    const totalPago = porPagamento.reduce((acc, f) => acc + f.valor, 0)
-    // O dia de maior valor, para o rodapé do "Dias da semana"; sem gasto em dia nenhum, não há rodapé.
-    const diaMaisCaro = diasDaSemana.reduce<(typeof diasDaSemana)[number] | null>((a, d) => (d.total > (a?.total ?? 0) ? d : a), null)
-    const frase =
-        concentracao.quantidade === 1
-            ? { numero: umaOuMais(1), resto: "fez o mês inteiro" }
-            : {
-                  numero: `${concentracao.n80} de ${concentracao.quantidade}`,
-                  resto: `${despesa ? "compras" : "entradas"} ${concentracao.n80 === 1 ? "fez" : "fizeram"} 80% do mês`,
-              }
-    const blocos = useMemo(
-        () => [
-            ...concentracao.compras.map((c) => ({ id: c.id, valor: c.valor })),
-            ...(concentracao.outras ? [{ id: "outras", valor: concentracao.outras.valor }] : []),
-        ],
-        [concentracao],
-    )
-    const rotuloDoBloco = (id: unknown) => {
-        if (id === "outras" && concentracao.outras) return `outras ${umaOuMais(concentracao.outras.quantidade)}`
-        const c = concentracao.compras.find((x) => x.id === id)
-        return c ? [c.descricao, diaDeMesPorExtenso(c.data)].filter(Boolean).join(" · ") : String(id)
-    }
-    const nomeDaFileira = `${frase.numero} ${frase.resto}. ${despesa ? "Maiores" : "Maiores entradas"}: ${concentracao.compras
-        .slice(0, 3)
-        .map((c) => `${c.descricao || diaDeMesPorExtenso(c.data)} ${currencyBRL(c.valor)}`)
-        .join(", ")}.`
     const comPagamento = porPagamento.length > 0
-    // O mesmo arredondamento da barra, para o destaque e a lista baterem com ela.
-    const pctsPagamento = splitPercents(porPagamento.map((f) => f.valor))
-    // Cada forma tem a sua cor fixa; pela chave, e não pelo nome, para a repetida esmaecer pela ordem do valor.
-    const configPagamento = useMemo(() => {
-        const vistas: Record<string, number> = {}
-        return Object.fromEntries(
-            porPagamento.map((f) => {
-                const n = vistas[f.forma] ?? 0
-                vistas[f.forma] = n + 1
-                const pct = ESMAECER_A_REPETIDA[Math.min(n, ESMAECER_A_REPETIDA.length - 1)]
-                const cor = paymentMethodColor(f.forma)
-                return [f.chave, { label: f.nome, color: pct === 100 ? cor : `color-mix(in oklab, ${cor} ${pct}%, transparent)` }]
-            }),
-        ) satisfies ChartConfig
-    }, [porPagamento])
-    // O ladrilho veste a cor da forma a 18% e o ícone a cor cheia; a repetida esmaece os dois, pela cor já esmaecida.
-    const ladrilhoDaForma = (chave: string) => {
-        const cor = configPagamento[chave].color
-        return { backgroundColor: `color-mix(in oklab, ${cor} 18%, transparent)`, color: cor }
-    }
-    // Sem nada no mês anterior não há contra o que comparar: nenhuma forma é "nova".
-    const diferencas = porPagamentoAnterior.length > 0 ? diferencaPorForma(porPagamento, porPagamentoAnterior) : null
-    const formaUnica = porPagamento.length === 1 ? porPagamento[0] : null
-    const maiorForma = porPagamento[0]
-    // A preposição segue a da forma única: "em dinheiro", "sem forma de pagamento", "no <nome>".
-    const ondeFoiPago = (f: FatiaDePagamento) =>
-        f.forma === "sem-forma" ? "sem forma de pagamento" : f.forma === "cash" ? `em ${f.nome.toLocaleLowerCase("pt-BR")}` : `no ${f.nome}`
-    const diferencaUnica = formaUnica && diferencas?.[formaUnica.chave] != null ? diferencaDaForma(diferencas[formaUnica.chave], despesa) : null
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
     const tendencia = useMemo(() => {
@@ -335,84 +189,7 @@ export function GraficosDoResumo({
                         </Card>
                     ) : null}
                     {comRitmo ? (
-                        <Card className="min-w-0">
-                            <CardHeader>
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <CardTitle size="sm">Ritmo do mês</CardTitle>
-                                    {seloRitmo ? (
-                                        <Badge tone={seloRitmo.tom} className="whitespace-nowrap">
-                                            {seloRitmo.texto}
-                                        </Badge>
-                                    ) : null}
-                                </div>
-                                <CardAction>
-                                    <Caption className="nums">
-                                        {aberto ? "deve fechar em " : "fechou em "}
-                                        <span className="font-semibold text-foreground">{reaisInteiros(contaDoRitmo.fechamento)}</span>
-                                    </Caption>
-                                </CardAction>
-                            </CardHeader>
-                            <CardContent>
-                                <ChartLine
-                                    grid={false}
-                                    legend={false}
-                                    yAxis={false}
-                                    config={configRitmo}
-                                    data={ritmoDesdeZero}
-                                    x="dia"
-                                    xTicks={[1, 8, 15, 22, ritmo.length]}
-                                    band={corDoVeu ? { dataKey: "faixa", color: corDoVeu } : undefined}
-                                    ghost={aberto ? { dataKey: "projecao", color: corDaSerie, label: "previsto" } : undefined}
-                                    tooltipDifference={{ better: despesa ? "lower" : "higher" }}
-                                    tooltipLabel={(d) => (Number(d) === 0 ? "início do mês" : `${d} de ${mesAtual}`)}
-                                    aspect="auto"
-                                    className="h-44 w-full"
-                                    label={`${oQue} acumulado dia a dia em ${mesAtual}, contra ${mesAnterior}`}
-                                    description={[
-                                        `A linha cheia é ${mesAtual}; a tracejada, ${mesAnterior}.`,
-                                        pontoDeHoje?.atual != null ? `${aberto ? `Até o dia ${hoje}` : "No mês inteiro"}, ${currencyBRL(pontoDeHoje.atual)}${seloRitmo ? `, ${seloRitmo.texto}${aberto ? " no mesmo dia" : ""}` : ""}.` : null,
-                                        contaDoRitmo.anteriorFinal != null ? `${mesAnterior.charAt(0).toUpperCase()}${mesAnterior.slice(1)} fechou em ${currencyBRL(contaDoRitmo.anteriorFinal)}.` : null,
-                                        `${aberto ? "Com o previsto, deve fechar em" : "Fechou em"} ${currencyBRL(contaDoRitmo.fechamento)}.`,
-                                    ]
-                                        .filter(Boolean)
-                                        .join(" ")}
-                                >
-                                    {aberto ? (
-                                        <ChartAnnotation x={hoje} label={`hoje, dia ${hoje}`} labelPosition="bottom" />
-                                    ) : null}
-                                    {pontoDeHoje?.atual != null ? (
-                                        <ChartReferenceDot
-                                            x={hoje}
-                                            y={pontoDeHoje.atual}
-                                            color={corDaSerie}
-                                            hollow={false}
-                                            label={`${mesAtual} · ${reaisInteiros(pontoDeHoje.atual)}`}
-                                            labelPosition={atualEmCima ? "top" : "bottom"}
-                                            labelAlign="end"
-                                        />
-                                    ) : null}
-                                    {contaDoRitmo.anteriorFinal != null && ultimoDoRitmo ? (
-                                        <ChartReferenceDot
-                                            x={ultimoDoRitmo.dia}
-                                            y={contaDoRitmo.anteriorFinal}
-                                            label={`${mesAnterior} · ${reaisInteiros(contaDoRitmo.anteriorFinal)}`}
-                                            labelPosition={aberto || !atualEmCima ? "top" : "bottom"}
-                                        />
-                                    ) : null}
-                                    {/* Sem previsto a reta é plana: o ponto repetiria o de hoje, e no telefone os dois rótulos se cruzavam. */}
-                                    {aberto && ultimoDoRitmo?.projecao != null && ultimoDoRitmo.projecao !== pontoDeHoje?.atual ? (
-                                        <ChartReferenceDot
-                                            x={ultimoDoRitmo.dia}
-                                            y={ultimoDoRitmo.projecao}
-                                            color={corDaSerie}
-                                            labelTone="series"
-                                            label={`previsto · ${reaisInteiros(ultimoDoRitmo.projecao)}`}
-                                            labelPosition="bottom"
-                                        />
-                                    ) : null}
-                                </ChartLine>
-                            </CardContent>
-                        </Card>
+                        <RitmoDoMes ritmo={ritmo} aberto={aberto} yearMonth={yearMonth} corDaSerie={corDaSerie} despesa={despesa} oQue={oQue} />
                     ) : null}
                 </div>
                 </div>
@@ -422,196 +199,24 @@ export function GraficosDoResumo({
                 <div className="@container/trio">
                 <div className="grid gap-3 @2xl/trio:grid-cols-2 @5xl/trio:grid-cols-3">
                     {comPagamento ? (
-                        <CartaoDoGrafico
-                            titulo="Como foi pago"
-                            apoio={!formaUnica && diferencas ? `vs ${mesAnterior}${aberto ? " inteiro" : ""}` : undefined}
-                        >
-                            {formaUnica ? (
-                                <div className="flex items-center gap-4">
-                                    <ChartDonut
-                                        rounded
-                                        legend={false}
-                                        tooltip={false}
-                                        config={configPagamento}
-                                        data={porPagamento}
-                                        nameKey="chave"
-                                        dataKey="valor"
-                                        className="size-30 shrink-0"
-                                        label={`${oQue} do mês por forma de pagamento: tudo no ${formaUnica.nome}`}
-                                        center={
-                                            <div
-                                                aria-hidden
-                                                className="pointer-events-none absolute inset-0 grid place-items-center"
-                                                style={{ color: configPagamento[formaUnica.chave].color }}
-                                            >
-                                                {formaUnica.forma === "credit_card" ? (
-                                                    <CreditCardBrandChip
-                                                        brand={cartoes.find((c) => c.id === formaUnica.cardId)?.brand ?? null}
-                                                    />
-                                                ) : (
-                                                    // `createElement`: o ícone vem de uma tabela, e não é um componente criado aqui.
-                                                    createElement(paymentMethodIcon(formaUnica.forma, "lg"), { className: "size-6" })
-                                                )}
-                                            </div>
-                                        }
-                                    />
-                                    {/* Nome, contagem e diferença são o mesmo dado em três linhas: sem `gap`. */}
-                                    <div className="min-w-0 flex-1 text-sm">
-                                        <p className="break-words">
-                                            {formaUnica.forma === "sem-forma" ? (
-                                                "Tudo sem forma de pagamento"
-                                            ) : (
-                                                <>
-                                                    {formaUnica.forma === "cash" ? "Tudo em" : "Tudo no"}{" "}
-                                                    <span className="font-semibold">{formaUnica.forma === "cash" ? formaUnica.nome.toLocaleLowerCase("pt-BR") : formaUnica.nome}</span>
-                                                </>
-                                            )}
-                                        </p>
-                                        <p className="nums text-muted-foreground">
-                                            {formaUnica.compras} {despesa ? "compra" : "entrada"}
-                                            {formaUnica.compras === 1 ? "" : "s"} · {currencyBRL(formaUnica.valor)}
-                                        </p>
-                                        {diferencaUnica ? (
-                                            <p className={cn("nums text-muted-foreground", diferencaUnica.classe)}>
-                                                {/* Contra o mês anterior inteiro; com o mês aberto, diz isso, porque o Ritmo ao lado compara no mesmo dia. */}
-                                                {diferencaUnica.texto === "igual" ? `igual a ${mesAnterior}${aberto ? " inteiro" : ""}` : `${diferencaUnica.texto} vs ${mesAnterior}${aberto ? " inteiro" : ""}`}
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                                    <div className="flex items-baseline justify-between gap-3">
-                                        <p className="min-w-0">
-                                            <span className="nums text-xl font-semibold">{pctsPagamento[0]}%</span>{" "}
-                                            <span className="text-sm text-muted-foreground">{ondeFoiPago(maiorForma)}</span>
-                                        </p>
-                                        <Caption className="nums shrink-0">{porPagamento.length} formas</Caption>
-                                    </div>
-                                    <ChartSplit
-                                        labels="none"
-                                        config={configPagamento}
-                                        data={porPagamento}
-                                        nameKey="chave"
-                                        dataKey="valor"
-                                        label={`${oQue} do mês por forma de pagamento`}
-                                    />
-                                    <ul className="mt-2 grid grid-cols-1 gap-3">
-                                        {porPagamento.map((f, i) => {
-                                            const d = diferencas ? diferencaDaForma(diferencas[f.chave], despesa) : null
-                                            return (
-                                                <li key={f.chave} className="flex items-center gap-3 text-sm">
-                                                    <ItemMedia variant="tile" style={ladrilhoDaForma(f.chave)}>
-                                                        {createElement(paymentMethodIcon(f.forma))}
-                                                    </ItemMedia>
-                                                    <ItemContent>
-                                                        <span className="truncate">{f.nome}</span>
-                                                        <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                            <ChartSwatch color={configPagamento[f.chave].color} />
-                                                            <span>
-                                                                {pctsPagamento[i]}%
-                                                                {d ? (
-                                                                    <>
-                                                                        {" · "}
-                                                                        <span className={d.classe}>{d.texto}</span>
-                                                                    </>
-                                                                ) : null}
-                                                            </span>
-                                                        </span>
-                                                    </ItemContent>
-                                                    <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(f.valor)}</span>
-                                                </li>
-                                            )
-                                        })}
-                                    </ul>
-                                    <p className="mt-auto flex items-baseline justify-between gap-3 border-t border-border pt-3 text-sm text-muted-foreground">
-                                        <span>{umaOuMais(comprasPagas)} no mês</span>
-                                        <span className="nums font-mono font-semibold text-foreground">{reaisInteiros(totalPago)}</span>
-                                    </p>
-                                </div>
-                            )}
-                        </CartaoDoGrafico>
+                        <ComoFoiPago
+                            porPagamento={porPagamento}
+                            porPagamentoAnterior={porPagamentoAnterior}
+                            cartoes={cartoes}
+                            aberto={aberto}
+                            yearMonth={yearMonth}
+                            despesa={despesa}
+                        />
                     ) : null}
-                    {comDias ? (
-                        <CartaoDoGrafico titulo="Dias da semana">
-                            <div className="flex flex-1 flex-col gap-4">
-                                <div className="flex gap-4">
-                                    {(
-                                        [
-                                            ["dias úteis", lados.uteis, lados.uteis.total >= lados.fim.total],
-                                            ["fim de semana", lados.fim, lados.fim.total > lados.uteis.total],
-                                        ] as const
-                                    ).map(([nome, lado, maior]) => (
-                                        // O % e a legenda são o mesmo dado em duas linhas: sem `gap`.
-                                        <div key={nome} className="min-w-0">
-                                            <p className={cn("nums text-xl font-semibold", !maior && "text-muted-foreground")}>{lado.pct}%</p>
-                                            <p className="nums text-sm text-muted-foreground">
-                                                {nome} <span className="whitespace-nowrap">· {reaisInteiros(lado.total)}</span>
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                                <ChartHeatStrip
-                                    data={diasDaSemana}
-                                    nameKey="nome"
-                                    dataKey="total"
-                                    color={corDaSerie}
-                                    labelText={diaPorExtenso}
-                                    label={`${despesa ? "Gasto" : "Entradas"} do mês por dia da semana`}
-                                />
-                                {diaMaisCaro ? (
-                                    <p className="mt-auto border-t border-border pt-3 text-sm text-muted-foreground">
-                                        <span className="text-foreground first-letter:uppercase inline-block">{diaPorExtenso(diaMaisCaro.nome)}</span>{" "}
-                                        {despesa ? "foi o dia mais caro" : "foi o dia de mais entradas"} ·{" "}
-                                        <span className="nums whitespace-nowrap">
-                                            {reaisInteiros(diaMaisCaro.total)} em {umaOuMais(diaMaisCaro.compras)}
-                                        </span>
-                                    </p>
-                                ) : null}
-                            </div>
-                        </CartaoDoGrafico>
-                    ) : null}
+                    {comDias ? <DiasDaSemana diasDaSemana={diasDaSemana} corDaSerie={corDaSerie} despesa={despesa} /> : null}
                     {comCompras ? (
-                        <CartaoDoGrafico
-                            titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"}
+                        <TamanhoDasCompras
+                            concentracao={concentracao}
+                            corDaSerie={corDaSerie}
+                            despesa={despesa}
                             // Em duas colunas, o terceiro cartão ficaria sozinho na metade da linha: ocupa a linha inteira.
                             className={comPagamento && comDias ? "@2xl/trio:col-span-2 @5xl/trio:col-span-1" : undefined}
-                        >
-                            <div className="flex flex-1 flex-col gap-3">
-                                <p className="min-w-0">
-                                    <span className="nums text-xl font-semibold">{frase.numero}</span>{" "}
-                                    <span className="text-sm text-muted-foreground">{frase.resto}</span>
-                                </p>
-                                <div>
-                                    <ChartStrip
-                                        data={blocos}
-                                        nameKey="id"
-                                        dataKey="valor"
-                                        color={corDaSerie}
-                                        highlight={Math.min(concentracao.n80, concentracao.compras.length)}
-                                        labelText={rotuloDoBloco}
-                                        label={nomeDaFileira}
-                                    />
-                                    <div aria-hidden className="mt-1.5 flex justify-between text-xs text-muted-foreground">
-                                        <span>maiores</span>
-                                        <span>menores</span>
-                                    </div>
-                                </div>
-                                {/* As maiores, as mesmas em destaque na fileira (até 2): o cartão diz o que foi a compra grande. */}
-                                <ul className="mt-auto grid grid-cols-1 gap-2.5 border-t border-border pt-3">
-                                    {concentracao.compras.slice(0, Math.min(2, concentracao.n80)).map((c) => (
-                                        <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
-                                            {/* Descrição e data são o mesmo dado em duas linhas: sem `gap`. */}
-                                            <span className="min-w-0">
-                                                <span className="block truncate">{c.descricao || diaDeMesPorExtenso(c.data)}</span>
-                                                <span className="block text-xs text-muted-foreground">{diaEMes(c.data)}</span>
-                                            </span>
-                                            <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(c.valor)}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </CartaoDoGrafico>
+                        />
                     ) : null}
                 </div>
                 </div>

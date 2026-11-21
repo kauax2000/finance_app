@@ -15,7 +15,7 @@ import type {
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import type { CreditCard, Transaction } from "@/lib/supabase"
-import { CartoesDoGasto } from "./cartoes-do-gasto"
+import { DestaquesDoMes } from "@/components/analise-do-mes/destaques-do-mes"
 import { CompromissosERepeticoes } from "./compromissos-e-repeticoes"
 import { FatosDoMes } from "./fatos-do-mes"
 import { GraficosDoResumo } from "./graficos-do-resumo"
@@ -110,7 +110,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
             ) : null}
             {temCartoes ? (
                 <Secao titulo={despesa ? "Destaques dos gastos" : "Destaques das entradas"}>
-                    <CartoesDoGasto tipo={p.tipo} cor={p.cor} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
+                    <DestaquesDoMes tipo={p.tipo} cor={p.cor} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
                 </Secao>
             ) : null}
             {temCompromissos ? (

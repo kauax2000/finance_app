@@ -12,7 +12,7 @@ import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { Compromissos, repeticoes } from "@/lib/categoria-resumo"
 import { currencyBRL } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
-import { mesPorExtenso } from "./rotulos"
+import { mesPorExtenso } from "@/components/analise-do-mes/rotulos"
 
 type Compromisso = Compromissos["itens"][number]
 
