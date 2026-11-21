@@ -45,7 +45,7 @@ export function SwRegister() {
         // Lido antes do registro. O `sw.ts` usa `clientsClaim`: no primeiro
         // acesso o SW recém-instalado reivindica a página e dispara
         // `controllerchange` com o controller já preenchido — dentro do evento
-        // ele nunca é nulo, e a primeira visita via "Nova versão disponível".
+        // ele nunca é nulo, e a primeira visita via "Nova versão do app".
         let hadController = !!navigator.serviceWorker.controller
 
         const reload = () => {
@@ -70,10 +70,12 @@ export function SwRegister() {
                 return
             }
             updateReady = true
-            toastPersistentAction("Nova versão disponível", {
+            toastPersistentAction("Nova versão do app", {
                 id: "sw-update",
-                label: "Atualizar",
+                label: "Atualizar agora",
+                description: "Atualize para ver as novidades. O que você já salvou continua aqui.",
                 onClick: reload,
+                stacked: true,
             })
         }
 

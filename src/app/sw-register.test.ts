@@ -28,7 +28,15 @@ describe("o registro do service worker", () => {
         expect(ramo).toContain("unregister")
     })
 
-    it("a primeira instalação não avisa 'Nova versão disponível'", () => {
+    it("o aviso de versão é claro: título, frase, botão largo no telefone", () => {
+        expect(CODIGO).toContain('toastPersistentAction("Nova versão do app"')
+        expect(CODIGO).toContain('"Atualize para ver as novidades. O que você já salvou continua aqui."')
+        expect(CODIGO).toContain('label: "Atualizar agora"')
+        expect(CODIGO).toContain("stacked: true")
+        expect(CODIGO).toContain('id: "sw-update"')
+    })
+
+    it("a primeira instalação não avisa 'Nova versão do app'", () => {
         // O `sw.ts` usa `clientsClaim`: no primeiro acesso o SW recém-instalado
         // reivindica a página e dispara `controllerchange` com o controller já
         // preenchido. Ler `navigator.serviceWorker.controller` dentro do evento
