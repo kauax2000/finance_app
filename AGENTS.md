@@ -196,6 +196,12 @@ os componentes. O conteúdo das páginas continua em português.
    Criar componente, mudar variant, adicionar token, rodar
    `npx shadcn@latest add` — tudo isso atinge todas as telas presentes e futuras.
    Apresente a proposta e espere o ok. Dentro do arquivo da tela, corrija direto.
+   **Autorização permanente do dono (21/11/2026):** quando uma tela ou um mockup
+   aprovado pedir algo que o design system não tem (variant, prop, token, peça
+   nova), altere e melhore o design system sem parar para perguntar, e registre
+   a mudança completa (invariante 8: `registry.ts`, página de docs, teste). O
+   mockup é livre: a tela real não pode sair mais pobre que ele por falta de
+   peça. A passada final compara a tela real com o mockup, lado a lado.
 7. **Esperar não é dissolver.** Se um componente já está declarado na tela e a
    extração depende de ok, ele fica onde está (com as cores corrigidas para
    token). Apagar a declaração e espalhar o JSX inline é pior que a violação
