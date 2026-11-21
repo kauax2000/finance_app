@@ -1285,6 +1285,7 @@ function ChartArea({
   delta = false,
   brush,
   yAxis = true,
+  grid = true,
   children,
 }: ChartFormProps & {
   x: string
@@ -1292,6 +1293,8 @@ function ChartArea({
   variant?: keyof typeof chartAreaShape
   /** O eixo de valor. `false` o esconde (o valor fica no tooltip e numa `ChartReferenceLine` rotulada): o cartão pequeno lê a forma, não a régua. */
   yAxis?: boolean
+  /** As linhas pontilhadas do fundo. `false` as tira: o cartão sem eixo lê a forma e as marcas rotuladas, sem régua (o resumo da categoria, 21/11/2026). */
+  grid?: boolean
   stacked?: boolean
   /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
   marker?: "last"
@@ -1352,7 +1355,7 @@ function ChartArea({
               ))}
             </defs>
           ) : null}
-          <ChartGrid />
+          {grid ? <ChartGrid /> : null}
           {/* Sem a calha do eixo Y o primeiro rótulo passava da borda e o Recharts o escondia: o recuo devolve o espaço. */}
           <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} />
           <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
@@ -1435,6 +1438,7 @@ function ChartLine({
   delta = false,
   brush,
   yAxis = true,
+  grid = true,
   children,
 }: ChartFormProps & {
   /** O tooltip mostra a variação contra o ponto anterior. */
@@ -1443,6 +1447,8 @@ function ChartLine({
   brush?: boolean | number
   /** O eixo de valor. `false` o esconde (o valor fica no tooltip). */
   yAxis?: boolean
+  /** As linhas pontilhadas do fundo. `false` as tira (o resumo da categoria, 21/11/2026). */
+  grid?: boolean
   x: string
   xFormat?: ChartFormat
   variant?: keyof typeof chartLineShape
@@ -1473,7 +1479,7 @@ function ChartLine({
         interactive={!!brush}
       >
         <LineChart data={data} accessibilityLayer>
-          <ChartGrid />
+          {grid ? <ChartGrid /> : null}
           <ChartXAxis dataKey={x} format={xFormat} />
           <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
@@ -1579,6 +1585,7 @@ function ChartBars({
   onSelect,
   delta = false,
   yAxis = true,
+  grid = true,
   partial,
   barMax,
   children,
@@ -1587,6 +1594,8 @@ function ChartBars({
   selectedColor?: string
   /** O eixo de valor (só no `vertical`). `false` o esconde: o valor fica no tooltip. */
   yAxis?: boolean
+  /** As linhas pontilhadas do fundo. `false` as tira (o resumo da categoria, 21/11/2026). */
+  grid?: boolean
   /** Barras com sinal (saldo cruzando o zero): acima `--chart-income`, abaixo `--chart-expense`, com a linha do zero desenhada (cor não é o único canal). Uma série. */
   signed?: boolean
   /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. `"selected"` escreve só o da barra `selected`, por extenso (um rótulo só tem espaço). */
@@ -1702,7 +1711,7 @@ function ChartBars({
           // O rótulo do `"selected"` é por extenso e passa da largura da barra: a margem segura a ponta da borda.
           margin={valueLabels === "selected" && !horizontal ? { top: 20, right: 28, bottom: 0, left: 28 } : undefined}
         >
-          <ChartGrid vertical={horizontal} horizontal={!horizontal} />
+          {grid ? <ChartGrid vertical={horizontal} horizontal={!horizontal} /> : null}
           {horizontal ? (
             <>
               <ChartXAxis

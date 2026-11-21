@@ -491,6 +491,14 @@ describe("Chart: o eixo X sem a calha do Y e o rótulo do ponto no topo (21/11/2
   it("o rótulo do ponto desce para baixo dele quando não cabe acima", () => {
     expect(trechoDe("ChartReferenceDotLabel")).toContain("cy - 19 < 0 ? cy + 18 : cy - 10")
   })
+  it("área, linha e barras tiram as linhas do fundo com grid={false}", () => {
+    for (const nome of ["ChartArea", "ChartLine", "ChartBars"]) {
+      const t = trechoDe(nome)
+      expect(t).toContain("grid?: boolean")
+      expect(t).toContain("grid = true")
+      expect(t).toMatch(/\{grid \? <ChartGrid/)
+    }
+  })
   it("a área sem eixo Y abre 20px no topo, para o rótulo do ponto caber acima", () => {
     expect(f).toContain("const CHART_AREA_HEADROOM = { top: 20, right: 5, bottom: 5, left: 5 }")
     expect(trechoDe("ChartArea")).toContain("margin={yAxis ? undefined : CHART_AREA_HEADROOM}")

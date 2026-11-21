@@ -12,14 +12,13 @@ import {
     ChartReferenceLine,
     type ChartConfig,
 } from "@/components/ui/chart"
-import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption } from "@/components/ui/typography"
 import { shiftYearMonth } from "@/lib/budget-month"
 import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { porDiaDaSemana, porFaixaDeValor, ritmoDoMes } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
-import { nomeDoMes, reaisInteiros } from "../regua-do-mes-contas"
+import { reaisInteiros } from "../regua-do-mes-contas"
 import { mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
@@ -139,7 +138,6 @@ export function GraficosDoResumo({
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
     const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
-    const nomeDoMesAberto = nomeDoMes(yearMonth)
 
     if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
 
@@ -149,20 +147,25 @@ export function GraficosDoResumo({
                 <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
                     {comMeses ? (
                         <Card className="min-w-0">
+                            {/* Sem o valor do mês: ele já está no topo da página (pedido do dono, 21/11/2026). */}
                             <CardHeader>
-                                <div>
-                                    <Caption className="capitalize">{nomeDoMesAberto}</Caption>
-                                    <div className="flex flex-wrap items-center gap-x-2">
-                                        <MoneyDisplay value={ultimo?.total ?? 0} size="2xl" />
-                                        {selo ? <Badge tone={selo.tom}>{selo.texto}</Badge> : null}
-                                    </div>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <CardTitle size="sm">Últimos meses</CardTitle>
+                                    {selo ? (
+                                        <Badge tone={selo.tom}>
+                                            {mesCurto(yearMonth)} {selo.texto}
+                                        </Badge>
+                                    ) : null}
                                 </div>
-                                <CardAction>
-                                    <Caption>Últimos meses</Caption>
-                                </CardAction>
+                                {comMedia ? (
+                                    <CardAction>
+                                        <Caption className="nums">média {currencyBRL(media)}</Caption>
+                                    </CardAction>
+                                ) : null}
                             </CardHeader>
                             <CardContent>
                                 <ChartArea
+                                    grid={false}
                                     variant="gradient"
                                     marker="last"
                                     yAxis={false}
@@ -199,6 +202,7 @@ export function GraficosDoResumo({
                             apoio={aberto && hoje != null ? `até dia ${hoje}` : "mês inteiro"}
                         >
                             <ChartLine
+                                    grid={false}
                                 marker="last"
                                 yAxis={false}
                                 config={configRitmo}
@@ -232,6 +236,7 @@ export function GraficosDoResumo({
                     {comDias ? (
                         <CartaoDoGrafico titulo="Dias da semana">
                             <ChartBars
+                                    grid={false}
                                 config={CONFIG_DIAS}
                                 data={diasDaSemana}
                                 x="nome"
@@ -248,6 +253,7 @@ export function GraficosDoResumo({
                     {comFaixas ? (
                         <CartaoDoGrafico titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"}>
                             <ChartBars
+                                    grid={false}
                                 config={CONFIG_FAIXAS}
                                 data={faixas}
                                 x="faixa"
@@ -277,6 +283,7 @@ export function GraficosDoResumo({
                     </CardHeader>
                     <CardContent>
                         <ChartBars
+                                    grid={false}
                             config={CONFIG_DIAS}
                             data={meses}
                             x="mes"
