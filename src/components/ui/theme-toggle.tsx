@@ -18,7 +18,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
-import { animarAurora, criarFaixa } from "@/lib/aurora-do-tema"
+import { animarAurora, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
 import { nomearVidros } from "@/lib/vidro-na-revelacao"
 
 /**
@@ -78,8 +78,10 @@ const DEGRAU = {
 const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
 
 /**
- * A aurora: a troca de tema desce de cima para baixo por uma borda ondulada, com uma
- * faixa do arco-íris da marca correndo na frente dela, pela View Transitions API (o
+ * A aurora: a troca de tema passa por uma borda em onda que desliza para o lado, com uma
+ * faixa da marca correndo na frente dela. O sentido e a paleta são do destino: o escuro
+ * cai de cima (violeta, índigo, azul), o claro sobe de baixo (âmbar, coral, magenta),
+ * e "sistema" segue o tema que resultou. Pela View Transitions API (o
  * navegador fotografa a página velha, a nova vive por baixo e o que anima é a máscara
  * do `::view-transition-new(root)`; `lib/aurora-do-tema`). O `flushSync` faz o tema
  * trocar dentro do callback, antes da foto nova, e a faixa nasce ali, depois dele, com
@@ -110,7 +112,7 @@ export function ThemeToggle({
     labels?: boolean
     /** `brand` é o brilho de arco-íris na borda do trilho. Uma por tela. */
     variant?: "default" | "brand"
-    /** A troca desce como uma aurora, de cima para baixo. */
+    /** A troca passa como uma aurora: o escuro cai de cima, o claro sobe de baixo. */
     reveal?: boolean
 }) {
     const degrau = DEGRAU[size]
@@ -164,12 +166,16 @@ export function ThemeToggle({
         // dela recomeçava do início quando ela acabava (o polegar voltava e viajava de novo).
         flushSync(() => setPedido(valor))
         let tirarFaixa: (() => void) | undefined
+        // O sentido é do destino, lido depois da troca ("sistema" vira o tema que resultou): o
+        // escuro cai de cima, o claro sobe de baixo.
+        let sentido: Sentido = "desce"
         const transicao = doc.startViewTransition(() => {
             flushSync(() => setTheme(valor))
-            tirarFaixa = criarFaixa(document, altura)
+            sentido = html.classList.contains("dark") ? "desce" : "sobe"
+            tirarFaixa = criarFaixa(document, altura, sentido)
         })
         transicao.ready
-            .then(() => animarAurora(html, altura, largura, vidros.vidros).finished.then(() => tirarFaixa?.()))
+            .then(() => animarAurora(html, altura, largura, sentido, vidros.vidros).finished.then(() => tirarFaixa?.()))
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.

@@ -239,7 +239,7 @@ describe("o trilho de tema", () => {
 
     it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
         expect(CODIGO).toContain("nomearVidros(document)")
-        expect(CODIGO).toContain("animarAurora(html, altura, largura, vidros.vidros)")
+        expect(CODIGO).toContain("animarAurora(html, altura, largura, sentido, vidros.vidros)")
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
         const css = lerFonte("src/app/globals.css")
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")
@@ -248,16 +248,18 @@ describe("o trilho de tema", () => {
     it("a aurora: a faixa nasce no callback, depois do tema, e sai no finished", () => {
         const callback = CODIGO.indexOf("doc.startViewTransition(")
         const tema = CODIGO.indexOf("flushSync(() => setTheme(valor))", callback)
-        const faixa = CODIGO.indexOf("criarFaixa(document", callback)
+        const sentido = CODIGO.indexOf('sentido = html.classList.contains("dark") ? "desce" : "sobe"', callback)
+        const faixa = CODIGO.indexOf("criarFaixa(document, altura, sentido)", callback)
         const fimDoCallback = CODIGO.indexOf("transicao.ready", callback)
         expect(callback).toBeGreaterThan(-1)
         expect(tema).toBeGreaterThan(callback)
-        expect(faixa).toBeGreaterThan(tema)
+        expect(sentido).toBeGreaterThan(tema)
+        expect(faixa).toBeGreaterThan(sentido)
         expect(faixa).toBeLessThan(fimDoCallback)
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarFaixa\?\.\(\)/)
         // A faixa sai quando a animação dela acaba, 50ms antes da transição: tirada só no
         // `finished`, a faixa de verdade podia pintar um quadro no topo.
-        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, vidros\.vidros\)\.finished\.then\(\(\) => tirarFaixa\?\.\(\)\)/)
+        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros\)\.finished\.then\(\(\) => tirarFaixa\?\.\(\)\)/)
         expect(CODIGO).not.toContain("REVELACAO")
         expect(CODIGO).not.toContain("circle(")
         const css = lerFonte("src/app/globals.css")

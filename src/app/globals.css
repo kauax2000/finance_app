@@ -2387,7 +2387,8 @@
 }
 
 /* A aurora do `ThemeToggle`. A View Transitions API esmaece a foto velha para a nova
-   por padrão; aqui quem revela é a máscara ondulada animada no
+   por padrão; aqui quem revela é a máscara em onda (descendo no escuro, subindo no
+   claro) animada no
    `::view-transition-new(root)` (`lib/aurora-do-tema`), então o esmaecer sai (senão a
    página nova aparecia translúcida). Escopado por `.theme-reveal`, que o componente põe
    no `<html>` só enquanto a transição dura. A faixa recebe o nome de transição inline,
@@ -2405,31 +2406,39 @@
   animation: none;
 }
 
-/* A faixa da aurora: quatro paradas da marca (âmbar, magenta, violeta, azul), borradas,
-   com a ponta de baixo ondulada pelo raio. Exceção nomeada ao arco-íris sob texto: ela
-   passa por cima do texto por ~1s e não é lida. O volume mora em `AURORA.opacidade`,
-   nunca nas paradas. */
+/* A faixa da aurora: três paradas da marca pelo destino, borradas. O escuro cai de cima
+   com as frias (violeta, índigo, azul, `--aurora-1` a `--aurora-3` por padrão); o claro
+   sobe de baixo com as quentes (âmbar, coral, magenta, `data-sentido="sobe"`), e a faixa
+   vira no eixo Y para a última parada ficar na frente, colada à borda. Exceção nomeada ao
+   arco-íris sob texto: ela passa por cima do texto por ~1s e não é lida. O volume mora em
+   `AURORA.opacidade`, nunca nas paradas. */
 @utility theme-aurora {
   position: fixed;
   inset-inline: -10vw;
   top: 0;
   pointer-events: none;
   z-index: var(--z-toast);
+  --aurora-1: var(--brand-violet);
+  --aurora-2: var(--brand-indigo);
+  --aurora-3: var(--brand-blue);
+
+  &[data-sentido="sobe"] {
+    --aurora-1: var(--brand-amber);
+    --aurora-2: var(--brand-coral);
+    --aurora-3: var(--brand-magenta);
+  }
 
   &::before {
     content: "";
     position: absolute;
     inset: 0;
-    filter: blur(36px);
-    border-radius: 0 0 45% 55% / 0 0 22% 30%;
+    filter: blur(24px);
     background: linear-gradient(
       180deg,
       transparent 0%,
-      color-mix(in oklch, var(--brand-amber) 70%, transparent) 22%,
-      var(--brand-magenta) 44%,
-      var(--brand-magenta) 62%,
-      var(--brand-violet) 78%,
-      var(--brand-blue) 90%,
+      var(--aurora-1) 30%,
+      var(--aurora-2) 55%,
+      var(--aurora-3) 78%,
       transparent 100%
     );
 
@@ -2437,14 +2446,16 @@
       background: linear-gradient(
         180deg in oklch,
         transparent 0%,
-        color-mix(in oklch, var(--brand-amber) 70%, transparent) 22%,
-        var(--brand-magenta) 44%,
-        var(--brand-magenta) 62%,
-        var(--brand-violet) 78%,
-        var(--brand-blue) 90%,
+        var(--aurora-1) 30%,
+        var(--aurora-2) 55%,
+        var(--aurora-3) 78%,
         transparent 100%
       );
     }
+  }
+
+  &[data-sentido="sobe"]::before {
+    scale: 1 -1;
   }
 }
 

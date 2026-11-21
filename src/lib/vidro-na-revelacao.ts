@@ -4,11 +4,12 @@
  * nas duas fotos só com a tinta, e a página aparecia nítida atrás dela. Durante a troca, cada
  * vidro visível ganha um nome próprio: o borrão passa a ser desenhado no grupo dele, sobre a foto
  * da página, e a máscara da aurora passa pelas duas fotos dele como pela página: a nova na foto
- * nova, a invertida na velha, deslocadas pelo topo do vidro (`lib/aurora-do-tema`). O nome só
+ * nova (o lado do destino), a oposta na velha, deslocadas pela caixa do vidro, no mesmo sentido
+ * da página (`lib/aurora-do-tema`). O nome só
  * existe durante a troca: `view-transition-name` permanente tira o borrão (AGENTS.md).
  */
 
-import { AURORA, quadrosDaMascara } from "./aurora-do-tema"
+import { AURORA, quadrosDaMascara, type Sentido } from "./aurora-do-tema"
 
 export type Vidro = { el: HTMLElement; nome: string; rect: DOMRect }
 
@@ -78,12 +79,15 @@ export function nomearVidros(doc: Document) {
 }
 
 /** A aurora passando pelas fotos de cada vidro. Chame no `ready`, com a altura e a largura da tela lidas no toque. */
-export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number, largura: number) {
+export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number, largura: number, sentido: Sentido) {
     const tempo = { duration: AURORA.duracao, easing: "linear" }
     for (const { nome, rect } of vidros) {
-        const horizontal = { largura, esquerda: rect.left }
-        html.animate(quadrosDaMascara(altura, rect.top, false, horizontal), { ...tempo, pseudoElement: `::view-transition-new(${nome})` })
-        html.animate(quadrosDaMascara(altura, rect.top, true, horizontal), {
+        const caixa = { x: rect.left, y: rect.top }
+        html.animate(quadrosDaMascara(altura, largura, sentido, "novo", caixa), {
+            ...tempo,
+            pseudoElement: `::view-transition-new(${nome})`,
+        })
+        html.animate(quadrosDaMascara(altura, largura, sentido, "velho", caixa), {
             ...tempo,
             pseudoElement: `::view-transition-old(${nome})`,
         })
