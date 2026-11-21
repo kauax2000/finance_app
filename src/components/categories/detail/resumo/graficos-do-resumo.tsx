@@ -9,7 +9,6 @@ import { ItemContent, ItemMedia } from "@/components/ui/item"
 import {
     ChartAnnotation,
     ChartArea,
-    ChartBars,
     ChartDonut,
     ChartHeatStrip,
     ChartLine,
@@ -41,8 +40,6 @@ import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor
 import { reaisInteiros } from "../regua-do-mes-contas"
 import { diaDeMesPorExtenso, diaEMes, diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
 
-// A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
-const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
 // A segunda forma do mesmo tipo (dois cartões de crédito) sai a 60% da cor, a terceira em diante a 35%.
 const ESMAECER_A_REPETIDA = [100, 60, 35]
 
@@ -106,7 +103,7 @@ function CartaoDoGrafico({
     )
 }
 
-/** Os gráficos do mês: últimos meses e ritmo em cima; forma de pagamento, dias da semana e tamanho das compras no meio; mês a mês embaixo. Cada um some sem dado. */
+/** Os gráficos do mês: últimos meses e ritmo em cima; forma de pagamento, dias da semana e tamanho das compras embaixo. Cada um some sem dado. */
 export function GraficosDoResumo({
     tipo,
     cor,
@@ -121,7 +118,6 @@ export function GraficosDoResumo({
     cartoes,
     diasDaSemana,
     concentracao,
-    onAbrirMes,
 }: {
     tipo: TipoDaCategoria
     /** A cor guardada da categoria (`categories.color`); resolvida por `tileColorFor`. */
@@ -138,7 +134,6 @@ export function GraficosDoResumo({
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
     concentracao: ReturnType<typeof concentracaoDasCompras>
     /** Abre esta tela noutro mês (`YYYY-MM`): o toque numa barra do "Mês a mês". */
-    onAbrirMes: (yearMonth: string) => void
 }) {
     const despesa = tipo === "expense"
     // A série tem a cor que o ladrilho desenha, e não a parada crua da paleta.
@@ -154,8 +149,7 @@ export function GraficosDoResumo({
         const parcial = inicio > 0 && inicio === primeiro ? [meses[0].mes] : undefined
         return { meses, parcial }
     }, [serie])
-    const mesAberto = mesCurto(yearMonth)
-    // "Últimos 6 meses" mostra só a ponta da série (pedido do dono, 21/11/2026); o "Mês a mês" segue com todos.
+    // "Últimos 6 meses" mostra só a ponta da série (pedido do dono, 21/11/2026).
     const seisMeses = useMemo(() => meses.slice(-6), [meses])
     const seisComParcial = parcial != null && seisMeses[0]?.mes === parcial[0]
     const ultimo = meses.at(-1)
@@ -259,7 +253,7 @@ export function GraficosDoResumo({
             : { Icone: ArrowTrendingDownIcon, texto: `−${pct} ${desde}` }
     }, [seisMeses, aberto, seisComParcial])
     const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
-    // A dica dos dois gráficos de meses: o mês por extenso, contra a média e contra o mês anterior.
+    // A dica do gráfico de meses: o mês por extenso, contra a média e contra o mês anterior.
     const dicaDosMeses = {
         delta: true,
         tooltipReference: comMedia
@@ -585,9 +579,9 @@ export function GraficosDoResumo({
                                         <span>menores</span>
                                     </div>
                                 </div>
-                                {/* As maiores, as mesmas em destaque na fileira (até 3): o cartão diz o que foi a compra grande. */}
+                                {/* As maiores, as mesmas em destaque na fileira (até 2): o cartão diz o que foi a compra grande. */}
                                 <ul className="grid grid-cols-1 gap-2.5 border-t border-border pt-3">
-                                    {concentracao.compras.slice(0, Math.min(3, concentracao.n80)).map((c) => (
+                                    {concentracao.compras.slice(0, Math.min(2, concentracao.n80)).map((c) => (
                                         <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
                                             {/* Descrição e data são o mesmo dado em duas linhas: sem `gap`. */}
                                             <span className="min-w-0">
@@ -603,46 +597,6 @@ export function GraficosDoResumo({
                     ) : null}
                 </div>
                 </div>
-            ) : null}
-            {comMeses ? (
-                <Card className="min-w-0">
-                    <CardHeader>
-                        <div className="flex items-baseline gap-2">
-                            <CardTitle size="sm">Mês a mês</CardTitle>
-                            <Caption>{`desde ${meses[0].mes}`}</Caption>
-                        </div>
-                        <CardAction>
-                            <Caption>toque num mês para abrir</Caption>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
-                        <ChartBars
-                                    grid={false}
-                            config={CONFIG_DIAS}
-                            data={meses}
-                            x="mes"
-                            {...dicaDosMeses}
-                            selected={mesAberto}
-                            selectedColor={corDaSerie}
-                            valueLabels="selected"
-                            barMax={56}
-                            partial={parcial}
-                            yAxis={false}
-                            onSelect={(x) => {
-                                const alvo = x && x !== mesAberto ? meses.find((m) => m.mes === x) : null
-                                if (alvo) onAbrirMes(alvo.yearMonth)
-                            }}
-                            aspect="auto"
-                            className="h-44 w-full"
-                            label={`${oQue} em ${nomeDaCategoria} por mês; escolha um mês para abri-lo`}
-                            description={`O mês aberto em destaque.${comMedia ? ` A linha tracejada é a média, ${currencyBRL(media)}.` : ""}`}
-                        >
-                            {comMedia ? (
-                                <ChartReferenceLine y={media} tone="average" ifOverflow="extendDomain" label={legendaDaMedia} />
-                            ) : null}
-                        </ChartBars>
-                    </CardContent>
-                </Card>
             ) : null}
         </div>
     )

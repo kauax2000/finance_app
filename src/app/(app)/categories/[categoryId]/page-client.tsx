@@ -681,7 +681,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                                 repetidas={analise.repetidas}
                                 insights={analise.insights}
                                 onDefinirLimite={openLimitDialog}
-                                onAbrirMes={handleMonthChange}
                             />
                         </>
                     ) : null
