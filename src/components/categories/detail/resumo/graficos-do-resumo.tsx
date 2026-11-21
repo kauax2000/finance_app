@@ -108,8 +108,11 @@ export function GraficosDoResumo({
         return { meses, parcial }
     }, [serie])
     const mesAberto = mesCurto(yearMonth)
+    // "Últimos 6 meses" mostra só a ponta da série (pedido do dono, 21/11/2026); o "Mês a mês" segue com todos.
+    const seisMeses = useMemo(() => meses.slice(-6), [meses])
+    const seisComParcial = parcial != null && seisMeses[0]?.mes === parcial[0]
     const ultimo = meses.at(-1)
-    const maior = meses.length >= 2 ? meses.reduce((a, b) => (b.total > a.total ? b : a)) : null
+    const maior = seisMeses.length >= 2 ? seisMeses.reduce((a, b) => (b.total > a.total ? b : a)) : null
     const marcaDoMaior = maior && maior.total > 0 && maior.yearMonth !== yearMonth ? maior : null
     const configMeses = useMemo(
         () => ({ total: { label: nomeDaCategoria, color: corDaSerie } }) satisfies ChartConfig,
@@ -139,7 +142,7 @@ export function GraficosDoResumo({
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
     const tendencia = useMemo(() => {
-        const t = tendenciaDosMeses(meses, { aberto, primeiroPelaMetade: parcial != null })
+        const t = tendenciaDosMeses(seisMeses, { aberto, primeiroPelaMetade: seisComParcial })
         if (!t) return null
         const desde = `desde ${mesCurto(t.desde)}`
         // Dentro de ±2% a categoria está parada: a mesma faixa do selo da média.
@@ -148,7 +151,7 @@ export function GraficosDoResumo({
         return t.variacao > 0
             ? { Icone: ArrowTrendingUpIcon, texto: `+${pct} ${desde}` }
             : { Icone: ArrowTrendingDownIcon, texto: `−${pct} ${desde}` }
-    }, [meses, aberto, parcial])
+    }, [seisMeses, aberto, seisComParcial])
     const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
     // A dica dos dois gráficos de meses: o mês por extenso, contra a média e contra o mês anterior.
     const dicaDosMeses = {
@@ -173,7 +176,7 @@ export function GraficosDoResumo({
                             {/* Sem o valor do mês: ele já está no topo da página (pedido do dono, 21/11/2026). */}
                             <CardHeader>
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <CardTitle size="sm">Últimos meses</CardTitle>
+                                    <CardTitle size="sm">Últimos 6 meses</CardTitle>
                                     {selo ? (
                                         <Badge tone={selo.tom}>
                                             {mesCurto(yearMonth)} {selo.texto}
@@ -197,12 +200,12 @@ export function GraficosDoResumo({
                                     marker="last"
                                     yAxis={false}
                                     config={configMeses}
-                                    data={meses}
+                                    data={seisMeses}
                                     x="mes"
                                     {...dicaDosMeses}
                                     aspect="auto"
                                     className="h-44 w-full"
-                                    label={`${oQue} em ${nomeDaCategoria} mês a mês, até 12 meses`}
+                                    label={`${oQue} em ${nomeDaCategoria} nos últimos 6 meses`}
                                     description={
                                         comMedia
                                             ? `O último ponto é o mês aberto. A linha tracejada é a média, ${currencyBRL(media)}.`
