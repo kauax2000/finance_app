@@ -355,6 +355,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             attribute="class"
             defaultTheme="system"
             enableSystem
+            // Chave nova (21/11/2026): a antiga "theme" guardava um "light" fixo em aparelhos
+            // que deviam seguir o sistema; com ela, todo aparelho volta a "Sistema" uma vez.
+            storageKey="tema"
             disableTransitionOnChange
         >
             <AuthContext.Provider value={authValue}>
