@@ -159,6 +159,8 @@ const DRAWN_SVG_FILES = [
   "components/ui/qr-code",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
   "designsystem/docs/motion",
+  // A máscara da aurora do tema: um SVG em data URI que recorta a revelação, não um ícone.
+  "lib/aurora-do-tema",
 ]
 
 /**

@@ -40,8 +40,8 @@ export default function ThemeToggleDoc() {
       </DocSection>
 
       <DocSection
-        title="A revelação circular"
-        description="A troca abre num círculo que parte da parada tocada e cobre a tela (View Transitions API): a página velha fica por cima, a nova se revela por baixo, e a peça continua viajando dentro do círculo. É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
+        title="A aurora"
+        description="A troca abre uma aurora: uma cortina borrada que desce do topo da tela em cerca de 1,1s, nas cores âmbar, magenta, violeta e azul da marca, e revela a página nova por baixo (View Transitions API). É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
         code={`<ThemeToggle />
 <ThemeToggle reveal={false} />`}
         previewClassName="items-end gap-6"
@@ -93,7 +93,7 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Quem desloca é a WAAPI, e o movimento reduzido é perguntado à mão">
-        O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>transition: none !important</code> durante a troca. Uma transição de CSS morreria ali; a Web Animations API não é transição e escapa. O repouso é o estilo, e a animação (com <code>fill: &quot;none&quot;</code>) só cobre o trajeto. O preço é que o bloco global de movimento reduzido também não a alcança, e o componente pergunta à mão — como pergunta antes da revelação circular. E a primeira pintura não anima: sem essa guarda, a peça entraria deslizando toda vez que nasce.
+        O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>transition: none !important</code> durante a troca. Uma transição de CSS morreria ali; a Web Animations API não é transição e escapa. O repouso é o estilo, e a animação (com <code>fill: &quot;none&quot;</code>) só cobre o trajeto. O preço é que o bloco global de movimento reduzido também não a alcança, e o componente pergunta à mão — como pergunta antes da aurora. E a primeira pintura não anima: sem essa guarda, a peça entraria deslizando toda vez que nasce.
       </DocNote>
 
       <DocNote title="A bandeja é sobreposição, e não tinta chapada">
@@ -109,14 +109,14 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Dois, no degrau <code>lg</code> e com a revelação circular: a seção Aparência de Configurações (<code>ThemeSettings</code>), com rótulos, do <code>md</code> para cima; e o grupo da página Você (<code>NesteCelularGrupo</code>), só com ícones, no telefone. O menu da conta do desktop teve o seu até 1º de novembro de 2026. O catálogo usa mais dois no cabeçalho.
+        Dois, no degrau <code>lg</code> e com a aurora: a seção Aparência de Configurações (<code>ThemeSettings</code>), com rótulos, do <code>md</code> para cima; e o grupo da página Você (<code>NesteCelularGrupo</code>), só com ícones, no telefone. O menu da conta do desktop teve o seu até 1º de novembro de 2026. O catálogo usa mais dois no cabeçalho.
       </DocNote>
 
       <PropsTable
         rows={[
           { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "A altura: 28, 32 e 36. O alvo de toque é 44 nos três." },
           { prop: "labels", type: "boolean", default: "false", description: "Ícone e texto em cada parada." },
-          { prop: "reveal", type: "boolean", default: "true", description: "A troca abre num círculo a partir da parada tocada." },
+          { prop: "reveal", type: "boolean", default: "true", description: "Liga a aurora: a troca desce do topo da tela. Com false, ou com movimento reduzido, troca na hora." },
           { prop: "variant", type: '"default" | "brand"', default: '"default"', description: "brand é o brilho de arco-íris na borda do trilho. Uma por tela." },
           { prop: "className", type: "string", description: "Para o trilho — e para o Skeleton que ocupa o lugar dele antes de montar." },
         ]}

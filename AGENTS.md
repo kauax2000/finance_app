@@ -438,7 +438,8 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
-  mede de 8,7 a 12,5:1 sobre as paradas puras).
+  mede de 8,7 a 12,5:1 sobre as paradas puras) e a aurora da troca de tema
+  (passa por cima do texto por ~1s e não é lida; volume em `AURORA.opacidade`).
 - **As famílias de peça de marca**:
   - **Brilho** (`Alert`, `Card`, `Button brand`, `Badge`, `Checkbox`,
     `Radio`, `RadioGroupItem brandCard`, `Switch`, `ThemeToggle`,
@@ -927,10 +928,11 @@ declaração de `background-color` no trilho).
   único controle de tema: não escreva outro com `setTheme`. `size`: `sm` 28,
   **`md` 32**, `lg` 36 (trilho = 4 + 3 paradas, alvo de 44 nos três). `labels`
   (ícone e texto, paradas de largura igual), `variant="brand"` (o brilho no
-  trilho) e `reveal` (**ligado por padrão**: a troca abre num círculo a partir
-  da parada tocada, pela View Transitions API com `flushSync`; o CSS é escopado
-  por `.theme-reveal` no `<html>`; sem API ou com movimento reduzido, troca na
-  hora). O app roda com `enableSystem` e `defaultTheme="system"`.
+  trilho) e `reveal` (**ligado por padrão**: a troca abre a aurora
+  (`lib/aurora-do-tema`): a cortina borrada de âmbar, magenta, violeta e azul
+  desce do topo em 1,1s pela View Transitions API com `flushSync`; a faixa ganha
+  `view-transition-name` só durante a troca; sem API ou com movimento reduzido,
+  troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela
   esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta
   sem fim conhecido. O `Spinner` é uma **roda desenhada**, não o

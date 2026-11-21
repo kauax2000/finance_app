@@ -29426,3 +29426,21 @@ fantasma de 32px e a tabela transbordava a moldura (974 → 1006px), com a colun
 aparecendo na quina. Agora a coluna declara `meta.desktop: false`: o `DataTable` põe o
 `hidden` na cabeça e na célula e a tira de `nColunas`. Transações e a conferência do Importar
 trocaram as classes pela prop.
+
+### Rodada 410 — a troca de tema vira a aurora
+
+Pedido do dono (21/11/2026), a partir de uma gravação de tela de 09/11/2026: a troca de tema
+devia descer do topo como uma aurora, e não abrir num círculo. O protótipo teve três opções: A
+(a aurora do vídeo), B (uma sóbria) e C (o círculo atual). O dono escolheu A, com a paleta
+"Curta" (`--brand-amber`, `--brand-magenta`, `--brand-violet`, `--brand-blue`).
+
+- `lib/aurora-do-tema` (`AURORA`: 1100ms, varredura 0,6, faixa 0,75, opacidade 0,9) pinta a
+  cortina numa faixa `.theme-aurora` com `view-transition-name: theme-aurora` só durante a
+  troca, e a página nova se revela por uma máscara SVG que desce do topo. Movimento reduzido,
+  `reveal={false}` e navegador sem a API trocam na hora.
+- Correção de geometria: o protótipo deixava os 10% de cima fora da máscara no fim da
+  varredura. A máscara agora tem `viewBox` de 240 e altura de 2,4 vezes a da janela, e cobre o
+  topo inteiro no último quadro.
+- No WebKit o vidro (`backdrop-filter`) ganha a mesma máscara, na largura da janela
+  (`revelarVidros`), para o borrão não aparecer fora da cortina.
+- Saíram o círculo, o `recorteDeFora` e a constante `REVELACAO`.
