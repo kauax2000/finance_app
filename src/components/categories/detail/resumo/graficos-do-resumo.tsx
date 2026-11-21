@@ -270,9 +270,9 @@ export function GraficosDoResumo({
     return (
         <div className="grid gap-3">
             {comMeses || comRitmo ? (
-                // Pela largura da seção, como a trinca de baixo: com a barra lateral aberta, a 768px os dois gráficos ficavam com ~250px e o cabeçalho quebrava em três linhas.
+                // Pela largura da seção, no mesmo degrau da trinca de baixo (@5xl): enquanto a trinca está em duas colunas, com o terceiro cartão na linha inteira, os dois de cima também ocupam a linha inteira, para não ficarem menores que ele.
                 <div className="@container/par">
-                <div className="grid gap-3 @3xl/par:grid-cols-2">
+                <div className="grid gap-3 @5xl/par:grid-cols-2">
                     {comMeses ? (
                         <Card className="min-w-0">
                             {/* Sem o valor do mês: ele já está no topo da página (pedido do dono, 21/11/2026). */}
