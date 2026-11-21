@@ -573,4 +573,9 @@ describe("Chart: a dica enxuta de uma série, com a comparação (21/11/2026)", 
     expect(CODIGO.match(/labelText=\{tooltipLabel\}/g)?.length).toBe(3)
     expect(CODIGO.match(/position=\{chaves\.length === 1 \? \{ y: 0 \} : undefined\}/g)?.length).toBe(2)
   })
+  it("a variação que arredonda a zero não leva sinal, e a referência inválida não entra", () => {
+    const fonte = lerFonte("src/components/ui/chart.tsx")
+    expect(fonte).toContain("=== 0) return texto")
+    expect(fonte).toContain("reference && Number.isFinite(reference.value) && reference.value !== 0")
+  })
 })

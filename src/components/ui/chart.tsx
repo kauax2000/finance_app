@@ -574,7 +574,7 @@ function ChartTooltipContent({
     const valor = item.value
     const partes: React.ReactNode[] = []
     if (typeof valor === "number") {
-      if (reference && reference.value !== 0) {
+      if (reference && Number.isFinite(reference.value) && reference.value !== 0) {
         const v = (valor - reference.value) / Math.abs(reference.value)
         partes.push(
           <span key="ref">
@@ -753,8 +753,10 @@ function variacaoContraAnterior(
 
 /** "+21%" e "−10%": o sinal escrito; inteiro, como o selo "vs média" (`casas` 1 é o `percent` do gráfico). */
 function textoDaVariacao(v: number, casas = 0): string {
-  const sinal = v > 0 ? "+" : v < 0 ? "−" : ""
-  return `${sinal}${percentBR(Math.abs(v), { maximumFractionDigits: casas })}`
+  const texto = percentBR(Math.abs(v), { maximumFractionDigits: casas })
+  // O que arredonda a zero não leva sinal: "+0%" dizia que subiu.
+  if (Number(texto.replace(/[^\d,]/g, "").replace(",", ".")) === 0) return texto
+  return `${v > 0 ? "+" : v < 0 ? "−" : ""}${texto}`
 }
 
 /** O veredito contra a referência: pior em `warning`, melhor em `success`; sem `better`, neutro. As tintas `-muted-foreground` têm contraste sobre a placa nos dois temas. */
