@@ -1280,14 +1280,15 @@ const config = {
         title="O ritmo do mês"
         description={
           <>
-            Cinco peças sobre o <code>ChartLine</code>. <code>band</code> é a faixa entre as duas linhas (pares <code>[baixo, alto]</code>, a 14%), <code>ghost</code> é o previsto tracejado a 60%, e as duas ficam fora da dica e da legenda. <code>xTicks</code> escolhe os dias do eixo. <code>ChartAnnotation labelPosition=&quot;bottom&quot;</code> escreve o hoje no pé, e <code>ChartReferenceDot</code> ganha <code>labelPosition</code>, <code>labelAlign</code> e <code>hollow</code> (cheio, com o anel da superfície, no ponto de hoje) e <code>labelTone=&quot;series&quot;</code> (o rótulo na cor do ponto, no previsto). Os valores ficam nas pontas, sem legenda; a dica de duas séries lista só as do <code>config</code>.
+            Cinco peças sobre o <code>ChartLine</code>. <code>band</code> é a faixa entre as duas linhas (pares <code>[baixo, alto]</code>, a 14%), <code>ghost</code> é o previsto tracejado a 60%, e as duas ficam fora da dica e da legenda. <code>xTicks</code> escolhe os dias do eixo. <code>ChartAnnotation labelPosition=&quot;bottom&quot;</code> escreve o hoje no pé, e <code>ChartReferenceDot</code> ganha <code>labelPosition</code>, <code>labelAlign</code> e <code>hollow</code> (cheio, com o anel da superfície, no ponto de hoje) e <code>labelTone=&quot;series&quot;</code> (o rótulo na cor do ponto, no previsto). Os valores ficam nas pontas, sem legenda; a dica de duas séries lista só as do <code>config</code>, com o respiro da enxuta e a amostra em traço (cheio, tracejado na série <code>dashed</code>). <code>tooltipDifference=&#123;&#123; better: &quot;lower&quot; &#125;&#125;</code> soma o rodapé &quot;diferença&quot; (a primeira menos a segunda, no tom do veredito) e prende a dica no topo; depois de hoje, a linha de novembro vira o previsto do <code>ghost</code> (pontilhado, a 75%). Passe o cursor num dia depois do 21.
           </>
         }
         code={`<ChartLine
   config={{ atual: { … }, anterior: { …, dashed: true } }}
   x="dia"
   band={{ dataKey: "veu", color: "var(--color-success)" }}
-  ghost={{ dataKey: "previsto", color: cor }}
+  ghost={{ dataKey: "previsto", color: cor, label: "previsto" }}
+  tooltipDifference={{ better: "lower" }}
   xTicks={[1, 8, 15, 22, 30]}
   legend={false} grid={false} yAxis={false}
   …
@@ -1304,7 +1305,8 @@ const config = {
           data={RITMO}
           x="dia"
           band={{ dataKey: "veu", color: "var(--color-success)" }}
-          ghost={{ dataKey: "previsto", color: TILE_EXPENSE_DEFAULT }}
+          ghost={{ dataKey: "previsto", color: TILE_EXPENSE_DEFAULT, label: "previsto" }}
+          tooltipDifference={{ better: "lower" }}
           xTicks={[1, 8, 15, 22, 30]}
           legend={false}
           grid={false}

@@ -572,7 +572,8 @@ describe("Chart: a dica enxuta de uma série, com a comparação (21/11/2026)", 
     expect(CODIGO.match(/variant=\{chaves\.length === 1 \? "single" : "default"\}/g)?.length).toBe(3)
     expect(CODIGO.match(/reference=\{tooltipReference\}/g)?.length).toBe(3)
     expect(CODIGO.match(/labelText=\{tooltipLabel\}/g)?.length).toBe(3)
-    expect(CODIGO.match(/position=\{chaves\.length === 1 \? \{ y: 0 \} : undefined\}/g)?.length).toBe(2)
+    expect(CODIGO.match(/position=\{chaves\.length === 1 \? \{ y: 0 \} : undefined\}/g)?.length).toBe(1)
+    expect(CODIGO).toContain("position={chaves.length === 1 || tooltipDifference ? { y: 0 } : undefined}")
   })
   it("a variação que arredonda a zero não leva sinal, e a referência inválida não entra", () => {
     const fonte = lerFonte("src/components/ui/chart.tsx")
@@ -605,7 +606,7 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
   })
   it("ghost é a linha tracejada 3 4 a 60%, fora da dica e da legenda", () => {
     const t = trechoDe("ChartLine")
-    expect(t).toContain("ghost?: { dataKey: string; color: string }")
+    expect(t).toContain("ghost?: { dataKey: string; color: string; label?: string }")
     expect(f).toContain('const CHART_GHOST_DASH = "3 4"')
     const ini = t.indexOf("dataKey={ghost.dataKey}")
     const linha = t.slice(ini, t.indexOf("/>", ini))
@@ -700,6 +701,67 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
     expect(doc).toContain("xTicks={")
     expect(doc).toContain('labelPosition="bottom"')
     expect(doc).toContain("hollow={false}")
+  })
+  describe("a dica de várias séries: respiro, traço, diferença e previsto (21/11/2026)", () => {
+    const config = { atual: { label: "novembro" }, anterior: { label: "outubro", dashed: true } }
+    const dica = (atual: number | null, anterior: number, props: Record<string, unknown> = {}) => {
+      const linha = { dia: 17, atual, anterior, previsto: 2150 }
+      return renderToStaticMarkup(
+        h(ChartContainer, {
+          config,
+          children: h("svg"),
+          overlay: h(ChartTooltipContent, {
+            active: true,
+            format: "currency",
+            label: 17,
+            indicator: "stroke",
+            payload: [
+              { dataKey: "atual", name: "atual", value: atual, payload: linha },
+              { dataKey: "anterior", name: "anterior", value: anterior, payload: linha },
+            ],
+            ...props,
+          }),
+        })
+      )
+    }
+    it("a dica padrão tem o respiro da enxuta", () => {
+      expect(dica(2098.6, 948.3)).toMatch(/data-slot="chart-tooltip-content"[^>]*class="[^"]*gap-2 px-3\.5 py-2\.5/)
+    })
+    it("a amostra stroke é um traço, tracejado 4 3 na série dashed", () => {
+      const html = dica(2098.6, 948.3)
+      expect(html.match(/data-indicator="stroke"/g)?.length).toBe(2)
+      expect(html).toContain('data-dash="4 3"')
+    })
+    it("o rodapé diz a diferença com sinal, no tom do veredito", () => {
+      const html = dica(2098.6, 948.3, { difference: { better: "lower" } })
+      const rodape = html.slice(html.indexOf('data-slot="chart-tooltip-difference"'))
+      expect(rodape).toContain("diferença")
+      expect(rodape).toMatch(/\+R\$\s1\.150,30/)
+      expect(rodape).toContain("text-warning-muted-foreground")
+      expect(dica(948.3, 2098.6, { difference: { better: "lower" } })).toContain("text-success-muted-foreground")
+      expect(dica(500, 500, { difference: {} })).toContain(">igual<")
+    })
+    it("sem diferença pedida, ou com os dois valores zero, não há rodapé", () => {
+      expect(dica(2098.6, 948.3)).not.toContain("chart-tooltip-difference")
+      expect(dica(0, 0, { difference: { better: "lower" } })).not.toContain("chart-tooltip-difference")
+    })
+    it("com a primeira série vazia, o ghost vira a linha previsto e a diferença sai dele", () => {
+      const html = dica(null, 1020, { difference: { better: "lower" }, ghost: { dataKey: "previsto" } })
+      expect(html).toContain(">previsto<")
+      expect(html).toMatch(/R\$\s2\.150,00/)
+      expect(html).toContain('data-dash="2 3"')
+      expect(html).toContain("opacity-75")
+      expect(html).not.toContain(">novembro<")
+      expect(html).toMatch(/\+R\$\s1\.130,00/)
+    })
+    it("o ChartLine liga o traço, o previsto e a diferença", () => {
+      const t = trechoDe("ChartLine")
+      expect(t).toContain("tooltipDifference?: { better?: \"lower\" | \"higher\"; label?: string }")
+      expect(t).toContain("ghost?: { dataKey: string; color: string; label?: string }")
+      expect(t).toContain('indicator={chaves.length > 1 ? "stroke" : "dot"}')
+      expect(t).toContain("difference={tooltipDifference}")
+      expect(t).toContain("filterNull={!ghost}")
+    })
   })
   describe("a rosca com detalhe na legenda e forma arredondada", () => {
     const base = {

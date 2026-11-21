@@ -457,7 +457,8 @@ const ChartTooltip = Tooltip
 type TooltipPayloadItem = {
   dataKey?: string | number
   name?: string | number
-  value?: string | number
+  /** `null` chega com `filterNull={false}` (o `ChartLine` com `ghost`). */
+  value?: string | number | null
   color?: string
   payload?: Record<string, unknown>
 }
@@ -485,6 +486,8 @@ function ChartTooltipContent({
   variant = "default",
   reference,
   labelText,
+  difference,
+  ghost,
 }: React.ComponentProps<"div"> & {
   active?: boolean
   payload?: TooltipPayloadItem[]
@@ -504,8 +507,8 @@ function ChartTooltipContent({
   color?: string
   hideLabel?: boolean
   hideIndicator?: boolean
-  /** A forma do marcador de série. Já existia e nunca tinha sido documentada. */
-  indicator?: "line" | "dot" | "dashed"
+  /** A forma do marcador de série. `stroke` é o traço de 14px na cor da série, tracejado quando o `config` a marca `dashed` (o `ChartLine` com duas séries ou mais). */
+  indicator?: "line" | "dot" | "dashed" | "stroke"
   /** Como o valor é escrito; o padrão é `number`, e as formas curtas passam `currency`. */
   format?: ChartFormat
   /** O cabeçalho do tooltip, quando ele carrega uma data em vez de um rótulo. */
@@ -525,6 +528,10 @@ function ChartTooltipContent({
   reference?: ChartTooltipReference
   /** O texto do rótulo do ponto, no cabeçalho (com a inicial maiúscula) e no anterior do `delta` ("set" vira "Setembro" e "ago" vira "agosto"). */
   labelText?: (label: unknown) => string
+  /** O rodapé "diferença": a primeira série menos a segunda no ponto, em moeda com sinal, no tom de `better`. Sem os dois números (ou com os dois zero), não aparece. */
+  difference?: ChartTooltipDifference
+  /** O previsto: no ponto em que a primeira série é vazia e `payload[ghost.dataKey]` é número, a linha dela vira "previsto" (traço pontilhado, valor a 75%). */
+  ghost?: { dataKey: string; label?: string }
 }) {
   const { config } = useChart()
   const single = variant === "single"
@@ -548,8 +555,8 @@ function ChartTooltipContent({
         ? (config[label]?.label ?? label)
         : itemConfig?.label
 
-    // Na dica enxuta o rótulo é miúdo e cinza: quem pesa é o valor embaixo.
-    const tom = single ? "text-muted-foreground" : "font-medium"
+    // Na dica enxuta (e na de diferença) o rótulo é miúdo e cinza: quem pesa é o valor.
+    const tom = single || difference ? "text-muted-foreground" : "font-medium"
     if (labelFormatter) {
       return (
         <div className={cn(tom, labelClassName)}>
@@ -570,6 +577,7 @@ function ChartTooltipContent({
     labelFormatter,
     labelText,
     single,
+    difference,
     payload,
     hideLabel,
     labelClassName,
@@ -624,7 +632,17 @@ function ChartTooltipContent({
     )
   }
 
-  const nestLabel = payload.length === 1 && indicator !== "dot"
+  const nestLabel = payload.length === 1 && indicator !== "dot" && indicator !== "stroke"
+  // O previsto ocupa o lugar da primeira série quando ela ainda não tem valor no ponto.
+  const valorDoGhost = ghost ? payload[0]?.payload?.[ghost.dataKey] : undefined
+  const previsto = payload[0]?.value == null && typeof valorDoGhost === "number" ? valorDoGhost : null
+  const valorDe = (item: TooltipPayloadItem, index: number) =>
+    index === 0 && previsto !== null ? previsto : item.value
+  const [primeiro, segundo] = [valorDe(payload[0], 0), payload[1] ? valorDe(payload[1], 1) : undefined]
+  const diferenca =
+    difference && typeof primeiro === "number" && typeof segundo === "number" && (primeiro !== 0 || segundo !== 0)
+      ? primeiro - segundo
+      : null
   const soma = total
     ? payload.reduce(
         (acc, item) => acc + (typeof item.value === "number" ? item.value : 0),
@@ -637,24 +655,29 @@ function ChartTooltipContent({
       data-slot="chart-tooltip-content"
       className={cn(
         // A placa flutuante da casa, a mesma do `Tooltip`, do `Popover` e dos menus.
-        "grid min-w-32 items-start gap-1.5 px-2.5 py-1.5 text-xs",
+        "grid min-w-32 items-start gap-2 px-3.5 py-2.5 text-xs",
         menuPanelSurfaceClassName,
         className
       )}
     >
       {!nestLabel ? tooltipLabel : null}
-      <div className="grid gap-1.5">
+      <div className="grid gap-2">
         {payload.map((item, index) => {
           const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
           const indicatorColor = color ?? item.payload?.fill ?? item.color
+          const ehPrevisto = index === 0 && previsto !== null
+          const valor = valorDe(item, index)
+          // Sem valor e sem previsto no lugar, a linha não tem o que dizer.
+          if (valor == null) return null
+          const traco = ehPrevisto ? "2 3" : itemConfig?.dashed ? "4 3" : undefined
 
           return (
             <div
               key={item.dataKey ?? index}
               className={cn(
                 "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
-                indicator === "dot" && "items-center"
+                (indicator === "dot" || indicator === "stroke") && "items-center"
               )}
             >
               {formatter && item?.value !== undefined && item.name ? (
@@ -664,7 +687,22 @@ function ChartTooltipContent({
                   {itemConfig?.icon ? (
                     <itemConfig.icon />
                   ) : (
-                    !hideIndicator && (
+                    !hideIndicator &&
+                    (indicator === "stroke" ? (
+                      <span
+                        aria-hidden="true"
+                        data-indicator="stroke"
+                        data-dash={traco}
+                        // O traço igual ao do gráfico: cheio, tracejado (a referência) ou pontilhado (o previsto).
+                        className={cn("h-0.5 w-3.5 shrink-0 rounded-full", !traco && "bg-(--indicator-bg)")}
+                        style={
+                          {
+                            "--indicator-bg": indicatorColor,
+                            backgroundImage: traco ? tracoDaAmostra(traco) : undefined,
+                          } as React.CSSProperties
+                        }
+                      />
+                    ) : (
                       <div
                         className={cn(
                           "shrink-0 rounded-xs border-(--indicator-border) bg-(--indicator-bg)",
@@ -686,7 +724,7 @@ function ChartTooltipContent({
                           } as React.CSSProperties
                         }
                       />
-                    )
+                    ))
                   )}
                   <div
                     className={cn(
@@ -699,13 +737,20 @@ function ChartTooltipContent({
                       {/* O texto veste token de texto, nunca a cor da série:
                           quem carrega a identidade é o marcador ao lado. */}
                       <span className="text-muted-foreground">
-                        {itemConfig?.label ?? item.name}
+                        {ehPrevisto ? (ghost?.label ?? "previsto") : (itemConfig?.label ?? item.name)}
                       </span>
                     </div>
-                    {item.value !== undefined ? (
+                    {valor !== undefined ? (
                       <span className="flex items-baseline gap-1.5">
-                        <span className="nums font-mono font-medium text-foreground">
-                          {formatChartValue(item.value, format)}
+                        {/* A primeira série é a que se lê; as outras são a referência, em cinza. */}
+                        <span
+                          className={cn(
+                            "nums font-mono font-medium",
+                            index === 0 ? "text-foreground" : "text-muted-foreground",
+                            ehPrevisto && "opacity-75"
+                          )}
+                        >
+                          {formatChartValue(valor, format)}
                         </span>
                         {share && typeof item.value === "number" ? (
                           <span className="nums font-mono text-muted-foreground">
@@ -715,7 +760,7 @@ function ChartTooltipContent({
                       </span>
                     ) : null}
                   </div>
-                  {delta && typeof item.value === "number" ? (
+                  {delta && typeof item.value === "number" && !ehPrevisto ? (
                     <ChartTooltipDelta
                       delta={delta}
                       row={item.payload}
@@ -737,10 +782,30 @@ function ChartTooltipContent({
             </span>
           </div>
         ) : null}
+        {diferenca !== null ? (
+          <div
+            data-slot="chart-tooltip-difference"
+            className="flex items-center justify-between gap-3 border-t border-border/60 pt-2 leading-none"
+          >
+            <span className="text-muted-foreground">{difference?.label ?? "diferença"}</span>
+            <span className={cn("nums font-mono font-medium", diferenca === 0 ? "text-foreground" : tomDaReferencia(diferenca, difference?.better))}>
+              {diferenca === 0 ? "igual" : currencyBRL(diferenca, { signed: true })}
+            </span>
+          </div>
+        ) : null}
       </div>
     </div>
   )
 }
+
+/** O tracejado da amostra `stroke` ("4 3": 4px de traço, 3 de vão), pintado como fundo na cor da série. */
+function tracoDaAmostra(traco: string): string {
+  const [ligado, vao] = traco.split(" ").map(Number)
+  return `repeating-linear-gradient(to right, var(--indicator-bg) 0 ${ligado}px, transparent ${ligado}px ${ligado + vao}px)`
+}
+
+/** O rodapé da dica de várias séries: o que é melhor (gastar menos é `lower`) e o rótulo ("diferença"). */
+type ChartTooltipDifference = { better?: "lower" | "higher"; label?: string }
 
 /** A referência da dica enxuta: o valor, o nome ("média") e o que é melhor (gastar menos é `lower`). */
 type ChartTooltipReference = { value: number; label: string; better?: "lower" | "higher" }
@@ -1608,14 +1673,17 @@ function ChartLine({
   xTicks,
   band,
   ghost,
+  tooltipDifference,
   children,
 }: ChartFormProps & {
   /** Os valores do eixo X que aparecem (os dias 1, 8, 15, 22 e o último); sem ele, o Recharts escolhe. */
   xTicks?: (string | number)[]
   /** A faixa entre duas séries: `dataKey` aponta, em cada ponto, para o par `[baixo, alto]` (ou `null`, que não pinta). Atrás das linhas, na `color` a 14%, sem traço nem ponto, fora da dica e da legenda. */
   band?: { dataKey: string; color: string }
-  /** A linha prevista: tracejada miúda a 60% na `color`, fora da dica e da legenda. Pontos `null` não desenham. */
-  ghost?: { dataKey: string; color: string }
+  /** A linha prevista: tracejada miúda a 60% na `color`, fora da legenda. Pontos `null` não desenham. Na dica, ocupa o lugar da primeira série onde ela é vazia, com o nome `label` ("previsto"). */
+  ghost?: { dataKey: string; color: string; label?: string }
+  /** O rodapé "diferença" da dica (a primeira série menos a segunda, no tom de `better`); com ele, a dica fica presa no topo e não cobre as linhas. */
+  tooltipDifference?: { better?: "lower" | "higher"; label?: string }
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
   /** A dica enxuta (uma série só) compara o ponto com esta referência: "+21% vs média". */
@@ -1667,14 +1735,19 @@ function ChartLine({
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
-              position={chaves.length === 1 ? { y: 0 } : undefined}
+              position={chaves.length === 1 || tooltipDifference ? { y: 0 } : undefined}
+              // O ponto em que a primeira série é vazia segue na dica, para o previsto entrar no lugar dela.
+              filterNull={!ghost}
               content={
                 <ChartTooltipContent
                   format={format}
                   delta={delta ? { data, x, xFormat } : undefined}
                   variant={chaves.length === 1 ? "single" : "default"}
+                  indicator={chaves.length > 1 ? "stroke" : "dot"}
                   reference={tooltipReference}
                   labelText={tooltipLabel}
+                  difference={tooltipDifference}
+                  ghost={ghost ? { dataKey: ghost.dataKey, label: ghost.label } : undefined}
                 />
               }
             />
