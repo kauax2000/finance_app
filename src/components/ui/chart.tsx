@@ -3289,8 +3289,8 @@ function ChartHeatStrip({
                   data-slot="chart-heat-strip-cell"
                   data-value={v}
                   className={cn(
-                    // Degrau pequeno (8px): no cartão estreito a célula desce a ~18px, e o `rounded-row` a deixava redonda.
-                    "aspect-square w-full rounded-lg",
+                    // Degrau pequeno (8px): no cartão estreito a célula desce a ~18px, e o `rounded-row` a deixava redonda. Teto de 48px: num cartão largo (uma coluna só) os quadrados viravam blocos de 64px+.
+                    "aspect-square w-full max-w-12 rounded-lg",
                     chartHeatCellClassName,
                     pct === 0 && "border border-dashed border-border",
                     ativo === i && "ring-2 ring-foreground/60"

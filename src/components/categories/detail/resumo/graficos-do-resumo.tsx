@@ -39,7 +39,7 @@ import { paymentMethodIcon } from "@/lib/payment-method-icon"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
-import { diaDeMesPorExtenso, diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
+import { diaDeMesPorExtenso, diaEMes, diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
 const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
@@ -80,9 +80,19 @@ function seloDoRitmo(diferenca: number | null, anteriorHoje: number, mesAnterior
     }
 }
 
-function CartaoDoGrafico({ titulo, apoio, children }: { titulo: string; apoio?: React.ReactNode; children: React.ReactNode }) {
+function CartaoDoGrafico({
+    titulo,
+    apoio,
+    className,
+    children,
+}: {
+    titulo: string
+    apoio?: React.ReactNode
+    className?: string
+    children: React.ReactNode
+}) {
     return (
-        <Card className="min-w-0">
+        <Card className={cn("min-w-0", className)}>
             <CardHeader>
                 <CardTitle size="sm">{titulo}</CardTitle>
                 {apoio ? (
@@ -406,7 +416,9 @@ export function GraficosDoResumo({
                 </div>
             ) : null}
             {comPagamento || comDias || comCompras ? (
-                <div className="grid gap-3 md:grid-cols-3">
+                // Pela largura da seção, não da janela: com a barra lateral aberta, três colunas a 768px davam cartões de ~220px e tudo se encavalava.
+                <div className="@container/trio">
+                <div className="grid gap-3 @2xl/trio:grid-cols-2 @5xl/trio:grid-cols-3">
                     {comPagamento ? (
                         <CartaoDoGrafico
                             titulo="Como foi pago"
@@ -545,7 +557,11 @@ export function GraficosDoResumo({
                         </CartaoDoGrafico>
                     ) : null}
                     {comCompras ? (
-                        <CartaoDoGrafico titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"}>
+                        <CartaoDoGrafico
+                            titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"}
+                            // Em duas colunas, o terceiro cartão ficaria sozinho na metade da linha: ocupa a linha inteira.
+                            className={comPagamento && comDias ? "@2xl/trio:col-span-2 @5xl/trio:col-span-1" : undefined}
+                        >
                             <div className="flex flex-col gap-3">
                                 <p className="min-w-0">
                                     <span className="nums text-xl font-semibold">{frase.numero}</span>{" "}
@@ -566,9 +582,23 @@ export function GraficosDoResumo({
                                         <span>menores</span>
                                     </div>
                                 </div>
+                                {/* As maiores, as mesmas em destaque na fileira (até 3): o cartão diz o que foi a compra grande. */}
+                                <ul className="grid grid-cols-1 gap-2.5 border-t border-border pt-3">
+                                    {concentracao.compras.slice(0, Math.min(3, concentracao.n80)).map((c) => (
+                                        <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
+                                            {/* Descrição e data são o mesmo dado em duas linhas: sem `gap`. */}
+                                            <span className="min-w-0">
+                                                <span className="block truncate">{c.descricao || diaDeMesPorExtenso(c.data)}</span>
+                                                <span className="block text-xs text-muted-foreground">{diaEMes(c.data)}</span>
+                                            </span>
+                                            <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(c.valor)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </CartaoDoGrafico>
                     ) : null}
+                </div>
                 </div>
             ) : null}
             {comMeses ? (
