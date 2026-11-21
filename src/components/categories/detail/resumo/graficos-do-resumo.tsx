@@ -11,6 +11,7 @@ import {
     ChartArea,
     ChartBars,
     ChartDonut,
+    ChartHeatStrip,
     ChartLine,
     ChartReferenceDot,
     ChartReferenceLine,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { diferencaPorForma, type FatiaDePagamento, type TipoDaCategoria } from "@/lib/categoria-detalhe"
 import {
+    diasUteisEFimDeSemana,
     resumoDoRitmo,
     tendenciaDosMeses,
     type porDiaDaSemana,
@@ -36,7 +38,7 @@ import { paymentMethodIcon } from "@/lib/payment-method-icon"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
-import { mesCurto, mesPorExtenso } from "./rotulos"
+import { diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
 const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
@@ -184,6 +186,7 @@ export function GraficosDoResumo({
     // O acumulado parte do zero antes do dia 1: as duas linhas nascem na base, como a área ao lado.
     const ritmoDesdeZero = useMemo(() => [{ dia: 0, atual: 0, anterior: 0, faixa: [0, 0] as [number, number], projecao: null }, ...ritmo], [ritmo])
     const comDias = diasDaSemana.some((d) => d.total > 0)
+    const lados = diasUteisEFimDeSemana(diasDaSemana)
     const comFaixas = faixas.some((f) => f.quantidade > 0)
     const comPagamento = porPagamento.length > 0
     // O mesmo arredondamento da barra, para o destaque e a lista baterem com ela.
@@ -495,19 +498,32 @@ export function GraficosDoResumo({
                     ) : null}
                     {comDias ? (
                         <CartaoDoGrafico titulo="Dias da semana">
-                            <ChartBars
-                                    grid={false}
-                                config={CONFIG_DIAS}
-                                data={diasDaSemana}
-                                x="nome"
-                                selected={maiorDe(diasDaSemana, (d) => d.nome, (d) => d.total)}
-                                selectedColor={corDaSerie}
-                                yAxis={false}
-                                aspect="auto"
-                                className="h-32 w-full"
-                                label={`${oQue} do mês por dia da semana`}
-                                description="O dia de maior valor em destaque."
-                            />
+                            <div className="flex flex-col gap-4">
+                                <div className="flex gap-4">
+                                    {(
+                                        [
+                                            ["dias úteis", lados.uteis, lados.uteis.total >= lados.fim.total],
+                                            ["fim de semana", lados.fim, lados.fim.total > lados.uteis.total],
+                                        ] as const
+                                    ).map(([nome, lado, maior]) => (
+                                        // O % e a legenda são o mesmo dado em duas linhas: sem `gap`.
+                                        <div key={nome} className="min-w-0">
+                                            <p className={cn("nums text-xl font-semibold", !maior && "text-muted-foreground")}>{lado.pct}%</p>
+                                            <p className="nums text-sm text-muted-foreground">
+                                                {nome} · {reaisInteiros(lado.total)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <ChartHeatStrip
+                                    data={diasDaSemana}
+                                    nameKey="nome"
+                                    dataKey="total"
+                                    color={corDaSerie}
+                                    labelText={diaPorExtenso}
+                                    label={`${despesa ? "Gasto" : "Entradas"} do mês por dia da semana`}
+                                />
+                            </div>
                         </CartaoDoGrafico>
                     ) : null}
                     {comFaixas ? (

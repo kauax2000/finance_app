@@ -7,6 +7,7 @@ import {
   ChartBarList,
   ChartContainer,
   ChartDonut,
+  ChartHeatStrip,
   ChartSplit,
   ChartSwatch,
   ChartTooltipContent,
@@ -839,6 +840,40 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
       const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
       expect(doc).toContain('labels="none"')
       expect(doc).toContain("<ChartSwatch")
+    })
+  })
+
+  describe("ChartHeatStrip", () => {
+    const dias = [
+      { nome: "Seg", total: 2080 },
+      { nome: "Ter", total: 170 },
+      { nome: "Qua", total: 0 },
+    ]
+    const html = renderToStaticMarkup(
+      h(ChartHeatStrip, {
+        data: dias,
+        nameKey: "nome",
+        dataKey: "total",
+        color: "var(--chart-2)",
+        label: "Gasto por dia da semana",
+        labelText: (n: unknown) => ({ Seg: "segunda", Ter: "terça", Qua: "quarta" })[String(n)] ?? String(n),
+      })
+    )
+
+    it("é exportada e desenha uma célula por linha", () => {
+      expect(typeof ChartHeatStrip).toBe("function")
+      expect(html.match(/data-slot="chart-heat-strip-cell"/g)).toHaveLength(3)
+    })
+    it("o maior dia fica a 100%, o pequeno no piso de 12%, e o zerado tracejado sem fundo", () => {
+      expect(html).toContain("color-mix(in oklab, var(--chart-2) 100%, transparent)")
+      expect(html).toContain("color-mix(in oklab, var(--chart-2) 12%, transparent)")
+      const zerada = html.match(/<span[^>]*data-value="0"[^>]*>/)?.[0] ?? ""
+      expect(zerada).toContain("border-dashed")
+      expect(zerada).not.toContain("color-mix")
+    })
+    it("o nome acessível lista os dias com o valor", () => {
+      expect(html).toContain('role="img"')
+      expect(html).toMatch(/aria-label="Gasto por dia da semana: Segunda R\$\s2\.080,00, Terça R\$\s170,00, Quarta R\$\s0,00"/)
     })
   })
 })

@@ -592,6 +592,14 @@ function ChartTooltipContent({
     const valor = item.value
     const partes: React.ReactNode[] = []
     if (typeof valor === "number") {
+      // Na dica enxuta a fatia é uma parte da comparação: "68% do total".
+      if (share) {
+        partes.push(
+          <span key="share">
+            <span className="nums font-mono">{formatChartValue(valor / share, "percent")}</span> do total
+          </span>
+        )
+      }
       if (reference && Number.isFinite(reference.value) && reference.value !== 0) {
         const v = (valor - reference.value) / Math.abs(reference.value)
         partes.push(
@@ -3215,6 +3223,111 @@ function ChartHeatmap({
   )
 }
 
+/** O piso da célula com valor: abaixo disto o dia pequeno some contra a superfície. */
+const CHART_HEAT_STRIP_FLOOR = 12
+
+/**
+ * A fileira de calor: N células iguais (os dias da semana de um gasto), cada uma
+ * na `color` com a intensidade do valor sobre o maior — o maior a 100%, o dia
+ * com valor no piso de 12%, o zerado só com o contorno tracejado. O nome fica
+ * embaixo, fora da célula: a cor nunca fica sob texto. A dica é a enxuta
+ * (`ChartTooltipContent variant="single"`), no cursor e no toque; o nome
+ * acessível lista as células com o valor, e o `dataTable` dá a tabela.
+ */
+function ChartHeatStrip({
+  data,
+  nameKey,
+  dataKey,
+  color,
+  label,
+  description,
+  format = "currency",
+  labelText,
+  className,
+  dataTable,
+}: {
+  data: Record<string, unknown>[]
+  nameKey: string
+  dataKey: string
+  /** A cor cheia da intensidade (a da categoria: `tileVividColor(tileColorFor(cor))`). */
+  color: string
+  label: string
+  description?: string
+  format?: ChartFormat
+  /** O nome por extenso na dica e no nome acessível ("Seg" vira "segunda"). */
+  labelText?: (label: unknown) => string
+  className?: string
+  dataTable?: boolean
+}) {
+  const [ativo, setAtivo] = React.useState<number | null>(null)
+  const nomes = data.map((d) => String(d[nameKey] ?? ""))
+  const valores = data.map((d) => (typeof d[dataKey] === "number" ? Math.max(0, d[dataKey] as number) : 0))
+  const maior = Math.max(0, ...valores)
+  const total = valores.reduce((acc, v) => acc + v, 0)
+  const porExtenso = (i: number) => inicialMaiuscula(labelText ? labelText(nomes[i]) : nomes[i])
+  const resumo = nomes.map((_, i) => `${porExtenso(i)} ${formatChartValue(valores[i], format)}`).join(", ")
+  const config = { [dataKey]: { label, color } } satisfies ChartConfig
+
+  return (
+    <ChartFrame dataTable={dataTable} data={data} series={[dataKey]} config={config} x={nameKey} xLabel="Dia" format={format}>
+      <ChartHtmlRoot config={config} label={`${label}: ${resumo}`} description={description} className={cn("w-full", className)}>
+        <div
+          className="grid gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}
+          onPointerLeave={(e) => {
+            // No toque a dica fica: o dedo sai logo depois de tocar.
+            if (ehCursor(e)) setAtivo(null)
+          }}
+        >
+          {nomes.map((nome, i) => {
+            const v = valores[i]
+            const pct = v > 0 && maior > 0 ? Math.max(CHART_HEAT_STRIP_FLOOR, Math.round((v / maior) * 100)) : 0
+            const lado = i === 0 ? "left-0" : i === nomes.length - 1 ? "right-0" : "left-1/2 -translate-x-1/2"
+            return (
+              <div key={nome || i} className="relative flex min-w-0 flex-col items-center gap-1.5">
+                <span
+                  data-slot="chart-heat-strip-cell"
+                  data-value={v}
+                  className={cn(
+                    "aspect-square w-full rounded-row",
+                    chartHeatCellClassName,
+                    pct === 0 && "border border-dashed border-border",
+                    ativo === i && "ring-2 ring-foreground/60"
+                  )}
+                  style={pct > 0 ? { backgroundColor: `color-mix(in oklab, ${color} ${pct}%, transparent)` } : undefined}
+                  onPointerEnter={(e) => {
+                    if (ehCursor(e)) setAtivo(i)
+                  }}
+                  onPointerDown={(e) => {
+                    if (!ehCursor(e)) setAtivo((a) => (a === i ? null : i))
+                  }}
+                />
+                <span aria-hidden className="max-w-full truncate text-xs text-muted-foreground">
+                  {nome}
+                </span>
+                {ativo === i ? (
+                  <div aria-hidden className={cn("pointer-events-none absolute bottom-full z-10 mb-2", lado)}>
+                    <ChartTooltipContent
+                      active
+                      variant="single"
+                      format={format}
+                      label={nome}
+                      labelText={labelText}
+                      share={total > 0 ? total : undefined}
+                      payload={[{ dataKey, name: dataKey, value: v, payload: data[i] } as TooltipPayloadItem]}
+                      className="w-max"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      </ChartHtmlRoot>
+    </ChartFrame>
+  )
+}
+
 /** O perfil: várias categorias, uma por eixo, com duas ou três séries sobrepostas (este mês contra a média). Serve a "onde o mês fugiu do normal", não a magnitude; para o número, as barras. */
 function ChartRadar({
   grid = "polygon",
@@ -3931,6 +4044,7 @@ export {
   ChartGrid,
   ChartHeatmap,
   chartHeatmapVariants,
+  ChartHeatStrip,
   ChartLegend,
   ChartLegendContent,
   ChartLine,

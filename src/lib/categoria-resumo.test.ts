@@ -4,6 +4,7 @@ import {
     compromissos,
     descricaoSemParcela,
     diaDeMaisGasto,
+    diasUteisEFimDeSemana,
     fatosDoMes,
     insights,
     maisFrequente,
@@ -133,6 +134,22 @@ describe("porDiaDaSemana", () => {
         expect(porDiaDaSemana([], "expense").every((d) => d.total === 0)).toBe(true)
         const r = porDiaDaSemana([tx({ date: "2026-11-09", amount: 100 }), estorno({ date: "2026-11-09", amount: 40 })], "expense")
         expect(r[0].total).toBe(60)
+    })
+})
+
+describe("diasUteisEFimDeSemana", () => {
+    const semana = (totais: number[]) => totais.map((total, dia) => ({ dia, total }))
+    it("seg a sex são úteis, sáb e dom fim de semana, e os % somam 100", () => {
+        const r = diasUteisEFimDeSemana(semana([2080, 170, 330, 250, 60, 172, 0]))
+        expect(r).toEqual({ uteis: { total: 2890, pct: 94 }, fim: { total: 172, pct: 6 } })
+    })
+    it("o mês todo em dia útil dá 100 e 0", () => {
+        const r = diasUteisEFimDeSemana(semana([10, 0, 5, 0, 0, 0, 0]))
+        expect(r).toEqual({ uteis: { total: 15, pct: 100 }, fim: { total: 0, pct: 0 } })
+    })
+    it("o mês zerado dá 0 e 0", () => {
+        const r = diasUteisEFimDeSemana(semana([0, 0, 0, 0, 0, 0, 0]))
+        expect(r).toEqual({ uteis: { total: 0, pct: 0 }, fim: { total: 0, pct: 0 } })
     })
 })
 

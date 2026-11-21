@@ -20,6 +20,7 @@ import {
   ChartError,
   ChartGrid,
   ChartHeatmap,
+  ChartHeatStrip,
   ChartLegend,
   ChartLegendContent,
   ChartLine,
@@ -588,6 +589,41 @@ function DemoCalendario() {
   )
 }
 
+const DIAS_DA_SEMANA = [
+  { nome: "Seg", total: 2080 },
+  { nome: "Ter", total: 170 },
+  { nome: "Qua", total: 330 },
+  { nome: "Qui", total: 250 },
+  { nome: "Sex", total: 60 },
+  { nome: "Sáb", total: 172 },
+  { nome: "Dom", total: 0 },
+]
+const DIA_POR_EXTENSO: Record<string, string> = {
+  Seg: "segunda",
+  Ter: "terça",
+  Qua: "quarta",
+  Qui: "quinta",
+  Sex: "sexta",
+  Sáb: "sábado",
+  Dom: "domingo",
+}
+
+function DemoFileiraDeCalor() {
+  return (
+    <div className="w-full max-w-72">
+      <ChartHeatStrip
+        data={DIAS_DA_SEMANA}
+        nameKey="nome"
+        dataKey="total"
+        color="var(--chart-2)"
+        labelText={(n) => DIA_POR_EXTENSO[String(n)] ?? String(n)}
+        label="Gasto do mês por dia da semana"
+        dataTable
+      />
+    </div>
+  )
+}
+
 function DemoPerfil() {
   const [v, setV] = React.useState<"polygon" | "circle">("polygon")
   return (
@@ -932,7 +968,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> (com <code>bleed</code>, que zera a margem interna para a faísca encostar nas bordas da caixa, e <code>band</code>, de 0 a 1, que prende a linha na fração de cima da altura com a área cheia embaixo), <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> (com <code>bleed</code>, que zera a margem interna para a faísca encostar nas bordas da caixa, e <code>band</code>, de 0 a 1, que prende a linha na fração de cima da altura com a área cheia embaixo), <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartHeatStrip</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection
@@ -1645,6 +1681,26 @@ const config = {
       </DocNote>
 
       <DocSection
+        title="Fileira de calor"
+        description={
+          <>
+            <code>ChartHeatStrip</code> é uma fileira de N células iguais — os sete dias da semana de um gasto — com a intensidade do valor na <code>color</code> dada: o maior a 100%, o dia com valor no piso de 12% (<code>color-mix</code> com <code>transparent</code>) e o zerado só com o contorno tracejado em <code>--border</code>. O nome fica <strong>embaixo</strong>, fora da célula: a cor nunca fica sob texto. A dica é a enxuta (<code>variant=&quot;single&quot;</code>): o nome por extenso (<code>labelText</code>), o valor e a % do total, no cursor e no toque. O nome acessível lista as células com o valor. O calendário de semanas é o <code>ChartHeatmap</code>.
+          </>
+        }
+        code={`<ChartHeatStrip
+  data={[{ nome: "Seg", total: 2080 }, …]}
+  nameKey="nome"
+  dataKey="total"
+  color={corDaCategoria}
+  labelText={(n) => "segunda"}
+  label="Gasto do mês por dia da semana"
+/>`}
+        previewClassName="flex-col items-center p-6"
+      >
+        <DemoFileiraDeCalor />
+      </DocSection>
+
+      <DocSection
         title="Perfil"
         description={
           <>
@@ -2104,7 +2160,7 @@ const config = {
       />
 
       <PropsTable
-        title="ChartWaterfall, ChartBarList e ChartAnnotation"
+        title="ChartWaterfall, ChartBarList, ChartHeatStrip e ChartAnnotation"
         rows={[
           {
             prop: "ChartWaterfall data",
@@ -2117,6 +2173,12 @@ const config = {
             type: "data · nameKey · dataKey · share",
             description:
               "O ranking em lista HTML: nome que quebra, barra embaixo, valor que conta; `share` soma a % do total.",
+          },
+          {
+            prop: "ChartHeatStrip",
+            type: "data · nameKey · dataKey · color · labelText",
+            description:
+              "A fileira de calor: uma célula por linha, `aspect-square` e `rounded-row`, na `color` com a intensidade do valor sobre o maior (piso de 12%); o zerado é tracejado. `labelText` dá o nome por extenso na dica e no nome acessível.",
           },
           {
             prop: "ChartAnnotation",

@@ -118,6 +118,26 @@ export function porDiaDaSemana(
     return NOMES_DA_SEMANA.map((nome, dia) => ({ dia, nome, total: cents[dia] / 100 }))
 }
 
+/** Dias úteis (seg a sex, `dia` 0–4) contra o fim de semana (sáb e dom): os totais e os % inteiros que somam 100, pelo maior resto do `splitPercents` (com duas partes, empate vai aos úteis). Total zero dá 0 e 0. */
+export function diasUteisEFimDeSemana(dias: { dia: number; total: number }[]): {
+    uteis: { total: number; pct: number }
+    fim: { total: number; pct: number }
+} {
+    let uteis = 0
+    let fim = 0
+    for (const d of dias) {
+        if (d.dia >= 5) fim += centavos({ amount: d.total })
+        else uteis += centavos({ amount: d.total })
+    }
+    // Como o `splitPercents`, um lado negativo (estorno maior que a compra) pesa zero no %.
+    const soma = Math.max(0, uteis) + Math.max(0, fim)
+    const pctUteis = soma > 0 ? Math.round((Math.max(0, uteis) / soma) * 100) : 0
+    return {
+        uteis: { total: uteis / 100, pct: pctUteis },
+        fim: { total: fim / 100, pct: soma > 0 ? 100 - pctUteis : 0 },
+    }
+}
+
 const FAIXAS = [
     { faixa: "até R$ 50", ate: 50 },
     { faixa: "R$ 50–200", ate: 200 },

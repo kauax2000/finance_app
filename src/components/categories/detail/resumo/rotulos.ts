@@ -18,3 +18,18 @@ export function mesCurto(ym: string): string {
     const { y, m } = parseYearMonth(ym)
     return formatMonthShortPtBr(new Date(y, m - 1, 1))
 }
+
+const DIAS_POR_EXTENSO: Record<string, string> = {
+    Seg: "segunda",
+    Ter: "terça",
+    Qua: "quarta",
+    Qui: "quinta",
+    Sex: "sexta",
+    Sáb: "sábado",
+    Dom: "domingo",
+}
+
+/** "segunda", a partir do nome curto do `porDiaDaSemana` ("Seg"). */
+export function diaPorExtenso(curto: unknown): string {
+    return DIAS_POR_EXTENSO[String(curto)] ?? String(curto)
+}
