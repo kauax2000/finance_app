@@ -20,17 +20,23 @@ export const AURORA = {
 
 export const NOME_DA_FAIXA = "theme-aurora"
 
-/** A borda ondulada: branco é o que mostra a página nova. */
-const BORDA = "M-10 -10H110V100C88 112 72 93 54 104S22 116 -10 103Z"
+/**
+ * A borda ondulada: branco é o que mostra a página nova. A onda do protótipo desceu 22 unidades
+ * numa imagem de 240 (2,4 telas): no fim a imagem ainda cobre o topo, e a borda (≈1,03 tela) já
+ * passou do pé. Com a onda em 100 de 200, o topo ficava fora da imagem, e a página velha aparecia
+ * nos 10% de cima enquanto a máscara não terminava.
+ */
+const BORDA = "M-10 -10H110V122C88 134 72 115 54 126S22 138 -10 125Z"
 
 /**
  * A máscara da borda, num `url("data:…")`. A invertida (a foto velha do vidro) é tudo abaixo da
- * borda: um retângulo menos o caminho, por `evenodd`. Ela tem o dobro da altura, para que o que
- * fica abaixo da borda cubra a tela inteira desde o primeiro quadro (fora da imagem a máscara é
- * transparente, e a foto velha sumiria antes de a borda chegar).
+ * borda: um retângulo menos o caminho, por `evenodd`. Ela tem o dobro da altura (na mesma escala,
+ * com a borda no mesmo lugar), para que o que fica abaixo da borda cubra a tela inteira desde o
+ * primeiro quadro (fora da imagem a máscara é transparente, e a foto velha sumiria antes de a
+ * borda chegar).
  */
 export function mascaraDaAurora(invertida = false): string {
-    const altura = invertida ? 400 : 200
+    const altura = invertida ? 480 : 240
     const d = invertida ? `M-10 -10H110V${altura + 10}H-10Z ${BORDA}` : BORDA
     const regra = invertida ? " fill-rule='evenodd'" : ""
     const svg =
@@ -43,7 +49,7 @@ export function mascaraDaAurora(invertida = false): string {
 /** Os três quadros da máscara: de acima da tela até abaixo dela, parada depois da varredura. O `deslocamento` é o topo do vidro, para ele casar com a página. */
 export function quadrosDaMascara(altura: number, deslocamento = 0, invertida = false): Keyframe[] {
     const imagem = mascaraDaAurora(invertida)
-    const tamanho = `100% ${(invertida ? 4 : 2) * altura}px`
+    const tamanho = `100% ${(invertida ? 4.8 : 2.4) * altura}px`
     const quadro = (y: number) => {
         const posicao = `0 ${y}px`
         return {
@@ -57,9 +63,9 @@ export function quadrosDaMascara(altura: number, deslocamento = 0, invertida = f
             webkitMaskPosition: posicao,
         }
     }
-    const fim = 0.1 * altura - deslocamento
+    const fim = -0.12 * altura - deslocamento
     return [
-        { ...quadro(-2.1 * altura - deslocamento), easing: AURORA.easing },
+        { ...quadro(-2.32 * altura - deslocamento), easing: AURORA.easing },
         { ...quadro(fim), offset: AURORA.varredura },
         quadro(fim),
     ]

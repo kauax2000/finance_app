@@ -17,7 +17,7 @@ describe("a aurora da troca de tema", () => {
         const m = mascaraDaAurora()
         expect(m.startsWith('url("data:image/svg+xml,')).toBe(true)
         expect(m).toContain("stdDeviation='2.2'")
-        expect(m).toContain("M-10 -10H110V100C88 112 72 93 54 104S22 116 -10 103Z")
+        expect(m).toContain("M-10 -10H110V122C88 134 72 115 54 126S22 138 -10 125Z")
         const miolo = m.slice('url("'.length, -'")'.length)
         expect(miolo).not.toContain('"')
         expect(miolo).not.toContain("#")
@@ -29,21 +29,31 @@ describe("a aurora da troca de tema", () => {
     it("a máscara varre a tela de cima para baixo e para na varredura", () => {
         const q = quadrosDaMascara(1000)
         expect(q).toHaveLength(3)
-        expect(q[0].maskPosition).toBe("0 -2100px")
+        expect(q[0].maskPosition).toBe("0 -2320px")
         expect(q[0].easing).toBe(AURORA.easing)
         expect(q[1].offset).toBe(0.6)
-        expect(q[1].maskPosition).toBe("0 100px")
-        expect(q[2].maskPosition).toBe("0 100px")
+        expect(q[1].maskPosition).toBe("0 -120px")
+        expect(q[2].maskPosition).toBe("0 -120px")
         for (const k of q) {
-            expect(k.maskSize).toBe("100% 2000px")
+            expect(k.maskSize).toBe("100% 2400px")
             expect(k.maskRepeat).toBe("no-repeat")
             expect(k.webkitMaskPosition).toBe(k.maskPosition)
             expect(k.webkitMaskImage).toBe(k.maskImage)
         }
     })
 
+    it("no fim a imagem ainda cobre o topo, e a borda já passou do pé", () => {
+        const fim = quadrosDaMascara(1000)[2]
+        // A imagem começa em -120px: cobre o topo. A onda (115 a 138 de 240, em 2400px) fica
+        // entre 1030 e 1260px: abaixo da tela de 1000.
+        expect(fim.maskPosition).toBe("0 -120px")
+        const inv = quadrosDaMascara(1000, 0, true)
+        expect(inv[0].maskSize).toBe("100% 4800px")
+        expect(inv[2].maskPosition).toBe(fim.maskPosition)
+    })
+
     it("deslocada pelo topo do vidro, casa com a página", () => {
-        expect(quadrosDaMascara(1000, 40)[1].maskPosition).toBe("0 60px")
+        expect(quadrosDaMascara(1000, 40)[1].maskPosition).toBe("0 -160px")
     })
 
     it("a faixa desce com a borda e some no fim", () => {
