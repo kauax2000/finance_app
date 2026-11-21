@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
-import { AURORA, mascaraDaAurora, quadrosDaMascara } from "./aurora-do-tema"
+import { RITMO, mascaraDaAurora, quadrosDaMascara } from "./aurora-do-tema"
 import { revelarVidros, type Vidro } from "./vidro-na-revelacao"
 
 describe("a aurora nos vidros", () => {
@@ -17,7 +17,20 @@ describe("a aurora nos vidros", () => {
         expect(chamadas[0].quadros).toEqual(quadrosDaMascara(800, 375, "desce", "novo", { x: 20, y: 700 }))
         expect(chamadas[1].tempo.pseudoElement).toBe("::view-transition-old(vidro-0)")
         expect(chamadas[1].quadros).toEqual(quadrosDaMascara(800, 375, "desce", "velho", { x: 20, y: 700 }))
-        for (const c of chamadas) expect(c.tempo.duration).toBe(AURORA.duracao)
+        for (const c of chamadas) expect(c.tempo.duration).toBe(RITMO.desce.duracao)
+    })
+
+    it("o tempo é o do sentido, e as animações voltam para quem chama", () => {
+        const tempos: number[] = []
+        const html = {
+            animate(_q: Keyframe[], tempo: KeyframeAnimationOptions) {
+                tempos.push(Number(tempo.duration))
+                return {}
+            },
+        } as unknown as HTMLElement
+        const animacoes = revelarVidros(html, [{ nome: "vidro-0", rect: { left: 0, top: 0 } } as unknown as Vidro], 800, 375, "sobe")
+        expect(tempos).toEqual([RITMO.sobe.duracao, RITMO.sobe.duracao])
+        expect(animacoes).toHaveLength(2)
     })
 
     it("a foto nova leva o lado do destino e a velha o oposto, nos dois sentidos", () => {

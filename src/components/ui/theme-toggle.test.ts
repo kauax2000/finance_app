@@ -239,7 +239,7 @@ describe("o trilho de tema", () => {
 
     it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
         expect(CODIGO).toContain("nomearVidros(document)")
-        expect(CODIGO).toContain("animarAurora(html, altura, largura, sentido, vidros.vidros)")
+        expect(CODIGO).toContain("animarAurora(html, altura, largura, sentido, vidros.vidros, aro)")
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
         const css = lerFonte("src/app/globals.css")
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")
@@ -259,7 +259,8 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarFaixa\?\.\(\)/)
         // A faixa sai quando a animação dela acaba, 50ms antes da transição: tirada só no
         // `finished`, a faixa de verdade podia pintar um quadro no topo.
-        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros\)\.finished\.then\(\(\) => tirarFaixa\?\.\(\)\)/)
+        // A faixa é a primeira animação devolvida; o aro sai com ela.
+        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros, aro\)\[0\]\.finished\.then\(/)
         expect(CODIGO).not.toContain("REVELACAO")
         expect(CODIGO).not.toContain("circle(")
         const css = lerFonte("src/app/globals.css")
@@ -268,6 +269,20 @@ describe("o trilho de tema", () => {
         for (const parada of ["amber", "magenta", "violet", "blue"]) {
             expect(css).toContain(`var(--brand-${parada})`)
         }
+    })
+
+    it("o aro nasce no callback, depois do tema, e a paleta vai ao <html> só durante a troca", () => {
+        const callback = CODIGO.indexOf("doc.startViewTransition(")
+        const tema = CODIGO.indexOf("flushSync(() => setTheme(valor))", callback)
+        const paleta = CODIGO.indexOf("html.dataset.aurora = sentido", callback)
+        const aro = CODIGO.indexOf("criarAro(document, altura, largura)", callback)
+        const fimDoCallback = CODIGO.indexOf("transicao.ready", callback)
+        expect(paleta).toBeGreaterThan(tema)
+        expect(paleta).toBeLessThan(fimDoCallback)
+        expect(aro).toBeGreaterThan(tema)
+        expect(aro).toBeLessThan(fimDoCallback)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*delete html\.dataset\.aurora/)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarAro\?\.\(\)/)
     })
 
     it("o polegar sai no toque, fora da View Transition: só o tema troca dentro dela", () => {

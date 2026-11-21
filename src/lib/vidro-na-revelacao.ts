@@ -9,7 +9,7 @@
  * existe durante a troca: `view-transition-name` permanente tira o borrão (AGENTS.md).
  */
 
-import { AURORA, quadrosDaMascara, type Sentido } from "./aurora-do-tema"
+import { RITMO, quadrosDaMascara, type Sentido } from "./aurora-do-tema"
 
 export type Vidro = { el: HTMLElement; nome: string; rect: DOMRect }
 
@@ -79,17 +79,25 @@ export function nomearVidros(doc: Document) {
 }
 
 /** A aurora passando pelas fotos de cada vidro. Chame no `ready`, com a altura e a largura da tela lidas no toque. */
-export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number, largura: number, sentido: Sentido) {
-    const tempo = { duration: AURORA.duracao, easing: "linear" }
+export function revelarVidros(
+    html: HTMLElement,
+    vidros: Vidro[],
+    altura: number,
+    largura: number,
+    sentido: Sentido,
+): Animation[] {
+    const tempo = { duration: RITMO[sentido].duracao, easing: "linear" }
+    const animacoes: Animation[] = []
     for (const { nome, rect } of vidros) {
         const caixa = { x: rect.left, y: rect.top }
-        html.animate(quadrosDaMascara(altura, largura, sentido, "novo", caixa), {
+        animacoes.push(html.animate(quadrosDaMascara(altura, largura, sentido, "novo", caixa), {
             ...tempo,
             pseudoElement: `::view-transition-new(${nome})`,
-        })
-        html.animate(quadrosDaMascara(altura, largura, sentido, "velho", caixa), {
+        }))
+        animacoes.push(html.animate(quadrosDaMascara(altura, largura, sentido, "velho", caixa), {
             ...tempo,
             pseudoElement: `::view-transition-old(${nome})`,
-        })
+        }))
     }
+    return animacoes
 }

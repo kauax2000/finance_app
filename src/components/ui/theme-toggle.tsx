@@ -18,7 +18,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
-import { animarAurora, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
+import { NOME_DO_ARO, animarAurora, criarAro, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
 import { nomearVidros } from "@/lib/vidro-na-revelacao"
 
 /**
@@ -84,8 +84,9 @@ const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
  * e "sistema" segue o tema que resultou. Pela View Transitions API (o
  * navegador fotografa a página velha, a nova vive por baixo e o que anima é a máscara
  * do `::view-transition-new(root)`; `lib/aurora-do-tema`). O `flushSync` faz o tema
- * trocar dentro do callback, antes da foto nova, e a faixa nasce ali, depois dele, com
- * o nome de transição inline; ela sai no `finished`. Sem a API, com `reveal={false}`
+ * trocar dentro do callback, antes da foto nova, e a faixa e o aro nascem ali, depois dele,
+ * com o nome de transição inline; saem no fim da animação da faixa. A paleta do destino vai
+ * ao `<html>` (`data-aurora`) só durante a troca. Sem a API, com `reveal={false}`
  * ou com movimento reduzido, troca como sempre. O CSS que desliga o esmaecer padrão e
  * desenha a faixa mora em `globals.css`, escopado por `.theme-reveal` no `<html>`
  * enquanto a transição dura. O vidro à vista ganha nome só durante a troca, e a
@@ -166,16 +167,25 @@ export function ThemeToggle({
         // dela recomeçava do início quando ela acabava (o polegar voltava e viajava de novo).
         flushSync(() => setPedido(valor))
         let tirarFaixa: (() => void) | undefined
+        let tirarAro: (() => void) | undefined
         // O sentido é do destino, lido depois da troca ("sistema" vira o tema que resultou): o
         // escuro cai de cima, o claro sobe de baixo.
         let sentido: Sentido = "desce"
         const transicao = doc.startViewTransition(() => {
             flushSync(() => setTheme(valor))
             sentido = html.classList.contains("dark") ? "desce" : "sobe"
+            html.dataset.aurora = sentido
             tirarFaixa = criarFaixa(document, altura, sentido)
+            tirarAro = criarAro(document, altura, largura)
         })
         transicao.ready
-            .then(() => animarAurora(html, altura, largura, sentido, vidros.vidros).finished.then(() => tirarFaixa?.()))
+            .then(() => {
+                const aro = document.querySelector<HTMLElement>(`.${NOME_DO_ARO}`) ?? undefined
+                return animarAurora(html, altura, largura, sentido, vidros.vidros, aro)[0].finished.then(() => {
+                    tirarFaixa?.()
+                    tirarAro?.()
+                })
+            })
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
@@ -183,8 +193,11 @@ export function ThemeToggle({
             revelacao.current = null
             setPedido(null)
             html.classList.remove("theme-reveal")
-            // A rede de segurança: a faixa já saiu no fim da animação dela, e tirar de novo não faz nada.
+            delete html.dataset.aurora
+            // A rede de segurança: a faixa e o aro já saíram no fim da animação da faixa, e tirar de
+            // novo não faz nada.
             tirarFaixa?.()
+            tirarAro?.()
             vidros.desfazer()
         })
     }

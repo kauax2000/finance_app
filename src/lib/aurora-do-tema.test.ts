@@ -1,15 +1,24 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
-import { AURORA, animarAurora, criarFaixa, mascaraDaAurora, quadrosDaFaixa, quadrosDaMascara } from "./aurora-do-tema"
+import {
+    AURORA,
+    RITMO,
+    animarAurora,
+    criarAro,
+    criarFaixa,
+    mascaraDaAurora,
+    mascaraDoAro,
+    quadrosDaFaixa,
+    quadrosDaMascara,
+    quadrosDoAro,
+} from "./aurora-do-tema"
 
 describe("a aurora da troca de tema", () => {
     it("tem os tempos e o volume aprovados", () => {
-        expect(AURORA).toEqual({
-            duracao: 1100,
-            varredura: 0.6,
-            faixa: 0.6,
-            opacidade: 0.85,
-            easing: "cubic-bezier(0.45, 0, 0.2, 1)",
+        expect(AURORA).toEqual({ varredura: 0.6, faixa: 0.6, opacidade: 0.85 })
+        expect(RITMO).toEqual({
+            desce: { duracao: 1250, easing: "cubic-bezier(0.55, 0, 0.15, 1)" },
+            sobe: { duracao: 950, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
         })
     })
 
@@ -21,26 +30,27 @@ describe("a aurora da troca de tema", () => {
             expect(m.startsWith('url("data:image/svg+xml,')).toBe(true)
             expect(m).toContain("viewBox='0 0 200 300'")
             expect(m).toContain("stdDeviation='2.2'")
-            expect(m).toContain("Q25 138 50 150 T100 150 T150 150 T200 150")
+            expect(m).toContain("Q-75 144 -50 150")
+            expect(m).toContain("T300 150")
             const miolo = m.slice('url("'.length, -'")'.length)
             expect(miolo).not.toContain('"')
             expect(miolo).not.toContain("#")
         }
-        expect(acima).toContain("V-10H-10Z")
-        expect(abaixo).toContain("V310H-10Z")
+        expect(acima).toContain("V-30H-100Z")
+        expect(abaixo).toContain("V330H-100Z")
     })
 
-    it("no escuro a borda desce, deslizando para o lado, e para na varredura", () => {
-        const q = quadrosDaMascara(1000, 400, "desce")
+    it("no escuro a borda desce em três ondas por tela, deslizando para o lado, e para na varredura", () => {
+        const q = quadrosDaMascara(1000, 600, "desce")
         expect(q).toHaveLength(3)
         expect(q[0].maskPosition).toBe("0px -1650px")
-        expect(q[0].easing).toBe(AURORA.easing)
+        expect(q[0].easing).toBe(RITMO.desce.easing)
         expect(q[1].offset).toBe(0.6)
-        expect(q[1].maskPosition).toBe("-320px -350px")
-        expect(q[2].maskPosition).toBe("-480px -350px")
+        expect(q[1].maskPosition).toBe("-160px -350px")
+        expect(q[2].maskPosition).toBe("-240px -350px")
         for (const k of q) {
             expect(k.maskImage).toBe(mascaraDaAurora("acima"))
-            expect(k.maskSize).toBe("800px 3000px")
+            expect(k.maskSize).toBe("400px 3000px")
             expect(k.maskRepeat).toBe("repeat-x")
             expect(k.webkitMaskPosition).toBe(k.maskPosition)
             expect(k.webkitMaskImage).toBe(k.maskImage)
@@ -50,9 +60,10 @@ describe("a aurora da troca de tema", () => {
     })
 
     it("no claro a borda sobe", () => {
-        const q = quadrosDaMascara(1000, 400, "sobe")
+        const q = quadrosDaMascara(1000, 600, "sobe")
         expect(q[0].maskPosition).toBe("0px -350px")
-        expect(q[1].maskPosition).toBe("-320px -1650px")
+        expect(q[0].easing).toBe(RITMO.sobe.easing)
+        expect(q[1].maskPosition).toBe("-160px -1650px")
         expect(q[0].maskImage).toBe(mascaraDaAurora("abaixo"))
     })
 
@@ -75,37 +86,46 @@ describe("a aurora da troca de tema", () => {
         expect(quadrosDaMascara(1000, 400, "desce")[0].maskClip).toBeUndefined()
     })
 
-    it("a faixa anda na frente da borda e some no fim", () => {
+    it("a faixa anda colada à borda, passa 0,1 tela e some no fim", () => {
         const desce = quadrosDaFaixa(1000, "desce")
-        expect(desce[0].transform).toBe("translateY(-660px)")
+        expect(desce[0].transform).toBe("translateY(-702px)")
         expect(desce[0].opacity).toBe(0.85)
-        expect(desce[1].transform).toBe("translateY(440px)")
+        expect(desce[0].easing).toBe(RITMO.desce.easing)
+        expect(desce[1].transform).toBe("translateY(598px)")
         expect(desce[1].offset).toBe(0.6)
+        expect(desce[2].transform).toBe("translateY(698px)")
         expect(desce[2].opacity).toBe(0)
         const sobe = quadrosDaFaixa(1000, "sobe")
-        expect(sobe[0].transform).toBe("translateY(1060px)")
-        expect(sobe[1].transform).toBe("translateY(-40px)")
+        expect(sobe[0].transform).toBe("translateY(1102px)")
+        expect(sobe[1].transform).toBe("translateY(-198px)")
+        expect(sobe[2].transform).toBe("translateY(-298px)")
         expect(sobe[2].opacity).toBe(0)
+        expect(sobe[0].easing).toBe(RITMO.sobe.easing)
+    })
+
+    it("o aro anda centrado na borda e some depois da varredura", () => {
+        const q = quadrosDoAro(1000, "desce")
+        expect(q[0].transform).toBe("translateY(-350px)")
+        expect(q[0].opacity).toBe(1)
+        expect(q[1].transform).toBe("translateY(950px)")
+        expect(q[1].offset).toBe(0.6)
+        expect(q[2].opacity).toBe(0)
+        expect(quadrosDoAro(1000, "sobe")[0].transform).toBe("translateY(950px)")
+    })
+
+    it("a máscara do aro é só o traço da onda, sem aspas duplas nem # cru", () => {
+        const m = mascaraDoAro()
+        expect(m).toContain("viewBox='0 130 200 40'")
+        expect(m).toContain("non-scaling-stroke")
+        expect(m).toContain("fill='none'")
+        expect(m).toContain("Q-75 144 -50 150")
+        const miolo = m.slice('url("'.length, -'")'.length)
+        expect(miolo).not.toContain('"')
+        expect(miolo).not.toContain("#")
     })
 
     it("a faixa é uma só, com nome de transição inline, e sai pela função devolvida", () => {
-        // Sem jsdom no projeto: um documento falso com o que `criarFaixa` toca.
-        type No = { className: string; style: Record<string, string>; atributos: Record<string, string>; setAttribute(k: string, v: string): void; remove(): void }
-        const corpo: No[] = []
-        const doc = {
-            createElement: () => {
-                const no: No = {
-                    className: "",
-                    style: {},
-                    atributos: {},
-                    setAttribute(k, v) { no.atributos[k] = v },
-                    remove() { corpo.splice(corpo.indexOf(no), 1) },
-                }
-                return no
-            },
-            querySelectorAll: (sel: string) => corpo.filter((n) => sel === `.${n.className}`),
-            body: { append: (n: No) => corpo.push(n) },
-        } as unknown as Document
+        const { doc, corpo } = documentoFalso()
         criarFaixa(doc, 1000, "sobe")
         const tirar = criarFaixa(doc, 1000, "sobe")
         expect(corpo).toHaveLength(1)
@@ -118,22 +138,53 @@ describe("a aurora da troca de tema", () => {
         expect(corpo).toHaveLength(0)
     })
 
-    it("a faixa acaba 50ms antes da raiz e é devolvida, para sair antes do fim da transição", () => {
-        const chamadas: { tempo: KeyframeAnimationOptions; animacao: object }[] = []
-        const html = {
-            animate(_q: Keyframe[], tempo: KeyframeAnimationOptions) {
+    it("o aro é um só, com nome de transição inline, a máscara da onda e três ondas por tela", () => {
+        const { doc, corpo } = documentoFalso()
+        criarAro(doc, 1000, 600)
+        const tirar = criarAro(doc, 1000, 600)
+        expect(corpo).toHaveLength(1)
+        expect(corpo[0].className).toBe("theme-aurora-aro")
+        expect(corpo[0].style.viewTransitionName).toBe("theme-aurora-aro")
+        expect(corpo[0].atributos["aria-hidden"]).toBe("true")
+        expect(corpo[0].style.height).toBe("400px")
+        expect(corpo[0].style.maskImage).toBe(mascaraDoAro())
+        expect(corpo[0].style.webkitMaskImage).toBe(mascaraDoAro())
+        expect(corpo[0].style.maskSize).toBe("400px 400px")
+        expect(corpo[0].style.maskRepeat).toBe("repeat-x")
+        tirar()
+        expect(corpo).toHaveLength(0)
+    })
+
+    it("a faixa acaba 50ms antes da raiz e vem primeiro, para sair antes do fim da transição", () => {
+        for (const sentido of ["desce", "sobe"] as const) {
+            const chamadas: { quadros: Keyframe[]; tempo: KeyframeAnimationOptions; animacao: object }[] = []
+            const animate = (quadros: Keyframe[], tempo: KeyframeAnimationOptions) => {
                 const animacao = { finished: Promise.resolve() }
-                chamadas.push({ tempo, animacao })
+                chamadas.push({ quadros, tempo, animacao })
                 return animacao
-            },
-        } as unknown as HTMLElement
-        const faixa = animarAurora(html, 1000, 375, "desce", [])
-        const raiz = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(root)")!
-        const daFaixa = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(theme-aurora)")!
-        expect(raiz.tempo.duration).toBe(AURORA.duracao)
-        expect(daFaixa.tempo.duration).toBe(AURORA.duracao - 50)
-        expect(daFaixa.tempo.fill).toBe("both")
-        expect(faixa).toBe(daFaixa.animacao)
+            }
+            const html = { animate } as unknown as HTMLElement
+            const aro = { animate } as unknown as HTMLElement
+            const animacoes = animarAurora(html, 1000, 600, sentido, [], aro)
+            const raiz = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(root)")!
+            const daFaixa = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(theme-aurora)")!
+            const doAro = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(theme-aurora-aro)")!
+            const mascaraDoAroAnda = chamadas.find((c) => c.tempo.pseudoElement === undefined)!
+            expect(raiz.tempo.duration).toBe(RITMO[sentido].duracao)
+            expect(daFaixa.tempo.duration).toBe(RITMO[sentido].duracao - 50)
+            expect(daFaixa.tempo.fill).toBe("both")
+            expect(doAro.quadros).toEqual(quadrosDoAro(1000, sentido))
+            expect(doAro.tempo.duration).toBe(RITMO[sentido].duracao)
+            expect(mascaraDoAroAnda.quadros.map((q) => q.maskPosition)).toEqual(["0px 0px", "-160px 0px", "-240px 0px"])
+            expect(animacoes).toHaveLength(4)
+            expect(animacoes[0]).toBe(daFaixa.animacao)
+            expect(animacoes).toContain(raiz.animacao)
+        }
+    })
+
+    it("sem aro, só a faixa e a raiz", () => {
+        const html = { animate: () => ({}) } as unknown as HTMLElement
+        expect(animarAurora(html, 1000, 600, "sobe", [])).toHaveLength(2)
     })
 
     it("a altura vem de quem chama, lida uma vez no toque", () => {
@@ -144,15 +195,57 @@ describe("a aurora da troca de tema", () => {
         expect(lerFonte("src/app/globals.css")).not.toContain("view-transition-name: theme-aurora")
     })
 
-    it("o CSS da faixa: borrão de 24px, a paleta fria por padrão e a quente quando sobe", () => {
+    it("o CSS da faixa: borrão de 24px e a virada quando sobe, lida no <html>", () => {
         const css = lerFonte("src/app/globals.css")
-        const i = css.indexOf("@utility theme-aurora")
+        const i = css.indexOf("@utility theme-aurora {")
         const bloco = css.slice(i, css.indexOf("\n}\n", i))
         expect(bloco).toContain("blur(24px)")
-        expect(bloco).toMatch(/\[data-sentido="?sobe"?\]/)
-        for (const t of ["violet", "indigo", "blue", "amber", "coral", "magenta"]) {
-            expect(bloco).toContain(`var(--brand-${t})`)
-        }
+        expect(bloco).toMatch(/html\[data-aurora="sobe"\]/)
+        expect(bloco).not.toContain("--aurora-1:")
         expect(bloco).not.toContain("view-transition-name")
     })
+
+    it("a paleta mora no <html> da troca: frias por padrão, quentes quando sobe", () => {
+        const css = lerFonte("src/app/globals.css")
+        const fria = css.slice(css.indexOf(".theme-reveal {"), css.indexOf("}", css.indexOf(".theme-reveal {")))
+        for (const t of ["violet", "indigo", "blue"]) expect(fria).toContain(`var(--brand-${t})`)
+        const i = css.indexOf('.theme-reveal[data-aurora="sobe"] {')
+        expect(i).toBeGreaterThan(-1)
+        const quente = css.slice(i, css.indexOf("}", i))
+        for (const t of ["amber", "coral", "magenta"]) expect(quente).toContain(`var(--brand-${t})`)
+    })
+
+    it("o CSS do aro: depois do no-scrollbar, a cor clara da paleta num token, sem nome de transição", () => {
+        const css = lerFonte("src/app/globals.css")
+        const i = css.indexOf("@utility theme-aurora-aro {")
+        expect(i).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
+        const bloco = css.slice(i, css.indexOf("\n}\n", i))
+        expect(bloco).toContain("blur(1.5px)")
+        expect(bloco).toContain("var(--aurora-3) 45%")
+        expect(bloco).toContain("var(--scrim-foreground)")
+        expect(bloco).not.toContain("view-transition-name")
+        expect(css).toMatch(/::view-transition-new\(theme-aurora-aro\)[^{]*\{\s*animation: none;/)
+        expect(css).toMatch(/::view-transition-new\(theme-aurora-parada\)[^{]*\{\s*animation: none;/)
+    })
 })
+
+/** Sem jsdom no projeto: um documento falso com o que `criarFaixa` e `criarAro` tocam. */
+function documentoFalso() {
+    type No = { className: string; style: Record<string, string>; atributos: Record<string, string>; setAttribute(k: string, v: string): void; remove(): void }
+    const corpo: No[] = []
+    const doc = {
+        createElement: () => {
+            const no: No = {
+                className: "",
+                style: {},
+                atributos: {},
+                setAttribute(k, v) { no.atributos[k] = v },
+                remove() { if (corpo.includes(no)) corpo.splice(corpo.indexOf(no), 1) },
+            }
+            return no
+        },
+        querySelectorAll: (sel: string) => corpo.filter((n) => sel === `.${n.className}`),
+        body: { append: (n: No) => corpo.push(n) },
+    } as unknown as Document
+    return { doc, corpo }
+}

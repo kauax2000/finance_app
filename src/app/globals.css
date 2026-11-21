@@ -2424,15 +2424,34 @@
 
 .theme-reveal::view-transition-group(theme-aurora),
 .theme-reveal::view-transition-new(theme-aurora),
-.theme-reveal::view-transition-old(theme-aurora) {
+.theme-reveal::view-transition-old(theme-aurora),
+.theme-reveal::view-transition-group(theme-aurora-aro),
+.theme-reveal::view-transition-new(theme-aurora-aro),
+.theme-reveal::view-transition-old(theme-aurora-aro),
+.theme-reveal::view-transition-group(theme-aurora-parada),
+.theme-reveal::view-transition-new(theme-aurora-parada),
+.theme-reveal::view-transition-old(theme-aurora-parada) {
   animation: none;
 }
 
-/* A faixa da aurora: três paradas da marca pelo destino, borradas. O escuro cai de cima
-   com as frias (violeta, índigo, azul, `--aurora-1` a `--aurora-3` por padrão); o claro
-   sobe de baixo com as quentes (âmbar, coral, magenta, `data-sentido="sobe"`), e a faixa
-   vira no eixo Y para a última parada ficar na frente, colada à borda. Exceção nomeada ao
-   arco-íris sob texto: ela passa por cima do texto por ~1s e não é lida. O volume mora em
+/* A paleta da aurora, no `<html>` só durante a troca: a faixa e o aro leem a mesma. O
+   escuro cai de cima com as frias (violeta, índigo, azul); o claro sobe de baixo com as
+   quentes (âmbar, coral, magenta), pelo `data-aurora` que o componente escreve no callback. */
+.theme-reveal {
+  --aurora-1: var(--brand-violet);
+  --aurora-2: var(--brand-indigo);
+  --aurora-3: var(--brand-blue);
+}
+
+.theme-reveal[data-aurora="sobe"] {
+  --aurora-1: var(--brand-amber);
+  --aurora-2: var(--brand-coral);
+  --aurora-3: var(--brand-magenta);
+}
+
+/* A faixa da aurora: as três paradas do destino, borradas. Subindo, ela vira no eixo Y
+   para a última parada ficar na frente, colada à borda. Exceção nomeada ao arco-íris sob
+   texto: ela passa por cima do texto por ~1s e não é lida. O volume mora em
    `AURORA.opacidade`, nunca nas paradas. */
 @utility theme-aurora {
   position: fixed;
@@ -2440,15 +2459,6 @@
   top: 0;
   pointer-events: none;
   z-index: var(--z-toast);
-  --aurora-1: var(--brand-violet);
-  --aurora-2: var(--brand-indigo);
-  --aurora-3: var(--brand-blue);
-
-  &[data-sentido="sobe"] {
-    --aurora-1: var(--brand-amber);
-    --aurora-2: var(--brand-coral);
-    --aurora-3: var(--brand-magenta);
-  }
 
   &::before {
     content: "";
@@ -2476,9 +2486,24 @@
     }
   }
 
-  &[data-sentido="sobe"]::before {
+  html[data-aurora="sobe"] &::before {
     scale: 1 -1;
   }
+}
+
+/* O aro aceso da aurora: o traço da onda (a máscara inline, `lib/aurora-do-tema`) na cor
+   clara da paleta, a terceira parada puxada ao branco (`--scrim-foreground`, branco nos dois
+   temas), com um halo na mesma cor. Anda com a borda e some depois da varredura. */
+@utility theme-aurora-aro {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  pointer-events: none;
+  z-index: var(--z-toast);
+  background: color-mix(in oklch, var(--aurora-3) 45%, var(--scrim-foreground));
+  filter: blur(1.5px)
+    drop-shadow(0 0 6px color-mix(in oklch, var(--aurora-3) 70%, var(--scrim-foreground)));
 }
 
 /* A troca de carteira, numa View Transition (`trocarComTransicao` do
