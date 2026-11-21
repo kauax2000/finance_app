@@ -981,12 +981,12 @@ function ChartReferenceDotLabel({
   viewBox,
   label,
 }: {
-  viewBox?: { x?: number; y?: number; width?: number }
+  viewBox?: { x?: number; y?: number; width?: number; height?: number }
   label: string
 }) {
   const area = usePlotArea()
   const cx = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
-  const cy = (viewBox?.y ?? 0) + (viewBox?.width ?? 0) / 2
+  const cy = (viewBox?.y ?? 0) + (viewBox?.height ?? 0) / 2
   const direita = area ? area.x + area.width : Infinity
   return (
     <text
@@ -1791,11 +1791,15 @@ function ChartBars({
                 return (
                   <Cell
                     key={String(linha[x] ?? j)}
-                    fill={parcial ? "transparent" : corDaBarra(key, i, linha)}
+                    fill={corDaBarra(key, i, linha)}
                     fillOpacity={apagada(linha)}
-                    stroke={parcial ? corDaBarra(key, i, linha) : undefined}
-                    strokeOpacity={parcial ? apagada(linha) : undefined}
-                    strokeDasharray={parcial ? "4 3" : undefined}
+                    // Só a parcial leva traço: um `stroke: undefined` explícito no Cell vence a emenda de 2px das empilhadas.
+                    {...(parcial && {
+                      fill: "transparent",
+                      stroke: corDaBarra(key, i, linha),
+                      strokeOpacity: apagada(linha),
+                      strokeDasharray: "4 3",
+                    })}
                     className="transition-[fill-opacity,stroke-opacity] duration-(--duration-base) ease-(--ease-out)"
                   />
                 )

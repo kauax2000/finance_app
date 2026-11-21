@@ -454,8 +454,11 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
   it("partial desenha a barra só com o contorno tracejado", () => {
     const t = trechoDe("ChartBars")
     expect(t).toContain("partial?: string[]")
-    expect(t).toContain('strokeDasharray={parcial ? "4 3" : undefined}')
-    expect(t).toContain('fill={parcial ? "transparent"')
+    expect(t).toContain('...(parcial && {')
+    expect(t).toContain('strokeDasharray: "4 3"')
+    expect(t).toContain('fill: "transparent"')
+    // Nenhum traço explícito fora da parcial: apagaria a emenda das empilhadas.
+    expect(t).not.toContain("parcial ? ")
   })
   it("a página do catálogo mostra as quatro peças", () => {
     const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
