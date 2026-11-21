@@ -2434,6 +2434,12 @@
   animation: none;
 }
 
+/* Os grupos pintam na ordem dos elementos, e a faixa e o aro (no fim do `body`) cobririam a
+   parada tocada: ela sobe por cima deles. */
+.theme-reveal::view-transition-group(theme-aurora-parada) {
+  z-index: 1;
+}
+
 /* A paleta da aurora, no `<html>` só durante a troca: a faixa e o aro leem a mesma. O
    escuro cai de cima com as frias (violeta, índigo, azul); o claro sobe de baixo com as
    quentes (âmbar, coral, magenta), pelo `data-aurora` que o componente escreve no callback. */

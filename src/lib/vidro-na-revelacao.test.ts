@@ -17,7 +17,10 @@ describe("a aurora nos vidros", () => {
         expect(chamadas[0].quadros).toEqual(quadrosDaMascara(800, 375, "desce", "novo", { x: 20, y: 700 }))
         expect(chamadas[1].tempo.pseudoElement).toBe("::view-transition-old(vidro-0)")
         expect(chamadas[1].quadros).toEqual(quadrosDaMascara(800, 375, "desce", "velho", { x: 20, y: 700 }))
-        for (const c of chamadas) expect(c.tempo.duration).toBe(RITMO.desce.duracao)
+        for (const c of chamadas) {
+            expect(c.tempo.duration).toBe(RITMO.desce.duracao)
+            expect(c.tempo.fill).toBe("both")
+        }
     })
 
     it("o tempo é o do sentido, e as animações voltam para quem chama", () => {

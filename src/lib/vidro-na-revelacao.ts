@@ -86,7 +86,8 @@ export function revelarVidros(
     largura: number,
     sentido: Sentido,
 ): Animation[] {
-    const tempo = { duration: RITMO[sentido].duracao, easing: "linear" }
+    // `fill` como a raiz: a volta não mostra um quadro sem máscara.
+    const tempo = { duration: RITMO[sentido].duracao, easing: "linear", fill: "both" as const }
     const animacoes: Animation[] = []
     for (const { nome, rect } of vidros) {
         const caixa = { x: rect.left, y: rect.top }

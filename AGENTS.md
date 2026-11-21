@@ -441,7 +441,8 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
   mede de 8,7 a 12,5:1 sobre as paradas puras) e a aurora da troca de tema
-  (passa por cima do texto por ~1s e não é lida; volume em `AURORA.opacidade`).
+  (passa por cima do texto por ~1s e não é lida; o volume da faixa mora em
+  `AURORA.opacidade`, e o aro e o brilho da parada, traços finos que não cobrem texto, ficam fora dela).
 - **As famílias de peça de marca**:
   - **Brilho** (`Alert`, `Card`, `Button brand`, `Badge`, `Checkbox`,
     `Radio`, `RadioGroupItem brandCard`, `Switch`, `ThemeToggle`,

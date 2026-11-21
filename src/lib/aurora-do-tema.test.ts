@@ -6,6 +6,7 @@ import {
     animarAurora,
     criarAro,
     criarFaixa,
+    varreduraAntesDoFim,
     mascaraDaAurora,
     mascaraDoAro,
     quadrosDaFaixa,
@@ -92,7 +93,11 @@ describe("a aurora da troca de tema", () => {
         expect(desce[0].opacity).toBe(0.85)
         expect(desce[0].easing).toBe(RITMO.desce.easing)
         expect(desce[1].transform).toBe("translateY(598px)")
-        expect(desce[1].offset).toBe(0.6)
+        // A varredura acaba no mesmo instante da borda: 750ms de 1200 (e 570 de 900 subindo).
+        expect(desce[1].offset).toBe(0.625)
+        expect(varreduraAntesDoFim("desce") * (RITMO.desce.duracao - 50)).toBeCloseTo(0.6 * RITMO.desce.duracao)
+        expect(varreduraAntesDoFim("sobe")).toBeCloseTo(0.6333, 4)
+        expect(quadrosDaFaixa(1000, "sobe")[1].offset).toBe(varreduraAntesDoFim("sobe"))
         expect(desce[2].transform).toBe("translateY(698px)")
         expect(desce[2].opacity).toBe(0)
         const sobe = quadrosDaFaixa(1000, "sobe")
@@ -108,7 +113,8 @@ describe("a aurora da troca de tema", () => {
         expect(q[0].transform).toBe("translateY(-350px)")
         expect(q[0].opacity).toBe(1)
         expect(q[1].transform).toBe("translateY(950px)")
-        expect(q[1].offset).toBe(0.6)
+        expect(q[1].offset).toBe(0.625)
+        expect(quadrosDoAro(1000, "sobe")[1].offset).toBe(varreduraAntesDoFim("sobe"))
         expect(q[2].opacity).toBe(0)
         expect(quadrosDoAro(1000, "sobe")[0].transform).toBe("translateY(950px)")
     })
@@ -126,14 +132,14 @@ describe("a aurora da troca de tema", () => {
 
     it("a faixa é uma só, com nome de transição inline, e sai pela função devolvida", () => {
         const { doc, corpo } = documentoFalso()
-        criarFaixa(doc, 1000, "sobe")
-        const tirar = criarFaixa(doc, 1000, "sobe")
+        criarFaixa(doc, 1000)
+        const tirar = criarFaixa(doc, 1000)
         expect(corpo).toHaveLength(1)
         expect(corpo[0].className).toBe("theme-aurora")
         expect(corpo[0].style.viewTransitionName).toBe("theme-aurora")
         expect(corpo[0].atributos["aria-hidden"]).toBe("true")
         expect(corpo[0].style.height).toBe("600px")
-        expect(corpo[0].atributos["data-sentido"]).toBe("sobe")
+        expect(corpo[0].atributos["data-sentido"]).toBeUndefined()
         tirar()
         expect(corpo).toHaveLength(0)
     })
@@ -180,6 +186,10 @@ describe("a aurora da troca de tema", () => {
             expect(doAro.tempo.fill).toBe("both")
             expect(mascaraDoAroAnda.tempo.duration).toBe(RITMO[sentido].duracao - 50)
             expect(mascaraDoAroAnda.tempo.fill).toBe("both")
+            expect(mascaraDoAroAnda.quadros[1].offset).toBe(varreduraAntesDoFim(sentido))
+            // A raiz segura o último quadro: na volta ela não mostra um quadro sem máscara.
+            expect(raiz.tempo.fill).toBe("both")
+            expect(raiz.quadros[1].offset).toBe(AURORA.varredura)
             expect(mascaraDoAroAnda.quadros.map((q) => q.maskPosition)).toEqual(["0px 0px", "-160px 0px", "-240px 0px"])
             expect(animacoes).toHaveLength(4)
             expect(animacoes[0]).toBe(daFaixa.animacao)
@@ -237,6 +247,8 @@ describe("a aurora da troca de tema", () => {
         expect(bloco).not.toContain("view-transition-name")
         expect(css).toMatch(/::view-transition-new\(theme-aurora-aro\)[^{]*\{\s*animation: none;/)
         expect(css).toMatch(/::view-transition-new\(theme-aurora-parada\)[^{]*\{\s*animation: none;/)
+        // A parada tocada pinta por cima da faixa e do aro.
+        expect(css).toMatch(/\.theme-reveal::view-transition-group\(theme-aurora-parada\) \{\s*z-index: 1;\s*\}/)
     })
 })
 

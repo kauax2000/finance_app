@@ -249,7 +249,7 @@ describe("o trilho de tema", () => {
         const callback = CODIGO.indexOf("doc.startViewTransition(")
         const tema = CODIGO.indexOf("flushSync(() => setTheme(valor))", callback)
         const sentido = CODIGO.indexOf('sentido = html.classList.contains("dark") ? "desce" : "sobe"', callback)
-        const faixa = CODIGO.indexOf("criarFaixa(document, altura, sentido)", callback)
+        const faixa = CODIGO.indexOf("criarFaixa(document, altura)", callback)
         const fimDoCallback = CODIGO.indexOf("transicao.ready", callback)
         expect(callback).toBeGreaterThan(-1)
         expect(tema).toBeGreaterThan(callback)

@@ -65,6 +65,18 @@ export function mascaraDoAro(): string {
 /** O deslize lateral da onda, na escala dela (meia imagem = 1/3 da tela). */
 const deslize = (largura: number) => [0, (-0.8 * largura) / 3, (-1.2 * largura) / 3]
 
+/** A faixa e o aro acabam 50ms antes da raiz e saem juntos, ainda dentro da transição. */
+const ANTES_DO_FIM = 50
+
+/**
+ * O fim da varredura na régua da faixa e do aro: eles duram 50ms menos, e a varredura tem de
+ * acabar no mesmo instante da borda (0,6 da duração inteira), senão correm na frente dela.
+ */
+export function varreduraAntesDoFim(sentido: Sentido) {
+    const d = RITMO[sentido].duracao
+    return (AURORA.varredura * d) / (d - ANTES_DO_FIM)
+}
+
 /** Onde a borda anda: de 15% fora da tela até 15% além do outro lado. */
 const borda = (altura: number, sentido: Sentido) =>
     sentido === "desce" ? [-0.15 * altura, 1.15 * altura] : [1.15 * altura, -0.15 * altura]
@@ -121,19 +133,18 @@ export function quadrosDaFaixa(altura: number, sentido: Sentido): Keyframe[] {
     const t = (f: number) => `translateY(${f * altura - recuo}px)`
     return [
         { transform: t(ys[0]), opacity: AURORA.opacidade, easing: RITMO[sentido].easing },
-        { offset: AURORA.varredura, transform: t(ys[1]), opacity: AURORA.opacidade },
+        { offset: varreduraAntesDoFim(sentido), transform: t(ys[1]), opacity: AURORA.opacidade },
         { transform: t(ys[2]), opacity: 0 },
     ]
 }
 
 /** Cria a faixa (chame dentro do callback da transição, depois do tema) e devolve como tirá-la. */
-export function criarFaixa(doc: Document, altura: number, sentido: Sentido): () => void {
+export function criarFaixa(doc: Document, altura: number): () => void {
     // Uma troca pulada não deixa faixa órfã.
     doc.querySelectorAll(`.${NOME_DA_FAIXA}`).forEach((el) => el.remove())
     const faixa = doc.createElement("div")
     faixa.className = NOME_DA_FAIXA
     faixa.setAttribute("aria-hidden", "true")
-    faixa.setAttribute("data-sentido", sentido)
     faixa.style.height = `${altura * AURORA.faixa}px`
     faixa.style.viewTransitionName = NOME_DA_FAIXA
     doc.body.append(faixa)
@@ -147,7 +158,7 @@ export function quadrosDoAro(altura: number, sentido: Sentido): Keyframe[] {
     const t = (y: number) => `translateY(${y - 0.2 * altura}px)`
     return [
         { transform: t(de), opacity: 1, easing: RITMO[sentido].easing },
-        { offset: AURORA.varredura, transform: t(ate), opacity: 1 },
+        { offset: varreduraAntesDoFim(sentido), transform: t(ate), opacity: 1 },
         { transform: t(ate), opacity: 0 },
     ]
 }
@@ -187,9 +198,10 @@ export function animarAurora(
     vidros: Vidro[],
     aro?: HTMLElement,
 ): Animation[] {
-    const tempo = { duration: RITMO[sentido].duracao, easing: "linear" }
-    // A faixa e o aro acabam 50ms antes e saem juntos, ainda dentro da transição.
-    const antes = { ...tempo, duration: tempo.duration - 50, fill: "both" as const }
+    // `fill` segura o último quadro: na volta (a animação ao contrário) a máscara chega a 0 e
+    // ficaria um quadro sem ela, mostrando o tema vivo antes de ele voltar.
+    const tempo = { duration: RITMO[sentido].duracao, easing: "linear", fill: "both" as const }
+    const antes = { ...tempo, duration: tempo.duration - ANTES_DO_FIM }
     const animacoes = [
         html.animate(quadrosDaFaixa(altura, sentido), {
             ...antes,
@@ -206,7 +218,7 @@ export function animarAurora(
                 pseudoElement: `::view-transition-new(${NOME_DO_ARO})`,
             }),
             aro.animate(
-                [{ ...posicao(x0), easing: RITMO[sentido].easing }, { ...posicao(x1), offset: AURORA.varredura }, posicao(x2)],
+                [{ ...posicao(x0), easing: RITMO[sentido].easing }, { ...posicao(x1), offset: varreduraAntesDoFim(sentido) }, posicao(x2)],
                 antes,
             ),
         )

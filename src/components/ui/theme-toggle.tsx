@@ -196,7 +196,7 @@ export function ThemeToggle({
             flushSync(() => setTheme(valor))
             sentido = html.classList.contains("dark") ? "desce" : "sobe"
             html.dataset.aurora = sentido
-            tirarFaixa = criarFaixa(document, altura, sentido)
+            tirarFaixa = criarFaixa(document, altura)
             aurora = criarAro(document, altura, largura)
             // A parada tocada fica por cima, viva. Uma troca pulada no meio deixou o nome noutra
             // parada deste trilho, e dois nomes iguais abortariam a transição.
