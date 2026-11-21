@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 22px;max-width:980px}.lead b{color:#ddd;font-weight:500}
+.opt{margin:0 0 40px}.tag{font:600 12px Inter;color:#ff6a45;margin:0 0 4px}.why{color:#9a9a9a;font-size:13px;margin:0 0 12px;max-width:900px}.why b{color:#ddd;font-weight:500}
+.row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}.sub{color:#777;font-size:11px;margin:0 0 6px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px;width:376px;min-height:214px;display:flex;flex-direction:column}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}.t{font-weight:600}.cap{color:#8f8f8f;font-size:12px}
+.m{font:600 13px "Geist Mono",monospace;color:#fff;white-space:nowrap}.mut{color:#8f8f8f;font-size:12px}
+.up{color:#f0c27a}.down{color:#7fdca6}
+.cc{width:38px;height:26px;border-radius:6px;flex:none;position:relative;background:linear-gradient(135deg,#27324f,#151c30);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);display:inline-block}
+.cc:after{content:"VISA";position:absolute;right:4px;bottom:3px;font:800 7px Inter;color:#c9d6ff}.cc:before{content:"";position:absolute;left:5px;top:6px;width:8px;height:6px;border-radius:2px;background:#c9a95c;opacity:.8}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;background:#1b1b1b;border:1px solid #262626;font-size:12px}
+.dot{width:8px;height:8px;border-radius:9px;flex:none}.note{color:#888;font-size:13px;max-width:900px}
+.big{font:600 22px Inter;letter-spacing:-.01em}
+.lg{display:grid;grid-template-columns:auto 1fr auto;column-gap:8px;row-gap:8px;align-items:start;font-size:13px}.lg .dot{margin-top:6px}
+.waffle{display:grid;grid-template-columns:repeat(20,1fr);gap:3px}.waffle i{aspect-ratio:1;border-radius:3px;display:block}
+.tm{display:flex;gap:4px;height:118px}.tm>div{border-radius:14px;padding:10px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;min-width:0}
+.tm .nm{font-size:12px;font-weight:600;color:rgba(255,255,255,.95);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tm .vl{font:600 13px "Geist Mono";color:#fff}
+</style></head><body>
+<h1>"Como foi pago" — mais versões visuais (família C)</h1>
+<p class="lead">A C atual (meia rosca) fica no topo, para comparar. As outras trocam o desenho e mantêm o que as três primeiras já tinham: <b>o nome inteiro</b>, <b>o cartão com a bandeira</b>, <b>as compras</b> e <b>a diferença contra outubro</b>. Cada uma mostra a Renata (tudo num cartão) e um mês com três formas.</p>
+
+<div class="opt"><div class="tag">C · MEIA ROSCA (ATUAL)</div>
+<div class="row"><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;flex-direction:column;align-items:center"><svg width="200" height="104" viewBox="0 0 200 104"><g fill="none" stroke-width="14" stroke-linecap="round"><path d="M16 96 A84 84 0 0 1 128.5 17" stroke="#2a9db0"/><path d="M146 26 A84 84 0 0 1 178 66" stroke="#8b7cf0"/><path d="M182.5 80 A84 84 0 0 1 184 96" stroke="#d29a4a"/></g></svg>
+<div style="margin-top:-40px;text-align:center"><div class="big">62%</div><div class="mut">no cartão</div></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px"><span class="chip"><span class="dot" style="background:#2a9db0"></span>Bradesco Visa <span class="m">R$ 1.360</span></span><span class="chip"><span class="dot" style="background:#8b7cf0"></span>Pix <span class="m">R$ 658</span></span><span class="chip"><span class="dot" style="background:#d29a4a"></span>Dinheiro <span class="m">R$ 176</span></span></div></div></div></div>
+
+<div class="opt"><div class="tag">C2 · ROSCA INTEIRA COM A LEGENDA AO LADO</div>
+<p class="why">A rosca cheia (120px) com respiro entre as fatias e o valor do mês no miolo. A legenda ao lado quebra em duas linhas em vez de cortar o nome, com o valor e a diferença contra outubro embaixo. Passar o cursor numa fatia acende a linha dela, e vice-versa. Com uma forma, o miolo leva o cartão.</p>
+<div class="row"><div><p class="sub">uma forma</p><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;align-items:center;gap:16px;margin-top:auto;margin-bottom:auto"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#2a9db0" stroke-width="12"/><foreignObject x="41" y="47" width="38" height="26"><span class="cc"></span></foreignObject></svg>
+<div class="lg" style="flex:1"><span class="dot" style="background:#2a9db0"></span><div>Bradesco Visa Infinity<div class="mut">11 compras · <span class="up">+R$ 1.245</span></div></div><span class="m">100%</span></div></div></div></div>
+<div><p class="sub">três formas</p><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;align-items:center;gap:16px;margin-top:auto;margin-bottom:auto"><svg width="120" height="120" viewBox="0 0 120 120"><g transform="rotate(-90 60 60)" fill="none" stroke-width="12" stroke-linecap="round"><circle cx="60" cy="60" r="50" stroke="#2a9db0" stroke-dasharray="184 314"/><circle cx="60" cy="60" r="50" stroke="#8b7cf0" stroke-dasharray="80 314" stroke-dashoffset="-198"/><circle cx="60" cy="60" r="50" stroke="#d29a4a" stroke-dasharray="11 314" stroke-dashoffset="-290"/></g><text x="60" y="58" text-anchor="middle" fill="#999" font-size="10">no mês</text><text x="60" y="73" text-anchor="middle" fill="#fff" font-size="13" font-family="Geist Mono" font-weight="600">R$ 2.194</text></svg>
+<div class="lg" style="flex:1"><span class="dot" style="background:#2a9db0"></span><div>Bradesco Visa Infinity<div class="mut">R$ 1.360 · <span class="up">+312</span></div></div><span class="m">62%</span>
+<span class="dot" style="background:#8b7cf0"></span><div>Pix<div class="mut">R$ 658 · <span class="down">−90</span></div></div><span class="m">30%</span>
+<span class="dot" style="background:#d29a4a"></span><div>Dinheiro<div class="mut">R$ 176 · novo</div></div><span class="m">8%</span></div></div></div></div></div></div>
+
+<div class="opt"><div class="tag">C3 · ANÉIS CONCÊNTRICOS</div>
+<p class="why">Um anel por forma, do maior para o menor, de fora para dentro, como os anéis de atividade do relógio. Cada anel preenche a fatia daquela forma no mês; o fundo do anel mostra quanto falta para 100%. A legenda ao lado segue a ordem dos anéis. Com uma forma, um anel só, fechado, com o cartão no meio.</p>
+<div class="row"><div><p class="sub">uma forma</p><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;align-items:center;gap:16px;margin:auto 0"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#2a9db0" stroke-width="12"/><foreignObject x="41" y="47" width="38" height="26"><span class="cc"></span></foreignObject></svg>
+<div style="flex:1"><div style="font-weight:600">Tudo no Bradesco Visa Infinity</div><div class="mut">11 compras · R$ 2.193,60</div><div class="mut up">+R$ 1.245 vs outubro</div></div></div></div></div>
+<div><p class="sub">três formas</p><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div style="display:flex;align-items:center;gap:16px;margin:auto 0"><svg width="120" height="120" viewBox="0 0 120 120"><g transform="rotate(-90 60 60)" fill="none" stroke-width="10" stroke-linecap="round">
+<circle cx="60" cy="60" r="52" stroke="#2a9db0" stroke-opacity=".15"/><circle cx="60" cy="60" r="52" stroke="#2a9db0" stroke-dasharray="203 327"/>
+<circle cx="60" cy="60" r="39" stroke="#8b7cf0" stroke-opacity=".15"/><circle cx="60" cy="60" r="39" stroke="#8b7cf0" stroke-dasharray="74 245"/>
+<circle cx="60" cy="60" r="26" stroke="#d29a4a" stroke-opacity=".15"/><circle cx="60" cy="60" r="26" stroke="#d29a4a" stroke-dasharray="13 163"/></g></svg>
+<div class="lg" style="flex:1"><span class="dot" style="background:#2a9db0"></span><div>Bradesco Visa Infinity<div class="mut">R$ 1.360 · <span class="up">+312</span></div></div><span class="m">62%</span>
+<span class="dot" style="background:#8b7cf0"></span><div>Pix<div class="mut">R$ 658 · <span class="down">−90</span></div></div><span class="m">30%</span>
+<span class="dot" style="background:#d29a4a"></span><div>Dinheiro<div class="mut">R$ 176 · novo</div></div><span class="m">8%</span></div></div></div></div></div></div>
+
+<div class="opt"><div class="tag">C4 · BLOCOS PROPORCIONAIS (MAPA DE ÁREAS)</div>
+<p class="why">Cada forma é um bloco, com a área proporcional ao valor, e <b>o nome e o valor escritos dentro</b>: não há legenda a parear com cor. O bloco é o alvo de toque do filtro. Blocos pequenos demais para o texto levam só o valor, e o nome aparece embaixo. Com uma forma, um bloco só com o cartão.</p>
+<div class="row"><div><p class="sub">uma forma</p><div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap up">+R$ 1.245 vs out</span></div>
+<div class="tm"><div style="flex:1;background:linear-gradient(135deg,#2a9db0,#1f7686)"><span class="cc"></span><div><div class="nm">Bradesco Visa Infinity</div><div class="vl">R$ 2.193,60 · 11 compras</div></div></div></div></div></div>
+<div><p class="sub">três formas</p><div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap">vs outubro</span></div>
+<div class="tm"><div style="flex:62;background:#2a9db0"><div class="nm">Bradesco Visa Infinity</div><div><div class="vl">R$ 1.360</div><div style="font-size:11px;color:rgba(255,255,255,.8)">62% · +312</div></div></div>
+<div style="flex:38;display:flex;flex-direction:column;gap:4px;padding:0;background:none"><div style="flex:30;background:#8b7cf0;border-radius:14px;padding:10px;display:flex;flex-direction:column;justify-content:space-between"><div class="nm">Pix</div><div class="vl">R$ 658</div></div><div style="flex:8;background:#d29a4a;border-radius:10px;padding:4px 10px;display:flex;align-items:center;justify-content:space-between"><span class="nm" style="font-size:11px">Dinheiro</span><span class="vl" style="font-size:11px">R$ 176</span></div></div></div></div></div></div></div>
+
+<div class="opt"><div class="tag">C5 · CEM QUADRADINHOS</div>
+<p class="why">Uma grade de 100 quadradinhos, cada um 1% do mês, pintados pela forma: lê como "de cada R$ 100, R$ 62 foram no cartão". A legenda embaixo diz isso em reais. Com uma forma, a grade inteira na cor do cartão e a frase.</p>
+<div class="row"><div><p class="sub">uma forma</p><div class="card"><div class="hd"><span class="t">Como foi pago</span></div>
+<div class="waffle" id="w1"></div><div style="margin-top:12px;display:flex;align-items:center;gap:8px"><span class="cc"></span><div><div style="font-weight:600;font-size:13px">Tudo no Bradesco Visa Infinity</div><div class="mut">11 compras · <span class="up">+R$ 1.245</span> vs outubro</div></div></div></div></div>
+<div><p class="sub">três formas</p><div class="card"><div class="hd"><span class="t">Como foi pago</span><span class="cap">de cada R$ 100</span></div>
+<div class="waffle" id="w2"></div>
+<div class="lg" style="margin-top:12px;grid-template-columns:auto 1fr auto auto"><span class="dot" style="background:#2a9db0"></span><span>Bradesco Visa Infinity</span><span class="m">R$ 62</span><span class="mut up">+312</span><span class="dot" style="background:#8b7cf0"></span><span>Pix</span><span class="m">R$ 30</span><span class="mut down">−90</span><span class="dot" style="background:#d29a4a"></span><span>Dinheiro</span><span class="m">R$ 8</span><span class="mut">novo</span></div></div></div></div></div>
+
+<p class="note">Minha escolha nesta família: <b style="color:#ddd">C2</b>. É a rosca de hoje corrigida: o nome não corta, os números ficam ao lado e o caso de uma forma vira o cartão no miolo. A <b style="color:#ddd">C4</b> é a mais diferente e a mais fácil de tocar, mas um bloco pequeno (abaixo de ~10%) não cabe o nome.</p>
+<script>
+function fill(id,parts){const w=document.getElementById(id);parts.forEach(([n,c])=>{for(let i=0;i<n;i++){const e=document.createElement('i');e.style.background=c;w.appendChild(e)}})}
+fill('w1',[[100,'#2a9db0']]);fill('w2',[[62,'#2a9db0'],[30,'#8b7cf0'],[8,'#d29a4a']]);
+</script>
+</body></html>
