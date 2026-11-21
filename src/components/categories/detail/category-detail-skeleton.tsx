@@ -3,7 +3,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
  * O esqueleto na forma do detalhe: o cabeçalho (só no desktop), a faixa do mês,
- * o cartão dos últimos meses, o insight e a lista dos lançamentos.
+ * o bloco do que é feito o mês, o cartão dos últimos meses, o insight e a lista dos lançamentos.
  */
 export function CategoryDetailSkeleton() {
     return (
@@ -16,6 +16,7 @@ export function CategoryDetailSkeleton() {
                     <Skeleton className="h-2 w-full rounded-full md:w-md" />
                     <Skeleton shape="text" className="w-56" />
                 </div>
+                <Skeleton shape="surface" className="h-80" />
                 <Skeleton shape="surface" className="h-64" />
                 <Skeleton shape="surface" className="h-20" />
                 <div className="flex flex-col gap-3">

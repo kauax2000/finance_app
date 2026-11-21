@@ -10,6 +10,7 @@ import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
 import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import { currencyBRL, percentBR } from "@/lib/formatters"
+import { fraseDoFechamento } from "./regua-do-mes-contas"
 
 /** Onde o mês está (0–100): o traço do ritmo no `Progress`. */
 export function ritmoDoMes(yearMonth: string, hoje = new Date()): number {
@@ -28,6 +29,17 @@ export function frasesDoLimite(lancado: number, previsto: number, limite: number
             ? `Com o previsto, passa ${currencyBRL(lancado + previsto - limite)}`
             : null
     return { principal, aviso }
+}
+
+/** "Deve fechar em R$ X · …": só no mês aberto (no fechado o valor já é o fechamento). */
+export function LinhaDoFechamento(props: Parameters<typeof fraseDoFechamento>[0]) {
+    const { valor, fim } = fraseDoFechamento(props)
+    return (
+        <p className="text-sm">
+            Deve fechar em <span className="nums font-semibold">{valor}</span>
+            {fim.length ? <span className="text-muted-foreground">{` · ${fim.join(" · ")}`}</span> : null}
+        </p>
+    )
 }
 
 /** A barra do mês: contra o limite (com o previsto e o ritmo) ou, sem limite, o peso na carteira. */
@@ -107,6 +119,7 @@ export function ResumoDoMes({
     const comLimite = despesa && limite != null && limite > 0
     const frases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
     const aindaVem = previsto > 0 && !frases?.aviso ? `Ainda vem ${currencyBRL(previsto)}` : null
+    const fechamento = aberto ? <LinhaDoFechamento yearMonth={yearMonth} lancado={lancado} previsto={previsto} limite={comLimite ? limite : null} /> : null
     const barra = (
         <BarraDoMes
             tipo={tipo}
@@ -149,13 +162,14 @@ export function ResumoDoMes({
                 <div>
                     <Caption>{despesa ? "Gasto" : "Entrou"}</Caption>
                     <MoneyDisplay value={lancado} size="3xl" />
+                    {fechamento}
                 </div>
                 {barra}
-                {frases || aindaVem ? (
+                {frases || (aindaVem && !fechamento) ? (
                     <div>
                         {frases ? <P>{frases.principal}</P> : null}
                         {frases?.aviso ? <Muted>{frases.aviso}</Muted> : null}
-                        {aindaVem ? <Muted>{aindaVem}</Muted> : null}
+                        {aindaVem && !fechamento ? <Muted>{aindaVem}</Muted> : null}
                     </div>
                 ) : null}
                 {pesoNoTotal != null && lancado !== 0 ? (

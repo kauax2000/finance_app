@@ -10,7 +10,7 @@ import { currencyBRL } from "@/lib/formatters"
 import type { Transaction } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { escalaDaRegua, fraseDaComparacao, nomeDoMes, reaisInteiros, vereditoDaMedia } from "./regua-do-mes-contas"
-import { BarraDoMes, frasesDoLimite } from "./resumo-do-mes"
+import { BarraDoMes, frasesDoLimite, LinhaDoFechamento } from "./resumo-do-mes"
 
 export type FaixaDoMesProps = {
     tipo: TipoDaCategoria
@@ -40,7 +40,7 @@ export function ReguaDoMes({
     /** O que vem depois do veredito (1A: os fatos em colunas). */
     children?: ReactNode
 }) {
-    const { tipo, yearMonth, lancado, previsto, limite, comparacao, media } = props
+    const { tipo, yearMonth, aberto, lancado, previsto, limite, comparacao, media } = props
     const despesa = tipo === "expense"
     const mes = nomeDoMes(yearMonth)
     const frase = fraseDaComparacao({ tipo, comparacao })
@@ -83,6 +83,7 @@ export function ReguaDoMes({
                 <div className="grid gap-3">
                     <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
                     {valor}
+                    {aberto ? <LinhaDoFechamento yearMonth={yearMonth} lancado={lancado} previsto={previsto} limite={comLimite ? limite : null} /> : null}
                 </div>
                 <div>
                     <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", veredito && "mb-3")}>

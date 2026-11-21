@@ -38,6 +38,12 @@ import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
 import { FaixaDoMes } from "@/components/categories/detail/faixa-do-mes"
 import { UltimosSeisMeses } from "@/components/categories/detail/resumo/ultimos-seis-meses"
 import { InsightDaCategoria } from "@/components/categories/detail/resumo/insight-da-categoria"
+import { DoQueEFeitoOMes } from "@/components/categories/detail/do-que-e-feito-o-mes"
+import { QuemGastou } from "@/components/categories/detail/quem-gastou"
+import { composicaoDoMes, fraseDaComposicao, quemGastou } from "@/lib/composicao-do-mes"
+import { useAdultos } from "@/lib/divisao/use-adultos"
+import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
+import { useHistoricoDaComposicaoQuery } from "@/lib/queries/use-historico-da-composicao"
 import { PARA_ONDE_VAI_ID } from "@/components/dashboard/dashboard-para-onde-vai"
 import { CategoryEmbeddedTransactions } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
@@ -65,6 +71,7 @@ import {
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
     tileColorFor,
+    tileVividColor,
 } from "@/lib/tile-palette"
 
 export default function CategoryDetailPageClient({ categoryId }: { categoryId: string }) {
@@ -95,6 +102,14 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         yearMonth,
         enabled: detailEnabled,
     })
+
+    const historicoQuery = useHistoricoDaComposicaoQuery({
+        workspaceId: currentWorkspaceId,
+        categoryId,
+        yearMonth,
+        enabled: detailEnabled,
+    })
+    const historico = historicoQuery.data
 
     const bundle = detailQuery.data
     const category = bundle?.category ?? null
@@ -445,7 +460,25 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
         // Um insight só: o primeiro que leva a uma ação (definir limite, ou a parcela que termina).
         const insight = insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).find((i) => i.acao) ?? null
+        // Sem o histórico (carregando ou falhou), o bloco espera: a frase sairia sem o normal.
+        const composicao = historico
+            ? composicaoDoMes({
+                  txsDoMes: txs,
+                  historico,
+                  tipo,
+                  yearMonth,
+                  lookup,
+                  parcelas: installmentPlans,
+                  assinaturas: subscriptions,
+                  categoryId,
+                  media,
+                  criadaEm: category.created_at,
+              })
+            : null
         return {
+            composicao,
+            frase: composicao ? fraseDaComposicao(composicao, tipo === "expense") : [],
+            quem: quemGastou(txs, tipo),
             comparacao: comparacaoComMesAnterior({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
             media,
             maior: maioresLancamentos(txs, tipo, 1)[0] ?? null,
@@ -456,6 +489,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     }, [
         category,
         categoryId,
+        historico,
         hojeYmd,
         installmentPlans,
         limite,
@@ -470,6 +504,10 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     ])
 
     const isMobile = useIsMobile()
+    // "Quem gastou" só na carteira com dois adultos ou mais, e nunca para o convidado.
+    const adultos = useAdultos(isAdulto && currentWorkspaceId ? currentWorkspaceId : "")
+    const comVariosAdultos = adultos.lista.length >= 2
+    const diretorio = useMemberDirectoryQuery(comVariosAdultos ? currentWorkspaceId : null).data ?? []
 
     if (workspaceError) {
         return (
@@ -599,6 +637,24 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             maior={analise.maior}
                         />
                     )
+                }
+                composicao={
+                    analise?.composicao && txs.length > 0 ? (
+                        <DoQueEFeitoOMes
+                            composicao={analise.composicao}
+                            frase={analise.frase}
+                            despesa={tipo === "expense"}
+                            yearMonth={yearMonth}
+                            corDaSerie={tileVividColor(
+                                tileColorFor(category.color) ?? (tipo === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT),
+                            )}
+                        />
+                    ) : null
+                }
+                quem={
+                    analise && comVariosAdultos ? (
+                        <QuemGastou pessoas={analise.quem} diretorio={diretorio} despesa={tipo === "expense"} />
+                    ) : null
                 }
                 meses={
                     analise ? (

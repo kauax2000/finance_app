@@ -41,3 +41,28 @@ export function fraseDaComparacao({ tipo, comparacao }: { tipo: TipoDaCategoria;
         resto: `${mesmoPonto ? `que no mesmo dia de ${mes}` : `que em ${mes}`} (${reaisInteiros(anterior)})`,
     }
 }
+
+/**
+ * "deve fechar em R$ X" do mês aberto: o lançado mais o previsto, e o fim (sem previsto, "nada mais
+ * previsto até o dia N"; com limite, "R$ Y acima do limite" ou "cabe no limite"). O mês fechado não chama.
+ */
+export function fraseDoFechamento({
+    yearMonth,
+    lancado,
+    previsto,
+    limite,
+}: {
+    yearMonth: string
+    lancado: number
+    previsto: number
+    limite: number | null
+}): { valor: string; fim: string[] } {
+    const fecha = lancado + previsto
+    const fim: string[] = []
+    if (previsto <= 0) {
+        const { y, m } = parseYearMonth(yearMonth)
+        fim.push(`nada mais previsto até o dia ${new Date(y, m, 0).getDate()}`)
+    }
+    if (limite != null && limite > 0) fim.push(fecha > limite ? `${reaisInteiros(fecha - limite)} acima do limite` : "cabe no limite")
+    return { valor: reaisInteiros(fecha), fim }
+}

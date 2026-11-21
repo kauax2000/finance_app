@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { escalaDaRegua, fraseDaComparacao, vereditoDaMedia } from "./regua-do-mes-contas"
+import { escalaDaRegua, fraseDaComparacao, fraseDoFechamento, vereditoDaMedia } from "./regua-do-mes-contas"
 
 const comparacao = (over: Partial<Parameters<typeof fraseDaComparacao>[0]["comparacao"]> = {}) => ({
     mesAnterior: "2026-10",
@@ -53,5 +53,26 @@ describe("fraseDaComparacao", () => {
     })
     it("sem mês anterior, sem frase", () => {
         expect(fraseDaComparacao({ tipo: "expense", comparacao: comparacao({ variacao: null }) })).toBeNull()
+    })
+})
+
+describe("fraseDoFechamento", () => {
+    const sp = (s: string) => s.replace(/\s/g, " ")
+    it("soma o lançado e o previsto", () => {
+        const f = fraseDoFechamento({ yearMonth: "2026-11", lancado: 1000, previsto: 500, limite: null })
+        expect(sp(f.valor)).toBe("R$ 1.500")
+        expect(f.fim).toEqual([])
+    })
+    it("sem previsto, diz até o último dia do mês", () => {
+        expect(fraseDoFechamento({ yearMonth: "2026-11", lancado: 3062.54, previsto: 0, limite: null }).fim).toEqual([
+            "nada mais previsto até o dia 30",
+        ])
+    })
+    it("com limite, acima ou cabe", () => {
+        expect(sp(fraseDoFechamento({ yearMonth: "2026-02", lancado: 900, previsto: 300, limite: 1000 }).fim.join())).toBe("R$ 200 acima do limite")
+        expect(fraseDoFechamento({ yearMonth: "2026-02", lancado: 900, previsto: 0, limite: 1000 }).fim).toEqual([
+            "nada mais previsto até o dia 28",
+            "cabe no limite",
+        ])
     })
 })
