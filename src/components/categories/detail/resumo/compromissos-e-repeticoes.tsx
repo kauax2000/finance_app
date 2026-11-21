@@ -10,6 +10,7 @@ import { Caption } from "@/components/ui/typography"
 import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { Compromissos, repeticoes } from "@/lib/categoria-resumo"
 import { currencyBRL } from "@/lib/formatters"
+import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
 import { mesPorExtenso } from "./rotulos"
 
 type Compromisso = Compromissos["itens"][number]
@@ -32,7 +33,7 @@ function detalheDaParcela(c: Compromisso, hojeYm: string): string {
     return [qual, termina].filter(Boolean).join(" · ")
 }
 
-function LinhaDoCompromisso({ c, hojeYm }: { c: Compromisso; hojeYm: string }) {
+function LinhaDoCompromisso({ c, hojeYm, cor }: { c: Compromisso; hojeYm: string; cor: string }) {
     const parcela = c.tipo === "parcela"
     const total = c.total ?? 0
     return (
@@ -54,6 +55,7 @@ function LinhaDoCompromisso({ c, hojeYm }: { c: Compromisso; hojeYm: string }) {
                         value={c.atual ?? 0}
                         max={total}
                         segments={total}
+                        fillColor={cor}
                         aria-label={`${c.atual ?? 0} de ${total} parcelas pagas`}
                     />
                 ) : null}
@@ -68,11 +70,14 @@ function LinhaDoCompromisso({ c, hojeYm }: { c: Compromisso; hojeYm: string }) {
 /** As parcelas e assinaturas da categoria e as descrições que se repetem no mês, lado a lado no `md`+. Cada lado some vazio. */
 export function CompromissosERepeticoes({
     tipo,
+    cor,
     hojeYmd,
     compromissos,
     repetidas,
 }: {
     tipo: TipoDaCategoria
+    /** `categories.color`: as parcelas pagas pintam nela. */
+    cor: string | null
     hojeYmd: string
     compromissos: Compromissos
     repetidas: ReturnType<typeof repeticoes>
@@ -80,6 +85,7 @@ export function CompromissosERepeticoes({
     const itens = [...compromissos.itens].sort(pelaProximaData)
     if (itens.length === 0 && repetidas.length === 0) return null
     const hojeYm = hojeYmd.slice(0, 7)
+    const corDaCategoria = tileColorFor(cor) ?? (tipo === "expense" ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT)
     const projecao = repetidas
         .filter((r) => (r.projecaoNoMes ?? 0) > 0)
         .sort((a, b) => (b.projecaoNoMes ?? 0) - (a.projecaoNoMes ?? 0))[0]
@@ -100,7 +106,7 @@ export function CompromissosERepeticoes({
                     </CardToolbar>
                     <ItemGroup variant="divided">
                         {itens.map((c) => (
-                            <LinhaDoCompromisso key={`${c.tipo}-${c.id}`} c={c} hojeYm={hojeYm} />
+                            <LinhaDoCompromisso key={`${c.tipo}-${c.id}`} c={c} hojeYm={hojeYm} cor={corDaCategoria} />
                         ))}
                     </ItemGroup>
                 </Card>

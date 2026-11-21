@@ -4,17 +4,18 @@ import { useMemo } from "react"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartArea, ChartBars, ChartDonut, ChartLine, ChartReferenceLine, type ChartConfig } from "@/components/ui/chart"
 import { Caption } from "@/components/ui/typography"
-import { shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
+import { shiftYearMonth } from "@/lib/budget-month"
 import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { porDiaDaSemana, porFaixaDeValor, ritmoDoMes } from "@/lib/categoria-resumo"
 import { currencyBRL } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
-import { mesPorExtenso } from "./rotulos"
+import { mesCurto, mesPorExtenso } from "./rotulos"
 
-// A cor da categoria só no traço e na área (12 meses e ritmo); barras e rosca na rampa neutra.
-const CONFIG_DIAS = { total: { label: "Total", color: "var(--chart-1)" } } satisfies ChartConfig
-const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--chart-1)" } } satisfies ChartConfig
-const CONFIG_PAGAMENTO = {} satisfies ChartConfig
+// A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
+const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
+const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
+// A rosca pula o `--chart-1`: é verde, e verde lê como entrada.
+const RAMPA_DO_PAGAMENTO = ["var(--chart-2)", "var(--chart-3)", "var(--chart-5)", "var(--chart-4)"]
 
 /** O nome da barra de maior valor, ou null quando tudo é zero. */
 function maiorDe<T>(linhas: T[], nome: (l: T) => string, valor: (l: T) => number): string | null {
@@ -70,10 +71,12 @@ export function GraficosDoResumo({
     const corDaSerie = tileColorFor(cor) ?? (despesa ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT)
     const oQue = despesa ? "Gasto" : "Entrada"
 
-    const meses = useMemo(
-        () => serie.map((p) => ({ mes: shortLabelYearMonthPt(p.yearMonth), total: p.total })),
-        [serie],
-    )
+    // Os meses zerados do começo achatariam a curva: ela abre no primeiro mês com valor, com no mínimo 3 pontos.
+    const meses = useMemo(() => {
+        const primeiro = serie.findIndex((p) => p.total !== 0)
+        const inicio = primeiro < 0 ? 0 : Math.max(0, Math.min(primeiro, serie.length - 3))
+        return serie.slice(inicio).map((p) => ({ mes: mesCurto(p.yearMonth), total: p.total }))
+    }, [serie])
     const configMeses = useMemo(
         () => ({ total: { label: nomeDaCategoria, color: corDaSerie } }) satisfies ChartConfig,
         [nomeDaCategoria, corDaSerie],
@@ -95,6 +98,10 @@ export function GraficosDoResumo({
     const comDias = diasDaSemana.some((d) => d.total > 0)
     const comFaixas = faixas.some((f) => f.quantidade > 0)
     const comPagamento = porPagamento.length > 0
+    const totalPago = porPagamento.reduce((acc, f) => acc + f.valor, 0)
+    const configPagamento = Object.fromEntries(
+        porPagamento.map((f, i) => [f.nome, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
+    ) satisfies ChartConfig
     const comMedia = media != null && media > 0
 
     if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
@@ -108,12 +115,13 @@ export function GraficosDoResumo({
                             <ChartArea
                                 variant="gradient"
                                 marker="last"
+                                yAxis={false}
                                 config={configMeses}
                                 data={meses}
                                 x="mes"
                                 aspect="auto"
                                 className="h-44 w-full"
-                                label={`${oQue} em ${nomeDaCategoria} em cada um dos últimos 12 meses`}
+                                label={`${oQue} em ${nomeDaCategoria} mês a mês, até 12 meses`}
                                 description={
                                     comMedia
                                         ? `O último ponto é o mês aberto. A linha tracejada é a média, ${currencyBRL(media)}.`
@@ -130,6 +138,8 @@ export function GraficosDoResumo({
                             apoio={aberto && hoje != null ? `até dia ${hoje}` : "mês inteiro"}
                         >
                             <ChartLine
+                                marker="last"
+                                yAxis={false}
                                 config={configRitmo}
                                 data={ritmo}
                                 x="dia"
@@ -145,13 +155,15 @@ export function GraficosDoResumo({
             {comPagamento || comDias || comFaixas ? (
                 <div className="grid gap-3 md:grid-cols-3">
                     {comPagamento ? (
-                        <CartaoDoGrafico titulo="Como foi pago">
+                        // O total vai no cabeçalho: no miolo de uma rosca de 96px ele sairia abaixo da escala.
+                        <CartaoDoGrafico titulo="Como foi pago" apoio={currencyBRL(totalPago)}>
                             <ChartDonut
-                                config={CONFIG_PAGAMENTO}
+                                config={configPagamento}
                                 data={porPagamento}
                                 nameKey="nome"
                                 dataKey="valor"
-                                className="h-32"
+                                legend="list"
+                                className="size-24"
                                 label={`${oQue} do mês por forma de pagamento`}
                             />
                         </CartaoDoGrafico>
@@ -163,6 +175,8 @@ export function GraficosDoResumo({
                                 data={diasDaSemana}
                                 x="nome"
                                 selected={maiorDe(diasDaSemana, (d) => d.nome, (d) => d.total)}
+                                selectedColor={corDaSerie}
+                                yAxis={false}
                                 aspect="auto"
                                 className="h-32 w-full"
                                 label={`${oQue} do mês por dia da semana`}
@@ -178,6 +192,8 @@ export function GraficosDoResumo({
                                 x="faixa"
                                 format="number"
                                 selected={maiorDe(faixas, (f) => f.faixa, (f) => f.quantidade)}
+                                selectedColor={corDaSerie}
+                                yAxis={false}
                                 aspect="auto"
                                 className="h-32 w-full"
                                 label={despesa ? "Quantas compras em cada faixa de valor" : "Quantas entradas em cada faixa de valor"}

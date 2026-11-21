@@ -51,7 +51,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
     const temCompromissos = p.compromissos.itens.length > 0 || p.repetidas.length > 0
     return (
         <div className="grid gap-6">
-            <FraseDoResumo frase={p.frase} />
+            <FraseDoResumo frase={p.frase} tipo={p.tipo} cor={p.cor} />
             <GraficosDoResumo
                 tipo={p.tipo}
                 cor={p.cor}
@@ -65,7 +65,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                 diasDaSemana={p.diasDaSemana}
                 faixas={p.faixas}
             />
-            <CartoesDoGasto tipo={p.tipo} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
+            <CartoesDoGasto tipo={p.tipo} cor={p.cor} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
             {temCompromissos ? (
                 <PageSection>
                     <PageSectionHeader>
@@ -73,6 +73,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                     </PageSectionHeader>
                     <CompromissosERepeticoes
                         tipo={p.tipo}
+                        cor={p.cor}
                         hojeYmd={p.hojeYmd}
                         compromissos={p.compromissos}
                         repetidas={p.repetidas}

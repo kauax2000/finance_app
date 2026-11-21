@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowPathIcon, CalendarDaysIcon, ReceiptPercentIcon, ShoppingBagIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, CalendarDaysIcon, ReceiptPercentIcon, ShoppingBagIcon } from "@heroicons/react/20/solid"
 import {
     StatCard,
     StatCardFooter,
@@ -15,17 +15,23 @@ import type { compraTipica, diaDeMaisGasto, maisFrequente } from "@/lib/categori
 import { currencyBRL } from "@/lib/formatters"
 import type { Transaction } from "@/lib/supabase"
 import { transactionLocalYmd } from "@/lib/transaction-date"
+import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE, tileColorFor } from "@/lib/tile-palette"
 import { diaEMes } from "./rotulos"
+
+const paleta = (nome: string) => TILE_PALETTE.find((p) => p.nome === nome)?.hex ?? null
 
 /** Os quatro números do mês com ícone; cada um some sem dado, e sem nenhum o grupo não aparece. */
 export function CartoesDoGasto({
     tipo,
+    cor,
     maior,
     tipica,
     frequente,
     diaDeMais,
 }: {
     tipo: TipoDaCategoria
+    /** `categories.color`: o primeiro cartão leva a cor da categoria, os outros três um matiz cada da paleta de ladrilhos. */
+    cor: string | null
     /** O maior lançamento do mês (`maioresLancamentos(...)[0]`), ou null. */
     maior: Transaction | null
     tipica: ReturnType<typeof compraTipica>
@@ -34,19 +40,18 @@ export function CartoesDoGasto({
 }) {
     const despesa = tipo === "expense"
     if (!maior && tipica == null && !frequente && !diaDeMais) return null
+    const corDaCategoria = tileColorFor(cor) ?? (despesa ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT)
     const dataDoMaior = maior ? transactionLocalYmd(maior.date) : null
 
     return (
         <StatCardGroup>
             {maior ? (
                 <StatCard>
+                    <StatCardIcon size="lg" color={corDaCategoria}>
+                        <ShoppingBagIcon className="size-5" />
+                    </StatCardIcon>
                     <StatCardHeader>
-                        <StatCardLabel>
-                            <StatCardIcon>
-                                <ShoppingBagIcon />
-                            </StatCardIcon>
-                            {despesa ? "Maior compra" : "Maior entrada"}
-                        </StatCardLabel>
+                        <StatCardLabel variant="plain">{despesa ? "Maior compra" : "Maior entrada"}</StatCardLabel>
                     </StatCardHeader>
                     <StatCardValue value={Number(maior.amount)} />
                     <StatCardFooter className="truncate">
@@ -58,13 +63,11 @@ export function CartoesDoGasto({
             ) : null}
             {tipica != null ? (
                 <StatCard>
+                    <StatCardIcon size="lg" color={paleta("azul")}>
+                        <ReceiptPercentIcon className="size-5" />
+                    </StatCardIcon>
                     <StatCardHeader>
-                        <StatCardLabel>
-                            <StatCardIcon>
-                                <ReceiptPercentIcon />
-                            </StatCardIcon>
-                            {despesa ? "Compra típica" : "Entrada típica"}
-                        </StatCardLabel>
+                        <StatCardLabel variant="plain">{despesa ? "Compra típica" : "Entrada típica"}</StatCardLabel>
                     </StatCardHeader>
                     <StatCardValue value={tipica} />
                     <StatCardFooter>
@@ -74,13 +77,11 @@ export function CartoesDoGasto({
             ) : null}
             {frequente ? (
                 <StatCard>
+                    <StatCardIcon size="lg" color={paleta("violeta")}>
+                        <ArrowPathIcon className="size-5" />
+                    </StatCardIcon>
                     <StatCardHeader>
-                        <StatCardLabel>
-                            <StatCardIcon>
-                                <ArrowPathIcon />
-                            </StatCardIcon>
-                            Mais frequente
-                        </StatCardLabel>
+                        <StatCardLabel variant="plain">Mais frequente</StatCardLabel>
                     </StatCardHeader>
                     <StatCardValue className="truncate font-sans">{frequente.descricao}</StatCardValue>
                     <StatCardFooter className="nums">
@@ -90,13 +91,11 @@ export function CartoesDoGasto({
             ) : null}
             {diaDeMais ? (
                 <StatCard>
+                    <StatCardIcon size="lg" color={paleta("lima")}>
+                        <CalendarDaysIcon className="size-5" />
+                    </StatCardIcon>
                     <StatCardHeader>
-                        <StatCardLabel>
-                            <StatCardIcon>
-                                <CalendarDaysIcon />
-                            </StatCardIcon>
-                            {despesa ? "Dia mais caro" : "Melhor dia"}
-                        </StatCardLabel>
+                        <StatCardLabel variant="plain">{despesa ? "Dia mais caro" : "Melhor dia"}</StatCardLabel>
                     </StatCardHeader>
                     <StatCardValue className="font-sans">{diaEMes(diaDeMais.ymd)}</StatCardValue>
                     <StatCardFooter className="nums">

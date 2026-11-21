@@ -8,9 +8,9 @@ import type { insights } from "@/lib/categoria-resumo"
 
 type Insight = ReturnType<typeof insights>[number]
 
-// O `ItemMedia tile` não tem tom de sucesso: a boa notícia fica no neutro, e quem a diz é o ícone.
+// Verde a boa notícia, âmbar a atenção, azul a informação.
 const MIDIA = {
-    success: { tone: "neutral", Icone: CheckCircleIcon },
+    success: { tone: "success", Icone: CheckCircleIcon },
     warning: { tone: "warning", Icone: ExclamationTriangleIcon },
     info: { tone: "info", Icone: LightBulbIcon },
 } as const
