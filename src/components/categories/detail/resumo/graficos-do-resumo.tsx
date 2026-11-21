@@ -466,19 +466,9 @@ export function GraficosDoResumo({
                                             const d = diferencas ? diferencaDaForma(diferencas[f.chave], despesa) : null
                                             return (
                                                 <li key={f.chave} className="flex items-center gap-3 text-sm">
-                                                    {/* A bandeira é irmã do ladrilho, fora do recorte e do `[&_svg]:size-4` do `tile`, como o canto do `Avatar`. */}
-                                                    <span className="relative shrink-0">
-                                                        <ItemMedia variant="tile" style={ladrilhoDaForma(f.chave)}>
-                                                            {createElement(paymentMethodIcon(f.forma))}
-                                                        </ItemMedia>
-                                                        {f.forma === "credit_card" ? (
-                                                            <CreditCardBrandChip
-                                                                size="xs"
-                                                                brand={cartoes.find((c) => c.id === f.cardId)?.brand ?? null}
-                                                                className="absolute -right-1 -bottom-1 ring-2 ring-card"
-                                                            />
-                                                        ) : null}
-                                                    </span>
+                                                    <ItemMedia variant="tile" style={ladrilhoDaForma(f.chave)}>
+                                                        {createElement(paymentMethodIcon(f.forma))}
+                                                    </ItemMedia>
                                                     <ItemContent>
                                                         <span className="truncate">{f.nome}</span>
                                                         <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
