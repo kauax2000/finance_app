@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
     comparacaoComMesAnterior,
     descricoesRepetidas,
+    diferencaPorForma,
     divisaoPorPagamento,
     maioresLancamentos,
     mediaDosMeses,
@@ -109,6 +110,24 @@ describe("divisaoPorPagamento", () => {
             ["Cartão", 10],
         ])
     })
+    it("conta as compras por forma", () => {
+        const txs = [tx({ amount: 30 }), tx({ amount: 5 }), tx({ amount: 20, payment_method: "cash" })]
+        expect(divisaoPorPagamento(txs, "expense", cartoes).map((f) => [f.chave, f.compras])).toEqual([
+            ["pix", 2],
+            ["cash", 1],
+        ])
+    })
+})
+
+describe("diferencaPorForma", () => {
+    const f = (chave: string, valor: number) => ({ chave, nome: chave, valor, compras: 1 })
+    it("aumento, queda e forma nova", () => {
+        expect(diferencaPorForma([f("pix", 120), f("c1", 50), f("cash", 10)], [f("pix", 100), f("c1", 80.5)])).toEqual({
+            pix: 20,
+            c1: -30.5,
+            cash: null,
+        })
+    })
 })
 
 describe("maioresLancamentos e descricoesRepetidas", () => {
@@ -152,11 +171,11 @@ describe("receita e Sem forma", () => {
     })
     it("sem forma de pagar → Sem forma", () => {
         const rows = [tx({ amount: 7, payment_method: null })]
-        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "sem-forma", nome: "Sem forma", valor: 7 }])
+        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "sem-forma", nome: "Sem forma", valor: 7, compras: 1, forma: "sem-forma", cardId: null }])
     })
     it("estorno no cartão abate a divisão", () => {
         const card = { payment_method: "credit_card", payment_credit_card_id: "c1" } as const
         const rows = [tx({ amount: 50, ...card }), tx({ amount: 20, type: "income", ...card })]
-        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "c1", nome: "Nubank", valor: 30 }])
+        expect(divisaoPorPagamento(rows, "expense", cartoes)).toEqual([{ chave: "c1", nome: "Nubank", valor: 30, compras: 1, forma: "credit_card", cardId: "c1" }])
     })
 })

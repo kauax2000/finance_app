@@ -67,7 +67,7 @@ import { shiftYearMonth } from "@/lib/budget-month"
 import { receitasDoMesPorCategoria } from "@/lib/categoria-receitas-do-mes"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
-import { buildCreditCardClosingLookup } from "@/lib/expense-month-attribution"
+import { buildCreditCardClosingLookup, transactionCountsInExpenseMonth } from "@/lib/expense-month-attribution"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
@@ -475,6 +475,12 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
             ritmo: ritmoDoMes({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup, previsto: mes.previsto }),
             porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
+            // O mês anterior pelo mesmo corte do `txs` do mês (fatura que fecha no mês).
+            porPagamentoAnterior: divisaoPorPagamento(
+                seriesSource.filter((t) => transactionCountsInExpenseMonth(t, shiftYearMonth(yearMonth, -1), lookup)),
+                tipo,
+                txController.creditCards,
+            ),
             diasDaSemana: porDiaDaSemana(txs, tipo),
             faixas: porFaixaDeValor(txs, tipo),
             // com menos de 3 compras a mediana repete o maior e o total
@@ -663,6 +669,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                                 media={analise.media}
                                 ritmo={analise.ritmo}
                                 porPagamento={analise.porPagamento}
+                                porPagamentoAnterior={analise.porPagamentoAnterior}
+                                cartoes={txController.creditCards}
                                 diasDaSemana={analise.diasDaSemana}
                                 faixas={analise.faixas}
                                 maior={analise.maior}

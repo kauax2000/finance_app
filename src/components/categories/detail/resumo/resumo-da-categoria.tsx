@@ -1,7 +1,7 @@
 "use client"
 
 import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
-import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
+import type { FatiaDePagamento, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type {
     Compromissos,
     compraTipica,
@@ -14,7 +14,7 @@ import type {
     repeticoes,
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
-import type { Transaction } from "@/lib/supabase"
+import type { CreditCard, Transaction } from "@/lib/supabase"
 import { CartoesDoGasto } from "./cartoes-do-gasto"
 import { CompromissosERepeticoes } from "./compromissos-e-repeticoes"
 import { FatosDoMes } from "./fatos-do-mes"
@@ -35,7 +35,11 @@ export type ResumoDaCategoriaProps = {
     serie: { yearMonth: string; total: number }[]
     media: number | null
     ritmo: ReturnType<typeof ritmoDoMes>
-    porPagamento: Fatia[]
+    porPagamento: FatiaDePagamento[]
+    /** A mesma divisão no mês anterior, para a diferença de cada forma. */
+    porPagamentoAnterior: FatiaDePagamento[]
+    /** Os cartões da carteira: a bandeira no miolo da rosca de uma forma só. */
+    cartoes: Pick<CreditCard, "id" | "brand">[]
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
     faixas: ReturnType<typeof porFaixaDeValor>
     maior: Transaction | null
@@ -98,6 +102,8 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                         media={p.media}
                         ritmo={p.ritmo}
                         porPagamento={p.porPagamento}
+                        porPagamentoAnterior={p.porPagamentoAnterior}
+                        cartoes={p.cartoes}
                         diasDaSemana={p.diasDaSemana}
                         faixas={p.faixas}
                         onAbrirMes={p.onAbrirMes}

@@ -2,6 +2,14 @@
 
 import { useMemo } from "react"
 import { ArrowLongRightIcon, ArrowTrendingDownIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowsRightLeftIcon,
+    BanknotesIcon,
+    CreditCardIcon,
+    EllipsisHorizontalIcon,
+    QrCodeIcon,
+} from "@heroicons/react/24/outline"
+import { CreditCardBrandChip } from "@/components/credit-cards/credit-card-brand-chip"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -9,14 +17,16 @@ import {
     ChartArea,
     ChartBars,
     ChartDonut,
+    ChartDonutCenter,
     ChartLine,
     ChartReferenceDot,
     ChartReferenceLine,
     type ChartConfig,
 } from "@/components/ui/chart"
 import { Caption } from "@/components/ui/typography"
+import { cn } from "@/lib/utils"
 import { shiftYearMonth } from "@/lib/budget-month"
-import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
+import { diferencaPorForma, type FatiaDePagamento, type TipoDaCategoria } from "@/lib/categoria-detalhe"
 import {
     resumoDoRitmo,
     tendenciaDosMeses,
@@ -25,6 +35,7 @@ import {
     type ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
+import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
 import { mesCurto, mesPorExtenso } from "./rotulos"
@@ -34,6 +45,24 @@ const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfi
 const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
 // A rosca pula o `--chart-1`: é verde, e verde lê como entrada.
 const RAMPA_DO_PAGAMENTO = ["var(--chart-2)", "var(--chart-3)", "var(--chart-5)", "var(--chart-4)"]
+// O miolo da rosca de uma forma só que não é cartão de crédito.
+const ICONE_DA_FORMA: Record<string, typeof BanknotesIcon> = {
+    pix: QrCodeIcon,
+    ted: ArrowsRightLeftIcon,
+    debit_card: CreditCardIcon,
+    cash: BanknotesIcon,
+}
+
+/** A diferença de uma forma contra o mês anterior: "+R$ 312" no tom do veredito, "igual" ou "novo" (null). */
+function diferencaDaForma(diferenca: number | null, despesa: boolean) {
+    if (diferenca == null) return { texto: "novo", classe: undefined }
+    if (Math.round(diferenca) === 0) return { texto: "igual", classe: undefined }
+    const bom = despesa ? diferenca < 0 : diferenca > 0
+    return {
+        texto: `${diferenca > 0 ? "+" : "−"}${reaisInteiros(Math.abs(diferenca))}`,
+        classe: bom ? "text-success-muted-foreground" : "text-warning-muted-foreground",
+    }
+}
 
 /** O selo do mês contra a média: a mesma faixa de ±2% da `vereditoDaMedia`; o tom diz se é bom (gastar menos, receber mais). */
 function seloDaMedia(valor: number, media: number | null, despesa: boolean) {
@@ -65,16 +94,11 @@ function maiorDe<T>(linhas: T[], nome: (l: T) => string, valor: (l: T) => number
     return melhor ? nome(melhor) : null
 }
 
-function CartaoDoGrafico({ titulo, apoio, children }: { titulo: string; apoio?: string; children: React.ReactNode }) {
+function CartaoDoGrafico({ titulo, children }: { titulo: string; children: React.ReactNode }) {
     return (
         <Card className="min-w-0">
             <CardHeader>
                 <CardTitle size="sm">{titulo}</CardTitle>
-                {apoio ? (
-                    <CardAction>
-                        <Caption className="nums">{apoio}</Caption>
-                    </CardAction>
-                ) : null}
             </CardHeader>
             <CardContent>{children}</CardContent>
         </Card>
@@ -92,6 +116,8 @@ export function GraficosDoResumo({
     media,
     ritmo,
     porPagamento,
+    porPagamentoAnterior,
+    cartoes,
     diasDaSemana,
     faixas,
     onAbrirMes,
@@ -105,7 +131,9 @@ export function GraficosDoResumo({
     serie: { yearMonth: string; total: number }[]
     media: number | null
     ritmo: ReturnType<typeof ritmoDoMes>
-    porPagamento: Fatia[]
+    porPagamento: FatiaDePagamento[]
+    porPagamentoAnterior: FatiaDePagamento[]
+    cartoes: Pick<CreditCard, "id" | "brand">[]
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
     faixas: ReturnType<typeof porFaixaDeValor>
     /** Abre esta tela noutro mês (`YYYY-MM`): o toque numa barra do "Mês a mês". */
@@ -163,9 +191,15 @@ export function GraficosDoResumo({
     const comFaixas = faixas.some((f) => f.quantidade > 0)
     const comPagamento = porPagamento.length > 0
     const totalPago = porPagamento.reduce((acc, f) => acc + f.valor, 0)
+    // Pela chave, e não pelo nome: dois cartões com o mesmo nome dividiriam a cor.
     const configPagamento = Object.fromEntries(
-        porPagamento.map((f, i) => [f.nome, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
+        porPagamento.map((f, i) => [f.chave, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
     ) satisfies ChartConfig
+    // Sem nada no mês anterior não há contra o que comparar: nenhuma forma é "nova".
+    const diferencas = porPagamentoAnterior.length > 0 ? diferencaPorForma(porPagamento, porPagamentoAnterior) : null
+    const formaUnica = porPagamento.length === 1 ? porPagamento[0] : null
+    const IconeDaForma = formaUnica ? (ICONE_DA_FORMA[formaUnica.forma] ?? EllipsisHorizontalIcon) : null
+    const diferencaUnica = formaUnica && diferencas?.[formaUnica.chave] != null ? diferencaDaForma(diferencas[formaUnica.chave], despesa) : null
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
     const tendencia = useMemo(() => {
@@ -338,17 +372,70 @@ export function GraficosDoResumo({
             {comPagamento || comDias || comFaixas ? (
                 <div className="grid gap-3 md:grid-cols-3">
                     {comPagamento ? (
-                        // O total vai no cabeçalho: no miolo de uma rosca de 96px ele sairia abaixo da escala.
-                        <CartaoDoGrafico titulo="Como foi pago" apoio={currencyBRL(totalPago)}>
-                            <ChartDonut
-                                config={configPagamento}
-                                data={porPagamento}
-                                nameKey="nome"
-                                dataKey="valor"
-                                legend="list"
-                                className="size-24"
-                                label={`${oQue} do mês por forma de pagamento`}
-                            />
+                        <CartaoDoGrafico titulo="Como foi pago">
+                            {formaUnica ? (
+                                <div className="flex items-center gap-4">
+                                    <ChartDonut
+                                        rounded
+                                        legend={false}
+                                        tooltip={false}
+                                        config={configPagamento}
+                                        data={porPagamento}
+                                        nameKey="chave"
+                                        dataKey="valor"
+                                        className="size-30 shrink-0"
+                                        label={`${oQue} do mês por forma de pagamento: tudo no ${formaUnica.nome}`}
+                                        center={
+                                            <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+                                                {formaUnica.forma === "credit_card" ? (
+                                                    <CreditCardBrandChip
+                                                        brand={cartoes.find((c) => c.id === formaUnica.cardId)?.brand ?? null}
+                                                    />
+                                                ) : IconeDaForma ? (
+                                                    <IconeDaForma className="size-6 text-muted-foreground" />
+                                                ) : null}
+                                            </div>
+                                        }
+                                    />
+                                    {/* Nome, contagem e diferença são o mesmo dado em três linhas: sem `gap`. */}
+                                    <div className="min-w-0 flex-1 text-sm">
+                                        <p className="break-words">
+                                            Tudo no <span className="font-semibold">{formaUnica.nome}</span>
+                                        </p>
+                                        <p className="nums text-muted-foreground">
+                                            {formaUnica.compras} {despesa ? "compra" : "entrada"}
+                                            {formaUnica.compras === 1 ? "" : "s"} · {currencyBRL(formaUnica.valor)}
+                                        </p>
+                                        {diferencaUnica ? (
+                                            <p className={cn("nums text-muted-foreground", diferencaUnica.classe)}>
+                                                {diferencaUnica.texto === "igual" ? `igual a ${mesAnterior}` : `${diferencaUnica.texto} vs ${mesAnterior}`}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                </div>
+                            ) : (
+                                <ChartDonut
+                                    rounded
+                                    config={configPagamento}
+                                    data={porPagamento}
+                                    nameKey="chave"
+                                    dataKey="valor"
+                                    legend="list"
+                                    className="size-30"
+                                    label={`${oQue} do mês por forma de pagamento`}
+                                    center={<ChartDonutCenter amount={totalPago} label="no mês" />}
+                                    legendDetail={(i) => {
+                                        const f = porPagamento[i]
+                                        if (!diferencas) return reaisInteiros(f.valor)
+                                        const d = diferencaDaForma(diferencas[f.chave], despesa)
+                                        return (
+                                            <>
+                                                {reaisInteiros(f.valor)} · <span className={d.classe}>{d.texto}</span>
+                                            </>
+                                        )
+                                    }}
+                                />
+                            )}
                         </CartaoDoGrafico>
                     ) : null}
                     {comDias ? (

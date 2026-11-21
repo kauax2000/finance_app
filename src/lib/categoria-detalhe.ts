@@ -13,7 +13,10 @@ export type LinhaDeValor = Pick<
     "date" | "amount" | "type" | "payment_method" | "payment_credit_card_id"
 >
 export type TipoDaCategoria = "expense" | "income"
-export type Fatia = { chave: string; nome: string; valor: number }
+/** `compras` conta os lançamentos de peso 1 (o estorno abate o valor, não conta). */
+export type Fatia = { chave: string; nome: string; valor: number; compras: number }
+/** A fatia de forma de pagamento: `forma` é o `payment_method` (ou "sem-forma"), `cardId` acha a bandeira. */
+export type FatiaDePagamento = Fatia & { forma: string; cardId: string | null }
 export type Comparacao = {
     mesAnterior: string
     anterior: number
@@ -115,19 +118,20 @@ export function mediaDosMeses(args: {
     return reais(soma / elegiveis.length)
 }
 
-function dividir(
-    txs: Transaction[],
+function dividir<T extends LinhaDeValor, E extends { chave: string; nome: string }>(
+    txs: T[],
     tipo: TipoDaCategoria,
-    chaveENome: (t: Transaction) => { chave: string; nome: string },
-): Fatia[] {
-    const mapa = new Map<string, Fatia>()
+    chaveENome: (t: T) => E,
+): (Omit<E, "chave" | "nome"> & Fatia)[] {
+    const mapa = new Map<string, E & { valor: number; compras: number }>()
     for (const t of txs) {
         const p = peso(t, tipo)
         if (p === 0) continue
-        const { chave, nome } = chaveENome(t)
-        const f = mapa.get(chave) ?? { chave, nome, valor: 0 }
+        const e = chaveENome(t)
+        const f = mapa.get(e.chave) ?? { ...e, valor: 0, compras: 0 }
         f.valor += p * Number(t.amount || 0)
-        mapa.set(chave, f)
+        if (p === 1) f.compras += 1
+        mapa.set(e.chave, f)
     }
     return [...mapa.values()]
         .map((f) => ({ ...f, valor: reais(f.valor) }))
@@ -136,21 +140,34 @@ function dividir(
 }
 
 export function divisaoPorPagamento(
-    txs: Transaction[],
+    txs: LinhaDeValor[],
     tipo: TipoDaCategoria,
     cartoes: Pick<CreditCard, "id" | "name">[],
-): Fatia[] {
+): FatiaDePagamento[] {
     return dividir(txs, tipo, (t) => {
         if (t.payment_method === "credit_card") {
             const card = cartoes.find((c) => c.id === t.payment_credit_card_id)
             return {
                 chave: t.payment_credit_card_id ?? "credit_card",
                 nome: card?.name ?? "Cartão",
+                forma: "credit_card",
+                cardId: t.payment_credit_card_id ?? null,
             }
         }
-        if (!t.payment_method) return { chave: "sem-forma", nome: "Sem forma" }
-        return { chave: t.payment_method, nome: paymentMethodLabel(t.payment_method) }
+        if (!t.payment_method) return { chave: "sem-forma", nome: "Sem forma", forma: "sem-forma", cardId: null }
+        return { chave: t.payment_method, nome: paymentMethodLabel(t.payment_method), forma: t.payment_method, cardId: null }
     })
+}
+
+/** Chave → `atual − anterior` em reais; null quando a forma não existia no anterior. */
+export function diferencaPorForma(atual: Fatia[], anterior: Fatia[]): Record<string, number | null> {
+    const antes = new Map(anterior.map((f) => [f.chave, f.valor]))
+    return Object.fromEntries(
+        atual.map((f) => {
+            const a = antes.get(f.chave)
+            return [f.chave, a == null ? null : reais(f.valor - a)]
+        }),
+    )
 }
 
 export function maioresLancamentos(txs: Transaction[], tipo: TipoDaCategoria, n = 5): Transaction[] {
