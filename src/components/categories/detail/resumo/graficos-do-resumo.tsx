@@ -510,7 +510,7 @@ export function GraficosDoResumo({
                                         <div key={nome} className="min-w-0">
                                             <p className={cn("nums text-xl font-semibold", !maior && "text-muted-foreground")}>{lado.pct}%</p>
                                             <p className="nums text-sm text-muted-foreground">
-                                                {nome} · {reaisInteiros(lado.total)}
+                                                {nome} <span className="whitespace-nowrap">· {reaisInteiros(lado.total)}</span>
                                             </p>
                                         </div>
                                     ))}
