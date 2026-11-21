@@ -2386,15 +2386,66 @@
   );
 }
 
-/* A revelação circular do `ThemeToggle`. A View Transitions API esmaece a foto velha
-   para a nova por padrão; aqui quem revela é o recorte circular animado no
-   `::view-transition-new(root)`, então o esmaecer sai (senão a página nova aparecia
-   translúcida). Escopado por `.theme-reveal`, que o componente põe no `<html>` só
-   enquanto a transição dura. */
+/* A aurora do `ThemeToggle`. A View Transitions API esmaece a foto velha para a nova
+   por padrão; aqui quem revela é a máscara ondulada animada no
+   `::view-transition-new(root)` (`lib/aurora-do-tema`), então o esmaecer sai (senão a
+   página nova aparecia translúcida). Escopado por `.theme-reveal`, que o componente põe
+   no `<html>` só enquanto a transição dura. A faixa recebe o nome de transição inline,
+   no elemento que nasce no callback, e nunca por seletor: a animação dela é a do
+   componente, e a padrão do grupo sai. */
 .theme-reveal::view-transition-old(root),
 .theme-reveal::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+.theme-reveal::view-transition-group(theme-aurora),
+.theme-reveal::view-transition-new(theme-aurora),
+.theme-reveal::view-transition-old(theme-aurora) {
+  animation: none;
+}
+
+/* A faixa da aurora: quatro paradas da marca (âmbar, magenta, violeta, azul), borradas,
+   com a ponta de baixo ondulada pelo raio. Exceção nomeada ao arco-íris sob texto: ela
+   passa por cima do texto por ~1s e não é lida. O volume mora em `AURORA.opacidade`,
+   nunca nas paradas. */
+@utility theme-aurora {
+  position: fixed;
+  inset-inline: -10vw;
+  top: 0;
+  pointer-events: none;
+  z-index: var(--z-toast);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    filter: blur(36px);
+    border-radius: 0 0 45% 55% / 0 0 22% 30%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in oklch, var(--brand-amber) 70%, transparent) 22%,
+      var(--brand-magenta) 44%,
+      var(--brand-magenta) 62%,
+      var(--brand-violet) 78%,
+      var(--brand-blue) 90%,
+      transparent 100%
+    );
+
+    @supports (background: linear-gradient(in oklch, red, blue)) {
+      background: linear-gradient(
+        180deg in oklch,
+        transparent 0%,
+        color-mix(in oklch, var(--brand-amber) 70%, transparent) 22%,
+        var(--brand-magenta) 44%,
+        var(--brand-magenta) 62%,
+        var(--brand-violet) 78%,
+        var(--brand-blue) 90%,
+        transparent 100%
+      );
+    }
+  }
 }
 
 /* A troca de carteira, numa View Transition (`trocarComTransicao` do

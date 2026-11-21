@@ -1,22 +1,29 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
-import { recorteDeFora } from "./vidro-na-revelacao"
+import { AURORA, quadrosDaMascara } from "./aurora-do-tema"
+import { revelarVidros, type Vidro } from "./vidro-na-revelacao"
 
-describe("o recorte de fora do círculo", () => {
-    it("é retângulo menos círculo, por evenodd", () => {
-        const p = recorteDeFora(362, 64, 50, -500, 300)
-        expect(p.startsWith('path(evenodd, "')).toBe(true)
-        // O retângulo passa 100px da caixa: a sombra do vidro não é cortada.
-        expect(p).toContain("M-100 -100H462V164H-100Z")
-        // O círculo, em dois arcos, com centro e raio pedidos.
-        expect(p).toContain("M-250 -500a300 300 0 1 0 600 0a300 300 0 1 0 -600 0Z")
+describe("a aurora nos vidros", () => {
+    it("cada vidro recebe a máscara da página, deslocada pelo topo dele", () => {
+        const chamadas: { quadros: Keyframe[]; tempo: KeyframeAnimationOptions }[] = []
+        const html = {
+            animate(quadros: Keyframe[], tempo: KeyframeAnimationOptions) {
+                chamadas.push({ quadros, tempo })
+            },
+        } as unknown as HTMLElement
+        revelarVidros(html, [{ nome: "vidro-0", rect: { top: 700 } } as unknown as Vidro], 800)
+        expect(chamadas).toHaveLength(2)
+        expect(chamadas[0].tempo.pseudoElement).toBe("::view-transition-new(vidro-0)")
+        expect(chamadas[0].quadros).toEqual(quadrosDaMascara(800, 700))
+        expect(chamadas[1].tempo.pseudoElement).toBe("::view-transition-old(vidro-0)")
+        expect(chamadas[1].quadros).toEqual(quadrosDaMascara(800, 700, true))
+        for (const c of chamadas) expect(c.tempo.duration).toBe(AURORA.duracao)
     })
 
-    it("tem os mesmos comandos em qualquer raio, senão o navegador não interpola", () => {
-        const comandos = (s: string) => s.replace(/-?\d+(\.\d+)?/g, "n")
-        expect(comandos(recorteDeFora(362, 64, 50, -500, 0))).toBe(
-            comandos(recorteDeFora(362, 64, 50, -500, 900)),
-        )
+    it("o círculo saiu", () => {
+        const fonte = lerFonte("src/lib/vidro-na-revelacao.ts")
+        expect(fonte).not.toContain("recorteDeFora")
+        expect(fonte).not.toContain("circle(")
     })
 })
 

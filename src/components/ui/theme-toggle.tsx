@@ -14,12 +14,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { useTheme } from "next-themes"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
-import { composeRefs } from "radix-ui/internal"
 import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
-import { nomearVidros, revelarVidros } from "@/lib/vidro-na-revelacao"
+import { animarAurora, criarFaixa } from "@/lib/aurora-do-tema"
+import { nomearVidros } from "@/lib/vidro-na-revelacao"
 
 /**
  * As três paradas, na ordem do trilho (a do menu de tema do macOS, por decisão
@@ -78,17 +78,17 @@ const DEGRAU = {
 const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
 
 /**
- * A revelação circular: a troca de tema abre num círculo que parte da parada
- * tocada, pela View Transitions API (o navegador fotografa a página velha, a nova
- * vive por baixo e o que anima é o recorte do `::view-transition-new(root)`). O
- * `flushSync` faz o tema trocar dentro do callback, antes da foto nova. Sem a
- * API, sem a parada, com `reveal={false}` ou com movimento reduzido, troca como
- * sempre. O CSS que desliga o esmaecer padrão mora em `globals.css`, escopado por
- * `.theme-reveal` no `<html>` enquanto a transição dura. O vidro à vista ganha nome
- * só durante a troca, e o círculo passa por ele (`lib/vidro-na-revelacao`).
+ * A aurora: a troca de tema desce de cima para baixo por uma borda ondulada, com uma
+ * faixa do arco-íris da marca correndo na frente dela, pela View Transitions API (o
+ * navegador fotografa a página velha, a nova vive por baixo e o que anima é a máscara
+ * do `::view-transition-new(root)`; `lib/aurora-do-tema`). O `flushSync` faz o tema
+ * trocar dentro do callback, antes da foto nova, e a faixa nasce ali, depois dele, com
+ * o nome de transição inline; ela sai no `finished`. Sem a API, com `reveal={false}`
+ * ou com movimento reduzido, troca como sempre. O CSS que desliga o esmaecer padrão e
+ * desenha a faixa mora em `globals.css`, escopado por `.theme-reveal` no `<html>`
+ * enquanto a transição dura. O vidro à vista ganha nome só durante a troca, e a
+ * máscara passa por ele (`lib/vidro-na-revelacao`).
  */
-const REVELACAO = { duration: 320, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
-
 type DocumentoComTransicao = Document & {
     startViewTransition?: (cb: () => void) => {
         ready: Promise<void>
@@ -110,7 +110,7 @@ export function ThemeToggle({
     labels?: boolean
     /** `brand` é o brilho de arco-íris na borda do trilho. Uma por tela. */
     variant?: "default" | "brand"
-    /** A troca abre num círculo a partir da parada tocada. */
+    /** A troca desce como uma aurora, de cima para baixo. */
     reveal?: boolean
 }) {
     const degrau = DEGRAU[size]
@@ -131,7 +131,6 @@ export function ThemeToggle({
     const [pedido, setPedido] = useState<Tema | null>(null)
     const indice = montado ? indiceDe(pedido ?? theme) : 0
 
-    const raizRef = useRef<HTMLDivElement>(null)
     // `montado` entra na condição porque o hook liga o ponteiro num efeito, na
     // montagem: antes dela quem está na tela é o `Skeleton`, o ref é nulo e o brilho
     // nunca acenderia.
@@ -144,12 +143,8 @@ export function ThemeToggle({
 
     const trocar = (valor: Tema) => {
         const doc = document as DocumentoComTransicao
-        const origem = raizRef.current?.querySelector<HTMLElement>(
-            `[data-parada="${valor}"]`,
-        )
         if (
             !reveal ||
-            !origem ||
             !doc.startViewTransition ||
             window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ) {
@@ -158,13 +153,7 @@ export function ThemeToggle({
         }
         // O toque chama duas vezes, pelo foco e pelo clique: a segunda é a mesma troca.
         if (revelacao.current?.valor === valor) return
-        const r = origem.getBoundingClientRect()
-        const x = r.left + r.width / 2
-        const y = r.top + r.height / 2
-        const raio = Math.hypot(
-            Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y),
-        )
+        const altura = window.innerHeight
         const html = document.documentElement
         const esta = { valor }
         revelacao.current = esta
@@ -173,22 +162,13 @@ export function ThemeToggle({
         // O polegar sai já, fora da transição: no WebKit, a animação criada dentro do callback
         // dela recomeçava do início quando ela acabava (o polegar voltava e viajava de novo).
         flushSync(() => setPedido(valor))
+        let tirarFaixa: (() => void) | undefined
         const transicao = doc.startViewTransition(() => {
             flushSync(() => setTheme(valor))
+            tirarFaixa = criarFaixa(document, altura)
         })
         transicao.ready
-            .then(() => {
-                html.animate(
-                    {
-                        clipPath: [
-                            `circle(0px at ${x}px ${y}px)`,
-                            `circle(${raio}px at ${x}px ${y}px)`,
-                        ],
-                    },
-                    { ...REVELACAO, pseudoElement: "::view-transition-new(root)" },
-                )
-                revelarVidros(html, vidros.vidros, x, y, raio, REVELACAO)
-            })
+            .then(() => animarAurora(html, altura, vidros.vidros))
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
@@ -196,6 +176,7 @@ export function ThemeToggle({
             revelacao.current = null
             setPedido(null)
             html.classList.remove("theme-reveal")
+            tirarFaixa?.()
             vidros.desfazer()
         })
     }
@@ -264,7 +245,7 @@ export function ThemeToggle({
 
     return (
         <RadioGroupPrimitive.Root
-            ref={composeRefs(raizRef, glowRef)}
+            ref={glowRef}
             value={PARADAS[indice].valor}
             onValueChange={(v) => trocar(v as Tema)}
             orientation="horizontal"

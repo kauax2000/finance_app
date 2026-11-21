@@ -96,10 +96,9 @@ describe("o trilho de tema", () => {
     it("5. o esticão anda em fase com a velocidade, e não contra ela", () => {
         // A curva do trajeto é a da referência, por decisão do dono.
         expect(CODIGO).toContain('easing: "cubic-bezier(1,0,0.4,1)"')
-        // A troca não pode parecer lenta: o marcador anda no trajeto macio, e a revelação
-        // não segura a tela depois de cobri-la.
+        // A troca não pode parecer lenta: o marcador anda no trajeto macio. O tempo da
+        // aurora mora em `lib/aurora-do-tema` (`aurora-do-tema.test.ts`).
         expect(CODIGO).toContain("{ amplitude, trajeto: TRAJETO_MACIO }")
-        expect(CODIGO).toContain("const REVELACAO = { duration: 320")
 
         // A asserção que importa: o pico do esticão e o relógio da escala têm de estar em fase
         // com a velocidade do trajeto (pico em 0,58, perto do pico de velocidade 0,667), senão
@@ -240,10 +239,30 @@ describe("o trilho de tema", () => {
 
     it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
         expect(CODIGO).toContain("nomearVidros(document)")
-        expect(CODIGO).toContain("revelarVidros(html, vidros.vidros, x, y, raio, REVELACAO)")
+        expect(CODIGO).toContain("animarAurora(html, altura, vidros.vidros)")
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
         const css = lerFonte("src/app/globals.css")
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")
+    })
+
+    it("a aurora: a faixa nasce no callback, depois do tema, e sai no finished", () => {
+        const callback = CODIGO.indexOf("doc.startViewTransition(")
+        const tema = CODIGO.indexOf("flushSync(() => setTheme(valor))", callback)
+        const faixa = CODIGO.indexOf("criarFaixa(document", callback)
+        const fimDoCallback = CODIGO.indexOf("transicao.ready", callback)
+        expect(callback).toBeGreaterThan(-1)
+        expect(tema).toBeGreaterThan(callback)
+        expect(faixa).toBeGreaterThan(tema)
+        expect(faixa).toBeLessThan(fimDoCallback)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarFaixa\?\.\(\)/)
+        expect(CODIGO).not.toContain("REVELACAO")
+        expect(CODIGO).not.toContain("circle(")
+        const css = lerFonte("src/app/globals.css")
+        expect(css).toContain("@utility theme-aurora")
+        expect(css).toMatch(/::view-transition-group\(theme-aurora\)[^{]*::view-transition-new\(theme-aurora\)[^{]*\{\s*animation: none;/)
+        for (const parada of ["amber", "magenta", "violet", "blue"]) {
+            expect(css).toContain(`var(--brand-${parada})`)
+        }
     })
 
     it("o polegar sai no toque, fora da View Transition: só o tema troca dentro dela", () => {

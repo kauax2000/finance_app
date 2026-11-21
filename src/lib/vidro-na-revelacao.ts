@@ -3,24 +3,17 @@
  * `backdrop-filter`: na troca de tema a barra de baixo (e todo `.glass-surface` à vista) entrava
  * nas duas fotos só com a tinta, e a página aparecia nítida atrás dela. Durante a troca, cada
  * vidro visível ganha um nome próprio: o borrão passa a ser desenhado no grupo dele, sobre a foto
- * da página, e o círculo da revelação passa pelas duas fotos dele como pela página. O nome só
+ * da página, e a máscara da aurora passa pelas duas fotos dele como pela página: a nova na foto
+ * nova, a invertida na velha, deslocadas pelo topo do vidro (`lib/aurora-do-tema`). O nome só
  * existe durante a troca: `view-transition-name` permanente tira o borrão (AGENTS.md).
  */
 
-export type Vidro = { el: HTMLElement; nome: string; rect: DOMRect }
+import { AURORA, quadrosDaMascara } from "./aurora-do-tema"
 
-/** Folga do retângulo além da caixa, para a sombra do vidro não ser cortada. */
-const FOLGA = 100
+export type Vidro = { el: HTMLElement; nome: string; rect: DOMRect }
 
 /** Uma folha só: uma troca pulada não deixa outra órfã. */
 const ID_DA_FOLHA = "vidro-na-revelacao"
-
-/** O que fica fora do círculo, na caixa do vidro: retângulo menos círculo. Os comandos não mudam com o raio, então o navegador interpola. */
-export function recorteDeFora(w: number, h: number, cx: number, cy: number, r: number) {
-    const ret = `M${-FOLGA} ${-FOLGA}H${w + FOLGA}V${h + FOLGA}H${-FOLGA}Z`
-    const circ = `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`
-    return `path(evenodd, "${ret} ${circ}")`
-}
 
 function borrao(estilo: CSSStyleDeclaration) {
     const f = estilo.backdropFilter || estilo.getPropertyValue("-webkit-backdrop-filter")
@@ -84,25 +77,14 @@ export function nomearVidros(doc: Document) {
     }
 }
 
-/** O círculo da revelação passando pelas fotos de cada vidro. Chame no `ready`, com o mesmo tempo da raiz. */
-export function revelarVidros(
-    html: HTMLElement,
-    vidros: Vidro[],
-    x: number,
-    y: number,
-    raio: number,
-    tempo: KeyframeAnimationOptions,
-) {
+/** A aurora passando pelas fotos de cada vidro. Chame no `ready`, com a altura da tela lida no toque. */
+export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number) {
+    const tempo = { duration: AURORA.duracao, easing: "linear" }
     for (const { nome, rect } of vidros) {
-        const cx = x - rect.left
-        const cy = y - rect.top
-        html.animate(
-            { clipPath: [`circle(0px at ${cx}px ${cy}px)`, `circle(${raio}px at ${cx}px ${cy}px)`] },
-            { ...tempo, pseudoElement: `::view-transition-new(${nome})` },
-        )
-        html.animate(
-            { clipPath: [recorteDeFora(rect.width, rect.height, cx, cy, 0), recorteDeFora(rect.width, rect.height, cx, cy, raio)] },
-            { ...tempo, pseudoElement: `::view-transition-old(${nome})` },
-        )
+        html.animate(quadrosDaMascara(altura, rect.top), { ...tempo, pseudoElement: `::view-transition-new(${nome})` })
+        html.animate(quadrosDaMascara(altura, rect.top, true), {
+            ...tempo,
+            pseudoElement: `::view-transition-old(${nome})`,
+        })
     }
 }
