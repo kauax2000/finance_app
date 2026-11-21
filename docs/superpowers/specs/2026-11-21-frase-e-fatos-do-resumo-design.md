@@ -31,3 +31,6 @@ A frase do resumo hoje é um parágrafo longo e cinza que mistura o veredito, o 
 - O botão do rodapé diz "Ver o lançamento", e não o nome dele: nomes longos estouram o botão.
 - Os dois botões do rodapé são `secondary` (par de mesmo peso, regra do AGENTS).
 - A cor do valor no veredito é a tinta do `tile-tonal` da categoria.
+
+## Mudança de plano (21/11/2026)
+Depois de ver a D3 na tela, o dono pediu: "remova o resumo". A frase (e a seção "Em resumo") saiu inteira; ficam os fatos do mês (B2) no topo de "Para ficar de olho".

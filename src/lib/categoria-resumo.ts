@@ -15,7 +15,7 @@ import type { Transaction, WorkspaceInstallmentPlan, WorkspaceSubscription } fro
 import { transactionLocalYmd } from "@/lib/transaction-date"
 
 /** `lancamento` marca o nome do lançamento que puxou o mês (a tela o torna clicável). */
-type Parte = { texto: string; forte?: boolean; lancamento?: true }
+type Parte = { texto: string; forte?: boolean }
 
 const reais = (n: number) => Math.round(n * 100) / 100
 const centavos = (t: Pick<Transaction, "amount">) => Math.round(Number(t.amount || 0) * 100)
@@ -244,72 +244,6 @@ export function descricaoSemParcela(descricao: string | null | undefined): strin
 const puxouOMes = (maior: Transaction | null, lancado: number, compras: number) =>
     !!maior && lancado > 0 && compras >= 2 && Number(maior.amount) / lancado > 0.4
 
-/** A frase de resumo, sem IA: o veredito de relance e a explicação por baixo. */
-export function fraseDoResumo(args: {
-    nomeDaCategoria: string
-    tipo: TipoDaCategoria
-    yearMonth: string
-    aberto: boolean
-    lancado: number
-    previsto: number
-    media: number | null
-    maior: Transaction | null
-    /** Quantas compras o mês tem (o "puxou o mês" pede 2 ou mais). */
-    compras: number
-    proximoMes: number
-}): { veredito: Parte[]; explicacao: Parte[] } {
-    const { nomeDaCategoria: nome, tipo, yearMonth, aberto, lancado, previsto, media, maior, compras, proximoMes } = args
-    const despesa = tipo === "expense"
-    if (lancado === 0 && previsto === 0) {
-        const mes = labelYearMonthPt(yearMonth).toLocaleLowerCase("pt-BR")
-        return {
-            veredito: [
-                {
-                    texto: `${despesa ? "Nenhum gasto com" : "Nenhuma entrada em"} ${nome} em ${mes}${aberto ? " até agora" : ""}.`,
-                },
-            ],
-            explicacao: [],
-        }
-    }
-    const comMedia = lancado > 0 && media != null && media > 0
-    const veredito: Parte[] = [
-        { texto: `${nomeDoMes(yearMonth)}${aberto ? " até agora" : ""}: ${despesa ? "" : "entrou "}` },
-        { texto: currencyBRL(lancado), forte: true },
-    ]
-    if (comMedia) {
-        // Com o que vem pela frente, o veredito é da projeção e a frase diz isso.
-        const projeta = aberto && previsto - lancado > 0.005
-        const razao = (projeta ? previsto : lancado) / media
-        const v = razao > 1.1 ? "acima da" : razao < 0.9 ? "abaixo da" : "em linha com a"
-        veredito.push({ texto: `${projeta ? "; deve fechar" : ","} ${v} sua média.` })
-    } else veredito.push({ texto: "." })
-
-    const explicacao: Parte[] = []
-    const frase = (...p: Parte[]) => {
-        if (explicacao.length) explicacao.push({ texto: " " })
-        explicacao.push(...p)
-    }
-    if (maior && puxouOMes(maior, lancado, compras)) {
-        frase(
-            { texto: descricaoSemParcela(maior.description) ?? "O maior lançamento", lancamento: true },
-            { texto: " (" },
-            { texto: currencyBRL(Number(maior.amount)), forte: true },
-            { texto: ") puxou o mês." },
-        )
-    }
-    if (aberto && previsto - lancado > 0.005) {
-        frase({ texto: "Ainda vêm " }, { texto: currencyBRL(previsto - lancado), forte: true }, { texto: " neste mês." })
-    }
-    if (proximoMes > 0) {
-        frase(
-            { texto: `${nomeDoMes(shiftYearMonth(yearMonth, 1))} já tem ` },
-            { texto: currencyBRL(proximoMes), forte: true },
-            { texto: " previstos." },
-        )
-    }
-    if (comMedia) frase({ texto: `A média dos últimos 6 meses é ${currencyBRL(media)}.` })
-    return { veredito, explicacao }
-}
 
 /** Os até três fatos do mês (puxou, já previsto, total), na ordem em que aparecem. */
 export function fatosDoMes(args: {

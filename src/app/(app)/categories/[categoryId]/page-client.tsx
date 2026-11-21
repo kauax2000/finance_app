@@ -56,7 +56,6 @@ import {
     compromissos,
     diaDeMaisGasto,
     fatosDoMes,
-    fraseDoResumo,
     insights,
     maisFrequente,
     porDiaDaSemana,
@@ -484,27 +483,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             diaDeMais: diaDeMaisGasto(txs, tipo),
             compromissos: c,
             repetidas: repeticoes({ txs, tipo, yearMonth, hojeYmd }),
-            frase: fraseDoResumo({
-                nomeDaCategoria: category.name,
-                tipo,
-                yearMonth,
-                aberto,
-                lancado: mes.lancado,
-                previsto: mes.lancado + mes.previsto,
-                media,
-                maior,
-                compras,
-                proximoMes,
-            }),
             fatos: fatosDoMes({ tipo, yearMonth, lancado: mes.lancado, media, maior, compras, proximoMes }),
-            comMedia: mes.lancado > 0 && media != null && media > 0,
             // O convidado não mexe no limite: a sugestão fica, sem o botão.
             insights: insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).map((i) =>
                 i.acao === "limite" && !podeEscrever ? { ...i, acao: undefined } : i,
             ),
         }
     }, [
-        aberto,
         category,
         categoryId,
         hojeYmd,
@@ -670,10 +655,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                                 yearMonth={yearMonth}
                                 hojeYmd={hojeYmd}
                                 aberto={aberto}
-                                frase={analise.frase}
                                 fatos={analise.fatos}
-                                quantosLancamentos={totalLancamentos}
-                                comMedia={analise.comMedia}
                                 onAbrirLancamento={
                                     maiorQuePuxou ? () => txController.openTransactionDetail(maiorQuePuxou) : null
                                 }

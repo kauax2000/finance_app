@@ -50,7 +50,7 @@ export function FatosDoMes({
                             <ItemDescription className="text-xs">{f.rotulo}</ItemDescription>
                             <ItemTitle className="w-full">
                                 {abrir ? (
-                                    <ItemLink onClick={abrir} className="min-w-0 truncate">
+                                    <ItemLink onClick={abrir} aria-label={`${f.rotulo}: ${f.titulo}`} className="min-w-0 truncate">
                                         {f.titulo}
                                     </ItemLink>
                                 ) : (

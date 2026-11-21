@@ -7,7 +7,6 @@ import type {
     compraTipica,
     diaDeMaisGasto,
     fatosDoMes,
-    fraseDoResumo,
     insights,
     maisFrequente,
     porDiaDaSemana,
@@ -19,7 +18,6 @@ import type { Transaction } from "@/lib/supabase"
 import { CartoesDoGasto } from "./cartoes-do-gasto"
 import { CompromissosERepeticoes } from "./compromissos-e-repeticoes"
 import { FatosDoMes } from "./fatos-do-mes"
-import { FraseDoResumo } from "./frase-do-resumo"
 import { GraficosDoResumo } from "./graficos-do-resumo"
 import { InsightsDoResumo } from "./insights-do-resumo"
 
@@ -31,12 +29,7 @@ export type ResumoDaCategoriaProps = {
     yearMonth: string
     hojeYmd: string
     aberto: boolean
-    frase: ReturnType<typeof fraseDoResumo>
     fatos: ReturnType<typeof fatosDoMes>
-    /** Quantos lançamentos o mês tem, para o rodapé da frase. */
-    quantosLancamentos: number
-    /** A média dos últimos 6 meses entrou na frase. */
-    comMedia: boolean
     /** Abre o detalhe do lançamento que puxou o mês; null sem ele. */
     onAbrirLancamento: (() => void) | null
     serie: { yearMonth: string; total: number }[]
@@ -76,7 +69,7 @@ function Secao({ titulo, id, children }: { titulo: string; id?: string; children
     )
 }
 
-/** A aba Resumo: frase → gráficos → cartões → parcelas e repetições → insights, cada bloco com título. Recebe tudo pronto. */
+/** A aba Resumo: gráficos → cartões → parcelas e repetições → insights, cada bloco com título. Recebe tudo pronto. */
 export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
     const despesa = p.tipo === "expense"
     // As mesmas condições com que cada bloco some sozinho: sem conteúdo, sem título solto.
@@ -89,22 +82,8 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
     const temCartoes = p.maior != null || p.tipica != null || p.frequente != null || p.diaDeMais != null
     const temCompromissos = p.compromissos.itens.length > 0 || p.repetidas.length > 0
     const verComprometido = temCompromissos ? rolarAteOComprometido : null
-    const proximoMes = p.fatos.find((f) => f.id === "previsto")?.titulo ?? null
     return (
         <div className="grid gap-6">
-            <Secao titulo="Em resumo">
-                <FraseDoResumo
-                    frase={p.frase}
-                    tipo={p.tipo}
-                    cor={p.cor}
-                    yearMonth={p.yearMonth}
-                    quantosLancamentos={p.quantosLancamentos}
-                    comMedia={p.comMedia}
-                    onAbrirLancamento={p.onAbrirLancamento}
-                    proximoMes={verComprometido ? proximoMes : null}
-                    onVerProximoMes={rolarAteOComprometido}
-                />
-            </Secao>
             {temGraficos ? (
                 <Secao titulo="Como o mês andou">
                     <GraficosDoResumo
