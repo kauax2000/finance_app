@@ -400,7 +400,14 @@ export function GraficosDoResumo({
                                     {/* Nome, contagem e diferença são o mesmo dado em três linhas: sem `gap`. */}
                                     <div className="min-w-0 flex-1 text-sm">
                                         <p className="break-words">
-                                            Tudo no <span className="font-semibold">{formaUnica.nome}</span>
+                                            {formaUnica.forma === "sem-forma" ? (
+                                                "Tudo sem forma de pagamento"
+                                            ) : (
+                                                <>
+                                                    {formaUnica.forma === "cash" ? "Tudo em" : "Tudo no"}{" "}
+                                                    <span className="font-semibold">{formaUnica.forma === "cash" ? formaUnica.nome.toLocaleLowerCase("pt-BR") : formaUnica.nome}</span>
+                                                </>
+                                            )}
                                         </p>
                                         <p className="nums text-muted-foreground">
                                             {formaUnica.compras} {despesa ? "compra" : "entrada"}
@@ -408,7 +415,8 @@ export function GraficosDoResumo({
                                         </p>
                                         {diferencaUnica ? (
                                             <p className={cn("nums text-muted-foreground", diferencaUnica.classe)}>
-                                                {diferencaUnica.texto === "igual" ? `igual a ${mesAnterior}` : `${diferencaUnica.texto} vs ${mesAnterior}`}
+                                                {/* Contra o mês anterior inteiro; com o mês aberto, diz isso, porque o Ritmo ao lado compara no mesmo dia. */}
+                                                {diferencaUnica.texto === "igual" ? `igual a ${mesAnterior}${aberto ? " inteiro" : ""}` : `${diferencaUnica.texto} vs ${mesAnterior}${aberto ? " inteiro" : ""}`}
                                             </p>
                                         ) : null}
                                     </div>
