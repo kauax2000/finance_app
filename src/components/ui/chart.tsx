@@ -2125,6 +2125,8 @@ function ChartDonut({
   bands,
   active,
   onActiveChange,
+  legendDetail,
+  rounded = false,
   children,
 }: Omit<ChartFormProps, "series" | "legend"> & {
   /** A fatia acesa pelo nome (`nameKey`), para quem tem a própria lista (a da fatura, de links). */
@@ -2133,6 +2135,10 @@ function ChartDonut({
   onActiveChange?: (nome: string | null) => void
   /** `true` é a fileira embaixo (padrão a partir de duas fatias); `list` é a lista ao lado do anel, com valor e porcentagem (desce abaixo do anel em `sm`). */
   legend?: boolean | "list"
+  /** Só com `legend="list"`: a linha embaixo do nome ("R$ 1.360 · +312"), em `text-muted-foreground`; com ela a coluna do valor sai (o % fica). */
+  legendDetail?: (index: number) => React.ReactNode
+  /** As pontas arredondadas, com respiro entre as fatias e sem o traço de superfície. */
+  rounded?: boolean
   /** Os cortes de aviso e perigo, só no `gauge`: o arco usado pinta o estado (mesmos tokens e cortes do `Progress`) e o resto vira o trilho em `--muted`. */
   bands?: ProgressBands
   /** `donut` deixa o miolo livre para o total; `pie` fecha o miolo; `gauge` é o meio-círculo de progresso contra um teto (orçamento, limite de cartão). */
@@ -2311,10 +2317,12 @@ function ChartDonut({
               startAngle={medidor ? 180 : 90}
               endAngle={medidor ? 0 : -270}
               cy={medidor ? `${CHART_GAUGE_CY}%` : undefined}
-              paddingAngle={1}
-              // Os mesmos 2px de superfície das barras empilhadas.
+              // Com uma fatia só, o respiro abriria o anel.
+              paddingAngle={rounded ? (data.length > 1 ? 3 : 0) : 1}
+              cornerRadius={rounded ? 4 : undefined}
+              // Os mesmos 2px de superfície das barras empilhadas; arredondada, quem separa é o respiro.
               stroke="var(--chart-surface)"
-              strokeWidth={2}
+              strokeWidth={rounded ? 0 : 2}
             >
               {data.map((_, i) => (
                 <Cell
@@ -2358,13 +2366,27 @@ function ChartDonut({
                   style={{ backgroundColor: corDoPonto(i) }}
                 />
                 {/* O nome quebra em até duas linhas: cortado, "Bradesco Visa Infi…" não dizia qual cartão. */}
-                <span className="line-clamp-2 min-w-0 flex-1 break-words">
-                  {config[chaves[i]]?.label ?? chaves[i]}
-                </span>
+                {legendDetail ? (
+                  // Nome e detalhe são o mesmo dado em duas linhas: sem `gap`.
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="line-clamp-2 break-words text-foreground">
+                      {config[chaves[i]]?.label ?? chaves[i]}
+                    </span>
+                    <span data-slot="chart-donut-legend-detail" className="nums text-muted-foreground">
+                      {legendDetail(i)}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="line-clamp-2 min-w-0 flex-1 break-words">
+                    {config[chaves[i]]?.label ?? chaves[i]}
+                  </span>
+                )}
                 {/* Abaixo de 20rem de cartão o valor sai (fica no miolo e no tooltip) e o nome ganha o espaço. */}
-                <span className="nums font-mono text-foreground @max-xs/chart-donut:hidden">
-                  {formatChartValue(valores[i], format)}
-                </span>
+                {legendDetail ? null : (
+                  <span className="nums font-mono text-foreground @max-xs/chart-donut:hidden">
+                    {formatChartValue(valores[i], format)}
+                  </span>
+                )}
                 <span className="nums w-9 text-right font-mono text-muted-foreground">
                   {pcts[i]}%
                 </span>

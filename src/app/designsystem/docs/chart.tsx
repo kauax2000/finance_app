@@ -158,6 +158,40 @@ const CONFIG_CATEGORIAS = {
   Casa: { label: "Casa" },
 } satisfies ChartConfig
 
+/** Como foi pago: a forma, o valor no mês e a diferença contra o mês anterior (`null` é forma nova). */
+const FORMAS = [
+  { nome: "Bradesco Visa Infinity", valor: 1360, diferenca: 312 },
+  { nome: "Pix", valor: 658, diferenca: -94 },
+  { nome: "Dinheiro", valor: 176, diferenca: null },
+]
+
+const CONFIG_FORMAS = {
+  "Bradesco Visa Infinity": { label: "Bradesco Visa Infinity" },
+  Pix: { label: "Pix" },
+  Dinheiro: { label: "Dinheiro" },
+} satisfies ChartConfig
+
+const TOTAL_FORMAS = FORMAS.reduce((acc, f) => acc + f.valor, 0)
+
+/** O detalhe da linha: o valor e a diferença no tom do veredito (despesa: a mais é aviso, a menos é sucesso). */
+function detalheDaForma(i: number) {
+  const f = FORMAS[i]
+  const dif = f.diferenca
+  return (
+    <>
+      {currencyBRL(f.valor, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ·{" "}
+      {dif == null ? (
+        "novo"
+      ) : (
+        <span className={dif > 0 ? "text-warning-muted-foreground" : "text-success-muted-foreground"}>
+          {dif > 0 ? "+" : "−"}
+          {Math.abs(dif)}
+        </span>
+      )}
+    </>
+  )
+}
+
 const CONSUMO = [{ nome: "Usado", valor: 3820 }, { nome: "Disponível", valor: 1180 }]
 
 const CONFIG_CONSUMO = {
@@ -1396,6 +1430,37 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Detalhe na legenda e forma arredondada"
+        description={
+          <>
+            <code>legendDetail</code> (só com <code>legend=&quot;list&quot;</code>) escreve uma linha embaixo do nome, em <code>text-muted-foreground</code>, e a coluna do valor sai: o detalhe já o diz, e o % fica. Nome e detalhe são o mesmo dado em duas linhas, sem <code>gap</code>. <code>rounded</code> arredonda as pontas (4px), abre 3° de respiro entre as fatias e tira o traço de superfície; com uma fatia só o respiro é 0, senão o anel abriria.
+          </>
+        }
+        code={`<ChartDonut
+  legend="list"
+  rounded
+  legendDetail={(i) => <>{currencyBRL(formas[i].valor)} · +312</>}
+  center={<ChartDonutCenter amount={total} label="no mês" />}
+  …
+/>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartDonut
+          legend="list"
+          rounded
+          legendDetail={detalheDaForma}
+          config={CONFIG_FORMAS}
+          data={FORMAS}
+          nameKey="nome"
+          dataKey="valor"
+          label="Como foi pago"
+          className="w-30"
+          aspect="square"
+          center={<ChartDonutCenter amount={TOTAL_FORMAS} label="no mês" />}
+        />
+      </DocSection>
+
+      <DocSection
         title="Medidor com faixas"
         description={
           <>
@@ -1960,6 +2025,16 @@ const config = {
             prop: "legend (rosca)",
             type: 'boolean | "list"',
             description: "`list` põe a legenda ao lado do anel, com valor e %.",
+          },
+          {
+            prop: "legendDetail (rosca)",
+            type: "(index) => ReactNode",
+            description: "Só com `list`: a linha embaixo do nome, em `text-muted-foreground`; a coluna do valor sai e o % fica.",
+          },
+          {
+            prop: "rounded (rosca)",
+            type: "boolean",
+            description: "Pontas de 4px, respiro de 3° entre fatias (0 com uma só) e sem o traço de superfície.",
           },
           {
             prop: "bands (rosca)",

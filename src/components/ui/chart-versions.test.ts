@@ -6,6 +6,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import {
   ChartBarList,
   ChartContainer,
+  ChartDonut,
   ChartTooltipContent,
   waterfallSteps,
   chartContainerVariants,
@@ -699,5 +700,44 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
     expect(doc).toContain("xTicks={")
     expect(doc).toContain('labelPosition="bottom"')
     expect(doc).toContain("hollow={false}")
+  })
+  describe("a rosca com detalhe na legenda e forma arredondada", () => {
+    const base = {
+      nameKey: "forma",
+      dataKey: "valor",
+      config: { cartao: { label: "Bradesco Visa Infinity" }, pix: { label: "Pix" } },
+      data: [
+        { forma: "cartao", valor: 1360 },
+        { forma: "pix", valor: 640 },
+      ],
+      legend: "list" as const,
+      label: "Como foi pago",
+    }
+    it("legendDetail escreve o nó embaixo do nome e tira a coluna do valor", () => {
+      const html = renderToStaticMarkup(
+        h(ChartDonut, { ...base, legendDetail: (i: number) => (i === 0 ? "R$ 1.360 · +312" : "novo") })
+      )
+      expect(html).toContain("R$ 1.360 · +312")
+      expect(html).toContain('data-slot="chart-donut-legend-detail"')
+      expect(html).not.toContain("@max-xs/chart-donut:hidden")
+      expect(html).toContain("68%")
+    })
+    it("sem legendDetail a linha segue com o valor", () => {
+      const html = renderToStaticMarkup(h(ChartDonut, base))
+      expect(html).not.toContain("chart-donut-legend-detail")
+      expect(html).toContain("@max-xs/chart-donut:hidden")
+    })
+    it("rounded passa o raio de 4, o respiro de 3 (0 com uma fatia) e zera o traço", () => {
+      const fonte = semComentarios(CODIGO)
+      expect(fonte).toContain("paddingAngle={rounded ? (data.length > 1 ? 3 : 0) : 1}")
+      expect(fonte).toContain("cornerRadius={rounded ? 4 : undefined}")
+      expect(fonte).toContain("strokeWidth={rounded ? 0 : 2}")
+      expect(fonte).toMatch(/rounded = false/)
+    })
+    it("a página do catálogo mostra a rosca da forma de pagamento", () => {
+      const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
+      expect(doc).toContain("legendDetail={")
+      expect(doc).toContain("Bradesco Visa Infinity")
+    })
   })
 })
