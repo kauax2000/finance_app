@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--pix:oklch(0.74 0.12 185);--cre:oklch(0.68 0.17 290);--deb:oklch(0.62 0.14 250);--cash:oklch(0.76 0.12 85);--ted:oklch(0.7 0.16 350)}
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 22px;max-width:1000px}.lead b{color:#ddd;font-weight:500}
+.grid{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}.opt{width:340px}.tag{font:600 12px Inter;color:#ff6a45;margin:0 0 4px}.why{color:#9a9a9a;font-size:13px;margin:0 0 12px;min-height:112px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px;display:grid;gap:14px}
+.row{display:flex;align-items:center;gap:12px}.nm{flex:1;min-width:0}.mut{color:#9a9a9a;font-size:12px}.m{font:600 13px "Geist Mono",monospace}
+.dot{display:inline-block;width:8px;height:8px;border-radius:9px;margin-right:4px}
+.t{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;flex:none;position:relative}
+.mini{width:36px;height:24px;border-radius:6px;display:grid;place-items:center;flex:none;position:relative}
+.visa{font:800 italic 8px Inter;letter-spacing:.02em}
+.badge{position:absolute;right:-3px;bottom:-3px;background:#1a1f71;color:#fff;border-radius:4px;padding:1px 3px;font:800 italic 6px Inter;box-shadow:0 0 0 2px #141414}
+.note{color:#888;font-size:13px;margin-top:26px;max-width:1000px}
+</style></head><body>
+<h1>O ícone de cada forma — opções</h1>
+<p class="lead">Hoje: o PIX é um <b>QR code genérico em cinza</b> sobre um verde-água quase invisível, e o cartão é <b>a bandeira num retângulo branco</b> que sai do círculo e não conversa com o PIX. Os dois ícones não têm a cor que a barra e a bolinha já usam. Abaixo, as cinco formas em cada opção (a Carro só tem as duas primeiras).</p>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="pix" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6c.6 0 1.1.2 1.5.6l2.9 2.9h-.6c-.8 0-1.6.3-2.2.9L12 8.6l-1.6-1.6c-.6-.6-1.4-.9-2.2-.9h-.6l2.9-2.9c.4-.4.9-.6 1.5-.6Zm-6.4 4.9h2.6c.4 0 .8.2 1.1.5l1.8 1.8c.5.5 1.3.5 1.8 0L14.7 8c.3-.3.7-.5 1.1-.5h2.6l2 2c.8.8.8 2.2 0 3l-2 2h-2.6c-.4 0-.8-.2-1.1-.5l-1.8-1.8c-.5-.5-1.3-.5-1.8 0L9.3 14c-.3.3-.7.5-1.1.5H5.6l-2-2c-.8-.8-.8-2.2 0-3l2-2Zm2 9.9h.6c.8 0 1.6-.3 2.2-.9l1.6-1.6 1.6 1.6c.6.6 1.4.9 2.2.9h.6l-2.9 2.9c-.8.8-2.2.8-3 0l-2.9-2.9Z"/></symbol>
+<symbol id="card" viewBox="0 0 20 20"><path fill="currentColor" d="M2.5 4A1.5 1.5 0 0 0 1 5.5V6h18v-.5A1.5 1.5 0 0 0 17.5 4h-15ZM19 8.5H1v6A1.5 1.5 0 0 0 2.5 16h15a1.5 1.5 0 0 0 1.5-1.5v-6ZM3 13.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm4.75-.75a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z"/></symbol>
+<symbol id="cash" viewBox="0 0 20 20"><path fill="currentColor" d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 6a2 2 0 0 0 2-2H4v2Zm12 0V4h-2a2 2 0 0 0 2 2ZM4 10v2h2a2 2 0 0 0-2-2Zm10 2h2v-2a2 2 0 0 0-2 2ZM2 14.5a.5.5 0 0 0 0 1h16a.5.5 0 0 0 0-1H2Z"/></symbol>
+<symbol id="ted" viewBox="0 0 20 20"><path fill="currentColor" fill-rule="evenodd" d="M13.2 2.24a.75.75 0 0 0 .04 1.06l2.1 1.95H6.75a.75.75 0 0 0 0 1.5h8.59l-2.1 1.95a.75.75 0 1 0 1.02 1.1l3.5-3.25a.75.75 0 0 0 0-1.1l-3.5-3.25a.75.75 0 0 0-1.06.04Zm-6.4 8a.75.75 0 0 0-1.06-.04l-3.5 3.25a.75.75 0 0 0 0 1.1l3.5 3.25a.75.75 0 1 0 1.02-1.1l-2.1-1.95h8.59a.75.75 0 0 0 0-1.5H4.66l2.1-1.95a.75.75 0 0 0 .04-1.06Z"/></symbol>
+</defs></svg>
+
+<div class="grid" id="g"></div>
+<p class="note">Minha escolha: <b style="color:#ddd">A</b>. O ícone ganha a cor que a barra e a bolinha já usam, então a lista se liga à barra sem ler legenda; o PIX ganha o próprio símbolo, e a bandeira vira um selo no canto, sem quebrar o círculo. A <b style="color:#ddd">C</b> é a mais "carteira", mas os mini cartões pedem mais largura e o dinheiro e o PIX viram cartão sem ser.</p>
+<script>
+const F=[["PIX","pix","--pix","65% · −R$ 15","R$ 2.000"],["Bradesco Visa Infinity","card","--cre","35% · −R$ 663","R$ 1.063",true],["Cartão de débito","card","--deb","12%","R$ 380"],["Dinheiro","cash","--cash","8%","R$ 240"],["TED / débito em conta","ted","--ted","5%","R$ 150"]];
+const ic=(s,c,sz=16)=>`<svg width="${sz}" height="${sz}" style="color:${c}"><use href="#${s}"/></svg>`;
+const HOJE=f=>f[5]?`<span class="t" style="background:color-mix(in oklab,var(${f[2]}) 16%,transparent)"><span style="background:#fff;border-radius:4px;padding:3px 5px" class="visa"><span style="color:#1a1f71">VISA</span></span></span>`:`<span class="t" style="background:color-mix(in oklab,var(${f[2]}) 16%,transparent)">${ic(f[1]==="pix"?"qr":f[1],"#8f8f8f")}</span>`;
+const A=f=>`<span class="t" style="background:color-mix(in oklab,var(${f[2]}) 18%,transparent)">${ic(f[1],`var(${f[2]})`)}${f[5]?'<span class="badge">VISA</span>':''}</span>`;
+const B=f=>`<span class="t" style="background:var(${f[2]})">${ic(f[1],"#111")}${f[5]?'<span class="badge">VISA</span>':''}</span>`;
+const C=f=>f[5]?`<span class="mini" style="background:linear-gradient(135deg,var(${f[2]}),color-mix(in oklab,var(${f[2]}) 60%,#000))"><span class="visa" style="position:absolute;right:4px;bottom:3px;color:#fff">VISA</span><span style="position:absolute;left:4px;top:5px;width:7px;height:5px;border-radius:1.5px;background:#e9c46a"></span></span>`:`<span class="mini" style="background:linear-gradient(135deg,var(${f[2]}),color-mix(in oklab,var(${f[2]}) 60%,#000))">${ic(f[1],"#fff",14)}</span>`;
+const opts=[["HOJE","QR code cinza e bandeira num retângulo branco.",HOJE,true],["A · ÍCONE NA COR DA FORMA","O círculo fica na cor da forma a 18% e o ícone na cor cheia dela, a mesma da barra e da bolinha. O PIX usa o símbolo do PIX (losango), não um QR. No crédito, o ícone de cartão violeta e a bandeira num selo pequeno no canto, como o canto do avatar.",A],["B · LADRILHO CHEIO","O círculo inteiro na cor da forma, com o ícone escuro por cima, como o ladrilho de categoria. Mais forte: a lista vira uma fileira de cores. A bandeira vai no selo do canto.",B],["C · MINI CARTÃO","Cada forma é um cartãozinho na cor dela, em degradê, como numa carteira do celular. O crédito tem o chip e a bandeira no canto; as outras levam o ícone em branco.",C]];
+document.getElementById('g').innerHTML=opts.map(([tag,why,fn,hoje])=>`<div class="opt"><div class="tag">${tag}</div><p class="why">${why}</p><div class="card">${(hoje?F.slice(0,2):F).map(f=>`<div class="row">${fn(f)}<div class="nm"><div>${f[0]}</div><div class="mut"><span class="dot" style="background:var(${f[2]})"></span>${f[3]}</div></div><span class="m">${f[4]}</span></div>`).join('')}</div></div>`).join('');
+</script>
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="qr" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></symbol></defs></svg>
+</body></html>
