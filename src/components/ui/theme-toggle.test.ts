@@ -329,10 +329,11 @@ describe("o trilho de tema", () => {
     })
 
     it("tocar de volta no meio inverte a aurora de onde ela está, sem nova transição", () => {
-        const i = CODIGO.indexOf("atual.anims.length > 0 && valor === atual.antes")
+        const i = CODIGO.indexOf('atual.anims.length > 0 && atual.anims[0].playState === "running" && valor === atual.antes')
         expect(i).toBeGreaterThan(-1)
         const volta = CODIGO.slice(i, CODIGO.indexOf("return", i))
-        expect(volta).toContain("flushSync(() => setTheme(valor))")
+        // A cortina recolhe antes de o tema trocar: a foto nova é viva.
+        expect(volta).not.toContain("setTheme")
         expect(volta).toContain("a.reverse()")
         expect(volta).toContain("atual.antes = atual.valor")
         expect(volta).toContain("atual.valor = valor")
@@ -342,5 +343,11 @@ describe("o trilho de tema", () => {
         expect(i).toBeLessThan(CODIGO.indexOf("doc.startViewTransition("))
         expect(CODIGO).toContain("revelacao.current = { valor, antes, anims: [] }")
         expect(CODIGO).toMatch(/esta\.anims = anims/)
+        // O tema final é aplicado no fim da máscara da raiz, a segunda animação de `animarAurora`.
+        expect(CODIGO).toContain("const MASCARA_DA_RAIZ = 1")
+        expect(CODIGO).toContain("anims[MASCARA_DA_RAIZ].finished.then(() => flushSync(() => setTheme(esta.valor))).catch(() => {})")
+        const aurora = lerFonte("src/lib/aurora-do-tema.ts")
+        const lista = aurora.slice(aurora.indexOf("const animacoes = ["))
+        expect(lista.indexOf("quadrosDaFaixa")).toBeLessThan(lista.indexOf('"::view-transition-new(root)"'))
     })
 })

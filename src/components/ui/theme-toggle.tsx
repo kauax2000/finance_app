@@ -94,6 +94,9 @@ const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
  * durante a troca e fica por cima, viva, com um brilho na paleta do destino. Tocar de volta a
  * parada de onde se veio, com a aurora andando, inverte todas as animações de onde estão.
  */
+/** O índice da máscara de `::view-transition-new(root)` no array de `animarAurora` (a faixa é a 0). */
+const MASCARA_DA_RAIZ = 1
+
 type DocumentoComTransicao = Document & {
     startViewTransition?: (cb: () => void) => {
         ready: Promise<void>
@@ -160,12 +163,12 @@ export function ThemeToggle({
         }
         // O toque chama duas vezes, pelo foco e pelo clique: a segunda é a mesma troca.
         if (revelacao.current?.valor === valor) return
-        // Tocar de volta no meio: o DOM vivo está escondido sob a transição, então o tema volta já
-        // e cada animação toca ao contrário de onde está; no fim, a página viva é a de antes. Antes
-        // do `ready` não há o que inverter, e segue o caminho de hoje.
+        // Tocar de volta no meio: cada animação toca ao contrário de onde está, e a cortina recolhe.
+        // O tema não troca aqui (a foto nova é viva e a página estalaria): troca quando a máscara
+        // acaba, no `ready`. Antes do `ready`, ou com a faixa já fora (os últimos 50ms), não há o
+        // que inverter, e segue o caminho de hoje.
         const atual = revelacao.current
-        if (atual && atual.anims.length > 0 && valor === atual.antes) {
-            flushSync(() => setTheme(valor))
+        if (atual && atual.anims.length > 0 && atual.anims[0].playState === "running" && valor === atual.antes) {
             for (const a of atual.anims) a.reverse()
             atual.antes = atual.valor
             atual.valor = valor
@@ -220,6 +223,9 @@ export function ThemeToggle({
                     )
                 }
                 esta.anims = anims
+                // O tema final é o do fim da máscara: o mesmo na ida, o de antes depois de um número
+                // ímpar de voltas. A troca pulada cancela a máscara, e nada é aplicado.
+                anims[MASCARA_DA_RAIZ].finished.then(() => flushSync(() => setTheme(esta.valor))).catch(() => {})
                 return anims[0].finished.then(() => {
                     tirarFaixa?.()
                     aurora?.tirar()
