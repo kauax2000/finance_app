@@ -742,11 +742,11 @@ function ChartTooltipContent({
                     </div>
                     {valor !== undefined ? (
                       <span className="flex items-baseline gap-1.5">
-                        {/* A primeira série é a que se lê; as outras são a referência, em cinza. */}
+                        {/* Nas linhas (`stroke`) a primeira série é a que se lê; as outras são a referência, em cinza. Barras e áreas empilhadas seguem iguais. */}
                         <span
                           className={cn(
                             "nums font-mono font-medium",
-                            index === 0 ? "text-foreground" : "text-muted-foreground",
+                            index > 0 && indicator === "stroke" ? "text-muted-foreground" : "text-foreground",
                             ehPrevisto && "opacity-75"
                           )}
                         >

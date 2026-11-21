@@ -316,8 +316,9 @@ export function GraficosDoResumo({
                                     x="dia"
                                     xTicks={[1, 8, 15, 22, ritmo.length]}
                                     band={corDoVeu ? { dataKey: "faixa", color: corDoVeu } : undefined}
-                                    ghost={aberto ? { dataKey: "projecao", color: corDaSerie } : undefined}
-                                    tooltipLabel={(d) => (Number(d) === 0 ? "início do mês" : `dia ${d}`)}
+                                    ghost={aberto ? { dataKey: "projecao", color: corDaSerie, label: "previsto" } : undefined}
+                                    tooltipDifference={{ better: despesa ? "lower" : "higher" }}
+                                    tooltipLabel={(d) => (Number(d) === 0 ? "início do mês" : `${d} de ${mesAtual}`)}
                                     aspect="auto"
                                     className="h-44 w-full"
                                     label={`${oQue} acumulado dia a dia em ${mesAtual}, contra ${mesAnterior}`}
