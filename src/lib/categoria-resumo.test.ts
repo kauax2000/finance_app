@@ -2,15 +2,12 @@ import { describe, expect, it } from "vitest"
 import {
     compraTipica,
     compromissos,
-    descricaoSemParcela,
     diaDeMaisGasto,
     diasUteisEFimDeSemana,
-    fatosDoMes,
     insights,
     maisFrequente,
     porDiaDaSemana,
     concentracaoDasCompras,
-    repeticoes,
     tendenciaDosMeses,
     resumoDoRitmo,
     ritmoDoMes,
@@ -305,65 +302,6 @@ describe("compromissos", () => {
         ])
         expect(r.porMes).toBe(30)
         expect(r.ateAcabar).toBe(0)
-    })
-})
-
-describe("repeticoes", () => {
-    it("cadência e projeção no mês aberto", () => {
-        const r = repeticoes({ txs: carro, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-21" })
-        expect(r).toHaveLength(1)
-        expect(r[0]).toMatchObject({ descricao: "Estacionamento", vezes: 3, total: 75, aCadaDias: 9 })
-        // faltam 9 dias, cadência 9 → mais 1 compra de ~25
-        expect(r[0].projecaoNoMes).toBe(25)
-    })
-    it("mês passado: sem projeção", () => {
-        const r = repeticoes({ txs: carro, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-12-10" })
-        expect(r[0].projecaoNoMes).toBeNull()
-    })
-    it("estorno não repete; vazio é lista vazia", () => {
-        expect(repeticoes({ txs: [estorno(), estorno()], tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-21" })).toEqual([])
-    })
-})
-
-// currencyBRL separa o R$ com espaço não separável; os textos esperados usam o espaço comum.
-const normal = (s: string) => s.replace(/\u00a0/g, " ")
-
-describe("descricaoSemParcela", () => {
-    it("tira o sufixo de parcela", () => {
-        expect(descricaoSemParcela("Consórcio Mãe - 3/6")).toBe("Consórcio Mãe")
-        expect(descricaoSemParcela("Consórcio Mãe – 3/6")).toBe("Consórcio Mãe")
-        expect(descricaoSemParcela("Seguro (4/12)")).toBe("Seguro")
-        expect(descricaoSemParcela("Seguro 4/12")).toBe("Seguro")
-        expect(descricaoSemParcela("Netflix")).toBe("Netflix")
-        expect(descricaoSemParcela("  ")).toBeNull()
-        expect(descricaoSemParcela(null)).toBeNull()
-    })
-})
-
-describe("fatosDoMes", () => {
-    const args = {
-        tipo: "expense" as const,
-        yearMonth: "2026-11",
-        lancado: 3062.54,
-        media: 2906.77,
-        maior: tx({ description: "Consórcio Mãe - 3/6", amount: 2000 }),
-        compras: 9,
-        proximoMes: 442.54,
-    }
-    it("puxou, previsto e total, nessa ordem", () => {
-        expect(fatosDoMes(args).map((f) => ({ ...f, titulo: normal(f.titulo) }))).toEqual([
-            { id: "puxou", rotulo: "Puxou o mês", titulo: "Consórcio Mãe", valor: 2000, acao: "lancamento" },
-            { id: "previsto", rotulo: "Já previsto", titulo: "Dezembro", valor: 442.54, acao: "comprometido" },
-            { id: "total", rotulo: "Total do mês", titulo: "média R$ 2.906,77", valor: 3062.54 },
-        ])
-    })
-    it("sem maior válido e sem próximo mês, só o total; sem média o título é o mês", () => {
-        expect(fatosDoMes({ ...args, maior: null, proximoMes: 0, media: null })).toEqual([
-            { id: "total", rotulo: "Total do mês", titulo: "novembro", valor: 3062.54 },
-        ])
-    })
-    it("sem lançado, nada", () => {
-        expect(fatosDoMes({ ...args, lancado: 0 })).toEqual([])
     })
 })
 

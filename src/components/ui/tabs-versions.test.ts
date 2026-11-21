@@ -168,14 +168,13 @@ describe("o estado na raiz", () => {
 })
 
 describe("o app", () => {
-  it("as seis telas vestem o padrão, sem pintar a fileira à mão", () => {
+  it("as cinco telas vestem o padrão, sem pintar a fileira à mão", () => {
     for (const arquivo of [
       "src/components/credit-cards/credit-cards-view-segment.tsx",
       "src/components/subscriptions/subscriptions-toolbar.tsx",
       "src/components/transactions/transaction-type-segment.tsx",
       "src/components/bills/bill-detail-history-list.tsx",
       "src/components/bills/bills-toolbar.tsx",
-      "src/components/categories/detail/category-detail-layout.tsx",
     ]) {
       const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toMatch(/<TabsList[^>]*variant="solid"/)

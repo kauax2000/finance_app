@@ -14,7 +14,7 @@ import { currencyBRL } from "@/lib/formatters"
 import type { Transaction, WorkspaceInstallmentPlan, WorkspaceSubscription } from "@/lib/supabase"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 
-/** `lancamento` marca o nome do lançamento que puxou o mês (a tela o torna clicável). */
+/** Um trecho do texto de um insight; `forte` vai em negrito. */
 type Parte = { texto: string; forte?: boolean }
 
 const reais = (n: number) => Math.round(n * 100) / 100
@@ -23,8 +23,6 @@ const ultimoDia = (ym: string) => {
     const { y, m } = parseYearMonth(ym)
     return new Date(y, m, 0).getDate()
 }
-const diasEntre = (a: string, b: string) =>
-    Math.round((Date.UTC(+b.slice(0, 4), +b.slice(5, 7) - 1, +b.slice(8, 10)) - Date.UTC(+a.slice(0, 4), +a.slice(5, 7) - 1, +a.slice(8, 10))) / 86_400_000)
 
 export type PontoDoRitmo = {
     dia: number
@@ -274,91 +272,6 @@ export function compromissos(args: {
         porMes += valor / (MESES_POR_COBRANCA[s.billing_interval] ?? 1)
     }
     return { itens, porMes: reais(porMes), ateAcabar: reais(ateAcabar) }
-}
-
-/** As repetidas do mês, a cadência média em dias e a projeção até o fim do mês (só no mês aberto). */
-export function repeticoes(args: {
-    txs: Transaction[]
-    tipo: TipoDaCategoria
-    yearMonth: string
-    hojeYmd: string
-}): { descricao: string; vezes: number; total: number; aCadaDias: number | null; projecaoNoMes: number | null }[] {
-    const { txs, tipo, yearMonth, hojeYmd } = args
-    const aberto = hojeYmd.slice(0, 7) === yearMonth
-    const faltam = ultimoDia(yearMonth) - Number(hojeYmd.slice(8, 10))
-    return descricoesRepetidas(txs, tipo, Infinity).map((r) => {
-        const chave = r.descricao.toLocaleLowerCase("pt-BR")
-        const datas = txs
-            .filter((t) => peso(t, tipo) === 1 && (t.description ?? "").trim().toLocaleLowerCase("pt-BR") === chave)
-            .map((t) => transactionLocalYmd(t.date))
-            .filter((d): d is string => !!d)
-            .sort()
-        const cadencia = datas.length > 1 ? Math.round(diasEntre(datas[0], datas[datas.length - 1]) / (datas.length - 1)) : 0
-        const aCadaDias = cadencia > 0 ? cadencia : null
-        return {
-            ...r,
-            aCadaDias,
-            projecaoNoMes:
-                aberto && aCadaDias ? reais(Math.floor(faltam / aCadaDias) * (r.total / r.vezes)) : null,
-        }
-    })
-}
-
-/** O mês sem o ano, com maiúscula ("Novembro"). */
-export const nomeDoMes = (ym: string) => {
-    const n = labelYearMonthPt(ym).split(" ")[0]
-    return n.charAt(0).toLocaleUpperCase("pt-BR") + n.slice(1)
-}
-
-/** Tira o sufixo de parcela ("- 3/6", "– 3/6", "(3/6)", " 3/6") do fim; vazio vira null. */
-export function descricaoSemParcela(descricao: string | null | undefined): string | null {
-    const t = (descricao ?? "").replace(/\s*(?:[-–]\s*\d+\/\d+|\(\d+\/\d+\)|\d+\/\d+)\s*$/, "").trim()
-    return t || null
-}
-
-/** O lançamento que puxou o mês: 2 compras ou mais, e o maior acima de 40% do lançado. */
-const puxouOMes = (maior: Transaction | null, lancado: number, compras: number) =>
-    !!maior && lancado > 0 && compras >= 2 && Number(maior.amount) / lancado > 0.4
-
-
-/** Os até três fatos do mês (puxou, já previsto, total), na ordem em que aparecem. */
-export function fatosDoMes(args: {
-    tipo: TipoDaCategoria
-    yearMonth: string
-    lancado: number
-    media: number | null
-    maior: Transaction | null
-    compras: number
-    proximoMes: number
-}): { id: "puxou" | "previsto" | "total"; rotulo: string; titulo: string; valor: number; acao?: "lancamento" | "comprometido" }[] {
-    const { yearMonth, lancado, media, maior, compras, proximoMes } = args
-    if (lancado <= 0) return []
-    const r: ReturnType<typeof fatosDoMes> = []
-    if (maior && puxouOMes(maior, lancado, compras)) {
-        r.push({
-            id: "puxou",
-            rotulo: "Puxou o mês",
-            titulo: descricaoSemParcela(maior.description) ?? "O maior lançamento",
-            valor: Number(maior.amount),
-            acao: "lancamento",
-        })
-    }
-    if (proximoMes > 0) {
-        r.push({
-            id: "previsto",
-            rotulo: "Já previsto",
-            titulo: nomeDoMes(shiftYearMonth(yearMonth, 1)),
-            valor: proximoMes,
-            acao: "comprometido",
-        })
-    }
-    r.push({
-        id: "total",
-        rotulo: "Total do mês",
-        titulo: media != null && media > 0 ? `média ${currencyBRL(media)}` : nomeDoMes(yearMonth).toLocaleLowerCase("pt-BR"),
-        valor: lancado,
-    })
-    return r
 }
 
 /** Até 3 insights, na ordem de utilidade. */

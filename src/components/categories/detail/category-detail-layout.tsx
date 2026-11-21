@@ -1,46 +1,34 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-type FormaDaLista = "tabela" | "lista"
 
 /**
- * O casco do detalhe da categoria, igual no telefone e no desktop: o resumo do
- * mês no topo e abas Resumo · Lançamentos. No desktop o conteúdo começa onde
- * começa o ladrilho do cabeçalho (38px depois da borda, com o voltar), e recua
- * o mesmo à direita.
+ * O casco do detalhe da categoria, igual no telefone e no desktop, sem abas:
+ * a faixa do mês, os últimos meses, o insight, a lista e o link para a análise
+ * no Painel. No desktop o conteúdo começa onde começa o ladrilho do cabeçalho
+ * (38px depois da borda, com o voltar), e recua o mesmo à direita.
  */
 export function CategoryDetailLayout({
     resumo,
-    analise,
+    meses,
+    insight,
     lancamentos,
-    totalLancamentos,
+    analise,
 }: {
     resumo: ReactNode
+    meses: ReactNode
+    insight: ReactNode
+    lancamentos: ReactNode
+    /** O link "Ver a análise de … no Painel"; null sem ele. */
     analise: ReactNode
-    lancamentos: (forma: FormaDaLista) => ReactNode
-    totalLancamentos: number
 }) {
     return (
         <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
             {resumo}
-            {/* As abas e o painel são blocos diferentes: `--space-block`, a mesma distância de Categorias e de Transações. */}
-            <Tabs defaultValue="resumo" className="gap-(--space-block)">
-                <TabsList aria-label="Seções da categoria" className="w-full md:w-fit">
-                    <TabsTrigger value="resumo" className="md:flex-none">Resumo</TabsTrigger>
-                    <TabsTrigger value="lancamentos" count={totalLancamentos} className="md:flex-none">
-                        Lançamentos
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value="resumo" className="flex flex-col gap-6">
-                    {analise}
-                </TabsContent>
-                {/* Montada sempre: a folha do lançamento mora nela e abre também do Resumo. */}
-                <TabsContent value="lancamentos" forceMount>
-                    {lancamentos("tabela")}
-                </TabsContent>
-            </Tabs>
+            {meses}
+            {insight}
+            {lancamentos}
+            {analise ? <div className="flex justify-center">{analise}</div> : null}
         </div>
     )
 }

@@ -89,11 +89,7 @@ describe("as versões do StatCard", () => {
     expect(kpi).toMatch(/better="down"/)
   })
 
-  it("o resumo da categoria e as contas usam as peças", () => {
-    const categoria = lerFonte("src/components/categories/detail/comparacoes.tsx")
-    expect(categoria).not.toContain("function SummaryMetricCard")
-    expect(categoria).not.toContain("function buildMomBadgeModel")
-    expect(categoria).toContain("StatCardDelta")
+  it("as contas usam as peças", () => {
     const analise = lerFonte("src/components/bills/bill-history-analytics.tsx")
     expect(analise).toContain("<StatCardRange")
     expect(analise).not.toContain('className="flex flex-wrap gap-x-2 text-xs sm:text-sm"')

@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
 import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -18,7 +19,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
-import { BanknotesIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { BanknotesIcon, ChevronRightIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -35,8 +36,9 @@ import { CategoryDetailSkeleton } from "@/components/categories/detail/category-
 import { CategoryDetailLayout } from "@/components/categories/detail/category-detail-layout"
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
 import { FaixaDoMes } from "@/components/categories/detail/faixa-do-mes"
-import { Comparacoes } from "@/components/categories/detail/comparacoes"
-import { ResumoDaCategoria } from "@/components/categories/detail/resumo/resumo-da-categoria"
+import { UltimosSeisMeses } from "@/components/categories/detail/resumo/ultimos-seis-meses"
+import { InsightDaCategoria } from "@/components/categories/detail/resumo/insight-da-categoria"
+import { PARA_ONDE_VAI_ID } from "@/components/dashboard/dashboard-para-onde-vai"
 import { CategoryEmbeddedTransactions } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
 import { MonthNav, useMonthInHeader } from "@/components/categories/categories-toolbar"
@@ -45,29 +47,15 @@ import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     comparacaoComMesAnterior,
-    divisaoPorPagamento,
     maioresLancamentos,
     mediaDosMeses,
-    peso,
     serieDosMeses,
 } from "@/lib/categoria-detalhe"
-import {
-    compraTipica,
-    compromissos,
-    diaDeMaisGasto,
-    fatosDoMes,
-    insights,
-    maisFrequente,
-    porDiaDaSemana,
-    concentracaoDasCompras,
-    repeticoes,
-    ritmoDoMes,
-} from "@/lib/categoria-resumo"
-import { shiftYearMonth } from "@/lib/budget-month"
+import { compromissos, insights } from "@/lib/categoria-resumo"
 import { receitasDoMesPorCategoria } from "@/lib/categoria-receitas-do-mes"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
-import { buildCreditCardClosingLookup, transactionCountsInExpenseMonth } from "@/lib/expense-month-attribution"
+import { buildCreditCardClosingLookup } from "@/lib/expense-month-attribution"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
@@ -451,49 +439,19 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const totalDaCarteira = tipo === "income" ? workspaceMonthSums.income : workspaceMonthSums.expense
     const pesoNoTotal = totalDaCarteira > 0 ? mes.lancado / totalDaCarteira : null
 
-    // O que já está previsto no mês seguinte (parcelas e recorrentes), para a frase do mês aberto.
-    const proximoMes = React.useMemo(() => {
-        if (!aberto) return 0
-        const ym = shiftYearMonth(yearMonth, 1)
-        if (tipo === "income") {
-            return receitasDoMesPorCategoria({ yearMonth: ym, hojeYmd, transactions: txs, subscriptions })[categoryId]?.previsto ?? 0
-        }
-        const m = buildCategoryCommitmentsForMonth({ yearMonth: ym, transactions: [], installmentPlans, subscriptions, creditCards })[categoryId]
-        return (m?.projectedInstallmentsTotal ?? 0) + (m?.projectedSubscriptionsTotal ?? 0)
-    }, [aberto, yearMonth, tipo, hojeYmd, txs, subscriptions, installmentPlans, creditCards, categoryId])
-
     const analise = React.useMemo(() => {
         if (!category) return null
         const media = mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at })
-        const maior = maioresLancamentos(txs, tipo, 1)[0] ?? null
-        const compras = txs.filter((t) => peso(t, tipo) === 1).length
         const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
+        // Um insight só: o primeiro que leva a uma ação (definir limite, ou a parcela que termina).
+        const insight = insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).find((i) => i.acao) ?? null
         return {
             comparacao: comparacaoComMesAnterior({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
             media,
-            maior,
+            maior: maioresLancamentos(txs, tipo, 1)[0] ?? null,
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
-            ritmo: ritmoDoMes({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup, previsto: mes.previsto }),
-            porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
-            // O mês anterior pelo mesmo corte do `txs` do mês (fatura que fecha no mês).
-            porPagamentoAnterior: divisaoPorPagamento(
-                seriesSource.filter((t) => transactionCountsInExpenseMonth(t, shiftYearMonth(yearMonth, -1), lookup)),
-                tipo,
-                txController.creditCards,
-            ),
-            diasDaSemana: porDiaDaSemana(txs, tipo),
-            concentracao: concentracaoDasCompras(txs, tipo),
-            // com menos de 3 compras a mediana repete o maior e o total
-            tipica: compras >= 3 ? compraTipica(txs, tipo) : null,
-            frequente: maisFrequente(txs, tipo),
-            diaDeMais: diaDeMaisGasto(txs, tipo),
-            compromissos: c,
-            repetidas: repeticoes({ txs, tipo, yearMonth, hojeYmd }),
-            fatos: fatosDoMes({ tipo, yearMonth, lancado: mes.lancado, media, maior, compras, proximoMes }),
             // O convidado não mexe no limite: a sugestão fica, sem o botão.
-            insights: insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).map((i) =>
-                i.acao === "limite" && !podeEscrever ? { ...i, acao: undefined } : i,
-            ),
+            insight: insight?.acao === "limite" && !podeEscrever ? { ...insight, acao: undefined } : insight,
         }
     }, [
         category,
@@ -504,11 +462,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         lookup,
         mes,
         podeEscrever,
-        proximoMes,
         seriesSource,
         subscriptions,
         tipo,
-        txController.creditCards,
         txs,
         yearMonth,
     ])
@@ -586,8 +542,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     ) : null
 
     const totalLancamentos = expenseMonthRows?.length ?? txController.totalCount ?? 0
-    // O lançamento que puxou o mês abre o detalhe dele (a folha mora na aba Lançamentos, montada sempre).
-    const maiorQuePuxou = analise?.fatos.some((f) => f.id === "puxou") ? analise.maior : null
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-6">
@@ -616,7 +570,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             )}
 
             <CategoryDetailLayout
-                totalLancamentos={totalLancamentos}
                 resumo={
                     isMobile || !analise ? (
                         <ResumoDoMes
@@ -647,53 +600,45 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         />
                     )
                 }
-                analise={
+                meses={
                     analise ? (
-                        <>
-                            {/* No desktop a comparação mora na faixa do mês; no telefone, aqui. */}
-                            {isMobile ? (
-                                <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={null} />
-                            ) : null}
-                            <ResumoDaCategoria
-                                tipo={tipo}
-                                nomeDaCategoria={category.name}
-                                cor={category.color}
-                                yearMonth={yearMonth}
-                                hojeYmd={hojeYmd}
-                                aberto={aberto}
-                                fatos={analise.fatos}
-                                onAbrirLancamento={
-                                    maiorQuePuxou ? () => txController.openTransactionDetail(maiorQuePuxou) : null
-                                }
-                                serie={analise.serie}
-                                media={analise.media}
-                                ritmo={analise.ritmo}
-                                porPagamento={analise.porPagamento}
-                                porPagamentoAnterior={analise.porPagamentoAnterior}
-                                cartoes={txController.creditCards}
-                                diasDaSemana={analise.diasDaSemana}
-                                concentracao={analise.concentracao}
-                                maior={analise.maior}
-                                tipica={analise.tipica}
-                                frequente={analise.frequente}
-                                diaDeMais={analise.diaDeMais}
-                                compromissos={analise.compromissos}
-                                repetidas={analise.repetidas}
-                                insights={analise.insights}
-                                onDefinirLimite={openLimitDialog}
-                            />
-                        </>
+                        <UltimosSeisMeses
+                            tipo={tipo}
+                            cor={category.color}
+                            nomeDaCategoria={category.name}
+                            yearMonth={yearMonth}
+                            aberto={aberto}
+                            serie={analise.serie}
+                            media={analise.media}
+                            limite={limite}
+                        />
                     ) : null
                 }
-                lancamentos={(forma) => (
+                insight={
+                    analise?.insight ? (
+                        <InsightDaCategoria insight={analise.insight} onDefinirLimite={openLimitDialog} />
+                    ) : null
+                }
+                lancamentos={
                     <CategoryEmbeddedTransactions
                         categoryType={category.type}
                         controller={txController}
                         expenseMonthRows={expenseMonthRows}
                         yearMonth={yearMonth}
-                        forma={forma}
+                        forma="tabela"
                     />
-                )}
+                }
+                analise={
+                    // A análise da carteira mora no Painel: a ponte abre a seção já filtrada. Só despesa, só o adulto.
+                    tipo === "expense" && isAdulto ? (
+                        <Button asChild variant="link">
+                            <Link href={`${ROUTES.DASHBOARD}?categoria=${encodeURIComponent(categoryId)}#${PARA_ONDE_VAI_ID}`}>
+                                <span>Ver a análise de {category.name} no Painel</span>
+                                <ChevronRightIcon aria-hidden />
+                            </Link>
+                        </Button>
+                    ) : null
+                }
             />
 
             <CategoryDetailDialogs

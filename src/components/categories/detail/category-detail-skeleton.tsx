@@ -2,9 +2,8 @@ import { PageHeaderSkeleton } from "@/components/ui/page-header"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
- * O esqueleto na forma do detalhe: o cabeçalho (só no desktop), o resumo do mês
- * e as abas Resumo · Lançamentos, igual nos dois tamanhos; embaixo, a aba Resumo
- * (os gráficos em duas linhas e os cartões do gasto).
+ * O esqueleto na forma do detalhe: o cabeçalho (só no desktop), a faixa do mês,
+ * o cartão dos últimos meses, o insight e a lista dos lançamentos.
  */
 export function CategoryDetailSkeleton() {
     return (
@@ -17,15 +16,11 @@ export function CategoryDetailSkeleton() {
                     <Skeleton className="h-2 w-full rounded-full md:w-md" />
                     <Skeleton shape="text" className="w-56" />
                 </div>
-                <Skeleton shape="control" className="w-full md:w-64" />
-                <div className="grid gap-3 md:grid-cols-2">
-                    <Skeleton shape="surface" className="h-64" />
-                    <Skeleton shape="surface" className="h-64 max-md:hidden" />
-                </div>
-                <div className="grid gap-3 max-md:hidden md:grid-cols-3">
-                    <Skeleton shape="surface" className="h-52" />
-                    <Skeleton shape="surface" className="h-52" />
-                    <Skeleton shape="surface" className="h-52" />
+                <Skeleton shape="surface" className="h-64" />
+                <Skeleton shape="surface" className="h-20" />
+                <div className="flex flex-col gap-3">
+                    <Skeleton shape="control" className="w-full md:w-64" />
+                    <Skeleton shape="surface" className="h-72" />
                 </div>
             </div>
         </SkeletonGroup>
