@@ -25,6 +25,7 @@ import { SeguroDoPainelWireframe } from "@/components/wireframe/seguro-para-gast
 import { ResumoDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { SaldoEAcertoWireframe } from "@/components/wireframe/divisao-wireframe"
 import { InsightsDoPainel } from "@/components/wireframe/insights-wireframe"
+import { DashboardParaOndeVai } from "@/components/dashboard/dashboard-para-onde-vai"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
 import { DashboardInstallmentsEndingSoon } from "@/components/dashboard/dashboard-installments-ending-soon"
@@ -324,6 +325,22 @@ export default function DashboardPageClient() {
             </div>
 
             {d.currentWorkspaceId ? <AConferirContagemWireframe workspaceId={d.currentWorkspaceId} /> : null}
+
+            {/* O convidado tem o Painel dele (`PainelPorPapel`); a guarda fica aqui também. */}
+            {isAdulto ? (
+                <DashboardParaOndeVai
+                    calendarYm={d.calendarYm}
+                    todayYmd={d.todayYmd}
+                    categories={d.categories}
+                    transactionsWide={d.transactionsWide}
+                    prevTransactions={d.prevTransactions}
+                    lookup={d.creditCardClosingLookup}
+                    creditCards={d.creditCards}
+                    installmentPlans={d.installmentPlans}
+                    subscriptions={d.subscriptions}
+                    previstoDaCarteira={d.calendarSummary.projected}
+                />
+            ) : null}
 
             <div className="min-h-0 min-w-0">
                 <DashboardPaymentsCalendar

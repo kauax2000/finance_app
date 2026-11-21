@@ -3,6 +3,7 @@
 import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { CalendarSkeleton } from "@/components/ui/calendar"
+import { PageSectionSkeleton } from "@/components/ui/page-section"
 import {
     StatCard,
     StatCardGroup,
@@ -329,11 +330,29 @@ function DashboardInstallmentsSkeleton() {
     )
 }
 
+/** "Para onde vai o dinheiro": o filtro no cabeçalho, o ritmo na linha inteira e dois pares de cartões. */
+function DashboardParaOndeVaiSkeleton() {
+    return (
+        <PageSectionSkeleton actions group={false}>
+            <div className="@container/para-onde">
+                <div className="grid gap-3 @2xl/para-onde:grid-cols-2">
+                    <Skeleton shape="surface" className="h-64 w-full @2xl/para-onde:col-span-2" />
+                    <Skeleton shape="surface" className="h-56 w-full" />
+                    <Skeleton shape="surface" className="h-56 w-full" />
+                    <Skeleton shape="surface" className="h-44 w-full" />
+                    <Skeleton shape="surface" className="h-44 w-full" />
+                </div>
+            </div>
+        </PageSectionSkeleton>
+    )
+}
+
 export function DashboardPageSkeleton() {
     return (
         <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando o dashboard…" delay>
             <DashboardToolbarSkeleton />
             <DashboardKpiSkeleton />
+            <DashboardParaOndeVaiSkeleton />
             <DashboardCalendarSkeleton />
 
             <div className="min-w-0">

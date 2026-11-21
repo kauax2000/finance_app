@@ -205,9 +205,12 @@ export function useDashboardData() {
             p.set("from", period_start)
             p.set("to", period_end)
             p.set("preset", preset)
+            // O filtro de "Para onde vai o dinheiro" atravessa a troca de mês.
+            const categoria = searchParams.get("categoria")
+            if (categoria) p.set("categoria", categoria)
             router.replace(`${pathname}?${p.toString()}`, { scroll: false })
         },
-        [pathname, router],
+        [pathname, router, searchParams],
     )
 
     const setCalendarYm = useCallback(
@@ -609,6 +612,9 @@ export function useDashboardData() {
         calendarYm,
         setCalendarYm,
         transactionsInRange,
+        transactionsWide,
+        prevTransactions,
+        creditCardClosingLookup,
         subscriptions,
         installmentPlans,
         creditCards,

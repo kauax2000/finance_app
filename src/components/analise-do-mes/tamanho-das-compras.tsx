@@ -51,7 +51,7 @@ export function TamanhoDasCompras({
 
     return (
         <CartaoDoGrafico titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"} className={className}>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-1 flex-col gap-3">
                 <p className="min-w-0">
                     <span className="nums text-xl font-semibold">{frase.numero}</span>{" "}
                     <span className="text-sm text-muted-foreground">{frase.resto}</span>
@@ -72,7 +72,7 @@ export function TamanhoDasCompras({
                     </div>
                 </div>
                 {/* As maiores, as mesmas em destaque na fileira (até 2): o cartão diz o que foi a compra grande. */}
-                <ul className="grid grid-cols-1 gap-2.5 border-t border-border pt-3">
+                <ul className="mt-auto grid grid-cols-1 gap-2.5 border-t border-border pt-3">
                     {concentracao.compras.slice(0, Math.min(2, concentracao.n80)).map((c) => (
                         <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
                             {/* Descrição e data são o mesmo dado em duas linhas: sem `gap`. */}

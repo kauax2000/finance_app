@@ -39,7 +39,8 @@ export function CartaoDoGrafico({
                     </CardAction>
                 ) : null}
             </CardHeader>
-            <CardContent>{children}</CardContent>
+            {/* Coluna que cresce: lado a lado, o último bloco do cartão (`mt-auto`) assenta no pé, e os pés se alinham. */}
+            <CardContent className="flex flex-1 flex-col">{children}</CardContent>
         </Card>
     )
 }

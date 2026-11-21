@@ -28,6 +28,7 @@ export function DestaquesDoMes({
     tipica,
     frequente,
     diaDeMais,
+    className,
 }: {
     tipo: TipoDaCategoria
     /** `categories.color`: o primeiro cartão leva a cor da categoria, os outros três um matiz cada da paleta de ladrilhos. */
@@ -37,6 +38,8 @@ export function DestaquesDoMes({
     tipica: ReturnType<typeof compraTipica>
     frequente: ReturnType<typeof maisFrequente>
     diaDeMais: ReturnType<typeof diaDeMaisGasto>
+    /** Vai ao `StatCardGroup` (ex.: duas colunas quando o grupo ocupa meia linha). */
+    className?: string
 }) {
     const despesa = tipo === "expense"
     if (!maior && tipica == null && !frequente && !diaDeMais) return null
@@ -44,7 +47,7 @@ export function DestaquesDoMes({
     const dataDoMaior = maior ? transactionLocalYmd(maior.date) : null
 
     return (
-        <StatCardGroup>
+        <StatCardGroup className={className}>
             {maior ? (
                 <StatCard>
                     <StatCardIcon size="lg" color={corDaCategoria}>
