@@ -931,8 +931,10 @@ declaração de `background-color` no trilho).
   **`md` 32**, `lg` 36 (trilho = 4 + 3 paradas, alvo de 44 nos três). `labels`
   (ícone e texto, paradas de largura igual), `variant="brand"` (o brilho no
   trilho) e `reveal` (**ligado por padrão**: a troca abre a aurora
-  (`lib/aurora-do-tema`): a cortina borrada de âmbar, magenta, violeta e azul
-  desce em ~0,66s e o brilho some no pé até 1,1s, pela View Transitions API com `flushSync`; a faixa ganha
+  (`lib/aurora-do-tema`): a cortina borrada anda pelo destino: o escuro cai do
+  topo em violeta, índigo e azul, o claro sobe do pé em âmbar, coral e magenta (o sistema segue o tema
+  que resulta); a borda ondula e desliza de lado, a cortina anda em ~0,66s e o brilho some até 1,1s,
+  pela View Transitions API com `flushSync`; a faixa ganha
   `view-transition-name` só durante a troca; sem API ou com movimento reduzido,
   troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela

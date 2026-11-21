@@ -29444,3 +29444,20 @@ devia descer do topo como uma aurora, e não abrir num círculo. O protótipo te
 - No WebKit o vidro (`backdrop-filter`) ganha a mesma máscara, na largura da janela
   (`revelarVidros`), para o borrão não aparecer fora da cortina.
 - Saíram o círculo, o `recorteDeFora` e a constante `REVELACAO`.
+
+### Rodada 411 — a aurora pela borda do tema
+
+Pedido do dono (21/11/2026): melhorar a aurora da rodada 410. Cinco melhorias propostas; o
+protótipo v2 mostrou quatro opções: A (duas bordas, nascendo do toque), B (uma borda, vinda pelo
+tema), C (a atual) e D (onda circular). O dono escolheu B.
+
+- A direção e a paleta são do destino: o escuro cai do topo em frio (`--brand-violet`,
+  `--brand-indigo`, `--brand-blue`) e o claro sobe do pé em quente (`--brand-amber`,
+  `--brand-coral`, `--brand-magenta`); "sistema" segue o tema que resulta. A borda ondula
+  (periódica, `repeat-x`) e desliza de lado enquanto anda e depois da varredura.
+- Valores novos: faixa 0,6 (era 0,75), opacidade 0,85 (era 0,9), borrão da faixa de 24px, máscara
+  de imagem com 3 alturas e a borda no meio. Mantidos: `duracao` 1100, `varredura` 0,6, o nome só
+  durante a troca, a faixa tirada 50ms antes do fim, as guardas e a troca na hora com movimento
+  reduzido.
+- Saíram: a onda nascendo do ponto do toque (a opção A não entrou), o truque das 4,8 alturas na
+  foto velha do vidro (agora ele recebe a imagem oposta) e o raio na ponta da faixa.

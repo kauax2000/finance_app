@@ -41,7 +41,7 @@ export default function ThemeToggleDoc() {
 
       <DocSection
         title="A aurora"
-        description="A troca abre uma aurora: uma cortina borrada que desce do topo da tela em ~0,66s (o brilho some no pé até 1,1s), nas cores âmbar, magenta, violeta e azul da marca, e revela a página nova por baixo (View Transitions API). É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
+        description="A troca abre uma aurora: uma cortina borrada que anda em ~0,66s (o brilho some até 1,1s) e revela a página nova por baixo (View Transitions API). O sentido e a cor são do destino: o escuro cai do topo, em violeta, índigo e azul; o claro sobe do pé, em âmbar, coral e magenta; o sistema segue o tema que resulta. A borda ondula e desliza de lado enquanto anda. É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
         code={`<ThemeToggle />
 <ThemeToggle reveal={false} />`}
         previewClassName="items-end gap-6"
@@ -116,7 +116,7 @@ export default function ThemeToggleDoc() {
         rows={[
           { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "A altura: 28, 32 e 36. O alvo de toque é 44 nos três." },
           { prop: "labels", type: "boolean", default: "false", description: "Ícone e texto em cada parada." },
-          { prop: "reveal", type: "boolean", default: "true", description: "Liga a aurora: a troca desce do topo da tela. Com false, ou com movimento reduzido, troca na hora." },
+          { prop: "reveal", type: "boolean", default: "true", description: "Liga a aurora: a troca cai do topo (escuro) ou sobe do pé (claro). Com false, ou com movimento reduzido, troca na hora." },
           { prop: "variant", type: '"default" | "brand"', default: '"default"', description: "brand é o brilho de arco-íris na borda do trilho. Uma por tela." },
           { prop: "className", type: "string", description: "Para o trilho — e para o Skeleton que ocupa o lugar dele antes de montar." },
         ]}
