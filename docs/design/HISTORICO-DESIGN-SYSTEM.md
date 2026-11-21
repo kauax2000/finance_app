@@ -29461,3 +29461,21 @@ tema), C (a atual) e D (onda circular). O dono escolheu B.
   reduzido.
 - Saíram: a onda nascendo do ponto do toque (a opção A não entrou), o truque das 4,8 alturas na
   foto velha do vidro (agora ele recebe a imagem oposta) e o raio na ponta da faixa.
+
+### Rodada 412 — o acabamento da aurora
+
+Pedido do dono (22/11/2026): dar acabamento à aurora da rodada 411. Sete propostas; o protótipo v3
+mostrou as variações. O dono recusou "a página afunda" (a página velha escurecendo e encolhendo):
+ela fica parada. A curva única, de uma onda só por tela, lia como "o site indo para trás" e foi
+trocada por ondas curtas.
+
+- A borda são três ondas curtas por tela (imagem de 2/3 da largura, meia amplitude, um período a
+  mais de cada lado, sem emenda). A cor da faixa fica colada à borda.
+- O aro aceso (`.theme-aurora-aro`) é o traço da mesma onda, com borrão de 1,5px e halo de 6px no
+  `::view-transition-new`, na luz de `--scrim-foreground`. A paleta mora no `<html data-aurora>`
+  durante a troca, para a faixa e o aro lerem a mesma.
+- `RITMO`: o escuro desce em 1250ms e o claro sobe em 950ms, cada um na sua curva.
+- A parada tocada acende por cima (`theme-aurora-parada`: anel de 3px em `--aurora-3`, halo de
+  18px em `--aurora-1`, pico a 25%). Tocar a parada de onde se veio no meio da troca inverte todas
+  as animações e põe o tema velho quando a máscara da raiz termina; só vale enquanto a faixa ainda
+  anda.
