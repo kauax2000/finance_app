@@ -445,7 +445,7 @@ export function GraficosDoResumo({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid gap-2">
+                                <div className="grid grid-cols-1 gap-2">
                                     <div className="flex items-baseline justify-between gap-3">
                                         <p className="min-w-0">
                                             <span className="nums text-xl font-semibold">{pctsPagamento[0]}%</span>{" "}
@@ -461,7 +461,7 @@ export function GraficosDoResumo({
                                         dataKey="valor"
                                         label={`${oQue} do mês por forma de pagamento`}
                                     />
-                                    <ul className="mt-2 grid gap-3">
+                                    <ul className="mt-2 grid grid-cols-1 gap-3">
                                         {porPagamento.map((f, i) => {
                                             const d = diferencas ? diferencaDaForma(diferencas[f.chave], despesa) : null
                                             return (
