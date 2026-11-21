@@ -265,7 +265,7 @@ describe("as versões do Chart", () => {
       expect(CODIGO).not.toContain("CHART_ANIMATION")
       const marcas = CODIGO.match(/<(Area|Line|Bar|Pie|Radar|RadialBar)\b/g) ?? []
       const comMovimento =
-        CODIGO.match(/\{\.\.\.(chartMarkMotion\(entrando(, i)?\)|movimento)\}/g) ?? []
+        CODIGO.match(/\{\.\.\.(chartMarkMotion\(entrando(, (i|0|chaves\.length))?\)|movimento)\}/g) ?? []
       expect(comMovimento.length).toBe(marcas.length)
       // Nenhuma escreve o booleano à mão, que é como uma marca nova escaparia.
       expect(CODIGO).not.toMatch(/isAnimationActive=\{(true|false)\}/)
@@ -439,7 +439,7 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     const t = trechoDe("ChartReferenceDot")
     expect(t).toContain("<ReferenceDot")
     expect(t).toContain("r={4}")
-    expect(t).toContain('fill="var(--chart-surface)"')
+    expect(t).toContain('fill={hollow ? "var(--chart-surface)" : traco}')
     expect(t).toContain("strokeWidth={2}")
     expect(t).toContain('tone?: "series" | "neutral"')
     const r = trechoDe("ChartReferenceDotLabel")
@@ -577,5 +577,119 @@ describe("Chart: a dica enxuta de uma série, com a comparação (21/11/2026)", 
     const fonte = lerFonte("src/components/ui/chart.tsx")
     expect(fonte).toContain("=== 0) return texto")
     expect(fonte).toContain("reference && Number.isFinite(reference.value) && reference.value !== 0")
+  })
+})
+
+describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de linha (21/11/2026)", () => {
+  const f = semComentarios(CODIGO)
+  const trechoDe = (nome: string) => {
+    const ini = f.indexOf(`function ${nome}(`)
+    return f.slice(ini, f.indexOf("\nfunction ", ini + 10))
+  }
+  it("band é uma Area atrás das linhas, a 14%, sem traço nem ponto, fora da dica e da legenda", () => {
+    const t = trechoDe("ChartLine")
+    expect(t).toContain("band?: { dataKey: string; color: string }")
+    const area = t.slice(t.indexOf("<Area"), t.indexOf("/>", t.indexOf("<Area")))
+    expect(area).toContain("dataKey={band.dataKey}")
+    expect(area).toContain("fillOpacity={0.14}")
+    expect(area).toContain('stroke="none"')
+    expect(area).toContain("dot={false}")
+    expect(area).toContain("activeDot={false}")
+    expect(area).toContain('tooltipType="none"')
+    expect(area).toContain('legendType="none"')
+    // O `LineChart` não desenha `Area`: com a faixa, o gráfico é `ComposedChart`.
+    expect(t).toContain("const Grafico = band ? ComposedChart : LineChart")
+    // Atrás: desenhada antes das linhas.
+    expect(t.indexOf("<Area")).toBeLessThan(t.search(/<Line\s/))
+  })
+  it("ghost é a linha tracejada 3 4 a 60%, fora da dica e da legenda", () => {
+    const t = trechoDe("ChartLine")
+    expect(t).toContain("ghost?: { dataKey: string; color: string }")
+    expect(f).toContain('const CHART_GHOST_DASH = "3 4"')
+    const ini = t.indexOf("dataKey={ghost.dataKey}")
+    const linha = t.slice(ini, t.indexOf("/>", ini))
+    expect(linha).toContain("strokeDasharray={CHART_GHOST_DASH}")
+    expect(linha).toContain("strokeOpacity={0.6}")
+    expect(linha).toContain("dot={false}")
+    expect(linha).toContain('tooltipType="none"')
+    expect(linha).toContain('legendType="none"')
+  })
+  it("xTicks chega ao ticks do eixo X, com interval 0, na linha, na área e nas barras", () => {
+    expect(f).toContain("ticks: xTicks, interval: 0")
+    for (const nome of ["ChartLine", "ChartArea", "ChartBars"]) {
+      const t = trechoDe(nome)
+      expect(t).toContain("xTicks?: (string | number)[]")
+      expect(t).toContain("{...xTicksProps(xTicks)}")
+    }
+  })
+  it("a linha sem eixo Y abre o topo e recua o X, como a área", () => {
+    const t = trechoDe("ChartLine")
+    expect(t).toContain("margin={yAxis ? undefined : CHART_AREA_HEADROOM}")
+    expect(t).toContain("padding={yAxis ? undefined : CHART_X_INSET}")
+  })
+  it("o ponto anotado põe o rótulo embaixo, alinha no fim e pode ser cheio", () => {
+    const t = trechoDe("ChartReferenceDot")
+    expect(t).toContain('labelPosition = "top"')
+    expect(t).toContain('labelAlign?: "middle" | "end"')
+    expect(t).toContain("hollow = true")
+    expect(t).toContain('fill={hollow ? "var(--chart-surface)" : traco}')
+    expect(t).toContain('stroke={hollow ? traco : "var(--chart-surface)"}')
+    const r = trechoDe("ChartReferenceDotLabel")
+    expect(r).toContain('lado === "bottom" ? cy + 16')
+    expect(r).toContain("textAnchor={ancora ?? (")
+  })
+  it("a anotação leva o rótulo ao pé da área com labelPosition=\"bottom\"", () => {
+    const t = trechoDe("ChartAnnotation")
+    expect(t).toContain('labelPosition?: "top" | "bottom"')
+    expect(t).toContain("(p.viewBox?.y ?? 0) + (p.viewBox?.height ?? 0) - 4")
+  })
+  it("a dica de duas séries ignora as chaves fora do config", () => {
+    const config = { atual: { label: "Novembro" }, anterior: { label: "Outubro" } }
+    const linha = { dia: 21, atual: 3063, anterior: 3740, veu: [3063, 3740], previsto: 3063 }
+    const html = renderToStaticMarkup(
+      h(ChartContainer, {
+        config,
+        children: h("svg"),
+        overlay: h(ChartTooltipContent, {
+          active: true,
+          format: "currency",
+          label: 21,
+          payload: [
+            { dataKey: "veu", name: "veu", value: 3063, payload: linha },
+            { dataKey: "atual", name: "atual", value: 3063, payload: linha },
+            { dataKey: "anterior", name: "anterior", value: 3740, payload: linha },
+            { dataKey: "previsto", name: "previsto", value: 3063, payload: linha },
+          ],
+        }),
+      })
+    )
+    expect(html).toContain("Novembro")
+    expect(html).toContain("Outubro")
+    expect(html).not.toContain(">veu<")
+    expect(html).not.toContain(">previsto<")
+    expect(html.match(/--indicator-bg/g)?.length).toBe(2)
+  })
+  it("o rótulo numérico (o dia) é o cabeçalho da dica, e não o nome da série", () => {
+    const html = renderToStaticMarkup(
+      h(ChartContainer, {
+        config: { atual: { label: "Novembro" } },
+        children: h("svg"),
+        overlay: h(ChartTooltipContent, {
+          active: true,
+          label: 21,
+          labelText: (d: unknown) => `dia ${d}`,
+          payload: [{ dataKey: "atual", name: "atual", value: 3063 }],
+        }),
+      })
+    )
+    expect(html).toContain("Dia 21")
+  })
+  it("a página do catálogo mostra o ritmo com as cinco peças", () => {
+    const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
+    expect(doc).toMatch(/band=\{\{/)
+    expect(doc).toMatch(/ghost=\{\{/)
+    expect(doc).toContain("xTicks={")
+    expect(doc).toContain('labelPosition="bottom"')
+    expect(doc).toContain("hollow={false}")
   })
 })

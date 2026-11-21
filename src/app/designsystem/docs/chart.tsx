@@ -98,6 +98,27 @@ const FLUXO = [
 ]
 
 /** O mês por extenso da dica: o eixo fala "Out", a dica fala "Outubro" e o anterior "setembro". */
+/** O ritmo de novembro contra outubro, acumulado por dia: hoje é dia 21, e o previsto (parcelas e assinaturas) leva o mês a R$ 2.940. */
+const RITMO_HOJE = 21
+const RITMO_PREVISTO = 480
+const RITMO = Array.from({ length: 30 }, (_, i) => {
+  const dia = i + 1
+  const anterior = Math.round(3740 * Math.sqrt(dia / 30))
+  const atual = dia <= RITMO_HOJE ? Math.round(2460 * (dia / RITMO_HOJE) ** 0.9) : null
+  return {
+    dia,
+    atual,
+    anterior,
+    veu: atual == null ? null : [Math.min(atual, anterior), Math.max(atual, anterior)],
+    previsto:
+      dia < RITMO_HOJE ? null : Math.round(2460 + (RITMO_PREVISTO * (dia - RITMO_HOJE)) / (30 - RITMO_HOJE)),
+  }
+})
+const CONFIG_RITMO = {
+  atual: { label: "Novembro", color: TILE_EXPENSE_DEFAULT },
+  anterior: { label: "Outubro", color: "var(--color-muted-foreground)", dashed: true },
+} satisfies ChartConfig
+
 const MES_POR_EXTENSO: Record<string, string> = {
   Out: "outubro",
   Nov: "novembro",
@@ -1222,6 +1243,65 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="O ritmo do mês"
+        description={
+          <>
+            Cinco peças sobre o <code>ChartLine</code>. <code>band</code> é a faixa entre as duas linhas (pares <code>[baixo, alto]</code>, a 14%), <code>ghost</code> é o previsto tracejado a 60%, e as duas ficam fora da dica e da legenda. <code>xTicks</code> escolhe os dias do eixo. <code>ChartAnnotation labelPosition=&quot;bottom&quot;</code> escreve o hoje no pé, e <code>ChartReferenceDot</code> ganha <code>labelPosition</code>, <code>labelAlign</code> e <code>hollow</code> (cheio, com o anel da superfície, no ponto de hoje). Os valores ficam nas pontas, sem legenda; a dica de duas séries lista só as do <code>config</code>.
+          </>
+        }
+        code={`<ChartLine
+  config={{ atual: { … }, anterior: { …, dashed: true } }}
+  x="dia"
+  band={{ dataKey: "veu", color: "var(--color-success)" }}
+  ghost={{ dataKey: "previsto", color: cor }}
+  xTicks={[1, 8, 15, 22, 30]}
+  legend={false} grid={false} yAxis={false}
+  …
+>
+  <ChartAnnotation x={21} label="hoje, dia 21" labelPosition="bottom" />
+  <ChartReferenceDot x={21} y={2460} label="novembro · R$ 2.460" color={cor} hollow={false} labelPosition="bottom" labelAlign="end" />
+  <ChartReferenceDot x={30} y={3740} label="outubro · R$ 3.740" />
+  <ChartReferenceDot x={30} y={2940} label="previsto · R$ 2.940" color={cor} labelPosition="bottom" labelAlign="end" />
+</ChartLine>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartLine
+          config={CONFIG_RITMO}
+          data={RITMO}
+          x="dia"
+          band={{ dataKey: "veu", color: "var(--color-success)" }}
+          ghost={{ dataKey: "previsto", color: TILE_EXPENSE_DEFAULT }}
+          xTicks={[1, 8, 15, 22, 30]}
+          legend={false}
+          grid={false}
+          yAxis={false}
+          label="Ritmo de novembro contra outubro"
+          description="Até o dia 21, R$ 2.460, R$ 669 a menos que outubro no mesmo dia. Outubro fechou em R$ 3.740; com o previsto, novembro deve fechar em R$ 2.940."
+          className="w-full max-w-2xl"
+        >
+          <ChartAnnotation x={RITMO_HOJE} label="hoje, dia 21" labelPosition="bottom" />
+          <ChartReferenceDot
+            x={RITMO_HOJE}
+            y={2460}
+            label="novembro · R$ 2.460"
+            color={TILE_EXPENSE_DEFAULT}
+            hollow={false}
+            labelPosition="bottom"
+            labelAlign="end"
+          />
+          <ChartReferenceDot x={30} y={3740} label="outubro · R$ 3.740" />
+          <ChartReferenceDot
+            x={30}
+            y={2460 + RITMO_PREVISTO}
+            label="previsto · R$ 2.940"
+            color={TILE_EXPENSE_DEFAULT}
+            labelPosition="bottom"
+            labelAlign="end"
+          />
+        </ChartLine>
+      </DocSection>
+
+      <DocSection
         title="Variação no tooltip"
         description={
           <>
@@ -1860,6 +1940,17 @@ const config = {
               "O rótulo do ponto na dica (com a inicial maiúscula) e no anterior do delta.",
           },
           {
+            prop: "band · ghost (linha)",
+            type: "{ dataKey, color }",
+            description:
+              "`band`: a faixa entre séries, de pares `[baixo, alto]` (ou `null`), atrás das linhas a 14%. `ghost`: o previsto, tracejado `3 4` a 60%. Os dois ficam fora da dica e da legenda, e as chaves não entram no `config`.",
+          },
+          {
+            prop: "xTicks",
+            type: "(string | number)[]",
+            description: "Os valores do eixo X que aparecem, todos (`interval` 0). Na linha, na área e nas barras verticais.",
+          },
+          {
             prop: "brush",
             type: "boolean | number",
             description: "Área e linha: o recorte de período, aberto nos últimos 12 (ou N) pontos.",
@@ -1899,9 +1990,16 @@ const config = {
           },
           {
             prop: "ChartAnnotation",
-            type: "x · label · tone",
-            default: 'tone "average"',
-            description: "O fio vertical com rótulo num ponto do eixo X. Filho de qualquer forma cartesiana.",
+            type: "x · label · tone · labelPosition",
+            default: 'tone "average" · labelPosition "top"',
+            description: "O fio vertical com rótulo num ponto do eixo X. Filho de qualquer forma cartesiana. `labelPosition=\"bottom\"` leva o rótulo ao pé da área.",
+          },
+          {
+            prop: "ChartReferenceDot",
+            type: 'x · y · label · tone · color · labelPosition · labelAlign · hollow',
+            default: 'labelPosition "top" · hollow true',
+            description:
+              "O ponto anotado de 4px. `labelPosition=\"bottom\"` põe o rótulo 16px abaixo do centro; `labelAlign` fixa `middle` ou `end` (sem ele, vira `end` perto da borda direita); `hollow={false}` é o ponto cheio na cor, com o anel da superfície.",
           },
         ]}
       />

@@ -10,6 +10,7 @@ import {
   Brush,
   CartesianGrid,
   Cell,
+  ComposedChart,
   LabelList,
   Legend,
   Line,
@@ -463,7 +464,7 @@ type TooltipPayloadItem = {
 
 function ChartTooltipContent({
   active,
-  payload,
+  payload: payloadBruto,
   className,
   indicator = "dot",
   format = "number",
@@ -527,14 +528,23 @@ function ChartTooltipContent({
 }) {
   const { config } = useChart()
   const single = variant === "single"
+  // Com duas séries ou mais, a dica lista só as do `config`: as auxiliares (a faixa, o previsto) ficam fora. Se nada casar, segue o payload inteiro.
+  const payload = React.useMemo(() => {
+    if (!payloadBruto || payloadBruto.length < 2) return payloadBruto
+    const doConfig = payloadBruto.filter(
+      (item) => config[String(item.dataKey)] != null || config[String(item.name)] != null
+    )
+    return doConfig.length ? doConfig : payloadBruto
+  }, [payloadBruto, config])
 
   const tooltipLabel = React.useMemo(() => {
     if (hideLabel || !payload?.length) return null
     const [item] = payload
     const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`
     const itemConfig = getPayloadConfigFromPayload(config, item, key)
+    // O rótulo numérico (o dia do mês) também é o ponto: antes ele caía no nome da série.
     const raw =
-      !labelKey && typeof label === "string"
+      !labelKey && (typeof label === "string" || typeof label === "number")
         ? (config[label]?.label ?? label)
         : itemConfig?.label
 
@@ -1066,26 +1076,31 @@ function ChartReferenceLine({
   )
 }
 
-/** O rótulo do ponto anotado: 10px acima do centro, centrado; a menos de 60px da borda direita da área, termina no ponto para não sair do gráfico. */
+/** O rótulo do ponto anotado: 10px acima do centro (ou 16px abaixo, com `lado="bottom"`), centrado; a menos de 60px da borda direita da área, termina no ponto para não sair do gráfico. `ancora` fixa o alinhamento. */
 function ChartReferenceDotLabel({
   viewBox,
   label,
+  lado = "top",
+  ancora,
 }: {
   viewBox?: { x?: number; y?: number; width?: number; height?: number }
   label: string
+  // Nomes próprios: o Recharts clona o rótulo com `position` e companhia, que sobrescreveriam os nossos.
+  lado?: "top" | "bottom"
+  ancora?: "middle" | "end"
 }) {
   const area = usePlotArea()
   const cx = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
   const cy = (viewBox?.y ?? 0) + (viewBox?.height ?? 0) / 2
   const direita = area ? area.x + area.width : Infinity
   // O ponto no topo do gráfico (o maior mês) não tem altura para o rótulo acima: o SVG o cortava. Ele desce para baixo do ponto.
-  const y = cy - 19 < 0 ? cy + 18 : cy - 10
+  const y = lado === "bottom" ? cy + 16 : cy - 19 < 0 ? cy + 18 : cy - 10
   return (
     <text
       data-slot="chart-reference-dot-label"
       x={cx}
       y={y}
-      textAnchor={direita - cx < 60 ? "end" : "middle"}
+      textAnchor={ancora ?? (direita - cx < 60 ? "end" : "middle")}
       // Na tinta do texto, não apagado: o ponto anotado é o destaque (pedido do dono, 21/11/2026).
       className="fill-foreground text-2xs"
     >
@@ -1106,6 +1121,9 @@ function ChartReferenceDot({
   label,
   tone = "neutral",
   color,
+  labelPosition = "top",
+  labelAlign,
+  hollow = true,
   ...props
 }: Omit<React.ComponentProps<typeof ReferenceDot>, "label" | "x" | "y" | "r"> & {
   x: string | number
@@ -1113,6 +1131,12 @@ function ChartReferenceDot({
   label: string
   tone?: "series" | "neutral"
   color?: string
+  /** O rótulo acima do ponto (o padrão) ou 16px abaixo do centro. */
+  labelPosition?: "top" | "bottom"
+  /** `end` termina o rótulo no ponto; sem ele, centrado, virando `end` perto da borda direita. */
+  labelAlign?: "middle" | "end"
+  /** Vazado (o padrão) ou cheio na cor, com o anel da superfície: o "hoje" da série. */
+  hollow?: boolean
 }) {
   const traco =
     color ?? (tone === "series" ? "var(--color-chart-1)" : "var(--color-muted-foreground)")
@@ -1121,10 +1145,10 @@ function ChartReferenceDot({
       x={x}
       y={y}
       r={4}
-      fill="var(--chart-surface)"
-      stroke={traco}
+      fill={hollow ? "var(--chart-surface)" : traco}
+      stroke={hollow ? traco : "var(--chart-surface)"}
       strokeWidth={2}
-      label={<ChartReferenceDotLabel label={label} />}
+      label={<ChartReferenceDotLabel label={label} lado={labelPosition} ancora={labelAlign} />}
       {...props}
     />
   )
@@ -1140,12 +1164,15 @@ function ChartAnnotation({
   x,
   label,
   tone = "average",
+  labelPosition = "top",
   ...props
 }: Omit<React.ComponentProps<typeof ReferenceLine>, "label" | "x"> & {
   /** O valor do eixo X onde a marca pousa — o mesmo do `x` dos dados. */
   x: string | number
   label: string
   tone?: keyof typeof chartReferenceTone
+  /** O rótulo no topo do fio (o padrão) ou no pé da área de desenho ("hoje, dia 21"). */
+  labelPosition?: "top" | "bottom"
 }) {
   return (
     <ReferenceLine
@@ -1153,11 +1180,15 @@ function ChartAnnotation({
       stroke={chartReferenceTone[tone]}
       strokeDasharray="3 3"
       strokeWidth={1}
-      label={(p: { viewBox?: { x?: number; y?: number } }) => (
+      label={(p: { viewBox?: { x?: number; y?: number; height?: number } }) => (
         <text
           data-slot="chart-annotation-label"
           x={(p.viewBox?.x ?? 0) + 4}
-          y={(p.viewBox?.y ?? 0) + 10}
+          y={
+            labelPosition === "bottom"
+              ? (p.viewBox?.y ?? 0) + (p.viewBox?.height ?? 0) - 4
+              : (p.viewBox?.y ?? 0) + 10
+          }
           className="fill-muted-foreground text-2xs"
         >
           {label}
@@ -1326,6 +1357,14 @@ function chartMarkerDot(ultimo: number, color: string, todos: boolean) {
 /** O traço da série tracejada: a projeção e a referência (`config.dashed`). */
 const CHART_DASH = "5 4"
 
+/** O traço do `ghost` do `ChartLine`: mais miúdo que o da série tracejada, para o previsto não ler como o mês anterior. */
+const CHART_GHOST_DASH = "3 4"
+
+/** Os ticks escolhidos do eixo X (`xTicks`): só eles, todos (`interval` 0). */
+function xTicksProps(xTicks?: (string | number)[]) {
+  return xTicks ? { ticks: xTicks, interval: 0 as const } : {}
+}
+
 function tracejada(config: ChartConfig, key: string) {
   return config[key]?.dashed === true
 }
@@ -1385,10 +1424,13 @@ function ChartArea({
   brush,
   yAxis = true,
   grid = true,
+  xTicks,
   children,
 }: ChartFormProps & {
   x: string
   xFormat?: ChartFormat
+  /** Os valores do eixo X que aparecem (os dias 1, 8, 15, 22 e o último); sem ele, o Recharts escolhe. */
+  xTicks?: (string | number)[]
   variant?: keyof typeof chartAreaShape
   /** O eixo de valor. `false` o esconde (o valor fica no tooltip e numa `ChartReferenceLine` rotulada): o cartão pequeno lê a forma, não a régua. */
   yAxis?: boolean
@@ -1460,7 +1502,7 @@ function ChartArea({
           ) : null}
           {grid ? <ChartGrid /> : null}
           {/* Sem a calha do eixo Y o primeiro rótulo passava da borda e o Recharts o escondia: o recuo devolve o espaço. */}
-          <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} />
+          <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} {...xTicksProps(xTicks)} />
           <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
             <ChartTooltip
@@ -1549,8 +1591,17 @@ function ChartLine({
   brush,
   yAxis = true,
   grid = true,
+  xTicks,
+  band,
+  ghost,
   children,
 }: ChartFormProps & {
+  /** Os valores do eixo X que aparecem (os dias 1, 8, 15, 22 e o último); sem ele, o Recharts escolhe. */
+  xTicks?: (string | number)[]
+  /** A faixa entre duas séries: `dataKey` aponta, em cada ponto, para o par `[baixo, alto]` (ou `null`, que não pinta). Atrás das linhas, na `color` a 14%, sem traço nem ponto, fora da dica e da legenda. */
+  band?: { dataKey: string; color: string }
+  /** A linha prevista: tracejada miúda a 60% na `color`, fora da dica e da legenda. Pontos `null` não desenham. */
+  ghost?: { dataKey: string; color: string }
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
   /** A dica enxuta (uma série só) compara o ponto com esta referência: "+21% vs média". */
@@ -1574,6 +1625,7 @@ function ChartLine({
   const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
+  const Grafico = band ? ComposedChart : LineChart
 
   return (
     <ChartFrame
@@ -1592,9 +1644,11 @@ function ChartLine({
         className={className}
         interactive={!!brush}
       >
-        <LineChart data={data} accessibilityLayer>
+        {/* Sem eixo Y, 20px de topo, como na área: o rótulo de um ponto anotado cabe acima dele. */}
+        {/* A faixa é uma `Area`, e o `LineChart` não desenha área: com ela, o mesmo gráfico vira `ComposedChart`. */}
+        <Grafico data={data} accessibilityLayer margin={yAxis ? undefined : CHART_AREA_HEADROOM}>
           {grid ? <ChartGrid /> : null}
-          <ChartXAxis dataKey={x} format={xFormat} />
+          <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} {...xTicksProps(xTicks)} />
           <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
             <ChartTooltip
@@ -1613,6 +1667,20 @@ function ChartLine({
           ) : null}
           {mostrarLegenda ? (
             <ChartLegend content={<ChartLegendContent />} />
+          ) : null}
+          {band ? (
+            <Area
+              {...chartMarkMotion(entrando, 0)}
+              dataKey={band.dataKey}
+              type={chartLineShape[variant]}
+              stroke="none"
+              fill={band.color}
+              fillOpacity={0.14}
+              dot={false}
+              activeDot={false}
+              tooltipType="none"
+              legendType="none"
+            />
           ) : null}
           {chaves.map((key, i) => (
             <Line
@@ -1646,9 +1714,24 @@ function ChartLine({
               }
             />
           ))}
+          {ghost ? (
+            <Line
+              {...chartMarkMotion(entrando, chaves.length)}
+              dataKey={ghost.dataKey}
+              type={chartLineShape[variant]}
+              stroke={ghost.color}
+              strokeOpacity={0.6}
+              strokeWidth={2}
+              strokeDasharray={CHART_GHOST_DASH}
+              dot={false}
+              activeDot={false}
+              tooltipType="none"
+              legendType="none"
+            />
+          ) : null}
           {chartBrush(data, x, xFormat, brush)}
           {children}
-        </LineChart>
+        </Grafico>
       </ChartContainer>
     </ChartFrame>
   )
@@ -1708,8 +1791,11 @@ function ChartBars({
   grid = true,
   partial,
   barMax,
+  xTicks,
   children,
 }: ChartFormProps & {
+  /** Os valores do eixo X que aparecem (só no `vertical`); sem ele, o Recharts escolhe. */
+  xTicks?: (string | number)[]
   /** A cor da barra selecionada. Com ela as outras não apagam: ficam na cor da série (a neutra) e só a escolhida acende — a cor da categoria no destaque. */
   selectedColor?: string
   /** O eixo de valor (só no `vertical`). `false` o esconde: o valor fica no tooltip. */
@@ -1852,7 +1938,7 @@ function ChartBars({
             </>
           ) : (
             <>
-              <ChartXAxis dataKey={x} format={xFormat} />
+              <ChartXAxis dataKey={x} format={xFormat} {...xTicksProps(xTicks)} />
               <ChartYAxis
                 hide={!yAxis}
                 format={axisFormatFor(format)}
