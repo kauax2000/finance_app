@@ -10,6 +10,7 @@ import {
     porDiaDaSemana,
     porFaixaDeValor,
     repeticoes,
+    tendenciaDosMeses,
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { buildCreditCardClosingLookup } from "@/lib/expense-month-attribution"
@@ -322,5 +323,31 @@ describe("insights", () => {
         const c = compromissos({ categoryId: "cat", parcelas: [plano({})], assinaturas: [], hojeYmd: "2026-11-21" })
         const r = insights({ tipo: "expense", lancado: 2910, media: 3000, limite: null, txs: carro.slice(0, 3), compromissos: c })
         expect(r.map((i) => i.id)).toEqual(["parcela-termina", "concentracao", "limite"])
+    })
+})
+
+describe("tendenciaDosMeses", () => {
+    const carro = [
+        { yearMonth: "2026-05", total: 604.85 },
+        { yearMonth: "2026-06", total: 3335.54 },
+        { yearMonth: "2026-07", total: 3046.58 },
+        { yearMonth: "2026-08", total: 3189 },
+        { yearMonth: "2026-09", total: 3524.51 },
+        { yearMonth: "2026-10", total: 3740.16 },
+        { yearMonth: "2026-11", total: 3062.54 },
+    ]
+    it("vai do primeiro ao último mês inteiro, sem o aberto nem o pela metade", () => {
+        const t = tendenciaDosMeses(carro, { aberto: true, primeiroPelaMetade: true })
+        expect(t?.desde).toBe("2026-06")
+        expect(t?.variacao).toBeCloseTo((3740.16 - 3335.54) / 3335.54, 6)
+    })
+    it("mês fechado entra; primeiro inteiro entra", () => {
+        const t = tendenciaDosMeses(carro.slice(1), { aberto: false, primeiroPelaMetade: false })
+        expect(t?.desde).toBe("2026-06")
+        expect(t?.variacao).toBeCloseTo((3062.54 - 3335.54) / 3335.54, 6)
+    })
+    it("menos de dois meses inteiros ou começo zerado: sem tendência", () => {
+        expect(tendenciaDosMeses(carro.slice(0, 3), { aberto: true, primeiroPelaMetade: true })).toBeNull()
+        expect(tendenciaDosMeses([{ yearMonth: "2026-10", total: 0 }, { yearMonth: "2026-11", total: 50 }], { aberto: false, primeiroPelaMetade: false })).toBeNull()
     })
 })

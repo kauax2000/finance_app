@@ -339,3 +339,21 @@ export function insights(args: {
     }
     return r.slice(0, 3)
 }
+
+/**
+ * Para onde a categoria está indo: do primeiro ao último mês inteiro da série.
+ * Fica de fora o mês aberto (ainda vai crescer) e o primeiro quando é pela
+ * metade (o mês em que a categoria começou a ser usada). Com menos de dois
+ * meses inteiros, ou começando do zero, não há tendência.
+ */
+export function tendenciaDosMeses(
+    meses: { yearMonth: string; total: number }[],
+    { aberto, primeiroPelaMetade }: { aberto: boolean; primeiroPelaMetade: boolean },
+): { variacao: number; desde: string } | null {
+    const inteiros = meses.slice(primeiroPelaMetade ? 1 : 0, aberto ? -1 : undefined)
+    if (inteiros.length < 2) return null
+    const inicio = inteiros[0]
+    const fim = inteiros[inteiros.length - 1]
+    if (inicio.total <= 0) return null
+    return { variacao: (fim.total - inicio.total) / inicio.total, desde: inicio.yearMonth }
+}

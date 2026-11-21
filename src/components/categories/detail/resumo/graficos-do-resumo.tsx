@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import { ArrowLongRightIcon, ArrowTrendingDownIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -15,7 +16,7 @@ import {
 import { Caption } from "@/components/ui/typography"
 import { shiftYearMonth } from "@/lib/budget-month"
 import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
-import type { porDiaDaSemana, porFaixaDeValor, ritmoDoMes } from "@/lib/categoria-resumo"
+import { tendenciaDosMeses, type porDiaDaSemana, type porFaixaDeValor, type ritmoDoMes } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
@@ -137,6 +138,17 @@ export function GraficosDoResumo({
     ) satisfies ChartConfig
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
+    const tendencia = useMemo(() => {
+        const t = tendenciaDosMeses(meses, { aberto, primeiroPelaMetade: parcial != null })
+        if (!t) return null
+        const desde = `desde ${mesCurto(t.desde)}`
+        // Dentro de ±2% a categoria está parada: a mesma faixa do selo da média.
+        if (Math.abs(t.variacao) < 0.02) return { Icone: ArrowLongRightIcon, texto: `estável ${desde}` }
+        const pct = percentBR(Math.abs(t.variacao), { maximumFractionDigits: 0 })
+        return t.variacao > 0
+            ? { Icone: ArrowTrendingUpIcon, texto: `+${pct} ${desde}` }
+            : { Icone: ArrowTrendingDownIcon, texto: `−${pct} ${desde}` }
+    }, [meses, aberto, parcial])
     const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
 
     if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
@@ -157,9 +169,13 @@ export function GraficosDoResumo({
                                         </Badge>
                                     ) : null}
                                 </div>
-                                {comMedia ? (
+                                {/* A tendência, e não a média: a média já está rotulada na linha do gráfico. */}
+                                {tendencia ? (
                                     <CardAction>
-                                        <Caption className="nums">média {currencyBRL(media)}</Caption>
+                                        <Caption className="nums inline-flex items-center gap-1">
+                                            <tendencia.Icone aria-hidden className="size-3.5" />
+                                            {tendencia.texto}
+                                        </Caption>
                                     </CardAction>
                                 ) : null}
                             </CardHeader>
