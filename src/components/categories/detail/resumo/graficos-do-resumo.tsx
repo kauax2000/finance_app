@@ -150,6 +150,17 @@ export function GraficosDoResumo({
             : { Icone: ArrowTrendingDownIcon, texto: `−${pct} ${desde}` }
     }, [meses, aberto, parcial])
     const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
+    // A dica dos dois gráficos de meses: o mês por extenso, contra a média e contra o mês anterior.
+    const dicaDosMeses = {
+        delta: true,
+        tooltipReference: comMedia
+            ? { value: media, label: "média", better: despesa ? ("lower" as const) : ("higher" as const) }
+            : undefined,
+        tooltipLabel: (x: unknown) => {
+            const ponto = meses.find((m) => m.mes === x)
+            return ponto ? mesPorExtenso(ponto.yearMonth) : String(x)
+        },
+    }
 
     if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
 
@@ -188,6 +199,7 @@ export function GraficosDoResumo({
                                     config={configMeses}
                                     data={meses}
                                     x="mes"
+                                    {...dicaDosMeses}
                                     aspect="auto"
                                     className="h-44 w-full"
                                     label={`${oQue} em ${nomeDaCategoria} mês a mês, até 12 meses`}
@@ -303,6 +315,7 @@ export function GraficosDoResumo({
                             config={CONFIG_DIAS}
                             data={meses}
                             x="mes"
+                            {...dicaDosMeses}
                             selected={mesAberto}
                             selectedColor={corDaSerie}
                             valueLabels="selected"

@@ -97,6 +97,18 @@ const FLUXO = [
   { mes: "Mar", entradas: 8432, saidas: 6218, saldo: 2214 },
 ]
 
+/** O mês por extenso da dica: o eixo fala "Out", a dica fala "Outubro" e o anterior "setembro". */
+const MES_POR_EXTENSO: Record<string, string> = {
+  Out: "outubro",
+  Nov: "novembro",
+  Dez: "dezembro",
+  Jan: "janeiro",
+  Fev: "fevereiro",
+  Mar: "março",
+}
+const mesDaDica = (x: unknown) => MES_POR_EXTENSO[String(x)] ?? String(x)
+const MEDIA_DO_SALDO = FLUXO.reduce((a, m) => a + m.saldo, 0) / FLUXO.length
+
 const CATEGORIAS = [
   { nome: "Mercado", valor: 1840 },
   { nome: "Transporte", valor: 620 },
@@ -1230,6 +1242,35 @@ const config = {
         />
       </DocSection>
 
+      <DocSection
+        title="A dica de uma série"
+        description={
+          <>
+            Com uma série só, área, linha e barras mudam a dica sozinhas: o rótulo do ponto miúdo em cima, o valor grande embaixo, sem bolinha nem o nome da série (o título já a nomeia). Embaixo, a comparação, só com as partes que existirem: <code>tooltipReference</code> contra uma referência, no tom do veredito (<code>better</code>: <code>lower</code> no gasto, <code>higher</code> no saldo), e <code>delta</code> contra o ponto anterior, em tinta neutra. <code>tooltipLabel</code> troca o rótulo do eixo pelo da dica. Em área e linha a dica fica presa no topo e segue só na horizontal, para não cobrir a curva.
+          </>
+        }
+        code={`<ChartArea
+  delta
+  tooltipReference={{ value: media, label: "média", better: "higher" }}
+  tooltipLabel={(x) => mesPorExtenso(x)}
+  x="mes"
+  …
+/>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartArea
+          delta
+          tooltipReference={{ value: MEDIA_DO_SALDO, label: "média", better: "higher" }}
+          tooltipLabel={mesDaDica}
+          variant="gradient"
+          config={CONFIG_SALDO}
+          data={FLUXO}
+          x="mes"
+          label="Saldo por mês, com a comparação contra a média e o mês anterior na dica"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
 
       <DocSection
         title="Rosca"
@@ -1807,6 +1848,18 @@ const config = {
             description: "Área, linha e barras: a variação contra o ponto anterior no tooltip.",
           },
           {
+            prop: "tooltipReference",
+            type: '{ value, label, better?: "lower" | "higher" }',
+            description:
+              "Área, linha e barras de uma série: a comparação contra uma referência na dica (\"+21% vs média\"), no tom do veredito. Referência zero não compara.",
+          },
+          {
+            prop: "tooltipLabel",
+            type: "(x) => string",
+            description:
+              "O rótulo do ponto na dica (com a inicial maiúscula) e no anterior do delta.",
+          },
+          {
             prop: "brush",
             type: "boolean | number",
             description: "Área e linha: o recorte de período, aberto nos últimos 12 (ou N) pontos.",
@@ -1882,6 +1935,13 @@ const config = {
             type: "{ data, x, xFormat? } · number",
             description:
               "A variação contra o ponto anterior, e a fatia em % de um total. As formas os passam sozinhas.",
+          },
+          {
+            prop: "variant · reference · labelText",
+            type: '"default" | "single" · { value, label, better? } · (label) => string',
+            default: '"default"',
+            description:
+              "A dica enxuta de uma série (as formas a escolhem sozinhas), a comparação contra uma referência e o texto do rótulo.",
           },
           {
             prop: "interactive · hiddenSeries · onToggle",

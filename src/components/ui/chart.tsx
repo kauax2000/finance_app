@@ -481,6 +481,9 @@ function ChartTooltipContent({
   labelKey,
   delta,
   share,
+  variant = "default",
+  reference,
+  labelText,
 }: React.ComponentProps<"div"> & {
   active?: boolean
   payload?: TooltipPayloadItem[]
@@ -515,8 +518,15 @@ function ChartTooltipContent({
   delta?: { data: Record<string, unknown>[]; x: string; xFormat?: ChartFormat }
   /** O total da rosca: cada fatia ganha a porcentagem dele ao lado do valor. */
   share?: number
+  /** `single` é a dica enxuta de uma série só: o rótulo miúdo em cima, o valor grande embaixo, sem marcador nem nome, e a linha de comparação. As formas escolhem sozinhas. */
+  variant?: "default" | "single"
+  /** A comparação contra uma referência ("+21% vs média"), na forma `single`; o tom diz se é melhor ou pior, segundo `better`. Referência zero não compara. */
+  reference?: ChartTooltipReference
+  /** O texto do rótulo do ponto, no cabeçalho (com a inicial maiúscula) e no anterior do `delta` ("set" vira "Setembro" e "ago" vira "agosto"). */
+  labelText?: (label: unknown) => string
 }) {
   const { config } = useChart()
+  const single = variant === "single"
 
   const tooltipLabel = React.useMemo(() => {
     if (hideLabel || !payload?.length) return null
@@ -528,20 +538,28 @@ function ChartTooltipContent({
         ? (config[label]?.label ?? label)
         : itemConfig?.label
 
+    // Na dica enxuta o rótulo é miúdo e cinza: quem pesa é o valor embaixo.
+    const tom = single ? "text-muted-foreground" : "font-medium"
     if (labelFormatter) {
       return (
-        <div className={cn("font-medium", labelClassName)}>
+        <div className={cn(tom, labelClassName)}>
           {labelFormatter(raw, payload)}
         </div>
       )
     }
-    const value = labelFormat ? formatChartValue(raw, labelFormat) : raw
+    const value = labelText
+      ? inicialMaiuscula(labelText(raw))
+      : labelFormat
+        ? formatChartValue(raw, labelFormat)
+        : raw
     if (!value) return null
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>
+    return <div className={cn(tom, labelClassName)}>{value}</div>
   }, [
     label,
     labelFormat,
     labelFormatter,
+    labelText,
+    single,
     payload,
     hideLabel,
     labelClassName,
@@ -550,6 +568,51 @@ function ChartTooltipContent({
   ])
 
   if (!active || !payload?.length) return null
+
+  if (single) {
+    const [item] = payload
+    const valor = item.value
+    const partes: React.ReactNode[] = []
+    if (typeof valor === "number") {
+      if (reference && reference.value !== 0) {
+        const v = (valor - reference.value) / Math.abs(reference.value)
+        partes.push(
+          <span key="ref">
+            <span className={cn("nums font-mono", tomDaReferencia(v, reference.better))}>
+              {textoDaVariacao(v)}
+            </span>{" "}
+            vs {reference.label}
+          </span>
+        )
+      }
+      const anterior = delta ? variacaoContraAnterior(delta, item.payload, String(item.dataKey ?? ""), valor) : null
+      if (anterior) {
+        partes.push(
+          <span key="anterior">
+            <span className="nums font-mono">{textoDaVariacao(anterior.variacao)}</span> vs{" "}
+            {labelText ? labelText(anterior.x) : formatChartValue(anterior.x, delta?.xFormat ?? "text")}
+          </span>
+        )
+      }
+    }
+    return (
+      <div
+        data-slot="chart-tooltip-content"
+        data-variant="single"
+        className={cn("grid min-w-32 items-start gap-0.5 px-2.5 py-1.5 text-xs", menuPanelSurfaceClassName, className)}
+      >
+        {tooltipLabel}
+        {valor !== undefined ? (
+          <span className="nums font-mono text-base font-semibold text-foreground">{formatChartValue(valor, format)}</span>
+        ) : null}
+        {partes.length ? (
+          <span data-slot="chart-tooltip-compare" className="text-2xs text-muted-foreground">
+            {partes.flatMap((p, i) => (i ? [" · ", p] : [p]))}
+          </span>
+        ) : null}
+      </div>
+    )
+  }
 
   const nestLabel = payload.length === 1 && indicator !== "dot"
   const soma = total
@@ -648,6 +711,7 @@ function ChartTooltipContent({
                       row={item.payload}
                       dataKey={String(item.dataKey ?? "")}
                       value={item.value}
+                      labelText={labelText}
                     />
                   ) : null}
                 </>
@@ -668,31 +732,62 @@ function ChartTooltipContent({
   )
 }
 
+/** A referência da dica enxuta: o valor, o nome ("média") e o que é melhor (gastar menos é `lower`). */
+type ChartTooltipReference = { value: number; label: string; better?: "lower" | "higher" }
+
+type ChartTooltipDeltaSpec = NonNullable<React.ComponentProps<typeof ChartTooltipContent>["delta"]>
+
+/** O ponto anterior ao da dica e a variação contra ele; null no primeiro ponto ou com base zero. */
+function variacaoContraAnterior(
+  delta: ChartTooltipDeltaSpec,
+  row: Record<string, unknown> | undefined,
+  dataKey: string,
+  value: number
+): { variacao: number; x: unknown } | null {
+  const i = row ? delta.data.indexOf(row) : -1
+  const anterior = i > 0 ? delta.data[i - 1] : undefined
+  const base = anterior?.[dataKey]
+  if (typeof base !== "number" || base === 0) return null
+  return { variacao: (value - base) / Math.abs(base), x: anterior?.[delta.x] }
+}
+
+/** "+21%" e "−10%": o sinal escrito; inteiro, como o selo "vs média" (`casas` 1 é o `percent` do gráfico). */
+function textoDaVariacao(v: number, casas = 0): string {
+  const sinal = v > 0 ? "+" : v < 0 ? "−" : ""
+  return `${sinal}${percentBR(Math.abs(v), { maximumFractionDigits: casas })}`
+}
+
+/** O veredito contra a referência: pior em `warning`, melhor em `success`; sem `better`, neutro. As tintas `-muted-foreground` têm contraste sobre a placa nos dois temas. */
+function tomDaReferencia(v: number, better: ChartTooltipReference["better"]): string | undefined {
+  if (!better || v === 0) return undefined
+  const melhor = better === "lower" ? v < 0 : v > 0
+  return melhor ? "text-success-muted-foreground" : "text-warning-muted-foreground"
+}
+
+function inicialMaiuscula(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
 /** A variação contra o ponto anterior, numa linha miúda sob o valor. O sinal é escrito (`+`/`−`) e a tinta é neutra: subir é bom no saldo e ruim no gasto. */
 function ChartTooltipDelta({
   delta,
   row,
   dataKey,
   value,
+  labelText,
 }: {
-  delta: NonNullable<React.ComponentProps<typeof ChartTooltipContent>["delta"]>
+  delta: ChartTooltipDeltaSpec
   row: Record<string, unknown> | undefined
   dataKey: string
   value: number
+  labelText?: (label: unknown) => string
 }) {
-  const i = row ? delta.data.indexOf(row) : -1
-  const anterior = i > 0 ? delta.data[i - 1] : undefined
-  const base = anterior?.[dataKey]
-  if (typeof base !== "number" || base === 0) return null
-  const variacao = (value - base) / Math.abs(base)
-  const sinal = variacao > 0 ? "+" : variacao < 0 ? "−" : ""
+  const anterior = variacaoContraAnterior(delta, row, dataKey, value)
+  if (!anterior) return null
   return (
     <span data-slot="chart-tooltip-delta" className="basis-full ps-4.5 text-2xs text-muted-foreground">
-      <span className="nums font-mono">
-        {sinal}
-        {formatChartValue(Math.abs(variacao), "percent")}
-      </span>{" "}
-      vs. {formatChartValue(anterior?.[delta.x], delta.xFormat ?? "text")}
+      <span className="nums font-mono">{textoDaVariacao(anterior.variacao, 1)}</span>{" "}
+      vs. {labelText ? labelText(anterior.x) : formatChartValue(anterior.x, delta.xFormat ?? "text")}
     </span>
   )
 }
@@ -1283,6 +1378,8 @@ function ChartArea({
   tooltip = true,
   dataTable,
   delta = false,
+  tooltipReference,
+  tooltipLabel,
   brush,
   yAxis = true,
   grid = true,
@@ -1300,6 +1397,10 @@ function ChartArea({
   marker?: "last"
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
+  /** A dica enxuta (uma série só) compara o ponto com esta referência: "+21% vs média". */
+  tooltipReference?: ChartTooltipReference
+  /** O rótulo do ponto na dica e no anterior do `delta` ("set" vira "Setembro"). */
+  tooltipLabel?: (x: unknown) => string
   /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
   brush?: boolean | number
 }) {
@@ -1362,11 +1463,16 @@ function ChartArea({
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
+              // Uma série: a dica presa no topo, seguindo só na horizontal, para não cobrir a curva.
+              position={chaves.length === 1 ? { y: 0 } : undefined}
               content={
                 <ChartTooltipContent
                   format={format}
                   total={stacked}
                   delta={delta ? { data, x, xFormat } : undefined}
+                  variant={chaves.length === 1 ? "single" : "default"}
+                  reference={tooltipReference}
+                  labelText={tooltipLabel}
                 />
               }
             />
@@ -1436,6 +1542,8 @@ function ChartLine({
   tooltip = true,
   dataTable,
   delta = false,
+  tooltipReference,
+  tooltipLabel,
   brush,
   yAxis = true,
   grid = true,
@@ -1443,6 +1551,10 @@ function ChartLine({
 }: ChartFormProps & {
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
+  /** A dica enxuta (uma série só) compara o ponto com esta referência: "+21% vs média". */
+  tooltipReference?: ChartTooltipReference
+  /** O rótulo do ponto na dica e no anterior do `delta` ("set" vira "Setembro"). */
+  tooltipLabel?: (x: unknown) => string
   /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
   brush?: boolean | number
   /** O eixo de valor. `false` o esconde (o valor fica no tooltip). */
@@ -1485,10 +1597,14 @@ function ChartLine({
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
+              position={chaves.length === 1 ? { y: 0 } : undefined}
               content={
                 <ChartTooltipContent
                   format={format}
                   delta={delta ? { data, x, xFormat } : undefined}
+                  variant={chaves.length === 1 ? "single" : "default"}
+                  reference={tooltipReference}
+                  labelText={tooltipLabel}
                 />
               }
             />
@@ -1584,6 +1700,8 @@ function ChartBars({
   selectedColor,
   onSelect,
   delta = false,
+  tooltipReference,
+  tooltipLabel,
   yAxis = true,
   grid = true,
   partial,
@@ -1610,6 +1728,10 @@ function ChartBars({
   onSelect?: (x: string | null) => void
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
+  /** A dica enxuta (uma série só) compara o ponto com esta referência: "+21% vs média". */
+  tooltipReference?: ChartTooltipReference
+  /** O rótulo do ponto na dica e no anterior do `delta` ("set" vira "Setembro"). */
+  tooltipLabel?: (x: unknown) => string
   x: string
   xFormat?: ChartFormat
   /** `vertical` (padrão) sobe; `horizontal` corre para a direita (ranking de nomes compridos); o Recharts precisa do eixo de categoria declarado, o que esta peça faz. */
@@ -1754,6 +1876,9 @@ function ChartBars({
                   format={format}
                   total={stacked}
                   delta={delta ? { data, x, xFormat } : undefined}
+                  variant={chaves.length === 1 ? "single" : "default"}
+                  reference={tooltipReference}
+                  labelText={tooltipLabel}
                 />
               }
             />

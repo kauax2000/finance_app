@@ -5,6 +5,8 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   ChartBarList,
+  ChartContainer,
+  ChartTooltipContent,
   waterfallSteps,
   chartContainerVariants,
   chartSeriesColor,
@@ -502,5 +504,73 @@ describe("Chart: o eixo X sem a calha do Y e o rótulo do ponto no topo (21/11/2
   it("a área sem eixo Y abre 20px no topo, para o rótulo do ponto caber acima", () => {
     expect(f).toContain("const CHART_AREA_HEADROOM = { top: 20, right: 5, bottom: 5, left: 5 }")
     expect(trechoDe("ChartArea")).toContain("margin={yAxis ? undefined : CHART_AREA_HEADROOM}")
+  })
+})
+
+describe("Chart: a dica enxuta de uma série, com a comparação (21/11/2026)", () => {
+  const config = { total: { label: "Carro" } }
+  const meses = [
+    { mes: "ago", total: 100 },
+    { mes: "set", total: 110 },
+  ]
+  const dica = (props: Record<string, unknown>) =>
+    renderToStaticMarkup(
+      // O `overlay` mora dentro do contexto e fora do `ResponsiveContainer`, que no servidor não desenha os filhos.
+      h(ChartContainer, {
+        config,
+        children: h("svg"),
+        overlay: h(ChartTooltipContent, {
+          active: true,
+          format: "currency",
+          label: "set",
+          payload: [{ dataKey: "total", name: "total", value: 110, payload: meses[1] }],
+          ...props,
+        }),
+      })
+    )
+
+  it("a forma single não desenha o marcador nem o nome, e o valor sai em text-base", () => {
+    const html = dica({ variant: "single" })
+    expect(html).toContain('data-variant="single"')
+    expect(html).not.toContain("Carro")
+    expect(html).not.toContain("--indicator-bg")
+    expect(html).toMatch(/text-base[^"]*font-semibold/)
+    expect(html).toContain("set")
+    // Sem referência nem delta, não há linha de comparação.
+    expect(html).not.toContain("chart-tooltip-compare")
+    // A forma padrão segue com o nome e o marcador.
+    const padrao = dica({})
+    expect(padrao).toContain("Carro")
+    expect(padrao).toContain("--indicator-bg")
+  })
+
+  it("a comparação junta referência e anterior com ' · ', e labelText legenda o cabeçalho e o anterior", () => {
+    const rotulo = (x: unknown) => ({ ago: "agosto", set: "setembro" })[String(x)] ?? String(x)
+    const html = dica({
+      variant: "single",
+      reference: { value: 91, label: "média", better: "lower" },
+      delta: { data: meses, x: "mes" },
+      labelText: rotulo,
+    })
+    expect(html).toContain("Setembro")
+    expect(html).toMatch(/\+21%<\/span> vs média<\/span> · <span><span[^>]*>\+10%<\/span> vs agosto/)
+    // Referência zero não compara; só o anterior fica, sem separador.
+    const soAnterior = dica({ variant: "single", reference: { value: 0, label: "média" }, delta: { data: meses, x: "mes" } })
+    expect(soAnterior).not.toContain("média")
+    expect(soAnterior).not.toContain(" · ")
+  })
+
+  it("o tom vem de better: pior em warning, melhor em success, sem better neutro", () => {
+    const ref = (better?: "lower" | "higher") => dica({ variant: "single", reference: { value: 91, label: "média", better } })
+    expect(ref("lower")).toContain("text-warning-muted-foreground")
+    expect(ref("higher")).toContain("text-success-muted-foreground")
+    expect(ref()).not.toMatch(/text-(warning|success)-muted-foreground/)
+  })
+
+  it("área, linha e barras passam single só com uma série; área e linha prendem a dica no topo", () => {
+    expect(CODIGO.match(/variant=\{chaves\.length === 1 \? "single" : "default"\}/g)?.length).toBe(3)
+    expect(CODIGO.match(/reference=\{tooltipReference\}/g)?.length).toBe(3)
+    expect(CODIGO.match(/labelText=\{tooltipLabel\}/g)?.length).toBe(3)
+    expect(CODIGO.match(/position=\{chaves\.length === 1 \? \{ y: 0 \} : undefined\}/g)?.length).toBe(2)
   })
 })
