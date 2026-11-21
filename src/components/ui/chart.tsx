@@ -1588,6 +1588,7 @@ function ChartBars({
   delta = false,
   yAxis = true,
   partial,
+  barMax,
   children,
 }: ChartFormProps & {
   /** A cor da barra selecionada. Com ela as outras não apagam: ficam na cor da série (a neutra) e só a escolhida acende — a cor da categoria no destaque. */
@@ -1596,10 +1597,12 @@ function ChartBars({
   yAxis?: boolean
   /** Barras com sinal (saldo cruzando o zero): acima `--chart-income`, abaixo `--chart-expense`, com a linha do zero desenhada (cor não é o único canal). Uma série. */
   signed?: boolean
-  /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. `"selected"` escreve só o da barra `selected`. */
+  /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. `"selected"` escreve só o da barra `selected`, por extenso (um rótulo só tem espaço). */
   valueLabels?: boolean | "selected"
-  /** Os `x` das barras ainda incompletas (o mês que começou no meio): só o contorno tracejado, na cor da série. Continuam no tooltip e no foco. */
+  /** Os `x` das barras ainda incompletas (o mês que começou no meio): só o contorno tracejado, em `--muted-foreground` (na cor neutra da série ele sumia no cartão). Continuam no tooltip e no foco. */
   partial?: string[]
+  /** A largura máxima da barra em px. Com poucas colunas num cartão largo, as barras ficam finas e com respiro, em vez de blocos. */
+  barMax?: number
   /** O valor de `x` da barra selecionada. As outras apagam. */
   selected?: string | null
   /** Clicar seleciona e clicar de novo solta (`null`); pelo teclado, setas andam e Enter seleciona. Com ele o gráfico é `role="group"` e anuncia a seleção numa região viva. */
@@ -1704,6 +1707,8 @@ function ChartBars({
           layout={horizontal ? "vertical" : "horizontal"}
           accessibilityLayer
           barCategoryGap={horizontal ? "22%" : "18%"}
+          // O rótulo do `"selected"` é por extenso e passa da largura da barra: a margem segura a ponta da borda.
+          margin={valueLabels === "selected" && !horizontal ? { top: 20, right: 28, bottom: 0, left: 28 } : undefined}
         >
           <ChartGrid vertical={horizontal} horizontal={!horizontal} />
           {horizontal ? (
@@ -1784,6 +1789,7 @@ function ChartBars({
               // o segmento de trás.
               stroke={stacked ? "var(--chart-surface)" : undefined}
               strokeWidth={stacked ? 2 : undefined}
+              maxBarSize={barMax}
               onClick={
                 onSelect
                   ? (entrada: { payload?: Record<string, unknown> }) =>
@@ -1802,7 +1808,7 @@ function ChartBars({
                     // Só a parcial leva traço: um `stroke: undefined` explícito no Cell vence a emenda de 2px das empilhadas.
                     {...(parcial && {
                       fill: "transparent",
-                      stroke: corDaBarra(key, i, linha),
+                      stroke: "var(--color-muted-foreground)",
                       strokeOpacity: apagada(linha),
                       strokeDasharray: "4 3",
                     })}
@@ -1826,7 +1832,7 @@ function ChartBars({
                         ? chaves.reduce((acc, k) => acc + Number(entrada.payload?.[k] ?? 0), 0)
                         : (entrada.payload?.[key] as number)
                   }
-                  formatter={(v: unknown) => formatChartValue(v, axisFormatFor(format))}
+                  formatter={(v: unknown) => formatChartValue(v, valueLabels === "selected" ? format : axisFormatFor(format))}
                 />
               ) : null}
             </Bar>

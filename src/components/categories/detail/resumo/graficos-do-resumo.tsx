@@ -283,6 +283,7 @@ export function GraficosDoResumo({
                             selected={mesAberto}
                             selectedColor={corDaSerie}
                             valueLabels="selected"
+                            barMax={56}
                             partial={parcial}
                             yAxis={false}
                             onSelect={(x) => {

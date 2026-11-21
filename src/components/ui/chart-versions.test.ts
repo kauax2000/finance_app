@@ -459,6 +459,15 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     expect(t).toContain('fill: "transparent"')
     // Nenhum traço explícito fora da parcial: apagaria a emenda das empilhadas.
     expect(t).not.toContain("parcial ? ")
+    // O contorno é neutro: na cor da série (o `--muted` do cartão) ele sumia.
+    expect(t).toContain('stroke: "var(--color-muted-foreground)"')
+  })
+  it("barMax limita a largura e o rótulo do selected sai por extenso, longe da borda", () => {
+    const t = trechoDe("ChartBars")
+    expect(t).toContain("barMax?: number")
+    expect(t).toContain("maxBarSize={barMax}")
+    expect(t).toContain('valueLabels === "selected" ? format : axisFormatFor(format)')
+    expect(t).toMatch(/valueLabels === "selected" && !horizontal \? \{ top: 20, right: 28/)
   })
   it("a página do catálogo mostra as quatro peças", () => {
     const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
