@@ -159,3 +159,14 @@ describe("escada do Item", () => {
     expect(desligado).not.toContain("hover:bg-muted")
   })
 })
+
+describe("ItemMedia tile success", () => {
+  it("o tom de boa notícia pinta a superfície -muted (soft) e a cor cheia (vivid)", () => {
+    const soft = renderToStaticMarkup(h(ItemMedia, { variant: "tile", tone: "success" }))
+    expect(soft).toContain("bg-success-muted")
+    expect(soft).toContain('data-tone="success"')
+    const vivid = renderToStaticMarkup(h(ItemMedia, { variant: "tile", tone: "success", tint: "vivid" }))
+    expect(vivid).toContain("bg-success")
+    expect(vivid).toContain("text-success-foreground")
+  })
+})

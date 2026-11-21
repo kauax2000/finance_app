@@ -202,6 +202,7 @@ const itemMediaVariants = cva(
       // Só o `tile` pinta o tom (as combinações abaixo); nas outras mídias ele não faz nada.
       tone: {
         neutral: "",
+        success: "",
         info: "",
         warning: "",
         destructive: "",
@@ -219,10 +220,12 @@ const itemMediaVariants = cva(
     },
     compoundVariants: [
       { variant: "tile", tint: "soft", tone: "neutral", className: "bg-muted text-muted-foreground" },
+      { variant: "tile", tint: "soft", tone: "success", className: "bg-success-muted text-success-muted-foreground" },
       { variant: "tile", tint: "soft", tone: "info", className: "bg-info-muted text-info-muted-foreground" },
       { variant: "tile", tint: "soft", tone: "warning", className: "bg-warning-muted text-warning-muted-foreground" },
       { variant: "tile", tint: "soft", tone: "destructive", className: "bg-destructive-muted text-destructive-muted-foreground" },
       { variant: "tile", tint: "vivid", tone: "neutral", className: "bg-muted-foreground text-background" },
+      { variant: "tile", tint: "vivid", tone: "success", className: "bg-success text-success-foreground" },
       { variant: "tile", tint: "vivid", tone: "info", className: "bg-info text-info-foreground" },
       { variant: "tile", tint: "vivid", tone: "warning", className: "bg-warning text-warning-foreground" },
       { variant: "tile", tint: "vivid", tone: "destructive", className: "bg-destructive text-destructive-foreground" },

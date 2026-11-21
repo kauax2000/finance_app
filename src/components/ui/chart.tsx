@@ -1190,11 +1190,14 @@ function ChartArea({
   dataTable,
   delta = false,
   brush,
+  yAxis = true,
   children,
 }: ChartFormProps & {
   x: string
   xFormat?: ChartFormat
   variant?: keyof typeof chartAreaShape
+  /** O eixo de valor. `false` o esconde (o valor fica no tooltip e numa `ChartReferenceLine` rotulada): o cartão pequeno lê a forma, não a régua. */
+  yAxis?: boolean
   stacked?: boolean
   /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
   marker?: "last"
@@ -1243,12 +1246,12 @@ function ChartArea({
                   <stop
                     offset="0%"
                     stopColor={serieColor(key, i, config)}
-                    stopOpacity={0.35}
+                    stopOpacity={0.4}
                   />
                   <stop
                     offset="100%"
                     stopColor={serieColor(key, i, config)}
-                    stopOpacity={0.02}
+                    stopOpacity={0}
                   />
                 </linearGradient>
               ))}
@@ -1256,7 +1259,7 @@ function ChartArea({
           ) : null}
           <ChartGrid />
           <ChartXAxis dataKey={x} format={xFormat} />
-          <ChartYAxis format={axisFormatFor(format)} />
+          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
@@ -1335,12 +1338,15 @@ function ChartLine({
   dataTable,
   delta = false,
   brush,
+  yAxis = true,
   children,
 }: ChartFormProps & {
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
   /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
   brush?: boolean | number
+  /** O eixo de valor. `false` o esconde (o valor fica no tooltip). */
+  yAxis?: boolean
   x: string
   xFormat?: ChartFormat
   variant?: keyof typeof chartLineShape
@@ -1373,7 +1379,7 @@ function ChartLine({
         <LineChart data={data} accessibilityLayer>
           <ChartGrid />
           <ChartXAxis dataKey={x} format={xFormat} />
-          <ChartYAxis format={axisFormatFor(format)} />
+          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
@@ -1399,8 +1405,9 @@ function ChartLine({
               strokeDasharray={tracejada(config, key) ? CHART_DASH : undefined}
               // O marcador tem 8px de diâmetro: abaixo disso ele lê como
               // sujeira do traço, não como ponto de dado.
+              // A série tracejada é referência (o mês passado, a projeção): o "hoje" é só da cheia.
               dot={
-                marker === "last"
+                marker === "last" && !tracejada(config, key)
                   ? chartMarkerDot(
                       ultimoIndiceComValor(data, key),
                       serieColor(key, i, config),
@@ -1472,10 +1479,16 @@ function ChartBars({
   signed = false,
   valueLabels = false,
   selected,
+  selectedColor,
   onSelect,
   delta = false,
+  yAxis = true,
   children,
 }: ChartFormProps & {
+  /** A cor da barra selecionada. Com ela as outras não apagam: ficam na cor da série (a neutra) e só a escolhida acende — a cor da categoria no destaque. */
+  selectedColor?: string
+  /** O eixo de valor (só no `vertical`). `false` o esconde: o valor fica no tooltip. */
+  yAxis?: boolean
   /** Barras com sinal (saldo cruzando o zero): acima `--chart-income`, abaixo `--chart-expense`, com a linha do zero desenhada (cor não é o único canal). Uma série. */
   signed?: boolean
   /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. */
@@ -1515,7 +1528,7 @@ function ChartBars({
     setEmFoco(v == null ? null : String(v))
   }, [])
   const apagada = (linha: Record<string, unknown>) =>
-    selected != null
+    selected != null && !selectedColor
       ? String(linha[x]) === selected
         ? 1
         : String(linha[x]) === emFoco
@@ -1538,7 +1551,9 @@ function ChartBars({
       ? Number(linha[key] ?? 0) < 0
         ? "var(--color-chart-expense)"
         : "var(--color-chart-income)"
-      : serieColor(key, i, config)
+      : selectedColor && selected != null && String(linha[x]) === selected
+        ? selectedColor
+        : serieColor(key, i, config)
 
   return (
     <ChartFrame
@@ -1602,6 +1617,7 @@ function ChartBars({
             <>
               <ChartXAxis dataKey={x} format={xFormat} />
               <ChartYAxis
+                hide={!yAxis}
                 format={axisFormatFor(format)}
                 domain={signed ? (dominioComSinal as never) : undefined}
               />
@@ -1825,6 +1841,11 @@ function ChartDonut({
         : "var(--color-muted)"
       : serieColor(chaves[i], i, config)
 
+  const corDoPonto = (i: number) => {
+    const cfg = config[chaves[i]]
+    return !medidor && cfg && "color" in cfg && cfg.color ? cfg.color : corDaFatia(i)
+  }
+
   // A variante é do `ChartDonut`, então é ele que a injeta no `ChartDonutCenter` (quem escreve o rótulo não decide o medidor).
   const centroFixo =
     medidor && React.isValidElement<{ align?: "center" | "gauge" }>(center)
@@ -1875,10 +1896,14 @@ function ChartDonut({
           encostava na esquerda: 102px fora do centro). `w-fit` respeita o
           espaço disponível, então a legenda quebra linha no telefone em vez de
           esticar o envelope. */}
+      {/* A lista vai ao lado do anel pela largura do próprio cartão (container
+          query), e não da janela: no cartão de 1/3 do desktop ela cabe ao lado,
+          e no de 640px de largura de janela num cartão estreito ela desce. */}
+      <div className={emLista ? "@container/chart-donut w-full" : "contents"}>
       <div
         className={cn(
           "flex flex-col items-center",
-          emLista ? "w-full gap-4 sm:flex-row sm:gap-8" : "w-fit"
+          emLista ? "w-full gap-4 @2xs/chart-donut:flex-row @2xs/chart-donut:gap-6" : "w-fit"
         )}
         onPointerLeave={() => setAtivoLista(null)}
       >
@@ -1952,7 +1977,7 @@ function ChartDonut({
         {mostrarLegenda && emLista ? (
           <ul
             data-slot="chart-donut-legend"
-            className="grid w-full min-w-0 gap-1 text-xs sm:flex-1"
+            className="grid w-full min-w-0 grid-cols-1 gap-1 text-xs @2xs/chart-donut:flex-1"
           >
             {data.map((_, i) => (
               <li
@@ -1974,12 +1999,15 @@ function ChartDonut({
                 <span
                   aria-hidden
                   className="size-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: corDaFatia(i) }}
+                  // A lista mora fora do `ChartContainer`, onde as `--color-<chave>` do
+                  // `config` não existem: a cor declarada entra direto.
+                  style={{ backgroundColor: corDoPonto(i) }}
                 />
                 <span className="min-w-0 flex-1 truncate">
                   {config[chaves[i]]?.label ?? chaves[i]}
                 </span>
-                <span className="nums font-mono text-foreground">
+                {/* Abaixo de 20rem de cartão o valor sai (fica no miolo e no tooltip) e o nome ganha o espaço. */}
+                <span className="nums font-mono text-foreground @max-xs/chart-donut:hidden">
                   {formatChartValue(valores[i], format)}
                 </span>
                 <span className="nums w-9 text-right font-mono text-muted-foreground">
@@ -1995,6 +2023,7 @@ function ChartDonut({
             nameKey={nameKey}
           />
         ) : null}
+      </div>
       </div>
     </ChartFrame>
   )

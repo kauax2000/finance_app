@@ -71,6 +71,14 @@ const cardVariants = cva(
           "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
           "border border-border bg-card bg-clip-padding text-card-foreground",
         ].join(" "),
+        /**
+         * O destaque sutil: o `outline` com um véu de `--muted` que desce do topo
+         * e some no meio (o fundo continua `--card`, então o véu clareia no
+         * escuro e acinzenta no claro). Para o bloco que abre a tela, como a
+         * frase do resumo; não é marca e não pede ação.
+         */
+        tinted:
+          "border border-border bg-card bg-linear-to-b from-muted/70 to-transparent to-70% bg-clip-padding text-card-foreground",
         /** O tracejado: o lugar de um cartão que ainda não existe (o "adicionar", a lista vazia). */
         dashed: "border border-dashed border-border bg-transparent text-muted-foreground",
       },

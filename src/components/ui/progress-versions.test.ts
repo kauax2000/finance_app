@@ -126,3 +126,27 @@ describe("Progress projected", () => {
     expect(readFileSync("src/app/designsystem/docs/progress.tsx", "utf8")).toContain("projected")
   })
 })
+
+describe("Progress fillColor", () => {
+  const casas = (html: string) =>
+    [...html.matchAll(/<span[^>]*data-slot="progress-segment"[^>]*>/g)].map((m) => m[0])
+
+  it("pinta as casas cheias na cor da pessoa, por --progress-fill", () => {
+    const html = renderToStaticMarkup(
+      createElement(Progress, { value: 4, max: 12, segments: 12, fillColor: "#FFB49B" })
+    )
+    expect(html).toMatch(/--progress-fill:\s*#FFB49B/)
+    const cs = casas(html)
+    expect(cs[0]).toContain("bg-(--progress-fill)")
+    expect(cs[0]).not.toMatch(/\bbg-primary\b/)
+    expect(cs[5]).not.toContain("bg-(--progress-fill)")
+  })
+
+  it("com tone ou bands a cor do estado vence", () => {
+    const html = renderToStaticMarkup(
+      createElement(Progress, { value: 4, max: 12, segments: 12, tone: "success", fillColor: "#FFB49B" })
+    )
+    expect(html).not.toContain("--progress-fill")
+    expect(html).toContain("bg-success")
+  })
+})

@@ -149,6 +149,12 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
      * `segments` (ignorado em execução, porque `segments` vem da `Base`) nem na marca.
      */
     projected?: number
+    /**
+     * A cor da pessoa no preenchimento (a da categoria, nas casas das parcelas),
+     * como o traço do gráfico a usa. Só no tom padrão: com `tone`, `bands` ou a
+     * marca, quem decide a cor é o estado e ela é ignorada.
+     */
+    fillColor?: string
   }
 
 /**
@@ -222,6 +228,7 @@ function Progress({
   marker,
   highlight,
   projected,
+  fillColor,
   ...props
 }: ProgressProps) {
   const { tone, bands, zones, variant = "default", ...rest } = props as Base & {
@@ -261,6 +268,9 @@ function Progress({
           ? "destructive"
           : progressToneForBands(pctTotal, bands)
         : tone
+
+  // A cor da pessoa entra só no tom padrão, por variável (classe montada não existe).
+  const corPropria = fillColor && variant !== "brand" && (tomFinal ?? "default") === "default" ? fillColor : null
 
   // O arco-íris é do trilho, e o preenchimento o revela: o degradê tem a largura
   // do trilho inteiro, então só fica completo em 100% (completar a barra completa
@@ -318,6 +328,11 @@ function Progress({
           ? { "aria-valuetext": `${Math.round(bruto)}%` }
           : {})}
       {...rest}
+      style={
+        corPropria
+          ? ({ ...rest.style, "--progress-fill": corPropria } as React.CSSProperties)
+          : rest.style
+      }
     >
       {casas ? (
         Array.from({ length: casas }, (_, i) => {
@@ -337,7 +352,7 @@ function Progress({
               data-highlight={realce ? "" : undefined}
               className={cn(
                 "h-full flex-1 rounded-full bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
-                acesa && variant !== "brand" && !realce && TOM_FUNDO[tomFinal ?? "default"],
+                acesa && variant !== "brand" && !realce && (corPropria ? "bg-(--progress-fill)" : TOM_FUNDO[tomFinal ?? "default"]),
                 realce && "bg-(--progress-highlight,var(--primary-accent))",
                 // Na marca cada casa mostra a sua fatia do arco-íris: o degradê tem a largura
                 // da barra inteira e a posição é a da casa (a conta do `HistogramSlider`).
@@ -364,6 +379,7 @@ function Progress({
             data-filled={pct > 0 ? "" : undefined}
             className={cn(
               progressIndicatorVariants({ tone: tomFinal, size }),
+              corPropria && "bg-(--progress-fill)",
               // `brand-rainbow-image` não é decoração: é ela que declara `--brand-rainbow`
               // no elemento.
               // Divergência consciente da 1.4.11: o arco-íris contra o trilho do sistema dá

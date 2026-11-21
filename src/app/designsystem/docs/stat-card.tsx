@@ -9,6 +9,7 @@ import {
   CreditCardIcon,
   ScaleIcon,
 } from "@heroicons/react/16/solid"
+import { CalendarDaysIcon, ReceiptPercentIcon, ShoppingBagIcon } from "@heroicons/react/20/solid"
 
 import { Button } from "@/components/ui/button"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -28,6 +29,9 @@ import {
   StatCardValueSkeleton,
 } from "@/components/ui/stat-card"
 import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { TILE_PALETTE } from "@/lib/tile-palette"
+
+const corDaPaleta = (nome: string) => TILE_PALETTE.find((p) => p.nome === nome)?.hex ?? null
 
 const VARIANTES = ["separate", "joined"] as const
 const TAMANHOS = ["sm", "md", "lg"] as const
@@ -304,6 +308,41 @@ export default function StatCardDoc() {
         </StatCard>
       </DocSection>
 
+      <DocSection
+        title="O ladrilho em cima, um matiz por cartão"
+        description="Numa fileira de cartões que se distinguem pela cor (o resumo da categoria), o ícone sobe acima do cabeçalho: StatCardIcon size=&quot;lg&quot; (36, ícone de 20) como filho direto do StatCard, com color de uma parada da paleta de ladrilhos — ele vira o ColorTile suave naquele matiz. O rótulo desce da sobrancelha para a frase (variant=&quot;plain&quot;): o ladrilho já é o marco."
+        code={`<StatCard>
+  <StatCardIcon size="lg" color={corDaCategoria}>
+    <ShoppingBagIcon className="size-5" />
+  </StatCardIcon>
+  <StatCardHeader>
+    <StatCardLabel variant="plain">Maior compra</StatCardLabel>
+  </StatCardHeader>
+  <StatCardValue value={2000} />
+  <StatCardFooter>Consórcio · 9 nov</StatCardFooter>
+</StatCard>`}
+        previewClassName="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-3"
+      >
+        {(
+          [
+            ["coral", ShoppingBagIcon, "Maior compra", 2000, "Consórcio · 9 nov"],
+            ["azul", ReceiptPercentIcon, "Compra típica", 35.5, "Metade custa menos que isso"],
+            ["lima", CalendarDaysIcon, "Dia mais caro", 2035.5, "Em 2 lançamentos"],
+          ] as const
+        ).map(([cor, Icone, rotulo, valor, pe]) => (
+          <StatCard key={cor}>
+            <StatCardIcon size="lg" color={corDaPaleta(cor)}>
+              <Icone className="size-5" />
+            </StatCardIcon>
+            <StatCardHeader>
+              <StatCardLabel variant="plain">{rotulo}</StatCardLabel>
+            </StatCardHeader>
+            <StatCardValue value={valor} />
+            <StatCardFooter>{pe}</StatCardFooter>
+          </StatCard>
+        ))}
+      </DocSection>
+
       <DocNote title="Rótulo e valor não levam gap">
         Rótulo sobre valor é par de identidade: quem os separa é a entrelinha. O respiro existe entre blocos diferentes — o cabeçalho, a nota, a faísca, a meta —, e quem o declara é o cartão, por degrau.
       </DocNote>
@@ -374,8 +413,8 @@ export default function StatCardDoc() {
           },
           {
             prop: "StatCardLabel / StatCardIcon",
-            type: "ComponentProps<'div' | 'span'>",
-            description: "O rótulo em sobrancelha; o ícone (16/solid) num ladrilho tonal.",
+            type: '{ variant?: "eyebrow" | "plain" } / { size?: "sm" | "lg"; color?: string | null }',
+            description: "O rótulo em sobrancelha (plain: a frase em 12px); o ícone num ladrilho tonal — sm (24, 16/solid) dentro do rótulo, lg (36, 20/solid) em cima do cartão; color troca o tom pelo ColorTile suave daquele matiz.",
           },
           {
             prop: "StatCardValue",

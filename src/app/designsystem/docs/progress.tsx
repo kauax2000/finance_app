@@ -18,6 +18,7 @@ import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { Controles, DocNote, DocSection, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
+import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 
 const ORCAMENTO = [
   ["Mercado", 45],
@@ -162,6 +163,7 @@ export default function ProgressDoc() {
     </ProgressHeader>
   }
 />
+<Progress value={4} max={12} segments={12} fillColor={corDaCategoria} />
 <Progress variant="brand" value={2} max={4} segments={4} />`}
         previewClassName="flex-col items-stretch gap-5"
       >
@@ -173,6 +175,7 @@ export default function ProgressDoc() {
             </ProgressHeader>
           }
         />
+        <Progress value={4} max={12} segments={12} fillColor={TILE_EXPENSE_DEFAULT} className="max-w-md" aria-label="4 de 12 parcelas pagas, na cor da categoria" />
         <Progress variant="brand" value={2} max={4} segments={4} className="max-w-md"
           header={
             <ProgressHeader>
@@ -404,6 +407,11 @@ export default function ProgressDoc() {
             prop: "projected",
             type: "number",
             description: "O trecho tracejado do previsto, depois do cheio, na unidade do value. Tom e pastilha contam o total; para no fim do trilho. Ignorado com segments, zones e na brand.",
+          },
+          {
+            prop: "fillColor",
+            type: "string",
+            description: "A cor da pessoa no preenchimento (a da categoria nas casas das parcelas), por --progress-fill. Só no tom padrão: com tone, bands ou brand é ignorada.",
           },
           {
             prop: "highlight",

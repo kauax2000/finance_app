@@ -1093,8 +1093,9 @@ declaração de `background-color` no trilho).
   o recorte em `src/components`. O `Button outline` segue a mesma régua: o fio é o
   `--border` também no escuro (era o `--input`).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
-  `muted`, `plain`, `dashed` — o vazio ou o "adicionar" —, `brand`, uma por
-  tela); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
+  (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
+  "adicionar" —, `brand`, uma por tela); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada
@@ -1124,6 +1125,9 @@ declaração de `background-color` no trilho).
   **`StatCardDelta current previous better`** calcula variação, seta e tom de
   estado (`statCardDelta()`). Peças: `StatCardChart`, `StatCardProgress`,
   `StatCardRange`, `StatCardSplit`, `StatCardGroup` (`separate` | `joined`).
+  `StatCardIcon size="lg" color` é o ladrilho de 36 em cima do cartão (filho
+  direto), no `ColorTile` suave do matiz dado; `StatCardLabel variant="plain"`
+  é o rótulo em frase, sem sobrancelha (21/11/2026).
   **Nenhuma tela declara `KpiCard`, `DeltaBadge` nem a conta de variação.**
 - **`Alert`**: `tone` é a cor (`default` | `info` | `success` | `warning` |
   `destructive`) — **não existe `variant` para a cor**; `variant` é a forma
@@ -1184,7 +1188,7 @@ declaração de `background-color` no trilho).
   (orçamento `[85, 100]`, limite de cartão `[30, 70]`). **O excesso vira uma
   pastilha fora do trilho**, que vale sempre o total. Peças `ProgressHeader` /
   `ProgressLabel` / `ProgressValue` / `ProgressFooter` (pelas props `header` e
-  `footer`), `segments`, `zones`, `ProgressRing`. `projected` é o trecho tracejado do previsto, depois do cheio, e o tom e a pastilha contam o total; `projected` não vale com `zones`, `segments` nem `variant="brand"`, e o `ProgressValue` lê só o lançado. `brand` é para progresso sem
+  `footer`), `segments`, `zones`, `ProgressRing`. `projected` é o trecho tracejado do previsto, depois do cheio, e o tom e a pastilha contam o total; `projected` não vale com `zones`, `segments` nem `variant="brand"`, e o `ProgressValue` lê só o lançado. `fillColor` é a cor da pessoa no preenchimento (as parcelas na cor da categoria), só no tom padrão. `brand` é para progresso sem
   limiar (o degradê é do trilho). Passos com data são `Timeline`; um total
   dividido, `ChartSplit`.
 - **`Timeline`**: o fim é CSS (`:last-child`; `isLast={false}` é a exceção),
@@ -1631,7 +1635,8 @@ declaração de `background-color` no trilho).
   (o círculo do tom: `soft`, o padrão, na superfície `-muted`; `vivid`, a cor
   cheia com a tinta `-foreground`, como o `ColorTile` e o `Avatar` — as
   notificações), `ItemLink` (a linha clicável com
-  ações dentro, como o `CardLink`) e `ItemGroupLabel sticky` (grudado é vidro:
+  ações dentro, como o `CardLink`; o `tile` tem os tons `neutral`, `success`,
+  `info`, `warning` e `destructive`) e `ItemGroupLabel sticky` (grudado é vidro:
   transparente com o `glass-surface`, tingido por `--item-group-label-surface`
   quando quem chama precisa; sem transparência, `--background`). **Nenhuma tela
   escreve `flex-nowrap` nem `text-left` num `Item`.**
@@ -1943,7 +1948,8 @@ declaração de `background-color` no trilho).
   ponto da linha tem `fill`. **Nenhuma tela monta tooltip à mão nem usa
   `ResponsiveContainer` cru**; `ChartTooltipContent` sem `format` escreve
   número. `chart-versions.test.ts`.
-- **`ChartSparkline reference`** é a linha tracejada da média, em `--color-muted-foreground`, atrás da série (zero ou ausente não desenha; `bars` ignora). A faísca de Categorias pinta na cor da categoria (`tileColorFor`), a exceção do dono à cor da pessoa só no ladrilho: só traço e área, nunca sob texto. `bleed` zera a margem interna, para a faísca encostar nas bordas (o pé do cartão de categoria, 19/11/2026). Sem `tooltip`, a faísca não acende o ponto sob o cursor (`activeDot`), 20/11/2026. `band` limita a linha à faixa de cima (a fração da altura), e a área cheia fica embaixo (o pé do cartão de categoria, 20/11/2026).
+- **`ChartSparkline reference`** é a linha tracejada da média, em `--color-muted-foreground`, atrás da série (zero ou ausente não desenha; `bars` ignora). A faísca de Categorias pinta na cor da categoria (`tileColorFor`), a exceção do dono à cor da pessoa só no ladrilho: só traço, área **e o destaque de barra** (`ChartBars selectedColor`, com as outras em `--muted`; o resumo da categoria, 21/11/2026), nunca sob texto. `bleed` zera a margem interna, para a faísca encostar nas bordas (o pé do cartão de categoria, 19/11/2026). Sem `tooltip`, a faísca não acende o ponto sob o cursor (`activeDot`), 20/11/2026. `band` limita a linha à faixa de cima (a fração da altura), e a área cheia fica embaixo (o pé do cartão de categoria, 20/11/2026).
+- **`yAxis={false}`** (área, linha, barras) tira a régua de valor no cartão pequeno; o valor fica no tooltip. Na linha, o `marker="last"` pula a série tracejada. A `legend="list"` da rosca vai ao lado do anel pela largura do cartão (`@2xs/chart-donut`), não da janela, e abaixo de 20rem tira o valor da linha.
 - **O desenho**: a ponta da barra é 8px (`CHART_BAR_TIP`); o hover apaga as
   outras a 45% (`CHART_HOVER_DIM_OPACITY`), sem retângulo atrás.
   `chart-design.test.ts`.

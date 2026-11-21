@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { ArrowDownIcon, ArrowUpIcon, MinusIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { tileColorFor } from "@/lib/tile-palette"
 import { useCountUp } from "@/hooks/use-count-up"
 import { currencyBRL, numberBR, percentPointsBR } from "@/lib/formatters"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
@@ -61,7 +62,8 @@ const statCardVariants = cva("gap-0", {
      * no meio e variação na ponta. Para folhas e listas, onde o vertical seria alto demais.
      */
     layout: {
-      vertical: "",
+      // O ladrilho grande (`StatCardIcon size="lg"`) mora acima do cabeçalho, como filho direto.
+      vertical: "[&>[data-slot=stat-card-icon]]:mb-3",
       horizontal: [
         "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3",
         "[&>[data-slot=stat-card-icon]]:row-span-2 [&>[data-slot=stat-card-icon]]:size-10 [&>[data-slot=stat-card-icon]]:rounded-lg",
@@ -130,15 +132,43 @@ function StatCardHeader({ className, ...props }: React.ComponentProps<"div">) {
  * O ícone num ladrilho tonal (o primeiro lugar do tom). Recebe um Heroicon
  * `16/solid`; na linha compacta o ladrilho cresce e o ícone não.
  */
-function StatCardIcon({ className, ...props }: React.ComponentProps<"span">) {
+function StatCardIcon({
+  className,
+  size = "sm",
+  color,
+  style,
+  ...props
+}: Omit<React.ComponentProps<"span">, "color"> & {
+  /**
+   * `sm` (24, o padrão) mora dentro do `StatCardLabel`; `lg` (36, com ícone de
+   * 20 do conjunto mini) é o ladrilho em cima do cartão, filho direto do
+   * `StatCard`, acima do cabeçalho.
+   */
+  size?: "sm" | "lg"
+  /**
+   * Uma cor da paleta de ladrilhos (`TILE_PALETTE`, ou a de uma categoria): o
+   * ladrilho vira o `ColorTile tint="soft"` naquele matiz, e o tom do cartão
+   * fica só no número. Para uma fileira de cartões que se distinguem pela cor.
+   */
+  color?: string | null
+}) {
+  const cor = color != null ? tileColorFor(color) : null
   return (
     <span
       data-slot="stat-card-icon"
+      data-size={size}
       aria-hidden
       className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-md bg-(--stat-tile) text-(--stat-tile-ink) [&_svg:not([class*='size-'])]:size-3.5",
+        "flex shrink-0 items-center justify-center",
+        size === "lg"
+          ? "size-9 rounded-row [&_svg:not([class*='size-'])]:size-5"
+          : "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3.5",
+        cor
+          ? "tile-soft bg-(--tile-surface) text-(--tile-ink)"
+          : "bg-(--stat-tile) text-(--stat-tile-ink)",
         className
       )}
+      style={cor ? ({ "--tile-color": cor, ...style } as React.CSSProperties) : style}
       {...props}
     />
   )
@@ -149,12 +179,22 @@ function StatCardIcon({ className, ...props }: React.ComponentProps<"span">) {
  * term="eyebrow"` e do cabeçalho da `Table`). Aceita um `StatCardIcon` antes do
  * texto, e o texto trunca em vez de empurrar a variação.
  */
-function StatCardLabel({ className, children, ...props }: React.ComponentProps<"div">) {
+function StatCardLabel({
+  className,
+  children,
+  variant = "eyebrow",
+  ...props
+}: React.ComponentProps<"div"> & {
+  /** `eyebrow` (o padrão) é a sobrancelha; `plain` é a frase em 12px, sem caixa alta — o cartão com ladrilho grande em cima, onde o ladrilho já faz o papel de marco. */
+  variant?: "eyebrow" | "plain"
+}) {
   return (
     <div
       data-slot="stat-card-label"
+      data-variant={variant}
       className={cn(
-        "flex min-w-0 items-center gap-2 text-2xs font-medium tracking-wide text-muted-foreground uppercase",
+        "flex min-w-0 items-center gap-2 text-muted-foreground",
+        variant === "plain" ? "text-xs" : "text-2xs font-medium tracking-wide uppercase",
         className
       )}
       {...props}

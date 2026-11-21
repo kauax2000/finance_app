@@ -103,3 +103,13 @@ describe("CardToolbar dá o degrau aos botões", () => {
     expect(out).toContain('data-size="sm"')
   })
 })
+
+describe("Card tinted", () => {
+  it("o destaque sutil é o outline com um véu de --muted que desce do topo, sobre o --card", () => {
+    const out = casco({ variant: "tinted" })
+    expect(out).toContain("bg-card")
+    expect(out).toContain("bg-linear-to-b")
+    expect(out).toContain("from-muted/70")
+    expect(out).toContain("border-border")
+  })
+})

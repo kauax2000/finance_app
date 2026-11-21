@@ -47,7 +47,7 @@ const AVISOS = [
     dia: "Ontem",
     linhas: [
       { titulo: "Ana entrou na carteira Casa", legenda: "Pelo convite de 12 de março · ontem", tone: "info", Icone: UserPlusIcon },
-      { titulo: "A compra parcelada da geladeira terminou", legenda: "12 de 12 parcelas pagas · ontem", tone: "neutral", Icone: CheckIcon },
+      { titulo: "A compra parcelada da geladeira terminou", legenda: "12 de 12 parcelas pagas · ontem", tone: "success", Icone: CheckIcon },
     ],
   },
 ] as const
@@ -129,7 +129,7 @@ export default function ItemDoc() {
 
       <DocSection
         title="Lista de avisos"
-        description="As três peças do painel de notificações. ItemMedia variant=&quot;tile&quot; é o círculo na superfície -muted do tom (neutral, info, warning, destructive), com o ícone de 16 na tinta dele: 32 no md, 28 no sm, 40 no lg. ItemLink é o alvo da linha: um botão (ou, com asChild, o link) cuja película cobre o Item, e as ItemActions sobem acima dela — a linha inteira abre, e o botão de dentro continua sendo outro alvo, sem botão dentro de botão. ItemGroupLabel é o rótulo do grupo em sobrancelha; com sticky ele gruda no topo do rolável, no fundo de --item-group-label-surface (a placa flutuante por padrão; aqui, o cartão)."
+        description="As três peças do painel de notificações. ItemMedia variant=&quot;tile&quot; é o círculo na superfície -muted do tom (neutral, success, info, warning, destructive), com o ícone de 16 na tinta dele: 32 no md, 28 no sm, 40 no lg. ItemLink é o alvo da linha: um botão (ou, com asChild, o link) cuja película cobre o Item, e as ItemActions sobem acima dela — a linha inteira abre, e o botão de dentro continua sendo outro alvo, sem botão dentro de botão. ItemGroupLabel é o rótulo do grupo em sobrancelha; com sticky ele gruda no topo do rolável, no fundo de --item-group-label-surface (a placa flutuante por padrão; aqui, o cartão)."
         code={`<ItemGroupLabel sticky>Hoje</ItemGroupLabel>
 <Item interactive>
   <ItemMedia variant="tile" tone="warning"><CreditCardIcon /></ItemMedia>
@@ -412,7 +412,7 @@ export default function ItemDoc() {
           },
           {
             prop: "ItemMedia tone",
-            type: '"neutral" | "info" | "warning" | "destructive"',
+            type: '"neutral" | "success" | "info" | "warning" | "destructive"',
             default: '"neutral"',
             description: "A cor do tom e a tinta do ícone. Só o tile o pinta.",
           },

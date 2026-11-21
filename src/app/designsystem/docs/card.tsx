@@ -62,10 +62,11 @@ export default function CardDoc() {
           não mostra superfície nenhuma. */}
       <DocSection
         title="Superfície"
-        description="variant decide borda e preenchimento, nunca o respiro. outline é o cartão do app; elevated o levanta sobre conteúdo atrás; muted rebaixa o contêiner de segunda ordem; plain só agrupa onde a superfície já é de outro; dashed é o lugar de um cartão que ainda não existe."
+        description="variant decide borda e preenchimento, nunca o respiro. outline é o cartão do app; elevated o levanta sobre conteúdo atrás; muted rebaixa o contêiner de segunda ordem; tinted é o destaque sutil, um véu de --muted que desce do topo e some (a frase do resumo da categoria); plain só agrupa onde a superfície já é de outro; dashed é o lugar de um cartão que ainda não existe."
         code={`<Card>…</Card>                       {/* outline */}
 <Card variant="elevated">…</Card>
 <Card variant="muted">…</Card>
+<Card variant="tinted">…</Card>
 <Card variant="plain">…</Card>
 <Card variant="dashed">…</Card>`}
         previewClassName="grid grid-cols-1 items-stretch gap-4 bg-background sm:grid-cols-2"
@@ -75,6 +76,7 @@ export default function CardDoc() {
             ["outline", "Chapado sobre a página."],
             ["elevated", "O mesmo, levantado."],
             ["muted", "Contêiner de segunda ordem."],
+            ["tinted", "Destaque sutil: o véu desce do topo."],
             ["plain", "Só agrupa. Sem borda."],
             ["dashed", "O lugar do que ainda não existe."],
           ] as const
@@ -701,7 +703,7 @@ export default function CardDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"outline" | "elevated" | "muted" | "plain" | "brand" | "dashed"',
+            type: '"outline" | "elevated" | "muted" | "tinted" | "plain" | "brand" | "dashed"',
             default: '"outline"',
             description: "Borda e superfície; nunca o respiro. brand — uma por tela; dashed, o lugar do que ainda não existe.",
           },

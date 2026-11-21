@@ -67,6 +67,7 @@ import { Caption } from "@/components/ui/typography"
 import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { addDaysYmd } from "@/lib/transaction-date"
+import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
 
@@ -1098,6 +1099,44 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Destaque na cor da pessoa, sem eixo"
+        description={
+          <>
+            <code>selectedColor</code> pinta a barra <code>selected</code> numa cor própria (a da categoria) e as outras ficam na cor da série, sem apagar — com a série em <code>--muted</code>, o destaque é a única cor do gráfico. <code>yAxis=&#123;false&#125;</code> tira a régua de valor (em <code>ChartArea</code>, <code>ChartLine</code> e <code>ChartBars</code>): o cartão pequeno lê a forma, e o valor fica no tooltip. Em <code>ChartLine</code> o <code>marker=&quot;last&quot;</code> marca só as séries cheias — a tracejada é referência.
+          </>
+        }
+        code={`<ChartBars
+  config={{ total: { label: "Total", color: "var(--muted)" } }}
+  selected="Sex"
+  selectedColor={corDaCategoria}
+  yAxis={false}
+  x="dia"
+  …
+/>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartBars
+          config={{ total: { label: "Total", color: "var(--muted)" } }}
+          data={[
+            { dia: "Seg", total: 120 },
+            { dia: "Ter", total: 210 },
+            { dia: "Qua", total: 60 },
+            { dia: "Qui", total: 95 },
+            { dia: "Sex", total: 340 },
+            { dia: "Sáb", total: 40 },
+            { dia: "Dom", total: 25 },
+          ]}
+          x="dia"
+          selected="Sex"
+          selectedColor={TILE_EXPENSE_DEFAULT}
+          yAxis={false}
+          aspect="auto"
+          label="Gasto por dia da semana, a sexta em destaque"
+          className="h-32 w-full max-w-md"
+        />
+      </DocSection>
+
+      <DocSection
         title="Variação no tooltip"
         description={
           <>
@@ -1142,7 +1181,7 @@ const config = {
         title="Legenda em lista"
         description={
           <>
-            <code>legend=&quot;list&quot;</code> põe a legenda ao lado do anel com o valor e a porcentagem de cada fatia — as porcentagens somam 100. Pousar numa linha acende a fatia. Abaixo de <code>sm</code> a lista desce para baixo do anel.
+            <code>legend=&quot;list&quot;</code> põe a legenda ao lado do anel com o valor e a porcentagem de cada fatia — as porcentagens somam 100. Pousar numa linha acende a fatia. A lista vai ao lado do anel quando o <strong>cartão</strong> tem 18rem ou mais (container query, não a janela: no cartão de 1/3 do desktop ela cabe) e desce abaixo disso; abaixo de 20rem o valor sai da linha e o nome ganha o espaço (o valor fica no miolo e no tooltip).
           </>
         }
         code={`<ChartDonut legend="list" center={<ChartDonutCenter amount={total} label="no mês" />} … />`}
@@ -1635,7 +1674,20 @@ const config = {
             prop: "marker",
             type: '"last"',
             description:
-              "Linha e área: o último ponto com valor, marcado e pulsando.",
+              "Linha e área: o último ponto com valor, marcado e pulsando. Na linha, só nas séries cheias (a tracejada é referência).",
+          },
+          {
+            prop: "yAxis",
+            type: "boolean",
+            default: "true",
+            description:
+              "Área, linha e barras: `false` tira a régua de valor (o valor fica no tooltip e numa linha de referência rotulada).",
+          },
+          {
+            prop: "selectedColor",
+            type: "string",
+            description:
+              "Só nas barras: a cor da barra `selected`; com ela as outras não apagam, ficam na cor da série.",
           },
           {
             prop: "labels",

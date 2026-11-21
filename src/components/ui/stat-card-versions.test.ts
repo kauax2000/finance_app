@@ -6,6 +6,7 @@ import { lerFonte } from "@/test/fonte"
 import {
   StatCard,
   StatCardDelta,
+  StatCardIcon,
   StatCardLabel,
   StatCardRange,
   StatCardValue,
@@ -96,5 +97,29 @@ describe("as versões do StatCard", () => {
     const analise = lerFonte("src/components/bills/bill-history-analytics.tsx")
     expect(analise).toContain("<StatCardRange")
     expect(analise).not.toContain('className="flex flex-wrap gap-x-2 text-xs sm:text-sm"')
+  })
+})
+
+describe("StatCardIcon lg com cor e StatCardLabel plain", () => {
+  it("o ladrilho grande com cor vira o ColorTile suave naquele matiz", () => {
+    const out = renderToStaticMarkup(h(StatCardIcon, { size: "lg", color: "#6EE2FF" }, "i"))
+    expect(out).toContain("size-9")
+    expect(out).toContain("tile-soft")
+    expect(out).toMatch(/--tile-color:\s*#6EE2FF/)
+    expect(out).not.toContain("bg-(--stat-tile)")
+  })
+
+  it("sem cor e sem size, nada muda: 24px no tom do cartão", () => {
+    const out = renderToStaticMarkup(h(StatCardIcon, null, "i"))
+    expect(out).toContain("size-6")
+    expect(out).toContain("bg-(--stat-tile)")
+    expect(out).not.toContain("tile-soft")
+  })
+
+  it("o rótulo plain é a frase em 12px, sem caixa alta; o padrão segue a sobrancelha", () => {
+    const plain = renderToStaticMarkup(h(StatCardLabel, { variant: "plain" }, "Maior compra"))
+    expect(plain).toContain("text-xs")
+    expect(plain).not.toContain("uppercase")
+    expect(renderToStaticMarkup(h(StatCardLabel, null, "x"))).toContain("uppercase")
   })
 })

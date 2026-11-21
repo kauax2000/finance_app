@@ -396,3 +396,24 @@ describe("ChartSparkline band: a área enche até o pé (20/11/2026)", () => {
     expect(f).toContain("baseValue={dominio ? dominio[0] : undefined}")
   })
 })
+
+describe("Chart: yAxis, selectedColor, marcador só na série cheia e a lista da rosca pela largura do cartão", () => {
+  const f = semComentarios(CODIGO)
+  it("yAxis esconde a régua de valor em área, linha e barras", () => {
+    expect(f.match(/yAxis = true/g)?.length).toBe(3)
+    expect(f.match(/hide=\{!yAxis\}/g)?.length).toBe(3)
+  })
+  it("selectedColor pinta só a barra escolhida e desliga o apagado", () => {
+    expect(f).toContain("selected != null && !selectedColor")
+    expect(f).toMatch(/selectedColor && selected != null && String\(linha\[x\]\) === selected/)
+  })
+  it("o marcador do último ponto pula a série tracejada na linha", () => {
+    expect(f).toContain('marker === "last" && !tracejada(config, key)')
+  })
+  it("a lista da rosca decide pela largura do cartão (container query), e a cor declarada chega ao ponto", () => {
+    expect(f).toContain("@container/chart-donut")
+    expect(f).toContain("@2xs/chart-donut:flex-row")
+    expect(f).not.toContain("sm:flex-row sm:gap-8")
+    expect(f).toContain("backgroundColor: corDoPonto(i)")
+  })
+})
