@@ -78,6 +78,8 @@ export function HeroiDoSeguro({
                     data={dados}
                     series={comRitmo ? ["gasto", "ritmo"] : ["gasto"]}
                     x="dia"
+                    // O dia no topo da dica, e não só o número (a dica de várias séries usa o rótulo do ponto).
+                    tooltipLabel={(d) => `dia ${d}`}
                     legend
                     aspect="auto"
                     // Um ponto só (dia 1) não traça linha: o marcador do último ponto o mostra.
