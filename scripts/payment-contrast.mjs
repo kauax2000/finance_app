@@ -8,6 +8,10 @@
 // E as seis precisam se distinguir entre si: a distância de cada par em OKLab
 // (ΔE ×100) não pode cair abaixo de DISTANCIA_MINIMA.
 //
+// O ícone do ladrilho também é marca não textual: a cor cheia da forma sobre o
+// círculo na mesma cor a 18% (`color-mix(..., transparent)`) pousado no cartão,
+// e o piso é o mesmo, 3:1.
+//
 // O método é o de `tone-contrast.mjs`: um bloco chapado por token, a cor lida
 // por canvas de 1×1 (o `getComputedStyle` devolve `oklch(...)`).
 import { abrirNavegador, abrirPagina, concluir, contraste, linha, lum, TEMAS } from "./lib/contrast.mjs"
@@ -50,11 +54,16 @@ for (const tema of TEMAS) {
         const c = document.createElement("canvas")
         c.width = c.height = 1
         const g = c.getContext("2d")
-        const ler = (token) => {
+        const ler = (token, sobre) => {
             const d = document.createElement("div")
-            d.style.cssText = `background:var(${token})`
+            d.style.cssText = `background:${sobre ? `color-mix(in oklab, var(${token}) 18%, transparent)` : `var(${token})`}`
             document.body.appendChild(d)
             g.clearRect(0, 0, 1, 1)
+            // O ladrilho é translúcido: o canvas o compõe sobre o cartão, como a página.
+            if (sobre) {
+                g.fillStyle = sobre
+                g.fillRect(0, 0, 1, 1)
+            }
             g.fillStyle = getComputedStyle(d).backgroundColor
             g.fillRect(0, 0, 1, 1)
             d.remove()
@@ -62,12 +71,21 @@ for (const tema of TEMAS) {
             // Token ausente pinta transparente: devolve null, e a linha reprova.
             return a === 255 ? [r, gg, b] : null
         }
-        return { card: ler("--card"), ...Object.fromEntries(formas.map((f) => [f, ler(`--payment-${f}`)])) }
+        const card = ler("--card")
+        const cardCss = card ? `rgb(${card.join(",")})` : null
+        return {
+            card,
+            ...Object.fromEntries(formas.map((f) => [f, ler(`--payment-${f}`)])),
+            ladrilho: Object.fromEntries(formas.map((f) => [f, cardCss ? ler(`--payment-${f}`, cardCss) : null])),
+        }
     }, { formas: FORMAS, escuro: tema === "dark" })
 
     for (const f of FORMAS) {
         const razao = cores[f] ? +contraste(lum(cores.card), lum(cores[f])).toFixed(2) : 0
         linhas.push(linha({ tema, forma: f, uso: "contra --card" }, razao, PISO))
+        const fundo = cores.ladrilho[f]
+        const icone = cores[f] && fundo ? +contraste(lum(fundo), lum(cores[f])).toFixed(2) : 0
+        linhas.push(linha({ tema, forma: f, uso: "ícone sobre o ladrilho de 18%" }, icone, PISO))
     }
     for (let i = 0; i < FORMAS.length; i++)
         for (let j = i + 1; j < FORMAS.length; j++) {
@@ -85,4 +103,4 @@ if (piorPar.deltaE < DISTANCIA_MINIMA) {
     console.error("Reprovou: duas formas de pagamento ficaram parecidas demais.")
     process.exitCode = 1
 }
-concluir(linhas, PISO, "alguma forma de pagamento ficou abaixo de 3:1 contra o cartão.")
+concluir(linhas, PISO, "alguma forma de pagamento ficou abaixo de 3:1 contra o cartão ou o próprio ladrilho.")

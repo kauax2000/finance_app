@@ -1,14 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
+import { createElement, useMemo } from "react"
 import { ArrowLongRightIcon, ArrowTrendingDownIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
-import {
-    ArrowsRightLeftIcon,
-    BanknotesIcon,
-    CreditCardIcon,
-    EllipsisHorizontalIcon,
-    QrCodeIcon,
-} from "@heroicons/react/24/outline"
 import { CreditCardBrandChip } from "@/components/credit-cards/credit-card-brand-chip"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,6 +32,7 @@ import {
 } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
 import { paymentMethodColor } from "@/lib/payment-methods"
+import { paymentMethodIcon } from "@/lib/payment-method-icon"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
@@ -49,13 +43,6 @@ const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfi
 const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
 // A segunda forma do mesmo tipo (dois cartões de crédito) sai a 60% da cor, a terceira em diante a 35%.
 const ESMAECER_A_REPETIDA = [100, 60, 35]
-// O miolo da rosca de uma forma só que não é cartão de crédito.
-const ICONE_DA_FORMA: Record<string, typeof BanknotesIcon> = {
-    pix: QrCodeIcon,
-    ted: ArrowsRightLeftIcon,
-    debit_card: CreditCardIcon,
-    cash: BanknotesIcon,
-}
 
 /** A diferença de uma forma contra o mês anterior: "+R$ 312" no tom do veredito, "igual" ou "novo" (null). */
 function diferencaDaForma(diferenca: number | null, despesa: boolean) {
@@ -214,12 +201,14 @@ export function GraficosDoResumo({
             }),
         ) satisfies ChartConfig
     }, [porPagamento])
-    // O ladrilho veste a cor da forma a 16%; o ícone fica na tinta normal.
-    const superficieDaForma = (chave: string) => ({ backgroundColor: `color-mix(in oklab, ${configPagamento[chave].color} 16%, transparent)` })
+    // O ladrilho veste a cor da forma a 18% e o ícone a cor cheia; a repetida esmaece os dois, pela cor já esmaecida.
+    const ladrilhoDaForma = (chave: string) => {
+        const cor = configPagamento[chave].color
+        return { backgroundColor: `color-mix(in oklab, ${cor} 18%, transparent)`, color: cor }
+    }
     // Sem nada no mês anterior não há contra o que comparar: nenhuma forma é "nova".
     const diferencas = porPagamentoAnterior.length > 0 ? diferencaPorForma(porPagamento, porPagamentoAnterior) : null
     const formaUnica = porPagamento.length === 1 ? porPagamento[0] : null
-    const IconeDaForma = formaUnica ? (ICONE_DA_FORMA[formaUnica.forma] ?? EllipsisHorizontalIcon) : null
     const maiorForma = porPagamento[0]
     // A preposição segue a da forma única: "em dinheiro", "sem forma de pagamento", "no <nome>".
     const ondeFoiPago = (f: FatiaDePagamento) =>
@@ -415,14 +404,19 @@ export function GraficosDoResumo({
                                         className="size-30 shrink-0"
                                         label={`${oQue} do mês por forma de pagamento: tudo no ${formaUnica.nome}`}
                                         center={
-                                            <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+                                            <div
+                                                aria-hidden
+                                                className="pointer-events-none absolute inset-0 grid place-items-center"
+                                                style={{ color: configPagamento[formaUnica.chave].color }}
+                                            >
                                                 {formaUnica.forma === "credit_card" ? (
                                                     <CreditCardBrandChip
                                                         brand={cartoes.find((c) => c.id === formaUnica.cardId)?.brand ?? null}
                                                     />
-                                                ) : IconeDaForma ? (
-                                                    <IconeDaForma className="size-6 text-muted-foreground" />
-                                                ) : null}
+                                                ) : (
+                                                    // `createElement`: o ícone vem de uma tabela, e não é um componente criado aqui.
+                                                    createElement(paymentMethodIcon(formaUnica.forma), { className: "size-4" })
+                                                )}
                                             </div>
                                         }
                                     />
@@ -469,20 +463,22 @@ export function GraficosDoResumo({
                                     />
                                     <ul className="mt-2 grid gap-3">
                                         {porPagamento.map((f, i) => {
-                                            const Icone = ICONE_DA_FORMA[f.forma] ?? EllipsisHorizontalIcon
                                             const d = diferencas ? diferencaDaForma(diferencas[f.chave], despesa) : null
                                             return (
                                                 <li key={f.chave} className="flex items-center gap-3 text-sm">
-                                                    {f.forma === "credit_card" ? (
-                                                        // O `tile` força 16px em todo `svg` de dentro, e a bandeira tem a largura dela.
-                                                        <ItemMedia className="size-8 rounded-full" style={superficieDaForma(f.chave)}>
-                                                            <CreditCardBrandChip brand={cartoes.find((c) => c.id === f.cardId)?.brand ?? null} />
+                                                    {/* A bandeira é irmã do ladrilho, fora do recorte e do `[&_svg]:size-4` do `tile`, como o canto do `Avatar`. */}
+                                                    <span className="relative shrink-0">
+                                                        <ItemMedia variant="tile" style={ladrilhoDaForma(f.chave)}>
+                                                            {createElement(paymentMethodIcon(f.forma))}
                                                         </ItemMedia>
-                                                    ) : (
-                                                        <ItemMedia variant="tile" style={superficieDaForma(f.chave)}>
-                                                            <Icone aria-hidden />
-                                                        </ItemMedia>
-                                                    )}
+                                                        {f.forma === "credit_card" ? (
+                                                            <CreditCardBrandChip
+                                                                size="xs"
+                                                                brand={cartoes.find((c) => c.id === f.cardId)?.brand ?? null}
+                                                                className="absolute -right-1 -bottom-1 ring-2 ring-card"
+                                                            />
+                                                        ) : null}
+                                                    </span>
                                                     <ItemContent>
                                                         <span className="truncate">{f.nome}</span>
                                                         <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">

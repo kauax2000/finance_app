@@ -138,6 +138,8 @@ const DRAWN_SVG_FILES = [
   "google-icon",
   "app-wordmark",
   "credit-card-brand-logos",
+  // O símbolo do PIX: marca de outra pessoa, como as bandeiras; o Heroicons não tem.
+  "pix-icon",
   "registered-credit-card-face",
   "spinner",
   // O anel do `ProgressRing`: a geometria do traço é o valor.
