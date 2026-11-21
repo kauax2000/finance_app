@@ -415,7 +415,7 @@ export function GraficosDoResumo({
                                                     />
                                                 ) : (
                                                     // `createElement`: o ícone vem de uma tabela, e não é um componente criado aqui.
-                                                    createElement(paymentMethodIcon(formaUnica.forma), { className: "size-4" })
+                                                    createElement(paymentMethodIcon(formaUnica.forma, "lg"), { className: "size-6" })
                                                 )}
                                             </div>
                                         }
