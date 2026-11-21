@@ -167,7 +167,7 @@ export function GraficosDoResumo({
     return (
         <div className="grid gap-3">
             {comMeses || comRitmo ? (
-                <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
+                <div className="grid gap-3 md:grid-cols-2">
                     {comMeses ? (
                         <Card className="min-w-0">
                             {/* Sem o valor do mês: ele já está no topo da página (pedido do dono, 21/11/2026). */}
