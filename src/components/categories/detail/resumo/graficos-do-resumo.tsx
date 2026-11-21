@@ -151,7 +151,6 @@ export function GraficosDoResumo({
                                 data={porPagamento}
                                 nameKey="nome"
                                 dataKey="valor"
-                                legend="list"
                                 className="h-32"
                                 label={`${oQue} do mês por forma de pagamento`}
                             />

@@ -11,12 +11,13 @@ export function FraseDoResumo({ frase }: { frase: ReturnType<typeof fraseDoResum
         <Card>
             <CardHeader
                 media={
+                    // O ladrilho força `[&_svg]:size-4`: o 20 vem do pai; o `size-5` no ícone diz o conjunto ao auditor.
                     <ItemMedia variant="tile" tone="neutral" className="size-10 [&_svg]:size-5">
                         <SparklesIcon aria-hidden className="size-5" />
                     </ItemMedia>
                 }
             >
-                <p className="text-lg leading-snug text-pretty text-foreground">
+                <p className="text-base leading-snug md:text-lg text-pretty text-foreground">
                     {frase.partes.map((p, i) =>
                         p.forte ? (
                             <strong key={i} className="nums font-semibold">

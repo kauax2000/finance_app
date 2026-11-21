@@ -47,15 +47,15 @@ export function InsightsDoResumo({
                             </ItemDescription>
                             {i.acao ? (
                                 <div className="mt-1">
-                                {i.acao === "previsao" ? (
-                                    <Button asChild variant="link" size="sm">
-                                        <Link href="/previsao">ver na Previsão</Link>
-                                    </Button>
-                                ) : (
-                                    <Button variant="link" size="sm" onClick={onDefinirLimite}>
-                                        definir limite
-                                    </Button>
-                                )}
+                                    {i.acao === "previsao" ? (
+                                        <Button asChild variant="link" size="sm" className="px-0">
+                                            <Link href="/previsao">ver na Previsão</Link>
+                                        </Button>
+                                    ) : (
+                                        <Button variant="link" size="sm" className="px-0" onClick={onDefinirLimite}>
+                                            definir limite
+                                        </Button>
+                                    )}
                                 </div>
                             ) : null}
                         </ItemContent>

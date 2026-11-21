@@ -36,10 +36,7 @@ import { CategoryDetailLayout } from "@/components/categories/detail/category-de
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
 import { FaixaDoMes } from "@/components/categories/detail/faixa-do-mes"
 import { Comparacoes } from "@/components/categories/detail/comparacoes"
-import { HistoricoDosMeses } from "@/components/categories/detail/historico-dos-meses"
-import { OndeEQuem } from "@/components/categories/detail/onde-e-quem"
-import { ParaOndeVai } from "@/components/categories/detail/para-onde-vai"
-import { Comprometido } from "@/components/categories/detail/comprometido"
+import { ResumoDaCategoria } from "@/components/categories/detail/resumo/resumo-da-categoria"
 import { CategoryEmbeddedTransactions } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
 import { MonthNav, useMonthInHeader } from "@/components/categories/categories-toolbar"
@@ -48,13 +45,24 @@ import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     comparacaoComMesAnterior,
-    descricoesRepetidas,
-    divisaoPorMembro,
     divisaoPorPagamento,
     maioresLancamentos,
     mediaDosMeses,
     serieDosMeses,
 } from "@/lib/categoria-detalhe"
+import {
+    compraTipica,
+    compromissos,
+    diaDeMaisGasto,
+    fraseDoResumo,
+    insights,
+    maisFrequente,
+    porDiaDaSemana,
+    porFaixaDeValor,
+    repeticoes,
+    ritmoDoMes,
+} from "@/lib/categoria-resumo"
+import { shiftYearMonth } from "@/lib/budget-month"
 import { receitasDoMesPorCategoria } from "@/lib/categoria-receitas-do-mes"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
@@ -64,7 +72,6 @@ import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
-import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import {
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
@@ -418,8 +425,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const hojeYmd = localYmdFromDate(new Date())
     const aberto = yearMonth === hojeYmd.slice(0, 7)
     const lookup = React.useMemo(() => buildCreditCardClosingLookup(creditCards), [creditCards])
-    const membrosQuery = useMemberDirectoryQuery(currentWorkspaceId)
-    const membros = React.useMemo(() => membrosQuery.data ?? [], [membrosQuery.data])
 
     // Despesa: o lançado e o previsto de `buildCategoryCommitmentsForMonth` (o mesmo
     // do aviso de orçamento). Receita: a conta da lista de Categorias.
@@ -445,27 +450,63 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const totalDaCarteira = tipo === "income" ? workspaceMonthSums.income : workspaceMonthSums.expense
     const pesoNoTotal = totalDaCarteira > 0 ? mes.lancado / totalDaCarteira : null
 
+    // O que já está previsto no mês seguinte (parcelas e recorrentes), para a frase do mês aberto.
+    const proximoMes = React.useMemo(() => {
+        if (!aberto) return 0
+        const ym = shiftYearMonth(yearMonth, 1)
+        if (tipo === "income") {
+            return receitasDoMesPorCategoria({ yearMonth: ym, hojeYmd, transactions: txs, subscriptions })[categoryId]?.previsto ?? 0
+        }
+        const m = buildCategoryCommitmentsForMonth({ yearMonth: ym, transactions: [], installmentPlans, subscriptions, creditCards })[categoryId]
+        return (m?.projectedInstallmentsTotal ?? 0) + (m?.projectedSubscriptionsTotal ?? 0)
+    }, [aberto, yearMonth, tipo, hojeYmd, txs, subscriptions, installmentPlans, creditCards, categoryId])
+
     const analise = React.useMemo(() => {
         if (!category) return null
+        const media = mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at })
+        const maior = attachPaymentCards(maioresLancamentos(txs, tipo, 1), txController.creditCards)[0] ?? null
+        const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
         return {
             comparacao: comparacaoComMesAnterior({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
-            media: mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at }),
+            media,
+            maior,
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
+            ritmo: ritmoDoMes({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
             porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
-            porMembro: divisaoPorMembro(txs, tipo, membros),
-            maiores: maioresLancamentos(txs, tipo),
-            maior: attachPaymentCards(maioresLancamentos(txs, tipo, 1), txController.creditCards)[0] ?? null,
-            repetidas: descricoesRepetidas(txs, tipo),
-            parcelas: installmentPlans.filter((p) => p.category_id === categoryId),
-            assinaturas: subscriptions.filter((s) => s.category_id === categoryId),
+            diasDaSemana: porDiaDaSemana(txs, tipo),
+            faixas: porFaixaDeValor(txs, tipo),
+            tipica: compraTipica(txs, tipo),
+            frequente: maisFrequente(txs, tipo),
+            diaDeMais: diaDeMaisGasto(txs, tipo),
+            compromissos: c,
+            repetidas: repeticoes({ txs, tipo, yearMonth, hojeYmd }),
+            frase: fraseDoResumo({
+                nomeDaCategoria: category.name,
+                tipo,
+                yearMonth,
+                aberto,
+                lancado: mes.lancado,
+                previsto: mes.lancado + mes.previsto,
+                media,
+                maior,
+                proximoMes,
+            }),
+            // O convidado não mexe no limite: a sugestão fica, sem o botão.
+            insights: insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).map((i) =>
+                i.acao === "limite" && !podeEscrever ? { ...i, acao: undefined } : i,
+            ),
         }
     }, [
+        aberto,
         category,
         categoryId,
         hojeYmd,
         installmentPlans,
+        limite,
         lookup,
-        membros,
+        mes,
+        podeEscrever,
+        proximoMes,
         seriesSource,
         subscriptions,
         tipo,
@@ -609,24 +650,32 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 analise={
                     analise ? (
                         <>
-                            {/* No desktop a comparação mora na faixa do mês. */}
+                            {/* No desktop a comparação mora na faixa do mês; no telefone, aqui. */}
                             {isMobile ? (
                                 <Comparacoes tipo={tipo} comparacao={analise.comparacao} media={analise.media} />
                             ) : null}
-                            <HistoricoDosMeses tipo={tipo} serie={analise.serie} limite={limite} />
-                            <OndeEQuem tipo={tipo} porPagamento={analise.porPagamento} porMembro={analise.porMembro} />
-                            <ParaOndeVai
+                            <ResumoDaCategoria
                                 tipo={tipo}
-                                maiores={analise.maiores}
-                                repetidas={analise.repetidas}
-                                onAbrir={txController.openTransactionDetail}
-                            />
-                            <Comprometido
-                                tipo={tipo}
+                                nomeDaCategoria={category.name}
+                                cor={category.color}
                                 yearMonth={yearMonth}
-                                parcelas={analise.parcelas}
-                                assinaturas={analise.assinaturas}
-                                previstoNoMes={mes.previsto}
+                                hojeYmd={hojeYmd}
+                                aberto={aberto}
+                                frase={analise.frase}
+                                serie={analise.serie}
+                                media={analise.media}
+                                ritmo={analise.ritmo}
+                                porPagamento={analise.porPagamento}
+                                diasDaSemana={analise.diasDaSemana}
+                                faixas={analise.faixas}
+                                maior={analise.maior}
+                                tipica={analise.tipica}
+                                frequente={analise.frequente}
+                                diaDeMais={analise.diaDeMais}
+                                compromissos={analise.compromissos}
+                                repetidas={analise.repetidas}
+                                insights={analise.insights}
+                                onDefinirLimite={openLimitDialog}
                             />
                         </>
                     ) : null

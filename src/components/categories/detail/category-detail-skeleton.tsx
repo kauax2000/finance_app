@@ -3,7 +3,8 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
  * O esqueleto na forma do detalhe: o cabeçalho (só no desktop), o resumo do mês
- * e as abas Resumo · Lançamentos, igual nos dois tamanhos.
+ * e as abas Resumo · Lançamentos, igual nos dois tamanhos; embaixo, a aba Resumo
+ * (a frase, os gráficos em duas linhas e os cartões do gasto).
  */
 export function CategoryDetailSkeleton() {
     return (
@@ -17,8 +18,16 @@ export function CategoryDetailSkeleton() {
                     <Skeleton shape="text" className="w-56" />
                 </div>
                 <Skeleton shape="control" className="w-full md:w-64" />
-                <Skeleton shape="surface" className="h-56" />
-                <Skeleton shape="surface" className="h-40" />
+                <Skeleton shape="surface" className="h-20" />
+                <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
+                    <Skeleton shape="surface" className="h-64" />
+                    <Skeleton shape="surface" className="h-64 max-md:hidden" />
+                </div>
+                <div className="grid gap-3 max-md:hidden md:grid-cols-3">
+                    <Skeleton shape="surface" className="h-52" />
+                    <Skeleton shape="surface" className="h-52" />
+                    <Skeleton shape="surface" className="h-52" />
+                </div>
             </div>
         </SkeletonGroup>
     )

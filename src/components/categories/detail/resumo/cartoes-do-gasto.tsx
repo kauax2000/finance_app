@@ -67,7 +67,9 @@ export function CartoesDoGasto({
                         </StatCardLabel>
                     </StatCardHeader>
                     <StatCardValue value={tipica} />
-                    <StatCardFooter>A mediana: metade custa menos que isso</StatCardFooter>
+                    <StatCardFooter>
+                        {despesa ? "Metade custa menos que isso" : "Metade vale menos que isso"}
+                    </StatCardFooter>
                 </StatCard>
             ) : null}
             {frequente ? (
@@ -93,10 +95,10 @@ export function CartoesDoGasto({
                             <StatCardIcon>
                                 <CalendarDaysIcon />
                             </StatCardIcon>
-                            {despesa ? "Dia de mais gasto" : "Dia de mais entrada"}
+                            {despesa ? "Dia mais caro" : "Melhor dia"}
                         </StatCardLabel>
                     </StatCardHeader>
-                    <StatCardValue>{diaEMes(diaDeMais.ymd)}</StatCardValue>
+                    <StatCardValue className="font-sans">{diaEMes(diaDeMais.ymd)}</StatCardValue>
                     <StatCardFooter className="nums">
                         {currencyBRL(diaDeMais.total)} em {diaDeMais.quantidade}{" "}
                         {diaDeMais.quantidade === 1 ? "lançamento" : "lançamentos"}
