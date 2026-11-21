@@ -429,12 +429,14 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   variant="brand"`, `Card variant="brand"`, `ThemeToggle variant="brand"`,
   `SearchInput variant="brand"`, `Progress`/`Slider variant="brand"`,
   `Spinner variant="brand"`, o numeral do `EmptyStateCode`, o anel do
-  `OnboardingTour` e o feixe (`command-beam`) da pílula do `CommandDialog` e da
-  frase do lançamento inteligente. **Uma peça de marca por tela.**
+  `OnboardingTour`, o feixe (`command-beam`) da pílula do `CommandDialog` e da
+  frase do lançamento inteligente, e a aurora da troca de tema (`ThemeToggle reveal`).
+  **Uma peça de marca por tela.**
 - **Arco-íris sob texto é proibido** — num gráfico, num fundo de cartão,
   preenchendo um chip: é a invariante 3 violada com sete cores, e sete matizes
   não têm um contraste só. As exceções conscientes, todas com o volume num
-  token e nunca nas paradas: o véu da `AnnouncementBar brand`
+  só lugar (um token, ou a constante `AURORA.opacidade` na aurora) e nunca nas
+  paradas: o véu da `AnnouncementBar brand`
   (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
@@ -930,7 +932,7 @@ declaração de `background-color` no trilho).
   (ícone e texto, paradas de largura igual), `variant="brand"` (o brilho no
   trilho) e `reveal` (**ligado por padrão**: a troca abre a aurora
   (`lib/aurora-do-tema`): a cortina borrada de âmbar, magenta, violeta e azul
-  desce do topo em 1,1s pela View Transitions API com `flushSync`; a faixa ganha
+  desce em ~0,66s e o brilho some no pé até 1,1s, pela View Transitions API com `flushSync`; a faixa ganha
   `view-transition-name` só durante a troca; sem API ou com movimento reduzido,
   troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela

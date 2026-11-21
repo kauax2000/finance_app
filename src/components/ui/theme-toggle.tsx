@@ -169,7 +169,7 @@ export function ThemeToggle({
             tirarFaixa = criarFaixa(document, altura)
         })
         transicao.ready
-            .then(() => animarAurora(html, altura, largura, vidros.vidros))
+            .then(() => animarAurora(html, altura, largura, vidros.vidros).finished.then(() => tirarFaixa?.()))
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
@@ -177,6 +177,7 @@ export function ThemeToggle({
             revelacao.current = null
             setPedido(null)
             html.classList.remove("theme-reveal")
+            // A rede de segurança: a faixa já saiu no fim da animação dela, e tirar de novo não faz nada.
             tirarFaixa?.()
             vidros.desfazer()
         })

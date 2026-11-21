@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
-import { AURORA, criarFaixa, mascaraDaAurora, quadrosDaFaixa, quadrosDaMascara } from "./aurora-do-tema"
+import { AURORA, animarAurora, criarFaixa, mascaraDaAurora, quadrosDaFaixa, quadrosDaMascara } from "./aurora-do-tema"
 
 describe("a aurora da troca de tema", () => {
     it("tem os tempos e o volume aprovados", () => {
@@ -91,6 +91,33 @@ describe("a aurora da troca de tema", () => {
         expect(corpo[0].style.height).toBe("750px")
         tirar()
         expect(corpo).toHaveLength(0)
+    })
+
+    it("a faixa acaba 50ms antes da raiz e é devolvida, para sair antes do fim da transição", () => {
+        const chamadas: { tempo: KeyframeAnimationOptions; animacao: object }[] = []
+        const html = {
+            animate(_q: Keyframe[], tempo: KeyframeAnimationOptions) {
+                const animacao = { finished: Promise.resolve() }
+                chamadas.push({ tempo, animacao })
+                return animacao
+            },
+        } as unknown as HTMLElement
+        const faixa = animarAurora(html, 1000, 375, [])
+        const raiz = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(root)")!
+        const daFaixa = chamadas.find((c) => c.tempo.pseudoElement === "::view-transition-new(theme-aurora)")!
+        expect(raiz.tempo.duration).toBe(AURORA.duracao)
+        expect(daFaixa.tempo.duration).toBe(AURORA.duracao - 50)
+        expect(daFaixa.tempo.fill).toBe("both")
+        expect(faixa).toBe(daFaixa.animacao)
+    })
+
+    it("a página não ganha mask-clip; o vidro ganha no-clip, para a sombra dele não ser cortada", () => {
+        expect(quadrosDaMascara(1000)[0].maskClip).toBeUndefined()
+        const vidro = quadrosDaMascara(1000, 0, false, { largura: 375, esquerda: 20 })
+        for (const k of vidro) {
+            expect(k.maskClip).toBe("no-clip")
+            expect(k.webkitMaskClip).toBe("no-clip")
+        }
     })
 
     it("a altura vem de quem chama, lida uma vez no toque", () => {

@@ -41,7 +41,7 @@ export default function ThemeToggleDoc() {
 
       <DocSection
         title="A aurora"
-        description="A troca abre uma aurora: uma cortina borrada que desce do topo da tela em cerca de 1,1s, nas cores âmbar, magenta, violeta e azul da marca, e revela a página nova por baixo (View Transitions API). É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
+        description="A troca abre uma aurora: uma cortina borrada que desce do topo da tela em ~0,66s (o brilho some no pé até 1,1s), nas cores âmbar, magenta, violeta e azul da marca, e revela a página nova por baixo (View Transitions API). É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
         code={`<ThemeToggle />
 <ThemeToggle reveal={false} />`}
         previewClassName="items-end gap-6"

@@ -73,6 +73,8 @@ export function quadrosDaMascara(
             webkitMaskSize: tamanho,
             webkitMaskRepeat: "no-repeat",
             webkitMaskPosition: posicao,
+            // No vidro a máscara não recorta na borda da caixa: a sombra dele passa da caixa.
+            ...(horizontal && { maskClip: "no-clip", webkitMaskClip: "no-clip" }),
         }
     }
     const fim = -0.12 * altura - deslocamento
@@ -103,17 +105,25 @@ export function criarFaixa(doc: Document, altura: number): () => void {
     faixa.style.height = `${altura * AURORA.faixa}px`
     faixa.style.viewTransitionName = NOME_DA_FAIXA
     doc.body.append(faixa)
+    // Tirar duas vezes não faz nada: a animação da faixa e o `finished` da transição tiram.
     return () => faixa.remove()
 }
 
-/** Anima a página, a faixa e cada vidro com o mesmo tempo. Chame no `ready`. */
-export function animarAurora(html: HTMLElement, altura: number, largura: number, vidros: Vidro[]): void {
+/**
+ * Anima a página, a faixa e cada vidro. Chame no `ready`. A faixa acaba 50ms antes da raiz e a
+ * animação dela é devolvida: quem chama tira a faixa no `finished` dela, ainda dentro da
+ * transição. Tirada só no `finished` da transição, a faixa de verdade (sem o esmaecer, que é do
+ * pseudo) podia pintar um quadro no topo.
+ */
+export function animarAurora(html: HTMLElement, altura: number, largura: number, vidros: Vidro[]): Animation {
     const tempo = { duration: AURORA.duracao, easing: "linear" }
     html.animate(quadrosDaMascara(altura), { ...tempo, pseudoElement: "::view-transition-new(root)" })
-    html.animate(quadrosDaFaixa(altura), {
+    const faixa = html.animate(quadrosDaFaixa(altura), {
         ...tempo,
+        duration: AURORA.duracao - 50,
         fill: "both",
         pseudoElement: `::view-transition-new(${NOME_DA_FAIXA})`,
     })
     revelarVidros(html, vidros, altura, largura)
+    return faixa
 }

@@ -255,6 +255,9 @@ describe("o trilho de tema", () => {
         expect(faixa).toBeGreaterThan(tema)
         expect(faixa).toBeLessThan(fimDoCallback)
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarFaixa\?\.\(\)/)
+        // A faixa sai quando a animação dela acaba, 50ms antes da transição: tirada só no
+        // `finished`, a faixa de verdade podia pintar um quadro no topo.
+        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, vidros\.vidros\)\.finished\.then\(\(\) => tirarFaixa\?\.\(\)\)/)
         expect(CODIGO).not.toContain("REVELACAO")
         expect(CODIGO).not.toContain("circle(")
         const css = lerFonte("src/app/globals.css")
