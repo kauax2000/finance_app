@@ -3303,7 +3303,8 @@ function ChartHeatStrip({
                     if (!ehCursor(e)) setAtivo((a) => (a === i ? null : i))
                   }}
                 />
-                <span aria-hidden className="max-w-full truncate text-xs text-muted-foreground">
+                {/* Sem `truncate`: "Seg" cortava em "S…" na célula de ~20px; o nome curto passa da célula, centrado, e cabe no vão. */}
+                <span aria-hidden className="text-2xs whitespace-nowrap text-muted-foreground">
                   {nome}
                 </span>
                 {ativo === i ? (
