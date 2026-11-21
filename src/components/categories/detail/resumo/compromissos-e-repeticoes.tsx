@@ -1,6 +1,7 @@
 "use client"
 
 import { CheckIcon } from "@heroicons/react/16/solid"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { DateTile } from "@/components/ui/date-tile"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
@@ -118,7 +119,12 @@ export function CompromissosERepeticoes({
                         {repetidas.map((r) => (
                             <Item key={r.descricao} variant="flush">
                                 <ItemContent>
-                                    <ItemTitle>{r.descricao}</ItemTitle>
+                                    {/* A descrição numa pílula: é o nome que se repete, não um lançamento. */}
+                                    <ItemTitle>
+                                        <Badge variant="outline" tone="neutral" size="md" className="max-w-full">
+                                            <span className="truncate">{r.descricao}</span>
+                                        </Badge>
+                                    </ItemTitle>
                                     <ItemDescription className="nums">
                                         {r.vezes}×{r.aCadaDias ? ` · a cada ~${r.aCadaDias} ${r.aCadaDias === 1 ? "dia" : "dias"}` : " no mesmo dia"}
                                     </ItemDescription>

@@ -46,31 +46,59 @@ export type ResumoDaCategoriaProps = {
     onDefinirLimite: () => void
 }
 
-/** A aba Resumo: frase → gráficos → cartões → parcelas e repetições → insights. Recebe tudo pronto. */
+/** Uma seção do Resumo com o título por cima; quem decide se ela aparece é quem chama. */
+function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+    return (
+        <PageSection>
+            <PageSectionHeader>
+                <PageSectionTitle>{titulo}</PageSectionTitle>
+            </PageSectionHeader>
+            {children}
+        </PageSection>
+    )
+}
+
+/** A aba Resumo: frase → gráficos → cartões → parcelas e repetições → insights, cada bloco com título. Recebe tudo pronto. */
 export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
+    const despesa = p.tipo === "expense"
+    // As mesmas condições com que cada bloco some sozinho: sem conteúdo, sem título solto.
+    const temGraficos =
+        p.serie.some((m) => m.total !== 0) ||
+        p.ritmo.some((d) => (d.atual ?? 0) !== 0 || d.anterior !== 0) ||
+        p.porPagamento.length > 0 ||
+        p.diasDaSemana.some((d) => d.total > 0) ||
+        p.faixas.some((f) => f.quantidade > 0)
+    const temCartoes = p.maior != null || p.tipica != null || p.frequente != null || p.diaDeMais != null
     const temCompromissos = p.compromissos.itens.length > 0 || p.repetidas.length > 0
     return (
         <div className="grid gap-6">
-            <FraseDoResumo frase={p.frase} tipo={p.tipo} cor={p.cor} />
-            <GraficosDoResumo
-                tipo={p.tipo}
-                cor={p.cor}
-                nomeDaCategoria={p.nomeDaCategoria}
-                yearMonth={p.yearMonth}
-                aberto={p.aberto}
-                serie={p.serie}
-                media={p.media}
-                ritmo={p.ritmo}
-                porPagamento={p.porPagamento}
-                diasDaSemana={p.diasDaSemana}
-                faixas={p.faixas}
-            />
-            <CartoesDoGasto tipo={p.tipo} cor={p.cor} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
+            <Secao titulo="Em resumo">
+                <FraseDoResumo frase={p.frase} tipo={p.tipo} cor={p.cor} />
+            </Secao>
+            {temGraficos ? (
+                <Secao titulo="Como o mês andou">
+                    <GraficosDoResumo
+                        tipo={p.tipo}
+                        cor={p.cor}
+                        nomeDaCategoria={p.nomeDaCategoria}
+                        yearMonth={p.yearMonth}
+                        aberto={p.aberto}
+                        serie={p.serie}
+                        media={p.media}
+                        ritmo={p.ritmo}
+                        porPagamento={p.porPagamento}
+                        diasDaSemana={p.diasDaSemana}
+                        faixas={p.faixas}
+                    />
+                </Secao>
+            ) : null}
+            {temCartoes ? (
+                <Secao titulo={despesa ? "Destaques dos gastos" : "Destaques das entradas"}>
+                    <CartoesDoGasto tipo={p.tipo} cor={p.cor} maior={p.maior} tipica={p.tipica} frequente={p.frequente} diaDeMais={p.diaDeMais} />
+                </Secao>
+            ) : null}
             {temCompromissos ? (
-                <PageSection>
-                    <PageSectionHeader>
-                        <PageSectionTitle>{p.tipo === "expense" ? "Já comprometido e o que se repete" : "Recorrente e o que se repete"}</PageSectionTitle>
-                    </PageSectionHeader>
+                <Secao titulo={despesa ? "Já comprometido" : "O que entra todo mês"}>
                     <CompromissosERepeticoes
                         tipo={p.tipo}
                         cor={p.cor}
@@ -78,15 +106,12 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                         compromissos={p.compromissos}
                         repetidas={p.repetidas}
                     />
-                </PageSection>
+                </Secao>
             ) : null}
             {p.insights.length > 0 ? (
-                <PageSection>
-                    <PageSectionHeader>
-                        <PageSectionTitle>Para ficar de olho</PageSectionTitle>
-                    </PageSectionHeader>
+                <Secao titulo="Para ficar de olho">
                     <InsightsDoResumo itens={p.insights} onDefinirLimite={p.onDefinirLimite} />
-                </PageSection>
+                </Secao>
             ) : null}
         </div>
     )

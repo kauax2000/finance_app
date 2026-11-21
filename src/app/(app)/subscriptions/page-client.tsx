@@ -557,7 +557,8 @@ export default function SubscriptionsPageClient() {
     }
 
     return (
-        <div className="space-y-3">
+        // A barra e a lista são blocos diferentes: `--space-block`, como em Categorias e Transações.
+        <div className="space-y-(--space-block)">
             <SubscriptionsToolbar
                 statusFilter={statusFilter}
                 onStatusFilterChange={(v) => {

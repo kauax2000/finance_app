@@ -7,7 +7,7 @@ import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { fraseDoResumo } from "@/lib/categoria-resumo"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
 
-/** A frase de resumo do mês, com o ladrilho na cor da categoria (o vivo, o do cabeçalho; o suave quase some no escuro) e as partes fortes (os números) em destaque. */
+/** A frase de resumo do mês, em Ledger, com o ladrilho tonal na cor da categoria e as partes fortes (os números) em destaque. */
 export function FraseDoResumo({
     frase,
     tipo,
@@ -23,15 +23,15 @@ export function FraseDoResumo({
         <Card variant="tinted">
             <CardHeader
                 media={
-                    <ColorTile size="lg" color={corDaCategoria}>
+                    <ColorTile size="lg" tint="tonal" color={corDaCategoria}>
                         <SparklesIcon aria-hidden />
                     </ColorTile>
                 }
             >
-                <p className="text-base leading-snug text-pretty text-muted-foreground md:text-xl">
+                <p className="font-display text-base leading-snug text-pretty text-muted-foreground md:text-xl">
                     {frase.partes.map((p, i) =>
                         p.forte ? (
-                            <strong key={i} className="nums font-semibold text-foreground">
+                            <strong key={i} className="nums font-sans font-semibold text-foreground">
                                 {p.texto}
                             </strong>
                         ) : (

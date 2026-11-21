@@ -670,7 +670,8 @@ export default function BillsPageClient() {
     const hasTable = !data.tableMissing
 
     return (
-        <div className="min-w-0 max-w-full space-y-3">
+        // A barra e a lista são blocos diferentes: `--space-block`, como em Categorias e Transações.
+        <div className="min-w-0 max-w-full space-y-(--space-block)">
             <BillsToolbar
                 mode={mode}
                 onModeChange={handleModeChange}

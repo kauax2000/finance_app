@@ -25,7 +25,8 @@ export function CategoryDetailLayout({
     return (
         <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
             {resumo}
-            <Tabs defaultValue="resumo">
+            {/* As abas e o painel são blocos diferentes: `--space-block`, a mesma distância de Categorias e de Transações. */}
+            <Tabs defaultValue="resumo" className="gap-(--space-block)">
                 <TabsList aria-label="Seções da categoria" className="w-full md:w-fit">
                     <TabsTrigger value="resumo" className="md:flex-none">Resumo</TabsTrigger>
                     <TabsTrigger value="lancamentos" count={totalLancamentos} className="md:flex-none">
