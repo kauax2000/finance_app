@@ -77,12 +77,13 @@ export function nomearVidros(doc: Document) {
     }
 }
 
-/** A aurora passando pelas fotos de cada vidro. Chame no `ready`, com a altura da tela lida no toque. */
-export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number) {
+/** A aurora passando pelas fotos de cada vidro. Chame no `ready`, com a altura e a largura da tela lidas no toque. */
+export function revelarVidros(html: HTMLElement, vidros: Vidro[], altura: number, largura: number) {
     const tempo = { duration: AURORA.duracao, easing: "linear" }
     for (const { nome, rect } of vidros) {
-        html.animate(quadrosDaMascara(altura, rect.top), { ...tempo, pseudoElement: `::view-transition-new(${nome})` })
-        html.animate(quadrosDaMascara(altura, rect.top, true), {
+        const horizontal = { largura, esquerda: rect.left }
+        html.animate(quadrosDaMascara(altura, rect.top, false, horizontal), { ...tempo, pseudoElement: `::view-transition-new(${nome})` })
+        html.animate(quadrosDaMascara(altura, rect.top, true, horizontal), {
             ...tempo,
             pseudoElement: `::view-transition-old(${nome})`,
         })

@@ -239,7 +239,7 @@ describe("o trilho de tema", () => {
 
     it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
         expect(CODIGO).toContain("nomearVidros(document)")
-        expect(CODIGO).toContain("animarAurora(html, altura, vidros.vidros)")
+        expect(CODIGO).toContain("animarAurora(html, altura, largura, vidros.vidros)")
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
         const css = lerFonte("src/app/globals.css")
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")

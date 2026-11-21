@@ -4,7 +4,7 @@
  * `::view-transition-new(root)`), com uma faixa do arco-íris da marca correndo na frente dela.
  * A faixa é um elemento criado no callback da transição, com `view-transition-name` inline: ela só
  * existe na foto nova e sai no `finished` (nome permanente tira o borrão do vidro, AGENTS.md).
- * A altura da tela é lida uma vez, no toque, por quem chama.
+ * A altura e a largura da tela são lidas uma vez, no toque, por quem chama.
  */
 
 import { revelarVidros, type Vidro } from "./vidro-na-revelacao"
@@ -46,12 +46,24 @@ export function mascaraDaAurora(invertida = false): string {
     return `url("data:image/svg+xml,${svg.replace(/%/g, "%25").replace(/%2523/g, "%23")}")`
 }
 
-/** Os três quadros da máscara: de acima da tela até abaixo dela, parada depois da varredura. O `deslocamento` é o topo do vidro, para ele casar com a página. */
-export function quadrosDaMascara(altura: number, deslocamento = 0, invertida = false): Keyframe[] {
+/**
+ * Os três quadros da máscara: de acima da tela até abaixo dela, parada depois da varredura. O
+ * `deslocamento` é o topo do vidro, e `horizontal` a largura da janela e a esquerda do vidro: a
+ * máscara de um pseudo do vidro mede pela caixa dele, e com `preserveAspectRatio='none'` a onda
+ * esticaria na largura do vidro, fora de fase com a da página. A página passa sem `horizontal`.
+ */
+export function quadrosDaMascara(
+    altura: number,
+    deslocamento = 0,
+    invertida = false,
+    horizontal?: { largura: number; esquerda: number },
+): Keyframe[] {
     const imagem = mascaraDaAurora(invertida)
-    const tamanho = `100% ${(invertida ? 4.8 : 2.4) * altura}px`
+    const largura = horizontal ? `${horizontal.largura}px` : "100%"
+    const x = horizontal ? `${-horizontal.esquerda}px` : "0"
+    const tamanho = `${largura} ${(invertida ? 4.8 : 2.4) * altura}px`
     const quadro = (y: number) => {
-        const posicao = `0 ${y}px`
+        const posicao = `${x} ${y}px`
         return {
             maskImage: imagem,
             maskSize: tamanho,
@@ -95,7 +107,7 @@ export function criarFaixa(doc: Document, altura: number): () => void {
 }
 
 /** Anima a página, a faixa e cada vidro com o mesmo tempo. Chame no `ready`. */
-export function animarAurora(html: HTMLElement, altura: number, vidros: Vidro[]): void {
+export function animarAurora(html: HTMLElement, altura: number, largura: number, vidros: Vidro[]): void {
     const tempo = { duration: AURORA.duracao, easing: "linear" }
     html.animate(quadrosDaMascara(altura), { ...tempo, pseudoElement: "::view-transition-new(root)" })
     html.animate(quadrosDaFaixa(altura), {
@@ -103,5 +115,5 @@ export function animarAurora(html: HTMLElement, altura: number, vidros: Vidro[])
         fill: "both",
         pseudoElement: `::view-transition-new(${NOME_DA_FAIXA})`,
     })
-    revelarVidros(html, vidros, altura)
+    revelarVidros(html, vidros, altura, largura)
 }

@@ -11,13 +11,27 @@ describe("a aurora nos vidros", () => {
                 chamadas.push({ quadros, tempo })
             },
         } as unknown as HTMLElement
-        revelarVidros(html, [{ nome: "vidro-0", rect: { top: 700 } } as unknown as Vidro], 800)
+        revelarVidros(html, [{ nome: "vidro-0", rect: { left: 0, top: 700 } } as unknown as Vidro], 800, 375)
         expect(chamadas).toHaveLength(2)
         expect(chamadas[0].tempo.pseudoElement).toBe("::view-transition-new(vidro-0)")
-        expect(chamadas[0].quadros).toEqual(quadrosDaMascara(800, 700))
+        expect(chamadas[0].quadros).toEqual(quadrosDaMascara(800, 700, false, { largura: 375, esquerda: 0 }))
         expect(chamadas[1].tempo.pseudoElement).toBe("::view-transition-old(vidro-0)")
-        expect(chamadas[1].quadros).toEqual(quadrosDaMascara(800, 700, true))
+        expect(chamadas[1].quadros).toEqual(quadrosDaMascara(800, 700, true, { largura: 375, esquerda: 0 }))
         for (const c of chamadas) expect(c.tempo.duration).toBe(AURORA.duracao)
+    })
+
+    it("a onda do vidro tem a largura da janela e começa na esquerda dela, não na do vidro", () => {
+        const chamadas: { quadros: Keyframe[] }[] = []
+        const html = { animate: (quadros: Keyframe[]) => chamadas.push({ quadros }) } as unknown as HTMLElement
+        revelarVidros(html, [{ nome: "vidro-0", rect: { left: 20, top: 700 } } as unknown as Vidro], 800, 375)
+        const nova = chamadas[0].quadros[0]
+        expect(nova.maskSize).toBe("375px 1920px")
+        expect(nova.webkitMaskSize).toBe("375px 1920px")
+        expect(String(nova.maskPosition).startsWith("-20px ")).toBe(true)
+        expect(chamadas[1].quadros[0].maskSize).toBe("375px 3840px")
+        // A página segue em 100% e 0.
+        expect(quadrosDaMascara(800)[0].maskSize).toBe("100% 1920px")
+        expect(String(quadrosDaMascara(800)[0].maskPosition).startsWith("0 ")).toBe(true)
     })
 
     it("o círculo saiu", () => {

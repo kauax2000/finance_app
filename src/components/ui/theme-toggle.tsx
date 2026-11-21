@@ -154,6 +154,7 @@ export function ThemeToggle({
         // O toque chama duas vezes, pelo foco e pelo clique: a segunda é a mesma troca.
         if (revelacao.current?.valor === valor) return
         const altura = window.innerHeight
+        const largura = window.innerWidth
         const html = document.documentElement
         const esta = { valor }
         revelacao.current = esta
@@ -168,7 +169,7 @@ export function ThemeToggle({
             tirarFaixa = criarFaixa(document, altura)
         })
         transicao.ready
-            .then(() => animarAurora(html, altura, vidros.vidros))
+            .then(() => animarAurora(html, altura, largura, vidros.vidros))
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
