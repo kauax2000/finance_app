@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
-import { EllipsisHorizontalIcon, FlagIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { BanknotesIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -534,7 +534,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 </DropdownMenuItem>
                 {category.type === "expense" ? (
                     <DropdownMenuItem onSelect={openLimitDialog}>
-                        <FlagIcon aria-hidden />
+                        <BanknotesIcon aria-hidden />
                         {budget ? "Editar limite" : "Definir limite"}
                     </DropdownMenuItem>
                 ) : null}
