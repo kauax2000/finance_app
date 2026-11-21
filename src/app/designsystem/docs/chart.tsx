@@ -1246,7 +1246,7 @@ const config = {
         title="O ritmo do mês"
         description={
           <>
-            Cinco peças sobre o <code>ChartLine</code>. <code>band</code> é a faixa entre as duas linhas (pares <code>[baixo, alto]</code>, a 14%), <code>ghost</code> é o previsto tracejado a 60%, e as duas ficam fora da dica e da legenda. <code>xTicks</code> escolhe os dias do eixo. <code>ChartAnnotation labelPosition=&quot;bottom&quot;</code> escreve o hoje no pé, e <code>ChartReferenceDot</code> ganha <code>labelPosition</code>, <code>labelAlign</code> e <code>hollow</code> (cheio, com o anel da superfície, no ponto de hoje). Os valores ficam nas pontas, sem legenda; a dica de duas séries lista só as do <code>config</code>.
+            Cinco peças sobre o <code>ChartLine</code>. <code>band</code> é a faixa entre as duas linhas (pares <code>[baixo, alto]</code>, a 14%), <code>ghost</code> é o previsto tracejado a 60%, e as duas ficam fora da dica e da legenda. <code>xTicks</code> escolhe os dias do eixo. <code>ChartAnnotation labelPosition=&quot;bottom&quot;</code> escreve o hoje no pé, e <code>ChartReferenceDot</code> ganha <code>labelPosition</code>, <code>labelAlign</code> e <code>hollow</code> (cheio, com o anel da superfície, no ponto de hoje) e <code>labelTone=&quot;series&quot;</code> (o rótulo na cor do ponto, no previsto). Os valores ficam nas pontas, sem legenda; a dica de duas séries lista só as do <code>config</code>.
           </>
         }
         code={`<ChartLine
@@ -1261,7 +1261,7 @@ const config = {
   <ChartAnnotation x={21} label="hoje, dia 21" labelPosition="bottom" />
   <ChartReferenceDot x={21} y={2460} label="novembro · R$ 2.460" color={cor} hollow={false} labelPosition="bottom" labelAlign="end" />
   <ChartReferenceDot x={30} y={3740} label="outubro · R$ 3.740" />
-  <ChartReferenceDot x={30} y={2940} label="previsto · R$ 2.940" color={cor} labelPosition="bottom" labelAlign="end" />
+  <ChartReferenceDot x={30} y={2940} label="previsto · R$ 2.940" color={cor} labelTone="series" labelPosition="bottom" labelAlign="end" />
 </ChartLine>`}
         previewClassName="items-stretch p-6"
       >
@@ -1295,6 +1295,7 @@ const config = {
             y={2460 + RITMO_PREVISTO}
             label="previsto · R$ 2.940"
             color={TILE_EXPENSE_DEFAULT}
+            labelTone="series"
             labelPosition="bottom"
             labelAlign="end"
           />

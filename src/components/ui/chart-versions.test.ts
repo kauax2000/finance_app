@@ -446,7 +446,7 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     expect(r).toContain("usePlotArea")
     expect(r).toContain("< 60")
     expect(r).toContain('"end"')
-    expect(r).toContain("fill-foreground text-2xs")
+    expect(r).toContain('cn("text-2xs", !tinta && "fill-foreground")')
   })
   it("valueLabels aceita \"selected\": só a barra escolhida leva o valor", () => {
     const t = trechoDe("ChartBars")
@@ -637,6 +637,14 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
     const r = trechoDe("ChartReferenceDotLabel")
     expect(r).toContain('lado === "bottom" ? cy + 16')
     expect(r).toContain("textAnchor={ancora ?? (")
+  })
+  it("o rótulo do ponto pode ir na cor do ponto (labelTone=\"series\")", () => {
+    const t = trechoDe("ChartReferenceDot")
+    expect(t).toContain('labelTone = "foreground"')
+    expect(t).toContain('tinta={labelTone === "series" ? traco : undefined}')
+    const r = trechoDe("ChartReferenceDotLabel")
+    expect(r).toContain("fill={tinta}")
+    expect(r).toContain('!tinta && "fill-foreground"')
   })
   it("a anotação leva o rótulo ao pé da área com labelPosition=\"bottom\"", () => {
     const t = trechoDe("ChartAnnotation")

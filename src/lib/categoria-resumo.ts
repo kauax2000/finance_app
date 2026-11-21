@@ -26,15 +26,26 @@ const ultimoDia = (ym: string) => {
 const diasEntre = (a: string, b: string) =>
     Math.round((Date.UTC(+b.slice(0, 4), +b.slice(5, 7) - 1, +b.slice(8, 10)) - Date.UTC(+a.slice(0, 4), +a.slice(5, 7) - 1, +a.slice(8, 10))) / 86_400_000)
 
-/** Gasto acumulado dia a dia do mês aberto e do anterior; `atual` fica null depois de hoje. */
+export type PontoDoRitmo = {
+    dia: number
+    atual: number | null
+    anterior: number
+    /** O véu entre as duas linhas, `[baixo, alto]`, só até hoje. */
+    faixa: [number, number] | null
+    /** Só com o mês aberto: de hoje (o atual de hoje) em reta até o lançado + previsto no último dia. */
+    projecao: number | null
+}
+
+/** Gasto acumulado dia a dia do mês aberto e do anterior; `atual` fica null depois de hoje. `previsto` é o restante previsto do mês. */
 export function ritmoDoMes(args: {
     rows: LinhaDeValor[]
     tipo: TipoDaCategoria
     yearMonth: string
     hojeYmd: string
     lookup: CreditCardClosingLookup
-}): { dia: number; atual: number | null; anterior: number }[] {
-    const { rows, tipo, yearMonth, hojeYmd, lookup } = args
+    previsto?: number
+}): PontoDoRitmo[] {
+    const { rows, tipo, yearMonth, hojeYmd, lookup, previsto = 0 } = args
     const acumulado = (ym: string) => {
         const n = ultimoDia(ym)
         const porDia = new Array<number>(n + 1).fill(0)
@@ -53,13 +64,40 @@ export function ritmoDoMes(args: {
     const atual = acumulado(yearMonth)
     const anterior = acumulado(shiftYearMonth(yearMonth, -1))
     const n = ultimoDia(yearMonth)
-    const ate = hojeYmd.slice(0, 7) === yearMonth ? Number(hojeYmd.slice(8, 10)) : n
-    return Array.from({ length: n }, (_, i) => ({
-        dia: i + 1,
-        atual: i + 1 <= ate ? atual[i + 1] : null,
+    const aberto = hojeYmd.slice(0, 7) === yearMonth
+    const ate = aberto ? Number(hojeYmd.slice(8, 10)) : n
+    const deHoje = atual[ate]
+    return Array.from({ length: n }, (_, i) => {
+        const dia = i + 1
+        const a = dia <= ate ? atual[dia] : null
         // o anterior mais longo que o atual: o último dia mostrado leva o total final dele
-        anterior: anterior[i + 1 === n ? anterior.length - 1 : Math.min(i + 1, anterior.length - 1)],
-    }))
+        const ant = anterior[dia === n ? anterior.length - 1 : Math.min(dia, anterior.length - 1)]
+        // hoje no último dia: a reta não tem dias, e o previsto cai inteiro nele
+        const projecao = !aberto || dia < ate ? null : reais(deHoje + (n === ate ? previsto : (previsto * (dia - ate)) / (n - ate)))
+        return {
+            dia,
+            atual: a,
+            anterior: ant,
+            faixa: a == null ? null : [Math.min(a, ant), Math.max(a, ant)],
+            projecao,
+        }
+    })
+}
+
+/** Os números do cartão do ritmo: o dia de hoje, a diferença contra o anterior no mesmo dia, onde o mês fecha e onde o anterior fechou. */
+export function resumoDoRitmo(
+    ritmo: PontoDoRitmo[],
+    { aberto }: { aberto: boolean },
+): { hoje: number; diferenca: number | null; fechamento: number; anteriorFinal: number | null } {
+    const deHoje = ritmo.filter((d) => d.atual != null).at(-1)
+    const ultimo = ritmo.at(-1)
+    const semAnterior = ritmo.every((d) => d.anterior === 0)
+    return {
+        hoje: deHoje?.dia ?? 0,
+        diferenca: semAnterior || !deHoje ? null : reais((deHoje.atual ?? 0) - deHoje.anterior),
+        fechamento: (aberto ? ultimo?.projecao : ultimo?.atual) ?? 0,
+        anteriorFinal: semAnterior ? null : (ultimo?.anterior ?? null),
+    }
 }
 
 const NOMES_DA_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]

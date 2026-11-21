@@ -473,7 +473,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             media,
             maior,
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
-            ritmo: ritmoDoMes({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
+            ritmo: ritmoDoMes({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup, previsto: mes.previsto }),
             porPagamento: divisaoPorPagamento(txs, tipo, txController.creditCards),
             diasDaSemana: porDiaDaSemana(txs, tipo),
             faixas: porFaixaDeValor(txs, tipo),

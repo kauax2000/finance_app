@@ -11,6 +11,7 @@ import {
     porFaixaDeValor,
     repeticoes,
     tendenciaDosMeses,
+    resumoDoRitmo,
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { buildCreditCardClosingLookup } from "@/lib/expense-month-attribution"
@@ -57,7 +58,7 @@ describe("ritmoDoMes", () => {
         ]
         const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-04", lookup })
         expect(r).toHaveLength(30)
-        expect(r[0]).toEqual({ dia: 1, atual: 0, anterior: 0 })
+        expect(r[0]).toEqual({ dia: 1, atual: 0, anterior: 0, faixa: [0, 0], projecao: null })
         expect(r[1].atual).toBe(10)
         expect(r[3].atual).toBe(15)
         expect(r[4].atual).toBeNull()
@@ -79,6 +80,44 @@ describe("ritmoDoMes", () => {
         const rows = [tx({ date: "2026-11-02", amount: 100 }), estorno({ date: "2026-11-03", amount: 30 })]
         const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-30", lookup })
         expect(r[2].atual).toBe(70)
+    })
+    it("a faixa só existe até hoje", () => {
+        const rows = [tx({ date: "2026-11-02", amount: 10 }), tx({ date: "2026-10-03", amount: 7 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-04", lookup })
+        expect(r[1].faixa).toEqual([0, 10])
+        expect(r[3].faixa).toEqual([7, 10])
+        expect(r[4].faixa).toBeNull()
+    })
+    it("a projeção sai do atual de hoje e chega ao atual + previsto no último dia", () => {
+        const rows = [tx({ date: "2026-11-02", amount: 100 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-10", lookup, previsto: 200 })
+        expect(r[8].projecao).toBeNull()
+        expect(r[9].projecao).toBe(100)
+        expect(r[19].projecao).toBe(200)
+        expect(r[29].projecao).toBe(300)
+    })
+    it("mês fechado: nenhuma projeção", () => {
+        const rows = [tx({ date: "2026-10-02", amount: 100 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-10", hojeYmd: "2026-11-10", lookup, previsto: 200 })
+        expect(r.every((d) => d.projecao === null)).toBe(true)
+    })
+})
+
+describe("resumoDoRitmo", () => {
+    it("Carro: R$ 671,62 a menos que outubro no dia 21", () => {
+        const rows = [tx({ date: "2026-11-05", amount: 3062.54 }), tx({ date: "2026-10-10", amount: 3734.16 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-21", lookup, previsto: 100 })
+        const s = resumoDoRitmo(r, { aberto: true })
+        expect(s.hoje).toBe(21)
+        expect(s.diferenca).toBeCloseTo(-671.62, 2)
+        expect(s.fechamento).toBeCloseTo(3162.54, 2)
+        expect(s.anteriorFinal).toBeCloseTo(3734.16, 2)
+    })
+    it("sem anterior, a diferença é null", () => {
+        const rows = [tx({ date: "2026-11-05", amount: 50 })]
+        const r = ritmoDoMes({ rows, tipo: "expense", yearMonth: "2026-11", hojeYmd: "2026-11-21", lookup })
+        expect(resumoDoRitmo(r, { aberto: true }).diferenca).toBeNull()
+        expect(resumoDoRitmo(r, { aberto: true }).anteriorFinal).toBeNull()
     })
 })
 

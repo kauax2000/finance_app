@@ -1082,12 +1082,15 @@ function ChartReferenceDotLabel({
   label,
   lado = "top",
   ancora,
+  tinta,
 }: {
   viewBox?: { x?: number; y?: number; width?: number; height?: number }
   label: string
   // Nomes próprios: o Recharts clona o rótulo com `position` e companhia, que sobrescreveriam os nossos.
   lado?: "top" | "bottom"
   ancora?: "middle" | "end"
+  /** A cor do rótulo; sem ela, a tinta do texto. */
+  tinta?: string
 }) {
   const area = usePlotArea()
   const cx = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
@@ -1102,7 +1105,8 @@ function ChartReferenceDotLabel({
       y={y}
       textAnchor={ancora ?? (direita - cx < 60 ? "end" : "middle")}
       // Na tinta do texto, não apagado: o ponto anotado é o destaque (pedido do dono, 21/11/2026).
-      className="fill-foreground text-2xs"
+      fill={tinta}
+      className={cn("text-2xs", !tinta && "fill-foreground")}
     >
       {label}
     </text>
@@ -1124,6 +1128,7 @@ function ChartReferenceDot({
   labelPosition = "top",
   labelAlign,
   hollow = true,
+  labelTone = "foreground",
   ...props
 }: Omit<React.ComponentProps<typeof ReferenceDot>, "label" | "x" | "y" | "r"> & {
   x: string | number
@@ -1137,6 +1142,8 @@ function ChartReferenceDot({
   labelAlign?: "middle" | "end"
   /** Vazado (o padrão) ou cheio na cor, com o anel da superfície: o "hoje" da série. */
   hollow?: boolean
+  /** O rótulo na tinta do texto (o padrão) ou na cor do ponto: o "previsto" da série. */
+  labelTone?: "foreground" | "series"
 }) {
   const traco =
     color ?? (tone === "series" ? "var(--color-chart-1)" : "var(--color-muted-foreground)")
@@ -1148,7 +1155,14 @@ function ChartReferenceDot({
       fill={hollow ? "var(--chart-surface)" : traco}
       stroke={hollow ? traco : "var(--chart-surface)"}
       strokeWidth={2}
-      label={<ChartReferenceDotLabel label={label} lado={labelPosition} ancora={labelAlign} />}
+      label={
+        <ChartReferenceDotLabel
+          label={label}
+          lado={labelPosition}
+          ancora={labelAlign}
+          tinta={labelTone === "series" ? traco : undefined}
+        />
+      }
       {...props}
     />
   )
