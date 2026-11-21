@@ -138,27 +138,42 @@ export function diasUteisEFimDeSemana(dias: { dia: number; total: number }[]): {
     }
 }
 
-const FAIXAS = [
-    { faixa: "até R$ 50", ate: 50 },
-    { faixa: "R$ 50–200", ate: 200 },
-    { faixa: "R$ 200–500", ate: 500 },
-    { faixa: "R$ 500+", ate: Infinity },
-]
+export type CompraDaConcentracao = { id: string; descricao: string; data: string; valor: number }
 
-/** Quantas compras em cada faixa de valor (estorno não é compra). */
-export function porFaixaDeValor(
+/**
+ * A concentração do mês: as compras da maior para a menor (estorno não é compra) e `n80`, o menor
+ * número delas, de cima, cuja soma alcança 80% do total. Acima de `max` compras (40), as menores
+ * se juntam em `outras`, e `compras` fica com `max - 1`; `n80` conta a lista inteira.
+ */
+export function concentracaoDasCompras(
     txs: Transaction[],
     tipo: TipoDaCategoria,
-): { faixa: string; quantidade: number; total: number }[] {
-    const r = FAIXAS.map((f) => ({ faixa: f.faixa, quantidade: 0, total: 0 }))
-    for (const t of txs) {
-        if (peso(t, tipo) !== 1) continue
-        const v = Number(t.amount || 0)
-        const i = FAIXAS.findIndex((f) => v <= f.ate)
-        r[i].quantidade += 1
-        r[i].total = reais(r[i].total + v)
+    opts: { max?: number } = {},
+): {
+    compras: CompraDaConcentracao[]
+    outras: { quantidade: number; valor: number } | null
+    quantidade: number
+    total: number
+    n80: number
+} {
+    const max = opts.max ?? 40
+    const todas = txs
+        .filter((t) => peso(t, tipo) === 1)
+        .map((t) => ({ id: t.id, descricao: t.description ?? "", data: transactionLocalYmd(t.date) ?? t.date, cents: centavos(t) }))
+        .sort((a, b) => b.cents - a.cents)
+    const total = todas.reduce((acc, c) => acc + c.cents, 0)
+    let n80 = 0
+    for (let soma = 0; n80 < todas.length && (n80 === 0 || soma * 10 < total * 8); n80++) soma += todas[n80].cents
+    const juntar = todas.length > max
+    const visiveis = juntar ? todas.slice(0, max - 1) : todas
+    const rabo = juntar ? todas.slice(max - 1) : []
+    return {
+        compras: visiveis.map(({ cents, ...c }) => ({ ...c, valor: cents / 100 })),
+        outras: juntar ? { quantidade: rabo.length, valor: rabo.reduce((acc, c) => acc + c.cents, 0) / 100 } : null,
+        quantidade: todas.length,
+        total: total / 100,
+        n80,
     }
-    return r
 }
 
 /** A mediana dos valores das compras (null sem lançamentos). */

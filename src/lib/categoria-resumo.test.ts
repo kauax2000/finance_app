@@ -9,7 +9,7 @@ import {
     insights,
     maisFrequente,
     porDiaDaSemana,
-    porFaixaDeValor,
+    concentracaoDasCompras,
     repeticoes,
     tendenciaDosMeses,
     resumoDoRitmo,
@@ -153,16 +153,37 @@ describe("diasUteisEFimDeSemana", () => {
     })
 })
 
-describe("porFaixaDeValor", () => {
-    it("conta as quatro faixas", () => {
-        const r = porFaixaDeValor(carro, "expense")
-        expect(r.map((f) => f.faixa)).toEqual(["até R$ 50", "R$ 50–200", "R$ 200–500", "R$ 500+"])
-        expect(r.map((f) => f.quantidade)).toEqual([4, 2, 2, 1])
-        expect(r[3].total).toBe(2000)
+describe("concentracaoDasCompras", () => {
+    const valores = [2000, 240, 210, 180, 150, 120, 100, 85, 70, 55, 40, 35, 30, 25, 18, 12]
+    it("5 de 16 compras fazem 80% do mês, da maior para a menor", () => {
+        const txs = [...valores].reverse().map((v, i) => tx({ id: String(i), amount: v }))
+        const r = concentracaoDasCompras(txs, "expense")
+        expect(r.n80).toBe(5)
+        expect(r.total).toBe(3370)
+        expect(r.quantidade).toBe(16)
+        expect(r.compras.map((c) => c.valor)).toEqual(valores)
+        expect(r.outras).toBeNull()
+    })
+    it("uma compra só faz o mês inteiro", () => {
+        expect(concentracaoDasCompras([tx({ amount: 42 })], "expense").n80).toBe(1)
+    })
+    it("10 compras iguais de R$ 50: 8 fazem 80%", () => {
+        const txs = Array.from({ length: 10 }, (_, i) => tx({ id: String(i), amount: 50 }))
+        expect(concentracaoDasCompras(txs, "expense").n80).toBe(8)
+    })
+    it("acima de 40, as menores viram \"outras\", e o n80 conta a lista inteira", () => {
+        const txs = Array.from({ length: 45 }, (_, i) => tx({ id: String(i), amount: 100 - i }))
+        const r = concentracaoDasCompras(txs, "expense")
+        expect(r.compras).toHaveLength(39)
+        expect(r.outras?.quantidade).toBe(6)
+        expect(r.outras?.valor).toBe(61 + 60 + 59 + 58 + 57 + 56)
+        expect(r.quantidade).toBe(45)
+        expect(r.n80).toBe(34)
     })
     it("estorno não é compra", () => {
-        const r = porFaixaDeValor([estorno()], "expense")
-        expect(r.every((f) => f.quantidade === 0)).toBe(true)
+        const r = concentracaoDasCompras([estorno(), tx({ amount: 30, description: "Gasolina", date: "2026-11-09" })], "expense")
+        expect(r.compras).toEqual([{ id: "x", descricao: "Gasolina", data: "2026-11-09", valor: 30 }])
+        expect(r.total).toBe(30)
     })
 })
 

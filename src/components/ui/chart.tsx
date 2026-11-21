@@ -3329,6 +3329,101 @@ function ChartHeatStrip({
   )
 }
 
+/**
+ * A fileira de concentração: um bloco por item (as compras do mês, já em ordem),
+ * lado a lado com 2px de vão e 28px de altura, na largura do valor (`flex-grow`,
+ * piso de 2px). As `highlight` primeiras vestem a `color`, as outras o `--muted`.
+ * A dica é a enxuta (`variant="single"`), por bloco, no cursor e no toque; o nome
+ * acessível é o `label` como veio (com 40 blocos, a lista inteira não se ouve: quem
+ * chama resume). Para duas a quatro partes de um total, o `ChartSplit`.
+ */
+function ChartStrip({
+  data,
+  nameKey,
+  dataKey,
+  color,
+  highlight = 0,
+  label,
+  description,
+  format = "currency",
+  labelText,
+  className,
+}: {
+  data: Record<string, unknown>[]
+  /** A chave única de cada bloco; é ela que o `labelText` recebe. */
+  nameKey: string
+  dataKey: string
+  /** A cor das `highlight` primeiras (a da categoria: `tileVividColor(tileColorFor(cor))`). */
+  color: string
+  /** Quantos blocos, do começo, vestem a `color`. */
+  highlight?: number
+  label: string
+  description?: string
+  format?: ChartFormat
+  /** O rótulo da dica, a partir do `nameKey` ("Consórcio · 9 de novembro"). */
+  labelText?: (label: unknown) => string
+  className?: string
+}) {
+  const [ativo, setAtivo] = React.useState<number | null>(null)
+  const nomes = data.map((d) => String(d[nameKey] ?? ""))
+  const valores = data.map((d) => (typeof d[dataKey] === "number" ? Math.max(0, d[dataKey] as number) : 0))
+  const total = valores.reduce((acc, v) => acc + v, 0)
+  const config = { [dataKey]: { label, color } } satisfies ChartConfig
+  // A dica fica dentro da largura da fileira (o cartão estreito não a corta): no começo dela para um bloco do primeiro terço, no fim para um do último, no meio para os outros.
+  const lado = (i: number) => {
+    const antes = valores.slice(0, i).reduce((acc, v) => acc + v, 0)
+    const meio = total > 0 ? ((antes + valores[i] / 2) / total) * 3 : 0
+    return meio < 1 ? "justify-start" : meio > 2 ? "justify-end" : "justify-center"
+  }
+
+  return (
+    <ChartHtmlRoot config={config} label={label} description={description} className={cn("w-full", className)}>
+      <div
+        className="relative"
+        onPointerLeave={(e) => {
+          // No toque a dica fica: o dedo sai logo depois de tocar.
+          if (ehCursor(e)) setAtivo(null)
+        }}
+      >
+        <div data-slot="chart-strip" className={cn("flex w-full gap-0.5", chartSplitRevealClassName)}>
+          {nomes.map((nome, i) => (
+            <span
+              key={nome || i}
+              data-slot="chart-strip-block"
+              className={cn(
+                "h-7 min-w-0.5 rounded-sm",
+                chartSplitGrowClassName,
+                ativo !== null && ativo !== i && "opacity-35"
+              )}
+              // `flex-grow` com o valor cru: a largura é a medida exata.
+              style={{ flex: `${valores[i]} 1 0`, backgroundColor: i < highlight ? color : "var(--muted)" }}
+              onPointerEnter={(e) => {
+                if (ehCursor(e)) setAtivo(i)
+              }}
+              onPointerDown={(e) => {
+                if (!ehCursor(e)) setAtivo((a) => (a === i ? null : i))
+              }}
+            />
+          ))}
+        </div>
+        {ativo !== null ? (
+          <div aria-hidden className={cn("pointer-events-none absolute inset-x-0 bottom-full z-10 mb-2 flex", lado(ativo))}>
+            <ChartTooltipContent
+              active
+              variant="single"
+              format={format}
+              label={nomes[ativo]}
+              labelText={labelText}
+              payload={[{ dataKey, name: dataKey, value: valores[ativo], payload: data[ativo] } as TooltipPayloadItem]}
+              className="w-max max-w-full"
+            />
+          </div>
+        ) : null}
+      </div>
+    </ChartHtmlRoot>
+  )
+}
+
 /** O perfil: várias categorias, uma por eixo, com duas ou três séries sobrepostas (este mês contra a média). Serve a "onde o mês fugiu do normal", não a magnitude; para o número, as barras. */
 function ChartRadar({
   grid = "polygon",
@@ -4056,6 +4151,7 @@ export {
   ChartRadial,
   ChartSparkline,
   ChartSplit,
+  ChartStrip,
   ChartStyle,
   ChartSwatch,
   ChartTooltip,

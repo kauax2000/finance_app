@@ -13,6 +13,12 @@ export function diaEMes(ymd: string): string {
     return d ? `${d.getDate()} ${formatMonthShortPtBr(d)}` : ymd
 }
 
+/** "9 de novembro", a partir de `YYYY-MM-DD`. */
+export function diaDeMesPorExtenso(ymd: string): string {
+    const d = parseYmdLocal(ymd.slice(0, 10))
+    return d ? `${d.getDate()} de ${formatMonthLongPtBr(d)}` : ymd
+}
+
 /** "nov", a partir de `YYYY-MM`: o eixo curto do gráfico (a série tem no máximo 12 meses, então o mês não se repete). */
 export function mesCurto(ym: string): string {
     const { y, m } = parseYearMonth(ym)

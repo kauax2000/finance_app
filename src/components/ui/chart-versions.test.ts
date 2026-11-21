@@ -9,6 +9,7 @@ import {
   ChartDonut,
   ChartHeatStrip,
   ChartSplit,
+  ChartStrip,
   ChartSwatch,
   ChartTooltipContent,
   waterfallSteps,
@@ -874,6 +875,53 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
     it("o nome acessível lista os dias com o valor", () => {
       expect(html).toContain('role="img"')
       expect(html).toMatch(/aria-label="Gasto por dia da semana: Segunda R\$\s2\.080,00, Terça R\$\s170,00, Quarta R\$\s0,00"/)
+    })
+  })
+
+  describe("ChartStrip", () => {
+    const compras = [
+      { id: "a", valor: 2000 },
+      { id: "b", valor: 240 },
+      { id: "c", valor: 12 },
+    ]
+    const html = renderToStaticMarkup(
+      h(ChartStrip, {
+        data: compras,
+        nameKey: "id",
+        dataKey: "valor",
+        color: "var(--chart-2)",
+        highlight: 2,
+        label: "2 de 3 compras fizeram 80% do mês",
+        labelText: (id: unknown) => `compra ${String(id)}`,
+      })
+    )
+
+    it("desenha um bloco por linha, na largura do valor, 28px de altura e 2px de vão", () => {
+      expect(html.match(/data-slot="chart-strip-block"/g)).toHaveLength(3)
+      expect(html).toContain("flex:2000 1 0")
+      expect(html).toContain("flex:12 1 0")
+      expect(html).toMatch(/data-slot="chart-strip"[^>]*class="[^"]*gap-0\.5/)
+      const bloco = html.match(/<span[^>]*data-slot="chart-strip-block"[^>]*>/)?.[0] ?? ""
+      expect(bloco).toContain("h-7")
+      expect(bloco).toContain("min-w-0.5")
+      expect(bloco).toContain("rounded-sm")
+    })
+    it("as `highlight` primeiras na cor, o resto em --muted", () => {
+      const fundos = [...html.matchAll(/data-slot="chart-strip-block"[^>]*style="[^"]*background-color:([^;"]+)/g)].map((m) => m[1])
+      expect(fundos).toEqual(["var(--chart-2)", "var(--chart-2)", "var(--muted)"])
+    })
+    it("o nome acessível é o `label`, sem listar os blocos", () => {
+      expect(html).toContain('role="img"')
+      expect(html).toContain('aria-label="2 de 3 compras fizeram 80% do mês"')
+    })
+    it("a dica é a enxuta, por bloco, no cursor e no toque", () => {
+      const fonte = semComentarios(CODIGO)
+      const corpo = fonte.slice(fonte.indexOf("function ChartStrip"))
+      const strip = corpo.slice(0, corpo.indexOf("\nfunction ", 10))
+      expect(strip).toContain('variant="single"')
+      expect(strip).toContain("labelText={labelText}")
+      expect(strip).toContain("onPointerEnter")
+      expect(strip).toContain("onPointerDown")
     })
   })
 })

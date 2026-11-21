@@ -59,7 +59,7 @@ import {
     insights,
     maisFrequente,
     porDiaDaSemana,
-    porFaixaDeValor,
+    concentracaoDasCompras,
     repeticoes,
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
@@ -482,7 +482,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 txController.creditCards,
             ),
             diasDaSemana: porDiaDaSemana(txs, tipo),
-            faixas: porFaixaDeValor(txs, tipo),
+            concentracao: concentracaoDasCompras(txs, tipo),
             // com menos de 3 compras a mediana repete o maior e o total
             tipica: compras >= 3 ? compraTipica(txs, tipo) : null,
             frequente: maisFrequente(txs, tipo),
@@ -672,7 +672,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                                 porPagamentoAnterior={analise.porPagamentoAnterior}
                                 cartoes={txController.creditCards}
                                 diasDaSemana={analise.diasDaSemana}
-                                faixas={analise.faixas}
+                                concentracao={analise.concentracao}
                                 maior={analise.maior}
                                 tipica={analise.tipica}
                                 frequente={analise.frequente}

@@ -10,7 +10,7 @@ import type {
     insights,
     maisFrequente,
     porDiaDaSemana,
-    porFaixaDeValor,
+    concentracaoDasCompras,
     repeticoes,
     ritmoDoMes,
 } from "@/lib/categoria-resumo"
@@ -41,7 +41,7 @@ export type ResumoDaCategoriaProps = {
     /** Os cartões da carteira: a bandeira no miolo da rosca de uma forma só. */
     cartoes: Pick<CreditCard, "id" | "brand">[]
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
-    faixas: ReturnType<typeof porFaixaDeValor>
+    concentracao: ReturnType<typeof concentracaoDasCompras>
     maior: Transaction | null
     tipica: ReturnType<typeof compraTipica>
     frequente: ReturnType<typeof maisFrequente>
@@ -84,7 +84,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
         p.ritmo.some((d) => (d.atual ?? 0) !== 0 || d.anterior !== 0) ||
         p.porPagamento.length > 0 ||
         p.diasDaSemana.some((d) => d.total > 0) ||
-        p.faixas.some((f) => f.quantidade > 0)
+        p.concentracao.quantidade > 0
     const temCartoes = p.maior != null || p.tipica != null || p.frequente != null || p.diaDeMais != null
     const temCompromissos = p.compromissos.itens.length > 0 || p.repetidas.length > 0
     const verComprometido = temCompromissos ? rolarAteOComprometido : null
@@ -105,7 +105,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                         porPagamentoAnterior={p.porPagamentoAnterior}
                         cartoes={p.cartoes}
                         diasDaSemana={p.diasDaSemana}
-                        faixas={p.faixas}
+                        concentracao={p.concentracao}
                         onAbrirMes={p.onAbrirMes}
                     />
                 </Secao>

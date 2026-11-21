@@ -21,6 +21,7 @@ import {
   ChartGrid,
   ChartHeatmap,
   ChartHeatStrip,
+  ChartStrip,
   ChartLegend,
   ChartLegendContent,
   ChartLine,
@@ -620,6 +621,39 @@ function DemoFileiraDeCalor() {
         label="Gasto do mês por dia da semana"
         dataTable
       />
+    </div>
+  )
+}
+
+// A Carro de novembro: 16 compras, da maior para a menor; as 5 primeiras fazem 80% do mês.
+const COMPRAS_DO_MES = [
+  ["Revisão dos 40 mil km", 2000], ["Pneu dianteiro", 240], ["IPVA parcela", 210], ["Gasolina", 180], ["Óleo", 150],
+  ["Gasolina", 120], ["Lavagem", 100], ["Gasolina", 85], ["Alinhamento", 70], ["Lavagem", 55], ["Estacionamento", 40],
+  ["Estacionamento", 35], ["Pedágio", 30], ["Estacionamento", 25], ["Pedágio", 18], ["Pedágio", 12],
+].map(([descricao, valor], i) => ({ id: `c${i}`, descricao: descricao as string, valor: valor as number }))
+
+function DemoConcentracao() {
+  return (
+    <div className="flex w-full max-w-72 flex-col gap-3">
+      <p>
+        <span className="nums text-xl font-semibold">5 de 16</span>{" "}
+        <span className="text-sm text-muted-foreground">compras fizeram 80% do mês</span>
+      </p>
+      <div>
+        <ChartStrip
+          data={COMPRAS_DO_MES}
+          nameKey="id"
+          dataKey="valor"
+          color="var(--chart-2)"
+          highlight={5}
+          labelText={(id) => COMPRAS_DO_MES.find((c) => c.id === id)?.descricao ?? String(id)}
+          label="5 de 16 compras fizeram 80% do mês. Maiores: Revisão dos 40 mil km R$ 2.000,00, Pneu dianteiro R$ 240,00, IPVA parcela R$ 210,00."
+        />
+        <div aria-hidden className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+          <span>maiores</span>
+          <span>menores</span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1701,6 +1735,27 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Fileira de concentração"
+        description={
+          <>
+            <code>ChartStrip</code> responde a &quot;o dinheiro vai em muitas compras pequenas ou em poucas grandes?&quot;: um bloco por item, na ordem dada (da maior para a menor), lado a lado com 2px de vão e 28px de altura, na largura do valor (<code>flex-grow</code>, piso de 2px), com o raio <code>rounded-sm</code> da escada pequena. As <code>highlight</code> primeiras vestem a <code>color</code>; as outras, o <code>--muted</code>. A dica é a enxuta (<code>variant=&quot;single&quot;</code>), por bloco, no cursor e no toque, com o rótulo do <code>labelText</code>, e fica dentro da largura da fileira. O nome acessível é o <code>label</code> como veio: com 40 blocos a lista não se ouve, e quem chama resume (a frase e as três maiores). Para duas a quatro partes de um total, o <code>ChartSplit</code>.
+          </>
+        }
+        code={`<ChartStrip
+  data={compras} // da maior para a menor
+  nameKey="id"
+  dataKey="valor"
+  color={corDaCategoria}
+  highlight={n80}
+  labelText={(id) => "Consórcio · 9 de novembro"}
+  label="5 de 16 compras fizeram 80% do mês. Maiores: …"
+/>`}
+        previewClassName="flex-col items-center p-6"
+      >
+        <DemoConcentracao />
+      </DocSection>
+
+      <DocSection
         title="Perfil"
         description={
           <>
@@ -2160,7 +2215,7 @@ const config = {
       />
 
       <PropsTable
-        title="ChartWaterfall, ChartBarList, ChartHeatStrip e ChartAnnotation"
+        title="ChartWaterfall, ChartBarList, ChartHeatStrip, ChartStrip e ChartAnnotation"
         rows={[
           {
             prop: "ChartWaterfall data",
@@ -2179,6 +2234,13 @@ const config = {
             type: "data · nameKey · dataKey · color · labelText",
             description:
               "A fileira de calor: uma célula por linha, `aspect-square` e `rounded-row`, na `color` com a intensidade do valor sobre o maior (piso de 12%); o zerado é tracejado. `labelText` dá o nome por extenso na dica e no nome acessível.",
+          },
+          {
+            prop: "ChartStrip",
+            type: "data · nameKey · dataKey · color · highlight · labelText",
+            default: "highlight 0",
+            description:
+              "A fileira de concentração: um bloco por linha, na ordem dada e na largura do valor (28px, vão de 2px, piso de 2px). As `highlight` primeiras na `color`, as outras em `--muted`; `labelText` recebe o `nameKey` e dá o rótulo da dica. O `label` é o nome acessível inteiro.",
           },
           {
             prop: "ChartAnnotation",

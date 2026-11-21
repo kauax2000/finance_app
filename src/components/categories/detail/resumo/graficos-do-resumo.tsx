@@ -16,6 +16,7 @@ import {
     ChartReferenceDot,
     ChartReferenceLine,
     ChartSplit,
+    ChartStrip,
     ChartSwatch,
     splitPercents,
     type ChartConfig,
@@ -28,8 +29,8 @@ import {
     diasUteisEFimDeSemana,
     resumoDoRitmo,
     tendenciaDosMeses,
+    type concentracaoDasCompras,
     type porDiaDaSemana,
-    type porFaixaDeValor,
     type ritmoDoMes,
 } from "@/lib/categoria-resumo"
 import { currencyBRL, percentBR } from "@/lib/formatters"
@@ -38,11 +39,10 @@ import { paymentMethodIcon } from "@/lib/payment-method-icon"
 import type { CreditCard } from "@/lib/supabase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { reaisInteiros } from "../regua-do-mes-contas"
-import { diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
+import { diaDeMesPorExtenso, diaPorExtenso, mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
 const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfies ChartConfig
-const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
 // A segunda forma do mesmo tipo (dois cartões de crédito) sai a 60% da cor, a terceira em diante a 35%.
 const ESMAECER_A_REPETIDA = [100, 60, 35]
 
@@ -80,13 +80,6 @@ function seloDoRitmo(diferenca: number | null, anteriorHoje: number, mesAnterior
     }
 }
 
-/** O nome da barra de maior valor, ou null quando tudo é zero. */
-function maiorDe<T>(linhas: T[], nome: (l: T) => string, valor: (l: T) => number): string | null {
-    let melhor: T | null = null
-    for (const l of linhas) if (valor(l) > 0 && (!melhor || valor(l) > valor(melhor))) melhor = l
-    return melhor ? nome(melhor) : null
-}
-
 function CartaoDoGrafico({ titulo, apoio, children }: { titulo: string; apoio?: React.ReactNode; children: React.ReactNode }) {
     return (
         <Card className="min-w-0">
@@ -117,7 +110,7 @@ export function GraficosDoResumo({
     porPagamentoAnterior,
     cartoes,
     diasDaSemana,
-    faixas,
+    concentracao,
     onAbrirMes,
 }: {
     tipo: TipoDaCategoria
@@ -133,7 +126,7 @@ export function GraficosDoResumo({
     porPagamentoAnterior: FatiaDePagamento[]
     cartoes: Pick<CreditCard, "id" | "brand">[]
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
-    faixas: ReturnType<typeof porFaixaDeValor>
+    concentracao: ReturnType<typeof concentracaoDasCompras>
     /** Abre esta tela noutro mês (`YYYY-MM`): o toque numa barra do "Mês a mês". */
     onAbrirMes: (yearMonth: string) => void
 }) {
@@ -187,7 +180,32 @@ export function GraficosDoResumo({
     const ritmoDesdeZero = useMemo(() => [{ dia: 0, atual: 0, anterior: 0, faixa: [0, 0] as [number, number], projecao: null }, ...ritmo], [ritmo])
     const comDias = diasDaSemana.some((d) => d.total > 0)
     const lados = diasUteisEFimDeSemana(diasDaSemana)
-    const comFaixas = faixas.some((f) => f.quantidade > 0)
+    const comCompras = concentracao.quantidade > 0
+    // A fileira: cada compra um bloco, da maior para a menor; o rabo acima de 40 vira "outras M compras".
+    const umaOuMais = (n: number) => `${n} ${despesa ? "compra" : "entrada"}${n === 1 ? "" : "s"}`
+    const frase =
+        concentracao.quantidade === 1
+            ? { numero: umaOuMais(1), resto: "fez o mês inteiro" }
+            : {
+                  numero: `${concentracao.n80} de ${concentracao.quantidade}`,
+                  resto: `${despesa ? "compras" : "entradas"} ${concentracao.n80 === 1 ? "fez" : "fizeram"} 80% do mês`,
+              }
+    const blocos = useMemo(
+        () => [
+            ...concentracao.compras.map((c) => ({ id: c.id, valor: c.valor })),
+            ...(concentracao.outras ? [{ id: "outras", valor: concentracao.outras.valor }] : []),
+        ],
+        [concentracao],
+    )
+    const rotuloDoBloco = (id: unknown) => {
+        if (id === "outras" && concentracao.outras) return `outras ${umaOuMais(concentracao.outras.quantidade)}`
+        const c = concentracao.compras.find((x) => x.id === id)
+        return c ? [c.descricao, diaDeMesPorExtenso(c.data)].filter(Boolean).join(" · ") : String(id)
+    }
+    const nomeDaFileira = `${frase.numero} ${frase.resto}. ${despesa ? "Maiores" : "Maiores entradas"}: ${concentracao.compras
+        .slice(0, 3)
+        .map((c) => `${c.descricao || diaDeMesPorExtenso(c.data)} ${currencyBRL(c.valor)}`)
+        .join(", ")}.`
     const comPagamento = porPagamento.length > 0
     // O mesmo arredondamento da barra, para o destaque e a lista baterem com ela.
     const pctsPagamento = splitPercents(porPagamento.map((f) => f.valor))
@@ -243,7 +261,7 @@ export function GraficosDoResumo({
         },
     }
 
-    if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
+    if (!comMeses && !comRitmo && !comDias && !comCompras && !comPagamento) return null
 
     return (
         <div className="grid gap-3">
@@ -387,7 +405,7 @@ export function GraficosDoResumo({
                     ) : null}
                 </div>
             ) : null}
-            {comPagamento || comDias || comFaixas ? (
+            {comPagamento || comDias || comCompras ? (
                 <div className="grid gap-3 md:grid-cols-3">
                     {comPagamento ? (
                         <CartaoDoGrafico
@@ -526,22 +544,29 @@ export function GraficosDoResumo({
                             </div>
                         </CartaoDoGrafico>
                     ) : null}
-                    {comFaixas ? (
+                    {comCompras ? (
                         <CartaoDoGrafico titulo={despesa ? "Tamanho das compras" : "Tamanho das entradas"}>
-                            <ChartBars
-                                    grid={false}
-                                config={CONFIG_FAIXAS}
-                                data={faixas}
-                                x="faixa"
-                                format="number"
-                                selected={maiorDe(faixas, (f) => f.faixa, (f) => f.quantidade)}
-                                selectedColor={corDaSerie}
-                                yAxis={false}
-                                aspect="auto"
-                                className="h-32 w-full"
-                                label={despesa ? "Quantas compras em cada faixa de valor" : "Quantas entradas em cada faixa de valor"}
-                                description="A faixa mais comum em destaque."
-                            />
+                            <div className="flex flex-col gap-3">
+                                <p className="min-w-0">
+                                    <span className="nums text-xl font-semibold">{frase.numero}</span>{" "}
+                                    <span className="text-sm text-muted-foreground">{frase.resto}</span>
+                                </p>
+                                <div>
+                                    <ChartStrip
+                                        data={blocos}
+                                        nameKey="id"
+                                        dataKey="valor"
+                                        color={corDaSerie}
+                                        highlight={Math.min(concentracao.n80, concentracao.compras.length)}
+                                        labelText={rotuloDoBloco}
+                                        label={nomeDaFileira}
+                                    />
+                                    <div aria-hidden className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+                                        <span>maiores</span>
+                                        <span>menores</span>
+                                    </div>
+                                </div>
+                            </div>
                         </CartaoDoGrafico>
                     ) : null}
                 </div>
