@@ -18,7 +18,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, TRAJETO_MACIO, viajarLiquido } from "@/lib/liquid-move"
-import { NOME_DO_ARO, animarAurora, criarAro, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
+import { animarAurora, criarAro, criarFaixa, type Sentido } from "@/lib/aurora-do-tema"
 import { nomearVidros } from "@/lib/vidro-na-revelacao"
 
 /**
@@ -167,7 +167,7 @@ export function ThemeToggle({
         // dela recomeçava do início quando ela acabava (o polegar voltava e viajava de novo).
         flushSync(() => setPedido(valor))
         let tirarFaixa: (() => void) | undefined
-        let tirarAro: (() => void) | undefined
+        let aurora: ReturnType<typeof criarAro> | undefined
         // O sentido é do destino, lido depois da troca ("sistema" vira o tema que resultou): o
         // escuro cai de cima, o claro sobe de baixo.
         let sentido: Sentido = "desce"
@@ -176,16 +176,15 @@ export function ThemeToggle({
             sentido = html.classList.contains("dark") ? "desce" : "sobe"
             html.dataset.aurora = sentido
             tirarFaixa = criarFaixa(document, altura, sentido)
-            tirarAro = criarAro(document, altura, largura)
+            aurora = criarAro(document, altura, largura)
         })
         transicao.ready
-            .then(() => {
-                const aro = document.querySelector<HTMLElement>(`.${NOME_DO_ARO}`) ?? undefined
-                return animarAurora(html, altura, largura, sentido, vidros.vidros, aro)[0].finished.then(() => {
+            .then(() =>
+                animarAurora(html, altura, largura, sentido, vidros.vidros, aurora?.aro)[0].finished.then(() => {
                     tirarFaixa?.()
-                    tirarAro?.()
-                })
-            })
+                    aurora?.tirar()
+                }),
+            )
             .catch(() => {})
         transicao.finished.finally(() => {
             // A transição pulada não limpa o que a seguinte já preparou.
@@ -197,7 +196,7 @@ export function ThemeToggle({
             // A rede de segurança: a faixa e o aro já saíram no fim da animação da faixa, e tirar de
             // novo não faz nada.
             tirarFaixa?.()
-            tirarAro?.()
+            aurora?.tirar()
             vidros.desfazer()
         })
     }

@@ -2449,6 +2449,13 @@
   --aurora-3: var(--brand-magenta);
 }
 
+/* O brilho do aro, na foto já mascarada: o filtro vem depois da máscara (`@utility
+   theme-aurora-aro`). Os pseudos da transição herdam a paleta do `<html>`. */
+.theme-reveal::view-transition-new(theme-aurora-aro) {
+  filter: blur(1.5px)
+    drop-shadow(0 0 6px color-mix(in oklch, var(--aurora-3) 70%, var(--scrim-foreground)));
+}
+
 /* A faixa da aurora: as três paradas do destino, borradas. Subindo, ela vira no eixo Y
    para a última parada ficar na frente, colada à borda. Exceção nomeada ao arco-íris sob
    texto: ela passa por cima do texto por ~1s e não é lida. O volume mora em
@@ -2493,7 +2500,9 @@
 
 /* O aro aceso da aurora: o traço da onda (a máscara inline, `lib/aurora-do-tema`) na cor
    clara da paleta, a terceira parada puxada ao branco (`--scrim-foreground`, branco nos dois
-   temas), com um halo na mesma cor. Anda com a borda e some depois da varredura. */
+   temas). Anda com a borda e some depois da varredura. O borrão e o halo moram na foto dele
+   (`::view-transition-new(theme-aurora-aro)`, logo abaixo da faixa): no próprio elemento o
+   filtro roda antes da máscara, e a máscara cortava o halo. */
 @utility theme-aurora-aro {
   position: fixed;
   left: 0;
@@ -2502,8 +2511,6 @@
   pointer-events: none;
   z-index: var(--z-toast);
   background: color-mix(in oklch, var(--aurora-3) 45%, var(--scrim-foreground));
-  filter: blur(1.5px)
-    drop-shadow(0 0 6px color-mix(in oklch, var(--aurora-3) 70%, var(--scrim-foreground)));
 }
 
 /* A troca de carteira, numa View Transition (`trocarComTransicao` do

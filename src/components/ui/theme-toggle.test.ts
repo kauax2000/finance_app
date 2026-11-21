@@ -239,7 +239,7 @@ describe("o trilho de tema", () => {
 
     it("o vidro à vista ganha nome só durante a revelação (no WebKit a foto não desenha borrão)", () => {
         expect(CODIGO).toContain("nomearVidros(document)")
-        expect(CODIGO).toContain("animarAurora(html, altura, largura, sentido, vidros.vidros, aro)")
+        expect(CODIGO).toContain("animarAurora(html, altura, largura, sentido, vidros.vidros, aurora?.aro)")
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*vidros\.desfazer\(\)/)
         const css = lerFonte("src/app/globals.css")
         expect(css).not.toContain(".theme-reveal\n    .glass-surface")
@@ -260,7 +260,7 @@ describe("o trilho de tema", () => {
         // A faixa sai quando a animação dela acaba, 50ms antes da transição: tirada só no
         // `finished`, a faixa de verdade podia pintar um quadro no topo.
         // A faixa é a primeira animação devolvida; o aro sai com ela.
-        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros, aro\)\[0\]\.finished\.then\(/)
+        expect(CODIGO).toMatch(/animarAurora\(html, altura, largura, sentido, vidros\.vidros, aurora\?\.aro\)\[0\]\.finished\.then\(/)
         expect(CODIGO).not.toContain("REVELACAO")
         expect(CODIGO).not.toContain("circle(")
         const css = lerFonte("src/app/globals.css")
@@ -282,7 +282,9 @@ describe("o trilho de tema", () => {
         expect(aro).toBeGreaterThan(tema)
         expect(aro).toBeLessThan(fimDoCallback)
         expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*delete html\.dataset\.aurora/)
-        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*tirarAro\?\.\(\)/)
+        expect(CODIGO).toMatch(/finished\.finally\(\(\) => \{[^}]*aurora\?\.tirar\(\)/)
+        // O aro vem de quem o criou, e não de uma busca no documento.
+        expect(CODIGO).not.toContain("querySelector<HTMLElement>(`.${NOME_DO_ARO}`)")
     })
 
     it("o polegar sai no toque, fora da View Transition: só o tema troca dentro dela", () => {

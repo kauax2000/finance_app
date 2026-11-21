@@ -152,8 +152,8 @@ export function quadrosDoAro(altura: number, sentido: Sentido): Keyframe[] {
     ]
 }
 
-/** Cria o aro (no callback da transição, depois do tema) e devolve como tirá-lo. */
-export function criarAro(doc: Document, altura: number, largura: number): () => void {
+/** Cria o aro (no callback da transição, depois do tema) e devolve ele e como tirá-lo. */
+export function criarAro(doc: Document, altura: number, largura: number): { aro: HTMLElement; tirar: () => void } {
     doc.querySelectorAll(`.${NOME_DO_ARO}`).forEach((el) => el.remove())
     const aro = doc.createElement("div")
     aro.className = NOME_DO_ARO
@@ -169,7 +169,7 @@ export function criarAro(doc: Document, altura: number, largura: number): () => 
     aro.style.webkitMaskRepeat = "repeat-x"
     aro.style.viewTransitionName = NOME_DO_ARO
     doc.body.append(aro)
-    return () => aro.remove()
+    return { aro, tirar: () => aro.remove() }
 }
 
 /**
@@ -188,11 +188,11 @@ export function animarAurora(
     aro?: HTMLElement,
 ): Animation[] {
     const tempo = { duration: RITMO[sentido].duracao, easing: "linear" }
+    // A faixa e o aro acabam 50ms antes e saem juntos, ainda dentro da transição.
+    const antes = { ...tempo, duration: tempo.duration - 50, fill: "both" as const }
     const animacoes = [
         html.animate(quadrosDaFaixa(altura, sentido), {
-            ...tempo,
-            duration: tempo.duration - 50,
-            fill: "both",
+            ...antes,
             pseudoElement: `::view-transition-new(${NOME_DA_FAIXA})`,
         }),
         html.animate(quadrosDaMascara(altura, largura, sentido), { ...tempo, pseudoElement: "::view-transition-new(root)" }),
@@ -202,13 +202,12 @@ export function animarAurora(
         const [x0, x1, x2] = deslize(largura)
         animacoes.push(
             html.animate(quadrosDoAro(altura, sentido), {
-                ...tempo,
-                fill: "both",
+                ...antes,
                 pseudoElement: `::view-transition-new(${NOME_DO_ARO})`,
             }),
             aro.animate(
                 [{ ...posicao(x0), easing: RITMO[sentido].easing }, { ...posicao(x1), offset: AURORA.varredura }, posicao(x2)],
-                { ...tempo, fill: "both" },
+                antes,
             ),
         )
     }
