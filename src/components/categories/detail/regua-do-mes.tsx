@@ -1,19 +1,12 @@
 "use client"
 
 import type { ReactNode } from "react"
-import {
-    DescriptionDetails,
-    DescriptionList,
-    DescriptionListItem,
-    DescriptionTerm,
-} from "@/components/ui/description-list"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageSection } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { Caption, Muted } from "@/components/ui/typography"
 import type { Comparacao, TipoDaCategoria } from "@/lib/categoria-detalhe"
-import { currencyBRL, percentBR } from "@/lib/formatters"
+import { currencyBRL } from "@/lib/formatters"
 import type { Transaction } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { escalaDaRegua, fraseDaComparacao, nomeDoMes, reaisInteiros, vereditoDaMedia } from "./regua-do-mes-contas"
@@ -38,13 +31,10 @@ export type FaixaDoMesProps = {
 
 /** O valor, a comparação com o mês anterior, a régua (limite ou média) e o veredito. */
 export function ReguaDoMes({
-    fatosNaLinha,
     sufixo,
     children,
     ...props
 }: FaixaDoMesProps & {
-    /** Os fatos à direita da linha do valor (1C). */
-    fatosNaLinha?: ReactNode
     /** O fim do veredito, depois de " · " (1C: a média por lançamento). */
     sufixo?: string | null
     /** O que vem depois do veredito (1A: os fatos em colunas). */
@@ -92,14 +82,7 @@ export function ReguaDoMes({
             <div className="grid min-w-0 gap-4">
                 <div className="grid gap-3">
                     <Caption>{`${despesa ? "Gasto" : "Recebido"} em ${mes}`}</Caption>
-                    {fatosNaLinha ? (
-                        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-                            {valor}
-                            <div className="2xl:hidden">{fatosNaLinha}</div>
-                        </div>
-                    ) : (
-                        valor
-                    )}
+                    {valor}
                 </div>
                 <div>
                     <div className={cn("2xl:flex 2xl:items-center 2xl:gap-12", veredito && "mb-3")}>
@@ -134,51 +117,12 @@ export function ReguaDoMes({
                         ) : (
                             <BarraDoMes {...props} className="min-w-0 2xl:flex-1" />
                         )}
-                        {fatosNaLinha ? (
-                            <div className="hidden shrink-0 items-center gap-12 2xl:flex">
-                                <Separator orientation="vertical" className="h-12" />
-                                {fatosNaLinha}
-                            </div>
-                        ) : null}
                     </div>
                     {veredito ? <Muted>{veredito}</Muted> : null}
                 </div>
                 {children}
             </div>
         </PageSection>
-    )
-}
-
-/** Os fatos do mês, em linha: lançamentos, a média por lançamento, o maior e o peso na carteira. */
-export function FatosDoMes({ tipo, lancado, pesoNoTotal, quantidade, maior }: FaixaDoMesProps) {
-    const despesa = tipo === "expense"
-    const fatos: { termo: string; valor: ReactNode }[] = [
-        { termo: "Lançamentos", valor: quantidade },
-        ...(quantidade > 0 ? [{ termo: "Por lançamento", valor: <MoneyDisplay value={lancado / quantidade} size="lg" /> }] : []),
-        ...(maior
-            ? [{ termo: despesa ? "Maior gasto" : "Maior entrada", valor: <MoneyDisplay value={Number(maior.amount)} size="lg" /> }]
-            : []),
-        ...(pesoNoTotal != null && lancado !== 0
-            ? [
-                  {
-                      termo: despesa ? "Do gasto da carteira" : "Da receita da carteira",
-                      valor: percentBR(pesoNoTotal, { maximumFractionDigits: 0 }),
-                  },
-              ]
-            : []),
-    ]
-
-    return (
-        <DescriptionList className="flex-row gap-9">
-            {fatos.map((f) => (
-                <DescriptionListItem key={f.termo}>
-                    <DescriptionTerm>{f.termo}</DescriptionTerm>
-                    <DescriptionDetails size="lg" className="font-mono font-semibold">
-                        {f.valor}
-                    </DescriptionDetails>
-                </DescriptionListItem>
-            ))}
-        </DescriptionList>
     )
 }
 
