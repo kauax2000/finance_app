@@ -55,6 +55,7 @@ import {
     compraTipica,
     compromissos,
     diaDeMaisGasto,
+    fatosDoMes,
     fraseDoResumo,
     insights,
     maisFrequente,
@@ -495,6 +496,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 compras,
                 proximoMes,
             }),
+            fatos: fatosDoMes({ tipo, yearMonth, lancado: mes.lancado, media, maior, compras, proximoMes }),
+            comMedia: mes.lancado > 0 && media != null && media > 0,
             // O convidado não mexe no limite: a sugestão fica, sem o botão.
             insights: insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).map((i) =>
                 i.acao === "limite" && !podeEscrever ? { ...i, acao: undefined } : i,
@@ -592,6 +595,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     ) : null
 
     const totalLancamentos = expenseMonthRows?.length ?? txController.totalCount ?? 0
+    // O lançamento que puxou o mês abre o detalhe dele (a folha mora na aba Lançamentos, montada sempre).
+    const maiorQuePuxou = analise?.fatos.some((f) => f.id === "puxou") ? analise.maior : null
 
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-6">
@@ -666,6 +671,12 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                                 hojeYmd={hojeYmd}
                                 aberto={aberto}
                                 frase={analise.frase}
+                                fatos={analise.fatos}
+                                quantosLancamentos={totalLancamentos}
+                                comMedia={analise.comMedia}
+                                onAbrirLancamento={
+                                    maiorQuePuxou ? () => txController.openTransactionDetail(maiorQuePuxou) : null
+                                }
                                 serie={analise.serie}
                                 media={analise.media}
                                 ritmo={analise.ritmo}

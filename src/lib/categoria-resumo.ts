@@ -228,7 +228,8 @@ export function repeticoes(args: {
     })
 }
 
-const nomeDoMes = (ym: string) => {
+/** O mês sem o ano, com maiúscula ("Novembro"). */
+export const nomeDoMes = (ym: string) => {
     const n = labelYearMonthPt(ym).split(" ")[0]
     return n.charAt(0).toLocaleUpperCase("pt-BR") + n.slice(1)
 }

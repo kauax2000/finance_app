@@ -6,6 +6,7 @@ import type {
     Compromissos,
     compraTipica,
     diaDeMaisGasto,
+    fatosDoMes,
     fraseDoResumo,
     insights,
     maisFrequente,
@@ -17,6 +18,7 @@ import type {
 import type { Transaction } from "@/lib/supabase"
 import { CartoesDoGasto } from "./cartoes-do-gasto"
 import { CompromissosERepeticoes } from "./compromissos-e-repeticoes"
+import { FatosDoMes } from "./fatos-do-mes"
 import { FraseDoResumo } from "./frase-do-resumo"
 import { GraficosDoResumo } from "./graficos-do-resumo"
 import { InsightsDoResumo } from "./insights-do-resumo"
@@ -30,6 +32,13 @@ export type ResumoDaCategoriaProps = {
     hojeYmd: string
     aberto: boolean
     frase: ReturnType<typeof fraseDoResumo>
+    fatos: ReturnType<typeof fatosDoMes>
+    /** Quantos lançamentos o mês tem, para o rodapé da frase. */
+    quantosLancamentos: number
+    /** A média dos últimos 6 meses entrou na frase. */
+    comMedia: boolean
+    /** Abre o detalhe do lançamento que puxou o mês; null sem ele. */
+    onAbrirLancamento: (() => void) | null
     serie: { yearMonth: string; total: number }[]
     media: number | null
     ritmo: ReturnType<typeof ritmoDoMes>
@@ -46,10 +55,19 @@ export type ResumoDaCategoriaProps = {
     onDefinirLimite: () => void
 }
 
+const ID_COMPROMETIDO = "ja-comprometido"
+
+/** Leva a "Já comprometido" (o que o mês seguinte já tem previsto); sem animação com movimento reduzido. */
+function rolarAteOComprometido() {
+    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    document.getElementById(ID_COMPROMETIDO)?.scrollIntoView({ behavior: reduzido ? "auto" : "smooth", block: "start" })
+}
+
 /** Uma seção do Resumo com o título por cima; quem decide se ela aparece é quem chama. */
-function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Secao({ titulo, id, children }: { titulo: string; id?: string; children: React.ReactNode }) {
     return (
-        <PageSection>
+        // A âncora para no pé da barra do topo, e não por baixo dela.
+        <PageSection id={id} className={id ? "scroll-mt-(--top-bar-bottom)" : undefined}>
             <PageSectionHeader>
                 <PageSectionTitle>{titulo}</PageSectionTitle>
             </PageSectionHeader>
@@ -70,10 +88,22 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
         p.faixas.some((f) => f.quantidade > 0)
     const temCartoes = p.maior != null || p.tipica != null || p.frequente != null || p.diaDeMais != null
     const temCompromissos = p.compromissos.itens.length > 0 || p.repetidas.length > 0
+    const verComprometido = temCompromissos ? rolarAteOComprometido : null
+    const proximoMes = p.fatos.find((f) => f.id === "previsto")?.titulo ?? null
     return (
         <div className="grid gap-6">
             <Secao titulo="Em resumo">
-                <FraseDoResumo frase={p.frase} tipo={p.tipo} cor={p.cor} />
+                <FraseDoResumo
+                    frase={p.frase}
+                    tipo={p.tipo}
+                    cor={p.cor}
+                    yearMonth={p.yearMonth}
+                    quantosLancamentos={p.quantosLancamentos}
+                    comMedia={p.comMedia}
+                    onAbrirLancamento={p.onAbrirLancamento}
+                    proximoMes={verComprometido ? proximoMes : null}
+                    onVerProximoMes={rolarAteOComprometido}
+                />
             </Secao>
             {temGraficos ? (
                 <Secao titulo="Como o mês andou">
@@ -98,7 +128,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                 </Secao>
             ) : null}
             {temCompromissos ? (
-                <Secao titulo={despesa ? "Já comprometido" : "O que entra todo mês"}>
+                <Secao titulo={despesa ? "Já comprometido" : "O que entra todo mês"} id={ID_COMPROMETIDO}>
                     <CompromissosERepeticoes
                         tipo={p.tipo}
                         cor={p.cor}
@@ -108,9 +138,18 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                     />
                 </Secao>
             ) : null}
-            {p.insights.length > 0 ? (
+            {p.fatos.length > 0 || p.insights.length > 0 ? (
                 <Secao titulo="Para ficar de olho">
-                    <InsightsDoResumo itens={p.insights} onDefinirLimite={p.onDefinirLimite} />
+                    <div className="grid gap-3">
+                        <FatosDoMes
+                            fatos={p.fatos}
+                            tipo={p.tipo}
+                            cor={p.cor}
+                            onAbrirLancamento={p.onAbrirLancamento}
+                            onVerComprometido={verComprometido}
+                        />
+                        <InsightsDoResumo itens={p.insights} onDefinirLimite={p.onDefinirLimite} />
+                    </div>
                 </Secao>
             ) : null}
         </div>

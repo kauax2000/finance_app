@@ -18,7 +18,7 @@ export function CategoryDetailSkeleton() {
                     <Skeleton shape="text" className="w-56" />
                 </div>
                 <Skeleton shape="control" className="w-full md:w-64" />
-                <Skeleton shape="surface" className="h-20" />
+                <Skeleton shape="surface" className="h-44" />
                 <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
                     <Skeleton shape="surface" className="h-64" />
                     <Skeleton shape="surface" className="h-64 max-md:hidden" />
