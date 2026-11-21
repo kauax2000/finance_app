@@ -8,7 +8,7 @@ import { shiftYearMonth } from "@/lib/budget-month"
 import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { porDiaDaSemana, porFaixaDeValor, ritmoDoMes } from "@/lib/categoria-resumo"
 import { currencyBRL } from "@/lib/formatters"
-import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
+import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
@@ -68,7 +68,8 @@ export function GraficosDoResumo({
     faixas: ReturnType<typeof porFaixaDeValor>
 }) {
     const despesa = tipo === "expense"
-    const corDaSerie = tileColorFor(cor) ?? (despesa ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT)
+    // A série tem a cor que o ladrilho desenha, e não a parada crua da paleta.
+    const corDaSerie = tileVividColor(tileColorFor(cor) ?? (despesa ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT))
     const oQue = despesa ? "Gasto" : "Entrada"
 
     // Os meses zerados do começo achatariam a curva: ela abre no primeiro mês com valor, com no mínimo 3 pontos.

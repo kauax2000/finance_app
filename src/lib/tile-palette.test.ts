@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -7,6 +9,7 @@ import {
     TILE_INCOME_DEFAULT,
     TILE_PALETTE,
     tileColorFor,
+    tileVividColor,
 } from "./tile-palette"
 
 /**
@@ -95,5 +98,14 @@ describe("corExataDaCarteira", () => {
         expect(corExataDaCarteira("#2563EB")).toBeUndefined()
         expect(corExataDaCarteira(null)).toBeUndefined()
         expect(corExataDaCarteira("azul")).toBeUndefined()
+    })
+})
+
+describe("tileVividColor", () => {
+    it("usa a mesma fórmula da superfície do tile-vivid", () => {
+        const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+        const superficie = css.match(/@utility tile-vivid \{\s*--tile-surface: oklch\(from var\(--tile-color\) (.+?)\);/)?.[1]
+        expect(superficie).toBeTruthy()
+        expect(tileVividColor("#FFB49B")).toBe(`oklch(from #FFB49B ${superficie})`)
     })
 })

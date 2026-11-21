@@ -27,7 +27,7 @@ import {
     type Variacao,
 } from "@/lib/categoria-situacao"
 import { currencyBRL } from "@/lib/formatters"
-import { TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
+import { TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { formatMonthShortPtBr } from "@/lib/transaction-date"
 
 function stopLinkNavigation(e: React.MouseEvent) {
@@ -234,7 +234,7 @@ export function IncomeCategoryCard({
                             className="w-full max-md:h-26 md:h-16 max-md:[&_.recharts-reference-line]:hidden"
                             data={serie ?? []}
                             reference={media}
-                            config={{ total: { label: category.name, color } }}
+                            config={{ total: { label: category.name, color: tileVividColor(color) } }}
                             label={`Receita em ${category.name} nos últimos 6 meses`}
                             description={descricaoDaSerie}
                         />

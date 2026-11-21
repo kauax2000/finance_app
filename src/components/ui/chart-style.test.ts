@@ -11,6 +11,11 @@ describe("chartStyleCss", () => {
         expect(css).toContain("--color-despesa: oklch(0.6 0.2 25);")
     })
 
+    it("aceita a cor relativa do ladrilho", () => {
+        const cor = "oklch(from #FFB49B 0.76 clamp(0, (c - 0.02) * 10, 0.2) h)"
+        expect(chartStyleCss("c1", { total: { label: "Carro", color: cor } })).toContain(`--color-total: ${cor};`)
+    })
+
     it("não deixa cor nem chave fecharem a regra", () => {
         const css = chartStyleCss("c1", {
             ok: { label: "Ok", color: "#10B981" },

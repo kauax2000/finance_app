@@ -408,7 +408,9 @@ const SAFE_CHART_KEY = /^[A-Za-z0-9_-]+$/
 function chartKeyToken(key: string): string {
   return key.replace(/[^A-Za-z0-9_-]/g, "-")
 }
-const SAFE_CHART_COLOR = /^[#\w\s().,%/-]+$/
+// O `*` entra pela cor relativa do ladrilho (`tileVividColor`: `clamp(0, (c - 0.02) * 10, 0.2)`).
+// Ele não sai da declaração: `{`, `}`, `;` e `<` continuam fora.
+const SAFE_CHART_COLOR = /^[#\w\s().,%/*-]+$/
 
 export function chartStyleCss(id: string, config: ChartConfig): string | null {
   const entries = Object.entries(config).filter(

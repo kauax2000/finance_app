@@ -11,7 +11,7 @@ import { Caption } from "@/components/ui/typography"
 import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { Compromissos, repeticoes } from "@/lib/categoria-resumo"
 import { currencyBRL } from "@/lib/formatters"
-import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor } from "@/lib/tile-palette"
+import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
 import { mesPorExtenso } from "./rotulos"
 
 type Compromisso = Compromissos["itens"][number]
@@ -86,7 +86,8 @@ export function CompromissosERepeticoes({
     const itens = [...compromissos.itens].sort(pelaProximaData)
     if (itens.length === 0 && repetidas.length === 0) return null
     const hojeYm = hojeYmd.slice(0, 7)
-    const corDaCategoria = tileColorFor(cor) ?? (tipo === "expense" ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT)
+    // As parcelas pagas têm a cor que o ladrilho desenha.
+    const corDaCategoria = tileVividColor(tileColorFor(cor) ?? (tipo === "expense" ? TILE_EXPENSE_DEFAULT : TILE_INCOME_DEFAULT))
     const projecao = repetidas
         .filter((r) => (r.projecaoNoMes ?? 0) > 0)
         .sort((a, b) => (b.projecaoNoMes ?? 0) - (a.projecaoNoMes ?? 0))[0]

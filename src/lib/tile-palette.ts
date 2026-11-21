@@ -85,6 +85,17 @@ export function tileColorFor(
     return dobrado === undefined ? bruto : dobrado
 }
 
+/**
+ * A cor que o ladrilho vivo desenha, como valor CSS: a superfície do
+ * `@utility tile-vivid` (`globals.css`) aplicada a uma cor. O gráfico da
+ * categoria pinta com ela, para a série ter a cor do ladrilho, e não a parada
+ * crua da paleta (decisão do dono, 21/11/2026). `tile-palette.test.ts` confere
+ * que a fórmula é a mesma do CSS.
+ */
+export function tileVividColor(cor: string): string {
+    return `oklch(from ${cor} 0.76 clamp(0, (c - 0.02) * 10, 0.2) h)`
+}
+
 const canalLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
 
 /**
