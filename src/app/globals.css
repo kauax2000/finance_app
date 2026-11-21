@@ -1221,12 +1221,17 @@
     margin-inline: 0;
     height: 44px;
     font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
     background: var(--primary);
     color: var(--primary-foreground);
   }
-  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button]:hover,
   [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button]:active {
     background: var(--primary-hover);
+  }
+  @media (hover: hover) {
+    [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button]:hover {
+      background: var(--primary-hover);
+    }
   }
 }
 
