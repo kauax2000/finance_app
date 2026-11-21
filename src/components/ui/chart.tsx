@@ -882,6 +882,24 @@ type LegendPayloadItem = {
   payload?: Record<string, unknown>
 }
 
+/** A amostra de cor de uma série, o ponto de 8px da legenda: para quem escreve a legenda fora do gráfico (a lista do "Como foi pago"). */
+function ChartSwatch({
+  color,
+  className,
+}: {
+  color?: string
+  className?: string
+}) {
+  return (
+    <span
+      aria-hidden
+      data-slot="chart-swatch"
+      className={cn("size-2 shrink-0 rounded-full", className)}
+      style={{ backgroundColor: color }}
+    />
+  )
+}
+
 function ChartLegendContent({
   className,
   hideIcon = false,
@@ -964,11 +982,7 @@ function ChartLegendContent({
                 style={{ borderColor: item.color }}
               />
             ) : (
-              <span
-                aria-hidden
-                className="size-2 shrink-0 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
+              <ChartSwatch color={item.color} />
             )}
             <span>{itemConfig?.label ?? item.value}</span>
             {valor ? (
@@ -2431,13 +2445,8 @@ function ChartDonut({
                   if (ehCursor(e)) setAtivoLista(i)
                 }}
               >
-                <span
-                  aria-hidden
-                  className="size-2 shrink-0 rounded-full"
-                  // A lista mora fora do `ChartContainer`, onde as `--color-<chave>` do
-                  // `config` não existem: a cor declarada entra direto.
-                  style={{ backgroundColor: corDoPonto(i) }}
-                />
+                {/* A lista mora fora do `ChartContainer`, onde as `--color-<chave>` do `config` não existem: a cor declarada entra direto. */}
+                <ChartSwatch color={corDoPonto(i)} />
                 {/* O nome quebra em até duas linhas: cortado, "Bradesco Visa Infi…" não dizia qual cartão. */}
                 {legendDetail ? (
                   // Nome e detalhe são o mesmo dado em duas linhas: sem `gap`.
@@ -2700,8 +2709,8 @@ function ChartSplit({
 }: Omit<ChartFormProps, "series" | "aspect" | "legend" | "tooltip" | "children"> & {
   nameKey: string
   dataKey: string
-  /** `below` escreve nome e porcentagem sob o começo de cada segmento (o que tem menos de 12% cai para uma legenda embaixo); `legend` põe todos numa legenda só. */
-  labels?: "below" | "legend"
+  /** `below` escreve nome e porcentagem sob o começo de cada segmento (o que tem menos de 12% cai para uma legenda embaixo); `legend` põe todos numa legenda só; `none` é só a barra, para quem lista as partes ao lado (o nome acessível segue com o resumo). */
+  labels?: "below" | "legend" | "none"
 }) {
   const [ativo, setAtivo] = React.useState<number | null>(null)
   const chaves = data.map((d) => String(d[nameKey] ?? ""))
@@ -2714,7 +2723,12 @@ function ChartSplit({
     .join(", ")
   const naLegenda = chaves
     .map((k, i) => i)
-    .filter((i) => valores[i] > 0 && (labels === "legend" || pcts[i] < CHART_SPLIT_LABEL_MIN))
+    .filter(
+      (i) =>
+        labels !== "none" &&
+        valores[i] > 0 &&
+        (labels === "legend" || pcts[i] < CHART_SPLIT_LABEL_MIN)
+    )
 
   return (
     <ChartFrame
@@ -2761,6 +2775,7 @@ function ChartSplit({
         {labels === "below" ? (
           <div
             aria-hidden
+            data-slot="chart-split-labels"
             className={cn("flex w-full gap-1 pt-2", chartRiseClassName)}
           >
             {chaves.map((k, i) =>
@@ -2922,11 +2937,7 @@ function ChartRadial({
                 // A linha só transiciona na entrada, então o atraso não pesa depois.
                 style={{ transitionDelay: `${150 + i * CHART_STAGGER_MS}ms` }}
               >
-                <span
-                  aria-hidden
-                  className="size-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: anel.cor }}
-                />
+                <ChartSwatch color={anel.cor} />
                 <span className="min-w-0 flex-1 truncate">
                   {config[anel.nome]?.label ?? anel.nome}
                 </span>
@@ -3931,6 +3942,7 @@ export {
   ChartSparkline,
   ChartSplit,
   ChartStyle,
+  ChartSwatch,
   ChartTooltip,
   ChartTooltipContent,
   ChartWaterfall,

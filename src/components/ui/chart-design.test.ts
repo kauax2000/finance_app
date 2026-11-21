@@ -18,7 +18,9 @@ describe("Chart", () => {
 
   it("as amostras de cor são pontos, e não quadradinhos", () => {
     expect(CODIGO).not.toContain('className="size-2 shrink-0 rounded-xs"')
-    expect(CODIGO.match(/className="size-2 shrink-0 rounded-full"/g)).toHaveLength(3)
+    // As três listas (legenda, lista da rosca, anéis) vestem a mesma amostra, a `ChartSwatch`.
+    expect(CODIGO).toContain('cn("size-2 shrink-0 rounded-full", className)')
+    expect(CODIGO.match(/<ChartSwatch color=/g)).toHaveLength(3)
     expect(CODIGO).toContain('"size-2 rounded-full": indicator === "dot"')
   })
 

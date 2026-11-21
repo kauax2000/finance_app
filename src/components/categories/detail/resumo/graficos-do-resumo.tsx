@@ -12,15 +12,18 @@ import {
 import { CreditCardBrandChip } from "@/components/credit-cards/credit-card-brand-chip"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import {
     ChartAnnotation,
     ChartArea,
     ChartBars,
     ChartDonut,
-    ChartDonutCenter,
     ChartLine,
     ChartReferenceDot,
     ChartReferenceLine,
+    ChartSplit,
+    ChartSwatch,
+    splitPercents,
     type ChartConfig,
 } from "@/components/ui/chart"
 import { Caption } from "@/components/ui/typography"
@@ -94,11 +97,16 @@ function maiorDe<T>(linhas: T[], nome: (l: T) => string, valor: (l: T) => number
     return melhor ? nome(melhor) : null
 }
 
-function CartaoDoGrafico({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function CartaoDoGrafico({ titulo, apoio, children }: { titulo: string; apoio?: React.ReactNode; children: React.ReactNode }) {
     return (
         <Card className="min-w-0">
             <CardHeader>
                 <CardTitle size="sm">{titulo}</CardTitle>
+                {apoio ? (
+                    <CardAction>
+                        <Caption>{apoio}</Caption>
+                    </CardAction>
+                ) : null}
             </CardHeader>
             <CardContent>{children}</CardContent>
         </Card>
@@ -190,7 +198,8 @@ export function GraficosDoResumo({
     const comDias = diasDaSemana.some((d) => d.total > 0)
     const comFaixas = faixas.some((f) => f.quantidade > 0)
     const comPagamento = porPagamento.length > 0
-    const totalPago = porPagamento.reduce((acc, f) => acc + f.valor, 0)
+    // O mesmo arredondamento da barra, para o destaque e a lista baterem com ela.
+    const pctsPagamento = splitPercents(porPagamento.map((f) => f.valor))
     // Pela chave, e não pelo nome: dois cartões com o mesmo nome dividiriam a cor.
     const configPagamento = Object.fromEntries(
         porPagamento.map((f, i) => [f.chave, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
@@ -199,6 +208,10 @@ export function GraficosDoResumo({
     const diferencas = porPagamentoAnterior.length > 0 ? diferencaPorForma(porPagamento, porPagamentoAnterior) : null
     const formaUnica = porPagamento.length === 1 ? porPagamento[0] : null
     const IconeDaForma = formaUnica ? (ICONE_DA_FORMA[formaUnica.forma] ?? EllipsisHorizontalIcon) : null
+    const maiorForma = porPagamento[0]
+    // A preposição segue a da forma única: "em dinheiro", "sem forma de pagamento", "no <nome>".
+    const ondeFoiPago = (f: FatiaDePagamento) =>
+        f.forma === "sem-forma" ? "sem forma de pagamento" : f.forma === "cash" ? `em ${f.nome.toLocaleLowerCase("pt-BR")}` : `no ${f.nome}`
     const diferencaUnica = formaUnica && diferencas?.[formaUnica.chave] != null ? diferencaDaForma(diferencas[formaUnica.chave], despesa) : null
     const comMedia = media != null && media > 0
     const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
@@ -373,7 +386,10 @@ export function GraficosDoResumo({
             {comPagamento || comDias || comFaixas ? (
                 <div className="grid gap-3 md:grid-cols-3">
                     {comPagamento ? (
-                        <CartaoDoGrafico titulo="Como foi pago">
+                        <CartaoDoGrafico
+                            titulo="Como foi pago"
+                            apoio={!formaUnica && diferencas ? `vs ${mesAnterior}${aberto ? " inteiro" : ""}` : undefined}
+                        >
                             {formaUnica ? (
                                 <div className="flex items-center gap-4">
                                     <ChartDonut
@@ -423,27 +439,59 @@ export function GraficosDoResumo({
                                     </div>
                                 </div>
                             ) : (
-                                <ChartDonut
-                                    rounded
-                                    config={configPagamento}
-                                    data={porPagamento}
-                                    nameKey="chave"
-                                    dataKey="valor"
-                                    legend="list"
-                                    className="size-30"
-                                    label={`${oQue} do mês por forma de pagamento`}
-                                    center={<ChartDonutCenter amount={totalPago} label="no mês" />}
-                                    legendDetail={(i) => {
-                                        const f = porPagamento[i]
-                                        if (!diferencas) return reaisInteiros(f.valor)
-                                        const d = diferencaDaForma(diferencas[f.chave], despesa)
-                                        return (
-                                            <>
-                                                {reaisInteiros(f.valor)} · <span className={d.classe}>{d.texto}</span>
-                                            </>
-                                        )
-                                    }}
-                                />
+                                <div className="grid gap-2">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <p className="min-w-0">
+                                            <span className="nums text-xl font-semibold">{pctsPagamento[0]}%</span>{" "}
+                                            <span className="text-sm text-muted-foreground">{ondeFoiPago(maiorForma)}</span>
+                                        </p>
+                                        <Caption className="nums shrink-0">{porPagamento.length} formas</Caption>
+                                    </div>
+                                    <ChartSplit
+                                        labels="none"
+                                        config={configPagamento}
+                                        data={porPagamento}
+                                        nameKey="chave"
+                                        dataKey="valor"
+                                        label={`${oQue} do mês por forma de pagamento`}
+                                    />
+                                    <ul className="mt-2 grid gap-3">
+                                        {porPagamento.map((f, i) => {
+                                            const Icone = ICONE_DA_FORMA[f.forma] ?? EllipsisHorizontalIcon
+                                            const d = diferencas ? diferencaDaForma(diferencas[f.chave], despesa) : null
+                                            return (
+                                                <li key={f.chave} className="flex items-center gap-3 text-sm">
+                                                    {f.forma === "credit_card" ? (
+                                                        // O `tile` força 16px em todo `svg` de dentro, e a bandeira tem a largura dela.
+                                                        <ItemMedia className="size-8 rounded-full bg-muted">
+                                                            <CreditCardBrandChip brand={cartoes.find((c) => c.id === f.cardId)?.brand ?? null} />
+                                                        </ItemMedia>
+                                                    ) : (
+                                                        <ItemMedia variant="tile">
+                                                            <Icone aria-hidden />
+                                                        </ItemMedia>
+                                                    )}
+                                                    <ItemContent>
+                                                        <span className="truncate">{f.nome}</span>
+                                                        <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                            <ChartSwatch color={configPagamento[f.chave].color} />
+                                                            <span>
+                                                                {pctsPagamento[i]}%
+                                                                {d ? (
+                                                                    <>
+                                                                        {" · "}
+                                                                        <span className={d.classe}>{d.texto}</span>
+                                                                    </>
+                                                                ) : null}
+                                                            </span>
+                                                        </span>
+                                                    </ItemContent>
+                                                    <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(f.valor)}</span>
+                                                </li>
+                                            )
+                                        })}
+                                    </ul>
+                                </div>
                             )}
                         </CartaoDoGrafico>
                     ) : null}

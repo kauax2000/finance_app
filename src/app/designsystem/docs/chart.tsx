@@ -30,6 +30,7 @@ import {
   ChartSkeleton,
   ChartSparkline,
   ChartSplit,
+  ChartSwatch,
   ChartTooltip,
   CHART_ENTER_MS,
   CHART_UPDATE_MS,
@@ -38,6 +39,7 @@ import {
   ChartXAxis,
   ChartYAxis,
   chartSeriesColor,
+  splitPercents,
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
@@ -496,10 +498,10 @@ function DemoMedidorFaixas() {
 }
 
 function DemoDivisao() {
-  const [v, setV] = React.useState<"below" | "legend">("below")
+  const [v, setV] = React.useState<"below" | "legend" | "none">("below")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Controles inicio={<Eixo rotulo="labels" valores={["below", "legend"] as const} valor={v} onChange={setV} />} />
+      <Controles inicio={<Eixo rotulo="labels" valores={["below", "legend", "none"] as const} valor={v} onChange={setV} />} />
       <ChartSplit
         labels={v}
         config={CONFIG_DIVISAO}
@@ -509,6 +511,42 @@ function DemoDivisao() {
         label="Gasto do mês por tipo"
         className="max-w-md"
       />
+    </div>
+  )
+}
+
+const CONFIG_FORMAS_COR = {
+  "Bradesco Visa Infinity": { label: "Bradesco Visa Infinity", color: "var(--chart-2)" },
+  Pix: { label: "Pix", color: "var(--chart-3)" },
+  Dinheiro: { label: "Dinheiro", color: "var(--chart-5)" },
+} satisfies ChartConfig
+
+function DemoDivisaoComLista() {
+  const pcts = splitPercents(FORMAS.map((f) => f.valor))
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <ChartSplit
+        labels="none"
+        config={CONFIG_FORMAS_COR}
+        data={FORMAS}
+        nameKey="nome"
+        dataKey="valor"
+        label="Como foi pago"
+      />
+      <ul className="grid gap-3 text-sm">
+        {FORMAS.map((f, i) => (
+          <li key={f.nome} className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate">{f.nome}</p>
+              <p className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
+                <ChartSwatch color={CONFIG_FORMAS_COR[f.nome as keyof typeof CONFIG_FORMAS_COR].color} />
+                {pcts[i]}%
+              </p>
+            </div>
+            <span className="nums font-mono font-semibold">{currencyBRL(f.valor, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -1504,6 +1542,20 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Só a barra, com a lista ao lado"
+        description={
+          <>
+            <code>labels=&quot;none&quot;</code> desenha só a barra: sem rótulos nem legenda, para quem lista as partes logo abaixo (o &quot;Como foi pago&quot; do detalhe da categoria). O nome acessível continua com o resumo. A lista marca cada parte com <code>ChartSwatch</code>, o mesmo ponto de 8px da legenda, e o % vem de <code>splitPercents</code>, o arredondamento da barra.
+          </>
+        }
+        code={`<ChartSplit labels="none" config={config} data={formas} nameKey="nome" dataKey="valor" label="Como foi pago" />
+<ChartSwatch color="var(--chart-2)" />`}
+        previewClassName="flex-col items-stretch p-6"
+      >
+        <DemoDivisaoComLista />
+      </DocSection>
+
+      <DocSection
         title="Anéis"
         description={
           <>
@@ -1953,10 +2005,10 @@ const config = {
           },
           {
             prop: "labels",
-            type: '"below" | "legend"',
+            type: '"below" | "legend" | "none"',
             default: '"below"',
             description:
-              "Só na divisão: rótulos sob os segmentos, ou numa legenda só.",
+              "Só na divisão: rótulos sob os segmentos, numa legenda só, ou nenhum (só a barra).",
           },
           {
             prop: "maxKey · bands",

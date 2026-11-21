@@ -7,6 +7,8 @@ import {
   ChartBarList,
   ChartContainer,
   ChartDonut,
+  ChartSplit,
+  ChartSwatch,
   ChartTooltipContent,
   waterfallSteps,
   chartContainerVariants,
@@ -417,7 +419,7 @@ describe("Chart: yAxis, selectedColor, marcador só na série cheia e a lista da
     expect(f).toContain("@container/chart-donut")
     expect(f).toContain("@2xs/chart-donut:flex-row")
     expect(f).not.toContain("sm:flex-row sm:gap-8")
-    expect(f).toContain("backgroundColor: corDoPonto(i)")
+    expect(f).toContain("<ChartSwatch color={corDoPonto(i)} />")
   })
 })
 
@@ -800,6 +802,43 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
       const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
       expect(doc).toContain("legendDetail={")
       expect(doc).toContain("Bradesco Visa Infinity")
+    })
+  })
+  describe("a divisão só com a barra", () => {
+    const base = {
+      nameKey: "forma",
+      dataKey: "valor",
+      config: { pix: { label: "PIX", color: "var(--chart-2)" }, cartao: { label: "Bradesco Visa Infinity", color: "var(--chart-3)" } },
+      data: [
+        { forma: "pix", valor: 2000 },
+        { forma: "cartao", valor: 1063 },
+      ],
+      label: "Como foi pago",
+    }
+    it('labels="none" desenha só a barra, sem rótulos nem legenda, e o nome acessível mantém o resumo', () => {
+      const html = renderToStaticMarkup(h(ChartSplit, { ...base, labels: "none" as const }))
+      expect(html).toContain('data-slot="chart-split-bar"')
+      expect(html).not.toContain("chart-legend-content")
+      expect(html).not.toContain('data-slot="chart-split-labels"')
+      expect(html).toContain("Como foi pago: PIX 65%")
+      expect(html).toContain("Bradesco Visa Infinity 35%")
+    })
+    it("o padrão segue com a fileira de rótulos", () => {
+      const html = renderToStaticMarkup(h(ChartSplit, base))
+      expect(html).toContain('data-slot="chart-split-labels"')
+    })
+    it("ChartSwatch é a amostra de 8px, e a legenda a usa", () => {
+      const html = renderToStaticMarkup(h(ChartSwatch, { color: "var(--chart-2)" }))
+      expect(html).toContain('data-slot="chart-swatch"')
+      expect(html).toContain("size-2")
+      expect(html).toContain("background-color:var(--chart-2)")
+      const fonte = semComentarios(CODIGO)
+      expect(fonte).toMatch(/<ChartSwatch color=\{item\.color\} \/>/)
+    })
+    it("a página do catálogo mostra a divisão da forma de pagamento sem rótulos", () => {
+      const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
+      expect(doc).toContain('labels="none"')
+      expect(doc).toContain("<ChartSwatch")
     })
   })
 })
