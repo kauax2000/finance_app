@@ -868,6 +868,9 @@ function ChartGrid({
   )
 }
 
+/** O recuo do eixo X quando não há eixo Y: o primeiro e o último rótulo cabem inteiros. */
+const CHART_X_INSET = { left: 12, right: 12 }
+
 function ChartXAxis({
   format = "text",
   tickLine = false,
@@ -988,11 +991,13 @@ function ChartReferenceDotLabel({
   const cx = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
   const cy = (viewBox?.y ?? 0) + (viewBox?.height ?? 0) / 2
   const direita = area ? area.x + area.width : Infinity
+  // O ponto no topo do gráfico (o maior mês) não tem altura para o rótulo acima: o SVG o cortava. Ele desce para baixo do ponto.
+  const y = cy - 19 < 0 ? cy + 18 : cy - 10
   return (
     <text
       data-slot="chart-reference-dot-label"
       x={cx}
-      y={cy - 10}
+      y={y}
       textAnchor={direita - cx < 60 ? "end" : "middle"}
       className="fill-muted-foreground text-2xs"
     >
@@ -1356,7 +1361,8 @@ function ChartArea({
             </defs>
           ) : null}
           <ChartGrid />
-          <ChartXAxis dataKey={x} format={xFormat} />
+          {/* Sem a calha do eixo Y o primeiro rótulo passava da borda e o Recharts o escondia: o recuo devolve o espaço. */}
+          <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} />
           <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
           {tooltip ? (
             <ChartTooltip

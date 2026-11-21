@@ -2,13 +2,24 @@
 
 import { useMemo } from "react"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartArea, ChartBars, ChartDonut, ChartLine, ChartReferenceLine, type ChartConfig } from "@/components/ui/chart"
+import { Badge } from "@/components/ui/badge"
+import {
+    ChartArea,
+    ChartBars,
+    ChartDonut,
+    ChartLine,
+    ChartReferenceDot,
+    ChartReferenceLine,
+    type ChartConfig,
+} from "@/components/ui/chart"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { Caption } from "@/components/ui/typography"
 import { shiftYearMonth } from "@/lib/budget-month"
 import type { Fatia, TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { porDiaDaSemana, porFaixaDeValor, ritmoDoMes } from "@/lib/categoria-resumo"
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, percentBR } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, tileColorFor, tileVividColor } from "@/lib/tile-palette"
+import { nomeDoMes, reaisInteiros } from "../regua-do-mes-contas"
 import { mesCurto, mesPorExtenso } from "./rotulos"
 
 // A cor da categoria no traço, na área e no destaque de barra; as outras barras no neutro (o verde da rampa leria como entrada).
@@ -16,6 +27,18 @@ const CONFIG_DIAS = { total: { label: "Total", color: "var(--muted)" } } satisfi
 const CONFIG_FAIXAS = { quantidade: { label: "Lançamentos", color: "var(--muted)" } } satisfies ChartConfig
 // A rosca pula o `--chart-1`: é verde, e verde lê como entrada.
 const RAMPA_DO_PAGAMENTO = ["var(--chart-2)", "var(--chart-3)", "var(--chart-5)", "var(--chart-4)"]
+
+/** O selo do mês contra a média: a mesma faixa de ±2% da `vereditoDaMedia`; o tom diz se é bom (gastar menos, receber mais). */
+function seloDaMedia(valor: number, media: number | null, despesa: boolean) {
+    if (media == null || media <= 0) return null
+    const delta = (valor - media) / media
+    if (Math.abs(delta) < 0.02) return { texto: "na média", tom: "neutral" as const }
+    const bom = despesa ? delta < 0 : delta > 0
+    return {
+        texto: `${delta > 0 ? "+" : "−"}${percentBR(Math.abs(delta), { maximumFractionDigits: 0 })} vs média`,
+        tom: bom ? ("success" as const) : ("warning" as const),
+    }
+}
 
 /** O nome da barra de maior valor, ou null quando tudo é zero. */
 function maiorDe<T>(linhas: T[], nome: (l: T) => string, valor: (l: T) => number): string | null {
@@ -40,7 +63,7 @@ function CartaoDoGrafico({ titulo, apoio, children }: { titulo: string; apoio?: 
     )
 }
 
-/** Os gráficos do mês: 12 meses e ritmo em cima; forma de pagamento, dias da semana e tamanho das compras embaixo. Cada um some sem dado. */
+/** Os gráficos do mês: últimos meses e ritmo em cima; forma de pagamento, dias da semana e tamanho das compras no meio; mês a mês embaixo. Cada um some sem dado. */
 export function GraficosDoResumo({
     tipo,
     cor,
@@ -53,6 +76,7 @@ export function GraficosDoResumo({
     porPagamento,
     diasDaSemana,
     faixas,
+    onAbrirMes,
 }: {
     tipo: TipoDaCategoria
     /** A cor guardada da categoria (`categories.color`); resolvida por `tileColorFor`. */
@@ -66,6 +90,8 @@ export function GraficosDoResumo({
     porPagamento: Fatia[]
     diasDaSemana: ReturnType<typeof porDiaDaSemana>
     faixas: ReturnType<typeof porFaixaDeValor>
+    /** Abre esta tela noutro mês (`YYYY-MM`): o toque numa barra do "Mês a mês". */
+    onAbrirMes: (yearMonth: string) => void
 }) {
     const despesa = tipo === "expense"
     // A série tem a cor que o ladrilho desenha, e não a parada crua da paleta.
@@ -73,11 +99,18 @@ export function GraficosDoResumo({
     const oQue = despesa ? "Gasto" : "Entrada"
 
     // Os meses zerados do começo achatariam a curva: ela abre no primeiro mês com valor, com no mínimo 3 pontos.
-    const meses = useMemo(() => {
+    const { meses, parcial } = useMemo(() => {
         const primeiro = serie.findIndex((p) => p.total !== 0)
         const inicio = primeiro < 0 ? 0 : Math.max(0, Math.min(primeiro, serie.length - 3))
-        return serie.slice(inicio).map((p) => ({ mes: mesCurto(p.yearMonth), total: p.total }))
+        const meses = serie.slice(inicio).map((p) => ({ mes: mesCurto(p.yearMonth), yearMonth: p.yearMonth, total: p.total }))
+        // O primeiro mês com valor depois do começo da janela é o mês em que a categoria começou: pela metade.
+        const parcial = inicio > 0 && inicio === primeiro ? [meses[0].mes] : undefined
+        return { meses, parcial }
     }, [serie])
+    const mesAberto = mesCurto(yearMonth)
+    const ultimo = meses.at(-1)
+    const maior = meses.length >= 2 ? meses.reduce((a, b) => (b.total > a.total ? b : a)) : null
+    const marcaDoMaior = maior && maior.total > 0 && maior.yearMonth !== yearMonth ? maior : null
     const configMeses = useMemo(
         () => ({ total: { label: nomeDaCategoria, color: corDaSerie } }) satisfies ChartConfig,
         [nomeDaCategoria, corDaSerie],
@@ -104,6 +137,9 @@ export function GraficosDoResumo({
         porPagamento.map((f, i) => [f.nome, { label: f.nome, color: RAMPA_DO_PAGAMENTO[i % RAMPA_DO_PAGAMENTO.length] }]),
     ) satisfies ChartConfig
     const comMedia = media != null && media > 0
+    const selo = ultimo ? seloDaMedia(ultimo.total, media, despesa) : null
+    const legendaDaMedia = comMedia ? `média ${reaisInteiros(media)}` : undefined
+    const nomeDoMesAberto = nomeDoMes(yearMonth)
 
     if (!comMeses && !comRitmo && !comDias && !comFaixas && !comPagamento) return null
 
@@ -112,26 +148,50 @@ export function GraficosDoResumo({
             {comMeses || comRitmo ? (
                 <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
                     {comMeses ? (
-                        <CartaoDoGrafico titulo="Últimos 12 meses" apoio={comMedia ? `média ${currencyBRL(media)}` : undefined}>
-                            <ChartArea
-                                variant="gradient"
-                                marker="last"
-                                yAxis={false}
-                                config={configMeses}
-                                data={meses}
-                                x="mes"
-                                aspect="auto"
-                                className="h-44 w-full"
-                                label={`${oQue} em ${nomeDaCategoria} mês a mês, até 12 meses`}
-                                description={
-                                    comMedia
-                                        ? `O último ponto é o mês aberto. A linha tracejada é a média, ${currencyBRL(media)}.`
-                                        : "O último ponto é o mês aberto."
-                                }
-                            >
-                                {comMedia ? <ChartReferenceLine y={media} tone="average" ifOverflow="extendDomain" /> : null}
-                            </ChartArea>
-                        </CartaoDoGrafico>
+                        <Card className="min-w-0">
+                            <CardHeader>
+                                <div>
+                                    <Caption className="capitalize">{nomeDoMesAberto}</Caption>
+                                    <div className="flex flex-wrap items-center gap-x-2">
+                                        <MoneyDisplay value={ultimo?.total ?? 0} size="2xl" />
+                                        {selo ? <Badge tone={selo.tom}>{selo.texto}</Badge> : null}
+                                    </div>
+                                </div>
+                                <CardAction>
+                                    <Caption>Últimos meses</Caption>
+                                </CardAction>
+                            </CardHeader>
+                            <CardContent>
+                                <ChartArea
+                                    variant="gradient"
+                                    marker="last"
+                                    yAxis={false}
+                                    config={configMeses}
+                                    data={meses}
+                                    x="mes"
+                                    aspect="auto"
+                                    className="h-44 w-full"
+                                    label={`${oQue} em ${nomeDaCategoria} mês a mês, até 12 meses`}
+                                    description={
+                                        comMedia
+                                            ? `O último ponto é o mês aberto. A linha tracejada é a média, ${currencyBRL(media)}.`
+                                            : "O último ponto é o mês aberto."
+                                    }
+                                >
+                                    {comMedia ? (
+                                        <ChartReferenceLine y={media} tone="average" ifOverflow="extendDomain" label={legendaDaMedia} />
+                                    ) : null}
+                                    {marcaDoMaior ? (
+                                        <ChartReferenceDot
+                                            x={marcaDoMaior.mes}
+                                            y={marcaDoMaior.total}
+                                            color={corDaSerie}
+                                            label={`${marcaDoMaior.mes} · ${reaisInteiros(marcaDoMaior.total)} (maior)`}
+                                        />
+                                    ) : null}
+                                </ChartArea>
+                            </CardContent>
+                        </Card>
                     ) : null}
                     {comRitmo ? (
                         <CartaoDoGrafico
@@ -203,6 +263,43 @@ export function GraficosDoResumo({
                         </CartaoDoGrafico>
                     ) : null}
                 </div>
+            ) : null}
+            {comMeses ? (
+                <Card className="min-w-0">
+                    <CardHeader>
+                        <div className="flex items-baseline gap-2">
+                            <CardTitle size="sm">Mês a mês</CardTitle>
+                            <Caption>{`desde ${meses[0].mes}`}</Caption>
+                        </div>
+                        <CardAction>
+                            <Caption>toque num mês para abrir</Caption>
+                        </CardAction>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartBars
+                            config={CONFIG_DIAS}
+                            data={meses}
+                            x="mes"
+                            selected={mesAberto}
+                            selectedColor={corDaSerie}
+                            valueLabels="selected"
+                            partial={parcial}
+                            yAxis={false}
+                            onSelect={(x) => {
+                                const alvo = x && x !== mesAberto ? meses.find((m) => m.mes === x) : null
+                                if (alvo) onAbrirMes(alvo.yearMonth)
+                            }}
+                            aspect="auto"
+                            className="h-44 w-full"
+                            label={`${oQue} em ${nomeDaCategoria} por mês; escolha um mês para abri-lo`}
+                            description={`O mês aberto em destaque.${comMedia ? ` A linha tracejada é a média, ${currencyBRL(media)}.` : ""}`}
+                        >
+                            {comMedia ? (
+                                <ChartReferenceLine y={media} tone="average" ifOverflow="extendDomain" label={legendaDaMedia} />
+                            ) : null}
+                        </ChartBars>
+                    </CardContent>
+                </Card>
             ) : null}
         </div>
     )

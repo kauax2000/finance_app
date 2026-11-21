@@ -468,3 +468,18 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     expect(doc).toContain("partial={")
   })
 })
+
+describe("Chart: o eixo X sem a calha do Y e o rótulo do ponto no topo (21/11/2026)", () => {
+  const f = semComentarios(CODIGO)
+  const trechoDe = (nome: string) => {
+    const ini = f.indexOf(`function ${nome}(`)
+    return f.slice(ini, f.indexOf("\nfunction ", ini + 10))
+  }
+  it("a área sem eixo Y recua o eixo X, para o primeiro mês não sumir", () => {
+    expect(f).toContain("const CHART_X_INSET = { left: 12, right: 12 }")
+    expect(trechoDe("ChartArea")).toContain("padding={yAxis ? undefined : CHART_X_INSET}")
+  })
+  it("o rótulo do ponto desce para baixo dele quando não cabe acima", () => {
+    expect(trechoDe("ChartReferenceDotLabel")).toContain("cy - 19 < 0 ? cy + 18 : cy - 10")
+  })
+})

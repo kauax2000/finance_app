@@ -46,6 +46,8 @@ export type ResumoDaCategoriaProps = {
     repetidas: ReturnType<typeof repeticoes>
     insights: ReturnType<typeof insights>
     onDefinirLimite: () => void
+    /** Abre esta tela noutro mês (`YYYY-MM`). */
+    onAbrirMes: (yearMonth: string) => void
 }
 
 const ID_COMPROMETIDO = "ja-comprometido"
@@ -98,6 +100,7 @@ export function ResumoDaCategoria(p: ResumoDaCategoriaProps) {
                         porPagamento={p.porPagamento}
                         diasDaSemana={p.diasDaSemana}
                         faixas={p.faixas}
+                        onAbrirMes={p.onAbrirMes}
                     />
                 </Secao>
             ) : null}
