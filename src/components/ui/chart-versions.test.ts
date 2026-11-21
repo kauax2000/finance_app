@@ -417,3 +417,51 @@ describe("Chart: yAxis, selectedColor, marcador só na série cheia e a lista da
     expect(f).toContain("backgroundColor: corDoPonto(i)")
   })
 })
+
+describe("Chart: rótulo na linha de referência, ponto anotado e barras parciais (21/11/2026)", () => {
+  const f = semComentarios(CODIGO)
+  const trechoDe = (nome: string) => {
+    const ini = f.indexOf(`function ${nome}(`)
+    return f.slice(ini, f.indexOf("\nfunction ", ini + 10))
+  }
+  it("a linha de referência escreve o rótulo à esquerda, sobre um retângulo da superfície", () => {
+    const t = trechoDe("ChartReferenceLine")
+    expect(t).toContain("label?: string")
+    expect(t).toContain('data-slot="chart-reference-label"')
+    expect(t).toContain('fill="var(--chart-surface)"')
+    expect(t).toContain("fill-muted-foreground text-2xs")
+    expect(t).toContain('dominantBaseline="central"')
+  })
+  it("o ponto anotado é vazado, com o rótulo acima e virando para dentro perto da borda", () => {
+    expect(f).toMatch(/export \{[\s\S]*ChartReferenceDot,[\s\S]*\}/)
+    const t = trechoDe("ChartReferenceDot")
+    expect(t).toContain("<ReferenceDot")
+    expect(t).toContain("r={4}")
+    expect(t).toContain('fill="var(--chart-surface)"')
+    expect(t).toContain("strokeWidth={2}")
+    expect(t).toContain('tone?: "series" | "neutral"')
+    const r = trechoDe("ChartReferenceDotLabel")
+    expect(r).toContain("usePlotArea")
+    expect(r).toContain("< 60")
+    expect(r).toContain('"end"')
+    expect(r).toContain("fill-muted-foreground text-2xs")
+  })
+  it("valueLabels aceita \"selected\": só a barra escolhida leva o valor", () => {
+    const t = trechoDe("ChartBars")
+    expect(t).toContain('valueLabels?: boolean | "selected"')
+    expect(t).toContain('valueLabels === "selected"')
+  })
+  it("partial desenha a barra só com o contorno tracejado", () => {
+    const t = trechoDe("ChartBars")
+    expect(t).toContain("partial?: string[]")
+    expect(t).toContain('strokeDasharray={parcial ? "4 3" : undefined}')
+    expect(t).toContain('fill={parcial ? "transparent"')
+  })
+  it("a página do catálogo mostra as quatro peças", () => {
+    const doc = lerFonte("src/app/designsystem/docs/chart.tsx")
+    expect(doc).toContain("<ChartReferenceDot")
+    expect(doc).toMatch(/<ChartReferenceLine[^>]*label=/)
+    expect(doc).toContain('valueLabels="selected"')
+    expect(doc).toContain("partial={")
+  })
+})

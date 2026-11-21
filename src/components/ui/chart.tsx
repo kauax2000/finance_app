@@ -22,6 +22,7 @@ import {
   RadarChart,
   RadialBar,
   RadialBarChart,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -29,6 +30,7 @@ import {
   YAxis,
   useActiveTooltipDataPoints,
   useActiveTooltipLabel,
+  usePlotArea,
 } from "recharts"
 
 
@@ -923,19 +925,113 @@ const chartReferenceTone = {
   zero: "var(--color-foreground)",
 } as const
 
-/** A linha de referência tem tom, não cor: zero, média e neutra são três papéis. */
+/** A largura do texto `text-2xs` (11px) estimada pelo número de letras. shortcut: média de 6px por letra da Inter, medir com `getBBox` se um rótulo longo vazar do retângulo. */
+const larguraDoRotulo = (texto: string) => texto.length * 6
+
+/** A linha de referência tem tom, não cor: zero, média e neutra são três papéis. Com `label`, o nome dela ("média") vai sobre a linha, à esquerda, num retângulo da superfície que a curva não atravessa. */
 function ChartReferenceLine({
   tone = "neutral",
   strokeDasharray = "4 4",
+  label,
   ...props
-}: React.ComponentProps<typeof ReferenceLine> & {
+}: Omit<React.ComponentProps<typeof ReferenceLine>, "label"> & {
   tone?: keyof typeof chartReferenceTone
+  /** O nome da linha, escrito sobre ela no começo da área. É texto do SVG: o que importa vai também no `description`. */
+  label?: string
 }) {
   return (
     <ReferenceLine
       stroke={chartReferenceTone[tone]}
       strokeDasharray={tone === "zero" ? undefined : strokeDasharray}
       strokeWidth={1}
+      label={
+        label
+          ? (p: { viewBox?: { x?: number; y?: number } }) => {
+              const x = (p.viewBox?.x ?? 0) + 4
+              const y = p.viewBox?.y ?? 0
+              return (
+                <g data-slot="chart-reference-label">
+                  <rect
+                    x={x - 2}
+                    y={y - 7}
+                    width={larguraDoRotulo(label) + 4}
+                    height={14}
+                    fill="var(--chart-surface)"
+                  />
+                  <text
+                    x={x}
+                    y={y}
+                    dominantBaseline="central"
+                    className="fill-muted-foreground text-2xs"
+                  >
+                    {label}
+                  </text>
+                </g>
+              )
+            }
+          : undefined
+      }
+      {...props}
+    />
+  )
+}
+
+/** O rótulo do ponto anotado: 10px acima do centro, centrado; a menos de 60px da borda direita da área, termina no ponto para não sair do gráfico. */
+function ChartReferenceDotLabel({
+  viewBox,
+  label,
+}: {
+  viewBox?: { x?: number; y?: number; width?: number }
+  label: string
+}) {
+  const area = usePlotArea()
+  const cx = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2
+  const cy = (viewBox?.y ?? 0) + (viewBox?.width ?? 0) / 2
+  const direita = area ? area.x + area.width : Infinity
+  return (
+    <text
+      data-slot="chart-reference-dot-label"
+      x={cx}
+      y={cy - 10}
+      textAnchor={direita - cx < 60 ? "end" : "middle"}
+      className="fill-muted-foreground text-2xs"
+    >
+      {label}
+    </text>
+  )
+}
+
+/**
+ * Um ponto anotado ("maior mês"): o círculo vazado de 4px sobre a série, com o
+ * rótulo acima. `tone="series"` pinta o traço na `color` da série (sem ela, a
+ * primeira da rampa); `neutral`, o padrão, em `--muted-foreground`. O rótulo é
+ * texto do SVG: o que importa vai também no `description`.
+ */
+function ChartReferenceDot({
+  x,
+  y,
+  label,
+  tone = "neutral",
+  color,
+  ...props
+}: Omit<React.ComponentProps<typeof ReferenceDot>, "label" | "x" | "y" | "r"> & {
+  x: string | number
+  y: number
+  label: string
+  tone?: "series" | "neutral"
+  color?: string
+}) {
+  const traco =
+    color ?? (tone === "series" ? "var(--color-chart-1)" : "var(--color-muted-foreground)")
+  return (
+    <ReferenceDot
+      x={x}
+      y={y}
+      r={4}
+      fill="var(--chart-surface)"
+      stroke={traco}
+      strokeWidth={2}
+      label={<ChartReferenceDotLabel label={label} />}
       {...props}
     />
   )
@@ -1485,6 +1581,7 @@ function ChartBars({
   onSelect,
   delta = false,
   yAxis = true,
+  partial,
   children,
 }: ChartFormProps & {
   /** A cor da barra selecionada. Com ela as outras não apagam: ficam na cor da série (a neutra) e só a escolhida acende — a cor da categoria no destaque. */
@@ -1493,8 +1590,10 @@ function ChartBars({
   yAxis?: boolean
   /** Barras com sinal (saldo cruzando o zero): acima `--chart-income`, abaixo `--chart-expense`, com a linha do zero desenhada (cor não é o único canal). Uma série. */
   signed?: boolean
-  /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. */
-  valueLabels?: boolean
+  /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. `"selected"` escreve só o da barra `selected`. */
+  valueLabels?: boolean | "selected"
+  /** Os `x` das barras ainda incompletas (o mês que começou no meio): só o contorno tracejado, na cor da série. Continuam no tooltip e no foco. */
+  partial?: string[]
   /** O valor de `x` da barra selecionada. As outras apagam. */
   selected?: string | null
   /** Clicar seleciona e clicar de novo solta (`null`); pelo teclado, setas andam e Enter seleciona. Com ele o gráfico é `role="group"` e anuncia a seleção numa região viva. */
@@ -1687,14 +1786,20 @@ function ChartBars({
               }
               style={onSelect ? { cursor: "pointer" } : undefined}
             >
-              {data.map((linha, j) => (
-                <Cell
-                  key={String(linha[x] ?? j)}
-                  fill={corDaBarra(key, i, linha)}
-                  fillOpacity={apagada(linha)}
-                  className="transition-[fill-opacity] duration-(--duration-base) ease-(--ease-out)"
-                />
-              ))}
+              {data.map((linha, j) => {
+                const parcial = partial?.includes(String(linha[x])) ?? false
+                return (
+                  <Cell
+                    key={String(linha[x] ?? j)}
+                    fill={parcial ? "transparent" : corDaBarra(key, i, linha)}
+                    fillOpacity={apagada(linha)}
+                    stroke={parcial ? corDaBarra(key, i, linha) : undefined}
+                    strokeOpacity={parcial ? apagada(linha) : undefined}
+                    strokeDasharray={parcial ? "4 3" : undefined}
+                    className="transition-[fill-opacity,stroke-opacity] duration-(--duration-base) ease-(--ease-out)"
+                  />
+                )
+              })}
               {valueLabels && (!stacked || i === chaves.length - 1) ? (
                 <LabelList
                   position={horizontal ? "right" : "top"}
@@ -1703,10 +1808,13 @@ function ChartBars({
                   fontSize={11}
                   // Empilhado, o rótulo é o total da coluna, na ponta do último
                   // segmento — um rótulo por segmento empilharia números.
+                  // Sem valor o Recharts não desenha o rótulo: é assim que o `"selected"` cala as outras.
                   valueAccessor={(entrada: { payload?: Record<string, unknown> }) =>
-                    stacked
-                      ? chaves.reduce((acc, k) => acc + Number(entrada.payload?.[k] ?? 0), 0)
-                      : (entrada.payload?.[key] as number)
+                    valueLabels === "selected" && String(entrada.payload?.[x]) !== selected
+                      ? null
+                      : stacked
+                        ? chaves.reduce((acc, k) => acc + Number(entrada.payload?.[k] ?? 0), 0)
+                        : (entrada.payload?.[key] as number)
                   }
                   formatter={(v: unknown) => formatChartValue(v, axisFormatFor(format))}
                 />
@@ -3476,6 +3584,7 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartLine,
+  ChartReferenceDot,
   ChartReferenceLine,
   ChartSkeleton,
   ChartRadar,

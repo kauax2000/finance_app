@@ -25,6 +25,7 @@ import {
   ChartLine,
   ChartRadar,
   ChartRadial,
+  ChartReferenceDot,
   ChartReferenceLine,
   ChartSkeleton,
   ChartSparkline,
@@ -70,6 +71,22 @@ import { addDaysYmd } from "@/lib/transaction-date"
 import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
+
+/** Doze meses de Mercado, de dez/24 a nov/25: a categoria nasceu no meio de dezembro. */
+const MERCADO_MESES = [
+  { mes: "Dez", total: 380 },
+  { mes: "Jan", total: 860 },
+  { mes: "Fev", total: 790 },
+  { mes: "Mar", total: 910 },
+  { mes: "Abr", total: 840 },
+  { mes: "Mai", total: 980 },
+  { mes: "Jun", total: 870 },
+  { mes: "Jul", total: 1340 },
+  { mes: "Ago", total: 920 },
+  { mes: "Set", total: 890 },
+  { mes: "Out", total: 960 },
+  { mes: "Nov", total: 940 },
+]
 
 const FLUXO = [
   { mes: "Out", entradas: 7900, saidas: 6400, saldo: 1500 },
@@ -1134,6 +1151,62 @@ const config = {
           label="Gasto por dia da semana, a sexta em destaque"
           className="h-32 w-full max-w-md"
         />
+      </DocSection>
+
+      <DocSection
+        title="Média, maior mês e mês parcial"
+        description={
+          <>
+            <code>ChartReferenceLine label</code> escreve o nome da linha sobre ela, no começo da área, num retângulo de <code>--chart-surface</code> que a curva não atravessa. <code>ChartReferenceDot</code> é o ponto vazado de 4px com o rótulo 10px acima — a menos de 60px da borda direita, ele termina no ponto. Nas barras, <code>valueLabels=&quot;selected&quot;</code> escreve só o valor do mês aberto, e <code>partial</code> desenha os meses incompletos só com o contorno tracejado, ainda no tooltip e no foco. Os rótulos são texto do SVG: o que importa vai também no <code>description</code>.
+          </>
+        }
+        code={`<ChartLine x="mes" … description="Média de R$ 936; o maior mês foi julho, R$ 1.340.">
+  <ChartReferenceLine y={936} tone="average" label="média" />
+  <ChartReferenceDot x="Jul" y={1340} label="R$ 1,3 mil" tone="series" color={cor} />
+</ChartLine>
+
+<ChartBars
+  valueLabels="selected"
+  selected="Out"
+  partial={["Dez"]}
+  x="mes"
+  …
+/>`}
+        previewClassName="items-stretch p-6"
+      >
+        <Stack className="w-full max-w-2xl gap-8">
+          <ChartLine
+            config={{ total: { label: "Mercado", color: TILE_EXPENSE_DEFAULT } }}
+            data={MERCADO_MESES.slice(1)}
+            x="mes"
+            yAxis={false}
+            label="Mercado de janeiro a novembro"
+            description="Média de R$ 936; o maior mês foi julho, R$ 1.340."
+            className="w-full"
+          >
+            <ChartReferenceLine y={936} tone="average" label="média" />
+            <ChartReferenceDot
+              x="Jul"
+              y={1340}
+              label="R$ 1,3 mil"
+              tone="series"
+              color={TILE_EXPENSE_DEFAULT}
+            />
+          </ChartLine>
+          <ChartBars
+            config={{ total: { label: "Mercado", color: "var(--muted)" } }}
+            data={MERCADO_MESES}
+            x="mes"
+            selected="Out"
+            selectedColor={TILE_EXPENSE_DEFAULT}
+            valueLabels="selected"
+            partial={["Dez"]}
+            yAxis={false}
+            label="Mercado mês a mês, outubro aberto"
+            description="Outubro, R$ 960. Dezembro está pela metade: a categoria começou a ser usada no meio do mês."
+            className="w-full"
+          />
+        </Stack>
       </DocSection>
 
       <DocSection
