@@ -124,16 +124,17 @@ describe("resumoDoRitmo", () => {
 
 describe("porDiaDaSemana", () => {
     it("soma por dia da semana, 0 = segunda", () => {
-        // segundas: 2/nov (20) e 9/nov (2000) = 2032; 15/nov é domingo
+        // segundas: 2/nov (20), 9/nov (2000) e 16/nov (12) = 2032, três compras; 15/nov é domingo
         const r = porDiaDaSemana(carro, "expense")
         expect(r).toHaveLength(7)
-        expect(r[0]).toEqual({ dia: 0, nome: "Seg", total: 2032 })
+        expect(r[0]).toEqual({ dia: 0, nome: "Seg", total: 2032, compras: 3 })
         expect(r[6].total).toBe(60)
     })
     it("estorno abate e sem lançamentos zera", () => {
         expect(porDiaDaSemana([], "expense").every((d) => d.total === 0)).toBe(true)
         const r = porDiaDaSemana([tx({ date: "2026-11-09", amount: 100 }), estorno({ date: "2026-11-09", amount: 40 })], "expense")
         expect(r[0].total).toBe(60)
+        expect(r[0].compras).toBe(1)
     })
 })
 

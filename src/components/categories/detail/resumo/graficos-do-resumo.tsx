@@ -98,7 +98,8 @@ function CartaoDoGrafico({
                     </CardAction>
                 ) : null}
             </CardHeader>
-            <CardContent>{children}</CardContent>
+            {/* Coluna que cresce: na fileira de três, o último bloco de cada cartão (`mt-auto`) assenta no pé, e os pés se alinham. */}
+            <CardContent className="flex flex-1 flex-col">{children}</CardContent>
         </Card>
     )
 }
@@ -187,6 +188,10 @@ export function GraficosDoResumo({
     const comCompras = concentracao.quantidade > 0
     // A fileira: cada compra um bloco, da maior para a menor; o rabo acima de 40 vira "outras M compras".
     const umaOuMais = (n: number) => `${n} ${despesa ? "compra" : "entrada"}${n === 1 ? "" : "s"}`
+    const comprasPagas = porPagamento.reduce((acc, f) => acc + f.compras, 0)
+    const totalPago = porPagamento.reduce((acc, f) => acc + f.valor, 0)
+    // O dia de maior valor, para o rodapé do "Dias da semana"; sem gasto em dia nenhum, não há rodapé.
+    const diaMaisCaro = diasDaSemana.reduce<(typeof diasDaSemana)[number] | null>((a, d) => (d.total > (a?.total ?? 0) ? d : a), null)
     const frase =
         concentracao.quantidade === 1
             ? { numero: umaOuMais(1), resto: "fez o mês inteiro" }
@@ -475,7 +480,7 @@ export function GraficosDoResumo({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 gap-2">
+                                <div className="flex min-w-0 flex-1 flex-col gap-2">
                                     <div className="flex items-baseline justify-between gap-3">
                                         <p className="min-w-0">
                                             <span className="nums text-xl font-semibold">{pctsPagamento[0]}%</span>{" "}
@@ -519,13 +524,17 @@ export function GraficosDoResumo({
                                             )
                                         })}
                                     </ul>
+                                    <p className="mt-auto flex items-baseline justify-between gap-3 border-t border-border pt-3 text-sm text-muted-foreground">
+                                        <span>{umaOuMais(comprasPagas)} no mês</span>
+                                        <span className="nums font-mono font-semibold text-foreground">{reaisInteiros(totalPago)}</span>
+                                    </p>
                                 </div>
                             )}
                         </CartaoDoGrafico>
                     ) : null}
                     {comDias ? (
                         <CartaoDoGrafico titulo="Dias da semana">
-                            <div className="flex flex-col gap-4">
+                            <div className="flex flex-1 flex-col gap-4">
                                 <div className="flex gap-4">
                                     {(
                                         [
@@ -550,6 +559,15 @@ export function GraficosDoResumo({
                                     labelText={diaPorExtenso}
                                     label={`${despesa ? "Gasto" : "Entradas"} do mês por dia da semana`}
                                 />
+                                {diaMaisCaro ? (
+                                    <p className="mt-auto border-t border-border pt-3 text-sm text-muted-foreground">
+                                        <span className="text-foreground first-letter:uppercase inline-block">{diaPorExtenso(diaMaisCaro.nome)}</span>{" "}
+                                        {despesa ? "foi o dia mais caro" : "foi o dia de mais entradas"} ·{" "}
+                                        <span className="nums whitespace-nowrap">
+                                            {reaisInteiros(diaMaisCaro.total)} em {umaOuMais(diaMaisCaro.compras)}
+                                        </span>
+                                    </p>
+                                ) : null}
                             </div>
                         </CartaoDoGrafico>
                     ) : null}
@@ -559,7 +577,7 @@ export function GraficosDoResumo({
                             // Em duas colunas, o terceiro cartão ficaria sozinho na metade da linha: ocupa a linha inteira.
                             className={comPagamento && comDias ? "@2xl/trio:col-span-2 @5xl/trio:col-span-1" : undefined}
                         >
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-1 flex-col gap-3">
                                 <p className="min-w-0">
                                     <span className="nums text-xl font-semibold">{frase.numero}</span>{" "}
                                     <span className="text-sm text-muted-foreground">{frase.resto}</span>
@@ -580,7 +598,7 @@ export function GraficosDoResumo({
                                     </div>
                                 </div>
                                 {/* As maiores, as mesmas em destaque na fileira (até 2): o cartão diz o que foi a compra grande. */}
-                                <ul className="grid grid-cols-1 gap-2.5 border-t border-border pt-3">
+                                <ul className="mt-auto grid grid-cols-1 gap-2.5 border-t border-border pt-3">
                                     {concentracao.compras.slice(0, Math.min(2, concentracao.n80)).map((c) => (
                                         <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
                                             {/* Descrição e data são o mesmo dado em duas linhas: sem `gap`. */}

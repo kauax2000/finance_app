@@ -106,16 +106,19 @@ const NOMES_DA_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 export function porDiaDaSemana(
     txs: Transaction[],
     tipo: TipoDaCategoria,
-): { dia: number; nome: string; total: number }[] {
+): { dia: number; nome: string; total: number; compras: number }[] {
     const cents = new Array<number>(7).fill(0)
+    // Quantas compras em cada dia (o estorno abate o valor, mas não é compra).
+    const compras = new Array<number>(7).fill(0)
     for (const t of txs) {
         const p = peso(t, tipo)
         const ymd = transactionLocalYmd(t.date)
         if (p === 0 || !ymd) continue
         const dia = (new Date(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10)).getDay() + 6) % 7
         cents[dia] += p * centavos(t)
+        if (p === 1) compras[dia] += 1
     }
-    return NOMES_DA_SEMANA.map((nome, dia) => ({ dia, nome, total: cents[dia] / 100 }))
+    return NOMES_DA_SEMANA.map((nome, dia) => ({ dia, nome, total: cents[dia] / 100, compras: compras[dia] }))
 }
 
 /** Dias úteis (seg a sex, `dia` 0–4) contra o fim de semana (sáb e dom): os totais e os % inteiros que somam 100, pelo maior resto do `splitPercents` (com duas partes, empate vai aos úteis). Total zero dá 0 e 0. */
