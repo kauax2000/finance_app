@@ -632,7 +632,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     // A análise da carteira mora no Painel: a ponte abre a seção já filtrada. Só despesa, só o adulto.
                     tipo === "expense" && isAdulto ? (
                         <Button asChild variant="link">
-                            <Link href={`${ROUTES.DASHBOARD}?categoria=${encodeURIComponent(categoryId)}#${PARA_ONDE_VAI_ID}`}>
+                            <Link href={`${ROUTES.DASHBOARD}?categoria=${encodeURIComponent(categoryId)}&month=${yearMonth}#${PARA_ONDE_VAI_ID}`}>
                                 <span>Ver a análise de {category.name} no Painel</span>
                                 <ChevronRightIcon aria-hidden />
                             </Link>
