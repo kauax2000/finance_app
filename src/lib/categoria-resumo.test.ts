@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest"
 import {
     compraTipica,
     compromissos,
+    descricaoSemParcela,
     diaDeMaisGasto,
+    fatosDoMes,
     fraseDoResumo,
     insights,
     maisFrequente,
@@ -245,7 +247,10 @@ describe("repeticoes", () => {
     })
 })
 
-const texto = (f: ReturnType<typeof fraseDoResumo>) => f.partes.map((p) => p.texto).join("")
+const texto = (f: ReturnType<typeof fraseDoResumo>) => [...f.veredito, ...f.explicacao].map((p) => p.texto).join("")
+// currencyBRL separa o R$ com espaço não separável; os textos esperados usam o espaço comum.
+const normal = (s: string) => s.replace(/\u00a0/g, " ")
+const juntar = (p: { texto: string }[]) => normal(p.map((x) => x.texto).join(""))
 const base = {
     nomeDaCategoria: "Carro",
     tipo: "expense" as const,
@@ -270,9 +275,9 @@ describe("fraseDoResumo", () => {
         const maior = tx({ description: "Consórcio", amount: 2000 })
         const t = texto(fraseDoResumo({ ...base, lancado: 3500, previsto: 3500, media: 3000, maior }))
         expect(t).toContain(currencyBRL(3500))
-        expect(t).toContain("acima da média")
+        expect(t).toContain("acima da sua média")
         expect(t).toContain("Consórcio")
-        expect(fraseDoResumo({ ...base, lancado: 3500, previsto: 3500, maior }).partes.some((p) => p.forte)).toBe(true)
+        expect(fraseDoResumo({ ...base, lancado: 3500, previsto: 3500, maior }).veredito.some((p) => p.forte)).toBe(true)
     })
     it("o maior só puxa acima de 40% do mês", () => {
         const maior = tx({ description: "Consórcio", amount: 1000 })
@@ -281,6 +286,7 @@ describe("fraseDoResumo", () => {
     it("o que ainda vem e o mês seguinte", () => {
         const t = texto(fraseDoResumo({ ...base, previsto: 3442.54, proximoMes: 2442.54 }))
         expect(t).toContain(currencyBRL(442.54))
+        expect(t).toContain("Dezembro já tem")
         expect(t).toContain(currencyBRL(2442.54))
         const fechado = texto(fraseDoResumo({ ...base, aberto: false, previsto: 3000, proximoMes: 0 }))
         expect(fechado).not.toContain("Ainda")
@@ -288,10 +294,10 @@ describe("fraseDoResumo", () => {
     it("mês aberto com previsto: o veredito é da projeção e diz isso", () => {
         // lançado 2.500 < média 3.000 < lançado + previsto 3.600
         const t = texto(fraseDoResumo({ ...base, lancado: 2500, previsto: 3600, media: 3000 }))
-        expect(t).toContain("deve fechar acima da média")
-        expect(t).not.toContain("abaixo da média")
+        expect(t).toContain("deve fechar acima da sua média")
+        expect(t).not.toContain("abaixo da sua média")
         const sem = texto(fraseDoResumo({ ...base, lancado: 2500, previsto: 2500, media: 3000 }))
-        expect(sem).toContain("abaixo da média")
+        expect(sem).toContain("abaixo da sua média")
     })
     it("o maior só puxa com 2 compras ou mais", () => {
         const maior = tx({ description: "Consórcio", amount: 2000 })
@@ -303,7 +309,78 @@ describe("fraseDoResumo", () => {
         expect(t).not.toContain("média")
     })
     it("receita usa entrada", () => {
-        expect(texto(fraseDoResumo({ ...base, tipo: "income" }))).toContain("entrou")
+        const t = texto(fraseDoResumo({ ...base, tipo: "income" }))
+        expect(t).toContain("entrou")
+        expect(t).not.toContain("gasto")
+    })
+    it("veredito de mês fechado em linha com a média", () => {
+        const f = fraseDoResumo({ ...base, lancado: 3062.54, previsto: 3062.54, media: 2906.77, aberto: false })
+        expect(juntar(f.veredito)).toBe("Novembro: R$ 3.062,54, em linha com a sua média.")
+        expect(f.veredito.find((p) => p.forte)?.texto).toBe(currencyBRL(3062.54))
+        expect(juntar(f.explicacao)).toBe("A média dos últimos 6 meses é R$ 2.906,77.")
+    })
+    it("mês aberto: veredito da projeção e o que ainda vem na explicação", () => {
+        const f = fraseDoResumo({ ...base, lancado: 2500, previsto: 3600, media: 3000 })
+        expect(juntar(f.veredito)).toBe("Novembro até agora: R$ 2.500,00; deve fechar acima da sua média.")
+        expect(juntar(f.explicacao)).toContain("Ainda vêm R$ 1.100,00 neste mês.")
+    })
+    it("o que puxou o mês perde a parcela e marca o lançamento", () => {
+        const maior = tx({ description: "Consórcio Mãe - 3/6", amount: 2000 })
+        const f = fraseDoResumo({ ...base, lancado: 3062.54, previsto: 3062.54, maior, compras: 9 })
+        expect(juntar(f.explicacao).startsWith("Consórcio Mãe (R$ 2.000,00) puxou o mês.")).toBe(true)
+        expect(f.explicacao.find((p) => p.lancamento)?.texto).toBe("Consórcio Mãe")
+    })
+    it("o mês seguinte tem nome; dezembro vira janeiro", () => {
+        expect(normal(texto(fraseDoResumo({ ...base, proximoMes: 442.54 })))).toContain("Dezembro já tem R$ 442,54 previstos.")
+        expect(texto(fraseDoResumo({ ...base, yearMonth: "2026-12", proximoMes: 442.54 }))).toContain("Janeiro já tem")
+    })
+    it("sem média nem veredito de média nem frase dela", () => {
+        const f = fraseDoResumo({ ...base, media: null })
+        expect(texto(f)).not.toContain("média")
+        expect(juntar(f.veredito)).toBe("Novembro até agora: R$ 3.000,00.")
+    })
+    it("mês vazio: só o veredito", () => {
+        const f = fraseDoResumo({ ...base, lancado: 0, previsto: 0, media: null })
+        expect(f.explicacao).toEqual([])
+    })
+})
+
+describe("descricaoSemParcela", () => {
+    it("tira o sufixo de parcela", () => {
+        expect(descricaoSemParcela("Consórcio Mãe - 3/6")).toBe("Consórcio Mãe")
+        expect(descricaoSemParcela("Consórcio Mãe – 3/6")).toBe("Consórcio Mãe")
+        expect(descricaoSemParcela("Seguro (4/12)")).toBe("Seguro")
+        expect(descricaoSemParcela("Seguro 4/12")).toBe("Seguro")
+        expect(descricaoSemParcela("Netflix")).toBe("Netflix")
+        expect(descricaoSemParcela("  ")).toBeNull()
+        expect(descricaoSemParcela(null)).toBeNull()
+    })
+})
+
+describe("fatosDoMes", () => {
+    const args = {
+        tipo: "expense" as const,
+        yearMonth: "2026-11",
+        lancado: 3062.54,
+        media: 2906.77,
+        maior: tx({ description: "Consórcio Mãe - 3/6", amount: 2000 }),
+        compras: 9,
+        proximoMes: 442.54,
+    }
+    it("puxou, previsto e total, nessa ordem", () => {
+        expect(fatosDoMes(args).map((f) => ({ ...f, titulo: normal(f.titulo) }))).toEqual([
+            { id: "puxou", rotulo: "Puxou o mês", titulo: "Consórcio Mãe", valor: 2000, acao: "lancamento" },
+            { id: "previsto", rotulo: "Já previsto", titulo: "Dezembro", valor: 442.54, acao: "comprometido" },
+            { id: "total", rotulo: "Total do mês", titulo: "média R$ 2.906,77", valor: 3062.54 },
+        ])
+    })
+    it("sem maior válido e sem próximo mês, só o total; sem média o título é o mês", () => {
+        expect(fatosDoMes({ ...args, maior: null, proximoMes: 0, media: null })).toEqual([
+            { id: "total", rotulo: "Total do mês", titulo: "novembro", valor: 3062.54 },
+        ])
+    })
+    it("sem lançado, nada", () => {
+        expect(fatosDoMes({ ...args, lancado: 0 })).toEqual([])
     })
 })
 

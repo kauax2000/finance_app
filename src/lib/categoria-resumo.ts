@@ -14,7 +14,8 @@ import { currencyBRL } from "@/lib/formatters"
 import type { Transaction, WorkspaceInstallmentPlan, WorkspaceSubscription } from "@/lib/supabase"
 import { transactionLocalYmd } from "@/lib/transaction-date"
 
-type Parte = { texto: string; forte?: boolean }
+/** `lancamento` marca o nome do lançamento que puxou o mês (a tela o torna clicável). */
+type Parte = { texto: string; forte?: boolean; lancamento?: true }
 
 const reais = (n: number) => Math.round(n * 100) / 100
 const centavos = (t: Pick<Transaction, "amount">) => Math.round(Number(t.amount || 0) * 100)
@@ -227,7 +228,22 @@ export function repeticoes(args: {
     })
 }
 
-/** A frase de resumo, sem IA. */
+const nomeDoMes = (ym: string) => {
+    const n = labelYearMonthPt(ym).split(" ")[0]
+    return n.charAt(0).toLocaleUpperCase("pt-BR") + n.slice(1)
+}
+
+/** Tira o sufixo de parcela ("- 3/6", "– 3/6", "(3/6)", " 3/6") do fim; vazio vira null. */
+export function descricaoSemParcela(descricao: string | null | undefined): string | null {
+    const t = (descricao ?? "").replace(/\s*(?:[-–]\s*\d+\/\d+|\(\d+\/\d+\)|\d+\/\d+)\s*$/, "").trim()
+    return t || null
+}
+
+/** O lançamento que puxou o mês: 2 compras ou mais, e o maior acima de 40% do lançado. */
+const puxouOMes = (maior: Transaction | null, lancado: number, compras: number) =>
+    !!maior && lancado > 0 && compras >= 2 && Number(maior.amount) / lancado > 0.4
+
+/** A frase de resumo, sem IA: o veredito de relance e a explicação por baixo. */
 export function fraseDoResumo(args: {
     nomeDaCategoria: string
     tipo: TipoDaCategoria
@@ -240,47 +256,98 @@ export function fraseDoResumo(args: {
     /** Quantas compras o mês tem (o "puxou o mês" pede 2 ou mais). */
     compras: number
     proximoMes: number
-}): { partes: Parte[] } {
+}): { veredito: Parte[]; explicacao: Parte[] } {
     const { nomeDaCategoria: nome, tipo, yearMonth, aberto, lancado, previsto, media, maior, compras, proximoMes } = args
-    const mes = labelYearMonthPt(yearMonth).toLocaleLowerCase("pt-BR")
     const despesa = tipo === "expense"
     if (lancado === 0 && previsto === 0) {
+        const mes = labelYearMonthPt(yearMonth).toLocaleLowerCase("pt-BR")
         return {
-            partes: [
+            veredito: [
                 {
                     texto: `${despesa ? "Nenhum gasto com" : "Nenhuma entrada em"} ${nome} em ${mes}${aberto ? " até agora" : ""}.`,
                 },
             ],
+            explicacao: [],
         }
     }
-    const partes: Parte[] = [
-        { texto: `Em ${mes} ${despesa ? "você gastou" : "entrou"} ` },
+    const comMedia = lancado > 0 && media != null && media > 0
+    const veredito: Parte[] = [
+        { texto: `${nomeDoMes(yearMonth)}${aberto ? " até agora" : ""}: ${despesa ? "" : "entrou "}` },
         { texto: currencyBRL(lancado), forte: true },
-        { texto: despesa ? ` com ${nome}` : ` em ${nome}` },
     ]
-    if (lancado > 0 && media != null && media > 0) {
+    if (comMedia) {
         // Com o que vem pela frente, o veredito é da projeção e a frase diz isso.
         const projeta = aberto && previsto - lancado > 0.005
         const razao = (projeta ? previsto : lancado) / media
-        const veredito = razao > 1.1 ? "acima da" : razao < 0.9 ? "abaixo da" : "em linha com a"
-        partes.push({ texto: `${projeta ? ", e deve fechar" : ","} ${veredito} média de ${currencyBRL(media)}.` })
-    } else partes.push({ texto: "." })
-    if (maior && lancado > 0 && compras >= 2 && Number(maior.amount) / lancado > 0.4) {
-        partes.push({ texto: ` ${maior.description?.trim() || "O maior lançamento"} (` })
-        partes.push({ texto: currencyBRL(Number(maior.amount)), forte: true })
-        partes.push({ texto: ") puxou o mês." })
+        const v = razao > 1.1 ? "acima da" : razao < 0.9 ? "abaixo da" : "em linha com a"
+        veredito.push({ texto: `${projeta ? "; deve fechar" : ","} ${v} sua média.` })
+    } else veredito.push({ texto: "." })
+
+    const explicacao: Parte[] = []
+    const frase = (...p: Parte[]) => {
+        if (explicacao.length) explicacao.push({ texto: " " })
+        explicacao.push(...p)
+    }
+    if (maior && puxouOMes(maior, lancado, compras)) {
+        frase(
+            { texto: descricaoSemParcela(maior.description) ?? "O maior lançamento", lancamento: true },
+            { texto: " (" },
+            { texto: currencyBRL(Number(maior.amount)), forte: true },
+            { texto: ") puxou o mês." },
+        )
     }
     if (aberto && previsto - lancado > 0.005) {
-        partes.push({ texto: " Ainda vêm " })
-        partes.push({ texto: currencyBRL(previsto - lancado), forte: true })
-        partes.push({ texto: " neste mês." })
+        frase({ texto: "Ainda vêm " }, { texto: currencyBRL(previsto - lancado), forte: true }, { texto: " neste mês." })
     }
     if (proximoMes > 0) {
-        partes.push({ texto: " No mês seguinte já há " })
-        partes.push({ texto: currencyBRL(proximoMes), forte: true })
-        partes.push({ texto: " previstos." })
+        frase(
+            { texto: `${nomeDoMes(shiftYearMonth(yearMonth, 1))} já tem ` },
+            { texto: currencyBRL(proximoMes), forte: true },
+            { texto: " previstos." },
+        )
     }
-    return { partes }
+    if (comMedia) frase({ texto: `A média dos últimos 6 meses é ${currencyBRL(media)}.` })
+    return { veredito, explicacao }
+}
+
+/** Os até três fatos do mês (puxou, já previsto, total), na ordem em que aparecem. */
+export function fatosDoMes(args: {
+    tipo: TipoDaCategoria
+    yearMonth: string
+    lancado: number
+    media: number | null
+    maior: Transaction | null
+    compras: number
+    proximoMes: number
+}): { id: "puxou" | "previsto" | "total"; rotulo: string; titulo: string; valor: number; acao?: "lancamento" | "comprometido" }[] {
+    const { yearMonth, lancado, media, maior, compras, proximoMes } = args
+    if (lancado <= 0) return []
+    const r: ReturnType<typeof fatosDoMes> = []
+    if (maior && puxouOMes(maior, lancado, compras)) {
+        r.push({
+            id: "puxou",
+            rotulo: "Puxou o mês",
+            titulo: descricaoSemParcela(maior.description) ?? "O maior lançamento",
+            valor: Number(maior.amount),
+            acao: "lancamento",
+        })
+    }
+    if (proximoMes > 0) {
+        r.push({
+            id: "previsto",
+            rotulo: "Já previsto",
+            titulo: nomeDoMes(shiftYearMonth(yearMonth, 1)),
+            valor: proximoMes,
+            acao: "comprometido",
+        })
+    }
+    r.push({
+        id: "total",
+        rotulo: "Total do mês",
+        titulo: media != null && media > 0 ? `média ${currencyBRL(media)}` : nomeDoMes(yearMonth).toLocaleLowerCase("pt-BR"),
+        valor: lancado,
+    })
+    return r
 }
 
 /** Até 3 insights, na ordem de utilidade. */
