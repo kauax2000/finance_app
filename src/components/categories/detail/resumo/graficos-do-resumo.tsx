@@ -157,6 +157,8 @@ export function GraficosDoResumo({
     // Fechado, os dois pontos dividem o último dia: o rótulo do maior sobe e o do menor desce, para não se cruzarem.
     const atualEmCima = !aberto && (pontoDeHoje?.atual ?? 0) >= (contaDoRitmo.anteriorFinal ?? 0)
     const corDoVeu = seloRitmo?.tom === "success" ? "var(--success)" : seloRitmo?.tom === "warning" ? "var(--warning)" : null
+    // O acumulado parte do zero antes do dia 1: as duas linhas nascem na base, como a área ao lado.
+    const ritmoDesdeZero = useMemo(() => [{ dia: 0, atual: 0, anterior: 0, faixa: [0, 0] as [number, number], projecao: null }, ...ritmo], [ritmo])
     const comDias = diasDaSemana.some((d) => d.total > 0)
     const comFaixas = faixas.some((f) => f.quantidade > 0)
     const comPagamento = porPagamento.length > 0
@@ -276,12 +278,12 @@ export function GraficosDoResumo({
                                     legend={false}
                                     yAxis={false}
                                     config={configRitmo}
-                                    data={ritmo}
+                                    data={ritmoDesdeZero}
                                     x="dia"
                                     xTicks={[1, 8, 15, 22, ritmo.length]}
                                     band={corDoVeu ? { dataKey: "faixa", color: corDoVeu } : undefined}
                                     ghost={aberto ? { dataKey: "projecao", color: corDaSerie } : undefined}
-                                    tooltipLabel={(d) => `dia ${d}`}
+                                    tooltipLabel={(d) => (Number(d) === 0 ? "início do mês" : `dia ${d}`)}
                                     aspect="auto"
                                     className="h-44 w-full"
                                     label={`${oQue} acumulado dia a dia em ${mesAtual}, contra ${mesAnterior}`}
