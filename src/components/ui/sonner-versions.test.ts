@@ -163,6 +163,7 @@ describe("a forma empilhada", () => {
     expect(BLOCO.indexOf(".toast-stacked")).toBeGreaterThan(BLOCO.indexOf("@media (width < 48rem)", inicio))
     expect(regra).toContain("flex-basis: calc(100% - 40px);")
     expect(regra).toContain("flex: 1 1 100%;")
+    expect(regra).toContain("margin-inline: 0 -32px;")
     expect(regra).toContain("height: 44px;")
     expect(regra).toContain("background: var(--primary);")
     expect(regra).toContain("color: var(--primary-foreground);")

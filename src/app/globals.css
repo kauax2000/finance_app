@@ -1218,7 +1218,9 @@
   }
   [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"].toast-stacked [data-button] {
     flex: 1 1 100%;
-    margin-inline: 0;
+    /* Sozinho na linha de baixo, longe do ×: ocupa os 44px que o toast reserva
+       para ele, menos os 12 do recuo, e as duas bordas ficam iguais. */
+    margin-inline: 0 -32px;
     height: 44px;
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);
