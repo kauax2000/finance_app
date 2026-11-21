@@ -424,13 +424,13 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     const ini = f.indexOf(`function ${nome}(`)
     return f.slice(ini, f.indexOf("\nfunction ", ini + 10))
   }
-  it("a linha de referência escreve o rótulo à esquerda, sobre um retângulo da superfície", () => {
+  it("a linha de referência escreve o rótulo à esquerda, logo acima dela e sem caixa", () => {
     const t = trechoDe("ChartReferenceLine")
     expect(t).toContain("label?: string")
     expect(t).toContain('data-slot="chart-reference-label"')
-    expect(t).toContain('fill="var(--chart-surface)"')
     expect(t).toContain("fill-muted-foreground text-2xs")
-    expect(t).toContain('dominantBaseline="central"')
+    expect(t).toContain("(p.viewBox?.y ?? 0) - 6")
+    expect(t).not.toContain("<rect")
   })
   it("o ponto anotado é vazado, com o rótulo acima e virando para dentro perto da borda", () => {
     expect(f).toMatch(/export \{[\s\S]*ChartReferenceDot,[\s\S]*\}/)
@@ -444,7 +444,7 @@ describe("Chart: rótulo na linha de referência, ponto anotado e barras parciai
     expect(r).toContain("usePlotArea")
     expect(r).toContain("< 60")
     expect(r).toContain('"end"')
-    expect(r).toContain("fill-muted-foreground text-2xs")
+    expect(r).toContain("fill-foreground text-2xs")
   })
   it("valueLabels aceita \"selected\": só a barra escolhida leva o valor", () => {
     const t = trechoDe("ChartBars")
@@ -490,5 +490,9 @@ describe("Chart: o eixo X sem a calha do Y e o rótulo do ponto no topo (21/11/2
   })
   it("o rótulo do ponto desce para baixo dele quando não cabe acima", () => {
     expect(trechoDe("ChartReferenceDotLabel")).toContain("cy - 19 < 0 ? cy + 18 : cy - 10")
+  })
+  it("a área sem eixo Y abre 20px no topo, para o rótulo do ponto caber acima", () => {
+    expect(f).toContain("const CHART_AREA_HEADROOM = { top: 20, right: 5, bottom: 5, left: 5 }")
+    expect(trechoDe("ChartArea")).toContain("margin={yAxis ? undefined : CHART_AREA_HEADROOM}")
   })
 })

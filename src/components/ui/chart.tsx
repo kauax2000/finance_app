@@ -870,6 +870,7 @@ function ChartGrid({
 
 /** O recuo do eixo X quando não há eixo Y: o primeiro e o último rótulo cabem inteiros. */
 const CHART_X_INSET = { left: 12, right: 12 }
+const CHART_AREA_HEADROOM = { top: 20, right: 5, bottom: 5, left: 5 }
 
 function ChartXAxis({
   format = "text",
@@ -928,10 +929,7 @@ const chartReferenceTone = {
   zero: "var(--color-foreground)",
 } as const
 
-/** A largura do texto `text-2xs` (11px) estimada pelo número de letras. shortcut: média de 6px por letra da Inter, medir com `getBBox` se um rótulo longo vazar do retângulo. */
-const larguraDoRotulo = (texto: string) => texto.length * 6
-
-/** A linha de referência tem tom, não cor: zero, média e neutra são três papéis. Com `label`, o nome dela ("média") vai sobre a linha, à esquerda, num retângulo da superfície que a curva não atravessa. */
+/** A linha de referência tem tom, não cor: zero, média e neutra são três papéis. Com `label`, o nome dela ("média") vai logo acima da linha, à esquerda, sem caixa. */
 function ChartReferenceLine({
   tone = "neutral",
   strokeDasharray = "4 4",
@@ -950,26 +948,18 @@ function ChartReferenceLine({
       label={
         label
           ? (p: { viewBox?: { x?: number; y?: number } }) => {
+              // Logo acima da linha, sem caixa: a linha segue inteira por baixo (o mockup aprovado, 21/11/2026).
               const x = (p.viewBox?.x ?? 0) + 4
-              const y = p.viewBox?.y ?? 0
+              const y = (p.viewBox?.y ?? 0) - 6
               return (
-                <g data-slot="chart-reference-label">
-                  <rect
-                    x={x - 2}
-                    y={y - 7}
-                    width={larguraDoRotulo(label) + 4}
-                    height={14}
-                    fill="var(--chart-surface)"
-                  />
-                  <text
-                    x={x}
-                    y={y}
-                    dominantBaseline="central"
-                    className="fill-muted-foreground text-2xs"
-                  >
-                    {label}
-                  </text>
-                </g>
+                <text
+                  data-slot="chart-reference-label"
+                  x={x}
+                  y={y}
+                  className="fill-muted-foreground text-2xs"
+                >
+                  {label}
+                </text>
               )
             }
           : undefined
@@ -999,7 +989,8 @@ function ChartReferenceDotLabel({
       x={cx}
       y={y}
       textAnchor={direita - cx < 60 ? "end" : "middle"}
-      className="fill-muted-foreground text-2xs"
+      // Na tinta do texto, não apagado: o ponto anotado é o destaque (pedido do dono, 21/11/2026).
+      className="fill-foreground text-2xs"
     >
       {label}
     </text>
@@ -1334,7 +1325,8 @@ function ChartArea({
         className={className}
         interactive={!!brush}
       >
-        <AreaChart data={data} accessibilityLayer>
+        {/* Sem eixo Y, 20px de topo: o rótulo de um ponto anotado (o maior mês) cabe acima dele. */}
+        <AreaChart data={data} accessibilityLayer margin={yAxis ? undefined : CHART_AREA_HEADROOM}>
           {gradiente ? (
             <defs>
               {chaves.map((key, i) => (

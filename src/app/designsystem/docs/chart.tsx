@@ -1157,7 +1157,7 @@ const config = {
         title="Média, maior mês e mês parcial"
         description={
           <>
-            <code>ChartReferenceLine label</code> escreve o nome da linha sobre ela, no começo da área, num retângulo de <code>--chart-surface</code> que a curva não atravessa. <code>ChartReferenceDot</code> é o ponto vazado de 4px com o rótulo 10px acima — a menos de 60px da borda direita, ele termina no ponto. Nas barras, <code>valueLabels=&quot;selected&quot;</code> escreve só o valor do mês aberto, e <code>partial</code> desenha os meses incompletos só com o contorno tracejado, ainda no tooltip e no foco. Os rótulos são texto do SVG: o que importa vai também no <code>description</code>.
+            <code>ChartReferenceLine label</code> escreve o nome da linha logo acima dela, no começo da área, sem caixa. <code>ChartReferenceDot</code> é o ponto vazado de 4px com o rótulo 10px acima — a <code>ChartArea</code> sem eixo Y abre 20px no topo para ele caber, e a menos de 60px da borda direita ele termina no ponto. Nas barras, <code>valueLabels=&quot;selected&quot;</code> escreve só o valor do mês aberto, e <code>partial</code> desenha os meses incompletos só com o contorno tracejado, ainda no tooltip e no foco. Os rótulos são texto do SVG: o que importa vai também no <code>description</code>.
           </>
         }
         code={`<ChartLine x="mes" … description="Média de R$ 936; o maior mês foi julho, R$ 1.340.">
