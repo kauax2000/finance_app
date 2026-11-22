@@ -142,7 +142,7 @@ export function UltimosSeisMeses({
                     x="mes"
                     {...dicaDosMeses}
                     aspect="auto"
-                    className="h-44 w-full"
+                    className="h-56 w-full"
                     label={`${oQue} em ${nomeDaCategoria} nos últimos 6 meses`}
                     description={descricao}
                 >
