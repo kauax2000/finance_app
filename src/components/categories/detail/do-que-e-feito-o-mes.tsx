@@ -1,7 +1,7 @@
 "use client"
 
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
-import { diaEMes, mesCurto } from "@/components/analise-do-mes/rotulos"
+import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
 import { Badge } from "@/components/ui/badge"
 import { ChartSplit, ChartSwatch, splitPercents, type ChartConfig } from "@/components/ui/chart"
 import { ItemContent } from "@/components/ui/item"
@@ -143,7 +143,7 @@ export function DoQueEFeitoOMes({
                                                     ) : null}
                                                 </span>
                                                 <span className="nums text-muted-foreground">
-                                                    {g.ultimaYmd ? (g.vezes > 1 ? `${g.vezes} vezes · última ${diaEMes(g.ultimaYmd)}` : diaEMes(g.ultimaYmd)) : null}
+                                                    {g.ultimaYmd ? dataDoGrupo(g.ultimaYmd, g.vezes, yearMonth) : null}
                                                     {/* Empilhado (telefone), a variação desce para a linha da data; lado a lado, tem coluna. */}
                                                     <span className="@xl:hidden">
                                                         {g.ultimaYmd ? " · " : null}

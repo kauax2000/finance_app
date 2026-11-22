@@ -39,3 +39,13 @@ const DIAS_POR_EXTENSO: Record<string, string> = {
 export function diaPorExtenso(curto: unknown): string {
     return DIAS_POR_EXTENSO[String(curto)] ?? String(curto)
 }
+
+/**
+ * A data de um grupo na lista do mês: "23 nov", "4 vezes · última 23 nov". A compra no cartão
+ * que caiu na fatura deste mês mas foi feita em outro diz isso: "30 out · fatura de nov".
+ */
+export function dataDoGrupo(ultimaYmd: string, vezes: number, yearMonth: string): string {
+    const dia = diaEMes(ultimaYmd)
+    const base = vezes > 1 ? `${vezes} vezes · última ${dia}` : dia
+    return ultimaYmd.slice(0, 7) === yearMonth ? base : `${base} · fatura de ${mesCurto(yearMonth)}`
+}
