@@ -307,6 +307,10 @@ const porcento = (v: number) => percentBR(Math.abs(v), { maximumFractionDigits: 
 
 /** O variável e o fixo contam como "fora do normal" a partir de ±5% (o total, de ±2%). */
 const PARTE_NORMAL = 0.05
+/** Fora do normal pelo % que se escreve: 5,4% sai "5%" na frase, e um "caiu 5%" no limite lia como ruído. Exportado para a linha do grupo usar a mesma régua. */
+export function foraDoNormal(v: number): boolean {
+    return Math.round(Math.abs(v) * 100) > PARTE_NORMAL * 100
+}
 
 /**
  * A frase do bloco, em partes; o tom só na direção, pela régua de despesa (receita inverte).
@@ -328,7 +332,7 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
 
     const normalVar = c.normais.variavel
     const vVar = variacao(c.variavel.total, normalVar)
-    if (normalVar != null && vVar != null && Math.abs(vVar) >= PARTE_NORMAL) {
+    if (normalVar != null && vVar != null && foraDoNormal(vVar)) {
         const subiu = vVar > 0
         const verbo = despesa ? (subiu ? "subiu" : "caiu") : subiu ? "subiram" : "caíram"
         const r: ParteDaFrase[] = [
@@ -346,7 +350,7 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
         // O fixo, quando saiu do normal (o novo diz quem e desde quando); depois, o total.
         const dFixo = c.fixo.total - (c.normais.fixo ?? 0)
         const fixoMudou =
-            c.normais.fixo != null && (c.normais.fixo ? Math.abs(dFixo / c.normais.fixo) >= PARTE_NORMAL : dFixo > 0)
+            c.normais.fixo != null && (c.normais.fixo ? foraDoNormal(dFixo / c.normais.fixo) : dFixo > 0)
         if (fixoMudou) {
             const Fixos = despesa ? "As parcelas" : "As entradas fixas"
             r.push({ texto: `. ${Fixos} ${dFixo > 0 ? "subiram" : "caíram"}` })

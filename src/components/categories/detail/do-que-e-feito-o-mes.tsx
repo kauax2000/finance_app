@@ -7,7 +7,7 @@ import { ChartSplit, ChartSwatch, splitPercents, type ChartConfig } from "@/comp
 import { ItemContent } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { fixoEmLinhas, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
+import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
@@ -24,7 +24,7 @@ const TOM: Record<NonNullable<ParteDaFrase["tom"]>, string> = { success: "text-s
 /** A variação do grupo contra o normal, em reais e em %: "= normal" dentro de ±5%; o tom diz se é bom. */
 function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean) {
     if (g.novo || g.variacao == null || g.normal == null) return { texto: "não tinha antes", classe: "text-muted-foreground" }
-    if (Math.abs(g.variacao) < 0.05) return { texto: "= normal", classe: "text-muted-foreground" }
+    if (!foraDoNormal(g.variacao)) return { texto: "= normal", classe: "text-muted-foreground" }
     const subiu = g.variacao > 0
     return {
         texto: `${reaisInteiros(Math.abs(g.valor - g.normal))} ${subiu ? "acima" : "abaixo"} · ${subiu ? "↑" : "↓"} ${percentBR(Math.abs(g.variacao), { maximumFractionDigits: 0 })}`,

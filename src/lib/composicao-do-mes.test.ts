@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+    foraDoNormal,
     chaveDoGrupo,
     composicaoDoMes,
     fixoEmLinhas,
@@ -292,5 +293,13 @@ describe("quemGastou", () => {
             { userId: "ana", valor: 120 },
             { userId: "bia", valor: 50 },
         ])
+    })
+})
+
+describe("foraDoNormal", () => {
+    it("decide pelo % que se escreve: 5,4% é normal, 5,6% não", () => {
+        expect(foraDoNormal(-0.054)).toBe(false)
+        expect(foraDoNormal(0.056)).toBe(true)
+        expect(foraDoNormal(0.02)).toBe(false)
     })
 })
