@@ -9,12 +9,14 @@ import {
   ChartDonut,
   ChartHeatStrip,
   ChartSplit,
+  ChartSplitCompare,
   ChartStrip,
   ChartSwatch,
   ChartTooltipContent,
   waterfallSteps,
   chartContainerVariants,
   chartSeriesColor,
+  chartSplitCompareFit,
   dominioDaFaixa,
   formatChartValue,
   type ChartFormat,
@@ -925,3 +927,76 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
     })
   })
 })
+
+describe("ChartSplitCompare", () => {
+  const config = {
+    variavel: { label: "O que você controla", color: "var(--chart-2)" },
+    fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
+  }
+  const html = renderToStaticMarkup(
+    h(ChartSplitCompare, {
+      config,
+      label: "Do que é feito o mês",
+      rows: [
+        {
+          label: "seu normal",
+          variant: "ghost",
+          segments: [
+            { key: "variavel", value: 2760, text: "R$ 2.760" },
+            { key: "fixo", value: 0 },
+          ],
+        },
+        {
+          label: "novembro",
+          variant: "solid",
+          segments: [
+            { key: "variavel", value: 3140, text: "R$ 3.140 ↑ 14%", shortText: "R$ 3.140" },
+            { key: "fixo", value: 443, text: "443", ink: "var(--card)" },
+          ],
+        },
+      ],
+    })
+  )
+  const barras = [...html.matchAll(/data-slot="chart-split-compare-bar"[^>]*style="width:([^;"]+)/g)].map((m) => m[1])
+
+  it("põe as linhas na mesma escala: a maior soma a 100%, a outra proporcional", () => {
+    expect(barras).toHaveLength(2)
+    expect(barras[1]).toBe("100%")
+    expect(parseFloat(barras[0])).toBeCloseTo((2760 / 3583) * 100, 5)
+  })
+  it("não desenha o pedaço de valor 0", () => {
+    expect(html.match(/data-slot="chart-split-compare-segment"/g)).toHaveLength(3)
+    expect(html).not.toContain("flex:0 1 0")
+  })
+  it("o texto cai para o curto, ou some, quando não cabe", () => {
+    expect(chartSplitCompareFit(120, 110, 60)).toBe("long")
+    expect(chartSplitCompareFit(80, 110, 60)).toBe("short")
+    expect(chartSplitCompareFit(40, 110, 60)).toBe("none")
+    expect(chartSplitCompareFit(80, 110)).toBe("none")
+    const fonte = semComentarios(CODIGO)
+    const corpo = fonte.slice(fonte.indexOf("function ChartSplitCompareSegmentBox"))
+    expect(corpo.slice(0, corpo.indexOf("\nfunction ", 10))).toContain("new ResizeObserver")
+  })
+  it("o nome acessível lista as linhas e os pedaços com valor", () => {
+    expect(html).toContain('role="img"')
+    expect(html).toMatch(
+      /aria-label="Do que é feito o mês: seu normal R\$\s2\.760,00 \(O que você controla R\$\s2\.760,00\); novembro R\$\s3\.583,00 \(O que você controla R\$\s3\.140,00, Já decidido R\$\s443,00\)"/
+    )
+  })
+  it("a referência é listrada em tokens, e o sólido pinta a cor e a tinta de cada pedaço", () => {
+    expect(html).toMatch(/data-variant="ghost"[\s\S]*repeating-linear-gradient\(135deg,var\(--muted\)/)
+    expect(html).toContain("background-color:var(--color-fixo);color:var(--card)")
+    expect(html).toContain("background-color:var(--color-variavel);color:var(--identity-foreground)")
+    expect(fonteSemHex()).toBe(true)
+  })
+  it("o rótulo sobe acima da barra abaixo de 18rem da própria largura", () => {
+    expect(html).toContain("@container/chart-split-compare")
+    expect(html).toContain("@2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)]")
+  })
+})
+
+function fonteSemHex() {
+  const fonte = semComentarios(CODIGO)
+  const corpo = fonte.slice(fonte.indexOf("export type ChartSplitCompareSegment"), fonte.indexOf("function ChartSplitCompare({"))
+  return !/#[0-9a-f]{3,8}\b/i.test(corpo)
+}

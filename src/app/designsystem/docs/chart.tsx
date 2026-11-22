@@ -32,6 +32,7 @@ import {
   ChartSkeleton,
   ChartSparkline,
   ChartSplit,
+  ChartSplitCompare,
   ChartSwatch,
   ChartTooltip,
   CHART_ENTER_MS,
@@ -553,6 +554,43 @@ function DemoDivisaoComLista() {
   )
 }
 
+// A Carro de novembro: o normal (média dos meses) contra o mês, na mesma escala.
+const CONFIG_COMPARADAS = {
+  variavel: { label: "O que você controla", color: "var(--chart-2)" },
+  fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
+} satisfies ChartConfig
+
+function DemoComparadas() {
+  const [v, setV] = React.useState<"cartão" | "estreito">("cartão")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Controles inicio={<Eixo rotulo="largura" valores={["cartão", "estreito"] as const} valor={v} onChange={setV} />} />
+      <ChartSplitCompare
+        className={v === "cartão" ? "max-w-md" : "max-w-32"}
+        config={CONFIG_COMPARADAS}
+        label="Do que é feito o mês"
+        rows={[
+          {
+            label: "seu normal",
+            variant: "ghost",
+            segments: [
+              { key: "variavel", value: 2760, text: "R$ 2.760" },
+              { key: "fixo", value: 147, text: "147" },
+            ],
+          },
+          {
+            label: "novembro",
+            segments: [
+              { key: "variavel", value: 3140, text: "R$ 3.140 ↑ 14%", shortText: "R$ 3.140" },
+              { key: "fixo", value: 443, text: "443", ink: "var(--card)" },
+            ],
+          },
+        ]}
+      />
+    </div>
+  )
+}
+
 function DemoAneis() {
   const [v, setV] = React.useState<"com cortes" | "na rampa">("com cortes")
   return (
@@ -1002,7 +1040,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> (com <code>bleed</code>, que zera a margem interna para a faísca encostar nas bordas da caixa, e <code>band</code>, de 0 a 1, que prende a linha na fração de cima da altura com a área cheia embaixo), <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartHeatStrip</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> (com <code>bleed</code>, que zera a margem interna para a faísca encostar nas bordas da caixa, e <code>band</code>, de 0 a 1, que prende a linha na fração de cima da altura com a área cheia embaixo), <code>ChartSplit</code>, <code>ChartSplitCompare</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartHeatStrip</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection
@@ -1626,6 +1664,32 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Barras comparadas"
+        description={
+          <>
+            <code>ChartSplitCompare</code> põe várias linhas divididas <strong>na mesma escala</strong>: a maior soma ocupa a largura toda, e as outras ficam proporcionais (o &quot;seu normal × este mês&quot; do detalhe da categoria). Cada linha tem um rótulo e uma <code>variant</code>: <code>solid</code> pinta cada pedaço na cor do <code>config</code> (ou a <code>color</code> do pedaço, a da categoria), com a tinta <code>--identity-foreground</code> do ladrilho vivo (<code>ink</code> troca: sobre <code>--muted-foreground</code>, <code>var(--card)</code>); <code>ghost</code> é a referência, listrada em <code>--muted</code> com o texto em <code>--muted-foreground</code>. O <code>text</code> de dentro cai para o <code>shortText</code>, ou some, quando o pedaço não o comporta, medido por <code>ResizeObserver</code> (a texto, a container query não mede). O rótulo mora numa coluna à esquerda, dividida pelas linhas, e sobe acima da barra abaixo de 18rem da largura da peça. Pedaço de valor 0 não se desenha. O nome acessível lista cada linha com a soma e os pedaços. Sem arco-íris: a barra leva texto.
+          </>
+        }
+        code={`<ChartSplitCompare
+  config={{ variavel: { label: "O que você controla", color: corDaCategoria },
+            fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" } }}
+  label="Do que é feito o mês"
+  rows={[
+    { label: "seu normal", variant: "ghost",
+      segments: [{ key: "variavel", value: 2760, text: "R$ 2.760" }, { key: "fixo", value: 147 }] },
+    { label: "novembro",
+      segments: [
+        { key: "variavel", value: 3140, text: "R$ 3.140 ↑ 14%", shortText: "R$ 3.140" },
+        { key: "fixo", value: 443, text: "443", ink: "var(--card)" },
+      ] },
+  ]}
+/>`}
+        previewClassName="flex-col items-stretch p-6"
+      >
+        <DemoComparadas />
+      </DocSection>
+
+      <DocSection
         title="Anéis"
         description={
           <>
@@ -2215,7 +2279,7 @@ const config = {
       />
 
       <PropsTable
-        title="ChartWaterfall, ChartBarList, ChartHeatStrip, ChartStrip e ChartAnnotation"
+        title="ChartWaterfall, ChartBarList, ChartHeatStrip, ChartSplitCompare, ChartStrip e ChartAnnotation"
         rows={[
           {
             prop: "ChartWaterfall data",
@@ -2234,6 +2298,13 @@ const config = {
             type: "data · nameKey · dataKey · color · labelText",
             description:
               "A fileira de calor: uma célula por linha, `aspect-square` e `rounded-row`, na `color` com a intensidade do valor sobre o maior (piso de 12%); o zerado é tracejado. `labelText` dá o nome por extenso na dica e no nome acessível.",
+          },
+          {
+            prop: "ChartSplitCompare",
+            type: "rows · config · label · format",
+            default: 'variant "solid"',
+            description:
+              "Barras comparadas na mesma escala (a maior soma a 100%). Cada linha: `label`, `variant` (`solid` | `ghost`) e `segments` (`key`, `value`, `text`, `shortText`, `color`, `ink`). O texto cai para o curto, ou some, quando não cabe; valor 0 não se desenha; o nome acessível lista linhas e pedaços.",
           },
           {
             prop: "ChartStrip",

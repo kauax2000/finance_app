@@ -2829,6 +2829,203 @@ function ChartSplit({
   )
 }
 
+/** Um pedaço de uma linha do `ChartSplitCompare`. */
+export type ChartSplitCompareSegment = {
+  /** A chave do `config`: dá o nome (no acessível) e a cor `--color-<key>`. */
+  key: string
+  value: number
+  /** O texto de dentro, por extenso ("R$ 3.140 ↑ 14%"). */
+  text?: string
+  /** O texto curto, para quando o longo não cabe ("R$ 3.140"). Sem ele, o pedaço estreito fica sem texto. */
+  shortText?: string
+  /** A cor do preenchimento na linha `solid`, no lugar da do `config` (a da categoria: `tileVividColor(tileColorFor(cor))`). */
+  color?: string
+  /** A tinta do texto na linha `solid`. O padrão, `--identity-foreground`, é a do ladrilho vivo; sobre `--muted-foreground`, use `var(--card)`. */
+  ink?: string
+}
+
+/** Uma linha do `ChartSplitCompare`: um rótulo e os pedaços. */
+export type ChartSplitCompareRow = {
+  label: string
+  /** `solid` pinta cada pedaço na sua cor; `ghost` é a referência, listrada em `--muted` com o texto em `--muted-foreground`. */
+  variant?: "solid" | "ghost"
+  segments: ChartSplitCompareSegment[]
+}
+
+/** Qual texto o pedaço mostra, pelas larguras medidas (em px): o longo se couber, senão o curto, senão nada. */
+export function chartSplitCompareFit(
+  available: number,
+  longWidth: number,
+  shortWidth?: number
+): "long" | "short" | "none" {
+  if (longWidth > 0 && longWidth <= available) return "long"
+  if (shortWidth && shortWidth > 0 && shortWidth <= available) return "short"
+  return "none"
+}
+
+/** A listra da referência: dois passos do `--muted` a 135°, que acompanham o tema. Sem arco-íris, porque leva texto. */
+const chartSplitCompareGhostClassName =
+  "bg-[repeating-linear-gradient(135deg,var(--muted)_0_6px,color-mix(in_oklab,var(--muted)_55%,transparent)_6px_12px)] text-muted-foreground"
+
+function ChartSplitCompareSegmentBox({
+  segment,
+  variant,
+  color,
+}: {
+  segment: ChartSplitCompareSegment
+  variant: "solid" | "ghost"
+  color: string
+}) {
+  const caixaRef = React.useRef<HTMLDivElement>(null)
+  const longoRef = React.useRef<HTMLSpanElement>(null)
+  const curtoRef = React.useRef<HTMLSpanElement>(null)
+  // No servidor e no primeiro quadro, o longo; o `ResizeObserver` decide em seguida.
+  const [cabe, setCabe] = React.useState<"long" | "short" | "none">("long")
+
+  React.useLayoutEffect(() => {
+    const caixa = caixaRef.current
+    if (!caixa || !segment.text) return
+    const medir = () => {
+      const estilo = getComputedStyle(caixa)
+      const livre =
+        caixa.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight)
+      setCabe(
+        chartSplitCompareFit(livre, longoRef.current?.offsetWidth ?? 0, curtoRef.current?.offsetWidth)
+      )
+    }
+    medir()
+    if (typeof ResizeObserver === "undefined") return
+    const observador = new ResizeObserver(medir)
+    observador.observe(caixa)
+    return () => observador.disconnect()
+  }, [segment.text, segment.shortText])
+
+  const texto = cabe === "long" ? segment.text : cabe === "short" ? segment.shortText : undefined
+
+  return (
+    <div
+      ref={caixaRef}
+      data-slot="chart-split-compare-segment"
+      data-fit={segment.text ? cabe : undefined}
+      className={cn(
+        "relative flex h-8 min-w-1.5 items-center overflow-hidden rounded-lg px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
+        chartSplitGrowClassName,
+        variant === "ghost" && chartSplitCompareGhostClassName
+      )}
+      // `flex-grow` com o valor cru: o comprimento é a medida exata.
+      style={{
+        flex: `${segment.value} 1 0`,
+        ...(variant === "solid"
+          ? { backgroundColor: color, color: segment.ink ?? "var(--identity-foreground)" }
+          : null),
+      }}
+    >
+      {texto ? <span aria-hidden>{texto}</span> : null}
+      {segment.text ? (
+        // As réguas: o longo e o curto medidos fora do fluxo, sem aparecer.
+        <span aria-hidden className="invisible absolute top-0 left-0 flex flex-col items-start">
+          <span ref={longoRef}>{segment.text}</span>
+          {segment.shortText ? <span ref={curtoRef}>{segment.shortText}</span> : null}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * Barras comparadas: várias linhas empilhadas na mesma escala (a maior soma
+ * ocupa a largura toda, as outras ficam proporcionais), cada uma dividida em
+ * pedaços. É o "seu normal × este mês" do detalhe da categoria: a referência
+ * `ghost` em cima, o mês `solid` embaixo. O texto de dentro cai para o curto, ou
+ * some, quando o pedaço não o comporta (medido por `ResizeObserver`). O rótulo
+ * fica numa coluna à esquerda, compartilhada pelas linhas, e sobe acima da barra
+ * abaixo de 18rem da própria largura (container query). Pedaço de valor 0 não
+ * se desenha. O nome acessível lista as linhas e os pedaços com o valor.
+ */
+function ChartSplitCompare({
+  rows,
+  config,
+  label,
+  description,
+  format = "currency",
+  className,
+}: {
+  rows: ChartSplitCompareRow[]
+  config: ChartConfig
+  label: string
+  description?: string
+  format?: ChartFormat
+  className?: string
+}) {
+  const valor = (s: ChartSplitCompareSegment) =>
+    Number.isFinite(s.value) && s.value > 0 ? s.value : 0
+  const somas = rows.map((r) => r.segments.reduce((acc, s) => acc + valor(s), 0))
+  const maior = Math.max(0, ...somas)
+  const nome = (key: string) => config[key]?.label ?? key
+  const resumo = rows
+    .map((r, i) => {
+      const partes = r.segments
+        .filter((s) => valor(s) > 0)
+        .map((s) => `${nome(s.key)} ${formatChartValue(valor(s), format)}`)
+        .join(", ")
+      return `${r.label} ${formatChartValue(somas[i], format)}${partes ? ` (${partes})` : ""}`
+    })
+    .join("; ")
+
+  return (
+    <ChartHtmlRoot
+      config={config}
+      label={`${label}: ${resumo}`}
+      description={description}
+      className={cn("@container/chart-split-compare w-full", className)}
+    >
+      <div
+        data-slot="chart-split-compare"
+        className="grid grid-cols-[minmax(0,1fr)] gap-y-3 @2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)] @2xs/chart-split-compare:gap-x-2.5"
+      >
+        {rows.map((r, i) => {
+          const variant = r.variant ?? "solid"
+          return (
+            <div
+              key={`${r.label}-${i}`}
+              data-slot="chart-split-compare-row"
+              data-variant={variant}
+              className="flex flex-col gap-1 @2xs/chart-split-compare:col-span-2 @2xs/chart-split-compare:grid @2xs/chart-split-compare:grid-cols-subgrid @2xs/chart-split-compare:items-center"
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "truncate text-xs",
+                  variant === "ghost" ? "text-muted-foreground" : "text-foreground"
+                )}
+              >
+                {r.label}
+              </span>
+              <div
+                data-slot="chart-split-compare-bar"
+                className={cn("flex gap-0.5", chartSplitRevealClassName)}
+                // A escala comum: a maior soma é 100%.
+                style={{ width: `${maior > 0 ? (somas[i] / maior) * 100 : 0}%` }}
+              >
+                {r.segments.map((s, j) =>
+                  valor(s) > 0 ? (
+                    <ChartSplitCompareSegmentBox
+                      key={s.key || j}
+                      segment={{ ...s, value: valor(s) }}
+                      variant={variant}
+                      color={s.color ?? serieColor(s.key, j, config)}
+                    />
+                  ) : null
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </ChartHtmlRoot>
+  )
+}
+
 /** A cor de um anel. Com `bands` diz estado (tokens de estado, não a rampa): o único gráfico em que verde e vermelho significam o que significam. Sem `bands` só identifica a categoria. */
 export function chartRadialColor(
   pct: number,
@@ -4152,6 +4349,7 @@ export {
   ChartRadial,
   ChartSparkline,
   ChartSplit,
+  ChartSplitCompare,
   ChartStrip,
   ChartStyle,
   ChartSwatch,
