@@ -134,9 +134,10 @@ export function DoQueEFeitoOMes({
                 </ItemContent>
             </Item>
 
-            {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; os 6 meses mais largos; abaixo de 42rem da área, empilham. */}
+            {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; os 6 meses à esquerda e mais largos; abaixo de 42rem da área, empilham. */}
             <div className="@container">
-                <div className="grid gap-(--space-block) @2xl:grid-cols-[2fr_3fr]">
+                <div className="grid gap-(--space-block) @2xl:grid-cols-[3fr_2fr]">
+                    {aoLado}
                     {comFixo || comVariavel ? (
                         <CartaoDoGrafico titulo="Do que é feito o mês" apoio={selo}>
                             <ChartSplitCompare
@@ -162,7 +163,6 @@ export function DoQueEFeitoOMes({
                             </div>
                         </CartaoDoGrafico>
                     ) : null}
-                    {aoLado}
                 </div>
             </div>
 
