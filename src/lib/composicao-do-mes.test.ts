@@ -6,6 +6,7 @@ import {
     composicaoDoMes,
     fixoEmLinhas,
     fraseDaComposicao,
+    tomDoInsight,
     quemGastou,
     type ComposicaoDoMes,
 } from "@/lib/composicao-do-mes"
@@ -113,7 +114,7 @@ describe("composicaoDoMes", () => {
         expect(c.variavel.grupos[0].ultimaYmd).toBe("2026-11-12")
         expect(c.puxouOVariavel).toEqual({ nome: "Posto Shell", valor: 500, variacao: 0.25, aMais: 100 })
         expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram com Consórcio Mãe, que começou em setembro, e o mês ficou 5% acima da média.",
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram com Consórcio Mãe, que começou em setembro.",
         )
     })
 
@@ -126,9 +127,8 @@ describe("composicaoDoMes", () => {
         expect(c.destaque).toMatchObject({ nome: "Posto Shell", aMais: 100 })
         const partes = fraseDaComposicao(c, true)
         expect(texto(partes)).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%), e o mês ficou 24% acima da média.",
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%).",
         )
-        expect(partes.find((p) => p.texto === "24% acima")?.tom).toBe("warning")
     })
 
     it("um grupo só deste mês é novo, sem variação", () => {
@@ -160,7 +160,7 @@ describe("composicaoDoMes", () => {
         expect(c.direcao).toBeNull()
         // O total está no normal, mas o variável não: a frase começa por ele.
         expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram, e o mês ficou dentro da média.",
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram.",
         )
     })
 
@@ -176,10 +176,9 @@ describe("composicaoDoMes", () => {
         expect(c.direcao).toBe("acima")
         const partes = fraseDaComposicao(c, true)
         expect(texto(partes)).toBe(
-            "O que você controla caiu 10%: R$ 450, R$ 50 abaixo do seu normal, puxado por Estacionamento (↓ 100%). As parcelas subiram, e o mês ficou 54% acima da média.",
+            "O que você controla caiu 10%: R$ 450, R$ 50 abaixo do seu normal, puxado por Estacionamento (↓ 100%). As parcelas subiram.",
         )
         expect(partes.find((p) => p.texto === "caiu 10%")?.tom).toBe("success")
-        expect(partes.find((p) => p.texto === "54% acima")?.tom).toBe("warning")
     })
 
     it("abaixo da média: o grupo que mais caiu, mesmo sumido", () => {
@@ -190,11 +189,8 @@ describe("composicaoDoMes", () => {
         expect(c.destaque).toMatchObject({ nome: "Estacionamento", aMais: -100, variacao: -1 })
         const partes = fraseDaComposicao(c, true)
         expect(texto(partes)).toBe(
-            "O que você controla caiu 20%: R$ 400, R$ 100 abaixo do seu normal, puxado por Estacionamento (↓ 100%), e o mês ficou 20% abaixo da média.",
+            "O que você controla caiu 20%: R$ 400, R$ 100 abaixo do seu normal, puxado por Estacionamento (↓ 100%).",
         )
-        expect(partes.find((p) => p.texto === "20% abaixo")?.tom).toBe("success")
-        // Na receita, entrar menos é ruim.
-        expect(fraseDaComposicao(c, false).find((p) => p.texto === "20% abaixo")?.tom).toBe("warning")
     })
 })
 
@@ -223,23 +219,21 @@ describe("fraseDaComposicao", () => {
     it("a Renata: começa pelo que ela controla", () => {
         const partes = fraseDaComposicao(renata, true)
         expect(texto(partes)).toBe(
-            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480). As parcelas caíram, e o mês ficou 4% abaixo da média.",
+            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480). As parcelas caíram.",
         )
         expect(partes.find((p) => p.texto === "subiu 67%")?.tom).toBe("warning")
-        expect(partes.find((p) => p.texto === "4% abaixo")?.tom).toBe("success")
     })
     it("a receita inverte o tom e diz avulsas", () => {
         const partes = fraseDaComposicao(renata, false)
         expect(texto(partes)).toBe(
-            "As avulsas subiram 67%: R$ 776, R$ 312 acima do seu normal, puxadas por Corte e hidratação (novo, R$ 480). As entradas fixas caíram, e o mês ficou 4% abaixo da média.",
+            "As avulsas subiram 67%: R$ 776, R$ 312 acima do seu normal, puxadas por Corte e hidratação (novo, R$ 480). As entradas fixas caíram.",
         )
         expect(partes.find((p) => p.texto === "subiram 67%")?.tom).toBe("success")
-        expect(partes.find((p) => p.texto === "4% abaixo")?.tom).toBe("warning")
     })
     it("o fixo dentro de ±5% não entra na frase", () => {
         const c: ComposicaoDoMes = { ...renata, normais: { fixo: 1400, variavel: 464 } }
         expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480), e o mês ficou 4% abaixo da média.",
+            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480).",
         )
     })
     it("o variável dentro de ±5%: o caso de hoje, sem o \"só por causa\"", () => {
@@ -301,5 +295,34 @@ describe("foraDoNormal", () => {
         expect(foraDoNormal(-0.054)).toBe(false)
         expect(foraDoNormal(0.056)).toBe(true)
         expect(foraDoNormal(0.02)).toBe(false)
+    })
+})
+
+describe("tomDoInsight", () => {
+    const base: ComposicaoDoMes = {
+        fixo: { total: 1000, itens: [], proximoMes: 1000 },
+        variavel: { total: 500, grupos: [], outros: null },
+        normais: { fixo: 1000, variavel: 500 },
+        caso: "normal",
+        direcao: null,
+        variacaoTotal: 0,
+    }
+    it("o variável subiu: aviso na despesa, bom na receita", () => {
+        const c = { ...base, variavel: { ...base.variavel, total: 776 } }
+        expect(tomDoInsight(c, true)).toBe("warning")
+        expect(tomDoInsight(c, false)).toBe("success")
+    })
+    it("o variável caiu: bom na despesa, aviso na receita", () => {
+        const c = { ...base, variavel: { ...base.variavel, total: 300 } }
+        expect(tomDoInsight(c, true)).toBe("success")
+        expect(tomDoInsight(c, false)).toBe("warning")
+    })
+    it("variável no normal: vale a direção do total", () => {
+        expect(tomDoInsight({ ...base, caso: "fixoPuxou", direcao: "acima", variacaoTotal: 0.54 }, true)).toBe("warning")
+        expect(tomDoInsight({ ...base, caso: "variavelPuxou", direcao: "abaixo", variacaoTotal: -0.2 }, true)).toBe("success")
+    })
+    it("tudo no normal ou sem média: info", () => {
+        expect(tomDoInsight(base, true)).toBe("info")
+        expect(tomDoInsight({ ...base, caso: "semMedia", normais: { fixo: null, variavel: null }, direcao: null, variacaoTotal: null }, true)).toBe("info")
     })
 })

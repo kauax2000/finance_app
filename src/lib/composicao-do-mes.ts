@@ -357,13 +357,7 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
             const d = c.destaque
             if (c.caso === "novo" && d?.desdeYm) r.push({ texto: " com " }, forte(d.nome), { texto: ", que começou em " }, forte(nomeDoMes(d.desdeYm)))
         }
-        r.push({ texto: ", e o mês ficou " })
-        if (c.direcao == null || c.variacaoTotal == null) r.push({ texto: "dentro da média." })
-        else
-            r.push(
-                { texto: `${porcento(c.variacaoTotal)} ${c.direcao}`, forte: true, tom: tomDe(c.direcao === "acima") },
-                { texto: " da média." },
-            )
+        r.push({ texto: "." })
         return r
     }
 
@@ -405,6 +399,15 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
         forte(reaisInteiros(Math.abs(d.aMais))),
         { texto: d.aMais > 0 ? " a mais que o normal)." : " a menos que o normal)." },
     ]
+}
+
+/** O tom do cartão de insight: a direção do variável quando saiu do normal; senão a do total; senão neutro (receita inverte). */
+export function tomDoInsight(c: ComposicaoDoMes, despesa: boolean): "warning" | "success" | "info" {
+    const normalVar = c.normais.variavel
+    const vVar = normalVar == null ? null : variacao(c.variavel.total, normalVar)
+    const acima = vVar != null && foraDoNormal(vVar) ? vVar > 0 : c.direcao == null ? null : c.direcao === "acima"
+    if (acima == null) return "info"
+    return acima === despesa ? "warning" : "success"
 }
 
 const FIXOS_A_MOSTRAR = 3
