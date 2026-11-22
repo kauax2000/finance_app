@@ -1,0 +1,121 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Do que é feito o mês · cards</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--c:#e879c9}
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 26px;max-width:1000px}
+h2{font:600 17px Inter;margin:46px 0 4px}.sub{color:#9a9a9a;margin:0 0 14px;max-width:1000px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.wrap{max-width:1080px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px 18px;min-width:0}
+.t{font-weight:600;font-size:14px}.mut{color:#8f8f8f;font-size:13px}.m{font:600 14px "Geist Mono",monospace;white-space:nowrap}
+.why{font-size:16px;line-height:1.5;margin:6px 0 12px}.why b{font-weight:600}
+.up{color:#f0c27a}.down{color:#7fdca6}
+.split{display:flex;gap:4px;height:10px}.split span{border-radius:99px}
+.g{display:grid;gap:12px}
+.ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-bottom:10px;border-bottom:1px solid #262626;margin-bottom:2px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:9px;margin-right:7px}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #1d1d1d}.row:first-of-type{border-top:0}
+.row.two{grid-template-columns:1fr auto}
+.delta{font-size:12px;text-align:right}
+.badge{font-size:11px;border-radius:99px;padding:1px 8px;background:rgba(232,178,92,.14);color:#f0c27a;margin-left:6px;font-weight:500}
+.frow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #1d1d1d;font-size:13.5px}.frow:first-of-type{border-top:0}
+.prog{display:inline-flex;gap:2px;vertical-align:middle;margin-left:8px}.prog i{width:5px;height:5px;border-radius:9px;background:#333}.prog i.on{background:var(--c)}
+.foot{margin-top:12px;padding-top:10px;border-top:1px solid #262626;display:grid;gap:4px;font-size:13px}
+.foot div{display:flex;justify-content:space-between}
+.big{font:600 24px "Geist Mono",monospace;margin:4px 0 2px}
+.eyebrow{font-size:13px;color:#9a9a9a;display:flex;align-items:center}
+.narrow{max-width:390px;margin-top:14px}
+.tag{display:inline-block;font:500 11px Inter;color:#888;border:1px dashed #333;border-radius:8px;padding:2px 8px;margin-bottom:8px}
+</style></head><body>
+<h1>"Do que é feito o mês" em cards separados</h1>
+<p class="lead">Dados reais da Renata em novembro. Três jeitos de separar as partes. Cada um mostra o desktop (~1080px de coluna) e, embaixo, o telefone.</p>
+
+<!-- ============ A ============ -->
+<h2>A · Resumo em cima, duas listas embaixo</h2>
+<p class="sub">Um cartão com a frase e a barra na largura toda; embaixo, <b>dois cartões lado a lado</b>: o que você controla e o que já está decidido (com o rodapé dele dentro). Lê de cima para baixo: o porquê, depois o detalhe. <b>Minha escolha.</b></p>
+<div class="wrap g">
+  <div class="card">
+    <div class="t">Do que é feito o mês</div>
+    <p class="why">O que você controla <b class="up">subiu 67%</b>: <b>R$ 776</b>, R$ 312 acima do seu normal, puxado por <b>Corte e hidratação</b> (novo, R$ 480). As parcelas caíram, e o mês ficou <b class="down">4% abaixo</b> da média.</p>
+    <div class="split"><span style="flex:776;background:var(--c)"></span><span style="flex:1418;background:#4a4a4a"></span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px" class="mut"><span><span class="dot" style="background:var(--c)"></span>O que você controla · <b style="color:#ddd">R$ 776</b> · 35%</span><span><span class="dot" style="background:#777"></span>Já decidido · <b style="color:#ddd">R$ 1.418</b> · 65%</span></div>
+  </div>
+  <div class="g" style="grid-template-columns:1.25fr 1fr">
+    <div class="card">
+      <div class="ch"><span class="t">O que você controla</span><span class="mut">vs seu normal</span></div>
+      <div class="row"><div>Corte e hidratação<span class="badge">novo</span><div class="mut">13 nov</div></div><span class="delta mut">não tinha antes</span><span class="m">R$ 480</span></div>
+      <div class="row"><div>Salão<div class="mut">30 out · fatura de nov</div></div><span class="delta down">R$ 49 abaixo · ↓ 30%</span><span class="m">R$ 115</span></div>
+      <div class="row"><div>Pé e mão Renata<div class="mut">19 nov</div></div><span class="delta up">R$ 22 acima · ↑ 30%</span><span class="m">R$ 95</span></div>
+      <div class="row two"><span class="mut">Outros 2 lançamentos</span><span class="m">R$ 86</span></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="ch"><span class="t">Já decidido · parcelas</span><span class="mut">6 ativas</span></div>
+      <div class="frow"><span>Yoga <span class="mut">6/12</span><span class="prog"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="m">R$ 332</span></div>
+      <div class="frow"><span>Zara <span class="mut">1/2</span><span class="prog"><i class=on></i><i></i></span></span><span class="m">R$ 299</span></div>
+      <div class="frow"><span>Botox Renata <span class="mut">2/3</span><span class="prog"><i class=on></i><i class=on></i><i></i></span></span><span class="m">R$ 279</span></div>
+      <div class="frow"><span>+ 3 parcelas novas este mês<div class="mut">Zara Kaua e Renata, Joias, Lentes</div></span><span class="m">R$ 508</span></div>
+      <div class="foot" style="margin-top:auto"><div><span class="mut">Última acaba em</span><b>mai/27</b></div><div><span class="mut">Em dezembro já entram</span><b>R$ 1.418</b></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ B ============ -->
+<h2>B · Três colunas</h2>
+<p class="sub">A frase vira um cartão estreito, com o total e a barra de pé; ao lado, os dois cartões de lista. <b>Tudo numa faixa</b>, mas a frase fica apertada (5–6 linhas) e as listas cabem em ~330px cada.</p>
+<div class="wrap g" style="grid-template-columns:0.9fr 1.1fr 1fr;align-items:stretch">
+  <div class="card" style="display:flex;flex-direction:column">
+    <div class="t">Do que é feito o mês</div>
+    <p class="why" style="font-size:15px">O que você controla <b class="up">subiu 67%</b>, puxado por <b>Corte e hidratação</b> (novo, R$ 480). As parcelas caíram, e o mês ficou <b class="down">4% abaixo</b> da média.</p>
+    <div style="margin-top:auto"><div class="split"><span style="flex:776;background:var(--c)"></span><span style="flex:1418;background:#4a4a4a"></span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px" class="mut"><span>35% controla</span><span>65% decidido</span></div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="t"><span class="dot" style="background:var(--c)"></span>O que você controla</span><span class="m">R$ 776</span></div>
+    <div class="row two"><div>Corte e hidratação<span class="badge">novo</span><div class="mut">13 nov · não tinha antes</div></div><span class="m">R$ 480</span></div>
+    <div class="row two"><div>Salão<div class="mut">30 out · fatura de nov · <span class="down">↓ 30%</span></div></div><span class="m">R$ 115</span></div>
+    <div class="row two"><div>Pé e mão Renata<div class="mut">19 nov · <span class="up">↑ 30%</span></div></div><span class="m">R$ 95</span></div>
+    <div class="row two"><span class="mut">Outros 2 lançamentos</span><span class="m">R$ 86</span></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column">
+    <div class="ch"><span class="t"><span class="dot" style="background:#777"></span>Já decidido</span><span class="m">R$ 1.418</span></div>
+    <div class="frow"><span>Yoga <span class="mut">6/12</span></span><span class="m">R$ 332</span></div>
+    <div class="frow"><span>Zara <span class="mut">1/2</span></span><span class="m">R$ 299</span></div>
+    <div class="frow"><span>Botox Renata <span class="mut">2/3</span></span><span class="m">R$ 279</span></div>
+    <div class="frow"><span>+ 3 novas este mês</span><span class="m">R$ 508</span></div>
+    <div class="foot" style="margin-top:auto"><div><span class="mut">Acaba em</span><b>mai/27</b></div><div><span class="mut">Dezembro</span><b>R$ 1.418</b></div></div>
+  </div>
+</div>
+
+<!-- ============ C ============ -->
+<h2>C · Números em cartões, listas embaixo</h2>
+<p class="sub">A frase sai do cartão e vira a abertura da seção. Embaixo, <b>três cartões de número</b> (controla, já decidido, próximo mês) e, abaixo deles, as duas listas. Mais escaneável, mas a tela fica mais alta e os números repetem o que a frase diz.</p>
+<div class="wrap g">
+  <div><div class="t" style="font-size:16px">Do que é feito o mês</div>
+  <p class="why">O que você controla <b class="up">subiu 67%</b>, puxado por <b>Corte e hidratação</b>. As parcelas caíram, e o mês ficou <b class="down">4% abaixo</b> da média.</p></div>
+  <div class="g" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card"><div class="eyebrow"><span class="dot" style="background:var(--c)"></span>O que você controla</div><div class="big">R$ 776</div><div class="mut"><span class="up">↑ 67%</span> · R$ 312 acima do normal</div></div>
+    <div class="card"><div class="eyebrow"><span class="dot" style="background:#777"></span>Já decidido · parcelas</div><div class="big">R$ 1.418</div><div class="mut"><span class="down">caíram</span> · 65% do mês</div></div>
+    <div class="card"><div class="eyebrow">Em dezembro já entram</div><div class="big">R$ 1.418</div><div class="mut">a última acaba em mai/27</div></div>
+  </div>
+  <div class="g" style="grid-template-columns:1.25fr 1fr">
+    <div class="card">
+      <div class="row"><div>Corte e hidratação<span class="badge">novo</span><div class="mut">13 nov</div></div><span class="delta mut">não tinha antes</span><span class="m">R$ 480</span></div>
+      <div class="row"><div>Salão<div class="mut">30 out · fatura de nov</div></div><span class="delta down">↓ 30%</span><span class="m">R$ 115</span></div>
+      <div class="row"><div>Pé e mão Renata<div class="mut">19 nov</div></div><span class="delta up">↑ 30%</span><span class="m">R$ 95</span></div>
+      <div class="row two"><span class="mut">Outros 2 lançamentos</span><span class="m">R$ 86</span></div>
+    </div>
+    <div class="card">
+      <div class="frow"><span>Yoga <span class="mut">6/12</span><span class="prog"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="m">R$ 332</span></div>
+      <div class="frow"><span>Zara <span class="mut">1/2</span></span><span class="m">R$ 299</span></div>
+      <div class="frow"><span>Botox Renata <span class="mut">2/3</span></span><span class="m">R$ 279</span></div>
+      <div class="frow"><span>+ 3 parcelas novas</span><span class="m">R$ 508</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>No telefone (as três empilham assim)</h2>
+<p class="sub">A: resumo → controla → decidido. B: igual à A. C: frase → 3 números (um por linha, ou 2+1) → as duas listas. Abaixo, a A a 390px.</p>
+<div class="narrow g">
+  <div class="card"><div class="t">Do que é feito o mês</div><p class="why" style="font-size:15px">O que você controla <b class="up">subiu 67%</b>: <b>R$ 776</b>, puxado por <b>Corte e hidratação</b> (novo). As parcelas caíram, e o mês ficou <b class="down">4% abaixo</b> da média.</p><div class="split"><span style="flex:776;background:var(--c)"></span><span style="flex:1418;background:#4a4a4a"></span></div></div>
+  <div class="card"><div class="ch"><span class="t">O que você controla</span><span class="m">R$ 776</span></div><div class="row two"><div>Corte e hidratação<span class="badge">novo</span><div class="mut">13 nov · não tinha antes</div></div><span class="m">R$ 480</span></div><div class="row two"><div>Salão<div class="mut">30 out · fatura de nov · <span class="down">↓ 30%</span></div></div><span class="m">R$ 115</span></div></div>
+  <div class="card"><div class="ch"><span class="t">Já decidido</span><span class="m">R$ 1.418</span></div><div class="frow"><span>Yoga <span class="mut">6/12</span></span><span class="m">R$ 332</span></div><div class="frow"><span>Zara <span class="mut">1/2</span></span><span class="m">R$ 299</span></div></div>
+</div>
+</body></html>
