@@ -3,10 +3,11 @@
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
 import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
 import { Badge } from "@/components/ui/badge"
-import { ChartSplit, ChartSwatch, splitPercents, type ChartConfig } from "@/components/ui/chart"
-import { ItemContent } from "@/components/ui/item"
+import { CheckCircleIcon, ExclamationTriangleIcon, LightBulbIcon } from "@heroicons/react/16/solid"
+import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
+import { Item, ItemContent, ItemDescription, ItemMedia } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
-import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
+import { fixoEmLinhas, foraDoNormal, tomDoInsight, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
@@ -14,6 +15,8 @@ import { nomeDoMes, reaisInteiros } from "./regua-do-mes-contas"
 
 /** "ago/27", a partir de `YYYY-MM`. */
 const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
+
+const ICONE = { success: CheckCircleIcon, warning: ExclamationTriangleIcon, info: LightBulbIcon } as const
 
 /** Até 12 parcelas o progresso vai em pontinhos; acima, só o "N/T". */
 const MAX_PONTINHOS = 12
@@ -54,11 +57,52 @@ export function DoQueEFeitoOMes({
 
     const comFixo = fixo.itens.length > 0
     const comVariavel = variavel.grupos.length > 0
-    const [pctVariavel, pctFixo] = splitPercents([Math.max(0, variavel.total), fixo.total])
     const config = {
         variavel: { label: despesa ? "O que você controla" : "Avulsas", color: corDaSerie },
         fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
     } satisfies ChartConfig
+    const IconeDoInsight = ICONE[tomDoInsight(composicao, despesa)]
+    const nomeMes = nomeDoMes(yearMonth)
+    const { normais, variacaoTotal, direcao } = composicao
+    // Variação do pedaço contra o normal: some dentro de ±5%, quando não há normal ou quando o normal é zero.
+    const quanto = (valor: number, normal: number | null) => {
+        if (!normal) return ""
+        const v = (valor - normal) / normal
+        return foraDoNormal(v) ? ` ${v > 0 ? "↑" : "↓"} ${percentBR(Math.abs(v), { maximumFractionDigits: 0 })}` : ""
+    }
+    const parte = (key: "variavel" | "fixo", valor: number, ink?: string) => ({
+        key,
+        value: valor,
+        text: `${reaisInteiros(valor)}${quanto(valor, normais[key])}`,
+        shortText: reaisInteiros(valor),
+        ...(ink ? { ink } : null),
+    })
+    const linhasDoGrafico: ChartSplitCompareRow[] = [
+        ...(normais.variavel != null || normais.fixo != null
+            ? [
+                  {
+                      label: "seu normal",
+                      variant: "ghost" as const,
+                      segments: (["variavel", "fixo"] as const).map((k) => ({
+                          key: k,
+                          value: normais[k] ?? 0,
+                          text: reaisInteiros(normais[k] ?? 0),
+                      })),
+                  },
+              ]
+            : []),
+        {
+            label: nomeMes,
+            segments: [parte("variavel", Math.max(0, variavel.total)), parte("fixo", fixo.total, "var(--card)")],
+        },
+    ]
+    const selo =
+        variacaoTotal != null && direcao != null ? (
+            <Badge tone={(direcao === "acima") === despesa ? "warning" : "success"} size="sm">
+                {direcao === "acima" ? "+" : "−"}
+                {percentBR(Math.abs(variacaoTotal), { maximumFractionDigits: 0 })}
+            </Badge>
+        ) : null
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
     const tituloDoFixo = despesa
         ? fixo.itens.some((i) => i.tipo === "assinatura")
@@ -71,47 +115,46 @@ export function DoQueEFeitoOMes({
 
     return (
         <div className="grid gap-(--space-block)">
-            <CartaoDoGrafico titulo="Do que é feito o mês">
-                <p className="text-base">
-                    {frase.map((p, i) => (
-                        <span key={i} className={cn(p.forte && "font-semibold", p.tom && TOM[p.tom])}>
-                            {p.texto}
-                        </span>
-                    ))}
-                </p>
+            <Item variant="outline" className="items-start">
+                <ItemMedia variant="tile" tone={tomDoInsight(composicao, despesa)}>
+                    <IconeDoInsight aria-hidden />
+                </ItemMedia>
+                <ItemContent>
+                    <ItemDescription className="line-clamp-none text-base text-foreground">
+                        {frase.map((p, i) => (
+                            <span key={i} className={cn(p.forte && "nums font-semibold", p.tom && TOM[p.tom])}>
+                                {p.texto}
+                            </span>
+                        ))}
+                    </ItemDescription>
+                </ItemContent>
+            </Item>
 
-                {comFixo && comVariavel ? (
-                    <>
-                        <ChartSplit
-                            className="mt-4"
-                            labels="none"
-                            config={config}
-                            data={[
-                                { parte: "variavel", valor: Math.max(0, variavel.total) },
-                                { parte: "fixo", valor: fixo.total },
-                            ]}
-                            nameKey="parte"
-                            dataKey="valor"
-                            label={`${despesa ? "Gasto" : "Recebido"} do mês, o que você controla e o já decidido`}
-                        />
-                        <div className="nums mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-sm">
-                            {[
-                                { ...config.variavel, valor: variavel.total, pct: pctVariavel },
-                                { ...config.fixo, valor: fixo.total, pct: pctFixo },
-                            ].map((l) => (
-                                <span key={l.label} className="inline-flex items-center gap-2">
-                                    <ChartSwatch color={l.color} />
-                                    {l.label}
-                                    <span>
-                                        <span className="font-mono font-semibold">{reaisInteiros(l.valor)}</span>
-                                        <span className="text-muted-foreground"> · {l.pct}%</span>
-                                    </span>
-                                </span>
-                            ))}
-                        </div>
-                    </>
-                ) : null}
-            </CartaoDoGrafico>
+            {comFixo || comVariavel ? (
+                <CartaoDoGrafico titulo="Do que é feito o mês" apoio={selo}>
+                    <ChartSplitCompare
+                        label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
+                        config={config}
+                        rows={linhasDoGrafico}
+                    />
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-2">
+                            <ChartSwatch color={corDaSerie} />
+                            {config.variavel.label}
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                            <ChartSwatch color={config.fixo.color} />
+                            {config.fixo.label}
+                            {composicao.caso === "novo" && composicao.destaque?.nome ? ` · ${composicao.destaque.nome}` : null}
+                            {composicao.caso === "novo" ? (
+                                <Badge tone="warning" size="xs">
+                                    novo
+                                </Badge>
+                            ) : null}
+                        </span>
+                    </div>
+                </CartaoDoGrafico>
+            ) : null}
 
             {/* O que se controla vem primeiro e mais largo; abaixo de 36rem da área, empilha nessa ordem. */}
             <div className="@container">

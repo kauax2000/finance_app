@@ -1,0 +1,99 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Resumo do mês · visual</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--c:#f07a4f;--r:#e879c9;--g:#5c5c5c;--up:#f0c27a;--down:#7fdca6}
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 6px;max-width:1000px}
+h2{font:600 17px Inter;margin:40px 0 4px}.sub{color:#9a9a9a;margin:0 0 14px;max-width:1040px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px}
+.lbl{font-size:12px;color:#777;margin-bottom:6px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px 18px;min-width:0}
+.t{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.chip{font:600 12px "Geist Mono",monospace;border-radius:99px;padding:2px 9px}.cu{background:rgba(240,194,122,.14);color:var(--up)}.cd{background:rgba(127,220,166,.12);color:var(--down)}
+.m{font:600 13px "Geist Mono",monospace;white-space:nowrap}.mut{color:#8f8f8f;font-size:12px}
+.up{color:var(--up)}.down{color:var(--down)}
+/* G */
+.rowg{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:center;margin-top:12px}
+.bar{display:flex;height:34px;gap:3px}.bar>div{border-radius:8px;display:flex;align-items:center;padding:0 10px;font:600 12.5px "Geist Mono",monospace;white-space:nowrap;overflow:hidden;min-width:6px}
+.ghost{background:repeating-linear-gradient(135deg,#262626 0 6px,#1c1c1c 6px 12px)!important;color:#9a9a9a}
+.legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:#999}.legend i{display:inline-block;width:9px;height:9px;border-radius:9px;margin-right:6px;vertical-align:-1px}
+/* H treemap */
+.tm{display:grid;gap:4px;height:200px;margin-top:12px}
+.tm>div{border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;min-width:0}
+.tm .n{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tm .v{font:600 13px "Geist Mono",monospace}
+.tm .a{font:600 11.5px Inter;border-radius:99px;padding:0 7px;align-self:flex-start;margin-top:3px}
+.au{background:rgba(0,0,0,.35);color:#ffd59a}.ad{background:rgba(0,0,0,.35);color:#a6f0c4}.an{background:rgba(0,0,0,.35);color:#fff}
+/* I diverging */
+.dv{margin-top:12px}
+.dl{display:grid;grid-template-columns:1fr 2px 1fr;align-items:center;height:30px;gap:0}
+.dl .l,.dl .r{display:flex;align-items:center;height:22px}
+.dl .l{justify-content:flex-end}.axis{background:#3a3a3a;height:100%}
+.b{height:22px;display:flex;align-items:center;padding:0 8px;font:600 12px "Geist Mono",monospace;white-space:nowrap}
+.bl{border-radius:6px 0 0 6px;justify-content:flex-start}.br{border-radius:0 6px 6px 0;justify-content:flex-end}
+.nm{font-size:12px;color:#bbb;white-space:nowrap;padding:0 8px}
+</style></head><body>
+<h1>O resumo, só com desenho</h1>
+<p class="lead">Texto reduzido a nomes e valores. Cada opção responde "por que o mês mudou" com uma forma diferente. Carro e Renata, novembro.</p>
+
+<!-- G -->
+<h2>G · Seu normal × este mês, lado a lado</h2>
+<p class="sub">Duas barras empilhadas: em cima, o seu mês normal; embaixo, este mês, divididas em <b>o que você controla</b> (cor da categoria) e <b>já decidido</b> (cinza). O olho compara o tamanho de cada pedaço. <b>Minha escolha</b>: uma forma só, e ela já responde "o que cresceu".</p>
+<div class="pair">
+ <div><div class="lbl">Carro</div><div class="card"><div class="t">Do que é feito o mês <span class="chip cu">+23%</span></div>
+  <div class="rowg"><span class="mut">seu normal</span><div class="bar" style="width:81%"><div class="ghost" style="flex:2760">R$ 2.760</div><div class="ghost" style="flex:147"></div></div></div>
+  <div class="rowg"><span class="mut" style="color:#ddd">novembro</span><div class="bar" style="width:100%"><div style="flex:3140;background:var(--c);color:#2a1206">R$ 3.140 <span style="opacity:.7;margin-left:8px">↑ 14%</span></div><div style="flex:443;background:var(--g)">443</div></div></div>
+  <div class="legend"><span><i style="background:var(--c)"></i>O que você controla</span><span><i style="background:var(--g)"></i>Já decidido · Seguro carro <span class="up">novo</span></span></div></div></div>
+ <div><div class="lbl">Renata</div><div class="card"><div class="t">Do que é feito o mês <span class="chip cd">−4%</span></div>
+  <div class="rowg"><span class="mut">seu normal</span><div class="bar"><div class="ghost" style="flex:464">464</div><div class="ghost" style="flex:1823">R$ 1.823</div></div></div>
+  <div class="rowg"><span class="mut" style="color:#ddd">novembro</span><div class="bar" style="width:96%"><div style="flex:776;background:var(--r);color:#2b0b22">R$ 776 <span style="opacity:.7;margin-left:6px">↑ 67%</span></div><div style="flex:1418;background:var(--g)">R$ 1.418 <span style="opacity:.7;margin-left:6px">↓ 22%</span></div></div></div>
+  <div class="legend"><span><i style="background:var(--r)"></i>O que você controla</span><span><i style="background:var(--g)"></i>Já decidido · parcelas</span></div></div></div>
+</div>
+
+<!-- H -->
+<h2>H · O mês em blocos</h2>
+<p class="sub">Um mapa de blocos: cada gasto do mês é um bloco do tamanho do valor, <b>colorido</b> se depende de você e <b>cinza</b> se é parcela, com uma pílula de ↑/↓ ou "novo". Mostra literalmente "do que é feito o mês". A variação fica pequena (pílula).</p>
+<div class="pair">
+ <div><div class="lbl">Carro</div><div class="card"><div class="t">Do que é feito o mês <span class="chip cu">+23%</span></div>
+  <div class="tm" style="grid-template-columns:2000fr 1583fr;grid-template-rows:1fr 1fr">
+   <div style="grid-row:span 2;background:var(--c);color:#2a1206"><div><div class="n">Consórcio Mãe</div><span class="a ad">↓ 16%</span></div><div class="v">R$ 2.000</div></div>
+   <div style="background:#e8916d;color:#2a1206"><div><div class="n">Abastecimento</div><span class="a au">↑ 68%</span></div><div class="v">R$ 840</div></div>
+   <div style="display:grid;grid-template-columns:443fr 300fr;gap:4px;padding:0;background:none">
+     <div style="background:var(--g);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div><div class="n">Seguro carro</div><span class="a an">novo</span></div><div class="v">R$ 443</div></div>
+     <div style="background:#f3a587;color:#2a1206;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div><div class="n">Gasolina</div><span class="a au">↑ 81%</span></div><div class="v">R$ 240</div></div>
+   </div>
+  </div></div></div>
+ <div><div class="lbl">Renata</div><div class="card"><div class="t">Do que é feito o mês <span class="chip cd">−4%</span></div>
+  <div class="tm" style="grid-template-columns:776fr 1418fr;grid-template-rows:480fr 296fr">
+   <div style="background:var(--r);color:#2b0b22"><div><div class="n">Corte e hidratação</div><span class="a an">novo</span></div><div class="v">R$ 480</div></div>
+   <div style="grid-row:span 2;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;padding:0;background:none">
+     <div style="background:var(--g);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">Yoga 6/12</div><div class="v">R$ 332</div></div>
+     <div style="background:#555;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">Zara 1/2</div><div class="v">R$ 299</div></div>
+     <div style="background:#505050;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">Botox 2/3</div><div class="v">R$ 279</div></div>
+     <div style="background:#4a4a4a;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">+ 3 novas</div><div class="v">R$ 508</div></div>
+   </div>
+   <div style="display:grid;grid-template-columns:115fr 95fr 86fr;gap:4px;padding:0;background:none">
+     <div style="background:#ef9fd8;color:#2b0b22;border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">Salão</div><span class="a ad">↓</span></div>
+     <div style="background:#f2b6e1;color:#2b0b22;border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between"><div class="n">Pé e mão</div><span class="a au">↑</span></div>
+     <div style="background:#f6cbea;color:#2b0b22;border-radius:10px;padding:6px 8px"><div class="n">Outros</div></div>
+   </div>
+  </div></div></div>
+</div>
+
+<!-- I -->
+<h2>I · Quem empurrou para cima, quem puxou para baixo</h2>
+<p class="sub">Barras saindo de um eixo no meio: para a direita, o que subiu contra o seu normal; para a esquerda, o que caiu. <b>Colorido</b> se depende de você, <b>cinza</b> se é parcela. Responde o "por quê" de uma vez.</p>
+<div class="pair">
+ <div><div class="lbl">Carro</div><div class="card"><div class="t">O que mudou no mês <span class="chip cu">+R$ 676</span></div>
+  <div class="dv">
+   <div class="dl"><div class="l"></div><div class="axis"></div><div class="r"><div class="b br" style="width:72%;background:var(--c);color:#2a1206">+340</div><span class="nm">Abastecimento</span></div></div>
+   <div class="dl"><div class="l"></div><div class="axis"></div><div class="r"><div class="b br" style="width:63%;background:var(--g)">+296</div><span class="nm">Seguro carro</span></div></div>
+   <div class="dl"><div class="l"></div><div class="axis"></div><div class="r"><div class="b br" style="width:23%;background:var(--c);color:#2a1206">+107</div><span class="nm">Gasolina</span></div></div>
+   <div class="dl"><div class="l"><span class="nm">Consórcio Mãe</span><div class="b bl" style="width:79%;background:var(--c);opacity:.55;color:#2a1206">−371</div></div><div class="axis"></div><div class="r"></div></div>
+  </div></div></div>
+ <div><div class="lbl">Renata</div><div class="card"><div class="t">O que mudou no mês <span class="chip cd">−R$ 93</span></div>
+  <div class="dv">
+   <div class="dl"><div class="l"></div><div class="axis"></div><div class="r"><div class="b br" style="width:90%;background:var(--r);color:#2b0b22">+480</div><span class="nm">Corte e hidratação</span></div></div>
+   <div class="dl"><div class="l"></div><div class="axis"></div><div class="r"><div class="b br" style="width:8%;background:var(--r);color:#2b0b22"></div><span class="nm">Pé e mão +22</span></div></div>
+   <div class="dl"><div class="l"><span class="nm">Salão −49</span><div class="b bl" style="width:11%;background:var(--r);opacity:.55"></div></div><div class="axis"></div><div class="r"></div></div>
+   <div class="dl"><div class="l"><span class="nm">Parcelas</span><div class="b bl" style="width:86%;background:var(--g)">−405</div></div><div class="axis"></div><div class="r"></div></div>
+  </div></div></div>
+</div>
+</body></html>
