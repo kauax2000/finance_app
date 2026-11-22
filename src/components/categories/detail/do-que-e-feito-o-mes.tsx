@@ -44,6 +44,7 @@ export function DoQueEFeitoOMes({
     despesa,
     yearMonth,
     corDaSerie,
+    aoLado,
 }: {
     composicao: ComposicaoDoMes
     frase: ParteDaFrase[]
@@ -51,9 +52,12 @@ export function DoQueEFeitoOMes({
     yearMonth: string
     /** A cor que o ladrilho da categoria desenha: o variável na barra, no cabeçalho e os pontinhos das parcelas. */
     corDaSerie: string
+    /** Um cartão ao lado do gráfico (os Últimos 6 meses), na mesma linha quando há largura. */
+    aoLado?: React.ReactNode
 }) {
     const { fixo, variavel } = composicao
-    if (fixo.itens.length === 0 && variavel.grupos.length === 0) return null
+    // Sem nada a compor, o cartão ao lado (os 6 meses) continua.
+    if (fixo.itens.length === 0 && variavel.grupos.length === 0) return aoLado ?? null
 
     const comFixo = fixo.itens.length > 0
     const comVariavel = variavel.grupos.length > 0
@@ -130,31 +134,37 @@ export function DoQueEFeitoOMes({
                 </ItemContent>
             </Item>
 
-            {comFixo || comVariavel ? (
-                <CartaoDoGrafico titulo="Do que é feito o mês" apoio={selo}>
-                    <ChartSplitCompare
-                        label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
-                        config={config}
-                        rows={linhasDoGrafico}
-                    />
-                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-2">
-                            <ChartSwatch color={corDaSerie} />
-                            {config.variavel.label}
-                        </span>
-                        <span className="inline-flex items-center gap-2">
-                            <ChartSwatch color={config.fixo.color} />
-                            {config.fixo.label}
-                            {composicao.caso === "novo" && composicao.destaque?.nome ? ` · ${composicao.destaque.nome}` : null}
-                            {composicao.caso === "novo" ? (
-                                <Badge tone="warning" size="xs">
-                                    novo
-                                </Badge>
-                            ) : null}
-                        </span>
-                    </div>
-                </CartaoDoGrafico>
-            ) : null}
+            {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; abaixo de 42rem da área, empilham. */}
+            <div className="@container">
+                <div className="grid gap-(--space-block) @2xl:grid-cols-2">
+                    {comFixo || comVariavel ? (
+                        <CartaoDoGrafico titulo="Do que é feito o mês" apoio={selo}>
+                            <ChartSplitCompare
+                                label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
+                                config={config}
+                                rows={linhasDoGrafico}
+                            />
+                            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                                <span className="inline-flex items-center gap-2">
+                                    <ChartSwatch color={corDaSerie} />
+                                    {config.variavel.label}
+                                </span>
+                                <span className="inline-flex items-center gap-2">
+                                    <ChartSwatch color={config.fixo.color} />
+                                    {config.fixo.label}
+                                    {composicao.caso === "novo" && composicao.destaque?.nome ? ` · ${composicao.destaque.nome}` : null}
+                                    {composicao.caso === "novo" ? (
+                                        <Badge tone="warning" size="xs">
+                                            novo
+                                        </Badge>
+                                    ) : null}
+                                </span>
+                            </div>
+                        </CartaoDoGrafico>
+                    ) : null}
+                    {aoLado}
+                </div>
+            </div>
 
             {/* O que se controla vem primeiro e mais largo; abaixo de 36rem da área, empilha nessa ordem. */}
             <div className="@container">

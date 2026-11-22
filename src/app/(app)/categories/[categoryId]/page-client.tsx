@@ -581,6 +581,20 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
 
     const totalLancamentos = expenseMonthRows?.length ?? txController.totalCount ?? 0
 
+    const comComposicao = Boolean(analise?.composicao) && txs.length > 0
+    const mesesNode = analise ? (
+        <UltimosSeisMeses
+            tipo={tipo}
+            cor={category.color}
+            nomeDaCategoria={category.name}
+            yearMonth={yearMonth}
+            aberto={aberto}
+            serie={analise.serie}
+            media={analise.media}
+            limite={limite}
+        />
+    ) : null
+
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-6">
             {confirmDialog}
@@ -639,7 +653,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     )
                 }
                 composicao={
-                    analise?.composicao && txs.length > 0 ? (
+                    comComposicao && analise?.composicao ? (
                         <DoQueEFeitoOMes
                             composicao={analise.composicao}
                             frase={analise.frase}
@@ -648,6 +662,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             corDaSerie={tileVividColor(
                                 tileColorFor(category.color) ?? (tipo === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT),
                             )}
+                            aoLado={mesesNode}
                         />
                     ) : null
                 }
@@ -656,20 +671,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         <QuemGastou pessoas={analise.quem} diretorio={diretorio} despesa={tipo === "expense"} />
                     ) : null
                 }
-                meses={
-                    analise ? (
-                        <UltimosSeisMeses
-                            tipo={tipo}
-                            cor={category.color}
-                            nomeDaCategoria={category.name}
-                            yearMonth={yearMonth}
-                            aberto={aberto}
-                            serie={analise.serie}
-                            media={analise.media}
-                            limite={limite}
-                        />
-                    ) : null
-                }
+                meses={comComposicao ? null : mesesNode}
                 insight={
                     analise?.insight ? (
                         <InsightDaCategoria insight={analise.insight} onDefinirLimite={openLimitDialog} />
