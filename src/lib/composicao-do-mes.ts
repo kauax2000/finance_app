@@ -34,6 +34,8 @@ export type GrupoVariavel = {
     /** Fração contra o normal; null no grupo novo. */
     variacao: number | null
     novo: boolean
+    /** O dia do último lançamento de peso 1 do grupo no mês (YYYY-MM-DD). */
+    ultimaYmd?: string
 }
 
 export type CasoDaComposicao = "semMedia" | "normal" | "novo" | "fixoPuxou" | "variavelPuxou"
@@ -52,6 +54,11 @@ export type ComposicaoDoMes = {
      * (negativo quando caiu).
      */
     destaque?: { nome: string; desdeYm?: string; variacao?: number | null; aMais?: number }
+    /**
+     * O grupo de maior diferença em reais na direção do variável contra o normal (o que a frase diz
+     * que puxou): `valor` no mês, `variacao` (null se novo) e `aMais` (negativo quando caiu).
+     */
+    puxouOVariavel?: { nome: string; valor: number; variacao: number | null; aMais: number }
 }
 
 export type ParteDaFrase = { texto: string; forte?: boolean; tom?: "success" | "warning" }
@@ -92,8 +99,8 @@ function janela(yearMonth: string, criadaEm: string, meses = 6): string[] {
 
 type Somas = { fixo: number; variavel: number; grupos: Map<string, number>; grafias: Map<string, Map<string, number>> }
 
-/** Somas em centavos com o peso (o estorno abate); `vezes` conta por grupo os de peso 1. */
-function somar(txs: Transaction[], tipo: TipoDaCategoria, vezes?: Map<string, number>): Somas {
+/** Somas em centavos com o peso (o estorno abate); `vezes` conta por grupo os de peso 1, e `ultimas` guarda o dia do último. */
+function somar(txs: Transaction[], tipo: TipoDaCategoria, vezes?: Map<string, number>, ultimas?: Map<string, string>): Somas {
     const s: Somas = { fixo: 0, variavel: 0, grupos: new Map(), grafias: new Map() }
     for (const t of txs) {
         const p = peso(t, tipo)
@@ -111,6 +118,10 @@ function somar(txs: Transaction[], tipo: TipoDaCategoria, vezes?: Map<string, nu
         g.set(grafia, (g.get(grafia) ?? 0) + 1)
         s.grafias.set(k, g)
         if (vezes && p === 1) vezes.set(k, (vezes.get(k) ?? 0) + 1)
+        if (ultimas && p === 1) {
+            const dia = transactionLocalYmd(t.date) ?? t.date.slice(0, 10)
+            if (dia > (ultimas.get(k) ?? "")) ultimas.set(k, dia)
+        }
     }
     return s
 }
@@ -194,7 +205,8 @@ export function composicaoDoMes(args: {
 
     // O mês e o normal de cada parte.
     const vezes = new Map<string, number>()
-    const mes = somar(txsDoMes, tipo, vezes)
+    const ultimas = new Map<string, string>()
+    const mes = somar(txsDoMes, tipo, vezes, ultimas)
     const meses = janela(yearMonth, criadaEm)
     const doHistorico = meses.map((ym) =>
         somar(
@@ -217,10 +229,34 @@ export function composicaoDoMes(args: {
         .map(([chave, c]) => {
             const valor = c / 100
             const n = normalDoGrupo(chave)
-            return { chave, nome: nomeDoGrupo(mes.grafias.get(chave)), vezes: vezes.get(chave) ?? 0, valor, normal: n, variacao: variacao(valor, n), novo: n == null }
+            return {
+                chave,
+                nome: nomeDoGrupo(mes.grafias.get(chave)),
+                vezes: vezes.get(chave) ?? 0,
+                valor,
+                normal: n,
+                variacao: variacao(valor, n),
+                novo: n == null,
+                ultimaYmd: ultimas.get(chave),
+            }
         })
         .sort((a, b) => b.valor - a.valor)
     const resto = todos.slice(GRUPOS_A_MOSTRAR)
+
+    // O grupo que mais subiu (ou caiu, incluindo o que sumiu) em reais, na direção de `sinal`.
+    const chaves = new Set([...mes.grupos.keys(), ...doHistorico.flatMap((s) => [...s.grupos.keys()])])
+    const maiorDiferenca = (sinal: number) => {
+        let melhor: { chave: string; aMais: number } | null = null
+        for (const k of chaves) {
+            const aMais = Math.max(0, mes.grupos.get(k) ?? 0) / 100 - (normalDoGrupo(k) ?? 0)
+            if (aMais * sinal > 0 && (!melhor || Math.abs(aMais) > Math.abs(melhor.aMais))) melhor = { chave: k, aMais }
+        }
+        if (!melhor) return null
+        const { chave, aMais } = melhor
+        const valor = Math.max(0, mes.grupos.get(chave) ?? 0) / 100
+        const nome = nomeDoGrupo(mes.grafias.get(chave) ?? doHistorico.findLast((s) => s.grafias.has(chave))?.grafias.get(chave))
+        return { nome, valor, variacao: variacao(valor, normalDoGrupo(chave)), aMais: Math.round(aMais * 100) / 100 }
+    }
 
     const fixoTotal = fontes.reduce((a, f) => a + f.cents, 0) / 100
     const variavelTotal = mes.variavel / 100
@@ -244,6 +280,8 @@ export function composicaoDoMes(args: {
         direcao: null,
         variacaoTotal: null,
     }
+    const puxou = normais.variavel != null ? maiorDiferenca(variavelTotal - normais.variavel) : null
+    if (puxou) r.puxouOVariavel = puxou
     if (media == null || media <= 0) return r
     const delta = (total - media) / media
     r.variacaoTotal = delta
@@ -260,26 +298,20 @@ export function composicaoDoMes(args: {
         return { ...r, caso: "fixoPuxou", destaque: { nome: "parcelas", variacao: variacao(variavelTotal, normais.variavel) } }
     }
 
-    // O grupo que mais subiu (ou caiu, incluindo o que sumiu) em reais.
-    const chaves = new Set([...mes.grupos.keys(), ...doHistorico.flatMap((s) => [...s.grupos.keys()])])
-    let melhor: { chave: string; aMais: number } | null = null
-    for (const k of chaves) {
-        const aMais = Math.max(0, mes.grupos.get(k) ?? 0) / 100 - (normalDoGrupo(k) ?? 0)
-        if (aMais * diferenca > 0 && (!melhor || Math.abs(aMais) > Math.abs(melhor.aMais))) melhor = { chave: k, aMais }
-    }
+    const melhor = maiorDiferenca(diferenca)
     if (!melhor) return { ...r, caso: "variavelPuxou" }
-    const valor = Math.max(0, mes.grupos.get(melhor.chave) ?? 0) / 100
-    const nome = nomeDoGrupo(mes.grafias.get(melhor.chave) ?? doHistorico.findLast((s) => s.grafias.has(melhor.chave))?.grafias.get(melhor.chave))
-    return {
-        ...r,
-        caso: "variavelPuxou",
-        destaque: { nome, variacao: variacao(valor, normalDoGrupo(melhor.chave)), aMais: Math.round(melhor.aMais * 100) / 100 },
-    }
+    return { ...r, caso: "variavelPuxou", destaque: { nome: melhor.nome, variacao: melhor.variacao, aMais: melhor.aMais } }
 }
 
 const porcento = (v: number) => percentBR(Math.abs(v), { maximumFractionDigits: 0 })
 
-/** A frase do bloco, em partes; o tom só no "acima"/"abaixo", pela régua de despesa (receita inverte). */
+/** O variável e o fixo contam como "fora do normal" a partir de ±5% (o total, de ±2%). */
+const PARTE_NORMAL = 0.05
+
+/**
+ * A frase do bloco, em partes; o tom só na direção, pela régua de despesa (receita inverte).
+ * Com o variável fora do normal ela começa por ele, quem o puxou, o fixo e o total; senão, o caso.
+ */
 export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDaFrase[] {
     const tomDe = (acima: boolean): ParteDaFrase["tom"] => (acima === despesa ? "warning" : "success")
     const forte = (texto: string): ParteDaFrase => ({ texto, forte: true })
@@ -293,6 +325,44 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
             { texto: despesa ? " do dia a dia neste mês." : " avulsas neste mês." },
         ]
     }
+
+    const normalVar = c.normais.variavel
+    const vVar = variacao(c.variavel.total, normalVar)
+    if (normalVar != null && vVar != null && Math.abs(vVar) >= PARTE_NORMAL) {
+        const subiu = vVar > 0
+        const verbo = despesa ? (subiu ? "subiu" : "caiu") : subiu ? "subiram" : "caíram"
+        const r: ParteDaFrase[] = [
+            { texto: despesa ? "O que você controla " : "As avulsas " },
+            { texto: `${verbo} ${porcento(vVar)}`, forte: true, tom: tomDe(subiu) },
+            { texto: ": " },
+            forte(reaisInteiros(c.variavel.total)),
+            { texto: `, ${reaisInteiros(Math.abs(c.variavel.total - normalVar))} ${subiu ? "acima" : "abaixo"} do seu normal` },
+        ]
+        const p = c.puxouOVariavel
+        if (p) {
+            const quanto = p.variacao == null ? `novo, ${reaisInteiros(p.valor)}` : `${p.variacao > 0 ? "↑" : "↓"} ${porcento(p.variacao)}`
+            r.push({ texto: despesa ? ", puxado por " : ", puxadas por " }, forte(p.nome), { texto: ` (${quanto})` })
+        }
+        // O fixo, quando saiu do normal (o novo diz quem e desde quando); depois, o total.
+        const dFixo = c.fixo.total - (c.normais.fixo ?? 0)
+        const fixoMudou =
+            c.normais.fixo != null && (c.normais.fixo ? Math.abs(dFixo / c.normais.fixo) >= PARTE_NORMAL : dFixo > 0)
+        if (fixoMudou) {
+            const Fixos = despesa ? "As parcelas" : "As entradas fixas"
+            r.push({ texto: `. ${Fixos} ${dFixo > 0 ? "subiram" : "caíram"}` })
+            const d = c.destaque
+            if (c.caso === "novo" && d?.desdeYm) r.push({ texto: " com " }, forte(d.nome), { texto: ", que começou em " }, forte(nomeDoMes(d.desdeYm)))
+        }
+        r.push({ texto: ", e o mês ficou " })
+        if (c.direcao == null || c.variacaoTotal == null) r.push({ texto: "dentro da média." })
+        else
+            r.push(
+                { texto: `${porcento(c.variacaoTotal)} ${c.direcao}`, forte: true, tom: tomDe(c.direcao === "acima") },
+                { texto: " da média." },
+            )
+        return r
+    }
+
     if (c.caso === "normal" || c.variacaoTotal == null || c.direcao == null) {
         const r: ParteDaFrase[] = [{ texto: "O mês está dentro do seu normal." }]
         if (c.fixo.total > 0) r.push({ texto: " " }, forte(reaisInteiros(c.fixo.total)), { texto: ` dele já eram ${fixos}.` })
@@ -309,12 +379,12 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
         return [...inicio, { texto: " por causa de " }, forte(d.nome), { texto: ", que começou em " }, forte(d.desdeYm ? nomeDoMes(d.desdeYm) : ""), { texto: "." }]
     }
     if (c.caso === "fixoPuxou") {
-        const r: ParteDaFrase[] = [...inicio, { texto: " só por causa das " }, forte(fixos), { texto: "." }]
-        const v = d?.variacao
-        if (v == null) return r
-        r.push({ texto: ` O que você controla, ` }, forte(reaisInteiros(c.variavel.total)), { texto: ", está " })
-        if (Math.abs(v) < NORMAL) r.push({ texto: "dentro do seu normal." })
-        else r.push({ texto: `${porcento(v)} ${v > 0 ? "acima" : "abaixo"}`, forte: true, tom: tomDe(v > 0) }, { texto: " do seu normal." })
+        const r: ParteDaFrase[] = [...inicio, { texto: " por causa das " }, forte(fixos), { texto: "." }]
+        // Aqui o variável já está dentro de ±5% (senão a frase começou por ele).
+        if (d?.variacao == null) return r
+        r.push({ texto: despesa ? " O que você controla, " : " As avulsas, " }, forte(reaisInteiros(c.variavel.total)), {
+            texto: despesa ? ", está dentro do seu normal." : ", estão dentro do seu normal.",
+        })
         return r
     }
     if (!d || d.aMais == null) return [...inicio, { texto: "." }]
@@ -331,6 +401,28 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
         forte(reaisInteiros(Math.abs(d.aMais))),
         { texto: d.aMais > 0 ? " a mais que o normal)." : " a menos que o normal)." },
     ]
+}
+
+const FIXOS_A_MOSTRAR = 3
+
+/**
+ * O fixo compacto: as 3 linhas de maior valor (os itens já vêm do maior para o menor) e o resto somado,
+ * com os nomes e se todos começaram neste mês.
+ */
+export function fixoEmLinhas(itens: ItemFixo[], yearMonth: string) {
+    const resto = itens.slice(FIXOS_A_MOSTRAR)
+    return {
+        linhas: itens.slice(0, FIXOS_A_MOSTRAR),
+        resto: resto.length
+            ? {
+                  n: resto.length,
+                  nomes: resto.map((i) => i.nome),
+                  valor: Math.round(resto.reduce((a, i) => a + i.valor * 100, 0)) / 100,
+                  soParcelas: resto.every((i) => i.tipo === "parcela"),
+                  todosNovos: resto.every((i) => i.novoDesdeYm === yearMonth),
+              }
+            : null,
+    }
 }
 
 /** Quem lançou quanto no mês (`user_id`), com o peso da categoria; do maior para o menor, sem quem fica em zero ou abaixo. */

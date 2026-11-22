@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
     chaveDoGrupo,
     composicaoDoMes,
+    fixoEmLinhas,
     fraseDaComposicao,
     quemGastou,
     type ComposicaoDoMes,
@@ -108,7 +109,11 @@ describe("composicaoDoMes", () => {
             ["posto", "Posto Shell", 2, 500, 400],
             ["estacionamento", "Estacionamento", 1, 120, 100],
         ])
-        expect(texto(fraseDaComposicao(c, true))).toBe("O mês está 5% acima da média por causa de Consórcio Mãe, que começou em setembro.")
+        expect(c.variavel.grupos[0].ultimaYmd).toBe("2026-11-12")
+        expect(c.puxouOVariavel).toEqual({ nome: "Posto Shell", valor: 500, variacao: 0.25, aMais: 100 })
+        expect(texto(fraseDaComposicao(c, true))).toBe(
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram com Consórcio Mãe, que começou em setembro, e o mês ficou 5% acima da média.",
+        )
     })
 
     it("sem fixo: o caso vem do variável", () => {
@@ -119,7 +124,9 @@ describe("composicaoDoMes", () => {
         expect(c.caso).toBe("variavelPuxou")
         expect(c.destaque).toMatchObject({ nome: "Posto Shell", aMais: 100 })
         const partes = fraseDaComposicao(c, true)
-        expect(texto(partes)).toBe("O mês está 24% acima da média: Posto Shell subiu 25% (R$ 100 a mais que o normal).")
+        expect(texto(partes)).toBe(
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%), e o mês ficou 24% acima da média.",
+        )
         expect(partes.find((p) => p.texto === "24% acima")?.tom).toBe("warning")
     })
 
@@ -150,7 +157,10 @@ describe("composicaoDoMes", () => {
         const c = composicaoDoMes({ ...base, txsDoMes: carroMes, historico: carroHistorico, parcelas: carroParcelas, media: 3050 })
         expect(c.caso).toBe("normal")
         expect(c.direcao).toBeNull()
-        expect(texto(fraseDaComposicao(c, true))).toBe("O mês está dentro do seu normal. R$ 2.443 dele já eram parcelas.")
+        // O total está no normal, mas o variável não: a frase começa por ele.
+        expect(texto(fraseDaComposicao(c, true))).toBe(
+            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram, e o mês ficou dentro da média.",
+        )
     })
 
     it("o fixo puxou: o variável fica abaixo do normal", () => {
@@ -165,9 +175,10 @@ describe("composicaoDoMes", () => {
         expect(c.direcao).toBe("acima")
         const partes = fraseDaComposicao(c, true)
         expect(texto(partes)).toBe(
-            "O mês está 54% acima da média só por causa das parcelas. O que você controla, R$ 450, está 10% abaixo do seu normal.",
+            "O que você controla caiu 10%: R$ 450, R$ 50 abaixo do seu normal, puxado por Estacionamento (↓ 100%). As parcelas subiram, e o mês ficou 54% acima da média.",
         )
-        expect(partes.find((p) => p.texto === "10% abaixo")?.tom).toBe("success")
+        expect(partes.find((p) => p.texto === "caiu 10%")?.tom).toBe("success")
+        expect(partes.find((p) => p.texto === "54% acima")?.tom).toBe("warning")
     })
 
     it("abaixo da média: o grupo que mais caiu, mesmo sumido", () => {
@@ -177,7 +188,9 @@ describe("composicaoDoMes", () => {
         expect(c.direcao).toBe("abaixo")
         expect(c.destaque).toMatchObject({ nome: "Estacionamento", aMais: -100, variacao: -1 })
         const partes = fraseDaComposicao(c, true)
-        expect(texto(partes)).toBe("O mês está 20% abaixo da média: Estacionamento caiu 100% (R$ 100 a menos que o normal).")
+        expect(texto(partes)).toBe(
+            "O que você controla caiu 20%: R$ 400, R$ 100 abaixo do seu normal, puxado por Estacionamento (↓ 100%), e o mês ficou 20% abaixo da média.",
+        )
         expect(partes.find((p) => p.texto === "20% abaixo")?.tom).toBe("success")
         // Na receita, entrar menos é ruim.
         expect(fraseDaComposicao(c, false).find((p) => p.texto === "20% abaixo")?.tom).toBe("warning")
@@ -196,9 +209,71 @@ describe("fraseDaComposicao", () => {
     it("normal sem fixo não fala de parcela", () => {
         expect(texto(fraseDaComposicao(vazia, true))).toBe("O mês está dentro do seu normal.")
     })
+    // A Renata em novembro: o variável subiu com um grupo novo, o fixo caiu e o total ficou abaixo.
+    const renata: ComposicaoDoMes = {
+        fixo: { total: 1418, itens: [], proximoMes: 1418 },
+        variavel: { total: 776, grupos: [], outros: null },
+        normais: { fixo: 1820, variavel: 464 },
+        caso: "variavelPuxou",
+        direcao: "abaixo",
+        variacaoTotal: -0.04,
+        puxouOVariavel: { nome: "Corte e hidratação", valor: 480, variacao: null, aMais: 480 },
+    }
+    it("a Renata: começa pelo que ela controla", () => {
+        const partes = fraseDaComposicao(renata, true)
+        expect(texto(partes)).toBe(
+            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480). As parcelas caíram, e o mês ficou 4% abaixo da média.",
+        )
+        expect(partes.find((p) => p.texto === "subiu 67%")?.tom).toBe("warning")
+        expect(partes.find((p) => p.texto === "4% abaixo")?.tom).toBe("success")
+    })
+    it("a receita inverte o tom e diz avulsas", () => {
+        const partes = fraseDaComposicao(renata, false)
+        expect(texto(partes)).toBe(
+            "As avulsas subiram 67%: R$ 776, R$ 312 acima do seu normal, puxadas por Corte e hidratação (novo, R$ 480). As entradas fixas caíram, e o mês ficou 4% abaixo da média.",
+        )
+        expect(partes.find((p) => p.texto === "subiram 67%")?.tom).toBe("success")
+        expect(partes.find((p) => p.texto === "4% abaixo")?.tom).toBe("warning")
+    })
+    it("o fixo dentro de ±5% não entra na frase", () => {
+        const c: ComposicaoDoMes = { ...renata, normais: { fixo: 1400, variavel: 464 } }
+        expect(texto(fraseDaComposicao(c, true))).toBe(
+            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480), e o mês ficou 4% abaixo da média.",
+        )
+    })
+    it("o variável dentro de ±5%: o caso de hoje, sem o \"só por causa\"", () => {
+        const c: ComposicaoDoMes = {
+            ...renata,
+            fixo: { total: 3000, itens: [], proximoMes: 0 },
+            variavel: { total: 470, grupos: [], outros: null },
+            caso: "fixoPuxou",
+            direcao: "acima",
+            variacaoTotal: 0.54,
+            destaque: { nome: "parcelas", variacao: 470 / 464 - 1 },
+        }
+        expect(texto(fraseDaComposicao(c, true))).toBe(
+            "O mês está 54% acima da média por causa das parcelas. O que você controla, R$ 470, está dentro do seu normal.",
+        )
+    })
     it("um grupo novo puxando o mês", () => {
         const c: ComposicaoDoMes = { ...vazia, caso: "variavelPuxou", direcao: "acima", variacaoTotal: 0.3, destaque: { nome: "Lava Rápido", aMais: 80 } }
         expect(texto(fraseDaComposicao(c, true))).toBe("O mês está 30% acima da média: Lava Rápido é novo neste mês (R$ 80).")
+    })
+})
+
+describe("fixoEmLinhas", () => {
+    const item = (id: string, valor: number, novoDesdeYm?: string) =>
+        ({ id, nome: id, tipo: "parcela", valor, diaYmd: "2026-11-05", novoDesdeYm }) as const
+    it("3 linhas e o resto somado, e a soma bate com o total", () => {
+        const itens = [item("Yoga", 332.1), item("Zara", 299), item("Botox", 279), item("Joias", 200.2, "2026-11"), item("Lentes", 109, "2026-11")]
+        const { linhas, resto } = fixoEmLinhas(itens, "2026-11")
+        expect(linhas.map((i) => i.id)).toEqual(["Yoga", "Zara", "Botox"])
+        expect(resto).toEqual({ n: 2, nomes: ["Joias", "Lentes"], valor: 309.2, soParcelas: true, todosNovos: true })
+        expect(linhas.reduce((a, i) => a + i.valor, 0) + resto!.valor).toBeCloseTo(1219.3, 2)
+    })
+    it("até 3 itens: sem resto; um antigo no resto não é novo", () => {
+        expect(fixoEmLinhas([item("a", 1)], "2026-11").resto).toBeNull()
+        expect(fixoEmLinhas([item("a", 4), item("b", 3), item("c", 2), item("d", 1, "2026-09")], "2026-11").resto?.todosNovos).toBe(false)
     })
 })
 
