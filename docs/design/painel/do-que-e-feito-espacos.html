@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Espaços do cartão</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--c:#f58a5c;--g:#a7a2a0;--up:#f0c27a}
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#ededed;font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 6px;max-width:900px}
+h2{font:600 17px Inter;margin:36px 0 4px}.sub{color:#9a9a9a;margin:0 0 12px;max-width:900px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.row{display:grid;grid-template-columns:3fr 2fr;gap:16px;max-width:980px}
+.card{background:#141414;border:1px solid #242424;border-radius:22px;padding:16px;height:252px;display:flex;flex-direction:column;min-width:0}
+.t{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.chip{font:500 12px Inter;border-radius:99px;padding:1px 9px;background:rgba(240,194,122,.16);color:var(--up)}
+.mut{color:#8f8f8f;font-size:12px}.m{font:600 12.5px "Geist Mono",monospace;white-space:nowrap}
+.ghost{background:repeating-linear-gradient(135deg,#2a2a2a 0 6px,#1d1d1d 6px 12px);color:#999}
+.six{flex:1;margin-top:12px;border-radius:10px;background:linear-gradient(#3a241c,#141414);position:relative}
+.six:after{content:"6 meses";position:absolute;inset:auto 10px 8px auto;color:#666;font-size:11px}
+.lg{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#aaa}.lg i{width:8px;height:8px;border-radius:9px;display:inline-block}
+.badge{font-size:11px;border-radius:99px;padding:0 7px;background:rgba(232,178,92,.16);color:#f0c27a}
+/* A */
+.bars{flex:1;display:grid;grid-template-rows:1fr 1fr;gap:10px;margin-top:14px}
+.br{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:stretch}
+.br>span{align-self:center;font-size:12.5px;color:#aaa}
+.bb{display:flex;gap:3px}.bb>div{border-radius:10px;display:flex;align-items:center;padding:0 10px;font:600 12.5px "Geist Mono",monospace;white-space:nowrap;overflow:hidden}
+/* B columns */
+.cols{flex:1;display:flex;gap:22px;align-items:flex-end;margin-top:10px;padding:0 6px}
+.col{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:6px;height:100%}
+.stackv{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:3px}
+.stackv>div{border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px "Geist Mono",monospace}
+.cl{text-align:center;font-size:12px;color:#aaa}
+</style></head><body>
+<h1>Espaços em branco do cartão "Do que é feito o mês"</h1>
+<p class="lead">Hoje o cartão tem a altura do gráfico de 6 meses (252px), mas o conteúdo ocupa o topo e sobram ~90px vazios embaixo. O pedaço do fixo é estreito demais e fica sem número. Mesma largura e altura da tela real (3/5 · 2/5).</p>
+
+<h2>Hoje</h2>
+<div class="row"><div class="card"><div class="t">Últimos 6 meses</div><div class="six"></div></div>
+<div class="card"><div class="t">Do que é feito o mês <span class="chip">+23%</span></div>
+ <div style="display:grid;grid-template-columns:72px 1fr;gap:8px;margin-top:22px;align-items:center"><span class="mut" style="font-size:12.5px">seu normal</span><div class="bb" style="height:32px;width:81%"><div class="ghost" style="flex:2759">R$ 2.759</div><div class="ghost" style="flex:147"></div></div>
+ <span style="font-size:12.5px">novembro</span><div class="bb" style="height:32px"><div style="flex:3140;background:var(--c);color:#2a1206">R$ 3.140 ↑ 14%</div><div style="flex:443;background:var(--g)"></div></div></div>
+ <div style="margin-top:14px;display:grid;gap:4px"><span class="lg"><i style="background:var(--c)"></i>O que você controla</span><span class="lg"><i style="background:var(--g)"></i>Já decidido · Seguro carro <span class="badge">novo</span></span></div></div></div>
+
+<h2>A · As barras crescem e a legenda desce, com os valores</h2>
+<p class="sub">As duas barras dividem a altura livre (ficam ~2× mais altas) e a legenda vai para o pé do cartão, <b>com o valor de cada parte</b> — o fixo, que não cabe na barra, ganha número ali. Nada novo, só o espaço redistribuído. <b>Minha escolha.</b></p>
+<div class="row"><div class="card"><div class="t">Últimos 6 meses</div><div class="six"></div></div>
+<div class="card"><div class="t">Do que é feito o mês <span class="chip">+23%</span></div>
+ <div class="bars">
+  <div class="br"><span>seu normal</span><div class="bb" style="width:81%"><div class="ghost" style="flex:2759">R$ 2.759</div><div class="ghost" style="flex:147"></div></div></div>
+  <div class="br"><span style="color:#ddd">novembro</span><div class="bb"><div style="flex:3140;background:var(--c);color:#2a1206">R$ 3.140 ↑ 14%</div><div style="flex:443;background:var(--g)"></div></div></div>
+ </div>
+ <div style="margin-top:14px;display:grid;gap:5px">
+  <div style="display:flex;justify-content:space-between"><span class="lg"><i style="background:var(--c)"></i>O que você controla</span><span class="m">R$ 3.140</span></div>
+  <div style="display:flex;justify-content:space-between"><span class="lg"><i style="background:var(--g)"></i>Já decidido · Seguro carro <span class="badge">novo</span></span><span class="m">R$ 443</span></div>
+ </div></div></div>
+
+<h2>B · Colunas em pé</h2>
+<p class="sub">As barras viram duas colunas empilhadas, de baixo para cima, que ocupam a altura toda. O fixo fica em cima, com o valor ao lado se não couber. Usa bem a altura, mas muda o desenho que você aprovou e fica parecido com o gráfico ao lado.</p>
+<div class="row"><div class="card"><div class="t">Últimos 6 meses</div><div class="six"></div></div>
+<div class="card"><div class="t">Do que é feito o mês <span class="chip">+23%</span></div>
+ <div class="cols">
+  <div class="col"><div class="stackv" style="padding-top:19%"><div class="ghost" style="flex:147;min-height:8px"></div><div class="ghost" style="flex:2759">R$ 2.759</div></div><div class="cl">seu normal</div></div>
+  <div class="col"><div class="stackv"><div style="flex:443;background:var(--g);color:#222">443</div><div style="flex:3140;background:var(--c);color:#2a1206">R$ 3.140<br>↑ 14%</div></div><div class="cl" style="color:#ddd">novembro</div></div>
+ </div>
+ <div style="margin-top:10px;display:flex;gap:14px;flex-wrap:wrap"><span class="lg"><i style="background:var(--c)"></i>Você controla</span><span class="lg"><i style="background:var(--g)"></i>Já decidido</span></div></div></div>
+
+<h2>C · Barras como hoje, e um número a mais no pé</h2>
+<p class="sub">O desenho fica igual, e o vão embaixo recebe uma informação útil: <b>"Em dezembro já entram R$ 443"</b> (hoje está no cartão do fixo, lá embaixo). Preenche com conteúdo, mas repete o rodapé do cartão "Já decidido".</p>
+<div class="row"><div class="card"><div class="t">Últimos 6 meses</div><div class="six"></div></div>
+<div class="card"><div class="t">Do que é feito o mês <span class="chip">+23%</span></div>
+ <div style="display:grid;grid-template-columns:72px 1fr;gap:8px;margin-top:22px;align-items:center"><span class="mut" style="font-size:12.5px">seu normal</span><div class="bb" style="height:32px;width:81%"><div class="ghost" style="flex:2759">R$ 2.759</div><div class="ghost" style="flex:147"></div></div>
+ <span style="font-size:12.5px">novembro</span><div class="bb" style="height:32px"><div style="flex:3140;background:var(--c);color:#2a1206">R$ 3.140 ↑ 14%</div><div style="flex:443;background:var(--g);color:#222;justify-content:center">443</div></div></div>
+ <div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap"><span class="lg"><i style="background:var(--c)"></i>Você controla</span><span class="lg"><i style="background:var(--g)"></i>Já decidido</span></div>
+ <div style="margin-top:auto;border-top:1px solid #262626;padding-top:10px;display:flex;justify-content:space-between;font-size:13px"><span class="mut" style="font-size:13px">Em dezembro já entram</span><span class="m">R$ 443</span></div></div></div>
+</body></html>

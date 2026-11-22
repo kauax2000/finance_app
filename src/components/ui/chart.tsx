@@ -2871,10 +2871,12 @@ function ChartSplitCompareSegmentBox({
   segment,
   variant,
   color,
+  size,
 }: {
   segment: ChartSplitCompareSegment
   variant: "solid" | "ghost"
   color: string
+  size: "md" | "lg"
 }) {
   const caixaRef = React.useRef<HTMLDivElement>(null)
   const longoRef = React.useRef<HTMLSpanElement>(null)
@@ -2908,7 +2910,8 @@ function ChartSplitCompareSegmentBox({
       data-slot="chart-split-compare-segment"
       data-fit={segment.text ? cabe : undefined}
       className={cn(
-        "relative flex h-8 min-w-1.5 items-center overflow-hidden rounded-lg px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
+        "relative flex min-w-1.5 items-center overflow-hidden rounded-lg px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
+        size === "lg" ? "h-12" : "h-8",
         chartSplitGrowClassName,
         variant === "ghost" && chartSplitCompareGhostClassName
       )}
@@ -2948,6 +2951,7 @@ function ChartSplitCompare({
   label,
   description,
   format = "currency",
+  size = "md",
   className,
 }: {
   rows: ChartSplitCompareRow[]
@@ -2955,6 +2959,8 @@ function ChartSplitCompare({
   label: string
   description?: string
   format?: ChartFormat
+  /** A altura do pedaço: `md` 32px, `lg` 48px (o cartão que divide a linha com um gráfico mais alto). */
+  size?: "md" | "lg"
   className?: string
 }) {
   const valor = (s: ChartSplitCompareSegment) =>
@@ -3014,6 +3020,7 @@ function ChartSplitCompare({
                       segment={{ ...s, value: valor(s) }}
                       variant={variant}
                       color={s.color ?? serieColor(s.key, j, config)}
+                      size={size}
                     />
                   ) : null
                 )}

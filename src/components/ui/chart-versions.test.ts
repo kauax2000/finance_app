@@ -964,6 +964,14 @@ describe("ChartSplitCompare", () => {
     expect(barras[1]).toBe("100%")
     expect(parseFloat(barras[0])).toBeCloseTo((2760 / 3583) * 100, 5)
   })
+  it("size mede o pedaço: md 32px por padrão, lg 48px", () => {
+    expect(html).toContain("h-8")
+    const lg = renderToStaticMarkup(
+      h(ChartSplitCompare, { config, label: "x", size: "lg", rows: [{ label: "a", segments: [{ key: "variavel", value: 1 }] }] })
+    )
+    expect(lg).toContain("h-12")
+    expect(lg).not.toContain("h-8")
+  })
   it("não desenha o pedaço de valor 0", () => {
     expect(html.match(/data-slot="chart-split-compare-segment"/g)).toHaveLength(3)
     expect(html).not.toContain("flex:0 1 0")

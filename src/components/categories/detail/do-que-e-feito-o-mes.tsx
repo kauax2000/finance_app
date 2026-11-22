@@ -7,6 +7,7 @@ import { CheckCircleIcon, ExclamationTriangleIcon, LightBulbIcon } from "@heroic
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
 import { Item, ItemContent, ItemDescription, ItemMedia } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
 import { fixoEmLinhas, foraDoNormal, tomDoInsight, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
@@ -115,7 +116,8 @@ export function DoQueEFeitoOMes({
         : "Já decidido · entradas fixas"
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
-    const comRodape = comFixo && (fixo.ultimaTerminaYm != null || fixo.proximoMes > 0)
+    // O "Em <mês> já entram" mora no pé do gráfico; aqui fica só quando a última parcela acaba.
+    const comRodape = comFixo && fixo.ultimaTerminaYm != null
 
     return (
         <div className="grid gap-(--space-block)">
@@ -144,23 +146,42 @@ export function DoQueEFeitoOMes({
                                 label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
                                 config={config}
                                 rows={linhasDoGrafico}
+                                size="lg"
                             />
-                            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                                <span className="inline-flex items-center gap-2">
-                                    <ChartSwatch color={corDaSerie} />
-                                    {config.variavel.label}
-                                </span>
-                                <span className="inline-flex items-center gap-2">
-                                    <ChartSwatch color={config.fixo.color} />
-                                    {config.fixo.label}
-                                    {composicao.caso === "novo" && composicao.destaque?.nome ? ` · ${composicao.destaque.nome}` : null}
-                                    {composicao.caso === "novo" ? (
-                                        <Badge tone="warning" size="xs">
-                                            novo
-                                        </Badge>
-                                    ) : null}
-                                </span>
+                            {/* A legenda no pé, com o valor de cada parte: o fixo, estreito na barra, ganha o número aqui. */}
+                            <div className="mt-auto grid gap-1 pt-4 text-sm">
+                                {[
+                                    { key: "variavel", cor: corDaSerie, valor: variavel.total, novo: false },
+                                    { key: "fixo", cor: config.fixo.color, valor: fixo.total, novo: composicao.caso === "novo" },
+                                ]
+                                    .filter((l) => l.valor > 0)
+                                    .map((l) => (
+                                        <span key={l.key} className="flex items-center justify-between gap-3">
+                                            <span className="inline-flex min-w-0 items-center gap-2 text-muted-foreground">
+                                                <ChartSwatch color={l.cor} />
+                                                <span className="truncate">
+                                                    {config[l.key as keyof typeof config].label}
+                                                    {l.novo && composicao.destaque?.nome ? ` · ${composicao.destaque.nome}` : null}
+                                                </span>
+                                                {l.novo ? (
+                                                    <Badge tone="warning" size="xs">
+                                                        novo
+                                                    </Badge>
+                                                ) : null}
+                                            </span>
+                                            <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(l.valor)}</span>
+                                        </span>
+                                    ))}
                             </div>
+                            {fixo.proximoMes > 0 ? (
+                                <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
+                                    <Separator />
+                                    <span className="flex justify-between gap-3">
+                                        Em {nomeDoMes(shiftYearMonth(yearMonth, 1))} já entram
+                                        <span className="nums font-mono font-semibold text-foreground">{reaisInteiros(fixo.proximoMes)}</span>
+                                    </span>
+                                </div>
+                            ) : null}
                         </CartaoDoGrafico>
                     ) : null}
                 </div>
@@ -266,12 +287,6 @@ export function DoQueEFeitoOMes({
                                         <span className="flex justify-between gap-3">
                                             {despesa ? "A última parcela acaba em" : "A última entrada fixa acaba em"}
                                             <span className="nums font-semibold text-foreground">{mesEAno(fixo.ultimaTerminaYm)}</span>
-                                        </span>
-                                    ) : null}
-                                    {fixo.proximoMes > 0 ? (
-                                        <span className="flex justify-between gap-3">
-                                            Em {nomeDoMes(shiftYearMonth(yearMonth, 1))} já entram
-                                            <span className="nums font-semibold text-foreground">{reaisInteiros(fixo.proximoMes)}</span>
                                         </span>
                                     ) : null}
                                 </div>

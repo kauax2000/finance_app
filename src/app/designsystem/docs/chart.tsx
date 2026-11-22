@@ -1667,7 +1667,7 @@ const config = {
         title="Barras comparadas"
         description={
           <>
-            <code>ChartSplitCompare</code> põe várias linhas divididas <strong>na mesma escala</strong>: a maior soma ocupa a largura toda, e as outras ficam proporcionais (o &quot;seu normal × este mês&quot; do detalhe da categoria). Cada linha tem um rótulo e uma <code>variant</code>: <code>solid</code> pinta cada pedaço na cor do <code>config</code> (ou a <code>color</code> do pedaço, a da categoria), com a tinta <code>--identity-foreground</code> do ladrilho vivo (<code>ink</code> troca: sobre <code>--muted-foreground</code>, <code>var(--card)</code>); <code>ghost</code> é a referência, listrada em <code>--muted</code> com o texto em <code>--muted-foreground</code>. O <code>text</code> de dentro cai para o <code>shortText</code>, ou some, quando o pedaço não o comporta, medido por <code>ResizeObserver</code> (a texto, a container query não mede). O rótulo mora numa coluna à esquerda, dividida pelas linhas, e sobe acima da barra abaixo de 18rem da largura da peça. Pedaço de valor 0 não se desenha. O nome acessível lista cada linha com a soma e os pedaços. Sem arco-íris: a barra leva texto.
+            <code>ChartSplitCompare</code> põe várias linhas divididas <strong>na mesma escala</strong>: a maior soma ocupa a largura toda, e as outras ficam proporcionais (o &quot;seu normal × este mês&quot; do detalhe da categoria). Cada linha tem um rótulo e uma <code>variant</code>: <code>solid</code> pinta cada pedaço na cor do <code>config</code> (ou a <code>color</code> do pedaço, a da categoria), com a tinta <code>--identity-foreground</code> do ladrilho vivo (<code>ink</code> troca: sobre <code>--muted-foreground</code>, <code>var(--card)</code>); <code>ghost</code> é a referência, listrada em <code>--muted</code> com o texto em <code>--muted-foreground</code>. O <code>text</code> de dentro cai para o <code>shortText</code>, ou some, quando o pedaço não o comporta, medido por <code>ResizeObserver</code> (a texto, a container query não mede). O rótulo mora numa coluna à esquerda, dividida pelas linhas, e sobe acima da barra abaixo de 18rem da largura da peça. O pedaço mede 32px; <code>size=&quot;lg&quot;</code> o leva a 48px, para o cartão que divide a linha com um gráfico mais alto. Pedaço de valor 0 não se desenha. O nome acessível lista cada linha com a soma e os pedaços. Sem arco-íris: a barra leva texto.
           </>
         }
         code={`<ChartSplitCompare
@@ -2301,10 +2301,10 @@ const config = {
           },
           {
             prop: "ChartSplitCompare",
-            type: "rows · config · label · format",
-            default: 'variant "solid"',
+            type: "rows · config · label · format · size",
+            default: 'variant "solid" · size "md"',
             description:
-              "Barras comparadas na mesma escala (a maior soma a 100%). Cada linha: `label`, `variant` (`solid` | `ghost`) e `segments` (`key`, `value`, `text`, `shortText`, `color`, `ink`). O texto cai para o curto, ou some, quando não cabe; valor 0 não se desenha; o nome acessível lista linhas e pedaços.",
+              "Barras comparadas na mesma escala (a maior soma a 100%). Cada linha: `label`, `variant` (`solid` | `ghost`) e `segments` (`key`, `value`, `text`, `shortText`, `color`, `ink`). O texto cai para o curto, ou some, quando não cabe; valor 0 não se desenha; o nome acessível lista linhas e pedaços. `size` mede o pedaço: `md` 32px, `lg` 48px.",
           },
           {
             prop: "ChartStrip",
