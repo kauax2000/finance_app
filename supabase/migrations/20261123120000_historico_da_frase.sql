@@ -27,7 +27,8 @@ as $$
     and t.date >= now() - interval '24 months'
     and (p_user_id is null or t.user_id = p_user_id)
   group by t.description, t.type, t.category_id, t.payment_method, t.payment_credit_card_id
-  order by max(t.date) desc
+  -- O app grava o meio-dia do dia escolhido: no mesmo dia, desempata quem entrou por último.
+  order by max(t.date) desc, max(t.created_at) desc nulls last
   limit 2000;
 $$;
 

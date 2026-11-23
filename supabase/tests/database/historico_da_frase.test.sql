@@ -7,7 +7,8 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-f400-000000000002', 'hist2@local.dev', '{"full_name":"Hist Dois"}'),
   ('00000000-0000-4000-f400-000000000003', 'hist3@local.dev', '{"full_name":"Hist Tres"}');
 
--- A carteira pessoal de hist1; hist2 lança nela como convidado.
+-- A carteira pessoal de hist1; as linhas de hist2 entram nela direto (sem ser
+-- membro), só para provar o filtro por p_user_id.
 create temp table _ws on commit drop as
   select w.id from public.workspaces w
   where w.created_by = '00000000-0000-4000-f400-000000000001' and w.type = 'personal';

@@ -785,12 +785,17 @@ const PALAVRAS_VAZIAS = new Set([
   'hoje', 'ontem', 'cartao', 'credito', 'debito', 'pix', 'dinheiro', 'loja', 'parcela',
 ])
 
-/** As palavras de 3+ letras que votam, cada uma pelo seu conceito ("posto" e "abastecimento" votam juntas). */
+/**
+ * As palavras de 3+ letras que votam, cada uma pelo seu conceito ("posto" e
+ * "abastecimento" votam juntas) ou sem o "s" final ("xablaus" vota com "xablau").
+ */
 function termos(s: string): Set<string> {
   const out = new Set<string>()
   for (const p of normalizarDescricao(s).split(' ')) {
-    if (p.length < 3 || /^\d+$/.test(p) || PALAVRAS_VAZIAS.has(p)) continue
-    out.add(conceitoDe(p) ?? p)
+    if (p.length < 3 || /^\d+$/.test(p)) continue
+    const singular = p.length > 3 && p.endsWith('s') ? p.slice(0, -1) : p
+    if (PALAVRAS_VAZIAS.has(p) || PALAVRAS_VAZIAS.has(singular)) continue
+    out.add(conceitoDe(p) ?? singular)
   }
   return out
 }
@@ -802,20 +807,21 @@ function mesesEntre(data: string, hoje: string): number {
   return Math.max(0, (Date.parse(hoje.slice(0, 10)) - Date.parse(data.slice(0, 10))) / MES_MS)
 }
 
+/** Abaixo disto (≈ um lançamento de mais de 6 meses) um termo não vota. */
+const PESO_MINIMO_DO_TERMO = 0.5
+/** Hábito firme: com este peso o aprendido passa à frente do nome da categoria. */
+const PESO_DO_HABITO = 2
+
 /**
- * A categoria que o histórico ensina para a descrição. Cada termo da descrição
- * reparte um voto entre as categorias das linhas que o têm, pesadas por `n` e
- * pela idade (o peso cai à metade a cada 6 meses). Vence quem soma 60% dos
- * termos que receberam voto e abre meio voto sobre a segunda; senão, `null`.
- * Só valem as linhas do `tipo` com uma categoria de `categorias` do `tipo`.
+ * O voto de `votarCategoria`, com o peso que a vencedora somou em todos os termos.
  */
-export function votarCategoria(
+function voto(
   descricao: string,
   tipo: 'expense' | 'income',
   categorias: CategoriaParaCasar[],
   historico: LinhaHistorico[],
   hoje: string,
-): string | null {
+): { categoryId: string; peso: number } | null {
   const ids = new Set(categorias.filter((c) => c.type === tipo).map((c) => c.id))
   const daDescricao = termos(descricao)
   if (!daDescricao.size) return null
@@ -824,6 +830,8 @@ export function votarCategoria(
   for (const l of historico) {
     if (l.type !== tipo || !l.description || !l.category_id || !ids.has(l.category_id)) continue
     const peso = (l.n ?? 1) * 0.5 ** (mesesEntre(l.date, hoje) / 6)
+    // Uma data ilegível (NaN) não pode fazer ninguém vencer.
+    if (!Number.isFinite(peso) || peso <= 0) continue
     for (const t of termos(l.description)) {
       if (!daDescricao.has(t)) continue
       const porCategoria = votos.get(t) ?? new Map<string, number>()
@@ -832,22 +840,49 @@ export function votarCategoria(
     }
   }
   const score = new Map<string, number>()
+  const somado = new Map<string, number>()
+  let comVoto = 0
   for (const porCategoria of votos.values()) {
     let total = 0
     for (const v of porCategoria.values()) total += v
-    for (const [c, v] of porCategoria) score.set(c, (score.get(c) ?? 0) + v / total)
+    if (total < PESO_MINIMO_DO_TERMO) continue
+    comVoto++
+    for (const [c, v] of porCategoria) {
+      score.set(c, (score.get(c) ?? 0) + v / total)
+      somado.set(c, (somado.get(c) ?? 0) + v)
+    }
   }
   const [primeiro, segundo] = [...score].sort((a, b) => b[1] - a[1])
-  if (!primeiro || primeiro[1] < 0.6 * votos.size || primeiro[1] - (segundo?.[1] ?? 0) < 0.5) return null
-  return primeiro[0]
+  if (!primeiro || primeiro[1] < 0.6 * comVoto || primeiro[1] - (segundo?.[1] ?? 0) < 0.5) return null
+  return { categoryId: primeiro[0], peso: somado.get(primeiro[0])! }
+}
+
+/**
+ * A categoria que o histórico ensina para a descrição. Cada termo da descrição
+ * reparte um voto entre as categorias das linhas que o têm, pesadas por `n` e
+ * pela idade (o peso cai à metade a cada 6 meses); um termo com menos de meio
+ * voto não conta. Vence quem soma 60% dos termos que votaram e abre meio voto
+ * sobre a segunda; senão, `null`. Só valem as linhas do `tipo` com uma
+ * categoria de `categorias` do `tipo`.
+ */
+export function votarCategoria(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+  historico: LinhaHistorico[],
+  hoje: string,
+): string | null {
+  return voto(descricao, tipo, categorias, historico, hoje)?.categoryId ?? null
 }
 
 /**
  * A categoria pela descrição, em ordem (a primeira que decide vence):
  * 1. **histórico** — a linha mais recente com a mesma descrição normalizada e categoria;
- * 2. **aprendido** — o voto das palavras em tudo o que a pessoa já lançou (`votarCategoria`);
+ * 2. **aprendido**, se é hábito firme — o voto das palavras em tudo o que a pessoa já lançou
+ *    (`votarCategoria`), quando a vencedora soma peso 2 ou mais (≈ dois lançamentos recentes);
  * 3. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
  *    duas categorias com o mesmo número de palavras casadas é empate, e ninguém vence;
+ *    depois dele, o **aprendido** de peso menor;
  * 4. **comum** — uma palavra conhecida (`CONCEITOS`) leva ao nome de categoria que a abriga.
  * Só valem as categorias de `categorias` do `tipo`: uma apagada no histórico não volta.
  */
@@ -867,8 +902,8 @@ export function casarCategoria(
   const exata = alvo ? maisRecente(linhas.filter((l) => normalizarDescricao(l.description!) === alvo)) : null
   if (exata) return { categoryId: exata.category_id!, motivo: 'historico' }
 
-  const aprendida = votarCategoria(descricao, tipo, doTipo, linhas, hoje)
-  if (aprendida) return { categoryId: aprendida, motivo: 'aprendido' }
+  const aprendida = voto(descricao, tipo, doTipo, linhas, hoje)
+  if (aprendida && aprendida.peso >= PESO_DO_HABITO) return { categoryId: aprendida.categoryId, motivo: 'aprendido' }
 
   const daDescricao = palavrasDe(descricao)
   let melhor: CategoriaParaCasar | null = null
@@ -883,6 +918,7 @@ export function casarCategoria(
     } else if (n > 0 && n === pontos) empate = true
   }
   if (melhor && !empate) return { categoryId: melhor.id, motivo: 'nome' }
+  if (aprendida) return { categoryId: aprendida.categoryId, motivo: 'aprendido' }
 
   const ws = normalizarDescricao(descricao).split(' ')
   for (let i = 0; i < ws.length; i++) {

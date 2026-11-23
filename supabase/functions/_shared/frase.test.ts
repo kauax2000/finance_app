@@ -329,9 +329,33 @@ Deno.test('aprendido: n agrega', () => {
 Deno.test('aprendido: palavra vazia não vota', () => {
   const hist = [lh({ description: 'compra no cartao', category_id: 'a' })]
   assertEquals(votarCategoria('compra', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+  // A vazia do histórico também não vota.
+  assertEquals(votarCategoria('compra xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
 })
 
 Deno.test('aprendido: receita não vota em despesa', () => {
   const hist = [lh({ description: 'Xablau', category_id: 'a', type: 'income' })]
+  assertEquals(votarCategoria('xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+})
+
+Deno.test('aprendido: um lançamento só não vence o nome da categoria', () => {
+  const cats = [cat('casa', 'Casa'), cat('transporte', 'Transporte')]
+  const hist = [lh({ description: 'Uber casa', category_id: 'transporte' })]
+  assertEquals(casarCategoria('Casa conserto', 'expense', cats, hist, HOJE), { categoryId: 'casa', motivo: 'nome' })
+})
+
+Deno.test('aprendido: lançamento velho demais não vota', () => {
+  const hist = [lh({ description: 'Xablau', category_id: 'a', date: mesesAntes(23) })]
+  assertEquals(votarCategoria('xablau novo', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+  assertEquals(casarCategoria('xablau novo', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+})
+
+Deno.test('aprendido: o plural vota com o singular', () => {
+  const hist = [lh({ description: 'Xablaus', category_id: 'a' })]
+  assertEquals(votarCategoria('xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), 'a')
+})
+
+Deno.test('aprendido: data ilegível não vota', () => {
+  const hist = [lh({ description: 'Xablau', category_id: 'a', date: 'lixo' })]
   assertEquals(votarCategoria('xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
 })
