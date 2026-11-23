@@ -213,7 +213,7 @@ baixado (versão 3) já manda `amount`, `merchant`, `card`, o `text` da compra
 e `source` = `apple_pay`.
 
 Se a notificação disser **"A compra chegou sem o valor…"**, o atalho que roda é
-antigo: no app, em **Configurações** › "Lançar pelo iPhone", toque no ⋯ ›
+antigo: no app, em **Você** › "Lançar pelo iPhone" (no computador, Configurações), toque no ⋯ ›
 **Baixar o atalho de novo** e, no app Atalhos, aponte a automação de Transação
 para o atalho novo (se o iOS o importou como "Lançar gasto 2", escolha esse).
 
