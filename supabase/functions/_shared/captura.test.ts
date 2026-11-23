@@ -1054,3 +1054,17 @@ Deno.test('dita: depois de um conectivo é fraca, a conferir, e o histórico ven
   // A forte segue limpa.
   assertEquals(linha('pão mercado 12'), ['Pão', 'mercado', 'dita', false])
 })
+
+Deno.test('dita: a fraca com o histórico conferido que concorda fica limpa', () => {
+  const cats = [cat('luz', 'Luz'), cat('casa', 'Casa')]
+  const com = (linhas: LinhaHistorico[]) => ctx({ historicoPorCarteira: { [PADRAO]: linhas }, categoriasPorCarteira: { [PADRAO]: cats } })
+  const linha = (text: string, c: ContextoCaptura) => {
+    const l = ok(montarLancamento({ text }, c)).linha
+    return [l.description, l.category_id, l.capture_meta?.categoria, l.needs_review]
+  }
+  const luz = Array.from({ length: 5 }, () => hist('Conta de luz', 'luz'))
+  assertEquals(linha('conta de luz 150', com(luz)), ['Conta de luz', 'luz', 'dita', false])
+  const lanche = Array.from({ length: 5 }, () => hist('Lanche', 'casa'))
+  assertEquals(linha('lanche em casa 20', com(lanche)), ['Lanche', 'casa', 'dita', false])
+  assertEquals(linha('conta de luz 150', com([])), ['Conta de luz', 'luz', 'dita', true])
+})

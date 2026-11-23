@@ -944,9 +944,10 @@ export function separarCategoriaDita(
  * A categoria da frase, a mesma regra no app e na Edge `capture`:
  * 1. a **dita forte** (`separarCategoriaDita`) vence tudo, com a descrição limpa;
  * 2. a **dita fraca** ("uber pra casa") pergunta antes ao que a pessoa já lançou,
- *    pela descrição sem a categoria: o histórico exato ou o voto aprendido com outra
- *    categoria vence, e a descrição fica inteira ("Uber pra casa" em Transporte);
- *    senão vale a dita, a conferir (`aConferir`);
+ *    pela descrição sem a categoria e pela que fica: concordando, a dita fica limpa
+ *    ("Conta de luz" já lançada em Luz); com outra categoria, ela vence, e a
+ *    descrição fica inteira ("Uber pra casa" em Transporte); sem nada, vale a dita,
+ *    a conferir (`aConferir`);
  * 3. sem dita (ou com `podeDitar` falso: o estabelecimento, a foto), `casarCategoria`.
  */
 export function escolherCategoria(
@@ -961,8 +962,13 @@ export function escolherCategoria(
   if (!dita) return { descricao, categoria: casarCategoria(descricao, tipo, categorias, historico, hoje), aConferir: false }
   const comoDita = { categoryId: dita.categoryId, motivo: 'dita' as const }
   if (dita.forte) return { descricao: dita.descricao, categoria: comoDita, aConferir: false }
-  const ja = peloQueJaLancou(dita.semCategoria, tipo, categorias, historico, hoje)
-  if (ja && ja.categoryId !== dita.categoryId) return { descricao, categoria: ja, aConferir: false }
+  // O que já foi lançado, pela descrição sem a categoria e pela que fica (inteira no "plano de saúde").
+  const jas = [dita.semCategoria, ...(dita.descricao !== dita.semCategoria ? [dita.descricao] : [])]
+    .map((d) => peloQueJaLancou(d, tipo, categorias, historico, hoje))
+    .filter((j) => j != null)
+  // Concorda com a dita: ela fica limpa.
+  if (jas.some((j) => j.categoryId === dita.categoryId)) return { descricao: dita.descricao, categoria: comoDita, aConferir: false }
+  if (jas.length) return { descricao, categoria: jas[0], aConferir: false }
   return { descricao: dita.descricao, categoria: comoDita, aConferir: true }
 }
 

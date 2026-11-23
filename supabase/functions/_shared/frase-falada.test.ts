@@ -182,8 +182,16 @@ Deno.test('dita: a fraca pergunta antes ao que a pessoa já lançou', () => {
   assertEquals(escolha('uber pra casa 25'), ['Uber', 'casa', 'dita', true])
   assertEquals(escolha('12 pão no mercado'), ['Pão', 'mercado', 'dita', true])
   assertEquals(escolha('plano de saúde 300'), ['Plano de saúde', 'saude', 'dita', true])
-  // O histórico que diz a mesma categoria não a torna limpa.
-  assertEquals(escolha('uber pra casa 25', [linhaDe('Uber', 'casa')]), ['Uber', 'casa', 'dita', true])
+  // O histórico que concorda com a dita a torna limpa: pela descrição sem a categoria...
+  assertEquals(escolha('uber pra casa 25', [linhaDe('Uber', 'casa')]), ['Uber', 'casa', 'dita', false])
+  assertEquals(escolha('lanche em casa 20', [linhaDe('Lanche', 'casa')]), ['Lanche', 'casa', 'dita', false])
+  // ...ou pela que fica inteira ("conta de luz").
+  const comLuz = [...LUGARES, { id: 'luz', name: 'Luz', type: 'expense' as const }]
+  assertEquals(escolha('conta de luz 150', [linhaDe('Conta de luz', 'luz')], comLuz), ['Conta de luz', 'luz', 'dita', false])
+  assertEquals(escolha('plano de saúde 300', [linhaDe('Plano de saúde', 'saude')]), ['Plano de saúde', 'saude', 'dita', false])
+  // Sem histórico, segue a conferir.
+  assertEquals(escolha('conta de luz 150', [], comLuz), ['Conta de luz', 'luz', 'dita', true])
+  assertEquals(escolha('lanche em casa 20'), ['Lanche', 'casa', 'dita', true])
   // A forte vence o histórico.
   assertEquals(escolha('pão mercado 12', [linhaDe('Pão', 'casa')]), ['Pão', 'mercado', 'dita', false])
 })
