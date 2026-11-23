@@ -1,5 +1,11 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
-import { interpretarFrase, palavrasDosCartoes, type CartaoParaCasar } from './frase.ts'
+import {
+  interpretarFrase,
+  palavrasDosCartoes,
+  separarCategoriaDita,
+  type CartaoParaCasar,
+  type CategoriaParaCasar,
+} from './frase.ts'
 
 const HOJE = '2026-11-23'
 const cartao = (name: string): CartaoParaCasar => ({ id: name, name, wallet_alias: null, last_four: null, workspace_id: 'w', is_active: true })
@@ -56,4 +62,64 @@ Deno.test('fala: "no mercado" com um cartão Mercado Pago fica na descrição', 
 Deno.test('fala: "no nubank" sozinho segue sendo o cartão (não é um gasto comum)', () => {
   assertEquals(ler('estorno de 50 no nubank').cartaoTexto, 'nubank')
   assertEquals(ler('50 no nubank').cartaoTexto, 'nubank')
+})
+
+// --- A categoria dita na frase sai da descrição ------------------------------
+
+const DITAS: CategoriaParaCasar[] = [
+  { id: 'mercado', name: 'Mercado', type: 'expense' },
+  { id: 'alimentacao', name: 'Alimentação', type: 'expense' },
+  { id: 'transporte', name: 'Transporte', type: 'expense' },
+  { id: 'farmacia', name: 'Farmácia', type: 'expense' },
+  { id: 'salario', name: 'Salário', type: 'income' },
+]
+const SO_NUBANK = palavrasDosCartoes([cartao('Nubank')])
+/** A frase pelo parser e, na descrição dele, a categoria dita. */
+const dita = (s: string, cats = DITAS) => {
+  const f = interpretarFrase(s, HOJE, SO_NUBANK)
+  return separarCategoriaDita(f.descricao, f.tipo, cats)
+}
+
+Deno.test('dita: a tabela do pedido', () => {
+  const casos: [string, string, string][] = [
+    ['42 mercado', 'Mercado', 'mercado'],
+    ['42 mercado mercado', 'Mercado', 'mercado'],
+    ['pão mercado 12', 'Pão', 'mercado'],
+    ['12 pão no mercado', 'Pão', 'mercado'],
+    ['pão 12 categoria mercado', 'Pão', 'mercado'],
+    ['remédio farmácia 30', 'Remédio', 'farmacia'],
+    ['uber transporte 20', 'Uber', 'transporte'],
+    ['arroz e feijão mercado 50 nubank', 'Arroz e feijão', 'mercado'],
+    ['30 mercados', 'Mercados', 'mercado'],
+    ['recebi 3000 salário', 'Salário', 'salario'],
+  ]
+  for (const [frase, descricao, categoryId] of casos) assertEquals([frase, dita(frase)], [frase, { descricao, categoryId }])
+})
+
+Deno.test('dita: no começo é nome de loja, não categoria', () => {
+  assertEquals(dita('Mercado Livre 80'), null)
+  assertEquals(dita('Farmácia São João 30'), null)
+})
+
+Deno.test('dita: só as categorias do tipo, e a palavra ambígua não decide', () => {
+  // "salário" numa despesa não é a categoria de receita.
+  assertEquals(separarCategoriaDita('Adiantamento salário', 'expense', DITAS), null)
+  const duas: CategoriaParaCasar[] = [
+    { id: 'mercado', name: 'Mercado', type: 'expense' },
+    { id: 'bairro', name: 'Mercado do bairro', type: 'expense' },
+  ]
+  // O nome inteiro "Mercado" casa uma só: vence a palavra, que casaria as duas.
+  assertEquals(separarCategoriaDita('Pão mercado', 'expense', duas), { descricao: 'Pão', categoryId: 'mercado' })
+  assertEquals(separarCategoriaDita('Pão bairro', 'expense', duas), { descricao: 'Pão', categoryId: 'bairro' })
+  assertEquals(separarCategoriaDita('Pão do mercado do bairro', 'expense', duas), { descricao: 'Pão', categoryId: 'bairro' })
+  const ambiguas: CategoriaParaCasar[] = [
+    { id: 'm1', name: 'Mercado do bairro', type: 'expense' },
+    { id: 'm2', name: 'Mercado central', type: 'expense' },
+  ]
+  assertEquals(separarCategoriaDita('Pão mercado', 'expense', ambiguas), null)
+})
+
+Deno.test('dita: o marcador "categoria" casa em qualquer lugar', () => {
+  assertEquals(separarCategoriaDita('Categoria mercado pão', 'expense', DITAS), { descricao: 'Pão', categoryId: 'mercado' })
+  assertEquals(separarCategoriaDita('Pão categoria xyz', 'expense', DITAS), null)
 })

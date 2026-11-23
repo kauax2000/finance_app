@@ -13,6 +13,7 @@ import {
   normalizarDescricao,
   palavrasDosCartoes,
   preencherPeloHistorico,
+  separarCategoriaDita,
   type CartaoParaCasar,
   type CategoriaParaCasar,
   type FormaDePagamento,
@@ -229,7 +230,7 @@ export function valoresDoPlano(total: number, n: number): { parcela: number; ult
 }
 
 /** A categoria que o atalho grava sem conferir: as que vêm do que a pessoa já fez ou disse. */
-const CATEGORIA_LIMPA = new Set<MotivoDaCategoria>(['historico', 'aprendido', 'nome'])
+const CATEGORIA_LIMPA = new Set<MotivoDaCategoria>(['dita', 'historico', 'aprendido', 'nome'])
 
 /** A forma do parser no vocabulário de `transactions.payment_method`. */
 const FORMA_NO_BANCO: Record<FormaDePagamento, string> = {
@@ -382,11 +383,19 @@ export function montarLancamento(
   const semDescricao = duvidas.includes('descricao')
   // O estorno no cartão busca a categoria da compra, no histórico de despesa.
   const tipoCategoria = tipoDaCategoria(tipo, estorno ? (cartao?.id ?? null) : null)
-  const historico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historicoDaCarteira)
   // Como no app (frase-no-form.ts): só as categorias da carteira de destino, do tipo.
-  const categoria = semDescricao
-    ? null
-    : casarCategoria(descricao, tipoCategoria, ctx.categoriasPorCarteira[carteira] ?? [], historicoDaCarteira, ctx.hoje)
+  const categorias = ctx.categoriasPorCarteira[carteira] ?? []
+  // A categoria escrita na frase ("pão mercado") sai da descrição; o estabelecimento
+  // do Apple Pay e a foto não são frase da pessoa. Daqui em diante, a descrição limpa.
+  const dita =
+    semDescricao || applePay || !pedido.text?.trim() ? null : separarCategoriaDita(descricao, tipoCategoria, categorias)
+  if (dita) descricao = dita.descricao
+  const historico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historicoDaCarteira)
+  const categoria: { categoryId: string; motivo: MotivoDaCategoria } | null = dita
+    ? { categoryId: dita.categoryId, motivo: 'dita' }
+    : semDescricao
+      ? null
+      : casarCategoria(descricao, tipoCategoria, categorias, historicoDaCarteira, ctx.hoje)
 
   // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o único cartão
   // ativo da carteira, senão o do último crédito. Um nome de cartão que não casou

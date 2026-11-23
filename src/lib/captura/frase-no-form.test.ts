@@ -321,7 +321,7 @@ describe("regras da frase com categorias e o cartão de sempre", () => {
         expect(c.paymentMethod).toBe("pix")
         expect(c.creditCardId).toBeNull()
         expect(c.categoryId).toBe("cat-mercado")
-        expect(c.motivoDaCategoria).toBe("nome")
+        expect(c.motivoDaCategoria).toBe("dita")
     })
 
     it("o resumo diz o que entendeu e de onde veio", () => {
@@ -329,7 +329,7 @@ describe("regras da frase com categorias e o cartão de sempre", () => {
         expect(resumoDaFrase(c, HOJE, categorias, [nubank])).toEqual([
             "R$\u00a042,00",
             "Mercado",
-            "categoria Mercado (pelo nome)",
+            "categoria Mercado (você escreveu)",
             "Crédito · Nubank (último usado)",
             "09/04/2026",
         ])
@@ -360,5 +360,41 @@ describe("o histórico aprendido", () => {
         const c = camposDaFrase("42 mercado dia", HOJE, [], [linha({ description: "Mercado extra", category_id: "cat-alim" })], { categorias })
         expect(c.motivoDaCategoria).toBe("aprendido")
         expect(resumoDaFrase(c, HOJE, categorias, [])).toContain("categoria Alimentação (pelo que você já lançou)")
+    })
+})
+
+describe("dita: a categoria escrita na frase sai da descrição", () => {
+    const categorias = [
+        { id: "cat-mercado", name: "Mercado", type: "expense" as const },
+        { id: "cat-alim", name: "Alimentação", type: "expense" as const },
+    ]
+
+    it("\"pão mercado\" é Pão em Mercado, e o resumo diz que a pessoa escreveu", () => {
+        const c = camposDaFrase("pão mercado 12", HOJE, [], [], { categorias })
+        expect(c).toMatchObject({ descricao: "Pão", categoryId: "cat-mercado", motivoDaCategoria: "dita" })
+        expect(resumoDaFrase(c, HOJE, categorias, [])).toContain("categoria Mercado (você escreveu)")
+    })
+
+    it("vence o histórico exato, que vê a descrição limpa", () => {
+        const hist = [linha({ description: "Pão", category_id: "cat-alim", payment_method: "cash" })]
+        const c = camposDaFrase("pão mercado 12", HOJE, [], hist, { categorias })
+        expect([c.descricao, c.categoryId, c.motivoDaCategoria, c.paymentMethod]).toEqual(["Pão", "cat-mercado", "dita", "cash"])
+    })
+
+    it("a descrição lida pela IA também perde a categoria dita; a da foto não", async () => {
+        const { camposDaIA } = await import("@/lib/captura/frase-no-form")
+        const lida = {
+            valor: 12,
+            data: null,
+            descricao: "Pão mercado",
+            tipo: null,
+            parcelas: null,
+            forma: null,
+            cartao: null,
+        }
+        const daFrase = camposDaIA(lida, HOJE, [], [], "paguei o pão do mercado", { categorias })
+        expect([daFrase.descricao, daFrase.motivoDaCategoria]).toEqual(["Pão", "dita"])
+        const daFoto = camposDaIA(lida, HOJE, [], [], "", { categorias })
+        expect([daFoto.descricao, daFoto.motivoDaCategoria]).toEqual(["Pão mercado", "nome"])
     })
 })

@@ -793,10 +793,10 @@ Deno.test('usoDoToken: versão e gatilho só entram com cabeçalho válido; sem 
 
 // --- Paridade com o app: categoria e cartão como na frase do formulário -----
 
-Deno.test('paridade: "42 mercado" sem histórico pega a categoria Mercado pelo nome', () => {
+Deno.test('paridade: "42 mercado" sem histórico pega a categoria Mercado escrita na frase', () => {
   const r = ok(montarLancamento({ text: '42 mercado' }, ctx({ categoriasPorCarteira: { [PADRAO]: [cat('mercado', 'Mercado')] } })))
   assertEquals(r.linha.category_id, 'mercado')
-  assertEquals(r.linha.capture_meta?.categoria, 'nome')
+  assertEquals(r.linha.capture_meta?.categoria, 'dita')
   assertEquals(r.linha.needs_review, false)
   assertEquals(r.semCategoria, false)
 })
@@ -974,4 +974,47 @@ Deno.test('categoria pelo nome: limpa só quando o nome cobre a descrição', ()
   assertEquals([casa.linha.category_id, casa.linha.needs_review], ['c-casa', true])
   const livre = ok(montarLancamento({ text: '120 Mercado Livre' }, comCats([cat('c-merc', 'Mercado')])))
   assertEquals([livre.linha.category_id, livre.linha.needs_review], ['c-merc', true])
+})
+
+// --- A categoria dita na frase sai da descrição ------------------------------
+
+Deno.test('dita: "pão mercado" grava Pão em Mercado, sem conferir', () => {
+  const comCats = ctx({ categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado'), cat('c-alim', 'Alimentação')] } })
+  const r = ok(montarLancamento({ text: 'pão mercado 12' }, comCats))
+  assertEquals(
+    [r.linha.description, r.linha.category_id, r.linha.needs_review, r.linha.capture_meta?.categoria, r.semCategoria],
+    ['Pão', 'c-merc', false, 'dita', false],
+  )
+  const repetida = ok(montarLancamento({ text: '42 mercado mercado' }, comCats))
+  assertEquals([repetida.linha.description, repetida.linha.category_id, repetida.linha.needs_review], ['Mercado', 'c-merc', false])
+})
+
+Deno.test('dita: o histórico e a IA veem a descrição já limpa', () => {
+  // O histórico de "Pão" diz pix: a forma vem pela descrição limpa.
+  const r = ok(
+    montarLancamento(
+      { text: 'pão mercado 12' },
+      ctx({
+        historicoPorCarteira: { [PADRAO]: [hist('Pão', 'c-merc', { payment_method: 'debit_card' })] },
+        categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado')] },
+      }),
+    ),
+  )
+  assertEquals([r.linha.description, r.linha.payment_method], ['Pão', 'debit_card'])
+  // A descrição lida pela IA também perde a categoria dita.
+  const lida = ok(
+    montarLancamento(
+      { text: 'paguei o pão do mercado', campos: ia({ descricao: 'Pão mercado', valor: 12 }) },
+      ctx({ categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado')] } }),
+    ),
+  )
+  assertEquals([lida.linha.description, lida.linha.category_id, lida.linha.capture_meta?.categoria], ['Pão', 'c-merc', 'dita'])
+})
+
+Deno.test('dita: o estabelecimento do Apple Pay não é frase, e "Mercado Livre" segue o nome', () => {
+  const comCats = ctx({ categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado')] } })
+  const pay = ok(montarLancamento({ amount: 30, merchant: 'Pão mercado', source: 'apple_pay' }, comCats))
+  assertEquals([pay.linha.description, pay.linha.capture_meta?.categoria], ['Pão mercado', 'nome'])
+  const livre = ok(montarLancamento({ text: '80 Mercado Livre' }, comCats))
+  assertEquals([livre.linha.description, livre.linha.capture_meta?.categoria, livre.linha.needs_review], ['Mercado Livre', 'nome', true])
 })

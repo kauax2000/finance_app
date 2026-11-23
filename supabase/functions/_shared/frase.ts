@@ -660,8 +660,8 @@ export function preencherPeloHistorico(
 
 export type CategoriaParaCasar = { id: string; name: string; type: 'expense' | 'income' }
 
-/** De onde veio a categoria escolhida pela frase. */
-export type MotivoDaCategoria = 'historico' | 'aprendido' | 'nome' | 'comum' | 'ia'
+/** De onde veio a categoria escolhida pela frase; `dita` é a que a pessoa escreveu nela ("pão mercado"). */
+export type MotivoDaCategoria = 'dita' | 'historico' | 'aprendido' | 'nome' | 'comum' | 'ia'
 
 /** As palavras de 3+ letras, normalizadas, com e sem o "s" final ("cafés" casa "café"). */
 function palavrasDe(s: string): Set<string> {
@@ -825,6 +825,85 @@ function palavrasQueContam(s: string): string[] {
 export function nomeCobreDescricao(descricao: string, nomeDaCategoria: string): boolean {
   const doNome = palavrasDe(nomeDaCategoria)
   return palavrasQueContam(descricao).every((p) => doNome.has(p))
+}
+
+/** A mesma palavra normalizada, com ou sem o "s" final ("mercados" é "mercado"). */
+function mesmaPalavra(a: string, b: string): boolean {
+  return a === b || (a.length > 3 && a === `${b}s`) || (b.length > 3 && b === `${a}s`)
+}
+
+/** Ligam a categoria dita ao resto ("pão no mercado"): soltos no fim, saem com ela. */
+const LIGAM_A_CATEGORIA = new Set(['no', 'na', 'de', 'do', 'da', 'em', 'pro', 'pra'])
+
+/**
+ * A categoria de um trecho da descrição: o nome inteiro de uma só categoria (o
+ * mais longo que `trecho(m)`, as `m` palavras, casa), senão uma palavra que conta
+ * (3+ letras, fora das vazias) do nome de uma só. Duas no mesmo degrau: `null`.
+ */
+function categoriaDoTrecho(
+  nomes: { id: string; ws: string[] }[],
+  trecho: (m: number) => string[] | null,
+): { id: string; m: number } | null {
+  for (let m = Math.max(0, ...nomes.map((c) => c.ws.length)); m >= 1; m--) {
+    const t = trecho(m)
+    if (!t) continue
+    const achadas = nomes.filter((c) => c.ws.length === m && c.ws.every((w, k) => mesmaPalavra(w, t[k])))
+    if (achadas.length === 1) return { id: achadas[0].id, m }
+    if (achadas.length > 1) return null
+  }
+  const conta = (w: string) => palavrasQueContam(w).length > 0
+  const p = trecho(1)?.[0]
+  if (!p || !conta(p)) return null
+  const achadas = nomes.filter((c) => c.ws.some((w) => conta(w) && mesmaPalavra(w, p)))
+  return achadas.length === 1 ? { id: achadas[0].id, m: 1 } : null
+}
+
+/**
+ * A categoria que a pessoa escreveu na frase ("pão mercado" → Pão em Mercado), e
+ * a descrição sem ela. Vale a do fim da descrição (com o mesmo trecho repetido
+ * contando uma vez, e os conectivos soltos saindo junto), ou a que segue o
+ * marcador "categoria" em qualquer lugar. No começo, com outras palavras depois,
+ * é nome de loja ("Mercado Livre"), e não há categoria dita. Sem nada que sobre,
+ * a descrição fica com uma ocorrência dela ("42 mercado" → Mercado). Só as
+ * categorias do `tipo`; ambígua, `null`.
+ */
+export function separarCategoriaDita(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+): { descricao: string; categoryId: string } | null {
+  const nomes = categorias
+    .filter((c) => c.type === tipo)
+    .map((c) => ({ id: c.id, ws: normalizarDescricao(c.name).split(' ').filter(Boolean) }))
+  const toks = descricao.trim().split(/\s+/).filter(Boolean)
+  const ks = toks.map(normalizarDescricao)
+  if (!nomes.length || !toks.length) return null
+
+  let achada: { id: string; m: number } | null = null
+  let resto: string[] = []
+  let dita: string[] = []
+  const marcador = ks.findIndex((k, i) => k === 'categoria' && i + 1 < ks.length)
+  if (marcador >= 0) {
+    const ini = marcador + 1
+    achada = categoriaDoTrecho(nomes, (m) => (ini + m <= ks.length ? ks.slice(ini, ini + m) : null))
+    if (achada) {
+      dita = toks.slice(ini, ini + achada.m)
+      resto = [...toks.slice(0, marcador), ...toks.slice(ini + achada.m)]
+    }
+  }
+  if (!achada) {
+    achada = categoriaDoTrecho(nomes, (m) => (m <= ks.length ? ks.slice(ks.length - m) : null))
+    if (!achada) return null
+    const m = achada.m
+    let ini = ks.length - m
+    // Repetida ("mercado mercado"): conta uma vez.
+    while (ini - m >= 0 && ks.slice(ini - m, ini).every((k, j) => mesmaPalavra(k, ks[ini + j]))) ini -= m
+    dita = toks.slice(ini, ini + m)
+    resto = toks.slice(0, ini)
+  }
+  while (resto.length && LIGAM_A_CATEGORIA.has(normalizarDescricao(resto[resto.length - 1]))) resto.pop()
+  const texto = (resto.length ? resto : dita).join(' ')
+  return { descricao: texto.charAt(0).toUpperCase() + texto.slice(1), categoryId: achada.id }
 }
 
 type Termos = {
