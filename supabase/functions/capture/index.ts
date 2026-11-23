@@ -320,7 +320,7 @@ Deno.serve(async (req: Request) => {
     if (nomes) lido = await interpretar({ admin, userId, hoje, nomes }, pedido.text ?? '')
   }
   let campos: CamposDaIA | undefined
-  if (lido?.ok) campos = { ...lido.dados, provedor: lido.provedor, modelo: lido.modelo }
+  if (lido?.ok) campos = { ...lido.dados, provedor: lido.provedor, modelo: lido.modelo, daFoto: foto != null }
   else if (lido) console.error('capture: ia', lido.motivo)
 
   const montado = montarLancamento(

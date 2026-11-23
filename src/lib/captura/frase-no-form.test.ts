@@ -396,5 +396,8 @@ describe("dita: a categoria escrita na frase sai da descrição", () => {
         expect([daFrase.descricao, daFrase.motivoDaCategoria]).toEqual(["Pão", "dita"])
         const daFoto = camposDaIA(lida, HOJE, [], [], "", { categorias })
         expect([daFoto.descricao, daFoto.motivoDaCategoria]).toEqual(["Pão mercado", "nome"])
+        // A foto com a frase junto: a descrição lida da foto continua inteira.
+        const fotoComFrase = camposDaIA(lida, HOJE, [], [], "recibo", { categorias }, true)
+        expect([fotoComFrase.descricao, fotoComFrase.motivoDaCategoria]).toEqual(["Pão mercado", "nome"])
     })
 })

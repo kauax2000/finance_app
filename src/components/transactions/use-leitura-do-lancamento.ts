@@ -100,7 +100,7 @@ export function useLeituraDoLancamento({
         // A IA vence e o texto da pessoa completa (`camposDaIA`).
         const ia = iaDaFoto ?? iaDoTexto
         const base = ia
-            ? camposDaIA(ia, hoje, cartoes, historico, fraseLida, ctx)
+            ? camposDaIA(ia, hoje, cartoes, historico, fraseLida, ctx, iaDaFoto != null)
             : fraseLida.trim()
               ? camposDaFrase(fraseLida, hoje, cartoes, historico, ctx)
               : null

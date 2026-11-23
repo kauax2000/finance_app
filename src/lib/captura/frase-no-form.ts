@@ -119,6 +119,8 @@ export function camposDaIA(
     /** A frase que a pessoa escreveu; a foto não tem. */
     texto = "",
     ctx: ContextoDaFrase = {},
+    /** A IA leu uma foto: a descrição dela não é frase da pessoa. */
+    daFoto = false,
 ): CamposDaFrase {
     const f = interpretarFrase(texto, hoje, palavrasDosCartoes(cartoes))
     const forma = c.forma ?? f.forma
@@ -147,8 +149,8 @@ export function camposDaIA(
         cartoes,
         historico,
         ctx,
-        // A descrição da foto não é frase da pessoa: nela não há categoria dita.
-        texto.trim() !== "",
+        // Só a descrição que veio do texto da pessoa tem categoria dita; a lida da foto, não.
+        texto.trim() !== "" && !(daFoto && c.descricao),
     )
     return { ...campos, duvidas: [...campos.duvidas, "ia"] }
 }

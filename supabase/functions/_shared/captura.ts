@@ -45,7 +45,8 @@ export type PedidoCaptura = {
   campos?: CamposDaIA
 }
 
-export type CamposDaIA = CamposIA & { provedor: Provedor; modelo: string }
+/** `daFoto`: a IA leu uma foto, e a descrição dela não é frase da pessoa. */
+export type CamposDaIA = CamposIA & { provedor: Provedor; modelo: string; daFoto?: boolean }
 
 type MetaCaptura = {
   walletCard?: string
@@ -386,9 +387,9 @@ export function montarLancamento(
   // Como no app (frase-no-form.ts): só as categorias da carteira de destino, do tipo.
   const categorias = ctx.categoriasPorCarteira[carteira] ?? []
   // A categoria escrita na frase ("pão mercado") sai da descrição; o estabelecimento
-  // do Apple Pay e a foto não são frase da pessoa. Daqui em diante, a descrição limpa.
-  const dita =
-    semDescricao || applePay || !pedido.text?.trim() ? null : separarCategoriaDita(descricao, tipoCategoria, categorias)
+  // do Apple Pay e a descrição lida da foto não são frase da pessoa. Daqui em diante, a descrição limpa.
+  const daPessoa = !applePay && !!pedido.text?.trim() && !(c?.daFoto && c.descricao)
+  const dita = semDescricao || !daPessoa ? null : separarCategoriaDita(descricao, tipoCategoria, categorias)
   if (dita) descricao = dita.descricao
   const historico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historicoDaCarteira)
   const categoria: { categoryId: string; motivo: MotivoDaCategoria } | null = dita

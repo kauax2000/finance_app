@@ -1018,3 +1018,14 @@ Deno.test('dita: o estabelecimento do Apple Pay não é frase, e "Mercado Livre"
   const livre = ok(montarLancamento({ text: '80 Mercado Livre' }, comCats))
   assertEquals([livre.linha.description, livre.linha.capture_meta?.categoria, livre.linha.needs_review], ['Mercado Livre', 'nome', true])
 })
+
+Deno.test('dita: a descrição lida da foto não perde a categoria, nem com texto junto', () => {
+  const comCats = ctx({ categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado')] } })
+  const foto = ok(montarLancamento({ campos: ia({ descricao: 'Pão mercado', daFoto: true }) }, comCats))
+  assertEquals([foto.linha.description, foto.linha.capture_meta?.categoria], ['Pão mercado', 'nome'])
+  const comTexto = ok(montarLancamento({ text: 'recibo', campos: ia({ descricao: 'Pão mercado', daFoto: true }) }, comCats))
+  assertEquals([comTexto.linha.description, comTexto.linha.capture_meta?.categoria], ['Pão mercado', 'nome'])
+  // Sem descrição na foto, a do texto da pessoa vale, e ela tem categoria dita.
+  const doTexto = ok(montarLancamento({ text: 'pão mercado', campos: ia({ descricao: null, daFoto: true }) }, comCats))
+  assertEquals([doTexto.linha.description, doTexto.linha.capture_meta?.categoria], ['Pão', 'dita'])
+})

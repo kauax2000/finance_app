@@ -119,6 +119,13 @@ Deno.test('dita: só as categorias do tipo, e a palavra ambígua não decide', (
   assertEquals(separarCategoriaDita('Pão mercado', 'expense', ambiguas), null)
 })
 
+Deno.test('dita: sobrando só palavras vazias, a descrição fica inteira', () => {
+  const comLuz = [...DITAS, { id: 'luz', name: 'Luz', type: 'expense' as const }]
+  assertEquals(dita('conta de luz 150', comLuz), { descricao: 'Conta de luz', categoryId: 'luz' })
+  assertEquals(dita('compra no mercado 30'), { descricao: 'Compra no mercado', categoryId: 'mercado' })
+  assertEquals(dita('pão mercado 12'), { descricao: 'Pão', categoryId: 'mercado' })
+})
+
 Deno.test('dita: o marcador "categoria" casa em qualquer lugar', () => {
   assertEquals(separarCategoriaDita('Categoria mercado pão', 'expense', DITAS), { descricao: 'Pão', categoryId: 'mercado' })
   assertEquals(separarCategoriaDita('Pão categoria xyz', 'expense', DITAS), null)

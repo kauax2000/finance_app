@@ -864,8 +864,9 @@ function categoriaDoTrecho(
  * contando uma vez, e os conectivos soltos saindo junto), ou a que segue o
  * marcador "categoria" em qualquer lugar. No começo, com outras palavras depois,
  * é nome de loja ("Mercado Livre"), e não há categoria dita. Sem nada que sobre,
- * a descrição fica com uma ocorrência dela ("42 mercado" → Mercado). Só as
- * categorias do `tipo`; ambígua, `null`.
+ * a descrição fica com uma ocorrência dela ("42 mercado" → Mercado); sobrando só
+ * palavras vazias, fica inteira ("Conta de luz" em Luz). Só as categorias do
+ * `tipo`; ambígua, `null`.
  */
 export function separarCategoriaDita(
   descricao: string,
@@ -902,7 +903,8 @@ export function separarCategoriaDita(
     resto = toks.slice(0, ini)
   }
   while (resto.length && LIGAM_A_CATEGORIA.has(normalizarDescricao(resto[resto.length - 1]))) resto.pop()
-  const texto = (resto.length ? resto : dita).join(' ')
+  // Só palavras vazias sobrando ("conta de luz" em Luz): a descrição fica inteira.
+  const texto = !resto.length ? dita.join(' ') : palavrasQueContam(resto.join(' ')).length ? resto.join(' ') : toks.join(' ')
   return { descricao: texto.charAt(0).toUpperCase() + texto.slice(1), categoryId: achada.id }
 }
 
