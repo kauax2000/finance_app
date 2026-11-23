@@ -4,6 +4,7 @@
  * `useLeituraDoLancamento`.
  */
 import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
+import { normalizarDescricao } from "@/lib/captura/frase"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import { currencyBRL } from "@/lib/formatters"
 import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
@@ -108,6 +109,43 @@ export function soDespesa(c: CamposDaFrase, categorias: { id: string; type: "exp
         motivoDoTipo: null,
         categoryId: categoria?.type === "expense" ? c.categoryId : null,
     }
+}
+
+/** O tipo de categoria que os campos escolhem: o estorno no cartão abate uma de despesa. */
+export function tipoDaCategoriaDosCampos(c: CamposDaFrase): "expense" | "income" {
+    return c.estorno ? "expense" : c.tipo
+}
+
+/**
+ * A pergunta à IA pela categoria, quando nada a achou: sem categoria, com
+ * descrição de verdade e sem a pessoa ter escolhido uma (nem "Sem categoria").
+ * A chave é (descrição, tipo): uma pergunta por par, e a resposta só vale para ele.
+ */
+export function chaveDaCategoriaPelaIA(c: CamposDaFrase, editados: Partial<CamposDaFrase>): string | null {
+    if (c.categoryId || "categoryId" in editados || c.duvidas.includes("descricao") || !c.descricao.trim()) return null
+    return JSON.stringify([c.descricao, tipoDaCategoriaDosCampos(c)])
+}
+
+/**
+ * A categoria que a IA sugeriu (`sugestoes`, o nome por chave) nos campos que
+ * ainda pedem por ela: só um nome da carteira, do tipo do lançamento, e fica a
+ * conferir (a dúvida "ia").
+ */
+export function comCategoriaDaIA(
+    c: CamposDaFrase,
+    sugestoes: Record<string, string>,
+    editados: Partial<CamposDaFrase>,
+    categorias: { id: string; name: string; type: "expense" | "income" }[],
+): CamposDaFrase {
+    const chave = chaveDaCategoriaPelaIA(c, editados)
+    const sugerida = chave != null ? sugestoes[chave] : undefined
+    if (!sugerida) return c
+    const nome = normalizarDescricao(sugerida)
+    const tipo = tipoDaCategoriaDosCampos(c)
+    const achada = categorias.find((k) => k.type === tipo && normalizarDescricao(k.name) === nome)
+    if (!achada) return c
+    const duvidas = c.duvidas.includes("ia") ? c.duvidas : [...c.duvidas, "ia"]
+    return { ...c, categoryId: achada.id, motivoDaCategoria: "ia", duvidas }
 }
 
 /** Sem valor ou sem descrição de verdade, o parser não leu a frase: a IA tenta. */

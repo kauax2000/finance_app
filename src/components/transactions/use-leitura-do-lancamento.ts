@@ -14,15 +14,18 @@ import {
     type ContextoDaFrase,
 } from "@/lib/captura/frase-no-form"
 import {
+    chaveDaCategoriaPelaIA,
+    comCategoriaDaIA,
     comTravas,
     faltaParaLancar,
     MOTIVO_DA_FALTA,
     precisaDeIA,
     soDespesa,
+    tipoDaCategoriaDosCampos,
     type CampoDoLancamento,
 } from "@/lib/captura/lancamento-inteligente"
 import { comprimirImagem } from "@/lib/anexos"
-import { lerFraseComIA, lerImagemComIA, type CamposIA } from "@/lib/ia/ler"
+import { categorizarComIA, lerFraseComIA, lerImagemComIA, type CamposIA } from "@/lib/ia/ler"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { cartaoPreEscolhido, gravarUltimoCartao } from "@/lib/ultimo-cartao"
 
@@ -73,6 +76,8 @@ export function useLeituraDoLancamento({
     const [lendoTexto, setLendoTexto] = useState(false)
     const [lendoFoto, setLendoFoto] = useState(false)
     const [aviso, setAviso] = useState<string | null>(null)
+    // A categoria que a IA sugeriu, por (descrição, tipo) (`chaveDaCategoriaPelaIA`).
+    const [sugestoesDaIA, setSugestoesDaIA] = useState<Record<string, string>>({})
     const hoje = localYmdFromDate(new Date())
 
     // O histórico é ajuda: carrega a cada abertura (o `staleTime` do cache a
@@ -100,8 +105,8 @@ export function useLeituraDoLancamento({
               : null
         if (!base) return null
         const lidos = comTravas(base, editados)
-        return semReceita ? soDespesa(lidos, categorias) : lidos
-    }, [fraseLida, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados, semReceita])
+        return comCategoriaDaIA(semReceita ? soDespesa(lidos, categorias) : lidos, sugestoesDaIA, editados, categorias)
+    }, [fraseLida, hoje, cartoes, categorias, historico, iaDoTexto, iaDaFoto, editados, semReceita, sugestoesDaIA])
 
     // A foto marca o lançamento como `share`; a frase, como `quick_text`. O
     // aplicar re-renderiza o formulário: só campos diferentes do último
@@ -128,6 +133,31 @@ export function useLeituraDoLancamento({
         }
     }, [])
 
+    // Cada Enter pede a categoria à IA uma vez, depois que a IA da frase (ou da
+    // foto) responde: nos campos finais, e não a cada tecla da revisão.
+    const [enters, setEnters] = useState(0)
+    const enterAtendido = useRef(0)
+    // (descrição, tipo) já perguntados: a recusa (sem plano, cota, rede) não se repete.
+    const perguntadas = useRef(new Set<string>())
+    useEffect(() => {
+        if (enters === enterAtendido.current || !ativo || !campos || lendoTexto || lendoFoto) return
+        enterAtendido.current = enters
+        const chave = chaveDaCategoriaPelaIA(campos, editados)
+        if (!chave || !currentWorkspaceId || perguntadas.current.has(chave)) return
+        perguntadas.current.add(chave)
+        const workspaceId = currentWorkspaceId
+        const meu = pedido.current
+        const nomes = (tipo: "expense" | "income") => categorias.filter((k) => k.type === tipo).map((k) => k.name)
+        void categorizarComIA(workspaceId, [{ i: 0, descricao: campos.descricao, tipo: tipoDaCategoriaDosCampos(campos) }], {
+            expense: nomes("expense"),
+            income: nomes("income"),
+        }).then((lido) => {
+            // Falhou, o lançamento segue sem categoria: nenhum aviso novo.
+            const nome = lido.ok ? lido.sugestoes.find((s) => s.i === 0)?.categoria : undefined
+            if (nome && meu === pedido.current) setSugestoesDaIA((atual) => ({ ...atual, [chave]: nome }))
+        })
+    }, [enters, ativo, campos, editados, lendoTexto, lendoFoto, currentWorkspaceId, categorias])
+
     /**
      * O Enter no campo: lê a frase escrita e abre a revisão. A frase nova
      * esquece o que a IA leu da anterior (as edições à mão ficam); se o valor
@@ -147,6 +177,7 @@ export function useLeituraDoLancamento({
             setIaTentada(false)
             setAviso(null)
         }
+        setEnters((n) => n + 1)
         // Com a foto lida, a frase só completa o que a IA leu dela.
         if (vazia || iaDaFoto || (!nova && iaTentada)) return
         const ctx: ContextoDaFrase = { categorias, cartaoAberto: cartaoPreEscolhido(cartoes) || null }
@@ -169,6 +200,9 @@ export function useLeituraDoLancamento({
         setLendoTexto(false)
         setLendoFoto(false)
         setAviso(null)
+        setSugestoesDaIA({})
+        perguntadas.current.clear()
+        enterAtendido.current = enters
         setFotoDoRecibo(null)
     }
 

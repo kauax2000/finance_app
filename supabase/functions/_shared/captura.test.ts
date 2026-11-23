@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert@1.0.19'
 import {
+  aplicarCategoriaDaIA,
   clientIdDoPedido,
   montarLancamento,
   opcoesDoFormulario,
@@ -901,4 +902,41 @@ Deno.test('paridade: "30 no crédito" com um só cartão ativo e sem histórico 
     montarLancamento({ text: '30 no crédito' }, ctx({ cartoes: [cartao('c-nu', 'Nubank', PADRAO), cartao('c-inter', 'Inter', PADRAO)] })),
   )
   assertEquals(dois.linha.payment_credit_card_id, null)
+})
+
+// --- A IA escolhe o que ainda sobrar ---------------------------------------
+
+const CATEGORIAS_DA_IA = [cat('carro', 'Carro'), cat('salario', 'Salário', 'income')]
+const semCategoriaNaPadrao = (text: string) =>
+  ok(montarLancamento({ text }, ctx({ categoriasPorCarteira: { [PADRAO]: CATEGORIAS_DA_IA } })))
+
+Deno.test('ia: a sugestão vira a categoria e deixa a conferir', () => {
+  const r = semCategoriaNaPadrao('45 zxqw')
+  assertEquals(r.semCategoria, true)
+  const linha = aplicarCategoriaDaIA(r.linha, ' carro ', CATEGORIAS_DA_IA)
+  assertEquals(linha.category_id, 'carro')
+  assertEquals(linha.needs_review, true)
+  assertEquals(linha.capture_meta?.categoria, 'ia')
+  // O resto do que a frase leu fica.
+  assertEquals(linha.capture_meta?.texto, '45 zxqw')
+})
+
+Deno.test('ia: nome que não existe na carteira é ignorado', () => {
+  const r = semCategoriaNaPadrao('45 zxqw')
+  assertEquals(aplicarCategoriaDaIA(r.linha, 'Viagem', CATEGORIAS_DA_IA), r.linha)
+})
+
+Deno.test('ia: sugestão de despesa numa receita é ignorada', () => {
+  const r = semCategoriaNaPadrao('recebi 200 zxqw')
+  assertEquals(r.linha.type, 'income')
+  assertEquals(aplicarCategoriaDaIA(r.linha, 'Carro', CATEGORIAS_DA_IA), r.linha)
+  assertEquals(aplicarCategoriaDaIA(r.linha, 'Salário', CATEGORIAS_DA_IA).category_id, 'salario')
+})
+
+Deno.test('ia: sem IA a linha grava igual', () => {
+  const r = semCategoriaNaPadrao('45 zxqw')
+  const linha = aplicarCategoriaDaIA(r.linha, null, CATEGORIAS_DA_IA)
+  assertEquals(linha, r.linha)
+  assertEquals(linha.category_id, null)
+  assertEquals(linha.needs_review, true)
 })

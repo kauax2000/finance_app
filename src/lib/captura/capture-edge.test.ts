@@ -120,10 +120,22 @@ describe("Edge capture", () => {
 
     it("sem os nomes dos membros a frase não vai à IA (Decisão 6)", () => {
         const f = fonte(CAPTURE)
-        const nomes = f.indexOf("await nomesDosMembros(")
+        // Uma busca por pedido, para a frase e para a categoria.
+        expect(f).toContain("nomesLidos ??= nomesDosMembros(admin, carteirasDaPessoa)")
+        const nomes = f.indexOf("await nomesDaPessoa(")
         expect(nomes).toBeGreaterThan(-1)
         expect(f.indexOf("if (nomes)", nomes)).toBeGreaterThan(nomes)
         expect(f.indexOf("await interpretar(", nomes)).toBeGreaterThan(f.indexOf("if (nomes)", nomes))
+    })
+
+    it("a categoria pela IA só sem categoria, com os nomes, e a falha só loga", () => {
+        const f = fonte(CAPTURE)
+        const sem = f.indexOf("if (montado.semCategoria)")
+        expect(sem).toBeGreaterThan(-1)
+        const nomes = f.indexOf("await nomesDaPessoa(", sem)
+        expect(f.indexOf("if (nomes)", nomes)).toBeGreaterThan(nomes)
+        expect(f.indexOf("await categorizar(", nomes)).toBeGreaterThan(f.indexOf("if (nomes)", nomes))
+        expect(f).toContain("console.error('capture: ia categoria', r.motivo)")
     })
 
     it("consulta o plano da carteira padrão", () => {

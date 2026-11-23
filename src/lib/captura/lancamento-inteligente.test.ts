@@ -7,6 +7,8 @@ vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 const { camposDaIA } = await import("@/lib/captura/frase-no-form")
 const {
     campoEditado,
+    chaveDaCategoriaPelaIA,
+    comCategoriaDaIA,
     comTravas,
     edicaoDoTipo,
     faltaParaLancar,
@@ -244,5 +246,60 @@ describe("useLeituraDoLancamento (fonte)", () => {
         const anexa = fonte.indexOf("setFotoDoRecibo(", comprime)
         expect(comprime).toBeGreaterThan(-1)
         expect(anexa).toBeGreaterThan(comprime)
+    })
+})
+
+describe("a categoria pela IA", () => {
+    const categorias = [
+        { id: "carro", name: "Carro", type: "expense" as const },
+        { id: "salario", name: "Salário", type: "income" as const },
+    ]
+
+    it("só pergunta sem categoria, com descrição de verdade e sem a pessoa ter escolhido", () => {
+        expect(chaveDaCategoriaPelaIA(campos(), {})).not.toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos({ categoryId: "carro" }), {})).toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos({ duvidas: ["descricao"] }), {})).toBeNull()
+        // "Sem categoria" escolhido à mão também é escolha.
+        expect(chaveDaCategoriaPelaIA(campos(), { categoryId: null })).toBeNull()
+    })
+
+    it("uma pergunta por descrição e tipo", () => {
+        expect(chaveDaCategoriaPelaIA(campos({ valor: 10 }), {})).toBe(chaveDaCategoriaPelaIA(campos({ valor: 99 }), {}))
+        expect(chaveDaCategoriaPelaIA(campos({ tipo: "income" }), {})).not.toBe(chaveDaCategoriaPelaIA(campos(), {}))
+        expect(chaveDaCategoriaPelaIA(campos({ descricao: "Posto" }), {})).not.toBe(chaveDaCategoriaPelaIA(campos(), {}))
+    })
+
+    it("a sugestão vira a categoria, a conferir", () => {
+        const chave = chaveDaCategoriaPelaIA(campos(), {})!
+        const c = comCategoriaDaIA(campos(), { [chave]: " carro " }, {}, categorias)
+        expect(c.categoryId).toBe("carro")
+        expect(c.motivoDaCategoria).toBe("ia")
+        expect(c.duvidas).toEqual(["ia"])
+        // A dúvida "ia" não se repete quando a frase já foi lida pela IA.
+        expect(comCategoriaDaIA(campos({ duvidas: ["ia"] }), { [chave]: "Carro" }, {}, categorias).duvidas).toEqual(["ia"])
+    })
+
+    it("resposta velha, nome fora da carteira, tipo errado ou categoria escolhida: nada muda", () => {
+        const chave = chaveDaCategoriaPelaIA(campos(), {})!
+        const base = campos()
+        expect(comCategoriaDaIA(base, {}, {}, categorias)).toBe(base)
+        expect(comCategoriaDaIA(campos({ descricao: "Posto" }), { [chave]: "Carro" }, {}, categorias).categoryId).toBeNull()
+        expect(comCategoriaDaIA(base, { [chave]: "Viagem" }, {}, categorias)).toBe(base)
+        expect(comCategoriaDaIA(base, { [chave]: "Salário" }, {}, categorias)).toBe(base)
+        const escolhida = campos({ categoryId: null })
+        expect(comCategoriaDaIA(escolhida, { [chave]: "Carro" }, { categoryId: null }, categorias)).toBe(escolhida)
+    })
+
+    it("o estorno no cartão escolhe entre as de despesa", () => {
+        const estorno = campos({ tipo: "income", estorno: true, creditCardId: "nubank" })
+        const chave = chaveDaCategoriaPelaIA(estorno, {})!
+        expect(comCategoriaDaIA(estorno, { [chave]: "Carro" }, {}, categorias).categoryId).toBe("carro")
+    })
+
+    it("o hook pergunta à IA pela regra pura e aplica pela mesma", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/use-leitura-do-lancamento.ts"))
+        expect(fonte).toContain("categorizarComIA(")
+        expect(fonte).toContain("chaveDaCategoriaPelaIA(")
+        expect(fonte).toContain("comCategoriaDaIA(")
     })
 })

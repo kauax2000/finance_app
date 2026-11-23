@@ -19,6 +19,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import {
+  aplicarCategoriaDaIA,
   type CamposDaIA,
   clientIdDoPedido,
   ERRO_VALOR,
@@ -34,10 +35,10 @@ import {
   validarPedido,
   valoresDoPlano,
 } from '../_shared/captura.ts'
-import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
+import { appTodayYmd, formatYmd, tipoDaCategoria } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, CategoriaParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
-import { interpretar, lerImagem, nomesDosMembros } from '../_shared/ia.ts'
+import { categorizar, interpretar, lerImagem, nomesDosMembros } from '../_shared/ia.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -300,12 +301,15 @@ Deno.serve(async (req: Request) => {
   // A IA (Decisões 8 e 9): a foto vai sempre; a frase, só se o parser não deu
   // conta. Sem IA (cota, provedor fora, sem chave), segue o caminho de hoje.
   let lido: Awaited<ReturnType<typeof interpretar>> | null = null
+  // Os nomes se buscam uma vez por pedido, para a frase e para a categoria.
+  let nomesLidos: Promise<string[] | null> | undefined
+  const nomesDaPessoa = () => (nomesLidos ??= nomesDosMembros(admin, carteirasDaPessoa))
   if (foto) {
     // A imagem não se redige (Decisão 6), então não leva nomes. Grande demais, o anexo segue e o texto decide.
     if (foto.bytes.byteLength <= MAX_FOTO_IA) lido = await lerImagem({ admin, userId, hoje, nomes: [] }, foto.bytes, foto.mime)
   } else if (precisaDeIA(pedido, hoje, cartoes)) {
     // Sem os nomes, o texto sairia sem redigir: sem IA.
-    const nomes = await nomesDosMembros(admin, carteirasDaPessoa)
+    const nomes = await nomesDaPessoa()
     if (nomes) lido = await interpretar({ admin, userId, hoje, nomes }, pedido.text ?? '')
   }
   let campos: CamposDaIA | undefined
@@ -322,9 +326,27 @@ Deno.serve(async (req: Request) => {
     if (foto && montado.erro === ERRO_VALOR) return json(montado.status, { error: erroDaFoto })
     return json(montado.status, { error: montado.erro, codigo: montado.codigo })
   }
-  const { linha } = montado
+  let { linha } = montado
   // A service role não passa pela RLS: a recusa do convidado se repete aqui.
   if (linha.type === 'income' && convidadoEm.has(linha.workspace_id)) return json(422, { error: ERRO_RECEITA_DO_CONVIDADO })
+
+  // As regras não acharam categoria: a IA escolhe entre as da carteira de destino.
+  // Sem IA (cota, provedor fora, sem os nomes para redigir), grava sem categoria, a conferir.
+  if (montado.semCategoria) {
+    const daCarteira = categoriasPorCarteira[linha.workspace_id] ?? []
+    const tipo = tipoDaCategoria(linha.type, linha.payment_credit_card_id)
+    const nomesDo = (t: 'expense' | 'income') => daCarteira.filter((k) => k.type === t).map((k) => k.name)
+    const nomes = daCarteira.some((k) => k.type === tipo) ? await nomesDaPessoa() : null
+    if (nomes) {
+      const r = await categorizar(
+        { admin, userId, hoje, nomes },
+        [{ i: 0, descricao: linha.description, tipo }],
+        { expense: nomesDo('expense'), income: nomesDo('income') },
+      )
+      if (r.ok) linha = aplicarCategoriaDaIA(linha, r.dados.find((s) => s.i === 0)?.categoria ?? null, daCarteira)
+      else console.error('capture: ia categoria', r.motivo)
+    }
+  }
 
   let gravado: Gravado | undefined
   let novo: boolean

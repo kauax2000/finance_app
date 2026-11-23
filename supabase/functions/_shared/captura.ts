@@ -462,6 +462,29 @@ export function montarLancamento(
 }
 
 /**
+ * A categoria que a IA sugeriu para a linha que as regras deixaram sem nenhuma:
+ * vale só um nome de `categorias` (as da carteira de destino) do tipo da linha,
+ * e fica a conferir. Sem sugestão, ou com um nome que não casa, a linha volta igual.
+ */
+export function aplicarCategoriaDaIA(
+  linha: LinhaCaptura,
+  sugestao: string | null,
+  categorias: CategoriaParaCasar[],
+): LinhaCaptura {
+  if (!sugestao) return linha
+  const nome = normalizarDescricao(sugestao)
+  const tipo = tipoDaCategoria(linha.type, linha.payment_credit_card_id)
+  const achada = categorias.find((k) => k.type === tipo && normalizarDescricao(k.name) === nome)
+  if (!achada) return linha
+  return {
+    ...linha,
+    category_id: achada.id,
+    needs_review: true,
+    capture_meta: { ...linha.capture_meta, categoria: 'ia' },
+  }
+}
+
+/**
  * O formulário do atalho v2: a pessoa escolheu tudo, então é despesa, na
  * carteira padrão, sem "a conferir" e sem histórico nem IA. Categoria ou
  * pagamento ausente vale "Sem categoria" / "Não informar"; um nome fora das
