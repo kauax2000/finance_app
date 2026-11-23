@@ -1,6 +1,6 @@
 -- pgTAP: o histórico do lançamento inteligente agrega a carteira em 24 meses.
 begin;
-select plan(6);
+select plan(7);
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-f400-000000000001', 'hist1@local.dev', '{"full_name":"Hist Um"}'),
@@ -26,6 +26,16 @@ from (values
   ('00000000-0000-4000-f400-000000000001'::uuid, 'Geladeira (2/10)', 1),
   ('00000000-0000-4000-f400-000000000001'::uuid, 'Geladeira (3/10)', 0)
 ) as v(u, d, m);
+
+-- Um palpite ainda a conferir não ensina.
+insert into public.transactions (workspace_id, user_id, type, amount, description, date, needs_review)
+values ((select id from _ws), '00000000-0000-4000-f400-000000000001', 'expense', 10, 'A conferir', now(), true);
+
+select is(
+  (select count(*)::int from public.historico_da_frase((select id from _ws)) where description = 'A conferir'),
+  0,
+  'a linha a conferir (needs_review) fica de fora'
+);
 
 select is(
   (select n from public.historico_da_frase((select id from _ws)) where description = 'Mercado'),

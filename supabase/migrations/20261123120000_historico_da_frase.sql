@@ -2,6 +2,8 @@
 -- aprende a categoria com o que a pessoa já lançou: 24 meses da carteira,
 -- agrupados pelo que o voto lê, com a contagem (`n`) e a data mais recente.
 -- Agrupado, cabe numa leitura só o que 300 linhas cruas não cobriam.
+-- Só o conferido ensina: um palpite ainda "a conferir" (needs_review) não vota;
+-- quando a pessoa o confirma, passa a votar.
 -- Invoker: a RLS de `transactions` decide o que cada um vê. A Edge chama com
 -- o service_role e passa `p_user_id` na carteira em que a pessoa é convidada
 -- (só os lançamentos dela, como antes).
@@ -27,6 +29,7 @@ as $$
   where t.workspace_id = p_workspace_id
     and t.date >= now() - interval '24 months'
     and (p_user_id is null or t.user_id = p_user_id)
+    and t.needs_review = false
   group by regexp_replace(t.description, '\s*\(\d+/\d+\)$', ''), t.type, t.category_id, t.payment_method,
            t.payment_credit_card_id
   -- O app grava o meio-dia do dia escolhido: no mesmo dia, desempata quem entrou por último.
