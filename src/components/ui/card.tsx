@@ -147,8 +147,8 @@ const cardVariants = cva(
     compoundVariants: [
       // O brilho que segue o ponteiro, com 4px de folga no recorte para o anel e o borrão.
       { variant: "brand", glow: "pointer", class: "brand-glow [overflow-clip-margin:var(--spacing)]" },
-      // A aurora (`@utility brand-aurora`): luz e borda são a mesma, parada, e o recorte
-      // fica rente à caixa para a luz não vazar. O fio neutro sai; quem desenha a borda é ela.
+      // A aurora (`@utility brand-aurora`): a borda em degradê só no topo e a luz parada, com o
+      // anel neutro dos quatro lados no `box-shadow` dela; o recorte fica rente à caixa.
       { variant: "brand", glow: "static", class: "brand-aurora border-transparent" },
     ],
     defaultVariants: {

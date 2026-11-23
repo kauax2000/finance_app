@@ -401,6 +401,15 @@ describe("contorno de marca", () => {
     expect(aurora).not.toContain("brand-glow")
     expect(aurora).not.toContain("[overflow-clip-margin:var(--spacing)]")
 
+    // A aurora calma (rodada 414): o anel neutro nos quatro lados é o único `box-shadow` (sem brilho colorido de lateral), o degradê da borda só desce até os 50% do topo e o volume é 0,3 (claro) e 0,55 (escuro).
+    const css = semComentarios(lerFonte("src/app/globals.css"))
+    const util = css.slice(css.indexOf("@utility brand-aurora"), css.indexOf("@utility brand-rainbow-image"))
+    expect(util.match(/box-shadow:[^;]*;/g)).toEqual(["box-shadow: inset 0 0 0 1px var(--border);"])
+    expect(util).not.toMatch(/inset\s+-?\d+px\s+-?\d+px\s+\d+px/)
+    expect(util.match(/linear-gradient\(#000 0%, rgb\(0 0 0 \/ 0\.35\) 22%, transparent 50%\)/g)).toHaveLength(2)
+    expect(util).toMatch(/opacity:\s*0\.8;/)
+    expect([...css.matchAll(/--brand-aurora-opacity:\s*([\d.]+);/g)].map((m) => m[1])).toEqual(["0.3", "0.55"])
+
     // O `Badge` em repouso é um chip `muted`; o núcleo do anel é a mesma cor, e o halo do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-muted", "[--brand-glow-opacity:1]"]) {

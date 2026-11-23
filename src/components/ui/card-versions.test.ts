@@ -29,6 +29,7 @@ describe("as versões do Card", () => {
     expect(aurora).toContain('data-mood="neutral"')
     expect(aurora).toContain("brand-aurora")
     expect(aurora).not.toContain("brand-glow")
+    // O fio do casco segue transparente: o anel neutro é o `box-shadow` da `brand-aurora`.
     expect(aurora).toMatch(/border-transparent/)
     expect(casco({ variant: "brand", glow: "static", mood: "warm" })).toContain('data-mood="warm"')
     expect(casco({ variant: "brand", glow: "static", mood: "cool" })).toContain('data-mood="cool"')

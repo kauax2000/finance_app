@@ -29503,3 +29503,20 @@ conversava com o fundo. Escolhido o P1c de `docs/design/painel/leitura-do-mes-v4
   6,06 / 5,89 / 6,27. O medidor lia sempre o tema claro: a chave do tema em `scripts/lib/contrast.mjs`
   era `theme`, e o `ThemeProvider` grava `tema`. Corrigida; os outros medidores que a usam passam a
   medir o escuro de verdade.
+
+### Rodada 414 — a aurora da Leitura do mês, só em cima
+
+Pedido do dono (23/11/2026): o arco-íris da Leitura do mês ainda era evidente demais, a borda em
+degradê dava a volta e lia como moldura. Escolhido o M1 (a cor só em cima) de
+`docs/design/painel/leitura-arco-iris-calmo.html`. Spec:
+`docs/superpowers/specs/2026-11-23-leitura-arco-iris-calmo-design.md`.
+
+- A borda do `Card glow="static"` é neutra nos quatro lados: o fio do casco segue transparente e a
+  `brand-aurora` desenha o anel de `--border` num `box-shadow: inset 0 0 0 1px`, no mesmo anel de
+  1,5px do degradê do `::before`, que o cobre no topo (um anel só, sem linha dupla).
+- O degradê da borda desce de opaco no topo a 35% aos 22% e a transparente aos 50% da altura, com
+  `opacity: 0.8`. Saiu o brilho colorido das laterais (o `box-shadow` inset).
+- A aurora (`::after`) mantém a geometria; `--brand-aurora-opacity` caiu a 0,3 no claro e 0,55 no escuro.
+- Contraste (`scripts/tone-contrast.mjs`, claro / escuro): tinta cheia 18,91 / 19,29 / 19,05 e
+  16,31 / 15,71 / 16,21; `--muted-foreground` 5,92 / 5,96 / 5,91 e 6,83 / 6,82 / 6,85 (warm / cool /
+  neutral). Antes: pior 5,27.
