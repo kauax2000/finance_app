@@ -2,19 +2,19 @@
 
 **Por quê.** O dono achou o arco-íris da Leitura do mês evidente demais (23/11/2026). Hoje a borda em degradê dá a volta inteira no cartão e há um brilho interno nas laterais; o cartão lê como uma moldura colorida, não como um insight.
 
-**Mockup:** `docs/design/painel/leitura-arco-iris-calmo.html`, opção **M2 · Um fio de luz**.
+**Mockup:** `docs/design/painel/leitura-arco-iris-calmo.html`, opção **M1 · A cor só em cima** (escolha do dono).
 
 ## Abordagens
-- **M1 · A cor só em cima:** borda neutra, o degradê só no terço de cima, aurora a 55%. Recusada: a borda colorida ainda desenha os cantos.
-- **M2 · Um fio de luz (escolhida, por recomendação; o dono pediu o fluxo sem escolher):** borda neutra em volta; a cor vira um fio de 1px no topo, que some nas pontas; a aurora fica mais baixa e mais estreita.
+- **M1 · A cor só em cima (escolhida pelo dono, 23/11/2026):** borda neutra em volta; o degradê da borda fica só no terço de cima e some antes do meio; aurora a 55% do volume de hoje; sem o brilho das laterais.
+- **M2 · Um fio de luz:** a cor só num fio de 1px no topo. Era a recomendação; o dono escolheu M1.
 - **M3 · Véu de uma cor:** recusada, perde a marca no cartão.
 - **M4 · A luz nasce do selo:** recusada no mockup, tinge o título.
 
 ## O que muda (`@utility brand-aurora`, `Card glow="static"`)
-1. **Borda:** o cartão volta à borda neutra do `outline` (`border` em `--border`, com `bg-clip-padding`); sai o `border-transparent` do composto `brand` + `static` em `card.tsx`.
-2. **O fio:** o `::before` deixa de ser a borda em degradê e passa a ser uma linha de 1px colada ao topo de dentro, de 12% a 88% da largura, no degradê das três cores do humor (`--aurora-l`, `--aurora-c`, `--aurora-r`), sumindo para transparente nas pontas (0 → 25%, 75% → 100%), com `opacity: 0.85`.
-3. **O brilho interno das laterais** (`box-shadow` inset) sai.
-4. **A aurora** (`::after`) fica mais estreita, `inset: -40% 5% 50% 5%`, e mais fraca: `--brand-aurora-opacity` vai de 1 a **0,4** no escuro e de 0,55 a **0,3** no claro. Os três humores e as paradas não mudam.
+1. **Borda neutra em volta:** o cartão passa a mostrar o fio de `--border` nos quatro lados, como o `outline`. Como o cartão `brand` tem `overflow-clip` e o degradê mora num pseudo dentro da `padding-box`, a borda neutra e o degradê precisam ocupar o mesmo anel (o degradê por cima do neutro no topo), sem linha dupla. O caminho sugerido: manter o `border-transparent` e desenhar o neutro no mesmo anel do `::before` (por exemplo, uma `box-shadow: inset 0 0 0 1px var(--border)` no cartão, que pinta sob o pseudo de `z` negativo), ou outra solução que dê um anel só.
+2. **O degradê só em cima:** o `::before` continua a borda em degradê (as três cores do humor), mas a máscara da primeira camada vai de opaco no topo a 35% aos 22% da altura e a transparente aos 50% (`linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 22%, transparent 50%)`), com `opacity: 0.8`. Embaixo do meio, só o neutro.
+3. **O brilho interno das laterais** (`box-shadow` inset colorido) sai.
+4. **A aurora** (`::after`) fica na mesma geometria e mais fraca: `--brand-aurora-opacity` vai de 1 a **0,55** no escuro e de 0,55 a **0,3** no claro. Os três humores e as paradas não mudam.
 5. Contraste: rodar `scripts/tone-contrast.mjs` (a aurora só fica mais fraca; o número deve subir) e anotar o pior caso no comentário do token e no AGENTS.md.
 
 ## Registro

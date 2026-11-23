@@ -46,7 +46,7 @@ export function LeituraDoMes({
         <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
             <CardContent className="grid gap-2">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span aria-hidden className="grid size-5.5 place-items-center rounded-full bg-muted text-xs">
+                    <span aria-hidden className="aurora-orb grid size-7 place-items-center text-sm">
                         <span className="brand-rainbow bg-clip-text text-transparent">✦</span>
                     </span>
                     Leitura do mês

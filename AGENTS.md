@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para a aurora parada (`brand-aurora`: três luzes fracas do topo, a borda neutra e o degradê das três cores só no topo, que some antes do meio, sem ponteiro) e `mood` (`warm` | `cool` | **`neutral`**) para a paleta pelo humor da notícia — a Leitura do mês passa o tom da manchete, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para a aurora parada (`brand-aurora`: três luzes fracas do topo, a borda neutra e o degradê das três cores só no topo, que some antes do meio, sem ponteiro; o selo ✦ da Leitura veste a `@utility aurora-orb`, o círculo escuro com a luz do humor nascendo do pé, que lê as três cores do `brand-aurora` e é parte da mesma peça) e `mood` (`warm` | `cool` | **`neutral`**) para a paleta pelo humor da notícia — a Leitura do mês passa o tom da manchete, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada

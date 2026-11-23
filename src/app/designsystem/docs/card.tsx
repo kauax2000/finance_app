@@ -109,7 +109,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Marca acesa"
-        description="glow=&quot;static&quot; é a aurora: três luzes paradas nascem do topo e somem antes do meio, a borda é neutra nos quatro lados e só o topo leva o degradê das mesmas três cores, que some antes do meio. Sem ponteiro, também no toque. mood escolhe a paleta pela notícia — warm (o gasto subiu), cool (melhorou), neutral (o normal; o padrão). É a exceção nomeada ao arco-íris sob texto (brand-aurora, com o volume em --brand-aurora-opacity) e continua sendo a peça de marca da tela: a Leitura do mês do detalhe da categoria."
+        description="glow=&quot;static&quot; é a aurora: três luzes paradas nascem do topo e somem antes do meio, a borda é neutra nos quatro lados e só o topo leva o degradê das mesmas três cores, que some antes do meio. Sem ponteiro, também no toque. mood escolhe a paleta pela notícia — warm (o gasto subiu), cool (melhorou), neutral (o normal; o padrão). É a exceção nomeada ao arco-íris sob texto (brand-aurora, com o volume em --brand-aurora-opacity) e continua sendo a peça de marca da tela: a Leitura do mês do detalhe da categoria. O selo ✦ do cabeçalho dela veste aurora-orb, que lê as mesmas três cores."
         code={`<Card variant="brand" glow="static" mood="warm">…</Card>`}
         previewClassName="grid w-full gap-4 py-10 md:grid-cols-3"
       >
