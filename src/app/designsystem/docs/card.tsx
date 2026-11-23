@@ -109,7 +109,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Marca acesa"
-        description="glow=&quot;static&quot; deixa o arco-íris sempre à vista: o anel inteiro aceso (o piso --brand-glow-floor), também no toque, e o arco mais forte ainda segue o ponteiro; para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
+        description="glow=&quot;static&quot; deixa o arco-íris sempre à vista: o anel inteiro aceso (o piso --brand-glow-floor), também no toque, e o arco mais forte ainda segue o ponteiro; no fundo, o véu de arco-íris borrado entra pelo topo (brand-wash, a exceção nomeada ao arco-íris sob texto); para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
         code={`<Card variant="brand" glow="static">…</Card>`}
         previewClassName="justify-center py-10"
       >

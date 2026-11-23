@@ -195,8 +195,8 @@ function Card({
       className={cn(
         cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation }),
         // Aceso de saída, na força do `beam` do onboarding: o arco-íris dá a volta inteira (o piso
-        // da janela) e o arco, mais forte, ainda segue o ponteiro.
-        aceso && "[--brand-glow-active:1] [--brand-glow-opacity:0.8] [--brand-glow-start:0] [--brand-glow-floor:0.55]",
+        // da janela), o arco, mais forte, ainda segue o ponteiro, e o véu (`brand-wash`) entra pelo topo.
+        aceso && "brand-wash [--brand-glow-active:1] [--brand-glow-opacity:0.8] [--brand-glow-start:0] [--brand-glow-floor:0.55]",
         className
       )}
       {...props}

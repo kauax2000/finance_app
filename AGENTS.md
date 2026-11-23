@@ -440,7 +440,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
-  mede de 8,7 a 12,5:1 sobre as paradas puras) e a aurora da troca de tema
+  mede de 8,7 a 12,5:1 sobre as paradas puras) o véu do `Card glow="static"` (`@utility brand-wash`, a Leitura do mês: o arco-íris borrado entrando pelo topo, sob o texto, com o volume em `--brand-wash-opacity`, 0,22 no claro e 0,3 no escuro, sem medição de contraste ainda) e a aurora da troca de tema
   (passa por cima do texto por ~1s e não é lida; o volume da faixa mora em
   `AURORA.opacidade`, e o aro e o brilho da parada, traços finos que não cobrem texto, ficam fora dela).
 - **As famílias de peça de marca**:
@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco-íris sempre à vista: o anel inteiro acende no piso `--brand-glow-floor` (0,55) e o arco, mais forte, ainda segue o ponteiro — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco-íris sempre à vista: o anel inteiro acende no piso `--brand-glow-floor` (0,55), o arco, mais forte, ainda segue o ponteiro, e o véu `brand-wash` entra pelo topo — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada

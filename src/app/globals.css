@@ -266,6 +266,9 @@
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.75;
+  /* A força do véu de arco-íris no fundo do `Card glow="static"` (`@utility brand-wash`).
+     Fica embaixo do texto, então é baixa e por tema; mexe-se aqui, nunca nas paradas. */
+  --brand-wash-opacity: 0.22;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   /* A vinheta do campo de marca escurece os cantos em direção ao preto, que dá ao
@@ -638,6 +641,8 @@
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.45;
+  /* No escuro o véu clareia o cartão: mais baixo, para o texto claro seguir lendo. */
+  --brand-wash-opacity: 0.3;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   --brand-field-vignette: radial-gradient(
@@ -1776,6 +1781,28 @@
    `brand-rainbow` é só o degradê, sem grão, e serve a máscara do wordmark e o
    `::before` do `Button variant="brand"`: num traço de 2 a 4px o grão é sujeira. O
    grão é do campo (`brand-field`), onde há área para ler como material. */
+/* O véu de marca no fundo de um cartão: o arco-íris borrado entrando pelo topo e
+   sumindo antes do meio, atrás do conteúdo. É a exceção nomeada ao "arco-íris sob
+   texto" do `Card glow="static"` (a Leitura do mês): o volume mora num token só,
+   `--brand-wash-opacity`, por tema, e as paradas não se mexem. Pede `isolate` e
+   `brand-rainbow-image` em quem veste (o `Card brand` já tem os dois): o `::after` em
+   `z` negativo pinta sobre o fundo do casco e sob os filhos. */
+@utility brand-wash {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: var(--brand-rainbow);
+    filter: blur(28px);
+    opacity: var(--brand-wash-opacity);
+    -webkit-mask-image: linear-gradient(to bottom, #000 10%, transparent 95%);
+    mask-image: linear-gradient(to bottom, #000 10%, transparent 95%);
+  }
+}
+
 @utility brand-rainbow-image {
   /* O sRGB primeiro, e o `@supports` por cima. O degradê mora numa propriedade
      personalizada, cujo valor não é validado na análise: um `in oklch` que o

@@ -27,6 +27,9 @@ describe("as versões do Card", () => {
     const aceso = casco({ variant: "brand", glow: "static" })
     expect(aceso).toContain('data-glow="static"')
     expect(aceso).toContain("[--brand-glow-active:1]")
+    // O véu de marca no fundo (a exceção nomeada ao arco-íris sob texto), só no aceso.
+    expect(aceso).toContain("brand-wash")
+    expect(casco({ variant: "brand" })).not.toContain("brand-wash")
     expect(casco({ variant: "brand" })).not.toContain("[--brand-glow-active:1]")
     expect(casco({ glow: "static" })).not.toContain("[--brand-glow-active:1]")
   })
