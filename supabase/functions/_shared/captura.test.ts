@@ -15,7 +15,7 @@ import {
   type CamposDaIA,
   type ContextoCaptura,
 } from './captura.ts'
-import type { CartaoParaCasar, LinhaHistorico } from './frase.ts'
+import type { CartaoParaCasar, CategoriaParaCasar, LinhaHistorico } from './frase.ts'
 
 const HOJE = '2026-04-10'
 const PADRAO = 'w-padrao'
@@ -42,13 +42,27 @@ const hist = (description: string, category_id: string, extra: Partial<LinhaHist
   ...extra,
 })
 
+const cat = (id: string, name: string, type: 'expense' | 'income' = 'expense'): CategoriaParaCasar => ({ id, name, type })
+
+/**
+ * Sem `categoriasPorCarteira`, as categorias são as do histórico de cada
+ * carteira (a Edge sempre as lê), com um nome que não casa descrição nenhuma.
+ */
 function ctx(over: Partial<ContextoCaptura> = {}): ContextoCaptura {
+  const historicoPorCarteira = over.historicoPorCarteira ?? {}
+  const categoriasPorCarteira = Object.fromEntries(
+    Object.entries(historicoPorCarteira).map(([w, linhas]) => [
+      w,
+      linhas.filter((l) => l.category_id).map((l) => cat(l.category_id!, '-', l.type)),
+    ]),
+  )
   return {
     userId: 'u1',
     carteiraPadrao: PADRAO,
     carteirasDaPessoa: [PADRAO, OUTRA],
     cartoes: [],
-    historicoPorCarteira: {},
+    historicoPorCarteira,
+    categoriasPorCarteira,
     hoje: HOJE,
     ...over,
   }
@@ -135,7 +149,7 @@ Deno.test('montarLancamento: com histórico pega categoria e forma, e não fica 
   assertEquals(r.linha.category_id, 'cat-mercado')
   assertEquals(r.linha.payment_method, 'debit_card')
   assertEquals(r.linha.needs_review, false)
-  assertEquals(r.linha.capture_meta, null)
+  assertEquals(r.linha.capture_meta, { categoria: 'historico' })
 })
 
 Deno.test('estorno sem cartão fica a conferir e não herda a forma do histórico', () => {
@@ -226,7 +240,7 @@ Deno.test('Foco 3: cartão de carteira alheia não é usado; fica na padrão, se
   // O histórico é o da padrão, e a palavra do cartão volta à descrição.
   assertEquals(r.linha.category_id, 'cat-padrao')
   assertEquals(r.linha.description, 'Mercado nubank')
-  assertEquals(r.linha.capture_meta, { texto: '42 mercado nubank' })
+  assertEquals(r.linha.capture_meta, { texto: '42 mercado nubank', categoria: 'palavra' })
   assertEquals(r.linha.needs_review, true)
   assertEquals(r.resumo, 'R$\u00a042,00 · Mercado nubank')
 })
@@ -311,7 +325,7 @@ Deno.test('casamento parcial do nome ("mercado" × "Mercado Pago") fica a confer
     ),
   )
   assertEquals(r.linha.needs_review, true)
-  assertEquals(r.linha.capture_meta, { texto: '50 compras no mercado' })
+  assertEquals(r.linha.capture_meta, { texto: '50 compras no mercado', categoria: 'historico' })
 })
 
 // Os 4 dígitos numa frase o parser ainda não separa como cartão (minor da Tarefa 2).
@@ -412,7 +426,7 @@ Deno.test('Apple Pay sem casamento grava capture_meta.walletCard, crédito sem c
   )
   assertEquals(r.linha.amount, 42.9)
   assertEquals(r.linha.description, 'Padaria Real')
-  assertEquals(r.linha.capture_meta, { walletCard: 'Visa Gold' })
+  assertEquals(r.linha.capture_meta, { walletCard: 'Visa Gold', categoria: 'historico' })
   assertEquals(r.linha.payment_method, 'credit_card')
   assertEquals(r.linha.payment_credit_card_id, null)
   assertEquals(r.linha.category_id, 'cat-padaria')
@@ -432,7 +446,7 @@ Deno.test('Apple Pay casa pelo wallet_alias e aceita amount numérico', () => {
   )
   assertEquals(r.linha.workspace_id, OUTRA)
   assertEquals(r.linha.payment_credit_card_id, 'c-nu')
-  assertEquals(r.linha.capture_meta, null)
+  assertEquals(r.linha.capture_meta, { categoria: 'historico' })
   assertEquals(r.linha.needs_review, false)
   assertEquals(r.resumo, 'R$ 42,90 · Padaria Real · Nubank')
 })
@@ -535,7 +549,7 @@ Deno.test('Foco 1: campos da IA sempre a conferir, mesmo com histórico e cartã
   assertEquals(r.linha.description, 'Padaria Real')
   assertEquals(r.linha.date, '2026-04-08T12:00:00.000Z')
   assertEquals(r.linha.needs_review, true)
-  assertEquals(r.linha.capture_meta, { ia: { provedor: 'groq', modelo: 'm1' } })
+  assertEquals(r.linha.capture_meta, { ia: { provedor: 'groq', modelo: 'm1' }, categoria: 'historico' })
 })
 
 Deno.test('IA: cartão de carteira alheia continua bloqueado (Foco 3)', () => {
@@ -774,4 +788,97 @@ Deno.test('usoDoToken: versão e gatilho só entram com cabeçalho válido; sem 
   for (const g of ['siri', 'acao', 'toque', 'bloqueio', 'inicio'])
     assertEquals(usoDoToken(null, g, AGORA), { last_used_at: AGORA, atalho_gatilho: g })
   for (const g of [null, '', 'Siri', 'toque2', 'apple_pay']) assertEquals(usoDoToken(null, g, AGORA), { last_used_at: AGORA })
+})
+
+// --- Paridade com o app: categoria e cartão como na frase do formulário -----
+
+Deno.test('paridade: "42 mercado" sem histórico pega a categoria Mercado pelo nome', () => {
+  const r = ok(montarLancamento({ text: '42 mercado' }, ctx({ categoriasPorCarteira: { [PADRAO]: [cat('mercado', 'Mercado')] } })))
+  assertEquals(r.linha.category_id, 'mercado')
+  assertEquals(r.linha.capture_meta?.categoria, 'nome')
+  assertEquals(r.linha.needs_review, false)
+  assertEquals(r.semCategoria, false)
+})
+
+Deno.test('paridade: "50 gasolina" cai em Transporte pela palavra comum, a conferir', () => {
+  const r = ok(
+    montarLancamento({ text: '50 gasolina' }, ctx({ categoriasPorCarteira: { [PADRAO]: [cat('transporte', 'Transporte')] } })),
+  )
+  assertEquals(r.linha.category_id, 'transporte')
+  assertEquals(r.linha.needs_review, true)
+  assertEquals(r.linha.capture_meta?.categoria, 'comum')
+})
+
+Deno.test('paridade: "30 no crédito" usa o cartão do último crédito do histórico', () => {
+  const credito = (id: string, date: string) =>
+    hist('Algo', 'cat-x', { payment_method: 'credit_card', payment_credit_card_id: id, date })
+  const r = ok(
+    montarLancamento(
+      { text: '30 no crédito' },
+      ctx({
+        cartoes: [
+          cartao('c-nu', 'Nubank', PADRAO),
+          cartao('c-inter', 'Inter', PADRAO),
+          cartao('c-velho', 'Velho', PADRAO, { is_active: false }),
+          cartao('c-outra', 'Itaú', OUTRA),
+        ],
+        historicoPorCarteira: {
+          [PADRAO]: [
+            credito('c-nu', '2026-04-01T12:00:00.000Z'),
+            credito('c-inter', '2026-04-05T12:00:00.000Z'),
+            // Mais recentes, mas de um cartão inativo e de um de outra carteira.
+            credito('c-velho', '2026-04-08T12:00:00.000Z'),
+            credito('c-outra', '2026-04-09T12:00:00.000Z'),
+          ],
+        },
+      }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, PADRAO)
+  assertEquals(r.linha.payment_method, 'credit_card')
+  assertEquals(r.linha.payment_credit_card_id, 'c-inter')
+})
+
+Deno.test('paridade: parcelas sem forma dita vão ao cartão do último crédito', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '300 geladeira em 3x' },
+      ctx({
+        cartoes: [cartao('c-nu', 'Nubank', PADRAO)],
+        historicoPorCarteira: { [PADRAO]: [hist('Algo', 'cat-x', { payment_method: 'credit_card', payment_credit_card_id: 'c-nu' })] },
+      }),
+    ),
+  )
+  assertEquals(r.parcelas, 3)
+  assertEquals(r.linha.payment_method, 'credit_card')
+  assertEquals(r.linha.payment_credit_card_id, 'c-nu')
+})
+
+Deno.test('paridade: a palavra que não é cartão volta com acento', () => {
+  assertEquals(ok(montarLancamento({ text: '80 farmácia' }, ctx())).linha.description, 'Farmácia')
+  assertEquals(ok(montarLancamento({ text: '80 no crédito farmácia' }, ctx())).linha.description, 'Farmácia')
+  assertEquals(ok(montarLancamento({ text: '80 remédio no crédito farmácia' }, ctx())).linha.description, 'Remédio farmácia')
+})
+
+Deno.test('paridade: categoria de outra carteira não vale', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '42 mercado' },
+      ctx({
+        historicoPorCarteira: { [OUTRA]: [hist('Mercado', 'cat-b')] },
+        categoriasPorCarteira: { [OUTRA]: [cat('cat-b', 'Mercado')] },
+      }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, PADRAO)
+  assertEquals(r.linha.category_id, null)
+  assertEquals(r.semCategoria, true)
+})
+
+Deno.test('paridade: receita não pega categoria de despesa', () => {
+  const r = ok(
+    montarLancamento({ text: 'recebi 200 reembolso' }, ctx({ categoriasPorCarteira: { [PADRAO]: [cat('reemb', 'Reembolso')] } })),
+  )
+  assertEquals(r.linha.type, 'income')
+  assertEquals(r.linha.category_id, null)
 })

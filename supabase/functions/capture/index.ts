@@ -35,7 +35,7 @@ import {
   valoresDoPlano,
 } from '../_shared/captura.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
-import type { CartaoParaCasar, LinhaHistorico } from '../_shared/frase.ts'
+import type { CartaoParaCasar, CategoriaParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 import { interpretar, lerImagem, nomesDosMembros } from '../_shared/ia.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
@@ -207,13 +207,22 @@ Deno.serve(async (req: Request) => {
     formulario = opcoes
   }
 
-  const { data: cartoesLidos, error: cErr } = await admin
-    .from('credit_cards')
-    .select('id, name, wallet_alias, last_four, workspace_id, is_active')
-    .in('workspace_id', carteirasDaPessoa)
-    .eq('is_active', true)
+  const [{ data: cartoesLidos, error: cErr }, { data: categoriasLidas, error: catErr }] = await Promise.all([
+    admin
+      .from('credit_cards')
+      .select('id, name, wallet_alias, last_four, workspace_id, is_active')
+      .in('workspace_id', carteirasDaPessoa)
+      .eq('is_active', true),
+    admin.from('categories').select('id, name, type, workspace_id').in('workspace_id', carteirasDaPessoa),
+  ])
   if (cErr) return json(500, { error: internalError('capture: cartões', cErr) })
+  if (catErr) return json(500, { error: internalError('capture: categorias', catErr) })
   const cartoes = (cartoesLidos ?? []) as CartaoParaCasar[]
+  // A categoria se escolhe como no app: pelas da carteira de destino.
+  const categoriasPorCarteira: Record<string, CategoriaParaCasar[]> = {}
+  for (const k of (categoriasLidas ?? []) as (CategoriaParaCasar & { workspace_id: string })[]) {
+    ;(categoriasPorCarteira[k.workspace_id] ??= []).push({ id: k.id, name: k.name, type: k.type })
+  }
 
   // O resumo de um retry vem da linha gravada, não do pedido. `anexo` é null
   // sem foto; `ia` diz se a linha passou pela IA (Decisão 2).
@@ -312,7 +321,7 @@ Deno.serve(async (req: Request) => {
 
   const montado = montarLancamento(
     { ...pedido, campos },
-    { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, hoje, formulario },
+    { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, categoriasPorCarteira, hoje, formulario },
   )
   if (!montado.ok) {
     // Sem valor e com foto: ou a IA não leu, ou a foto nem foi a ela (acima de 4 MB).

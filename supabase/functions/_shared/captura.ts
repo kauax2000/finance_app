@@ -4,15 +4,19 @@
  * pessoa. A Edge só faz I/O em volta disto.
  */
 import {
+  cartaoDoCredito,
   casarCartao,
+  casarCategoria,
   interpretarFrase,
   lerNumero,
   normalizarDescricao,
   palavrasDosCartoes,
   preencherPeloHistorico,
   type CartaoParaCasar,
+  type CategoriaParaCasar,
   type FormaDePagamento,
   type LinhaHistorico,
+  type MotivoDaCategoria,
 } from './frase.ts'
 import { tipoDaCategoria } from './credit-card-cycle.ts'
 import type { CamposIA } from './ia.ts'
@@ -41,7 +45,13 @@ export type PedidoCaptura = {
 
 export type CamposDaIA = CamposIA & { provedor: Provedor; modelo: string }
 
-type MetaCaptura = { walletCard?: string; texto?: string; ia?: { provedor: Provedor; modelo: string } }
+type MetaCaptura = {
+  walletCard?: string
+  texto?: string
+  ia?: { provedor: Provedor; modelo: string }
+  /** De onde veio a categoria escolhida (a medição de quanto o atalho acerta). */
+  categoria?: MotivoDaCategoria
+}
 
 export type LinhaCaptura = {
   workspace_id: string
@@ -64,6 +74,8 @@ export type ContextoCaptura = {
   carteirasDaPessoa: string[]
   cartoes: CartaoParaCasar[]
   historicoPorCarteira: Record<string, LinhaHistorico[]>
+  /** As categorias (despesa e receita) de cada carteira da pessoa. */
+  categoriasPorCarteira: Record<string, CategoriaParaCasar[]>
   hoje: string // YYYY-MM-DD, o dia de São Paulo
   /** As listas do GET, lidas da carteira padrão: só o pedido do formulário as usa. */
   formulario?: OpcoesDoFormulario
@@ -268,7 +280,7 @@ export function montarLancamento(
   pedido: PedidoCaptura,
   ctx: ContextoCaptura,
 ):
-  | { ok: true; linha: LinhaCaptura; resumo: string; parcelas: number | null }
+  | { ok: true; linha: LinhaCaptura; resumo: string; parcelas: number | null; semCategoria: boolean }
   | { ok: false; status: 422; erro: string; codigo?: CodigoDoErro } {
   if (pedido.category != null || pedido.payment != null) return montarDoFormulario(pedido, ctx)
   let valor: number | null
@@ -278,6 +290,7 @@ export function montarLancamento(
   let duvidas: string[]
   let forma: FormaDePagamento | null
   let cartaoTexto: string | null
+  let cartaoPalavra: string | null | undefined = null
   let parcelas: number | null = null
   let estorno = false
   const capturaMeta: MetaCaptura = {}
@@ -297,7 +310,7 @@ export function montarLancamento(
     forma = cartaoTexto ? 'credit_card' : null
   } else {
     const f = interpretarFrase(pedido.text ?? '', ctx.hoje, palavrasDosCartoes(ctx.cartoes))
-    ;({ valor, data, tipo, descricao, forma, cartaoTexto, parcelas, estorno } = f)
+    ;({ valor, data, tipo, descricao, forma, cartaoTexto, cartaoPalavra, parcelas, estorno } = f)
     // Regra 1: a dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     duvidas = f.duvidas.filter((d) => d !== 'cartao' || forma === 'credit_card')
     if (c) {
@@ -313,6 +326,8 @@ export function montarLancamento(
       // Como no parser (frase.ts): pix, débito ou dinheiro não têm cartão, e um
       // nome de cartão nunca vira crédito por cima da forma dita.
       cartaoTexto = forma == null || forma === 'credit_card' ? (c.cartao ?? cartaoTexto) : null
+      // O nome lido pela IA já vem como foi escrito.
+      if (c.cartao) cartaoPalavra = null
       parcelas = c.parcelas ?? parcelas
       capturaMeta.ia = { provedor: c.provedor, modelo: c.modelo }
     }
@@ -345,10 +360,11 @@ export function montarLancamento(
   if (cartaoSemCasar) {
     if (applePay) capturaMeta.walletCard = cartaoTexto!
     else {
-      // Regra 1: a palavra volta ao fim da descrição.
+      // Regra 1: a palavra volta ao fim da descrição, como foi escrita.
+      const palavra = cartaoPalavra || cartaoTexto!
       descricao = duvidas.includes('descricao')
-        ? cartaoTexto!.charAt(0).toUpperCase() + cartaoTexto!.slice(1)
-        : `${descricao} ${cartaoTexto}`
+        ? palavra.charAt(0).toUpperCase() + palavra.slice(1)
+        : `${descricao} ${palavra}`
       cartaoSemCasar = forma === 'credit_card' || casado != null
     }
   }
@@ -357,15 +373,33 @@ export function montarLancamento(
   if (estorno && !cartao && !duvidas.includes('cartao')) duvidas.push('cartao')
 
   const carteira = cartao?.workspace_id ?? ctx.carteiraPadrao
+  const historicoDaCarteira = ctx.historicoPorCarteira[carteira] ?? []
   // Regra 2: sem descrição de verdade, o histórico não tem o que casar.
-  const historico = duvidas.includes('descricao')
+  const semDescricao = duvidas.includes('descricao')
+  // O estorno no cartão busca a categoria da compra, no histórico de despesa.
+  const tipoCategoria = tipoDaCategoria(tipo, estorno ? (cartao?.id ?? null) : null)
+  const historico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historicoDaCarteira)
+  // Como no app (frase-no-form.ts): só as categorias da carteira de destino, do tipo.
+  const categoria = semDescricao
     ? null
-    : // O estorno no cartão busca a categoria da compra, no histórico de despesa.
-      preencherPeloHistorico(
-        descricao,
-        tipoDaCategoria(tipo, estorno ? (cartao?.id ?? null) : null),
-        ctx.historicoPorCarteira[carteira] ?? [],
-      )
+    : casarCategoria(descricao, tipoCategoria, ctx.categoriasPorCarteira[carteira] ?? [], historicoDaCarteira)
+
+  // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o cartão do
+  // último crédito da carteira. Um nome de cartão que não casou não ganha palpite.
+  const doCredito =
+    tipo === 'expense' &&
+    !cartao &&
+    ((forma === 'credit_card' && !cartaoTexto) || (!forma && !cartaoSemCasar && parcelas != null && parcelas > 1))
+      ? cartaoDoCredito(
+          ctx.cartoes.filter((k) => k.workspace_id === carteira),
+          historicoDaCarteira,
+          null,
+        )
+      : null
+  if (doCredito) {
+    forma = 'credit_card'
+    duvidas = duvidas.filter((d) => d !== 'cartao')
+  }
 
   // Estorno sem cartão não herda a forma do histórico (um pix de lá não é a fatura).
   const paymentMethod = forma
@@ -373,7 +407,7 @@ export function montarLancamento(
     : estorno && !cartao
       ? null
       : (historico?.paymentMethod ?? null)
-  let cartaoId = cartao?.id ?? null
+  let cartaoId = cartao?.id ?? doCredito?.id ?? null
   if (!forma && paymentMethod === 'credit_card') {
     // O cartão do histórico só se ainda ativo e da mesma carteira.
     const doHistorico = ctx.cartoes.find(
@@ -389,10 +423,17 @@ export function montarLancamento(
     parcelasDoPlano = null
     duvidas.push('parcelas')
   }
-  const categoria = historico?.categoryId ?? null
-  // Decisão 2: tudo que passou por IA nasce a conferir.
-  const needsReview = duvidas.length > 0 || cartaoSemCasar || categoria == null || parcelasDoPlano != null || c != null
+  // Decisão 2: tudo que passou por IA nasce a conferir. A palavra comum é um
+  // palpite que o atalho não mostra antes de gravar: fica a conferir também.
+  const needsReview =
+    duvidas.length > 0 ||
+    cartaoSemCasar ||
+    categoria == null ||
+    categoria.motivo === 'comum' ||
+    parcelasDoPlano != null ||
+    c != null
   if (needsReview && !applePay && pedido.text) capturaMeta.texto = pedido.text
+  if (categoria) capturaMeta.categoria = categoria.motivo
 
   const nomeDoCartao = ctx.cartoes.find((c) => c.id === cartaoId)?.name
   return {
@@ -406,13 +447,14 @@ export function montarLancamento(
       date: `${data}T12:00:00.000Z`,
       payment_method: paymentMethod,
       payment_credit_card_id: cartaoId,
-      category_id: categoria,
+      category_id: categoria?.categoryId ?? null,
       source: pedido.source ?? 'shortcut',
       needs_review: needsReview,
       capture_meta: Object.keys(capturaMeta).length ? capturaMeta : null,
     },
     resumo: resumoDoLancamento(valor, descricao, nomeDoCartao),
     parcelas: parcelasDoPlano,
+    semCategoria: !semDescricao && categoria == null,
   }
 }
 
@@ -425,7 +467,7 @@ export function montarLancamento(
 function montarDoFormulario(
   pedido: PedidoCaptura,
   ctx: ContextoCaptura,
-): { ok: true; linha: LinhaCaptura; resumo: string; parcelas: null } | { ok: false; status: 422; erro: string; codigo?: CodigoDoErro } {
+): { ok: true; linha: LinhaCaptura; resumo: string; parcelas: null; semCategoria: false } | { ok: false; status: 422; erro: string; codigo?: CodigoDoErro } {
   const valor = valorDoAmount(pedido.amount)
   if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR, codigo: 'sem_valor' }
   if (valor > MAX_VALOR) return { ok: false, status: 422, erro: ERRO_LIMITE }
@@ -456,6 +498,7 @@ function montarDoFormulario(
     },
     resumo: resumoDoLancamento(valor, descricao, ctx.cartoes.find((c) => c.id === pagamento.cartaoId)?.name),
     parcelas: null,
+    semCategoria: false,
   }
 }
 
