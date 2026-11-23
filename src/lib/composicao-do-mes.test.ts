@@ -6,9 +6,12 @@ import {
     composicaoDoMes,
     fixoEmLinhas,
     fraseDaComposicao,
+    leituraDoMes,
     tomDoInsight,
     quemGastou,
     type ComposicaoDoMes,
+    type GrupoVariavel,
+    type ItemFixo,
 } from "@/lib/composicao-do-mes"
 import type { CreditCardClosingLookup } from "@/lib/expense-month-attribution"
 import type { Transaction, WorkspaceInstallmentPlan, WorkspaceSubscription } from "@/lib/supabase"
@@ -324,5 +327,147 @@ describe("tomDoInsight", () => {
     it("tudo no normal ou sem média: info", () => {
         expect(tomDoInsight(base, true)).toBe("info")
         expect(tomDoInsight({ ...base, caso: "semMedia", normais: { fixo: null, variavel: null }, direcao: null, variacaoTotal: null }, true)).toBe("info")
+    })
+})
+
+describe("leituraDoMes", () => {
+    const grupo = (chave: string, nome: string, valor: number, normal: number | null): GrupoVariavel => ({
+        chave,
+        nome,
+        vezes: 1,
+        valor,
+        normal,
+        variacao: normal ? (valor - normal) / normal : null,
+        novo: normal == null,
+    })
+    const item = (id: string, nome: string, valor: number, novoDesdeYm?: string): ItemFixo => ({
+        id,
+        nome,
+        tipo: "parcela",
+        valor,
+        diaYmd: "2026-11-05",
+        novoDesdeYm,
+    })
+    // A Carro em novembro: o variável subiu 14% (R$ 380), puxado pelo Abastecimento; o Seguro carro é o fixo novo.
+    const carro: ComposicaoDoMes = {
+        fixo: { total: 739, itens: [item("consorcio", "Consórcio", 443), item("seguro", "Seguro carro", 296, "2026-09")], proximoMes: 443 },
+        variavel: {
+            total: 3139,
+            grupos: [
+                grupo("abastecimento", "Abastecimento", 1700, 1360),
+                grupo("estacionamento", "Estacionamento", 300, 310),
+                grupo("lava", "Lava Rápido", 80, null),
+            ],
+            outros: null,
+        },
+        normais: { fixo: 443, variavel: 2759 },
+        caso: "variavelPuxou",
+        direcao: "acima",
+        variacaoTotal: 0.2,
+    }
+    it("a Carro: manchete do variável, dois motivos em reais e a sugestão", () => {
+        const l = leituraDoMes(carro, true, "2026-11", true)
+        expect(l.tom).toBe("warning")
+        expect(texto(l.manchete)).toBe("O que você controla subiu 14% este mês")
+        expect(l.manchete.find((p) => p.texto === "14%")?.tom).toBe("warning")
+        expect(texto(l.apoio)).toBe("São R$ 380 acima do seu normal, e quase tudo veio de dois lugares:")
+        expect(l.motivos).toEqual([
+            { chave: "abastecimento", nome: "Abastecimento", delta: 340, parte: "variavel" },
+            { nome: "Seguro carro", detalhe: "novo desde set", delta: 296, parte: "fixo" },
+        ])
+        expect(l.sugestao).toEqual({ mes: "dezembro", valor: 3202, grupo: { chave: "abastecimento", nome: "Abastecimento" } })
+    })
+    it("mês fechado: sem sugestão", () => {
+        expect(leituraDoMes(carro, true, "2026-11", false).sugestao).toBeNull()
+    })
+    it("o motivo principal do fixo: a sugestão fica sem grupo", () => {
+        const c: ComposicaoDoMes = { ...carro, fixo: { ...carro.fixo, total: 1043 } }
+        const l = leituraDoMes(c, true, "2026-11", true)
+        expect(l.motivos[0]).toMatchObject({ nome: "Seguro carro", delta: 600, parte: "fixo" })
+        expect(l.sugestao).toEqual({ mes: "dezembro", valor: 3202 })
+    })
+    // A Renata: o variável subiu com um grupo novo; as parcelas caíram e ficam fora (não vão na direção da manchete).
+    const renata: ComposicaoDoMes = {
+        fixo: { total: 1418, itens: [item("a", "Escova progressiva", 1418)], proximoMes: 1418 },
+        variavel: {
+            total: 776,
+            grupos: [grupo("corte", "Corte e hidratação", 480, null), grupo("escova", "Escova", 200, 180), grupo("manicure", "Manicure", 96, 284)],
+            outros: null,
+        },
+        normais: { fixo: 1820, variavel: 464 },
+        caso: "variavelPuxou",
+        direcao: "abaixo",
+        variacaoTotal: -0.04,
+    }
+    it("a Renata: só os motivos que subiram", () => {
+        const l = leituraDoMes(renata, true, "2026-11", true)
+        expect(texto(l.manchete)).toBe("O que você controla subiu 67% este mês")
+        expect(l.motivos).toEqual([
+            { chave: "corte", nome: "Corte e hidratação", detalhe: "novo", delta: 480, parte: "variavel" },
+            { chave: "escova", nome: "Escova", delta: 20, parte: "variavel" },
+        ])
+    })
+    it("a receita diz avulsas e inverte o tom", () => {
+        const l = leituraDoMes(renata, false, "2026-11", true)
+        expect(texto(l.manchete)).toBe("As avulsas subiram 67% este mês")
+        expect(l.manchete.find((p) => p.texto === "67%")?.tom).toBe("success")
+        expect(l.tom).toBe("success")
+    })
+    it("a receita chama o fixo de entradas fixas", () => {
+        const c: ComposicaoDoMes = { ...renata, variavel: { ...renata.variavel, total: 300 } }
+        const l = leituraDoMes(c, false, "2026-11", true)
+        expect(texto(l.manchete)).toBe("As avulsas caíram 35% este mês")
+        expect(l.motivos.map((m) => [m.nome, m.delta])).toEqual([
+            ["Entradas fixas", -402],
+            ["Manicure", -188],
+        ])
+        expect(l.manchete.find((p) => p.texto === "35%")?.tom).toBe("warning")
+    })
+    it("um motivo só: veio de um lugar", () => {
+        const c: ComposicaoDoMes = { ...renata, variavel: { ...renata.variavel, grupos: [renata.variavel.grupos[0]] } }
+        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("São R$ 312 acima do seu normal, e veio de um lugar:")
+    })
+    it("variável no normal e total fora: a manchete do total, com a diferença contra a média", () => {
+        const c: ComposicaoDoMes = {
+            ...carro,
+            variavel: { ...carro.variavel, total: 2800 },
+            fixo: { ...carro.fixo, total: 1043 },
+            caso: "fixoPuxou",
+            direcao: "acima",
+            variacaoTotal: 0.1,
+        }
+        const l = leituraDoMes(c, true, "2026-11", true)
+        expect(texto(l.manchete)).toBe("O mês está 10% acima da média")
+        // Total 3.843 contra a média 3.493,64.
+        expect(texto(l.apoio)).toBe("São R$ 349 acima do seu normal, e quase tudo veio de dois lugares:")
+        expect(l.motivos.map((m) => m.nome)).toEqual(["Seguro carro", "Abastecimento"])
+    })
+    it("normal: sem motivos, o apoio diz as parcelas", () => {
+        const c: ComposicaoDoMes = { ...carro, variavel: { ...carro.variavel, total: 2800 }, caso: "normal", direcao: null, variacaoTotal: 0.01 }
+        const l = leituraDoMes(c, true, "2026-11", true)
+        expect(l.tom).toBe("info")
+        expect(texto(l.manchete)).toBe("O mês está dentro do seu normal")
+        expect(texto(l.apoio)).toBe("R$ 739 dele já eram parcelas.")
+        expect(l.motivos).toEqual([])
+        expect(l.sugestao?.valor).toBe(3202)
+    })
+    it("normal sem fixo: sem apoio", () => {
+        const c: ComposicaoDoMes = {
+            ...carro,
+            fixo: { total: 0, itens: [], proximoMes: 0 },
+            variavel: { ...carro.variavel, total: 2800 },
+            caso: "normal",
+            direcao: null,
+            variacaoTotal: 0.01,
+        }
+        expect(leituraDoMes(c, true, "2026-11", true).apoio).toEqual([])
+    })
+    it("sem média: sem motivos e sem sugestão", () => {
+        const c: ComposicaoDoMes = { ...carro, normais: { fixo: null, variavel: null }, caso: "semMedia", direcao: null, variacaoTotal: null }
+        const l = leituraDoMes(c, true, "2026-11", true)
+        expect(texto(l.manchete)).toBe("Ainda não dá para comparar este mês")
+        expect(texto(l.apoio)).toBe("R$ 739 fixos e R$ 3.139 do dia a dia neste mês.")
+        expect(l.motivos).toEqual([])
+        expect(l.sugestao).toBeNull()
     })
 })

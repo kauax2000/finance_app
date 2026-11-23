@@ -1,3 +1,4 @@
+import { mesCurto } from "@/components/analise-do-mes/rotulos"
 import { nomeDoMes, reaisInteiros } from "@/components/categories/detail/regua-do-mes-contas"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { peso, type TipoDaCategoria } from "@/lib/categoria-detalhe"
@@ -399,6 +400,125 @@ export function fraseDaComposicao(c: ComposicaoDoMes, despesa: boolean): ParteDa
         forte(reaisInteiros(Math.abs(d.aMais))),
         { texto: d.aMais > 0 ? " a mais que o normal)." : " a menos que o normal)." },
     ]
+}
+
+export type MotivoDoMes = {
+    /** A chave do grupo; só no variável. */
+    chave?: string
+    nome: string
+    /** "novo", "novo desde set". */
+    detalhe?: string
+    /** A diferença em reais contra o normal, com sinal. */
+    delta: number
+    parte: "variavel" | "fixo"
+}
+
+export type LeituraDoMes = {
+    tom: "warning" | "success" | "info"
+    manchete: ParteDaFrase[]
+    apoio: ParteDaFrase[]
+    motivos: MotivoDoMes[]
+    /** "Com o dia a dia no seu normal, <mes> fecha perto de R$ <valor>"; `grupo` é o motivo principal do variável. */
+    sugestao: { mes: string; valor: number; grupo?: { chave: string; nome: string } } | null
+}
+
+const MOTIVOS = 2
+
+/**
+ * A "Leitura do mês": a manchete (o variável fora de ±5%, senão o total fora de ±2%, senão o normal), o apoio,
+ * até 2 motivos (as maiores diferenças em reais na direção da manchete, entre os grupos do variável e o fixo)
+ * e a sugestão do mês seguinte, só com o mês aberto e o normal do variável conhecido. A receita inverte o tom.
+ */
+export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: string, aberto: boolean): LeituraDoMes {
+    const tom = tomDoInsight(c, despesa)
+    const tomDe = (acima: boolean): ParteDaFrase["tom"] => (acima === despesa ? "warning" : "success")
+    const forte = (texto: string): ParteDaFrase => ({ texto, forte: true })
+    const normalVar = c.normais.variavel
+    const sugestao: LeituraDoMes["sugestao"] =
+        aberto && normalVar != null && c.caso !== "semMedia"
+            ? { mes: nomeDoMes(shiftYearMonth(yearMonth, 1)), valor: Math.round((c.fixo.proximoMes + normalVar) * 100) / 100 }
+            : null
+
+    if (c.caso === "semMedia") {
+        return {
+            tom,
+            manchete: [{ texto: "Ainda não dá para comparar este mês" }],
+            apoio: [
+                forte(reaisInteiros(c.fixo.total)),
+                { texto: despesa ? " fixos e " : " de entradas fixas e " },
+                forte(reaisInteiros(c.variavel.total)),
+                { texto: despesa ? " do dia a dia neste mês." : " avulsas neste mês." },
+            ],
+            motivos: [],
+            sugestao: null,
+        }
+    }
+
+    // A manchete e a diferença em reais que o apoio diz.
+    const vVar = variacao(c.variavel.total, normalVar)
+    let manchete: ParteDaFrase[]
+    let diferenca: number
+    if (normalVar != null && vVar != null && foraDoNormal(vVar)) {
+        const subiu = vVar > 0
+        const verbo = despesa ? (subiu ? "subiu" : "caiu") : subiu ? "subiram" : "caíram"
+        manchete = [
+            { texto: `${despesa ? "O que você controla" : "As avulsas"} ${verbo} ` },
+            { texto: porcento(vVar), tom: tomDe(subiu) },
+            { texto: " este mês" },
+        ]
+        diferenca = c.variavel.total - normalVar
+    } else if (c.caso !== "normal" && c.variacaoTotal != null && c.direcao != null) {
+        manchete = [
+            { texto: "O mês está " },
+            { texto: porcento(c.variacaoTotal), tom: tomDe(c.direcao === "acima") },
+            { texto: ` ${c.direcao} da média` },
+        ]
+        const total = c.fixo.total + c.variavel.total
+        diferenca = total - total / (1 + c.variacaoTotal)
+    } else {
+        const apoio: ParteDaFrase[] =
+            c.fixo.total > 0 ? [forte(reaisInteiros(c.fixo.total)), { texto: ` dele já eram ${despesa ? "parcelas" : "entradas fixas"}.` }] : []
+        return { tom, manchete: [{ texto: "O mês está dentro do seu normal" }], apoio, motivos: [], sugestao }
+    }
+
+    // Os motivos: o que andou na direção da manchete, do maior para o menor em reais.
+    const sinal = Math.sign(diferenca)
+    const candidatos: MotivoDoMes[] = c.variavel.grupos.map((g) => ({
+        chave: g.chave,
+        nome: g.nome,
+        ...(g.novo ? { detalhe: "novo" } : null),
+        delta: Math.round((g.valor - (g.normal ?? 0)) * 100) / 100,
+        parte: "variavel" as const,
+    }))
+    if (c.normais.fixo != null) {
+        const novo = c.fixo.itens.find((i) => i.novoDesdeYm)
+        candidatos.push({
+            nome: novo?.nome ?? (despesa ? "Parcelas" : "Entradas fixas"),
+            ...(novo?.novoDesdeYm ? { detalhe: novo.novoDesdeYm === yearMonth ? "novo" : `novo desde ${mesCurto(novo.novoDesdeYm)}` } : null),
+            delta: Math.round((c.fixo.total - c.normais.fixo) * 100) / 100,
+            parte: "fixo",
+        })
+    }
+    const motivos = candidatos
+        .filter((m) => m.delta * sinal > 0)
+        .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+        .slice(0, MOTIVOS)
+
+    const apoio: ParteDaFrase[] = [
+        { texto: "São " },
+        forte(`${reaisInteiros(Math.abs(diferenca))} ${diferenca > 0 ? "acima" : "abaixo"}`),
+        {
+            texto:
+                motivos.length === 0
+                    ? " do seu normal."
+                    : motivos.length === 1
+                      ? " do seu normal, e veio de um lugar:"
+                      : " do seu normal, e quase tudo veio de dois lugares:",
+        },
+    ]
+    const principal = motivos[0]
+    if (sugestao && principal?.parte === "variavel" && principal.chave) sugestao.grupo = { chave: principal.chave, nome: principal.nome }
+    return { tom, manchete, apoio, motivos, sugestao }
 }
 
 /** O tom do cartão de insight: a direção do variável quando saiu do normal; senão a do total; senão neutro (receita inverte). */
