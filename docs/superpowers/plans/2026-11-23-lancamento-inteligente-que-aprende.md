@@ -297,3 +297,55 @@ vence c*   = argmax score, se score[c*] >= 0.6 * T  e  score[c*] - segundo >= 0.
 - [ ] **Step 4: Publicar, só com ok explícito do dono (`AskUserQuestion`)** — `supabase db push` da migração e `supabase functions deploy capture --use-api` (ia-ler não muda). Sem ok, registrar no fim da tarefa que a migração e a Edge esperam publicação.
 - [ ] **Step 5: Depois de uma semana de uso** (com ok do dono para ler o banco), rodar `acompanhamento.sql` e anotar antes × depois em `linha-de-base.md`.
 - [ ] **Step 6: `graphify update .` e commit** — `git commit -am "docs(jornadas): captura com aprendizado e IA de categoria"`.
+
+---
+
+### Task 8: A categoria dita na frase sai da descrição
+
+Pedido do dono em 23/11/2026: quem escreve "pão mercado" quer descrição **Pão** e categoria **Mercado**; quem escreve só "mercado" quer **Mercado** nas duas; "mercado mercado" é a mesma coisa digitada duas vezes. Hoje a categoria sai certa, mas a palavra dela fica na descrição ("Pão mercado", "Mercado mercado"), e a regra de `nome` que cobre a descrição (revisão final) deixa "pão mercado" a conferir.
+
+**Files:**
+- Modify: `supabase/functions/_shared/frase.ts` (`MotivoDaCategoria`, nova `separarCategoriaDita`)
+- Modify: `src/lib/captura/frase-no-form.ts` (`camposDaInterpretacao`, rótulo do motivo)
+- Modify: `supabase/functions/_shared/captura.ts` (`montarLancamento`, `CATEGORIA_LIMPA`)
+- Test: `supabase/functions/_shared/frase-falada.test.ts`, `supabase/functions/_shared/captura.test.ts`, `src/lib/captura/frase-no-form.test.ts`
+- Docs: `docs/JORNADAS.md` e `docs/atlas/template.html` (+ `python3 docs/atlas/build.py`), na linha da ordem da categoria
+
+**Interfaces:**
+- Produces:
+  - `MotivoDaCategoria` ganha `'dita'`; rótulo em `MOTIVO_DA_CATEGORIA`: `dita: "você escreveu"`.
+  - `separarCategoriaDita(descricao: string, tipo: 'expense' | 'income', categorias: CategoriaParaCasar[]): { descricao: string; categoryId: string } | null` — pura, sem imports.
+
+Regras (`separarCategoriaDita`):
+1. **No fim** — as últimas palavras da descrição (normalizadas, com e sem o "s" final) iguais ao nome inteiro de **uma só** categoria do tipo, ou a uma palavra significativa (3+ letras, fora de `PALAVRAS_VAZIAS`) do nome de **uma só** categoria do tipo, são a categoria dita. Elas saem da descrição, com os conectivos que ficarem soltos no fim ("no", "na", "de", "do", "da", "em", "pro", "pra"). A descrição que sobra mantém a escrita da pessoa (acentos) e a maiúscula inicial.
+2. **Única palavra** — se tirar a categoria deixaria a descrição vazia, a descrição fica com uma ocorrência da palavra ("42 mercado" e "42 mercado mercado" → descrição "Mercado").
+3. **Repetida** — a mesma palavra da categoria repetida no fim conta uma vez ("mercado mercado").
+4. **Marcador** — "categoria X" em qualquer lugar: "categoria" e X saem da descrição, X casando como na regra 1.
+5. **No começo não é dita** — se a palavra da categoria é a primeira da descrição e há outras depois ("Mercado Livre", "Farmácia São João"), não há categoria dita (é nome de loja); devolve `null`.
+6. **Ambíguo não decide** — palavra que casa duas categorias do tipo: `null`.
+7. Vale para despesa e receita (só categorias do tipo).
+
+Ordem nova da categoria, no app e na Edge: **dita** → histórico exato → aprendido firme → nome → aprendido → comum → IA. Com a categoria dita, o histórico, o voto e a IA usam a descrição já limpa. `'dita'` entra em `CATEGORIA_LIMPA` (sem conferir). O Importar não usa `separarCategoriaDita` (extrato de banco não tem categoria dita).
+
+- [ ] **Step 1: Escrever os testes que falham** (`describe` "dita:"), com as categorias Mercado, Alimentação, Transporte, Farmácia (despesa) e Salário (receita):
+
+| Frase | Descrição | Categoria | Motivo |
+| --- | --- | --- | --- |
+| 42 mercado | Mercado | Mercado | dita |
+| 42 mercado mercado | Mercado | Mercado | dita |
+| pão mercado 12 | Pão | Mercado | dita |
+| 12 pão no mercado | Pão | Mercado | dita |
+| pão 12 categoria mercado | Pão | Mercado | dita |
+| remédio farmácia 30 | Remédio | Farmácia | dita |
+| uber transporte 20 | Uber | Transporte | dita |
+| arroz e feijão mercado 50 nubank (com cartão Nubank) | Arroz e feijão | Mercado | dita |
+| 30 mercados | Mercados | Mercado | dita |
+| Mercado Livre 80 | Mercado Livre | (regras de hoje; não `dita`) | — |
+| recebi 3000 salário | Salário | Salário | dita |
+
+  Mais: duas categorias "Mercado" e "Mercado do bairro" com "pão mercado" → não é `dita` (ambíguo pela palavra; o nome inteiro "Mercado" casa uma só: **é** `dita` Mercado — o nome inteiro vence a palavra); na Edge, "pão mercado" sai com `needs_review: false` e `capture_meta.categoria === 'dita'`; no app (`camposDaFrase`), `motivoDaCategoria === 'dita'` e o resumo diz "você escreveu".
+- [ ] **Step 2: Rodar e ver falhar** — `npm run test:edge -- --filter "dita:"`.
+- [ ] **Step 3: Implementar** `separarCategoriaDita` e chamá-la antes de `casarCategoria` em `camposDaInterpretacao` (app) e `montarLancamento` (Edge), trocando a descrição pela limpa.
+- [ ] **Step 4: Rodar tudo** — `npm run test:edge && npm run test:unit && npx tsc --noEmit && npm run lint && deno check --node-modules-dir=none supabase/functions/capture/index.ts`.
+- [ ] **Step 5: Docs** — a ordem da categoria em `docs/JORNADAS.md` (Frase rápida, Lançamento inteligente, Captura) e no `docs/atlas/template.html`; `python3 docs/atlas/build.py`.
+- [ ] **Step 6: Commit** com caminhos explícitos — `feat(frase): a categoria dita na frase sai da descrição`.
