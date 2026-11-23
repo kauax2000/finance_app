@@ -882,3 +882,23 @@ Deno.test('paridade: receita não pega categoria de despesa', () => {
   assertEquals(r.linha.type, 'income')
   assertEquals(r.linha.category_id, null)
 })
+
+Deno.test('paridade: "30 no crédito" com um só cartão ativo e sem histórico usa esse cartão', () => {
+  const c = ctx({
+    cartoes: [
+      cartao('c-nu', 'Nubank', PADRAO),
+      cartao('c-velho', 'Velho', PADRAO, { is_active: false }),
+      cartao('c-outra', 'Itaú', OUTRA),
+    ],
+  })
+  for (const text of ['30 no crédito', '300 tv em 3x']) {
+    const r = ok(montarLancamento({ text }, c))
+    assertEquals(r.linha.payment_method, 'credit_card', text)
+    assertEquals(r.linha.payment_credit_card_id, 'c-nu', text)
+  }
+  // Dois ativos e sem histórico: nenhum palpite.
+  const dois = ok(
+    montarLancamento({ text: '30 no crédito' }, ctx({ cartoes: [cartao('c-nu', 'Nubank', PADRAO), cartao('c-inter', 'Inter', PADRAO)] })),
+  )
+  assertEquals(dois.linha.payment_credit_card_id, null)
+})

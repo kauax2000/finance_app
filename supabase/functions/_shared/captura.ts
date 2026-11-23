@@ -384,17 +384,16 @@ export function montarLancamento(
     ? null
     : casarCategoria(descricao, tipoCategoria, ctx.categoriasPorCarteira[carteira] ?? [], historicoDaCarteira)
 
-  // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o cartão do
-  // último crédito da carteira. Um nome de cartão que não casou não ganha palpite.
+  // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o único cartão
+  // ativo da carteira, senão o do último crédito. Um nome de cartão que não casou
+  // não ganha palpite. O "último escolhido neste aparelho" só existe no app.
+  const cartoesDaCarteira = ctx.cartoes.filter((k) => k.workspace_id === carteira)
+  const ativos = cartoesDaCarteira.filter((k) => k.is_active)
   const doCredito =
     tipo === 'expense' &&
     !cartao &&
     ((forma === 'credit_card' && !cartaoTexto) || (!forma && !cartaoSemCasar && parcelas != null && parcelas > 1))
-      ? cartaoDoCredito(
-          ctx.cartoes.filter((k) => k.workspace_id === carteira),
-          historicoDaCarteira,
-          null,
-        )
+      ? cartaoDoCredito(cartoesDaCarteira, historicoDaCarteira, ativos.length === 1 ? ativos[0].id : null)
       : null
   if (doCredito) {
     forma = 'credit_card'
