@@ -109,16 +109,24 @@ export default function CardDoc() {
 
       <DocSection
         title="Marca acesa"
-        description="glow=&quot;static&quot; deixa o arco-íris sempre à vista: o anel inteiro aceso (o piso --brand-glow-floor), também no toque, e o arco mais forte ainda segue o ponteiro; no fundo, o véu de arco-íris borrado entra pelo topo (brand-wash, a exceção nomeada ao arco-íris sob texto); para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
-        code={`<Card variant="brand" glow="static">…</Card>`}
-        previewClassName="justify-center py-10"
+        description="glow=&quot;static&quot; é a aurora: três luzes paradas nascem do topo e somem antes do meio, a borda é o degradê das mesmas três cores (forte em cima, quase nada no pé) e a cor vaza alguns pixels para dentro. Sem ponteiro, também no toque. mood escolhe a paleta pela notícia — warm (o gasto subiu), cool (melhorou), neutral (o normal; o padrão). É a exceção nomeada ao arco-íris sob texto (brand-aurora, com o volume em --brand-aurora-opacity) e continua sendo a peça de marca da tela: a Leitura do mês do detalhe da categoria."
+        code={`<Card variant="brand" glow="static" mood="warm">…</Card>`}
+        previewClassName="grid w-full gap-4 py-10 md:grid-cols-3"
       >
-        <Card variant="brand" glow="static" className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Leitura do mês</CardTitle>
-            <CardDescription>O que você controla subiu 14% este mês.</CardDescription>
-          </CardHeader>
-        </Card>
+        {(
+          [
+            ["warm", "O que você controla subiu 14% este mês."],
+            ["cool", "O que você controla caiu 9% este mês."],
+            ["neutral", "O mês está dentro do seu normal."],
+          ] as const
+        ).map(([mood, frase]) => (
+          <Card key={mood} variant="brand" glow="static" mood={mood}>
+            <CardHeader>
+              <CardTitle>Leitura do mês</CardTitle>
+              <CardDescription>{frase}</CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
       </DocSection>
 
       <DocSection
@@ -738,6 +746,18 @@ export default function CardDoc() {
             type: '"info"',
             default: "—",
             description: "O cartão que pede ação: só a borda vai ao --info a 45%. Sem tone, nada muda.",
+          },
+          {
+            prop: "glow",
+            type: '"pointer" | "static"',
+            default: '"pointer"',
+            description: "Só no brand. pointer: o arco que acende com o ponteiro. static: a aurora parada, para o cartão que é a leitura da marca.",
+          },
+          {
+            prop: "mood",
+            type: '"warm" | "cool" | "neutral"',
+            default: '"neutral"',
+            description: "Só com glow=\"static\": a paleta da aurora pelo humor — warm magenta, coral e âmbar; cool teal, verde e azul; neutral violeta, azul e magenta.",
           },
           {
             prop: "orientation",

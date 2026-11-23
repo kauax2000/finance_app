@@ -23,15 +23,21 @@ const html = (el: React.ReactElement) => renderToStaticMarkup(el)
 const casco = (props: Record<string, unknown>) => html(h(Card, props, "x"))
 
 describe("as versões do Card", () => {
-  it("brand com glow static deixa o arco aceso, sem o ponteiro", () => {
-    const aceso = casco({ variant: "brand", glow: "static" })
-    expect(aceso).toContain('data-glow="static"')
-    expect(aceso).toContain("[--brand-glow-active:1]")
-    // O véu de marca no fundo (a exceção nomeada ao arco-íris sob texto), só no aceso.
-    expect(aceso).toContain("brand-wash")
-    expect(casco({ variant: "brand" })).not.toContain("brand-wash")
-    expect(casco({ variant: "brand" })).not.toContain("[--brand-glow-active:1]")
-    expect(casco({ glow: "static" })).not.toContain("[--brand-glow-active:1]")
+  it("brand com glow static é a aurora parada, no humor pedido", () => {
+    const aurora = casco({ variant: "brand", glow: "static" })
+    expect(aurora).toContain('data-glow="static"')
+    expect(aurora).toContain('data-mood="neutral"')
+    expect(aurora).toContain("brand-aurora")
+    expect(aurora).not.toContain("brand-glow")
+    expect(aurora).toMatch(/border-transparent/)
+    expect(casco({ variant: "brand", glow: "static", mood: "warm" })).toContain('data-mood="warm"')
+    expect(casco({ variant: "brand", glow: "static", mood: "cool" })).toContain('data-mood="cool"')
+    // O brilho de sempre não muda, e fora do `brand` o `glow` e o `mood` não pintam nada.
+    const brilho = casco({ variant: "brand" })
+    expect(brilho).toContain("brand-glow")
+    expect(brilho).not.toContain("brand-aurora")
+    expect(brilho).not.toContain("data-mood")
+    expect(casco({ glow: "static", mood: "warm" })).not.toMatch(/brand-aurora|data-mood|data-glow/)
   })
   it("inativo, selecionado, horizontal e tracejado são eixos próprios", () => {
     const inativo = casco({ inactive: true })

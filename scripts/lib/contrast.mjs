@@ -35,7 +35,8 @@ export async function abrirPagina(
     const ctx = await browser.newContext(
         deviceScaleFactor === undefined ? { viewport } : { viewport, deviceScaleFactor }
     )
-    await ctx.addInitScript((t) => localStorage.setItem("theme", t), tema)
+    // A chave é a do `ThemeProvider` (`providers.tsx`, `storageKey="tema"`).
+    await ctx.addInitScript((t) => localStorage.setItem("tema", t), tema)
     const page = await ctx.newPage()
     await page.goto(`http://localhost:3000${caminho}`, { waitUntil: "domcontentloaded" })
     await page.waitForSelector(seletor)

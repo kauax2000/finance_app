@@ -22,7 +22,7 @@
 // foi o que fez toda razão marcar 1,0 na primeira versão da página de cores.
 //
 // O piso é 4,5:1 (WCAG AA).
-import { abrirNavegador, abrirPagina, concluir, contraste, linha, lum, TEMAS } from "./lib/contrast.mjs"
+import { abrirNavegador, abrirPagina, concluir, contraste, linha, lum, piorRazao, TEMAS } from "./lib/contrast.mjs"
 
 const PISO = 4.5
 const TONS = ["success", "warning", "info", "destructive", "income", "expense"]
@@ -136,6 +136,44 @@ for (const tema of TEMAS) {
         )
     }
     await ctx.close()
+
+    // A aurora do `Card glow="static"` (a Leitura do mês), nos três humores da página do
+    // Card: o texto apagado, a captura do cabeçalho (onde a luz é mais forte; o corpo da
+    // Leitura fica abaixo, onde ela já sumiu) e o pior pixel contra as duas tintas.
+    const aurora = await abrirPagina(browser, tema, "/designsystem/card", {
+        viewport: { width: 1280, height: 900 },
+        seletor: "[data-glow=static]",
+        semPortal: true,
+        espera: 800,
+    })
+    await aurora.page.addStyleTag({ content: "[data-glow=static] *{color:transparent!important}" })
+    const tintas = await aurora.page.evaluate(() => {
+        const c = document.createElement("canvas")
+        c.width = c.height = 1
+        const g = c.getContext("2d")
+        const ler = (css) => {
+            g.fillStyle = css
+            g.fillRect(0, 0, 1, 1)
+            return Array.from(g.getImageData(0, 0, 1, 1).data.slice(0, 3))
+        }
+        const s = getComputedStyle(document.documentElement)
+        return {
+            "foreground": ler(s.getPropertyValue("--foreground")),
+            "muted-foreground": ler(s.getPropertyValue("--muted-foreground")),
+        }
+    })
+    // O título contra a tinta cheia e a descrição contra a apagada, cada um na caixa do
+    // próprio texto (a borda e o brilho de dentro ficam fora, no respiro do cartão).
+    for (const humor of ["warm", "cool", "neutral"]) {
+        const cartao = `[data-glow=static][data-mood=${humor}]`
+        for (const [slot, tinta] of [["card-title", "foreground"], ["card-description", "muted-foreground"]]) {
+            const alvo = aurora.page.locator(`${cartao} [data-slot=${slot}]`).first()
+            await alvo.scrollIntoViewIfNeeded()
+            const razao = await piorRazao(aurora.page, alvo, tintas[tinta], { x: [0, 1], y: [0, 1] })
+            linhas.push(linha({ tema, tom: `aurora-${humor}`, uso: `Card glow=static (${tinta})` }, razao, PISO))
+        }
+    }
+    await aurora.ctx.close()
 }
 
 await browser.close()

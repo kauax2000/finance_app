@@ -440,7 +440,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
-  mede de 8,7 a 12,5:1 sobre as paradas puras) o véu do `Card glow="static"` (`@utility brand-wash`, a Leitura do mês: o arco-íris borrado entrando pelo topo, sob o texto, com o volume em `--brand-wash-opacity`, 0,22 no claro e 0,3 no escuro, sem medição de contraste ainda) e a aurora da troca de tema
+  mede de 8,7 a 12,5:1 sobre as paradas puras) a aurora do `Card glow="static"` (`@utility brand-aurora`, a Leitura do mês: três luzes de uma paleta de três paradas por humor — `mood` `warm`, `cool` ou `neutral` — nascendo do topo, sob o texto, com o volume em `--brand-aurora-opacity`, 0,55 no claro e 1 no escuro; contraste medido na rodada 413 por `scripts/tone-contrast.mjs`: pior 5,27:1 na tinta apagada) e a aurora da troca de tema
   (passa por cima do texto por ~1s e não é lida; o volume da faixa mora em
   `AURORA.opacidade`, e o aro e o brilho da parada, traços finos que não cobrem texto, ficam fora dela).
 - **As famílias de peça de marca**:
@@ -465,7 +465,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   ângulo fixo, com o ângulo no `mask-image` — não mascare o `--brand-rainbow`
   linear nem gire o cônico com o arco. A janela lê `var(--brand-glow-start,
   0)`, com valor inicial declarado. **O volume se mexe em
-  `--brand-glow-opacity`, nunca nas paradas**, e o quanto do anel fica aceso fora do arco em `--brand-glow-floor` (0 por padrão). O ângulo anda pelo `animate` do
+  `--brand-glow-opacity`, nunca nas paradas**. O ângulo anda pelo `animate` do
   `motion` (o atual lido do DOM, o tween anterior parado, movimento reduzido
   perguntado por `matchMedia`). O listener é o único `pointermove` em
   `document` montado em repouso: só com `variant="brand"` e `(hover: hover)`,
@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco-íris sempre à vista: o anel inteiro acende no piso `--brand-glow-floor` (0,55), o arco, mais forte, ainda segue o ponteiro, e o véu `brand-wash` entra pelo topo — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para a aurora parada (`brand-aurora`: três luzes do topo e a borda da mesma cor sumindo para baixo, sem ponteiro) e `mood` (`warm` | `cool` | **`neutral`**) para a paleta pelo humor da notícia — a Leitura do mês passa o tom da manchete, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada

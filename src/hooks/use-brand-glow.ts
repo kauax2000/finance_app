@@ -36,11 +36,7 @@ const GLOW_EASE = [0.16, 1, 0.3, 1] as const
  * pelo lado errado. Nada de estado React: a posição vai para o CSS por
  * `setProperty`, sem re-render.
  */
-export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(
-  ativo: boolean,
-  /** `sempreAceso`: o arco nunca apaga; longe do ponteiro, fica onde parou (no topo, de saída). */
-  { sempreAceso = false }: { sempreAceso?: boolean } = {}
-) {
+export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: boolean) {
   const ref = React.useRef<T | null>(null)
 
   React.useEffect(() => {
@@ -73,8 +69,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(
     // parado, sem varrer a borda atrás do ponteiro que saiu) e o `data-brand-glow`
     // deixa o CSS tirar o pseudo de vez quando o esmaecimento acaba (`visibility`):
     // nenhuma camada fica pintada com opacidade zero.
-    const acender = (pedido: boolean) => {
-      const aceso = pedido || sempreAceso
+    const acender = (aceso: boolean) => {
       el.style.setProperty("--brand-glow-active", aceso ? "1" : "0")
       el.dataset.brandGlow = aceso ? "on" : "off"
       if (!aceso) {
@@ -187,7 +182,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(
       doc.removeEventListener("pointerout", aoSair)
       win.removeEventListener("blur", esquecer)
     }
-  }, [ativo, sempreAceso])
+  }, [ativo])
 
   return ref
 }

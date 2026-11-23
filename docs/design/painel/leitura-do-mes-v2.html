@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Leitura do mês · v2</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&family=Ledger&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#8f8f8f;--up:#f0c27a;--c:#f58a5c;--g:#a7a2a0;
+--teal:oklch(0.82 0.12 195);--blue:oklch(0.8 0.14 220);--indigo:oklch(0.66 0.19 262);--violet:oklch(0.66 0.2 288);--magenta:oklch(0.72 0.28 335);--coral:oklch(0.75 0.18 38);--amber:oklch(0.88 0.17 90);--green:oklch(0.88 0.18 130);
+--rb:linear-gradient(135deg in oklch,var(--teal),var(--blue) 14%,var(--indigo) 32%,var(--violet) 46%,var(--magenta) 60%,var(--coral) 74%,var(--amber) 88%,var(--green));
+--ring:conic-gradient(from 200deg in oklch,var(--teal),var(--blue),var(--indigo),var(--violet),var(--magenta),var(--coral),var(--amber),var(--green),var(--teal))}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 6px;max-width:960px}
+h2{font:600 17px Inter;margin:38px 0 4px}.sub{color:#9a9a9a;margin:0 0 14px;max-width:960px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.w{max-width:980px;display:grid;gap:14px}
+.serif{font-family:Ledger,Georgia,serif;letter-spacing:-.01em}.up{color:var(--up)}.m{font:600 12.5px "Geist Mono",monospace}
+.card{position:relative;isolation:isolate;background:var(--card);border-radius:22px;padding:18px 18px 18px;overflow:hidden}
+.card .ringx{position:absolute;inset:0;border-radius:22px;padding:1.5px;background:var(--ring);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.75;z-index:2;pointer-events:none}
+.kick{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--mut)}
+.hl{font-size:25px;line-height:1.2;margin:8px 0 6px}
+.p{color:#bdbdbd;font-size:14px;margin:0}.p b{color:var(--fg);font-weight:600}
+.reasons{display:grid;grid-template-columns:max-content minmax(80px,220px) auto;column-gap:14px;row-gap:8px;margin-top:14px;align-items:center;font-size:13.5px}
+.dot{width:8px;height:8px;border-radius:9px;display:inline-block;margin-right:8px}
+.tr{height:6px;border-radius:99px;background:rgba(255,255,255,.06);position:relative}.tr i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.tag{font-size:11.5px;color:var(--mut);margin-left:6px}
+.tip{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.tip span{color:#cfcfcf;font-size:13.5px}.tip b{color:var(--fg);font-weight:600}
+.btn{font:500 13px Inter;color:var(--fg);background:rgba(255,255,255,.08);border:0;border-radius:99px;padding:7px 14px;white-space:nowrap}
+.chip{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;background:#262626;color:#fff;font-size:12px}
+/* atual */
+.wash-now:after{content:"";position:absolute;inset:0;background:var(--rb);filter:blur(28px);opacity:.3;-webkit-mask:linear-gradient(#000 10%,transparent 95%);z-index:-1}
+/* P1 aurora */
+.p1 .aur{position:absolute;inset:-20% -10% 30% -10%;z-index:-1;filter:blur(36px);opacity:.9;
+ background:radial-gradient(40% 70% at 12% 0%,color-mix(in oklch,var(--violet) 70%,transparent),transparent 70%),
+            radial-gradient(35% 70% at 55% -10%,color-mix(in oklch,var(--blue) 60%,transparent),transparent 70%),
+            radial-gradient(30% 60% at 92% 0%,color-mix(in oklch,var(--magenta) 55%,transparent),transparent 70%)}
+.p1 .chip,.p2 .chip,.p3 .chip{background:transparent;position:relative}
+.rbtext{background:var(--rb);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px;line-height:1}
+.p1 .kick{color:#c9c9c9}
+/* P2 faixa */
+.p2 .band{position:absolute;left:0;right:0;top:0;height:3px;background:var(--rb);z-index:1}
+.p2 .band:after{content:"";position:absolute;left:5%;right:5%;top:0;height:60px;background:var(--rb);filter:blur(30px);opacity:.28}
+/* P3 vidro */
+.p3{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0) 55%),var(--card)}
+.p3 .aur{position:absolute;right:-40px;top:-60px;width:280px;height:200px;border-radius:50%;background:conic-gradient(from 90deg in oklch,var(--teal),var(--indigo),var(--magenta),var(--coral),var(--teal));filter:blur(50px);opacity:.35;z-index:-1}
+.lbl{font-size:12px;color:#666;margin-bottom:-8px}
+</style></head><body>
+<h1>Leitura do mês · mais bonita, mesmo layout</h1>
+<p class="lead">O véu de hoje é o degradê inteiro borrado: no escuro, o meio do arco-íris (coral, âmbar, verde) vira um marrom-oliva sujo atrás do texto. As versões abaixo mantêm o cartão como está — título, manchete, apoio, motivos, sugestão — e mudam só a luz e os detalhes. Carro, novembro.</p>
+
+<script>
+const corpo=(chip)=>`<div class="kick">${chip}Leitura do mês</div>
+<p class="hl serif">O que você controla subiu <span class="up">14%</span> este mês</p>
+<p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+<div class="reasons"><span><span class="dot" style="background:var(--c)"></span>Abastecimento</span><span class="tr"><i style="width:100%;background:var(--c)"></i></span><span class="m up">+R$ 340</span>
+<span><span class="dot" style="background:var(--g)"></span>Seguro carro<span class="tag">novo desde set</span></span><span class="tr"><i style="width:87%;background:var(--g)"></i></span><span class="m up">+R$ 295</span></div>
+<div class="tip"><span>Com o dia a dia no seu normal, dezembro fecha perto de <b>R$ 3.202</b>.</span><button class="btn">Ver Abastecimento</button></div>`;
+</script>
+
+<h2>Hoje</h2>
+<div class="w"><div class="card wash-now" id="a"><span class="ringx"></span></div></div>
+
+<h2>P1 · Aurora em três luzes</h2>
+<p class="sub">No lugar do degradê inteiro, três luzes frias e limpas (violeta, azul, magenta) nascem do topo e se apagam antes do meio. Nada de marrom; o texto fica sobre o escuro. O ✦ vira o arco-íris. <b>Minha escolha.</b></p>
+<div class="w"><div class="card p1" id="b"><span class="aur"></span><span class="ringx"></span></div></div>
+
+<h2>P2 · Fio de luz no topo</h2>
+<p class="sub">O arco-íris vira um fio fino na borda de cima, com um brilho borrado descendo dele; o resto do cartão fica limpo. Mais discreto, a cor fica longe do texto.</p>
+<div class="w"><div class="card p2" id="c"><span class="band"></span><span class="ringx" style="opacity:.35"></span></div></div>
+
+<h2>P3 · Vidro com uma luz no canto</h2>
+<p class="sub">O cartão ganha um reflexo de vidro (claro no topo) e uma única luz colorida no canto de cima à direita, longe da manchete. O mais elegante, o menos "arco-íris".</p>
+<div class="w"><div class="card p3" id="d"><span class="aur"></span><span class="ringx" style="opacity:.55"></span></div></div>
+
+<script>
+const chipNeutro='<span class="chip">✦</span>', chipRb='<span class="chip"><span class="rbtext">✦</span></span>';
+document.getElementById('a').insertAdjacentHTML('beforeend',corpo(chipNeutro));
+document.getElementById('b').insertAdjacentHTML('beforeend',corpo(chipRb));
+document.getElementById('c').insertAdjacentHTML('beforeend',corpo(chipRb));
+document.getElementById('d').insertAdjacentHTML('beforeend',corpo(chipRb));
+</script>
+</body></html>

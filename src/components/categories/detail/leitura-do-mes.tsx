@@ -11,6 +11,9 @@ import { reaisInteiros } from "./regua-do-mes-contas"
 
 const TOM: Record<NonNullable<ParteDaFrase["tom"]>, string> = { success: "text-success", warning: "text-warning" }
 
+/** O humor da aurora pelo tom da manchete: subiu é quente, melhorou é frio, o normal é o neutro. */
+const HUMOR = { warning: "warm", success: "cool", info: "neutral" } as const
+
 /** As partes da frase; o forte vai em `font-semibold` na tinta do texto, o tom só na cor. */
 function Partes({ partes }: { partes: ParteDaFrase[] }) {
     return partes.map((p, i) => (
@@ -21,7 +24,7 @@ function Partes({ partes }: { partes: ParteDaFrase[] }) {
 }
 
 /**
- * A "Leitura do mês": o cartão de insight do detalhe da categoria. É a peça de marca da tela (o brilho na borda);
+ * A "Leitura do mês": o cartão de insight do detalhe da categoria. É a peça de marca da tela (a aurora, no humor do tom);
  * a manchete na Ledger, até 2 motivos com régua e a sugestão do mês seguinte com o botão que filtra a lista.
  */
 export function LeituraDoMes({
@@ -40,11 +43,11 @@ export function LeituraDoMes({
     const { manchete, apoio, motivos, sugestao } = leitura
     const maior = Math.abs(motivos[0]?.delta ?? 0)
     return (
-        <Card variant="brand" glow="static">
+        <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
             <CardContent className="grid gap-2">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span aria-hidden className="grid size-5.5 place-items-center rounded-full bg-muted text-xs text-foreground">
-                        ✦
+                    <span aria-hidden className="grid size-5.5 place-items-center rounded-full bg-muted text-xs">
+                        <span className="brand-rainbow bg-clip-text text-transparent">✦</span>
                     </span>
                     Leitura do mês
                 </h2>

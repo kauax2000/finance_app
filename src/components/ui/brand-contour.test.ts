@@ -282,10 +282,9 @@ describe("contorno de marca", () => {
     // E o pseudo não pinta miolo nenhum: só o arco-íris, na `border-box`.
     expect(corpoBg).not.toMatch(/padding-box|--brand-glow-core|--brand-glow-overlay/)
 
-    // A janela é um triângulo: opaco no meio, fechando em `spread * 2`, sobre o piso
-    // `--brand-glow-floor` (0 por padrão = o triângulo puro; o `Card glow="static"` o sobe).
-    expect(corpoMask).toMatch(/rgb\(0 0 0 \/ var\(--brand-glow-floor\)\),\s*#000,\s*rgb\(0 0 0 \/ var\(--brand-glow-floor\)\)/)
-    expect(CSS).toMatch(/--brand-glow-floor: 0;/)
+    // A janela é um triângulo puro: três paradas, opaco no meio, fechando em `spread * 2`.
+    expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
+    expect(CSS).not.toContain("--brand-glow-floor")
     expect(corpoMask).toMatch(/var\(--brand-glow-spread\) \* 2deg/)
 
     // Sem `radial-gradient`: círculos no interior da caixa não alcançam o anel de 2px da aresta.
@@ -394,8 +393,13 @@ describe("contorno de marca", () => {
     }
     // O `overflow-hidden` da base tem de ter perdido a disputa, não coexistido.
     expect(cartao).not.toContain("overflow-hidden")
-    // O `glow="static"` mantém o ponteiro e só não deixa o arco apagar.
-    expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand", \{ sempreAceso: aceso \}\)/)
+    // O `glow="static"` é a aurora parada: o ponteiro não liga, e o brilho não veste.
+    expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand" && !aurora\)/)
+    expect(lerFonte("src/hooks/use-brand-glow.ts")).not.toContain("sempreAceso")
+    const aurora = cn(cardVariants({ variant: "brand", glow: "static" })).split(/\s+/)
+    expect(aurora).toContain("brand-aurora")
+    expect(aurora).not.toContain("brand-glow")
+    expect(aurora).not.toContain("[overflow-clip-margin:var(--spacing)]")
 
     // O `Badge` em repouso é um chip `muted`; o núcleo do anel é a mesma cor, e o halo do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)

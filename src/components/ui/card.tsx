@@ -68,7 +68,7 @@ const cardVariants = cva(
          * tela; sem ponteiro fino fica igual ao `outline`.
          */
         brand: [
-          "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
+          "brand-rainbow-image isolate overflow-clip",
           "border border-border bg-card bg-clip-padding text-card-foreground",
         ].join(" "),
         /**
@@ -141,8 +141,18 @@ const cardVariants = cva(
         ],
         false: "",
       },
+      /** Só pinta com `variant="brand"`; as classes moram nos `compoundVariants`. */
+      glow: { pointer: "", static: "" },
     },
+    compoundVariants: [
+      // O brilho que segue o ponteiro, com 4px de folga no recorte para o anel e o borrão.
+      { variant: "brand", glow: "pointer", class: "brand-glow [overflow-clip-margin:var(--spacing)]" },
+      // A aurora (`@utility brand-aurora`): luz e borda são a mesma, parada, e o recorte
+      // fica rente à caixa para a luz não vazar. O fio neutro sai; quem desenha a borda é ela.
+      { variant: "brand", glow: "static", class: "brand-aurora border-transparent" },
+    ],
     defaultVariants: {
+      glow: "pointer",
       variant: "outline",
       padding: "md",
       inactive: false,
@@ -164,6 +174,7 @@ function Card({
   orientation,
   asChild = false,
   glow = "pointer",
+  mood = "neutral",
   ref,
   ...props
 }: React.ComponentProps<"div"> &
@@ -172,14 +183,21 @@ function Card({
     asChild?: boolean
     /**
      * Só no `brand`: `pointer` (o padrão) acende o arco conforme o ponteiro chega;
-     * `static` o deixa sempre aceso — no topo de saída, também no toque — e ele
-     * ainda segue o ponteiro, para o cartão que é a leitura da marca.
+     * `static` é a aurora — três luzes paradas que nascem do topo e a borda da mesma
+     * cor, sumindo para baixo —, sem ponteiro e também no toque, para o cartão que é
+     * a leitura da marca.
      */
     glow?: "pointer" | "static"
+    /**
+     * Só com `glow="static"`: a paleta da aurora pelo humor da notícia — `warm`
+     * (magenta, coral, âmbar: o gasto subiu), `cool` (teal, verde, azul: melhorou) e
+     * `neutral` (violeta, azul, magenta; o padrão).
+     */
+    mood?: "warm" | "cool" | "neutral"
   }) {
   const Comp = asChild ? Slot.Root : "div"
-  const aceso = variant === "brand" && glow === "static"
-  const glowRef = useBrandGlow(variant === "brand", { sempreAceso: aceso })
+  const aurora = variant === "brand" && glow === "static"
+  const glowRef = useBrandGlow(variant === "brand" && !aurora)
   return (
     <Comp
       data-slot="card"
@@ -191,12 +209,10 @@ function Card({
       data-selected={selected ? "" : undefined}
       data-tone={tone ?? undefined}
       data-orientation={orientation ?? "vertical"}
-      data-glow={aceso ? "static" : undefined}
+      data-glow={aurora ? "static" : undefined}
+      data-mood={aurora ? mood : undefined}
       className={cn(
-        cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation }),
-        // Aceso de saída, na força do `beam` do onboarding: o arco-íris dá a volta inteira (o piso
-        // da janela), o arco, mais forte, ainda segue o ponteiro, e o véu (`brand-wash`) entra pelo topo.
-        aceso && "brand-wash [--brand-glow-active:1] [--brand-glow-opacity:0.8] [--brand-glow-start:0] [--brand-glow-floor:0.55]",
+        cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation, glow }),
         className
       )}
       {...props}

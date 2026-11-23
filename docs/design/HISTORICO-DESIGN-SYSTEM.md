@@ -29479,3 +29479,27 @@ trocada por ondas curtas.
   18px em `--aurora-1`, pico a 25%). Tocar a parada de onde se veio no meio da troca inverte todas
   as animações e põe o tema velho quando a máscara da raiz termina; só vale enquanto a faixa ainda
   anda.
+
+### Rodada 413 — a aurora de marca da Leitura do mês, no humor do mês
+
+Pedido do dono (23/11/2026): o véu `brand-wash` (o arco-íris inteiro borrado) sujava o cartão, e no
+escuro coral, âmbar e verde viravam marrom-oliva atrás do texto; o anel de arco-íris completo não
+conversava com o fundo. Escolhido o P1c de `docs/design/painel/leitura-do-mes-v4.html` (o P1a é o
+`neutral`). Spec: `docs/superpowers/specs/2026-11-23-leitura-aurora-humor-design.md`.
+
+- `Card glow="static"` vira a `@utility brand-aurora`: três luzes borradas no `::after`, a borda de
+  1,5px no `::before` (degradê das mesmas três cores, máscara de 100% até 20% da altura e 12% no
+  pé) e o brilho de dentro no `box-shadow` do casco. O fio neutro fica transparente e o recorte,
+  rente à caixa. `mood` (`warm` | `cool` | `neutral`) troca as três cores e os alfas do mockup por
+  `data-mood`. Volume em `--brand-aurora-opacity`: 0,55 no claro, 1 no escuro.
+- Saíram o `sempreAceso` do `useBrandGlow`, o piso `--brand-glow-floor` (a janela do `brand-glow`
+  voltou ao triângulo puro) e o `brand-wash`. No `static` o ponteiro não liga; o `glow="pointer"`
+  segue igual (as classes do brilho foram para os `compoundVariants`).
+- A Leitura passa o humor pelo tom da manchete (`warning` → `warm`, `success` → `cool`, `info` →
+  `neutral`), e o ✦ é escrito no arco-íris (`brand-rainbow` recortado no glifo).
+- Contraste, medido por `scripts/tone-contrast.mjs` (pior pixel da caixa do título e da descrição
+  com o texto apagado, na página do Card): claro — tinta cheia 16,1 / 17,43 / 16,78 e
+  `--muted-foreground` 5,27 / 5,51 / 5,28 (warm / cool / neutral); escuro — 13,67 / 11,82 / 13,92 e
+  6,06 / 5,89 / 6,27. O medidor lia sempre o tema claro: a chave do tema em `scripts/lib/contrast.mjs`
+  era `theme`, e o `ThemeProvider` grava `tema`. Corrigida; os outros medidores que a usam passam a
+  medir o escuro de verdade.
