@@ -1858,6 +1858,10 @@
   /* O teto de intensidade, o botão de volume da peça. Mexer aqui muda a força;
      mexer nas paradas mudaria a cor, que é o que ele tem de certo. */
   --brand-glow-opacity: 0.5;
+  /* O piso da janela: quanto do anel fica aceso fora do arco. 0 é o brilho de sempre (só o
+     arco); o `Card glow="static"` sobe para o arco-íris dar a volta inteira, sempre à vista,
+     com o arco ainda mais forte onde está. */
+  --brand-glow-floor: 0;
 
   /* O ângulo é animado por JavaScript, e não por transição de CSS: a referência
      escreve `--start` a cada quadro com o `animate` do `motion`, e a propriedade
@@ -1929,9 +1933,10 @@
     -webkit-mask-image:
       conic-gradient(
         from calc((var(--brand-glow-start, 0) - var(--brand-glow-spread)) * 1deg),
-        transparent,
+        rgb(0 0 0 / var(--brand-glow-floor)),
         #000,
-        transparent calc(var(--brand-glow-spread) * 2deg)
+        rgb(0 0 0 / var(--brand-glow-floor)) calc(var(--brand-glow-spread) * 2deg),
+        rgb(0 0 0 / var(--brand-glow-floor))
       ),
       linear-gradient(#000 0 0);
     -webkit-mask-clip: border-box, padding-box;
@@ -1939,9 +1944,10 @@
     mask-image:
       conic-gradient(
         from calc((var(--brand-glow-start, 0) - var(--brand-glow-spread)) * 1deg),
-        transparent,
+        rgb(0 0 0 / var(--brand-glow-floor)),
         #000,
-        transparent calc(var(--brand-glow-spread) * 2deg)
+        rgb(0 0 0 / var(--brand-glow-floor)) calc(var(--brand-glow-spread) * 2deg),
+        rgb(0 0 0 / var(--brand-glow-floor))
       ),
       linear-gradient(#000 0 0);
     mask-clip: border-box, padding-box;

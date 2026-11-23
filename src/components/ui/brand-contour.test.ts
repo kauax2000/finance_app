@@ -282,8 +282,10 @@ describe("contorno de marca", () => {
     // E o pseudo não pinta miolo nenhum: só o arco-íris, na `border-box`.
     expect(corpoBg).not.toMatch(/padding-box|--brand-glow-core|--brand-glow-overlay/)
 
-    // A janela é um triângulo puro: três paradas, opaco no meio, fechando em `spread * 2`.
-    expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
+    // A janela é um triângulo: opaco no meio, fechando em `spread * 2`, sobre o piso
+    // `--brand-glow-floor` (0 por padrão = o triângulo puro; o `Card glow="static"` o sobe).
+    expect(corpoMask).toMatch(/rgb\(0 0 0 \/ var\(--brand-glow-floor\)\),\s*#000,\s*rgb\(0 0 0 \/ var\(--brand-glow-floor\)\)/)
+    expect(CSS).toMatch(/--brand-glow-floor: 0;/)
     expect(corpoMask).toMatch(/var\(--brand-glow-spread\) \* 2deg/)
 
     // Sem `radial-gradient`: círculos no interior da caixa não alcançam o anel de 2px da aresta.

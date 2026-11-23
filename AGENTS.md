@@ -465,7 +465,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   ângulo fixo, com o ângulo no `mask-image` — não mascare o `--brand-rainbow`
   linear nem gire o cônico com o arco. A janela lê `var(--brand-glow-start,
   0)`, com valor inicial declarado. **O volume se mexe em
-  `--brand-glow-opacity`, nunca nas paradas.** O ângulo anda pelo `animate` do
+  `--brand-glow-opacity`, nunca nas paradas**, e o quanto do anel fica aceso fora do arco em `--brand-glow-floor` (0 por padrão). O ângulo anda pelo `animate` do
   `motion` (o atual lido do DOM, o tween anterior parado, movimento reduzido
   perguntado por `matchMedia`). O listener é o único `pointermove` em
   `document` montado em repouso: só com `variant="brand"` e `(hover: hover)`,
@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco sempre aceso (no topo de saída, e ainda seguindo o ponteiro) — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco-íris sempre à vista: o anel inteiro acende no piso `--brand-glow-floor` (0,55) e o arco, mais forte, ainda segue o ponteiro — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada
