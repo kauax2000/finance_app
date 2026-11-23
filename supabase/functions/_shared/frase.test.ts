@@ -273,3 +273,15 @@ Deno.test('conceito: palavras genéricas não casam', () => {
   for (const p of ['dia', 'extra', 'ale']) assertEquals(conceitoDe(p), null, p)
   assertEquals(casarCategoria('Almoço do dia', 'expense', [cat('merc', 'Mercado')], []), null)
 })
+
+Deno.test('conceito: uber cai em Carro quando não há Transporte', () => {
+  assertEquals(casarCategoria('Uber', 'expense', [cat('carro', 'Carro')], []), { categoryId: 'carro', motivo: 'comum' })
+})
+
+Deno.test('conceito: estacionamento cai em Combustível quando só ele existe', () => {
+  assertEquals(casarCategoria('Estacionamento', 'expense', [cat('comb', 'Combustível')], []), { categoryId: 'comb', motivo: 'comum' })
+})
+
+Deno.test('conceito: multa de fatura não vira Carro', () => {
+  assertEquals(casarCategoria('Multa atraso fatura', 'expense', [cat('carro', 'Carro')], []), null)
+})

@@ -685,13 +685,13 @@ export const CONCEITOS: { id: string; palavras: string[]; nomes: string[] }[] = 
   },
   {
     id: 'carro',
-    palavras: ['estacionamento', 'pedagio', 'oficina', 'ipva', 'licenciamento', 'lavagem', 'mecanico', 'multa', 'seguro auto', 'sem parar', 'veloe'],
-    nomes: ['carro', 'veiculo', 'automovel', 'transporte'],
+    palavras: ['estacionamento', 'pedagio', 'oficina', 'ipva', 'licenciamento', 'lavagem', 'mecanico', 'seguro auto', 'sem parar', 'veloe'],
+    nomes: ['carro', 'veiculo', 'automovel', 'transporte', 'combustivel'],
   },
   {
     id: 'transporte',
     palavras: ['uber', 'taxi', 'onibus', 'metro', 'trem', 'cabify', 'patinete', 'bilhete'],
-    nomes: ['transporte', 'mobilidade'],
+    nomes: ['transporte', 'mobilidade', 'carro', 'veiculo'],
   },
   {
     id: 'saude',
