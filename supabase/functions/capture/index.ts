@@ -22,7 +22,6 @@ import {
   aplicarCategoriaDaIA,
   type CamposDaIA,
   clientIdDoPedido,
-  ERRO_VALOR,
   montarLancamento,
   opcoesDoFormulario,
   type OpcoesDoFormulario,
@@ -330,7 +329,7 @@ Deno.serve(async (req: Request) => {
   if (!montado.ok) {
     // Sem valor e com foto: ou a IA não leu, ou a foto nem foi a ela (acima de 4 MB).
     const erroDaFoto = foto && foto.bytes.byteLength > MAX_FOTO_IA ? ERRO_FOTO_GRANDE : ERRO_FOTO
-    if (foto && montado.erro === ERRO_VALOR) return json(montado.status, { error: erroDaFoto })
+    if (foto && montado.codigo === 'sem_valor') return json(montado.status, { error: erroDaFoto })
     return json(montado.status, { error: montado.erro, codigo: montado.codigo })
   }
   let { linha } = montado

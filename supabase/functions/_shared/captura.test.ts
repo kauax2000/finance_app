@@ -1085,6 +1085,7 @@ Deno.test('Apple Pay com propriedades vazias lança pelo texto', () => {
   const l = ok(montarLancamento({ amount: '', merchant: '', card: '', text: 'Padaria Real 42,90', source: 'apple_pay' }, ctx()))
   assertEquals(l.linha.amount, 42.9)
   assertEquals(l.linha.source, 'apple_pay')
+  assertEquals(l.linha.needs_review, true)
 })
 
 Deno.test('Apple Pay com milhar no valor', () => {
@@ -1095,6 +1096,34 @@ Deno.test('Apple Pay com milhar no valor', () => {
 Deno.test('Apple Pay: estorno não lança', () => {
   const v = validarPedido({ amount: '-R$ 10,00', merchant: 'Loja', source: 'apple_pay' })
   assertEquals(v, { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' })
+})
+
+Deno.test('Apple Pay sem valor e sem texto pede o atalho novo, não "Ex.: 42 mercado"', () => {
+  const esperado = { ok: false as const, erro: ERRO_APPLE_PAY_SEM_VALOR, codigo: 'sem_valor' as const }
+  assertEquals(validarPedido({ text: '', source: 'apple_pay' }), esperado)
+  assertEquals(validarPedido({ source: 'apple_pay' }), esperado)
+})
+
+Deno.test('Apple Pay com valor e texto longo demais passa, e o texto fica no teto', () => {
+  const v = validarPedido({ amount: 42, merchant: 'Loja', text: 'x'.repeat(600), source: 'apple_pay' })
+  assert(v.ok)
+  if (!v.ok) return
+  assertEquals(v.pedido.text?.length, 500)
+  assertEquals(ok(montarLancamento(v.pedido, ctx())).linha.amount, 42)
+  // Os outros campos e a frase de outras origens seguem com o teto.
+  assertEquals(validarPedido({ amount: 42, merchant: 'x'.repeat(600), source: 'apple_pay' }).ok, false)
+  assertEquals(validarPedido({ text: 'x'.repeat(600), source: 'share' }).ok, false)
+})
+
+Deno.test('Apple Pay com o valor lido do texto fica a conferir', () => {
+  // Com o histórico que limparia a frase, o valor do texto ainda é palpite.
+  const cats = [cat('pad', 'Padaria')]
+  const hs = Array.from({ length: 5 }, () => hist('Padaria Real', 'pad'))
+  const c = ctx({ historicoPorCarteira: { [PADRAO]: hs }, categoriasPorCarteira: { [PADRAO]: cats } })
+  assertEquals(ok(montarLancamento({ text: 'Padaria Real 42,90' }, c)).linha.needs_review, false)
+  const l = ok(montarLancamento({ text: 'Padaria Real 42,90', source: 'apple_pay' }, c))
+  assertEquals(l.linha.amount, 42.9)
+  assertEquals(l.linha.needs_review, true)
 })
 
 Deno.test('erroDoApplePaySemValor corta o eco em 60 caracteres', () => {

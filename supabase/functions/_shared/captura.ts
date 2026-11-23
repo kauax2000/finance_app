@@ -177,7 +177,9 @@ export function validarPedido(
   const b = body as Record<string, unknown>
   for (const campo of ['text', 'merchant', 'card', 'date', 'category', 'payment'] as const) {
     if (b[campo] != null && typeof b[campo] !== 'string') return { ok: false, erro: 'Corpo inválido.' }
-    if (typeof b[campo] === 'string' && (b[campo] as string).length > MAX_TEXTO) return { ok: false, erro: ERRO_TEXTO }
+    // No Apple Pay com valor, o `text` é só reserva: longo demais é cortado, não mata a compra.
+    const reserva = campo === 'text' && b.source === 'apple_pay' && temAmount(b.amount)
+    if (typeof b[campo] === 'string' && (b[campo] as string).length > MAX_TEXTO && !reserva) return { ok: false, erro: ERRO_TEXTO }
   }
   if (b.id != null && (typeof b.id !== 'string' || !b.id.trim() || b.id.length > 200)) {
     return { ok: false, erro: 'Id inválido.' }
@@ -186,11 +188,12 @@ export function validarPedido(
   if (temAmount(b.amount)) {
     if (valorDoAmount(b.amount) == null) return { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' }
   } else if (!comFoto && (typeof b.text !== 'string' || !b.text.trim())) {
-    return { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' }
+    const erro = b.source === 'apple_pay' ? ERRO_APPLE_PAY_SEM_VALOR : ERRO_VALOR
+    return { ok: false, erro, codigo: 'sem_valor' }
   }
   // Só os campos do contrato: `campos` (a IA) nunca entra pelo corpo.
   const { id, text, amount, merchant, card, date, source, category, payment } = b as PedidoCaptura
-  return { ok: true, pedido: { id, text, amount, merchant, card, date, source, category, payment } }
+  return { ok: true, pedido: { id, text: text?.slice(0, MAX_TEXTO), amount, merchant, card, date, source, category, payment } }
 }
 
 /**
@@ -327,6 +330,8 @@ export function montarLancamento(
     ;({ valor, data, tipo, descricao, forma, cartaoTexto, cartaoPalavra, parcelas, estorno } = f)
     // Regra 1: a dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     duvidas = f.duvidas.filter((d) => d !== 'cartao' || forma === 'credit_card')
+    // Apple Pay sem `amount`: o formato do texto da Wallet é desconhecido, o valor lido é palpite.
+    if (pedido.source === 'apple_pay' && valor != null && !duvidas.includes('valor')) duvidas.push('valor')
     if (c) {
       // Decisão 9: a IA vence e o texto completa, mas o valor que a pessoa
       // escreveu vence o lido. Daqui em diante, o mesmo caminho da frase.
