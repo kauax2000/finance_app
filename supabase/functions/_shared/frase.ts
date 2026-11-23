@@ -670,7 +670,7 @@ function palavrasDe(s: string): Set<string> {
 export const CONCEITOS: { id: string; palavras: string[]; nomes: string[] }[] = [
   {
     id: 'mercado',
-    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado', 'pao de acucar', 'extra', 'dia', 'oxxo', 'sams', 'makro', 'mateus', 'guanabara'],
+    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado', 'pao de acucar', 'oxxo', 'sams', 'makro', 'mateus', 'guanabara'],
     nomes: ['mercado', 'supermercado', 'feira', 'alimentacao', 'comida'],
   },
   {
@@ -680,7 +680,7 @@ export const CONCEITOS: { id: string; palavras: string[]; nomes: string[] }[] = 
   },
   {
     id: 'combustivel',
-    palavras: ['gasolina', 'etanol', 'alcool', 'diesel', 'gnv', 'combustivel', 'abastecimento', 'abasteci', 'posto', 'shell', 'ipiranga', 'petrobras', 'ale'],
+    palavras: ['gasolina', 'etanol', 'alcool', 'diesel', 'gnv', 'combustivel', 'abastecimento', 'abasteci', 'posto', 'shell', 'ipiranga', 'petrobras'],
     nomes: ['combustivel', 'carro', 'veiculo', 'automovel', 'transporte', 'mobilidade'],
   },
   {

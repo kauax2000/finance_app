@@ -268,3 +268,8 @@ Deno.test('conceito: drogaria raia é Saúde e pão de açúcar é Mercado', () 
   assertEquals(casarCategoria('Drogaria Raia', 'expense', [cat('saude', 'Saúde')], []), { categoryId: 'saude', motivo: 'comum' })
   assertEquals(casarCategoria('Pão de Açúcar', 'expense', [cat('merc', 'Mercado')], []), { categoryId: 'merc', motivo: 'comum' })
 })
+
+Deno.test('conceito: palavras genéricas não casam', () => {
+  for (const p of ['dia', 'extra', 'ale']) assertEquals(conceitoDe(p), null, p)
+  assertEquals(casarCategoria('Almoço do dia', 'expense', [cat('merc', 'Mercado')], []), null)
+})
