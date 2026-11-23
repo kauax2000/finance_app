@@ -35,7 +35,7 @@ select ok(
 from unnest(array[
   'public.catch_up_recurring_billing()',
   'public.complete_workspace_categories_onboarding(uuid)',
-  'public.create_workspace_installment_plan(uuid,uuid,text,text,uuid,integer,numeric,numeric,date)',
+  'public.create_workspace_installment_plan(uuid,uuid,text,text,uuid,integer,numeric,numeric,date,text,boolean,jsonb)',
   'public.delete_workspace_installment_plan_cascade(uuid)',
   'public.delete_workspace(uuid)',
   'public.get_workspace_delete_impact(uuid)'
@@ -48,7 +48,7 @@ select ok(
 from unnest(array[
   'public.catch_up_recurring_billing()',
   'public.complete_workspace_categories_onboarding(uuid)',
-  'public.create_workspace_installment_plan(uuid,uuid,text,text,uuid,integer,numeric,numeric,date)',
+  'public.create_workspace_installment_plan(uuid,uuid,text,text,uuid,integer,numeric,numeric,date,text,boolean,jsonb)',
   'public.delete_workspace_installment_plan_cascade(uuid)',
   'public.delete_workspace(uuid)',
   'public.get_workspace_delete_impact(uuid)'
@@ -62,7 +62,10 @@ select is(
     where n.nspname = 'public'
       and p.prosecdef
       and has_function_privilege('anon', p.oid, 'execute')
-      and p.proname not in ('is_workspace_member', 'is_workspace_owner', 'workspace_role', 'is_workspace_adult')
+      -- guarda_do_token_de_ia: o db_pre_request do PostgREST roda em toda
+      -- requisição, anon incluso; sem o EXECUTE a API inteira cai para o anon.
+      -- Não lê nem grava dado: só recusa o token de IA (20261103140000).
+      and p.proname not in ('is_workspace_member', 'is_workspace_owner', 'workspace_role', 'is_workspace_adult', 'guarda_do_token_de_ia')
     order by 1
   ),
   '{}'::text[],
