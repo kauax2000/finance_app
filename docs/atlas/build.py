@@ -69,7 +69,8 @@ tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
 # O Bloco 8 partiu a jornada 11 em duas: a 11b (@@D16@@, Assinar, renovar e reembolsar) entrou logo
 # depois da 11a (@@D15@@) e deslocou de Confiança em diante um a mais (@@D17@@ a @@D29@@).
 # A reativação (jornada 10) entrou depois da Conta: @@D15@@ e @@T10@@ são dela, e os seguintes deslocaram um a mais.
-assert len(diagrams) == 32 and len(tables) == 36, (len(diagrams), len(tables))
+# A de lacunas fechadas em 23/nov/2026 também mora no fim e não desloca índice (37).
+assert len(diagrams) == 32 and len(tables) == 37, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out
