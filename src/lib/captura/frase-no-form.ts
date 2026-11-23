@@ -10,6 +10,7 @@ import {
     casarCartao,
     casarCategoria,
     interpretarFrase,
+    palavrasDosCartoes,
     preencherPeloHistorico,
     type CartaoParaCasar,
     type CategoriaParaCasar,
@@ -98,7 +99,7 @@ export function camposDaFrase(
     historico: LinhaHistorico[],
     ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
-    return camposDaInterpretacao(interpretarFrase(texto, hoje), cartoes, historico, ctx)
+    return camposDaInterpretacao(interpretarFrase(texto, hoje, palavrasDosCartoes(cartoes)), cartoes, historico, ctx)
 }
 
 /**
@@ -118,7 +119,7 @@ export function camposDaIA(
     texto = "",
     ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
-    const f = interpretarFrase(texto, hoje)
+    const f = interpretarFrase(texto, hoje, palavrasDosCartoes(cartoes))
     const forma = c.forma ?? f.forma
     let data = c.data ?? f.data
     const duvidas = c.descricao || !f.duvidas.includes("descricao") ? [] : ["descricao"]

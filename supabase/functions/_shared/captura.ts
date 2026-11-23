@@ -8,6 +8,7 @@ import {
   interpretarFrase,
   lerNumero,
   normalizarDescricao,
+  palavrasDosCartoes,
   preencherPeloHistorico,
   type CartaoParaCasar,
   type FormaDePagamento,
@@ -187,9 +188,9 @@ export async function clientIdDoPedido(tokenId: string, id: string): Promise<str
  * A frase precisa da IA (Decisão 9)? O parser vem primeiro, e a IA só entra se
  * o valor ficou nulo ou a descrição ficou em dúvida. O Apple Pay nunca.
  */
-export function precisaDeIA(pedido: PedidoCaptura, hoje: string): boolean {
+export function precisaDeIA(pedido: PedidoCaptura, hoje: string, cartoes?: CartaoParaCasar[]): boolean {
   if (temAmount(pedido.amount)) return false
-  const f = interpretarFrase(pedido.text ?? '', hoje)
+  const f = interpretarFrase(pedido.text ?? '', hoje, cartoes && palavrasDosCartoes(cartoes))
   return f.valor == null || f.duvidas.includes('descricao')
 }
 
@@ -295,7 +296,7 @@ export function montarLancamento(
     cartaoTexto = pedido.card?.trim() || null
     forma = cartaoTexto ? 'credit_card' : null
   } else {
-    const f = interpretarFrase(pedido.text ?? '', ctx.hoje)
+    const f = interpretarFrase(pedido.text ?? '', ctx.hoje, palavrasDosCartoes(ctx.cartoes))
     ;({ valor, data, tipo, descricao, forma, cartaoTexto, parcelas, estorno } = f)
     // Regra 1: a dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     duvidas = f.duvidas.filter((d) => d !== 'cartao' || forma === 'credit_card')

@@ -67,9 +67,14 @@ const PARCELA = new Set(['parcela', 'parcelas', 'prestacao', 'prestacoes'])
 const POR_MES = new Set(['mensal', 'mensais', '/mes'])
 
 /** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
-const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
+const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e', 'pro', 'pra', 'para'])
 /** Antes da última palavra, dizem que ela é do nome ("pão de queijo", "uma pizza"), não um cartão; um número também. */
 const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as', 'x'])
+
+/** A fala abre com o verbo ("gastei 200 de abastecimento"): no começo da frase, ele sai. */
+const VERBOS_DE_ABERTURA = new Set(['gastei', 'paguei', 'comprei', 'dei', 'foi', 'custou', 'deu', 'saiu', 'torrei', 'fiz', 'tive'])
+/** O verbo que já diz o gasto vira a 1ª palavra da descrição ("abasteci 150" → "Abastecimento"). */
+const VERBOS_QUE_NOMEIAM = new Map([['abasteci', 'Abastecimento'], ['almocei', 'Almoço'], ['jantei', 'Jantar'], ['lanchei', 'Lanche']])
 
 type Token = { texto: string; chave: string; usado: boolean }
 
@@ -203,7 +208,11 @@ const RECEITA_SUBSTANTIVO = new Set(['reembolso', 'rendimento', 'rendimentos', '
 
 type Candidato = { valor: number; de: number; ate: number; marcado: boolean; extenso: boolean; parou: boolean }
 
-export function interpretarFrase(texto: string, hoje: string): FraseInterpretada {
+/**
+ * Com `palavrasDeCartao` (de `palavrasDosCartoes`), a última palavra solta só
+ * vira cartão se for de um cartão da pessoa; sem ele, qualquer uma pode ser.
+ */
+export function interpretarFrase(texto: string, hoje: string, palavrasDeCartao?: ReadonlySet<string>): FraseInterpretada {
   const toks: Token[] = texto
     .replace(/(\d)(\/m[eê]s)(?=$|[\s.,;:!?)])/giu, '$1 $2') // "100/mês"
     .split(/\s+/)
@@ -258,6 +267,20 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   for (let i = 0; i < toks.length; i++) {
     const c = k(i)
     const t = toks[i]
+
+    // O verbo da fala, antes de qualquer palavra da descrição ("ontem gastei 50").
+    if (toks.slice(0, i).every((u) => u.usado)) {
+      if (VERBOS_DE_ABERTURA.has(c)) {
+        t.usado = true
+        continue
+      }
+      const nome = VERBOS_QUE_NOMEIAM.get(c)
+      if (nome) {
+        t.texto = nome
+        t.chave = chaveDe(nome)
+        continue
+      }
+    }
 
     // "3x", "3 x", "3 vezes", "três vezes", "três x", "4 parcelas"; com "de V", V é a parcela.
     // Um número solto logo depois de "r$" é dinheiro, nunca a contagem ("R$ 30 x 2");
@@ -481,7 +504,7 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
 
   // O cartão: a palavra logo depois de "cartão"/"crédito"; senão, numa despesa
   // (ou estorno) sem pix/débito/dinheiro, a última palavra que sobrou quando sobram duas ou mais.
-  // ponytail: o parser não conhece os cartões; quem chama devolve a palavra à descrição se `casarCartao` falhar.
+  // Com `palavrasDeCartao`, só a palavra de um cartão; sem ele, quem chama devolve a palavra à descrição se `casarCartao` falhar.
   const ehPalavra = (i: number) => /^\p{L}{3,}$/u.test(k(i)) && !CONECTIVOS.has(k(i))
   let cartaoIdx = -1
   const depoisDoCredito = ultimoCredito + 1
@@ -493,7 +516,8 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     const antes = k(s[s.length - 2])
     // "3 itens", "dois cafés", "pão de queijo": a palavra depois de número ou de "de" é do nome.
     const prende = PRENDEM_A_SEGUINTE.has(antes) || NUMEROS.has(antes) || antes === 'mil' || /\d/.test(antes)
-    if (s.length >= 2 && ehPalavra(ultima) && !prende) cartaoIdx = ultima
+    const deCartao = !palavrasDeCartao || palavrasDeCartao.has(k(ultima))
+    if (s.length >= 2 && ehPalavra(ultima) && !prende && deCartao) cartaoIdx = ultima
   }
   let cartaoTexto: string | null = null
   let cartaoPalavra: string | null = null
@@ -541,6 +565,18 @@ export type CartaoParaCasar = {
   last_four: string | null
   workspace_id: string
   is_active: boolean
+}
+
+/** As palavras (3+ letras, não numéricas, normalizadas) do nome e do apelido dos cartões ativos. */
+export function palavrasDosCartoes(cartoes: CartaoParaCasar[]): Set<string> {
+  const out = new Set<string>()
+  for (const c of cartoes) {
+    if (!c.is_active) continue
+    for (const p of normalizarDescricao(`${c.name} ${c.wallet_alias ?? ''}`).split(' ')) {
+      if (p.length >= 3 && !/^\d+$/.test(p)) out.add(p)
+    }
+  }
+  return out
 }
 
 /**

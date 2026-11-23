@@ -301,7 +301,7 @@ Deno.serve(async (req: Request) => {
   if (foto) {
     // A imagem não se redige (Decisão 6), então não leva nomes. Grande demais, o anexo segue e o texto decide.
     if (foto.bytes.byteLength <= MAX_FOTO_IA) lido = await lerImagem({ admin, userId, hoje, nomes: [] }, foto.bytes, foto.mime)
-  } else if (precisaDeIA(pedido, hoje)) {
+  } else if (precisaDeIA(pedido, hoje, cartoes)) {
     // Sem os nomes, o texto sairia sem redigir: sem IA.
     const nomes = await nomesDosMembros(admin, carteirasDaPessoa)
     if (nomes) lido = await interpretar({ admin, userId, hoje, nomes }, pedido.text ?? '')
