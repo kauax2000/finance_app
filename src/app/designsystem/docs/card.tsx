@@ -108,6 +108,20 @@ export default function CardDoc() {
       </DocSection>
 
       <DocSection
+        title="Marca acesa"
+        description="glow=&quot;static&quot; deixa o arco aceso no topo, sem ponteiro e também no toque: para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
+        code={`<Card variant="brand" glow="static">…</Card>`}
+        previewClassName="justify-center py-10"
+      >
+        <Card variant="brand" glow="static" className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Leitura do mês</CardTitle>
+            <CardDescription>O que você controla subiu 14% este mês.</CardDescription>
+          </CardHeader>
+        </Card>
+      </DocSection>
+
+      <DocSection
         title="Ritmo interno"
         description="padding decide o respiro, uma medida só para o casco e os slots; md é o padrão. none é o painel: o corpo sangra, e as tiras de topo e de pé mantêm os 16px delas."
         code={`<Card padding="none">…</Card>

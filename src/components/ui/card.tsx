@@ -163,15 +163,23 @@ function Card({
   tone,
   orientation,
   asChild = false,
+  glow = "pointer",
   ref,
   ...props
 }: React.ComponentProps<"div"> &
   VariantProps<typeof cardVariants> & {
     /** Torna o cartão o próprio `<Link>` ou `<button>`. Vem com `interactive`. */
     asChild?: boolean
+    /**
+     * Só no `brand`: `pointer` (o padrão) acende o arco conforme o ponteiro chega;
+     * `static` o deixa aceso no topo, sem ponteiro e também no toque — para o
+     * cartão que é a leitura da marca e precisa ser visto de saída.
+     */
+    glow?: "pointer" | "static"
   }) {
   const Comp = asChild ? Slot.Root : "div"
-  const glowRef = useBrandGlow(variant === "brand")
+  const aceso = variant === "brand" && glow === "static"
+  const glowRef = useBrandGlow(variant === "brand" && !aceso)
   return (
     <Comp
       data-slot="card"
@@ -183,8 +191,11 @@ function Card({
       data-selected={selected ? "" : undefined}
       data-tone={tone ?? undefined}
       data-orientation={orientation ?? "vertical"}
+      data-glow={aceso ? "static" : undefined}
       className={cn(
         cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation }),
+        // O arco parado no topo, na força do `beam` do onboarding, e mais aberto (220° em vez de 80°, na força cheia): sem ponteiro, ele precisa ser visto.
+        aceso && "[--brand-glow-active:1] [--brand-glow-opacity:1] [--brand-glow-start:0] [--brand-glow-spread:110]",
         className
       )}
       {...props}

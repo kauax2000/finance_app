@@ -23,6 +23,13 @@ const html = (el: React.ReactElement) => renderToStaticMarkup(el)
 const casco = (props: Record<string, unknown>) => html(h(Card, props, "x"))
 
 describe("as versões do Card", () => {
+  it("brand com glow static deixa o arco aceso, sem o ponteiro", () => {
+    const aceso = casco({ variant: "brand", glow: "static" })
+    expect(aceso).toContain('data-glow="static"')
+    expect(aceso).toContain("[--brand-glow-active:1]")
+    expect(casco({ variant: "brand" })).not.toContain("[--brand-glow-active:1]")
+    expect(casco({ glow: "static" })).not.toContain("[--brand-glow-active:1]")
+  })
   it("inativo, selecionado, horizontal e tracejado são eixos próprios", () => {
     const inativo = casco({ inactive: true })
     expect(inativo).toContain("data-inactive")
