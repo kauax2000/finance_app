@@ -1,6 +1,6 @@
 -- pgTAP: o histórico do lançamento inteligente agrega a carteira em 24 meses.
 begin;
-select plan(5);
+select plan(6);
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-f400-000000000001', 'hist1@local.dev', '{"full_name":"Hist Um"}'),
@@ -21,13 +21,22 @@ from (values
   ('00000000-0000-4000-f400-000000000001'::uuid, 'Mercado', 2),
   ('00000000-0000-4000-f400-000000000001'::uuid, 'Mercado', 3),
   ('00000000-0000-4000-f400-000000000001'::uuid, 'Antigo', 30),
-  ('00000000-0000-4000-f400-000000000002'::uuid, 'Do convidado', 1)
+  ('00000000-0000-4000-f400-000000000002'::uuid, 'Do convidado', 1),
+  ('00000000-0000-4000-f400-000000000001'::uuid, 'Geladeira (1/10)', 2),
+  ('00000000-0000-4000-f400-000000000001'::uuid, 'Geladeira (2/10)', 1),
+  ('00000000-0000-4000-f400-000000000001'::uuid, 'Geladeira (3/10)', 0)
 ) as v(u, d, m);
 
 select is(
   (select n from public.historico_da_frase((select id from _ws)) where description = 'Mercado'),
   3,
   'agrega a mesma descrição em n'
+);
+
+select is(
+  (select array_agg(description || ':' || n) from public.historico_da_frase((select id from _ws)) where description like 'Geladeira%'),
+  array['Geladeira:3'],
+  'as parcelas de uma compra votam como uma descrição, sem o (k/N)'
 );
 
 select is(
@@ -47,7 +56,7 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-f400-0000000
 
 select is(
   (select count(*)::int from public.historico_da_frase((select id from _ws))),
-  2,
+  3,
   'o dono da carteira vê o histórico dela'
 );
 

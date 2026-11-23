@@ -9,6 +9,7 @@ import {
   casarCategoria,
   interpretarFrase,
   lerNumero,
+  nomeCobreDescricao,
   normalizarDescricao,
   palavrasDosCartoes,
   preencherPeloHistorico,
@@ -200,9 +201,9 @@ export async function clientIdDoPedido(tokenId: string, id: string): Promise<str
  * A frase precisa da IA (Decisão 9)? O parser vem primeiro, e a IA só entra se
  * o valor ficou nulo ou a descrição ficou em dúvida. O Apple Pay nunca.
  */
-export function precisaDeIA(pedido: PedidoCaptura, hoje: string, cartoes?: CartaoParaCasar[]): boolean {
+export function precisaDeIA(pedido: PedidoCaptura, hoje: string, cartoes: CartaoParaCasar[]): boolean {
   if (temAmount(pedido.amount)) return false
-  const f = interpretarFrase(pedido.text ?? '', hoje, cartoes && palavrasDosCartoes(cartoes))
+  const f = interpretarFrase(pedido.text ?? '', hoje, palavrasDosCartoes(cartoes))
   return f.valor == null || f.duvidas.includes('descricao')
 }
 
@@ -390,6 +391,7 @@ export function montarLancamento(
   // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o único cartão
   // ativo da carteira, senão o do último crédito. Um nome de cartão que não casou
   // não ganha palpite. O "último escolhido neste aparelho" só existe no app.
+  // Só o único ativo tira a dúvida: com dois ou mais, o último crédito é palpite, a conferir.
   const cartoesDaCarteira = ctx.cartoes.filter((k) => k.workspace_id === carteira)
   const ativos = cartoesDaCarteira.filter((k) => k.is_active)
   const doCredito =
@@ -400,7 +402,8 @@ export function montarLancamento(
       : null
   if (doCredito) {
     forma = 'credit_card'
-    duvidas = duvidas.filter((d) => d !== 'cartao')
+    if (ativos.length === 1) duvidas = duvidas.filter((d) => d !== 'cartao')
+    else if (!duvidas.includes('cartao')) duvidas.push('cartao')
   }
 
   // Estorno sem cartão não herda a forma do histórico (um pix de lá não é a fatura).
@@ -427,12 +430,17 @@ export function montarLancamento(
   }
   // Decisão 2: tudo que passou por IA nasce a conferir. A palavra comum e a
   // sugestão da IA são palpites que o atalho não mostra antes de gravar: ficam
-  // a conferir também.
+  // a conferir também. O nome só é limpo quando cobre a descrição: "Casa do Pão
+  // de Queijo" na categoria Casa, ou "Mercado Livre" em Mercado, é palpite.
+  const nomeDaCategoria = categoria?.motivo === 'nome'
+    ? ((ctx.categoriasPorCarteira[carteira] ?? []).find((k) => k.id === categoria.categoryId)?.name ?? '')
+    : null
   const needsReview =
     duvidas.length > 0 ||
     cartaoSemCasar ||
     categoria == null ||
     !CATEGORIA_LIMPA.has(categoria.motivo) ||
+    (nomeDaCategoria != null && !nomeCobreDescricao(descricao, nomeDaCategoria)) ||
     parcelasDoPlano != null ||
     c != null
   if (needsReview && !applePay && pedido.text) capturaMeta.texto = pedido.text

@@ -339,8 +339,9 @@ Deno.serve(async (req: Request) => {
 
   // As regras não acharam categoria: a IA escolhe entre as da carteira de destino.
   // Sem IA (cota, provedor fora, sem os nomes para redigir), grava sem categoria, a conferir.
-  // Se a leitura já esbarrou na cota ou na falta de chave, a categoria nem tenta.
-  const iaFora = lido?.ok === false && (lido.motivo === 'cota' || lido.motivo === 'sem_chave')
+  // Se a leitura já falhou (cota, sem chave, prazo, provedor fora), a categoria nem tenta:
+  // uma segunda espera atrasaria o Atalho.
+  const iaFora = lido?.ok === false
   if (montado.semCategoria && !iaFora) {
     const daCarteira = categoriasPorCarteira[linha.workspace_id] ?? []
     const tipo = tipoDaCategoria(linha.type, linha.payment_credit_card_id)
@@ -353,7 +354,7 @@ Deno.serve(async (req: Request) => {
     const candidatas = { expense: nomesDo('expense'), income: nomesDo('income') }
     const nomes = candidatas[tipo].length ? await nomesDaPessoa() : null
     if (nomes) {
-      const r = await categorizar({ admin, userId, hoje, nomes }, [{ i: 0, descricao: linha.description, tipo }], candidatas)
+      const r = await categorizar({ admin, userId, hoje, nomes, prazoMs: 4000 }, [{ i: 0, descricao: linha.description, tipo }], candidatas)
       if (r.ok) linha = aplicarCategoriaDaIA(linha, r.dados.find((s) => s.i === 0)?.categoria ?? null, daCarteira)
       else console.error('capture: ia categoria', r.motivo)
     }

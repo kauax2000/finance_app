@@ -596,10 +596,10 @@ Deno.test('IA com parcelas leva o N ao plano', () => {
 })
 
 Deno.test('Foco 5: precisaDeIA só sem valor ou com dúvida de descrição, e nunca no Apple Pay', () => {
-  assertEquals(precisaDeIA({ text: '42 mercado' }, HOJE), false)
-  assertEquals(precisaDeIA({ text: 'paguei o almoço' }, HOJE), true)
-  assertEquals(precisaDeIA({ text: '42' }, HOJE), true)
-  assertEquals(precisaDeIA({ amount: 42, merchant: 'Café' }, HOJE), false)
+  assertEquals(precisaDeIA({ text: '42 mercado' }, HOJE, []), false)
+  assertEquals(precisaDeIA({ text: 'paguei o almoço' }, HOJE, []), true)
+  assertEquals(precisaDeIA({ text: '42' }, HOJE, []), true)
+  assertEquals(precisaDeIA({ amount: 42, merchant: 'Café' }, HOJE, []), false)
 })
 
 Deno.test('validarPedido: com foto o texto é opcional; campos da IA não entram pelo corpo', () => {
@@ -939,4 +939,39 @@ Deno.test('ia: sem IA a linha grava igual', () => {
   assertEquals(linha, r.linha)
   assertEquals(linha.category_id, null)
   assertEquals(linha.needs_review, true)
+})
+
+// --- Revisão final -------------------------------------------------------------
+
+Deno.test('"crédito" sem nome com dois cartões ativos: o palpite do último crédito, a conferir', () => {
+  const nu = cartao('nu', 'Nubank', PADRAO)
+  const itau = cartao('itau', 'Itaú', PADRAO)
+  const r = ok(
+    montarLancamento(
+      { text: '45 mercado no crédito' },
+      ctx({
+        cartoes: [nu, itau],
+        historicoPorCarteira: {
+          [PADRAO]: [
+            hist('Farmácia', 'c1', { payment_method: 'credit_card', payment_credit_card_id: 'nu', date: '2026-03-01T12:00:00.000Z' }),
+            hist('Posto', 'c1', { payment_method: 'credit_card', payment_credit_card_id: 'itau', date: '2026-04-05T12:00:00.000Z' }),
+          ],
+        },
+        categoriasPorCarteira: { [PADRAO]: [cat('c-merc', 'Mercado')] },
+      }),
+    ),
+  )
+  assertEquals([r.linha.payment_credit_card_id, r.linha.payment_method, r.linha.needs_review], ['itau', 'credit_card', true])
+})
+
+Deno.test('categoria pelo nome: limpa só quando o nome cobre a descrição', () => {
+  const comCats = (cats: CategoriaParaCasar[]) => ctx({ categoriasPorCarteira: { [PADRAO]: cats } })
+  const limpa = ok(montarLancamento({ text: '42 mercado' }, comCats([cat('c-merc', 'Mercado')])))
+  assertEquals([limpa.linha.category_id, limpa.linha.needs_review], ['c-merc', false])
+  const casa = ok(
+    montarLancamento({ amount: 18, merchant: 'Casa do Pão de Queijo', source: 'apple_pay' }, comCats([cat('c-casa', 'Casa')])),
+  )
+  assertEquals([casa.linha.category_id, casa.linha.needs_review], ['c-casa', true])
+  const livre = ok(montarLancamento({ text: '120 Mercado Livre' }, comCats([cat('c-merc', 'Mercado')])))
+  assertEquals([livre.linha.category_id, livre.linha.needs_review], ['c-merc', true])
 })

@@ -138,12 +138,20 @@ describe("Edge capture", () => {
         expect(f).toContain("console.error('capture: ia categoria', r.motivo)")
     })
 
-    it("a categoria pela IA respeita os tetos da ia-ler e não insiste sem cota nem chave", () => {
+    it("a categoria pela IA respeita os tetos da ia-ler e não insiste depois de uma leitura que falhou", () => {
         const f = fonte(CAPTURE)
         expect(f).toContain("k.name.length <= MAX_NOME_CATEGORIA")
         expect(f).toContain(".slice(0, MAX_NOMES_POR_TIPO)")
-        expect(f).toContain("lido.motivo === 'cota' || lido.motivo === 'sem_chave'")
+        // Qualquer falha da leitura (cota, sem chave, prazo, provedor fora) pula a categoria.
+        expect(f).toContain("const iaFora = lido?.ok === false")
+        expect(f).not.toContain("lido.motivo === 'cota' || lido.motivo === 'sem_chave'")
         expect(f).toContain("if (montado.semCategoria && !iaFora)")
+    })
+
+    it("a categoria pela IA tem prazo curto, para não atrasar o Atalho", () => {
+        const f = fonte(CAPTURE)
+        const chamada = f.slice(f.indexOf("await categorizar("))
+        expect(chamada.slice(0, chamada.indexOf("\n"))).toContain("prazoMs: 4000")
     })
 
     it("consulta o plano da carteira padrão", () => {

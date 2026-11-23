@@ -20,13 +20,15 @@ stable
 security invoker
 set search_path = public
 as $$
-  select t.description, t.type, t.category_id, t.payment_method, t.payment_credit_card_id,
-         max(t.date), count(*)::integer
+  -- Sem o "(k/N)" das parcelas: uma compra em 10x vota como uma, não como dez.
+  select regexp_replace(t.description, '\s*\(\d+/\d+\)$', ''), t.type, t.category_id, t.payment_method,
+         t.payment_credit_card_id, max(t.date), count(*)::integer
   from public.transactions t
   where t.workspace_id = p_workspace_id
     and t.date >= now() - interval '24 months'
     and (p_user_id is null or t.user_id = p_user_id)
-  group by t.description, t.type, t.category_id, t.payment_method, t.payment_credit_card_id
+  group by regexp_replace(t.description, '\s*\(\d+/\d+\)$', ''), t.type, t.category_id, t.payment_method,
+           t.payment_credit_card_id
   -- O app grava o meio-dia do dia escolhido: no mesmo dia, desempata quem entrou por último.
   order by max(t.date) desc, max(t.created_at) desc nulls last
   limit 2000;
