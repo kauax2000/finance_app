@@ -1,5 +1,8 @@
 import { assert, assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert@1.0.19'
 import {
+  ERRO_APPLE_PAY_SEM_VALOR,
+  ERRO_VALOR,
+  erroDoApplePaySemValor,
   aplicarCategoriaDaIA,
   clientIdDoPedido,
   montarLancamento,
@@ -1067,4 +1070,44 @@ Deno.test('dita: a fraca com o histórico conferido que concorda fica limpa', ()
   const lanche = Array.from({ length: 5 }, () => hist('Lanche', 'casa'))
   assertEquals(linha('lanche em casa 20', com(lanche)), ['Lanche', 'casa', 'dita', false])
   assertEquals(linha('conta de luz 150', com([])), ['Conta de luz', 'luz', 'dita', true])
+})
+
+Deno.test('Apple Pay só com texto sem valor pede o atalho novo e mostra o que chegou', () => {
+  const r = montarLancamento({ text: 'Padaria Real', source: 'apple_pay' }, ctx())
+  assertEquals(r.ok, false)
+  if (r.ok) return
+  assertEquals(r.status, 422)
+  assertEquals(r.codigo, 'sem_valor')
+  assertEquals(r.erro, `${ERRO_APPLE_PAY_SEM_VALOR} Chegou: "Padaria Real"`)
+})
+
+Deno.test('Apple Pay com propriedades vazias lança pelo texto', () => {
+  const l = ok(montarLancamento({ amount: '', merchant: '', card: '', text: 'Padaria Real 42,90', source: 'apple_pay' }, ctx()))
+  assertEquals(l.linha.amount, 42.9)
+  assertEquals(l.linha.source, 'apple_pay')
+})
+
+Deno.test('Apple Pay com milhar no valor', () => {
+  const l = ok(montarLancamento({ amount: 'R$ 1.234,56', merchant: 'Loja', source: 'apple_pay' }, ctx()))
+  assertEquals(l.linha.amount, 1234.56)
+})
+
+Deno.test('Apple Pay: estorno não lança', () => {
+  const v = validarPedido({ amount: '-R$ 10,00', merchant: 'Loja', source: 'apple_pay' })
+  assertEquals(v, { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' })
+})
+
+Deno.test('erroDoApplePaySemValor corta o eco em 60 caracteres', () => {
+  assertEquals(erroDoApplePaySemValor(undefined), ERRO_APPLE_PAY_SEM_VALOR)
+  assertEquals(erroDoApplePaySemValor('   '), ERRO_APPLE_PAY_SEM_VALOR)
+  assertEquals(erroDoApplePaySemValor('a'.repeat(80)), `${ERRO_APPLE_PAY_SEM_VALOR} Chegou: "${'a'.repeat(60)}…"`)
+})
+
+Deno.test('precisaDeIA: o Apple Pay nunca, nem só com texto', () => {
+  assertEquals(precisaDeIA({ text: 'Padaria Real', source: 'apple_pay' }, '2026-11-23', []), false)
+})
+
+Deno.test('frase do atalho sem valor continua com o erro de sempre', () => {
+  const r = montarLancamento({ text: 'mercado', source: 'shortcut' }, ctx())
+  assertEquals(r.ok === false && r.erro, ERRO_VALOR)
 })

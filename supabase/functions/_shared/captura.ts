@@ -139,6 +139,14 @@ export function resolverOpcao<T extends { nome: string }>(lista: T[], nome: stri
 }
 
 export const ERRO_VALOR = 'Não entendi o valor. Ex.: 42 mercado'
+export const ERRO_APPLE_PAY_SEM_VALOR = 'A compra chegou sem o valor. Baixe o atalho de novo em Lançar pelo iPhone.'
+
+/** O erro do Apple Pay sem valor, com um eco curto do texto que chegou (dado da pessoa: não vai para log). */
+export function erroDoApplePaySemValor(texto: string | undefined): string {
+  const t = (texto ?? '').trim()
+  if (!t) return ERRO_APPLE_PAY_SEM_VALOR
+  return `${ERRO_APPLE_PAY_SEM_VALOR} Chegou: "${t.length > 60 ? `${t.slice(0, 60)}…` : t}"`
+}
 const ERRO_OPCAO = 'Escolha uma opção da lista.'
 const DESCRICAO_DO_FORMULARIO = 'Gasto'
 const ERRO_TEXTO = 'Texto acima de 500 caracteres.'
@@ -203,6 +211,7 @@ export async function clientIdDoPedido(tokenId: string, id: string): Promise<str
  * o valor ficou nulo ou a descrição ficou em dúvida. O Apple Pay nunca.
  */
 export function precisaDeIA(pedido: PedidoCaptura, hoje: string, cartoes: CartaoParaCasar[]): boolean {
+  if (pedido.source === 'apple_pay') return false
   if (temAmount(pedido.amount)) return false
   const f = interpretarFrase(pedido.text ?? '', hoje, palavrasDosCartoes(cartoes))
   return f.valor == null || f.duvidas.includes('descricao')
@@ -344,7 +353,10 @@ export function montarLancamento(
     }
   }
 
-  if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR, codigo: 'sem_valor' }
+  if (valor == null) {
+    const erro = pedido.source === 'apple_pay' ? erroDoApplePaySemValor(pedido.text) : ERRO_VALOR
+    return { ok: false, status: 422, erro, codigo: 'sem_valor' }
+  }
   if (valor > MAX_VALOR) return { ok: false, status: 422, erro: ERRO_LIMITE }
 
   // O cartão casado só vale numa carteira da pessoa (Foco 3); senão o
