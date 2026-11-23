@@ -36,3 +36,24 @@ Deno.test('fala: só verbo e valor fica com dúvida de descrição', () => {
 Deno.test('fala: sem o conjunto de cartões, o comportamento de antes', () => {
   assertEquals(interpretarFrase('paguei 80 na farmácia', HOJE).cartaoTexto, 'farmacia')
 })
+
+Deno.test('fala: verbo no plural e artigo do começo saem', () => {
+  assertEquals(ler('gastamos 40 no mercado').descricao, 'Mercado')
+  assertEquals(ler('pagamos 90 no jantar').descricao, 'Jantar')
+  assertEquals(ler('compramos 30 de pão').descricao, 'Pão')
+  assertEquals(ler('demos 20 pro flanelinha').descricao, 'Flanelinha')
+  assertEquals(ler('um café 8').descricao, 'Café')
+  assertEquals(ler('A conta de luz 150').descricao, 'Conta de luz')
+  // No meio da frase o artigo fica.
+  assertEquals(ler('jantar uma pizza 60').descricao, 'Jantar uma pizza')
+})
+
+Deno.test('fala: "no mercado" com um cartão Mercado Pago fica na descrição', () => {
+  const f = ler('gastei 50 no mercado')
+  assertEquals([f.descricao, f.cartaoTexto], ['Mercado', null])
+})
+
+Deno.test('fala: "no nubank" sozinho segue sendo o cartão (não é um gasto comum)', () => {
+  assertEquals(ler('estorno de 50 no nubank').cartaoTexto, 'nubank')
+  assertEquals(ler('50 no nubank').cartaoTexto, 'nubank')
+})

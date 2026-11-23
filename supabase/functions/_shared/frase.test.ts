@@ -1,6 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import { appTodayYmd, formatYmd } from './credit-card-cycle.ts'
-import { cartaoDoCredito, casarCartao, casarCategoria, conceitoDe, interpretarFrase, preencherPeloHistorico, type LinhaHistorico, votarCategoria } from './frase.ts'
+import { cartaoDoCredito, casarCartao, casarCategoria, conceitoDe, interpretarFrase, nomeCobreDescricao, preencherPeloHistorico, type LinhaHistorico, votarCategoria } from './frase.ts'
 
 const HOJE = '2026-04-10'
 
@@ -358,4 +358,46 @@ Deno.test('aprendido: o plural vota com o singular', () => {
 Deno.test('aprendido: data ilegível não vota', () => {
   const hist = [lh({ description: 'Xablau', category_id: 'a', date: 'lixo' })]
   assertEquals(votarCategoria('xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+})
+
+Deno.test('aprendido: a palavra vota antes do conceito ("padaria" não herda o iFood)', () => {
+  const cats = [cat('delivery', 'Delivery'), cat('mercado', 'Mercado')]
+  const hist = [
+    lh({ description: 'iFood', category_id: 'delivery', n: 30 }),
+    ...[1, 2, 3].map(() => lh({ description: 'Padaria', category_id: 'mercado' })),
+  ]
+  assertEquals(casarCategoria('pão na padaria', 'expense', cats, hist, HOJE), { categoryId: 'mercado', motivo: 'aprendido' })
+})
+
+Deno.test('aprendido: "dentista" vota pela palavra, não pelo conceito de saúde', () => {
+  const cats = [cat('remedios', 'Remédios'), cat('saude', 'Saúde')]
+  const hist = [
+    lh({ description: 'Drogasil', category_id: 'remedios', n: 20 }),
+    lh({ description: 'Dentista', category_id: 'saude', n: 2 }),
+  ]
+  assertEquals(votarCategoria('dentista', 'expense', cats, hist, HOJE), 'saude')
+  assertEquals(casarCategoria('dentista do centro', 'expense', cats, hist, HOJE), { categoryId: 'saude', motivo: 'aprendido' })
+})
+
+Deno.test('conceito: "mateus" é nome de gente, não mercado', () => {
+  assertEquals(conceitoDe('mateus'), null)
+  assertEquals(casarCategoria('PIX ENVIADO MATEUS SILVA', 'expense', [cat('merc', 'Mercado')], [], HOJE), null)
+})
+
+Deno.test('nome cobre a descrição: só quando toda palavra que conta está no nome', () => {
+  assertEquals(nomeCobreDescricao('Mercado', 'Mercado'), true)
+  assertEquals(nomeCobreDescricao('Mercados de bairro', 'Mercado bairro'), true)
+  assertEquals(nomeCobreDescricao('Casa do Pão de Queijo', 'Casa'), false)
+  assertEquals(nomeCobreDescricao('Mercado Livre', 'Mercado'), false)
+})
+
+Deno.test('desempenho: 300 descrições contra 5000 linhas em menos de 2 s', () => {
+  const cats = [cat('a', 'Alfa'), cat('b', 'Beta'), cat('c', 'Gama')]
+  const palavras = ['padaria', 'posto', 'mercado', 'uber', 'farmacia', 'xablau', 'loja', 'cinema', 'aluguel', 'pizza']
+  const hist = Array.from({ length: 5000 }, (_, i) =>
+    lh({ description: `${palavras[i % 10]} ${palavras[(i * 7) % 10]} filial ${i % 37}`, category_id: ['a', 'b', 'c'][i % 3], date: mesesAntes(i % 20) }))
+  const t0 = performance.now()
+  for (let i = 0; i < 300; i++) casarCategoria(`${palavras[(i * 3) % 10]} unidade ${i}`, 'expense', cats, hist, HOJE)
+  const ms = performance.now() - t0
+  if (ms >= 2000) throw new Error(`300 × 5000 levou ${Math.round(ms)} ms`)
 })

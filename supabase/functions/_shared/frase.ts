@@ -72,7 +72,12 @@ const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', '
 const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as', 'x'])
 
 /** A fala abre com o verbo ("gastei 200 de abastecimento"): no começo da frase, ele sai. */
-const VERBOS_DE_ABERTURA = new Set(['gastei', 'paguei', 'comprei', 'dei', 'foi', 'custou', 'deu', 'saiu', 'torrei', 'fiz', 'tive'])
+const VERBOS_DE_ABERTURA = new Set([
+  'gastei', 'paguei', 'comprei', 'dei', 'foi', 'custou', 'deu', 'saiu', 'torrei', 'fiz', 'tive',
+  'gastamos', 'pagamos', 'compramos', 'demos',
+])
+/** O artigo que abre a descrição sai ("Um café" → "Café"); no meio dela fica ("jantar uma pizza"). */
+const ARTIGOS = new Set(['a', 'o', 'um', 'uma'])
 /** O verbo que já diz o gasto vira a 1ª palavra da descrição ("abasteci 150" → "Abastecimento"). */
 const VERBOS_QUE_NOMEIAM = new Map([['abasteci', 'Abastecimento'], ['almocei', 'Almoço'], ['jantei', 'Jantar'], ['lanchei', 'Lanche']])
 
@@ -517,7 +522,11 @@ export function interpretarFrase(texto: string, hoje: string, palavrasDeCartao?:
     // "3 itens", "dois cafés", "pão de queijo": a palavra depois de número ou de "de" é do nome.
     const prende = PRENDEM_A_SEGUINTE.has(antes) || NUMEROS.has(antes) || antes === 'mil' || /\d/.test(antes)
     const deCartao = !palavrasDeCartao || palavrasDeCartao.has(k(ultima))
-    if (s.length >= 2 && ehPalavra(ultima) && !prende && deCartao) cartaoIdx = ultima
+    // Com os cartões, o conectivo não conta quando a palavra sozinha é um gasto comum:
+    // "gastei 50 no mercado" com um Mercado Pago é o mercado; "estorno de 50 no nubank" é o Nubank.
+    const naoConectivas = s.filter((i) => !CONECTIVOS.has(k(i))).length
+    const bastam = s.length >= 2 && (!palavrasDeCartao || naoConectivas >= 2 || conceitoDe(k(ultima)) == null)
+    if (bastam && ehPalavra(ultima) && !prende && deCartao) cartaoIdx = ultima
   }
   let cartaoTexto: string | null = null
   let cartaoPalavra: string | null = null
@@ -533,6 +542,7 @@ export function interpretarFrase(texto: string, hoje: string, palavrasDeCartao?:
   // A descrição: o resto, sem conectivo solto nas pontas.
   const resto = sobra()
   while (resto.length && CONECTIVOS.has(k(resto[0]))) resto.shift()
+  if (resto.length > 1 && ARTIGOS.has(k(resto[0]))) resto.shift()
   while (resto.length && CONECTIVOS.has(k(resto[resto.length - 1]))) resto.pop()
   let descricao = resto
     .map((i) => toks[i].texto)
@@ -672,7 +682,7 @@ function palavrasDe(s: string): Set<string> {
 export const CONCEITOS: { id: string; palavras: string[]; nomes: string[] }[] = [
   {
     id: 'mercado',
-    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado', 'pao de acucar', 'oxxo', 'sams', 'makro', 'mateus', 'guanabara'],
+    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado', 'pao de acucar', 'oxxo', 'sams', 'makro', 'guanabara'],
     nomes: ['mercado', 'supermercado', 'feira', 'alimentacao', 'comida'],
   },
   {
@@ -774,9 +784,19 @@ function casaEm(ws: string[], i: number, entrada: string): boolean {
   return e.every((w, k) => ws[i + k] === w)
 }
 
+/** Palavra (de uma palavra só) → posição do primeiro conceito que a tem; montado uma vez. */
+const POSICAO_DO_CONCEITO = new Map<string, number>()
+CONCEITOS.forEach((g, i) => {
+  for (const e of g.palavras) if (!e.includes(' ') && !POSICAO_DO_CONCEITO.has(e)) POSICAO_DO_CONCEITO.set(e, i)
+})
+
 /** O `id` do conceito de uma palavra normalizada (com e sem o "s" final); `null` fora de todos. */
 export function conceitoDe(palavra: string): string | null {
-  return CONCEITOS.find((g) => g.palavras.some((e) => !e.includes(' ') && casaEm([palavra], 0, e)))?.id ?? null
+  const exata = POSICAO_DO_CONCEITO.get(palavra)
+  const semS = palavra.endsWith('s') ? POSICAO_DO_CONCEITO.get(palavra.slice(0, -1)) : undefined
+  // Como no `find` pela ordem de CONCEITOS: vence o conceito que vem antes.
+  const i = exata == null ? semS : semS == null ? exata : Math.min(exata, semS)
+  return i == null ? null : CONCEITOS[i].id
 }
 
 /** Não votam: dizem como foi pago, ou nada dizem do gasto. */
@@ -785,19 +805,55 @@ const PALAVRAS_VAZIAS = new Set([
   'hoje', 'ontem', 'cartao', 'credito', 'debito', 'pix', 'dinheiro', 'loja', 'parcela',
 ])
 
-/**
- * As palavras de 3+ letras que votam, cada uma pelo seu conceito ("posto" e
- * "abastecimento" votam juntas) ou sem o "s" final ("xablaus" vota com "xablau").
- */
-function termos(s: string): Set<string> {
-  const out = new Set<string>()
+/** As palavras de 3+ letras que contam, normalizadas e no singular ("xablaus" → "xablau"), sem as vazias. */
+function palavrasQueContam(s: string): string[] {
+  const out: string[] = []
   for (const p of normalizarDescricao(s).split(' ')) {
     if (p.length < 3 || /^\d+$/.test(p)) continue
     const singular = p.length > 3 && p.endsWith('s') ? p.slice(0, -1) : p
     if (PALAVRAS_VAZIAS.has(p) || PALAVRAS_VAZIAS.has(singular)) continue
-    out.add(conceitoDe(p) ?? singular)
+    out.push(singular)
   }
   return out
+}
+
+/**
+ * Se a descrição é coberta pelo nome da categoria: toda palavra que conta
+ * (`palavrasQueContam`) está no nome ("42 mercado" e Mercado sim; "Mercado
+ * Livre" e Mercado, não).
+ */
+export function nomeCobreDescricao(descricao: string, nomeDaCategoria: string): boolean {
+  const doNome = palavrasDe(nomeDaCategoria)
+  return palavrasQueContam(descricao).every((p) => doNome.has(p))
+}
+
+type Termos = {
+  /** Cada palavra que conta, com o termo do conceito dela (`#id`) ou `null`. */
+  palavras: [string, string | null][]
+  /** Tudo o que a linha do histórico vota: as palavras e os conceitos delas. */
+  todos: Set<string>
+}
+
+/** O Importar pergunta pelas mesmas descrições milhares de vezes; o teto evita crescer sem fim. */
+const TERMOS_EM_CACHE = new Map<string, Termos>()
+const TETO_DO_CACHE = 5000
+
+/**
+ * As palavras que votam, cada uma em duas formas: ela mesma, no singular, e o
+ * conceito dela (`#combustivel` para "posto" e "abastecimento"). O `#` separa o
+ * conceito da palavra de mesmo nome ("mercado").
+ */
+function termos(s: string): Termos {
+  let t = TERMOS_EM_CACHE.get(s)
+  if (t) return t
+  const palavras = palavrasQueContam(s).map((p): [string, string | null] => {
+    const c = conceitoDe(p)
+    return [p, c && `#${c}`]
+  })
+  t = { palavras, todos: new Set(palavras.flatMap(([p, c]) => (c ? [p, c] : [p]))) }
+  if (TERMOS_EM_CACHE.size >= TETO_DO_CACHE) TERMOS_EM_CACHE.clear()
+  TERMOS_EM_CACHE.set(s, t)
+  return t
 }
 
 const MES_MS = 30.4375 * 86_400_000
@@ -807,9 +863,13 @@ function mesesEntre(data: string, hoje: string): number {
   return Math.max(0, (Date.parse(hoje.slice(0, 10)) - Date.parse(data.slice(0, 10))) / MES_MS)
 }
 
-/** Abaixo disto (≈ um lançamento de mais de 6 meses) um termo não vota. */
+/** Abaixo disto (um lançamento de mais de 6 meses pesa menos que isto) um termo não vota. */
 const PESO_MINIMO_DO_TERMO = 0.5
-/** Hábito firme: com este peso o aprendido passa à frente do nome da categoria. */
+/**
+ * Hábito firme: com este peso o aprendido passa à frente do nome da categoria. O peso
+ * soma, em cada termo que votou, o de cada linha da vencedora (`n` × ½ a cada 6 meses):
+ * dois lançamentos recentes de uma palavra, ou um só com duas palavras que votam.
+ */
 const PESO_DO_HABITO = 2
 
 /**
@@ -824,7 +884,7 @@ function voto(
 ): { categoryId: string; peso: number } | null {
   const ids = new Set(categorias.filter((c) => c.type === tipo).map((c) => c.id))
   const daDescricao = termos(descricao)
-  if (!daDescricao.size) return null
+  if (!daDescricao.palavras.length) return null
   // termo → categoria → peso
   const votos = new Map<string, Map<string, number>>()
   for (const l of historico) {
@@ -832,20 +892,29 @@ function voto(
     const peso = (l.n ?? 1) * 0.5 ** (mesesEntre(l.date, hoje) / 6)
     // Uma data ilegível (NaN) não pode fazer ninguém vencer.
     if (!Number.isFinite(peso) || peso <= 0) continue
-    for (const t of termos(l.description)) {
-      if (!daDescricao.has(t)) continue
+    for (const t of termos(l.description).todos) {
+      if (!daDescricao.todos.has(t)) continue
       const porCategoria = votos.get(t) ?? new Map<string, number>()
       porCategoria.set(l.category_id, (porCategoria.get(l.category_id) ?? 0) + peso)
       votos.set(t, porCategoria)
     }
   }
+  const totalDe = (t: string) => {
+    let total = 0
+    for (const v of votos.get(t)?.values() ?? []) total += v
+    return total
+  }
+  // A palavra vota por si; o conceito só entra no lugar dela quando ela, sozinha, não tem voto.
+  const escolhidos = new Set(
+    daDescricao.palavras.map(([p, c]) => (c && totalDe(p) < PESO_MINIMO_DO_TERMO ? c : p)),
+  )
   const score = new Map<string, number>()
   const somado = new Map<string, number>()
   let comVoto = 0
-  for (const porCategoria of votos.values()) {
-    let total = 0
-    for (const v of porCategoria.values()) total += v
-    if (total < PESO_MINIMO_DO_TERMO) continue
+  for (const t of escolhidos) {
+    const porCategoria = votos.get(t)
+    const total = totalDe(t)
+    if (!porCategoria || total < PESO_MINIMO_DO_TERMO) continue
     comVoto++
     for (const [c, v] of porCategoria) {
       score.set(c, (score.get(c) ?? 0) + v / total)
@@ -858,7 +927,9 @@ function voto(
 }
 
 /**
- * A categoria que o histórico ensina para a descrição. Cada termo da descrição
+ * A categoria que o histórico ensina para a descrição. Cada palavra da descrição
+ * vota por si; só quando ela não soma meio voto entra o conceito dela ("padaria"
+ * com histórico próprio não herda o iFood). Cada termo
  * reparte um voto entre as categorias das linhas que o têm, pesadas por `n` e
  * pela idade (o peso cai à metade a cada 6 meses); um termo com menos de meio
  * voto não conta. Vence quem soma 60% dos termos que votaram e abre meio voto
@@ -879,7 +950,8 @@ export function votarCategoria(
  * A categoria pela descrição, em ordem (a primeira que decide vence):
  * 1. **histórico** — a linha mais recente com a mesma descrição normalizada e categoria;
  * 2. **aprendido**, se é hábito firme — o voto das palavras em tudo o que a pessoa já lançou
- *    (`votarCategoria`), quando a vencedora soma peso 2 ou mais (≈ dois lançamentos recentes);
+ *    (`votarCategoria`), quando a vencedora soma peso 2 ou mais nos termos que votaram
+ *    (cada lançamento pesa `n` × ½ a cada 6 meses de idade, em cada termo em que aparece);
  * 3. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
  *    duas categorias com o mesmo número de palavras casadas é empate, e ninguém vence;
  *    depois dele, o **aprendido** de peso menor;

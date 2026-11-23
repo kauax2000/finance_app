@@ -25,7 +25,7 @@ describe("interpretarFrase", () => {
         ["cento e vinte farmácia", HOJE, { valor: 120, descricao: "Farmácia" }],
         ["mil e duzentos aluguel", HOJE, { valor: 1200, descricao: "Aluguel" }],
         ["vinte e um padaria", HOJE, { valor: 21, descricao: "Padaria" }],
-        ["uma pizza 30", HOJE, { valor: 30, descricao: "Uma pizza", cartaoTexto: null }],
+        ["uma pizza 30", HOJE, { valor: 30, descricao: "Pizza", cartaoTexto: null }],
         ["mercado nubank", HOJE, { valor: null, duvidas: ["valor"] }],
         // Data
         ["hoje 20 padaria", HOJE, { data: "2026-04-10", valor: 20 }],
