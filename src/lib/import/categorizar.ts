@@ -11,7 +11,8 @@ export const MAX_NOMES_POR_TIPO = 100
 export const MAX_DESCRICAO_IA = 200
 export const MAX_NOME_IA = 60
 
-const nomesPara = (categorias: CategoriaParaCasar[], tipo: "expense" | "income") =>
+/** Os nomes de um tipo que a `ia-ler` aceita: sem vazios, até `MAX_NOME_IA` caracteres, os primeiros `MAX_NOMES_POR_TIPO`. */
+export const nomesPara = (categorias: CategoriaParaCasar[], tipo: "expense" | "income") =>
     categorias
         .filter((c) => c.type === tipo && c.name.length <= MAX_NOME_IA && normalizarDescricao(c.name))
         .map((c) => c.name)

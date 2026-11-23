@@ -26,6 +26,7 @@ import {
 } from "@/lib/captura/lancamento-inteligente"
 import { comprimirImagem } from "@/lib/anexos"
 import { categorizarComIA, lerFraseComIA, lerImagemComIA, type CamposIA } from "@/lib/ia/ler"
+import { MAX_DESCRICAO_IA, nomesPara } from "@/lib/import/categorizar"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { cartaoPreEscolhido, gravarUltimoCartao } from "@/lib/ultimo-cartao"
 
@@ -142,16 +143,16 @@ export function useLeituraDoLancamento({
     useEffect(() => {
         if (enters === enterAtendido.current || !ativo || !campos || lendoTexto || lendoFoto) return
         enterAtendido.current = enters
-        const chave = chaveDaCategoriaPelaIA(campos, editados)
+        const chave = chaveDaCategoriaPelaIA(campos, editados, categorias)
         if (!chave || !currentWorkspaceId || perguntadas.current.has(chave)) return
+        // Os tetos da `ia-ler`, como no Importar: um nome longo recusaria o pedido inteiro.
+        const nomes = { expense: nomesPara(categorias, "expense"), income: nomesPara(categorias, "income") }
+        const tipo = tipoDaCategoriaDosCampos(campos)
+        if (!nomes[tipo].length) return
         perguntadas.current.add(chave)
-        const workspaceId = currentWorkspaceId
         const meu = pedido.current
-        const nomes = (tipo: "expense" | "income") => categorias.filter((k) => k.type === tipo).map((k) => k.name)
-        void categorizarComIA(workspaceId, [{ i: 0, descricao: campos.descricao, tipo: tipoDaCategoriaDosCampos(campos) }], {
-            expense: nomes("expense"),
-            income: nomes("income"),
-        }).then((lido) => {
+        const item = { i: 0, descricao: campos.descricao.slice(0, MAX_DESCRICAO_IA), tipo }
+        void categorizarComIA(currentWorkspaceId, [item], nomes).then((lido) => {
             // Falhou, o lançamento segue sem categoria: nenhum aviso novo.
             const nome = lido.ok ? lido.sugestoes.find((s) => s.i === 0)?.categoria : undefined
             if (nome && meu === pedido.current) setSugestoesDaIA((atual) => ({ ...atual, [chave]: nome }))

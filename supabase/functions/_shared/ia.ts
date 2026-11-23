@@ -226,7 +226,9 @@ export function validarCategorias(bruto: unknown, itens: ItemParaCategorizar[], 
   return ok
 }
 
-const MAX_NOMES_POR_TIPO = 100
+/** Os tetos de nomes de categoria por tipo e de caracteres por nome que `lerPedidoCategorizar` aceita. */
+export const MAX_NOMES_POR_TIPO = 100
+export const MAX_NOME_CATEGORIA = 60
 
 /** O corpo da op: lista não vazia com descrição ≤ 200, tipo válido, `i` inteiro ≥ 0 e únicos; até 100 nomes de ≤ 60 caracteres por tipo. */
 export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]; categorias: CategoriasPorTipo } | null {
@@ -245,7 +247,7 @@ export function lerPedidoCategorizar(v: unknown): { itens: ItemParaCategorizar[]
   }
   const { expense, income } = (categorias ?? {}) as Record<string, unknown>
   const nomes = (l: unknown) =>
-    Array.isArray(l) && l.length <= MAX_NOMES_POR_TIPO && l.every((n) => typeof n === 'string' && n.trim() && n.length <= 60)
+    Array.isArray(l) && l.length <= MAX_NOMES_POR_TIPO && l.every((n) => typeof n === 'string' && n.trim() && n.length <= MAX_NOME_CATEGORIA)
       ? (l as string[])
       : null
   const e = nomes(expense)

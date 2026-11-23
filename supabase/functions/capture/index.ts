@@ -38,7 +38,14 @@ import {
 import { appTodayYmd, formatYmd, tipoDaCategoria } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, CategoriaParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
-import { categorizar, interpretar, lerImagem, nomesDosMembros } from '../_shared/ia.ts'
+import {
+  categorizar,
+  interpretar,
+  lerImagem,
+  MAX_NOME_CATEGORIA,
+  MAX_NOMES_POR_TIPO,
+  nomesDosMembros,
+} from '../_shared/ia.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -332,17 +339,21 @@ Deno.serve(async (req: Request) => {
 
   // As regras não acharam categoria: a IA escolhe entre as da carteira de destino.
   // Sem IA (cota, provedor fora, sem os nomes para redigir), grava sem categoria, a conferir.
-  if (montado.semCategoria) {
+  // Se a leitura já esbarrou na cota ou na falta de chave, a categoria nem tenta.
+  const iaFora = lido?.ok === false && (lido.motivo === 'cota' || lido.motivo === 'sem_chave')
+  if (montado.semCategoria && !iaFora) {
     const daCarteira = categoriasPorCarteira[linha.workspace_id] ?? []
     const tipo = tipoDaCategoria(linha.type, linha.payment_credit_card_id)
-    const nomesDo = (t: 'expense' | 'income') => daCarteira.filter((k) => k.type === t).map((k) => k.name)
-    const nomes = daCarteira.some((k) => k.type === tipo) ? await nomesDaPessoa() : null
+    // Os tetos da op `categorizar` da `ia-ler`: nomes vazios ou longos não vão.
+    const nomesDo = (t: 'expense' | 'income') =>
+      daCarteira
+        .filter((k) => k.type === t && k.name.trim() && k.name.length <= MAX_NOME_CATEGORIA)
+        .map((k) => k.name)
+        .slice(0, MAX_NOMES_POR_TIPO)
+    const candidatas = { expense: nomesDo('expense'), income: nomesDo('income') }
+    const nomes = candidatas[tipo].length ? await nomesDaPessoa() : null
     if (nomes) {
-      const r = await categorizar(
-        { admin, userId, hoje, nomes },
-        [{ i: 0, descricao: linha.description, tipo }],
-        { expense: nomesDo('expense'), income: nomesDo('income') },
-      )
+      const r = await categorizar({ admin, userId, hoje, nomes }, [{ i: 0, descricao: linha.description, tipo }], candidatas)
       if (r.ok) linha = aplicarCategoriaDaIA(linha, r.dados.find((s) => s.i === 0)?.categoria ?? null, daCarteira)
       else console.error('capture: ia categoria', r.motivo)
     }

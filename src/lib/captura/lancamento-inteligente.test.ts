@@ -256,21 +256,29 @@ describe("a categoria pela IA", () => {
     ]
 
     it("só pergunta sem categoria, com descrição de verdade e sem a pessoa ter escolhido", () => {
-        expect(chaveDaCategoriaPelaIA(campos(), {})).not.toBeNull()
-        expect(chaveDaCategoriaPelaIA(campos({ categoryId: "carro" }), {})).toBeNull()
-        expect(chaveDaCategoriaPelaIA(campos({ duvidas: ["descricao"] }), {})).toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos(), {}, categorias)).not.toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos({ categoryId: "carro" }), {}, categorias)).toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos({ duvidas: ["descricao"] }), {}, categorias)).toBeNull()
         // "Sem categoria" escolhido à mão também é escolha.
-        expect(chaveDaCategoriaPelaIA(campos(), { categoryId: null })).toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos(), { categoryId: null }, categorias)).toBeNull()
+    })
+
+    it("sem categoria do tipo na carteira, não gasta a cota", () => {
+        const soDeDespesa = categorias.filter((k) => k.type === "expense")
+        expect(chaveDaCategoriaPelaIA(campos({ tipo: "income" }), {}, soDeDespesa)).toBeNull()
+        expect(chaveDaCategoriaPelaIA(campos(), {}, soDeDespesa)).not.toBeNull()
+        // O estorno no cartão escolhe entre as de despesa.
+        expect(chaveDaCategoriaPelaIA(campos({ tipo: "income", estorno: true }), {}, soDeDespesa)).not.toBeNull()
     })
 
     it("uma pergunta por descrição e tipo", () => {
-        expect(chaveDaCategoriaPelaIA(campos({ valor: 10 }), {})).toBe(chaveDaCategoriaPelaIA(campos({ valor: 99 }), {}))
-        expect(chaveDaCategoriaPelaIA(campos({ tipo: "income" }), {})).not.toBe(chaveDaCategoriaPelaIA(campos(), {}))
-        expect(chaveDaCategoriaPelaIA(campos({ descricao: "Posto" }), {})).not.toBe(chaveDaCategoriaPelaIA(campos(), {}))
+        expect(chaveDaCategoriaPelaIA(campos({ valor: 10 }), {}, categorias)).toBe(chaveDaCategoriaPelaIA(campos({ valor: 99 }), {}, categorias))
+        expect(chaveDaCategoriaPelaIA(campos({ tipo: "income" }), {}, categorias)).not.toBe(chaveDaCategoriaPelaIA(campos(), {}, categorias))
+        expect(chaveDaCategoriaPelaIA(campos({ descricao: "Posto" }), {}, categorias)).not.toBe(chaveDaCategoriaPelaIA(campos(), {}, categorias))
     })
 
     it("a sugestão vira a categoria, a conferir", () => {
-        const chave = chaveDaCategoriaPelaIA(campos(), {})!
+        const chave = chaveDaCategoriaPelaIA(campos(), {}, categorias)!
         const c = comCategoriaDaIA(campos(), { [chave]: " carro " }, {}, categorias)
         expect(c.categoryId).toBe("carro")
         expect(c.motivoDaCategoria).toBe("ia")
@@ -280,7 +288,7 @@ describe("a categoria pela IA", () => {
     })
 
     it("resposta velha, nome fora da carteira, tipo errado ou categoria escolhida: nada muda", () => {
-        const chave = chaveDaCategoriaPelaIA(campos(), {})!
+        const chave = chaveDaCategoriaPelaIA(campos(), {}, categorias)!
         const base = campos()
         expect(comCategoriaDaIA(base, {}, {}, categorias)).toBe(base)
         expect(comCategoriaDaIA(campos({ descricao: "Posto" }), { [chave]: "Carro" }, {}, categorias).categoryId).toBeNull()
@@ -292,7 +300,7 @@ describe("a categoria pela IA", () => {
 
     it("o estorno no cartão escolhe entre as de despesa", () => {
         const estorno = campos({ tipo: "income", estorno: true, creditCardId: "nubank" })
-        const chave = chaveDaCategoriaPelaIA(estorno, {})!
+        const chave = chaveDaCategoriaPelaIA(estorno, {}, categorias)!
         expect(comCategoriaDaIA(estorno, { [chave]: "Carro" }, {}, categorias).categoryId).toBe("carro")
     })
 
@@ -301,5 +309,20 @@ describe("a categoria pela IA", () => {
         expect(fonte).toContain("categorizarComIA(")
         expect(fonte).toContain("chaveDaCategoriaPelaIA(")
         expect(fonte).toContain("comCategoriaDaIA(")
+    })
+
+    it("o hook espera a IA da frase e joga fora a resposta velha", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/use-leitura-do-lancamento.ts"))
+        const pergunta = fonte.indexOf("categorizarComIA(")
+        const efeito = fonte.lastIndexOf("useEffect(", pergunta)
+        // O efeito só pergunta com as leituras (frase e foto) terminadas, nos campos finais.
+        expect(fonte.slice(efeito, pergunta)).toContain("lendoTexto || lendoFoto")
+        // O número do pedido é conferido antes de guardar a sugestão.
+        const confere = fonte.indexOf("meu === pedido.current", pergunta)
+        expect(confere).toBeGreaterThan(pergunta)
+        expect(fonte.indexOf("setSugestoesDaIA(", confere)).toBeGreaterThan(confere)
+        // Os nomes e a descrição seguem os tetos da `ia-ler`, pela regra do Importar.
+        expect(fonte.slice(efeito, pergunta)).toContain("nomesPara(categorias")
+        expect(fonte.slice(efeito, pergunta)).toContain(".slice(0, MAX_DESCRICAO_IA)")
     })
 })

@@ -118,12 +118,18 @@ export function tipoDaCategoriaDosCampos(c: CamposDaFrase): "expense" | "income"
 
 /**
  * A pergunta à IA pela categoria, quando nada a achou: sem categoria, com
- * descrição de verdade e sem a pessoa ter escolhido uma (nem "Sem categoria").
+ * descrição de verdade, sem a pessoa ter escolhido uma (nem "Sem categoria") e
+ * com alguma categoria do tipo na carteira (senão a cota se gasta à toa).
  * A chave é (descrição, tipo): uma pergunta por par, e a resposta só vale para ele.
  */
-export function chaveDaCategoriaPelaIA(c: CamposDaFrase, editados: Partial<CamposDaFrase>): string | null {
+export function chaveDaCategoriaPelaIA(
+    c: CamposDaFrase,
+    editados: Partial<CamposDaFrase>,
+    categorias: { type: "expense" | "income" }[],
+): string | null {
     if (c.categoryId || "categoryId" in editados || c.duvidas.includes("descricao") || !c.descricao.trim()) return null
-    return JSON.stringify([c.descricao, tipoDaCategoriaDosCampos(c)])
+    const tipo = tipoDaCategoriaDosCampos(c)
+    return categorias.some((k) => k.type === tipo) ? JSON.stringify([c.descricao, tipo]) : null
 }
 
 /**
@@ -137,7 +143,7 @@ export function comCategoriaDaIA(
     editados: Partial<CamposDaFrase>,
     categorias: { id: string; name: string; type: "expense" | "income" }[],
 ): CamposDaFrase {
-    const chave = chaveDaCategoriaPelaIA(c, editados)
+    const chave = chaveDaCategoriaPelaIA(c, editados, categorias)
     const sugerida = chave != null ? sugestoes[chave] : undefined
     if (!sugerida) return c
     const nome = normalizarDescricao(sugerida)

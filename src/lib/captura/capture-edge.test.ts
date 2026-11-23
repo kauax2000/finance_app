@@ -130,12 +130,20 @@ describe("Edge capture", () => {
 
     it("a categoria pela IA só sem categoria, com os nomes, e a falha só loga", () => {
         const f = fonte(CAPTURE)
-        const sem = f.indexOf("if (montado.semCategoria)")
+        const sem = f.indexOf("if (montado.semCategoria")
         expect(sem).toBeGreaterThan(-1)
         const nomes = f.indexOf("await nomesDaPessoa(", sem)
         expect(f.indexOf("if (nomes)", nomes)).toBeGreaterThan(nomes)
         expect(f.indexOf("await categorizar(", nomes)).toBeGreaterThan(f.indexOf("if (nomes)", nomes))
         expect(f).toContain("console.error('capture: ia categoria', r.motivo)")
+    })
+
+    it("a categoria pela IA respeita os tetos da ia-ler e não insiste sem cota nem chave", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("k.name.length <= MAX_NOME_CATEGORIA")
+        expect(f).toContain(".slice(0, MAX_NOMES_POR_TIPO)")
+        expect(f).toContain("lido.motivo === 'cota' || lido.motivo === 'sem_chave'")
+        expect(f).toContain("if (montado.semCategoria && !iaFora)")
     })
 
     it("consulta o plano da carteira padrão", () => {
