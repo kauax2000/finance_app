@@ -1,6 +1,5 @@
 "use client"
 
-import { AppLogo } from "@/components/layout/app-logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChartSwatch } from "@/components/ui/chart"
@@ -44,7 +43,9 @@ export function LeituraDoMes({
         <Card variant="brand" glow="static">
             <CardContent className="grid gap-2">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <AppLogo rainbow className="size-5" />
+                    <span aria-hidden className="grid size-5.5 place-items-center rounded-full bg-muted text-xs text-foreground">
+                        ✦
+                    </span>
                     Leitura do mês
                 </h2>
                 <p className="font-display text-2xl text-balance">

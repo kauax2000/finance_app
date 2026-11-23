@@ -172,14 +172,14 @@ function Card({
     asChild?: boolean
     /**
      * Só no `brand`: `pointer` (o padrão) acende o arco conforme o ponteiro chega;
-     * `static` o deixa aceso no topo, sem ponteiro e também no toque — para o
-     * cartão que é a leitura da marca e precisa ser visto de saída.
+     * `static` o deixa sempre aceso — no topo de saída, também no toque — e ele
+     * ainda segue o ponteiro, para o cartão que é a leitura da marca.
      */
     glow?: "pointer" | "static"
   }) {
   const Comp = asChild ? Slot.Root : "div"
   const aceso = variant === "brand" && glow === "static"
-  const glowRef = useBrandGlow(variant === "brand" && !aceso)
+  const glowRef = useBrandGlow(variant === "brand", { sempreAceso: aceso })
   return (
     <Comp
       data-slot="card"
@@ -194,8 +194,8 @@ function Card({
       data-glow={aceso ? "static" : undefined}
       className={cn(
         cardVariants({ variant, padding, interactive, inactive, selected, tone, orientation }),
-        // O arco parado no topo, na força do `beam` do onboarding, e mais aberto (220° em vez de 80°, na força cheia): sem ponteiro, ele precisa ser visto.
-        aceso && "[--brand-glow-active:1] [--brand-glow-opacity:1] [--brand-glow-start:0] [--brand-glow-spread:110]",
+        // Aceso de saída, no topo e na força do `beam` do onboarding; o ponteiro ainda o leva.
+        aceso && "[--brand-glow-active:1] [--brand-glow-opacity:0.8] [--brand-glow-start:0]",
         className
       )}
       {...props}

@@ -109,7 +109,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Marca acesa"
-        description="glow=&quot;static&quot; deixa o arco aceso no topo, sem ponteiro e também no toque: para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
+        description="glow=&quot;static&quot; deixa o arco sempre aceso: no topo de saída e no toque, e ele ainda segue o ponteiro; para o cartão que é a leitura da marca e precisa ser visto de saída (a Leitura do mês do detalhe da categoria). Continua sendo a peça de marca da tela."
         code={`<Card variant="brand" glow="static">…</Card>`}
         previewClassName="justify-center py-10"
       >

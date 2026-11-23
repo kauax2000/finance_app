@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco aceso no topo sem ponteiro — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para o arco sempre aceso (no topo de saída, e ainda seguindo o ponteiro) — a Leitura do mês, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada

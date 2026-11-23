@@ -392,8 +392,8 @@ describe("contorno de marca", () => {
     }
     // O `overflow-hidden` da base tem de ter perdido a disputa, não coexistido.
     expect(cartao).not.toContain("overflow-hidden")
-    // O `glow="static"` desliga o ponteiro: o arco fica aceso por CSS, como no `beam`.
-    expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand" && !aceso\)/)
+    // O `glow="static"` mantém o ponteiro e só não deixa o arco apagar.
+    expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand", \{ sempreAceso: aceso \}\)/)
 
     // O `Badge` em repouso é um chip `muted`; o núcleo do anel é a mesma cor, e o halo do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)
