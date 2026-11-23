@@ -208,7 +208,14 @@ botão Copiar; conferir e salvar; e a notificação depois de pagar. A frase é:
 > Lançar gasto com a compra, sem pedir confirmação.
 
 Sem a caixa de descrever (iOS 26 ou anterior), o caminho é à mão, como abaixo. Os
-passos são também a referência de quem monta a automação sem o atalho pronto.
+passos são a referência de quem monta a automação **sem** o atalho pronto: o atalho
+baixado (versão 3) já manda `amount`, `merchant`, `card`, o `text` da compra
+e `source` = `apple_pay`.
+
+Se a notificação disser **"A compra chegou sem o valor…"**, o atalho que roda é
+antigo: no app, em **Configurações** › "Lançar pelo iPhone", toque no ⋯ ›
+**Baixar o atalho de novo** e, no app Atalhos, aponte a automação de Transação
+para o atalho novo (se o iOS o importou como "Lançar gasto 2", escolha esse).
 
 1. No app Atalhos, abra **Automação** › **+** › **Transação**.
 2. Em **Cartão**, toque em **Escolher** e marque os cartões. Marque **Executar
@@ -222,6 +229,7 @@ passos são também a referência de quem monta a automação sem o atalho pront
      - `merchant` (Texto) = **Comerciante**;
      - `card` (Texto) = **Cartão**, que em algumas versões do iOS se chama
        **Cartão ou Passe**;
+     - `text` (Texto) = **Entrada do atalho** inteira (a reserva, se alguma propriedade vier vazia);
      - `source` (Texto) = `apple_pay`.
 
 Valor, Comerciante e Cartão não aparecem como variáveis soltas. Eles são
