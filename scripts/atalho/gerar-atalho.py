@@ -6,7 +6,9 @@ O atalho pergunta o código do aparelho ao ser adicionado (pergunta de
 importação numa ação Texto, vazia de propósito), e a cada vez:
 
 - com uma entrada (a transação da Carteira, na automação do Apple Pay), manda o
-  texto dela com `source: apple_pay` e mostra o `resumo`;
+  valor, o estabelecimento e o cartão dela (as propriedades `Amount`, `Merchant`
+  e `Card or Pass`), mais o texto da transação como reserva, com
+  `source: apple_pay`, e mostra o `resumo`;
 - sem entrada, pede uma descrição breve ("Qual foi o gasto?") e manda a frase
   com `source: shortcut`: o lançamento inteligente do app (as regras e, se não
   entender, a IA) tira valor, descrição, categoria e pagamento dela. Lançada, o
@@ -20,7 +22,7 @@ Sem condição "é": a versão de 19/nov/2026 com ela parava no iOS 27 ("Escolha
 valor para cada parâmetro"). Toda condição é "tem qualquer valor".
 
 Todo pedido vai à Edge `capture` com `Authorization: Bearer <código>` e
-`X-Atalho-Versao: 2`, e o `resumo` da resposta aparece numa notificação.
+`X-Atalho-Versao: 3`, e o `resumo` da resposta aparece numa notificação.
 
 Assinar precisa do `shortcuts` do macOS, por isso o arquivo assinado é gerado
 aqui e versionado em `public/atalho/`, e não no build:
@@ -77,6 +79,11 @@ def saida(uid: str, nome: str) -> dict:
 ENTRADA = {"Type": "ExtensionInput"}
 
 
+def propriedade(nome: str) -> dict:
+    """Uma propriedade da Entrada (a transação da Carteira): valor, estabelecimento, cartão."""
+    return {"Type": "ExtensionInput", "Aggrandizements": [{"Type": "WFPropertyVariableAggrandizement", "PropertyName": nome}]}
+
+
 def dicionario(pares: list[tuple[str, dict]]) -> dict:
     return {
         "Value": {
@@ -95,7 +102,7 @@ def acao(ident: str, **params) -> dict:
 def cabecalhos(codigo: str) -> dict:
     return dicionario([
         ("Authorization", texto(f"Bearer {VAR}", {7: saida(codigo, "Texto")})),
-        ("X-Atalho-Versao", texto("2")),
+        ("X-Atalho-Versao", texto("3")),
     ])
 
 
@@ -143,9 +150,15 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
     acoes = [
         # 0: o código do aparelho, preenchido pela pergunta de importação.
         acao("gettext", UUID=codigo, WFTextActionText=texto("")),
-        # Com Entrada (a transação da Carteira, no Apple Pay): manda o texto dela.
+        # Com Entrada (a transação da Carteira, no Apple Pay): manda as propriedades dela e o texto como reserva.
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=0, WFCondition=100, WFInput={"Type": "Variable", "Variable": anexo(ENTRADA)}),
-        pedido(r_pay, url, codigo, "POST", [("text", texto(VAR, {0: ENTRADA})), ("source", texto("apple_pay"))]),
+        pedido(r_pay, url, codigo, "POST", [
+            ("amount", texto(VAR, {0: propriedade("Amount")})),
+            ("merchant", texto(VAR, {0: propriedade("Merchant")})),
+            ("card", texto(VAR, {0: propriedade("Card or Pass")})),
+            ("text", texto(VAR, {0: ENTRADA})),
+            ("source", texto("apple_pay")),
+        ]),
         chave(resumo_pay, "resumo", r_pay),
         notificar(resumo_pay),
         acao("conditional", GroupingIdentifier=entrada_se, WFControlFlowMode=1),
@@ -232,12 +245,18 @@ def verificar() -> None:
         cab = {i["WFKey"]["Value"]["string"]: i["WFValue"]["Value"] for i in itens}
         assert set(cab) == {"Authorization", "X-Atalho-Versao"}, cab
         assert cab["Authorization"]["string"].startswith("Bearer ")
+        assert cab["X-Atalho-Versao"]["string"] == "3"
         assert [v.get("OutputUUID") for v in cab["Authorization"]["attachmentsByRange"].values()] == [codigo]
     corpos = [
         [i["WFKey"]["Value"]["string"] for i in p["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]]
         for p in pedidos if p["WFHTTPMethod"] == "POST"
     ]
-    assert corpos == [["text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "source"]], corpos
+    assert corpos == [["amount", "merchant", "card", "text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "source"]], corpos
+    pay = next(p for p in pedidos if p["WFHTTPMethod"] == "POST")
+    campos = {i["WFKey"]["Value"]["string"]: i["WFValue"]["Value"] for i in pay["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]}
+    nomes = {k: [a["PropertyName"] for a in v["attachmentsByRange"]["{0, 1}"].get("Aggrandizements", [])] for k, v in campos.items() if k in ("amount", "merchant", "card")}
+    assert nomes == {"amount": ["Amount"], "merchant": ["Merchant"], "card": ["Card or Pass"]}, nomes
+    assert campos["text"]["attachmentsByRange"]["{0, 1}"] == ENTRADA
 
     ids = [_id(a) for a in acoes]
     prompts = [a["WFWorkflowActionParameters"]["WFAskActionPrompt"]["Value"]["string"] for a in acoes if _id(a) == "ask"]
