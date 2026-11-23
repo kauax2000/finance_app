@@ -6,6 +6,7 @@ import {
     calendarYmdToStorageIso,
     filterRangeEndIso,
     filterRangeStartIso,
+    localYmdFromDate,
     transactionLocalYmd,
 } from "@/lib/transaction-date"
 import type { TablesInsert } from "@/types/database"
@@ -40,13 +41,14 @@ export function prepararItens(
     categorias: CategoriaParaCasar[],
     destino: DestinoImportacao,
 ): ItemImportavel[] {
+    const hoje = localYmdFromDate(new Date())
     return itens.map((i) => {
-        const r = casarCategoria(i.descricao, tipoDoItem(i, destino), categorias, historico)
+        const r = casarCategoria(i.descricao, tipoDoItem(i, destino), categorias, historico, hoje)
         return {
             ...i,
             clientId: crypto.randomUUID(),
             categoryId: r?.categoryId ?? null,
-            origem: r ? (r.motivo === "historico" || r.motivo === "palavra" ? "historico" : "regra") : null,
+            origem: r ? (r.motivo === "historico" || r.motivo === "aprendido" ? "historico" : "regra") : null,
         }
     })
 }

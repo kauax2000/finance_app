@@ -2275,6 +2275,18 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: Json
       }
+      historico_da_frase: {
+        Args: { p_user_id?: string; p_workspace_id: string }
+        Returns: {
+          category_id: string | null
+          date: string
+          description: string | null
+          n: number
+          payment_credit_card_id: string | null
+          payment_method: string | null
+          type: string
+        }[]
+      }
       inserir_insights: {
         Args: { p_linhas: Json }
         Returns: Database["public"]["Tables"]["insights"]["Row"][]

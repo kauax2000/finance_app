@@ -616,6 +616,8 @@ export type LinhaHistorico = {
   payment_credit_card_id: string | null
   date: string
   type: 'expense' | 'income'
+  /** Quantas vezes a linha se repete (a RPC agrupa); ausente é 1. */
+  n?: number
 }
 
 function maisRecente(lista: LinhaHistorico[]): LinhaHistorico | null {
@@ -649,7 +651,7 @@ export function preencherPeloHistorico(
 export type CategoriaParaCasar = { id: string; name: string; type: 'expense' | 'income' }
 
 /** De onde veio a categoria escolhida pela frase. */
-export type MotivoDaCategoria = 'historico' | 'nome' | 'palavra' | 'comum'
+export type MotivoDaCategoria = 'historico' | 'aprendido' | 'nome' | 'comum' | 'ia'
 
 /** As palavras de 3+ letras, normalizadas, com e sem o "s" final ("cafés" casa "café"). */
 function palavrasDe(s: string): Set<string> {
@@ -777,12 +779,75 @@ export function conceitoDe(palavra: string): string | null {
   return CONCEITOS.find((g) => g.palavras.some((e) => !e.includes(' ') && casaEm([palavra], 0, e)))?.id ?? null
 }
 
+/** Não votam: dizem como foi pago, ou nada dizem do gasto. */
+const PALAVRAS_VAZIAS = new Set([
+  'compra', 'compras', 'pagamento', 'gasto', 'conta', 'valor', 'reais', 'real', 'coisa', 'coisas',
+  'hoje', 'ontem', 'cartao', 'credito', 'debito', 'pix', 'dinheiro', 'loja', 'parcela',
+])
+
+/** As palavras de 3+ letras que votam, cada uma pelo seu conceito ("posto" e "abastecimento" votam juntas). */
+function termos(s: string): Set<string> {
+  const out = new Set<string>()
+  for (const p of normalizarDescricao(s).split(' ')) {
+    if (p.length < 3 || /^\d+$/.test(p) || PALAVRAS_VAZIAS.has(p)) continue
+    out.add(conceitoDe(p) ?? p)
+  }
+  return out
+}
+
+const MES_MS = 30.4375 * 86_400_000
+
+/** Meses (fracionados) de `data` até `hoje`; uma data futura conta como hoje. */
+function mesesEntre(data: string, hoje: string): number {
+  return Math.max(0, (Date.parse(hoje.slice(0, 10)) - Date.parse(data.slice(0, 10))) / MES_MS)
+}
+
+/**
+ * A categoria que o histórico ensina para a descrição. Cada termo da descrição
+ * reparte um voto entre as categorias das linhas que o têm, pesadas por `n` e
+ * pela idade (o peso cai à metade a cada 6 meses). Vence quem soma 60% dos
+ * termos que receberam voto e abre meio voto sobre a segunda; senão, `null`.
+ * Só valem as linhas do `tipo` com uma categoria de `categorias` do `tipo`.
+ */
+export function votarCategoria(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+  historico: LinhaHistorico[],
+  hoje: string,
+): string | null {
+  const ids = new Set(categorias.filter((c) => c.type === tipo).map((c) => c.id))
+  const daDescricao = termos(descricao)
+  if (!daDescricao.size) return null
+  // termo → categoria → peso
+  const votos = new Map<string, Map<string, number>>()
+  for (const l of historico) {
+    if (l.type !== tipo || !l.description || !l.category_id || !ids.has(l.category_id)) continue
+    const peso = (l.n ?? 1) * 0.5 ** (mesesEntre(l.date, hoje) / 6)
+    for (const t of termos(l.description)) {
+      if (!daDescricao.has(t)) continue
+      const porCategoria = votos.get(t) ?? new Map<string, number>()
+      porCategoria.set(l.category_id, (porCategoria.get(l.category_id) ?? 0) + peso)
+      votos.set(t, porCategoria)
+    }
+  }
+  const score = new Map<string, number>()
+  for (const porCategoria of votos.values()) {
+    let total = 0
+    for (const v of porCategoria.values()) total += v
+    for (const [c, v] of porCategoria) score.set(c, (score.get(c) ?? 0) + v / total)
+  }
+  const [primeiro, segundo] = [...score].sort((a, b) => b[1] - a[1])
+  if (!primeiro || primeiro[1] < 0.6 * votos.size || primeiro[1] - (segundo?.[1] ?? 0) < 0.5) return null
+  return primeiro[0]
+}
+
 /**
  * A categoria pela descrição, em ordem (a primeira que decide vence):
  * 1. **histórico** — a linha mais recente com a mesma descrição normalizada e categoria;
- * 2. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
+ * 2. **aprendido** — o voto das palavras em tudo o que a pessoa já lançou (`votarCategoria`);
+ * 3. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
  *    duas categorias com o mesmo número de palavras casadas é empate, e ninguém vence;
- * 3. **palavra** — a linha mais recente com a mesma `palavraSignificativa` e categoria;
  * 4. **comum** — uma palavra conhecida (`CONCEITOS`) leva ao nome de categoria que a abriga.
  * Só valem as categorias de `categorias` do `tipo`: uma apagada no histórico não volta.
  */
@@ -791,6 +856,7 @@ export function casarCategoria(
   tipo: 'expense' | 'income',
   categorias: CategoriaParaCasar[],
   historico: LinhaHistorico[],
+  hoje: string,
 ): { categoryId: string; motivo: MotivoDaCategoria } | null {
   const doTipo = categorias.filter((c) => c.type === tipo)
   if (!doTipo.length) return null
@@ -800,6 +866,9 @@ export function casarCategoria(
   const alvo = normalizarDescricao(descricao)
   const exata = alvo ? maisRecente(linhas.filter((l) => normalizarDescricao(l.description!) === alvo)) : null
   if (exata) return { categoryId: exata.category_id!, motivo: 'historico' }
+
+  const aprendida = votarCategoria(descricao, tipo, doTipo, linhas, hoje)
+  if (aprendida) return { categoryId: aprendida, motivo: 'aprendido' }
 
   const daDescricao = palavrasDe(descricao)
   let melhor: CategoriaParaCasar | null = null
@@ -814,10 +883,6 @@ export function casarCategoria(
     } else if (n > 0 && n === pontos) empate = true
   }
   if (melhor && !empate) return { categoryId: melhor.id, motivo: 'nome' }
-
-  const palavra = palavraSignificativa(descricao)
-  const parecida = palavra ? maisRecente(linhas.filter((l) => palavraSignificativa(l.description!) === palavra)) : null
-  if (parecida) return { categoryId: parecida.category_id!, motivo: 'palavra' }
 
   const ws = normalizarDescricao(descricao).split(' ')
   for (let i = 0; i < ws.length; i++) {

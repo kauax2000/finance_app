@@ -99,7 +99,7 @@ export function camposDaFrase(
     historico: LinhaHistorico[],
     ctx: ContextoDaFrase = {},
 ): CamposDaFrase {
-    return camposDaInterpretacao(interpretarFrase(texto, hoje, palavrasDosCartoes(cartoes)), cartoes, historico, ctx)
+    return camposDaInterpretacao(interpretarFrase(texto, hoje, palavrasDosCartoes(cartoes)), hoje, cartoes, historico, ctx)
 }
 
 /**
@@ -142,6 +142,7 @@ export function camposDaIA(
             cartaoTexto: forma == null || forma === "credit_card" ? (c.cartao ?? f.cartaoTexto) : null,
             parcelas: c.parcelas ?? f.parcelas,
         },
+        hoje,
         cartoes,
         historico,
         ctx,
@@ -157,13 +158,14 @@ export function camposDaIA(
  *   histórico (`cartaoDoCredito`); parcelas ("em 3x") sem forma dita são crédito
  *   nesse mesmo cartão, quando há um; por último, a forma e o cartão da mesma
  *   descrição no histórico.
- * - **Categoria**: `casarCategoria` (histórico exato, nome da categoria, palavra
- *   do histórico, palavra comum).
+ * - **Categoria**: `casarCategoria` (histórico exato, o aprendido com o que a
+ *   pessoa já lançou, nome da categoria, palavra comum).
  * - Um nome de cartão que não casa nenhum volta à descrição e, no crédito, fica
  *   a conferir sem cartão: palpitar outro cartão ali erraria de propósito.
  */
 function camposDaInterpretacao(
     f: FraseInterpretada,
+    hoje: string,
     cartoes: CartaoParaCasar[],
     historico: LinhaHistorico[],
     ctx: ContextoDaFrase = {},
@@ -197,7 +199,7 @@ function camposDaInterpretacao(
     const categoria =
         semDescricao || !ctx.categorias
             ? null
-            : casarCategoria(descricao, tipoCategoria, ctx.categorias, historico)
+            : casarCategoria(descricao, tipoCategoria, ctx.categorias, historico, hoje)
 
     let paymentMethod: PaymentMethod | null = null
     let creditCardId: string | null = null
@@ -253,9 +255,10 @@ function camposDaInterpretacao(
 
 const MOTIVO_DA_CATEGORIA: Record<MotivoDaCategoria, string> = {
     historico: "como da última vez",
+    aprendido: "pelo que você já lançou",
     nome: "pelo nome",
-    palavra: "como uma parecida",
     comum: "palavra comum",
+    ia: "sugerida pela IA",
 }
 
 const ORIGEM_DO_CARTAO: Record<"ultimo" | "historico", string> = {
@@ -377,18 +380,12 @@ export async function historicoDaFraseEmCache(
     }
 }
 
-/** As últimas 300 linhas da carteira, as colunas que o histórico lê. */
+/** 24 meses da carteira, agrupados pela RPC (`n` conta as repetições), mais recentes primeiro. */
 export async function carregarHistoricoDaFrase(
     workspaceId: string,
     signal?: AbortSignal,
 ): Promise<LinhaHistorico[]> {
-    let consulta = supabase
-        .from("transactions")
-        .select("description, category_id, payment_method, payment_credit_card_id, date, type")
-        .eq("workspace_id", workspaceId)
-        .order("date", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(300)
+    let consulta = supabase.rpc("historico_da_frase", { p_workspace_id: workspaceId })
     if (signal) consulta = consulta.abortSignal(signal)
     const { data, error } = await consulta
     if (error) throw error

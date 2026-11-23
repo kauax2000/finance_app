@@ -342,3 +342,23 @@ it("o resumo do parcelado mostra a parcela, e a parcela dita vira o total", () =
     expect(camposDaFrase("Kimono parcela 100 4x Kauã", HOJE, [], []).descricao).toBe("Kimono Kauã")
     expect(resumoDaFrase(c, HOJE, [], [])).toContain("em 4x de R$\u00a0100,00")
 })
+
+describe("o histórico aprendido", () => {
+    it("vem da RPC historico_da_frase da carteira", async () => {
+        const { supabase } = (await import("@/lib/supabase")) as unknown as { supabase: Record<string, unknown> }
+        const linhas = [linha({ n: 4 })]
+        const rpc = vi.fn(() => Promise.resolve({ data: linhas, error: null }))
+        supabase.rpc = rpc
+        const { carregarHistoricoDaFrase } = await import("@/lib/captura/frase-no-form")
+        await expect(carregarHistoricoDaFrase("ws-1")).resolves.toEqual(linhas)
+        expect(rpc).toHaveBeenCalledWith("historico_da_frase", { p_workspace_id: "ws-1" })
+        delete supabase.rpc
+    })
+
+    it("o resumo diz que a categoria veio do que a pessoa já lançou", () => {
+        const categorias = [{ id: "cat-alim", name: "Alimentação", type: "expense" as const }]
+        const c = camposDaFrase("42 mercado dia", HOJE, [], [linha({ description: "Mercado extra", category_id: "cat-alim" })], { categorias })
+        expect(c.motivoDaCategoria).toBe("aprendido")
+        expect(resumoDaFrase(c, HOJE, categorias, [])).toContain("categoria Alimentação (pelo que você já lançou)")
+    })
+})

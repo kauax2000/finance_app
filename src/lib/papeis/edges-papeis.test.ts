@@ -124,7 +124,7 @@ describe("Edge capture: o histórico do convidado", () => {
         const f = fonte("capture/index.ts")
         expect(f).toMatch(/\.from\('workspace_members'\)\s*\.select\('workspace_id, ?role'\)/)
         expect(f).toMatch(/\.filter\(\(m: \{ role: string \}\) => m\.role === 'guest'\)/)
-        expect(f).toContain("convidadoEm.has(w) ? q.eq('user_id', userId) : q")
+        expect(f).toContain("p_user_id: convidadoEm.has(w) ? userId : null")
     })
 })
 

@@ -1,6 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import { appTodayYmd, formatYmd } from './credit-card-cycle.ts'
-import { cartaoDoCredito, casarCartao, casarCategoria, conceitoDe, interpretarFrase, preencherPeloHistorico, type LinhaHistorico } from './frase.ts'
+import { cartaoDoCredito, casarCartao, casarCategoria, conceitoDe, interpretarFrase, preencherPeloHistorico, type LinhaHistorico, votarCategoria } from './frase.ts'
 
 const HOJE = '2026-04-10'
 
@@ -124,36 +124,36 @@ const lh = (l: Partial<LinhaHistorico>): LinhaHistorico => ({
 })
 
 Deno.test('categoria: histórico exato vence o nome', () => {
-  const r = casarCategoria('Mercado', 'expense', CATS, [lh({ description: 'mercado', category_id: 'c-alim' })])
+  const r = casarCategoria('Mercado', 'expense', CATS, [lh({ description: 'mercado', category_id: 'c-alim' })], HOJE)
   assertEquals(r, { categoryId: 'c-alim', motivo: 'historico' })
 })
 
 Deno.test('categoria: o nome da categoria na descrição, com plural', () => {
-  assertEquals(casarCategoria('Mercado extra', 'expense', CATS, []), { categoryId: 'c-merc', motivo: 'nome' })
-  assertEquals(casarCategoria('Restaurante japonês', 'expense', CATS, []), { categoryId: 'c-rest', motivo: 'nome' })
+  assertEquals(casarCategoria('Mercado extra', 'expense', CATS, [], HOJE), { categoryId: 'c-merc', motivo: 'nome' })
+  assertEquals(casarCategoria('Restaurante japonês', 'expense', CATS, [], HOJE), { categoryId: 'c-rest', motivo: 'nome' })
 })
 
-Deno.test('categoria: a palavra do histórico vem antes da palavra comum', () => {
-  const r = casarCategoria('Padaria do zé', 'expense', CATS, [lh({ description: 'Padaria Real' })])
-  assertEquals(r, { categoryId: 'c-alim', motivo: 'palavra' })
+Deno.test('categoria: o aprendido vem antes da palavra comum', () => {
+  const r = casarCategoria('Padaria do zé', 'expense', CATS, [lh({ description: 'Padaria Real' })], HOJE)
+  assertEquals(r, { categoryId: 'c-alim', motivo: 'aprendido' })
 })
 
 Deno.test('categoria: palavra comum leva à categoria que a abriga', () => {
-  assertEquals(casarCategoria('Uber', 'expense', CATS, []), { categoryId: 'c-transp', motivo: 'comum' })
-  assertEquals(casarCategoria('Ifood', 'expense', CATS, []), { categoryId: 'c-rest', motivo: 'comum' })
+  assertEquals(casarCategoria('Uber', 'expense', CATS, [], HOJE), { categoryId: 'c-transp', motivo: 'comum' })
+  assertEquals(casarCategoria('Ifood', 'expense', CATS, [], HOJE), { categoryId: 'c-rest', motivo: 'comum' })
   // Sem "Transporte", "uber" não inventa: nenhuma outra categoria abriga.
-  assertEquals(casarCategoria('Uber', 'expense', CATS.filter((c) => c.id !== 'c-transp'), []), null)
+  assertEquals(casarCategoria('Uber', 'expense', CATS.filter((c) => c.id !== 'c-transp'), [], HOJE), null)
 })
 
 Deno.test('categoria: só do tipo, e a apagada do histórico não volta', () => {
-  assertEquals(casarCategoria('Salário', 'expense', CATS, []), null)
-  assertEquals(casarCategoria('Salário', 'income', CATS, []), { categoryId: 'c-sal', motivo: 'nome' })
-  assertEquals(casarCategoria('Xyz', 'expense', CATS, [lh({ description: 'Xyz', category_id: 'apagada' })]), null)
+  assertEquals(casarCategoria('Salário', 'expense', CATS, [], HOJE), null)
+  assertEquals(casarCategoria('Salário', 'income', CATS, [], HOJE), { categoryId: 'c-sal', motivo: 'nome' })
+  assertEquals(casarCategoria('Xyz', 'expense', CATS, [lh({ description: 'Xyz', category_id: 'apagada' })], HOJE), null)
 })
 
 Deno.test('categoria: empate no nome não escolhe', () => {
   const dois = [{ id: 'a', name: 'Casa', type: 'expense' as const }, { id: 'b', name: 'Praia', type: 'expense' as const }]
-  assertEquals(casarCategoria('Praia casa', 'expense', dois, []), null)
+  assertEquals(casarCategoria('Praia casa', 'expense', dois, [], HOJE), null)
 })
 
 Deno.test('cartão do crédito: o do formulário, senão o último crédito ativo do histórico', () => {
@@ -256,32 +256,82 @@ Deno.test('conceito: abastecimento, posto, shell e etanol são combustível', ()
 
 Deno.test('conceito: combustível prefere Carro a Transporte quando os dois existem', () => {
   const cats = [cat('transporte', 'Transporte'), cat('carro', 'Carro')]
-  assertEquals(casarCategoria('Abastecimento', 'expense', cats, []), { categoryId: 'carro', motivo: 'comum' })
+  assertEquals(casarCategoria('Abastecimento', 'expense', cats, [], HOJE), { categoryId: 'carro', motivo: 'comum' })
 })
 
 Deno.test('conceito: uber continua em Transporte', () => {
   const cats = [cat('transporte', 'Transporte'), cat('carro', 'Carro')]
-  assertEquals(casarCategoria('Uber', 'expense', cats, []), { categoryId: 'transporte', motivo: 'comum' })
+  assertEquals(casarCategoria('Uber', 'expense', cats, [], HOJE), { categoryId: 'transporte', motivo: 'comum' })
 })
 
 Deno.test('conceito: drogaria raia é Saúde e pão de açúcar é Mercado', () => {
-  assertEquals(casarCategoria('Drogaria Raia', 'expense', [cat('saude', 'Saúde')], []), { categoryId: 'saude', motivo: 'comum' })
-  assertEquals(casarCategoria('Pão de Açúcar', 'expense', [cat('merc', 'Mercado')], []), { categoryId: 'merc', motivo: 'comum' })
+  assertEquals(casarCategoria('Drogaria Raia', 'expense', [cat('saude', 'Saúde')], [], HOJE), { categoryId: 'saude', motivo: 'comum' })
+  assertEquals(casarCategoria('Pão de Açúcar', 'expense', [cat('merc', 'Mercado')], [], HOJE), { categoryId: 'merc', motivo: 'comum' })
 })
 
 Deno.test('conceito: palavras genéricas não casam', () => {
   for (const p of ['dia', 'extra', 'ale']) assertEquals(conceitoDe(p), null, p)
-  assertEquals(casarCategoria('Almoço do dia', 'expense', [cat('merc', 'Mercado')], []), null)
+  assertEquals(casarCategoria('Almoço do dia', 'expense', [cat('merc', 'Mercado')], [], HOJE), null)
 })
 
 Deno.test('conceito: uber cai em Carro quando não há Transporte', () => {
-  assertEquals(casarCategoria('Uber', 'expense', [cat('carro', 'Carro')], []), { categoryId: 'carro', motivo: 'comum' })
+  assertEquals(casarCategoria('Uber', 'expense', [cat('carro', 'Carro')], [], HOJE), { categoryId: 'carro', motivo: 'comum' })
 })
 
 Deno.test('conceito: estacionamento cai em Combustível quando só ele existe', () => {
-  assertEquals(casarCategoria('Estacionamento', 'expense', [cat('comb', 'Combustível')], []), { categoryId: 'comb', motivo: 'comum' })
+  assertEquals(casarCategoria('Estacionamento', 'expense', [cat('comb', 'Combustível')], [], HOJE), { categoryId: 'comb', motivo: 'comum' })
 })
 
 Deno.test('conceito: multa de fatura não vira Carro', () => {
-  assertEquals(casarCategoria('Multa atraso fatura', 'expense', [cat('carro', 'Carro')], []), null)
+  assertEquals(casarCategoria('Multa atraso fatura', 'expense', [cat('carro', 'Carro')], [], HOJE), null)
+})
+
+const mesesAntes = (meses: number) => {
+  const d = new Date(`${HOJE}T12:00:00Z`)
+  d.setUTCMonth(d.getUTCMonth() - meses)
+  return d.toISOString().slice(0, 10)
+}
+
+Deno.test('aprendido: "Posto Shell" em Carro ensina "abastecimento"', () => {
+  const cats = [cat('carro', 'Carro'), cat('transporte', 'Transporte')]
+  const hist = [lh({ description: 'Posto Shell', category_id: 'carro' })]
+  assertEquals(casarCategoria('Abastecimento', 'expense', cats, hist, HOJE), { categoryId: 'carro', motivo: 'aprendido' })
+})
+
+Deno.test('aprendido: o costume da pessoa vence o nome da categoria', () => {
+  const cats = [cat('mercado', 'Mercado'), cat('alimentacao', 'Alimentação')]
+  const hist = [1, 2, 3].map(() => lh({ description: 'Mercado extra', category_id: 'alimentacao' }))
+  assertEquals(casarCategoria('mercado dia', 'expense', cats, hist, HOJE), { categoryId: 'alimentacao', motivo: 'aprendido' })
+})
+
+Deno.test('aprendido: empate não escolhe', () => {
+  const cats = [cat('a', 'Alfa'), cat('b', 'Beta')]
+  const hist = [lh({ description: 'Xablau', category_id: 'a' }), lh({ description: 'Xablau', category_id: 'b' })]
+  assertEquals(votarCategoria('xablau loja nova', 'expense', cats, hist, HOJE), null)
+  assertEquals(casarCategoria('xablau loja nova', 'expense', cats, hist, HOJE), null)
+})
+
+Deno.test('aprendido: o recente pesa mais', () => {
+  const cats = [cat('saude', 'Saúde'), cat('beleza', 'Beleza')]
+  const hist = [
+    lh({ description: 'Farmacia', category_id: 'saude', date: mesesAntes(30), n: 3 }),
+    lh({ description: 'Farmacia', category_id: 'beleza', date: mesesAntes(1), n: 1 }),
+  ]
+  assertEquals(votarCategoria('farmacia', 'expense', cats, hist, HOJE), 'beleza')
+})
+
+Deno.test('aprendido: n agrega', () => {
+  const cats = [cat('a', 'Alfa'), cat('b', 'Beta')]
+  const hist = [lh({ description: 'Xablau', category_id: 'a', n: 5 }), lh({ description: 'Xablau', category_id: 'b', n: 1 })]
+  assertEquals(votarCategoria('xablau', 'expense', cats, hist, HOJE), 'a')
+})
+
+Deno.test('aprendido: palavra vazia não vota', () => {
+  const hist = [lh({ description: 'compra no cartao', category_id: 'a' })]
+  assertEquals(votarCategoria('compra', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
+})
+
+Deno.test('aprendido: receita não vota em despesa', () => {
+  const hist = [lh({ description: 'Xablau', category_id: 'a', type: 'income' })]
+  assertEquals(votarCategoria('xablau', 'expense', [cat('a', 'Alfa')], hist, HOJE), null)
 })

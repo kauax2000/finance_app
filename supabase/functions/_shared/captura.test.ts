@@ -240,7 +240,7 @@ Deno.test('Foco 3: cartão de carteira alheia não é usado; fica na padrão, se
   // O histórico é o da padrão, e a palavra do cartão volta à descrição.
   assertEquals(r.linha.category_id, 'cat-padrao')
   assertEquals(r.linha.description, 'Mercado nubank')
-  assertEquals(r.linha.capture_meta, { texto: '42 mercado nubank', categoria: 'palavra' })
+  assertEquals(r.linha.capture_meta, { texto: '42 mercado nubank', categoria: 'aprendido' })
   assertEquals(r.linha.needs_review, true)
   assertEquals(r.resumo, 'R$\u00a042,00 · Mercado nubank')
 })

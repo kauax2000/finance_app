@@ -64,7 +64,6 @@ const MAX_CORPO = 16 * 1024
 const MAX_FOTO = 10 * 1024 * 1024
 /** Acima disto a foto não vai à IA (o limite de imagem do provedor; memória do worker): o texto decide. */
 const MAX_FOTO_IA = 4 * 1024 * 1024
-const HISTORICO_POR_CARTEIRA = 300
 const TOKEN_INVALIDO = () => json(401, { error: 'Token inválido.' })
 const CORPO_GRANDE = (multipart: boolean) =>
   json(413, { error: multipart ? 'Foto acima de 10 MB.' : 'Corpo acima de 16 KB.' })
@@ -284,17 +283,11 @@ Deno.serve(async (req: Request) => {
 
   // ponytail: o histórico de todas as carteiras da pessoa (o destino só se sabe
   // depois de casar o cartão); uma família tem poucas. Se crescer, casar antes.
+  // 24 meses agrupados pela RPC; na carteira em que é convidada, só o que a pessoa lançou.
   const historicos = await Promise.all(
-    carteirasDaPessoa.map((w: string) => {
-      const q = admin
-        .from('transactions')
-        .select('description, category_id, payment_method, payment_credit_card_id, date, type')
-        .eq('workspace_id', w)
-      return (convidadoEm.has(w) ? q.eq('user_id', userId) : q)
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(HISTORICO_POR_CARTEIRA)
-    }),
+    carteirasDaPessoa.map((w: string) =>
+      admin.rpc('historico_da_frase', { p_workspace_id: w, p_user_id: convidadoEm.has(w) ? userId : null })
+    ),
   )
   const historicoPorCarteira: Record<string, LinhaHistorico[]> = {}
   for (const [i, r] of historicos.entries()) {

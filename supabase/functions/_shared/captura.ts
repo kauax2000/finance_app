@@ -227,6 +227,9 @@ export function valoresDoPlano(total: number, n: number): { parcela: number; ult
   return parcela > 0 && ultima > 0 ? { parcela, ultima } : null
 }
 
+/** A categoria que o atalho grava sem conferir: as que vêm do que a pessoa já fez ou disse. */
+const CATEGORIA_LIMPA = new Set<MotivoDaCategoria>(['historico', 'aprendido', 'nome'])
+
 /** A forma do parser no vocabulário de `transactions.payment_method`. */
 const FORMA_NO_BANCO: Record<FormaDePagamento, string> = {
   pix: 'pix',
@@ -382,7 +385,7 @@ export function montarLancamento(
   // Como no app (frase-no-form.ts): só as categorias da carteira de destino, do tipo.
   const categoria = semDescricao
     ? null
-    : casarCategoria(descricao, tipoCategoria, ctx.categoriasPorCarteira[carteira] ?? [], historicoDaCarteira)
+    : casarCategoria(descricao, tipoCategoria, ctx.categoriasPorCarteira[carteira] ?? [], historicoDaCarteira, ctx.hoje)
 
   // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o único cartão
   // ativo da carteira, senão o do último crédito. Um nome de cartão que não casou
@@ -422,13 +425,14 @@ export function montarLancamento(
     parcelasDoPlano = null
     duvidas.push('parcelas')
   }
-  // Decisão 2: tudo que passou por IA nasce a conferir. A palavra comum é um
-  // palpite que o atalho não mostra antes de gravar: fica a conferir também.
+  // Decisão 2: tudo que passou por IA nasce a conferir. A palavra comum e a
+  // sugestão da IA são palpites que o atalho não mostra antes de gravar: ficam
+  // a conferir também.
   const needsReview =
     duvidas.length > 0 ||
     cartaoSemCasar ||
     categoria == null ||
-    categoria.motivo === 'comum' ||
+    !CATEGORIA_LIMPA.has(categoria.motivo) ||
     parcelasDoPlano != null ||
     c != null
   if (needsReview && !applePay && pedido.text) capturaMeta.texto = pedido.text

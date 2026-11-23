@@ -37,7 +37,7 @@ describe("Edge capture", () => {
         const cartoes = f.indexOf(".from('credit_cards')")
         expect(f.indexOf(".in('workspace_id', carteirasDaPessoa)", cartoes)).toBeGreaterThan(cartoes)
         expect(f).toContain("carteirasDaPessoa.map((w: string) =>")
-        expect(f).toContain(".eq('workspace_id', w)")
+        expect(f).toContain("admin.rpc('historico_da_frase', { p_workspace_id: w, p_user_id: convidadoEm.has(w) ? userId : null })")
     })
 
     it("o corpo é lido aos pedaços, com o teto de 16 KB, depois do formato do token", () => {
