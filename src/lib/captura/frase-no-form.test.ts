@@ -375,6 +375,22 @@ describe("dita: a categoria escrita na frase sai da descrição", () => {
         expect(resumoDaFrase(c, HOJE, categorias, [])).toContain("categoria Mercado (você escreveu)")
     })
 
+    it("depois de um conectivo, o que a pessoa já lançou vence a dita", () => {
+        const lugares = [
+            { id: "cat-casa", name: "Casa", type: "expense" as const },
+            { id: "cat-transporte", name: "Transporte", type: "expense" as const },
+        ]
+        const uber = [linha({ description: "Uber", category_id: "cat-transporte" })]
+        const comHistorico = camposDaFrase("uber pra casa 25", HOJE, [nubank], uber, { categorias: lugares })
+        expect([comHistorico.descricao, comHistorico.categoryId, comHistorico.motivoDaCategoria]).toEqual([
+            "Uber pra casa",
+            "cat-transporte",
+            "historico",
+        ])
+        const semHistorico = camposDaFrase("uber pra casa 25", HOJE, [nubank], [], { categorias: lugares })
+        expect([semHistorico.descricao, semHistorico.categoryId, semHistorico.motivoDaCategoria]).toEqual(["Uber", "cat-casa", "dita"])
+    })
+
     it("vence o histórico exato, que vê a descrição limpa", () => {
         const hist = [linha({ description: "Pão", category_id: "cat-alim", payment_method: "cash" })]
         const c = camposDaFrase("pão mercado 12", HOJE, [], hist, { categorias })

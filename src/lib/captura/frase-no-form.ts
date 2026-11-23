@@ -8,11 +8,10 @@ import { onlineManager, type QueryClient } from "@tanstack/react-query"
 import {
     cartaoDoCredito,
     casarCartao,
-    casarCategoria,
+    escolherCategoria,
     interpretarFrase,
     palavrasDosCartoes,
     preencherPeloHistorico,
-    separarCategoriaDita,
     type CartaoParaCasar,
     type CategoriaParaCasar,
     type FormaDePagamento,
@@ -163,9 +162,10 @@ export function camposDaIA(
  *   histórico (`cartaoDoCredito`); parcelas ("em 3x") sem forma dita são crédito
  *   nesse mesmo cartão, quando há um; por último, a forma e o cartão da mesma
  *   descrição no histórico.
- * - **Categoria**: a escrita na frase (`separarCategoriaDita`: "pão mercado" é
- *   Pão em Mercado), senão `casarCategoria` (histórico exato, o aprendido com o
- *   que a pessoa já lançou, nome da categoria, palavra comum), já com a
+ * - **Categoria**: `escolherCategoria`, a mesma da Edge: a escrita na frase
+ *   ("pão mercado" é Pão em Mercado; depois de um conectivo, "uber pra casa", o
+ *   histórico ainda vence), senão `casarCategoria` (histórico exato, o aprendido
+ *   com o que a pessoa já lançou, nome da categoria, palavra comum), já com a
  *   descrição limpa.
  * - Um nome de cartão que não casa nenhum volta à descrição e, no crédito, fica
  *   a conferir sem cartão: palpitar outro cartão ali erraria de propósito.
@@ -204,15 +204,14 @@ function camposDaInterpretacao(
     const semDescricao = duvidas.includes("descricao")
     // O estorno no cartão busca a categoria da compra, no histórico de despesa.
     const tipoCategoria = tipoDaCategoria(f.tipo, f.estorno ? (cartao?.id ?? null) : null)
-    const dita =
-        semDescricao || !ctx.categorias || !podeDitar ? null : separarCategoriaDita(descricao, tipoCategoria, ctx.categorias)
-    if (dita) descricao = dita.descricao
+    // A mesma escolha da Edge: a categoria dita (que sai da descrição), senão `casarCategoria`.
+    const escolha =
+        semDescricao || !ctx.categorias
+            ? null
+            : escolherCategoria(descricao, tipoCategoria, ctx.categorias, historico, hoje, podeDitar)
+    if (escolha) descricao = escolha.descricao
     const doHistorico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historico)
-    const categoria: { categoryId: string; motivo: MotivoDaCategoria } | null = dita
-        ? { categoryId: dita.categoryId, motivo: "dita" }
-        : semDescricao || !ctx.categorias
-          ? null
-          : casarCategoria(descricao, tipoCategoria, ctx.categorias, historico, hoje)
+    const categoria = escolha?.categoria ?? null
 
     let paymentMethod: PaymentMethod | null = null
     let creditCardId: string | null = null

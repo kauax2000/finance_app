@@ -832,8 +832,17 @@ function mesmaPalavra(a: string, b: string): boolean {
   return a === b || (a.length > 3 && a === `${b}s`) || (b.length > 3 && b === `${a}s`)
 }
 
-/** Ligam a categoria dita ao resto ("pão no mercado"): soltos no fim, saem com ela. */
-const LIGAM_A_CATEGORIA = new Set(['no', 'na', 'de', 'do', 'da', 'em', 'pro', 'pra'])
+/**
+ * Ligam a categoria dita ao resto ("pão no mercado", "brinquedo para o pet"):
+ * soltos no fim, saem com ela, e dizem que ela é um lugar ou um dono, não a
+ * categoria com certeza (a dita fraca). O "a" é o artigo e o "à" sem acento.
+ */
+const LIGAM_A_CATEGORIA = new Set([
+  'no', 'na', 'nos', 'nas', 'em', 'pra', 'pro', 'para', 'pros', 'pras', 'ate', 'ao', 'aos', 'a', 'as',
+  'de', 'do', 'da', 'dos', 'das', 'o', 'os',
+])
+/** Depois deles a categoria compõe o nome ("plano de saúde", "garrafa de água"): a descrição fica inteira. */
+const COMPOEM_O_NOME = new Set(['de', 'do', 'da', 'dos', 'das'])
 
 /**
  * A categoria de um trecho da descrição: o nome inteiro de uma só categoria (o
@@ -858,21 +867,14 @@ function categoriaDoTrecho(
   return achadas.length === 1 ? { id: achadas[0].id, m: 1 } : null
 }
 
-/**
- * A categoria que a pessoa escreveu na frase ("pão mercado" → Pão em Mercado), e
- * a descrição sem ela. Vale a do fim da descrição (com o mesmo trecho repetido
- * contando uma vez, e os conectivos soltos saindo junto), ou a que segue o
- * marcador "categoria" em qualquer lugar. No começo, com outras palavras depois,
- * é nome de loja ("Mercado Livre"), e não há categoria dita. Sem nada que sobre,
- * a descrição fica com uma ocorrência dela ("42 mercado" → Mercado); sobrando só
- * palavras vazias, fica inteira ("Conta de luz" em Luz). Só as categorias do
- * `tipo`; ambígua, `null`.
- */
-export function separarCategoriaDita(
+type Dita = { descricao: string; categoryId: string; forte: boolean }
+
+/** A dita, e a descrição sem a categoria (a que o histórico confere na fraca). */
+function separar(
   descricao: string,
   tipo: 'expense' | 'income',
   categorias: CategoriaParaCasar[],
-): { descricao: string; categoryId: string } | null {
+): (Dita & { semCategoria: string }) | null {
   const nomes = categorias
     .filter((c) => c.type === tipo)
     .map((c) => ({ id: c.id, ws: normalizarDescricao(c.name).split(' ').filter(Boolean) }))
@@ -892,6 +894,7 @@ export function separarCategoriaDita(
       resto = [...toks.slice(0, marcador), ...toks.slice(ini + achada.m)]
     }
   }
+  const peloMarcador = achada != null
   if (!achada) {
     achada = categoriaDoTrecho(nomes, (m) => (m <= ks.length ? ks.slice(ks.length - m) : null))
     if (!achada) return null
@@ -902,10 +905,83 @@ export function separarCategoriaDita(
     dita = toks.slice(ini, ini + m)
     resto = toks.slice(0, ini)
   }
-  while (resto.length && LIGAM_A_CATEGORIA.has(normalizarDescricao(resto[resto.length - 1]))) resto.pop()
-  // Só palavras vazias sobrando ("conta de luz" em Luz): a descrição fica inteira.
-  const texto = !resto.length ? dita.join(' ') : palavrasQueContam(resto.join(' ')).length ? resto.join(' ') : toks.join(' ')
-  return { descricao: texto.charAt(0).toUpperCase() + texto.slice(1), categoryId: achada.id }
+  const soltos: string[] = []
+  while (resto.length && LIGAM_A_CATEGORIA.has(normalizarDescricao(resto[resto.length - 1]))) {
+    soltos.push(normalizarDescricao(resto.pop()!))
+  }
+  const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+  const semCategoria = maiuscula((resto.length ? resto : dita).join(' '))
+  // Forte: pelo marcador, colada no fim sem conectivo, ou a única coisa dita ("42 mercado").
+  const forte = peloMarcador || !soltos.length || !resto.length
+  // A categoria que compõe o nome, ou só palavras vazias sobrando ("conta de luz" em Luz): a descrição fica inteira.
+  const inteira =
+    resto.length > 0 && (soltos.some((k) => COMPOEM_O_NOME.has(k)) || !palavrasQueContam(resto.join(' ')).length)
+  return { descricao: inteira ? maiuscula(toks.join(' ')) : semCategoria, semCategoria, categoryId: achada.id, forte }
+}
+
+/**
+ * A categoria que a pessoa escreveu na frase ("pão mercado" → Pão em Mercado), e
+ * a descrição sem ela. Vale a do fim da descrição (com o mesmo trecho repetido
+ * contando uma vez, e os conectivos e artigos soltos saindo junto), ou a que
+ * segue o marcador "categoria" em qualquer lugar. No começo, com outras palavras
+ * depois, é nome de loja ("Mercado Livre"), e não há categoria dita. Sem nada que
+ * sobre, a descrição fica com uma ocorrência dela ("42 mercado" → Mercado);
+ * sobrando só palavras vazias, ou depois de "de"/"do"/"da"/"dos"/"das" ("plano de
+ * saúde"), fica inteira. `forte` é a colada no fim sem conectivo, a do marcador ou
+ * a única coisa dita; depois de um conectivo ("uber pra casa") é fraca, um lugar
+ * ou um dono que pode não ser a categoria. Só as categorias do `tipo`; ambígua, `null`.
+ */
+export function separarCategoriaDita(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+): Dita | null {
+  const d = separar(descricao, tipo, categorias)
+  return d && { descricao: d.descricao, categoryId: d.categoryId, forte: d.forte }
+}
+
+/**
+ * A categoria da frase, a mesma regra no app e na Edge `capture`:
+ * 1. a **dita forte** (`separarCategoriaDita`) vence tudo, com a descrição limpa;
+ * 2. a **dita fraca** ("uber pra casa") pergunta antes ao que a pessoa já lançou,
+ *    pela descrição sem a categoria: o histórico exato ou o voto aprendido com outra
+ *    categoria vence, e a descrição fica inteira ("Uber pra casa" em Transporte);
+ *    senão vale a dita, a conferir (`aConferir`);
+ * 3. sem dita (ou com `podeDitar` falso: o estabelecimento, a foto), `casarCategoria`.
+ */
+export function escolherCategoria(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+  historico: LinhaHistorico[],
+  hoje: string,
+  podeDitar = true,
+): { descricao: string; categoria: { categoryId: string; motivo: MotivoDaCategoria } | null; aConferir: boolean } {
+  const dita = podeDitar ? separar(descricao, tipo, categorias) : null
+  if (!dita) return { descricao, categoria: casarCategoria(descricao, tipo, categorias, historico, hoje), aConferir: false }
+  const comoDita = { categoryId: dita.categoryId, motivo: 'dita' as const }
+  if (dita.forte) return { descricao: dita.descricao, categoria: comoDita, aConferir: false }
+  const ja = peloQueJaLancou(dita.semCategoria, tipo, categorias, historico, hoje)
+  if (ja && ja.categoryId !== dita.categoryId) return { descricao, categoria: ja, aConferir: false }
+  return { descricao: dita.descricao, categoria: comoDita, aConferir: true }
+}
+
+/** O histórico exato, senão o voto aprendido (qualquer peso), só nas categorias do `tipo`. */
+function peloQueJaLancou(
+  descricao: string,
+  tipo: 'expense' | 'income',
+  categorias: CategoriaParaCasar[],
+  historico: LinhaHistorico[],
+  hoje: string,
+): { categoryId: string; motivo: MotivoDaCategoria } | null {
+  const doTipo = categorias.filter((c) => c.type === tipo)
+  const ids = new Set(doTipo.map((c) => c.id))
+  const linhas = historico.filter((l) => l.type === tipo && l.description && l.category_id && ids.has(l.category_id))
+  const alvo = normalizarDescricao(descricao)
+  const exata = alvo ? maisRecente(linhas.filter((l) => normalizarDescricao(l.description!) === alvo)) : null
+  if (exata) return { categoryId: exata.category_id!, motivo: 'historico' }
+  const aprendida = voto(descricao, tipo, doTipo, linhas, hoje)
+  return aprendida && { categoryId: aprendida.categoryId, motivo: 'aprendido' }
 }
 
 type Termos = {

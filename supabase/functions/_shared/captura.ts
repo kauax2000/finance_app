@@ -6,14 +6,13 @@
 import {
   cartaoDoCredito,
   casarCartao,
-  casarCategoria,
+  escolherCategoria,
   interpretarFrase,
   lerNumero,
   nomeCobreDescricao,
   normalizarDescricao,
   palavrasDosCartoes,
   preencherPeloHistorico,
-  separarCategoriaDita,
   type CartaoParaCasar,
   type CategoriaParaCasar,
   type FormaDePagamento,
@@ -389,14 +388,12 @@ export function montarLancamento(
   // A categoria escrita na frase ("pão mercado") sai da descrição; o estabelecimento
   // do Apple Pay e a descrição lida da foto não são frase da pessoa. Daqui em diante, a descrição limpa.
   const daPessoa = !applePay && !!pedido.text?.trim() && !(c?.daFoto && c.descricao)
-  const dita = semDescricao || !daPessoa ? null : separarCategoriaDita(descricao, tipoCategoria, categorias)
-  if (dita) descricao = dita.descricao
+  const escolha = semDescricao
+    ? null
+    : escolherCategoria(descricao, tipoCategoria, categorias, historicoDaCarteira, ctx.hoje, daPessoa)
+  if (escolha) descricao = escolha.descricao
   const historico = semDescricao ? null : preencherPeloHistorico(descricao, tipoCategoria, historicoDaCarteira)
-  const categoria: { categoryId: string; motivo: MotivoDaCategoria } | null = dita
-    ? { categoryId: dita.categoryId, motivo: 'dita' }
-    : semDescricao
-      ? null
-      : casarCategoria(descricao, tipoCategoria, categorias, historicoDaCarteira, ctx.hoje)
+  const categoria = escolha?.categoria ?? null
 
   // Como no app: "crédito" sem nome, ou parcelas sem forma dita, é o único cartão
   // ativo da carteira, senão o do último crédito. Um nome de cartão que não casou
@@ -450,6 +447,8 @@ export function montarLancamento(
     cartaoSemCasar ||
     categoria == null ||
     !CATEGORIA_LIMPA.has(categoria.motivo) ||
+    // A dita depois de um conectivo ("uber pra casa") pode ser um lugar: a conferir.
+    escolha?.aConferir === true ||
     (nomeDaCategoria != null && !nomeCobreDescricao(descricao, nomeDaCategoria)) ||
     parcelasDoPlano != null ||
     c != null

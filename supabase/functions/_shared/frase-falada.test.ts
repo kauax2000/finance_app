@@ -2,9 +2,12 @@ import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import {
   interpretarFrase,
   palavrasDosCartoes,
+  escolherCategoria,
+  normalizarDescricao,
   separarCategoriaDita,
   type CartaoParaCasar,
   type CategoriaParaCasar,
+  type LinhaHistorico,
 } from './frase.ts'
 
 const HOJE = '2026-11-23'
@@ -73,27 +76,50 @@ const DITAS: CategoriaParaCasar[] = [
   { id: 'farmacia', name: 'Farmácia', type: 'expense' },
   { id: 'salario', name: 'Salário', type: 'income' },
 ]
+/** As da revisão: lugares e donos que também são categoria. */
+const LUGARES: CategoriaParaCasar[] = ['Casa', 'Transporte', 'Trabalho', 'Mercado', 'Saúde', 'Água', 'Pet', 'Filhos'].map((name) => ({
+  id: normalizarDescricao(name),
+  name,
+  type: 'expense' as const,
+}))
 const SO_NUBANK = palavrasDosCartoes([cartao('Nubank')])
 /** A frase pelo parser e, na descrição dele, a categoria dita. */
 const dita = (s: string, cats = DITAS) => {
   const f = interpretarFrase(s, HOJE, SO_NUBANK)
   return separarCategoriaDita(f.descricao, f.tipo, cats)
 }
+/** A frase pelo parser e a escolha da categoria (a regra do app e da Edge). */
+const escolha = (s: string, historico: LinhaHistorico[] = [], cats = LUGARES) => {
+  const f = interpretarFrase(s, HOJE, SO_NUBANK)
+  const e = escolherCategoria(f.descricao, f.tipo, cats, historico, HOJE)
+  return [e.descricao, e.categoria?.categoryId ?? null, e.categoria?.motivo ?? null, e.aConferir]
+}
+const linhaDe = (description: string, category_id: string): LinhaHistorico => ({
+  description,
+  category_id,
+  payment_method: 'pix',
+  payment_credit_card_id: null,
+  date: '2026-11-01T12:00:00.000Z',
+  type: 'expense',
+})
 
 Deno.test('dita: a tabela do pedido', () => {
-  const casos: [string, string, string][] = [
-    ['42 mercado', 'Mercado', 'mercado'],
-    ['42 mercado mercado', 'Mercado', 'mercado'],
-    ['pão mercado 12', 'Pão', 'mercado'],
-    ['12 pão no mercado', 'Pão', 'mercado'],
-    ['pão 12 categoria mercado', 'Pão', 'mercado'],
-    ['remédio farmácia 30', 'Remédio', 'farmacia'],
-    ['uber transporte 20', 'Uber', 'transporte'],
-    ['arroz e feijão mercado 50 nubank', 'Arroz e feijão', 'mercado'],
-    ['30 mercados', 'Mercados', 'mercado'],
-    ['recebi 3000 salário', 'Salário', 'salario'],
+  const casos: [string, string, string, boolean][] = [
+    ['42 mercado', 'Mercado', 'mercado', true],
+    ['42 mercado mercado', 'Mercado', 'mercado', true],
+    ['pão mercado 12', 'Pão', 'mercado', true],
+    // Depois de um conectivo, a dita é fraca.
+    ['12 pão no mercado', 'Pão', 'mercado', false],
+    ['pão 12 categoria mercado', 'Pão', 'mercado', true],
+    ['remédio farmácia 30', 'Remédio', 'farmacia', true],
+    ['uber transporte 20', 'Uber', 'transporte', true],
+    ['arroz e feijão mercado 50 nubank', 'Arroz e feijão', 'mercado', true],
+    ['30 mercados', 'Mercados', 'mercado', true],
+    ['recebi 3000 salário', 'Salário', 'salario', true],
   ]
-  for (const [frase, descricao, categoryId] of casos) assertEquals([frase, dita(frase)], [frase, { descricao, categoryId }])
+  for (const [frase, descricao, categoryId, forte] of casos) {
+    assertEquals([frase, dita(frase)], [frase, { descricao, categoryId, forte }])
+  }
 })
 
 Deno.test('dita: no começo é nome de loja, não categoria', () => {
@@ -109,9 +135,13 @@ Deno.test('dita: só as categorias do tipo, e a palavra ambígua não decide', (
     { id: 'bairro', name: 'Mercado do bairro', type: 'expense' },
   ]
   // O nome inteiro "Mercado" casa uma só: vence a palavra, que casaria as duas.
-  assertEquals(separarCategoriaDita('Pão mercado', 'expense', duas), { descricao: 'Pão', categoryId: 'mercado' })
-  assertEquals(separarCategoriaDita('Pão bairro', 'expense', duas), { descricao: 'Pão', categoryId: 'bairro' })
-  assertEquals(separarCategoriaDita('Pão do mercado do bairro', 'expense', duas), { descricao: 'Pão', categoryId: 'bairro' })
+  assertEquals(separarCategoriaDita('Pão mercado', 'expense', duas), { descricao: 'Pão', categoryId: 'mercado', forte: true })
+  assertEquals(separarCategoriaDita('Pão bairro', 'expense', duas), { descricao: 'Pão', categoryId: 'bairro', forte: true })
+  assertEquals(separarCategoriaDita('Pão do mercado do bairro', 'expense', duas), {
+    descricao: 'Pão do mercado do bairro',
+    categoryId: 'bairro',
+    forte: false,
+  })
   const ambiguas: CategoriaParaCasar[] = [
     { id: 'm1', name: 'Mercado do bairro', type: 'expense' },
     { id: 'm2', name: 'Mercado central', type: 'expense' },
@@ -121,12 +151,39 @@ Deno.test('dita: só as categorias do tipo, e a palavra ambígua não decide', (
 
 Deno.test('dita: sobrando só palavras vazias, a descrição fica inteira', () => {
   const comLuz = [...DITAS, { id: 'luz', name: 'Luz', type: 'expense' as const }]
-  assertEquals(dita('conta de luz 150', comLuz), { descricao: 'Conta de luz', categoryId: 'luz' })
-  assertEquals(dita('compra no mercado 30'), { descricao: 'Compra no mercado', categoryId: 'mercado' })
-  assertEquals(dita('pão mercado 12'), { descricao: 'Pão', categoryId: 'mercado' })
+  assertEquals(dita('conta de luz 150', comLuz), { descricao: 'Conta de luz', categoryId: 'luz', forte: false })
+  assertEquals(dita('compra no mercado 30'), { descricao: 'Compra no mercado', categoryId: 'mercado', forte: false })
+  assertEquals(dita('compra mercado 30'), { descricao: 'Compra mercado', categoryId: 'mercado', forte: true })
 })
 
 Deno.test('dita: o marcador "categoria" casa em qualquer lugar', () => {
-  assertEquals(separarCategoriaDita('Categoria mercado pão', 'expense', DITAS), { descricao: 'Pão', categoryId: 'mercado' })
+  assertEquals(separarCategoriaDita('Categoria mercado pão', 'expense', DITAS), { descricao: 'Pão', categoryId: 'mercado', forte: true })
   assertEquals(separarCategoriaDita('Pão categoria xyz', 'expense', DITAS), null)
+})
+
+Deno.test('dita: os conectivos e artigos soltos saem com a categoria', () => {
+  assertEquals(dita('uber para casa 25', LUGARES), { descricao: 'Uber', categoryId: 'casa', forte: false })
+  assertEquals(dita('uber até casa 25', LUGARES), { descricao: 'Uber', categoryId: 'casa', forte: false })
+  assertEquals(dita('brinquedo para o pet 40', LUGARES), { descricao: 'Brinquedo', categoryId: 'pet', forte: false })
+  // Depois de "de"/"do"/"da"/"dos"/"das" a categoria compõe o nome: a descrição fica inteira.
+  assertEquals(dita('escola dos filhos 500', LUGARES), { descricao: 'Escola dos filhos', categoryId: 'filhos', forte: false })
+  assertEquals(dita('plano de saúde 300', LUGARES), { descricao: 'Plano de saúde', categoryId: 'saude', forte: false })
+  assertEquals(dita('garrafa de água 5', LUGARES), { descricao: 'Garrafa de água', categoryId: 'agua', forte: false })
+})
+
+Deno.test('dita: a fraca pergunta antes ao que a pessoa já lançou', () => {
+  const uber = [linhaDe('Uber', 'transporte'), linhaDe('Uber', 'transporte'), linhaDe('Uber', 'transporte')]
+  assertEquals(escolha('uber pra casa 25', uber), ['Uber pra casa', 'transporte', 'historico', false])
+  assertEquals(escolha('uber para casa 25', uber), ['Uber para casa', 'transporte', 'historico', false])
+  // O voto aprendido também vence ("Uber centro" ensina Transporte pela palavra).
+  const aprendido = [linhaDe('Uber centro', 'transporte'), linhaDe('Uber aeroporto', 'transporte')]
+  assertEquals(escolha('uber pra casa 25', aprendido), ['Uber pra casa', 'transporte', 'aprendido', false])
+  // Sem histórico, vale a dita, a conferir.
+  assertEquals(escolha('uber pra casa 25'), ['Uber', 'casa', 'dita', true])
+  assertEquals(escolha('12 pão no mercado'), ['Pão', 'mercado', 'dita', true])
+  assertEquals(escolha('plano de saúde 300'), ['Plano de saúde', 'saude', 'dita', true])
+  // O histórico que diz a mesma categoria não a torna limpa.
+  assertEquals(escolha('uber pra casa 25', [linhaDe('Uber', 'casa')]), ['Uber', 'casa', 'dita', true])
+  // A forte vence o histórico.
+  assertEquals(escolha('pão mercado 12', [linhaDe('Pão', 'casa')]), ['Pão', 'mercado', 'dita', false])
 })

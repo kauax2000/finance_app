@@ -1029,3 +1029,28 @@ Deno.test('dita: a descrição lida da foto não perde a categoria, nem com text
   const doTexto = ok(montarLancamento({ text: 'pão mercado', campos: ia({ descricao: null, daFoto: true }) }, comCats))
   assertEquals([doTexto.linha.description, doTexto.linha.capture_meta?.categoria], ['Pão', 'dita'])
 })
+
+Deno.test('dita: depois de um conectivo é fraca, a conferir, e o histórico vence', () => {
+  const lugares = ['Casa', 'Transporte', 'Trabalho', 'Mercado', 'Saúde', 'Água', 'Pet', 'Filhos'].map((n) =>
+    cat(n.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(), n),
+  )
+  const sem = ctx({ categoriasPorCarteira: { [PADRAO]: lugares } })
+  const linha = (text: string, c = sem) => {
+    const l = ok(montarLancamento({ text }, c)).linha
+    return [l.description, l.category_id, l.capture_meta?.categoria, l.needs_review]
+  }
+  const uber = ctx({
+    historicoPorCarteira: { [PADRAO]: [hist('Uber', 'transporte'), hist('Uber', 'transporte'), hist('Uber', 'transporte')] },
+    categoriasPorCarteira: { [PADRAO]: lugares },
+  })
+  assertEquals(linha('uber pra casa 25', uber), ['Uber pra casa', 'transporte', 'historico', false])
+  assertEquals(linha('uber para casa 25', uber), ['Uber para casa', 'transporte', 'historico', false])
+  // Sem histórico, a dita fraca fica, mas a conferir: nada a grava limpa.
+  assertEquals(linha('uber pra casa 25'), ['Uber', 'casa', 'dita', true])
+  assertEquals(linha('12 pão no mercado'), ['Pão', 'mercado', 'dita', true])
+  assertEquals(linha('plano de saúde 300'), ['Plano de saúde', 'saude', 'dita', true])
+  assertEquals(linha('brinquedo para o pet 40'), ['Brinquedo', 'pet', 'dita', true])
+  assertEquals(linha('escola dos filhos 500'), ['Escola dos filhos', 'filhos', 'dita', true])
+  // A forte segue limpa.
+  assertEquals(linha('pão mercado 12'), ['Pão', 'mercado', 'dita', false])
+})
