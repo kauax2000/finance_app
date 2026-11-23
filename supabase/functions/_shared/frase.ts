@@ -667,76 +667,115 @@ function palavrasDe(s: string): Set<string> {
  * mais específico ao mais geral: "uber" cai em "Transporte", ou em "Carro"
  * quando não há "Transporte". A primeira palavra da descrição que casa decide.
  */
-const COMUNS: { palavras: string[]; nomes: string[] }[] = [
+export const CONCEITOS: { id: string; palavras: string[]; nomes: string[] }[] = [
   {
-    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado'],
+    id: 'mercado',
+    palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'atacadao', 'assai', 'carrefour', 'atacarejo', 'hiper', 'hipermercado', 'pao de acucar', 'extra', 'dia', 'oxxo', 'sams', 'makro', 'mateus', 'guanabara'],
     nomes: ['mercado', 'supermercado', 'feira', 'alimentacao', 'comida'],
   },
   {
-    palavras: ['restaurante', 'lanche', 'lanchonete', 'almoco', 'jantar', 'ifood', 'delivery', 'pizza', 'pizzaria', 'hamburguer', 'burger', 'sushi', 'cafe', 'cafeteria', 'padaria', 'bar', 'marmita', 'rappi', 'mcdonalds', 'starbucks', 'acai', 'sorvete', 'pastel', 'salgado', 'churrasco', 'boteco'],
+    id: 'restaurante',
+    palavras: ['restaurante', 'lanche', 'lanchonete', 'almoco', 'jantar', 'ifood', 'delivery', 'pizza', 'pizzaria', 'hamburguer', 'burger', 'sushi', 'cafe', 'cafeteria', 'padaria', 'bar', 'marmita', 'rappi', 'mcdonalds', 'starbucks', 'acai', 'sorvete', 'pastel', 'salgado', 'churrasco', 'boteco', 'ze delivery', 'outback', 'coco bambu', 'habibs', 'bobs', 'burger king'],
     nomes: ['restaurante', 'delivery', 'lanche', 'refeicao', 'refeicoe', 'alimentacao', 'comida'],
   },
   {
-    palavras: ['uber', 'taxi', 'onibus', 'metro', 'trem', 'gasolina', 'combustivel', 'etanol', 'diesel', 'posto', 'estacionamento', 'pedagio', 'cabify', 'patinete', 'bilhete', 'oficina', 'ipva', 'lavagem', 'mecanico'],
-    nomes: ['transporte', 'mobilidade', 'carro', 'veiculo', 'combustivel'],
+    id: 'combustivel',
+    palavras: ['gasolina', 'etanol', 'alcool', 'diesel', 'gnv', 'combustivel', 'abastecimento', 'abasteci', 'posto', 'shell', 'ipiranga', 'petrobras', 'ale'],
+    nomes: ['combustivel', 'carro', 'veiculo', 'automovel', 'transporte', 'mobilidade'],
   },
   {
-    palavras: ['farmacia', 'drogaria', 'drogasil', 'remedio', 'medico', 'consulta', 'exame', 'dentista', 'hospital', 'psicologo', 'terapia', 'laboratorio', 'clinica'],
+    id: 'carro',
+    palavras: ['estacionamento', 'pedagio', 'oficina', 'ipva', 'licenciamento', 'lavagem', 'mecanico', 'multa', 'seguro auto', 'sem parar', 'veloe'],
+    nomes: ['carro', 'veiculo', 'automovel', 'transporte'],
+  },
+  {
+    id: 'transporte',
+    palavras: ['uber', 'taxi', 'onibus', 'metro', 'trem', 'cabify', 'patinete', 'bilhete'],
+    nomes: ['transporte', 'mobilidade'],
+  },
+  {
+    id: 'saude',
+    palavras: ['farmacia', 'drogaria', 'drogasil', 'remedio', 'medico', 'consulta', 'exame', 'dentista', 'hospital', 'psicologo', 'terapia', 'laboratorio', 'clinica', 'raia', 'drogaraia', 'pague menos', 'panvel', 'unimed', 'plano de saude'],
     nomes: ['saude', 'farmacia', 'medico', 'remedio'],
   },
   {
-    palavras: ['aluguel', 'condominio', 'iptu', 'luz', 'energia', 'agua', 'gas', 'internet', 'celular', 'telefone', 'enel', 'sabesp', 'cemig', 'copel', 'light', 'vivo', 'claro', 'tim'],
+    id: 'casa',
+    palavras: ['aluguel', 'condominio', 'iptu', 'luz', 'energia', 'agua', 'gas', 'internet', 'celular', 'telefone', 'enel', 'sabesp', 'cemig', 'copel', 'light', 'vivo', 'claro', 'tim', 'botijao', 'ultragaz', 'conta de luz', 'conta de agua'],
     nomes: ['moradia', 'casa', 'contas', 'habitacao', 'aluguel', 'servico'],
   },
   {
+    id: 'assinatura',
     palavras: ['netflix', 'spotify', 'disney', 'hbo', 'youtube', 'globoplay', 'deezer', 'icloud', 'chatgpt', 'assinatura', 'prime', 'paramount', 'crunchyroll'],
     nomes: ['assinatura', 'streaming', 'servico', 'lazer', 'entretenimento'],
   },
   {
+    id: 'viagem',
     palavras: ['hotel', 'airbnb', 'passagem', 'voo', 'latam', 'booking', 'hospedagem', 'pousada', 'viagem'],
     nomes: ['viagem', 'lazer'],
   },
   {
+    id: 'lazer',
     palavras: ['cinema', 'show', 'ingresso', 'teatro', 'steam', 'balada', 'festa', 'passeio', 'parque', 'museu'],
     nomes: ['lazer', 'entretenimento', 'diversao'],
   },
   {
+    id: 'educacao',
     palavras: ['escola', 'faculdade', 'curso', 'livro', 'apostila', 'udemy', 'alura', 'material', 'livraria', 'mensalidade'],
     nomes: ['educacao', 'estudo', 'escola', 'curso', 'livro'],
   },
   {
+    id: 'vestuario',
     palavras: ['roupa', 'sapato', 'tenis', 'camisa', 'camiseta', 'calca', 'vestido', 'shein', 'renner', 'zara', 'riachuelo', 'shopee', 'amazon', 'magalu', 'shopping'],
     nomes: ['vestuario', 'roupa', 'compra', 'shopping'],
   },
   {
-    palavras: ['pet', 'petshop', 'racao', 'veterinario', 'cachorro', 'gato'],
+    id: 'pets',
+    palavras: ['pet', 'petshop', 'racao', 'veterinario', 'cachorro', 'gato', 'cobasi', 'petz'],
     nomes: ['pet', 'animai', 'cachorro', 'gato'],
   },
   {
+    id: 'beleza',
     palavras: ['cabelo', 'cabeleireiro', 'salao', 'barbeiro', 'barbearia', 'manicure', 'unha', 'estetica', 'perfume', 'maquiagem', 'cosmetico'],
     nomes: ['beleza', 'cuidado', 'estetica', 'pessoal'],
   },
   {
+    id: 'academia',
     palavras: ['academia', 'smartfit', 'crossfit', 'pilates', 'natacao', 'futebol', 'esporte'],
     nomes: ['academia', 'esporte', 'saude'],
   },
   {
+    id: 'salario',
     palavras: ['salario', 'holerite', 'ordenado', 'adiantamento'],
     nomes: ['salario', 'trabalho', 'renda'],
   },
   {
+    id: 'freela',
     palavras: ['freela', 'freelance', 'bico', 'cliente'],
     nomes: ['freela', 'freelance', 'extra', 'trabalho', 'renda'],
   },
   {
+    id: 'rendimento',
     palavras: ['rendimento', 'juros', 'dividendo', 'cdb', 'tesouro', 'investimento', 'poupanca'],
     nomes: ['rendimento', 'investimento', 'juros'],
   },
   {
+    id: 'reembolso',
     palavras: ['reembolso', 'devolucao', 'ressarcimento'],
     nomes: ['reembolso', 'devolucao'],
   },
 ]
+
+/** A entrada (uma ou mais palavras) começa em `ws[i]`; a de uma palavra casa também sem o "s" final. */
+function casaEm(ws: string[], i: number, entrada: string): boolean {
+  const e = entrada.split(' ')
+  if (e.length === 1) return ws[i] === entrada || (ws[i].endsWith('s') && ws[i].slice(0, -1) === entrada)
+  return e.every((w, k) => ws[i + k] === w)
+}
+
+/** O `id` do conceito de uma palavra normalizada (com e sem o "s" final); `null` fora de todos. */
+export function conceitoDe(palavra: string): string | null {
+  return CONCEITOS.find((g) => g.palavras.some((e) => !e.includes(' ') && casaEm([palavra], 0, e)))?.id ?? null
+}
 
 /**
  * A categoria pela descrição, em ordem (a primeira que decide vence):
@@ -744,7 +783,7 @@ const COMUNS: { palavras: string[]; nomes: string[] }[] = [
  * 2. **nome** — uma palavra do nome de uma categoria está na descrição ("42 mercado" → "Mercado");
  *    duas categorias com o mesmo número de palavras casadas é empate, e ninguém vence;
  * 3. **palavra** — a linha mais recente com a mesma `palavraSignificativa` e categoria;
- * 4. **comum** — uma palavra conhecida (`COMUNS`) leva ao nome de categoria que a abriga.
+ * 4. **comum** — uma palavra conhecida (`CONCEITOS`) leva ao nome de categoria que a abriga.
  * Só valem as categorias de `categorias` do `tipo`: uma apagada no histórico não volta.
  */
 export function casarCategoria(
@@ -780,8 +819,9 @@ export function casarCategoria(
   const parecida = palavra ? maisRecente(linhas.filter((l) => palavraSignificativa(l.description!) === palavra)) : null
   if (parecida) return { categoryId: parecida.category_id!, motivo: 'palavra' }
 
-  for (const p of normalizarDescricao(descricao).split(' ')) {
-    const grupo = COMUNS.find((g) => g.palavras.includes(p) || (p.endsWith('s') && g.palavras.includes(p.slice(0, -1))))
+  const ws = normalizarDescricao(descricao).split(' ')
+  for (let i = 0; i < ws.length; i++) {
+    const grupo = CONCEITOS.find((g) => g.palavras.some((e) => casaEm(ws, i, e)))
     if (!grupo) continue
     for (const nome of grupo.nomes) {
       const achadas = doTipo.filter((c) => palavrasDe(c.name).has(nome))

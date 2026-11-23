@@ -1,6 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import { appTodayYmd, formatYmd } from './credit-card-cycle.ts'
-import { cartaoDoCredito, casarCartao, casarCategoria, interpretarFrase, preencherPeloHistorico, type LinhaHistorico } from './frase.ts'
+import { cartaoDoCredito, casarCartao, casarCategoria, conceitoDe, interpretarFrase, preencherPeloHistorico, type LinhaHistorico } from './frase.ts'
 
 const HOJE = '2026-04-10'
 
@@ -245,4 +245,26 @@ Deno.test('frase: as formas de parcela que já funcionavam', () => {
   ]) {
     assertEquals(lerParcelas(s), [400, 4, 'Tv'], s)
   }
+})
+
+const cat = (id: string, name: string) => ({ id, name, type: 'expense' as const })
+
+Deno.test('conceito: abastecimento, posto, shell e etanol são combustível', () => {
+  for (const p of ['abastecimento', 'posto', 'shell', 'etanol', 'postos']) assertEquals(conceitoDe(p), 'combustivel', p)
+  assertEquals(conceitoDe('xablau'), null)
+})
+
+Deno.test('conceito: combustível prefere Carro a Transporte quando os dois existem', () => {
+  const cats = [cat('transporte', 'Transporte'), cat('carro', 'Carro')]
+  assertEquals(casarCategoria('Abastecimento', 'expense', cats, []), { categoryId: 'carro', motivo: 'comum' })
+})
+
+Deno.test('conceito: uber continua em Transporte', () => {
+  const cats = [cat('transporte', 'Transporte'), cat('carro', 'Carro')]
+  assertEquals(casarCategoria('Uber', 'expense', cats, []), { categoryId: 'transporte', motivo: 'comum' })
+})
+
+Deno.test('conceito: drogaria raia é Saúde e pão de açúcar é Mercado', () => {
+  assertEquals(casarCategoria('Drogaria Raia', 'expense', [cat('saude', 'Saúde')], []), { categoryId: 'saude', motivo: 'comum' })
+  assertEquals(casarCategoria('Pão de Açúcar', 'expense', [cat('merc', 'Mercado')], []), { categoryId: 'merc', motivo: 'comum' })
 })
