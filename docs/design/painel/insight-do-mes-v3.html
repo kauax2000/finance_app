@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Insight do mês · v3</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&family=Ledger&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--line:rgba(255,255,255,.1);--fg:#ededed;--mut:#8f8f8f;--up:#f0c27a;--down:#7fdca6;--c:#f58a5c;--g:#a7a2a0;--info:#7cb3ff;
+--rb:linear-gradient(90deg,#ff6b6b,#ffb84d,#d9f05b,#4fd6a0,#4fb8ff,#8f7bff,#e879c9,#ff6b6b)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 6px;max-width:960px}
+h2{font:600 17px Inter;margin:40px 0 4px}.sub{color:#9a9a9a;margin:0 0 14px;max-width:960px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.w{max-width:980px}
+.serif{font-family:Ledger,Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.up{color:var(--up)}.down{color:var(--down)}.m{font:600 12.5px "Geist Mono",monospace}
+.kick{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin-bottom:10px}
+.hl{font-size:23px;line-height:1.25;margin:0 0 6px}
+.p{color:#bdbdbd;font-size:14px;margin:0;max-width:70ch}
+.p b{color:var(--fg);font-weight:600}
+.reasons{display:grid;grid-template-columns:max-content minmax(80px,220px) auto;column-gap:14px;row-gap:8px;margin-top:14px;align-items:center;font-size:13.5px}
+.dot{width:8px;height:8px;border-radius:9px;display:inline-block;margin-right:8px}
+.tr{height:6px;border-radius:99px;background:rgba(255,255,255,.05);position:relative}.tr i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.tag{font-size:11.5px;color:var(--mut);margin-left:6px}
+.tip{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;border-top:1px solid var(--line)}
+.tip span{color:#cfcfcf;font-size:13.5px}.tip b{color:var(--fg);font-weight:600}
+.btn{font:500 13px Inter;color:var(--fg);background:rgba(255,255,255,.07);border:0;border-radius:99px;padding:7px 14px;white-space:nowrap}
+/* I1 brand glow */
+.brand{position:relative;background:var(--card);border-radius:22px;padding:20px 22px;isolation:isolate}
+.brand:before{content:"";position:absolute;inset:0;border-radius:22px;padding:1px;background:conic-gradient(from 200deg,#ff6b6b,#ffb84d,#d9f05b,#4fd6a0,#4fb8ff,#8f7bff,#e879c9,#ff6b6b);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;z-index:-1}
+.brand:after{content:"";position:absolute;left:30px;right:30px;top:-1px;height:40px;background:var(--rb);filter:blur(28px);opacity:.14;z-index:-2}
+.spark{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:#fff;font-size:12px}
+/* I2 tinted */
+.tint{background:linear-gradient(180deg,rgba(240,194,122,.10),rgba(240,194,122,.02) 60%,transparent),var(--card);border:1px solid rgba(240,194,122,.22);border-radius:22px;padding:20px 22px}
+.bulb{width:28px;height:28px;border-radius:99px;display:grid;place-items:center;background:rgba(240,194,122,.16);color:var(--up);font-size:14px}
+/* I3 quote */
+.q{display:grid;grid-template-columns:4px 1fr;gap:18px;padding:6px 0}
+.q .bar{border-radius:4px;background:var(--rb)}
+</style></head><body>
+<h1>Cartão de insight · com cara de insight</h1>
+<p class="lead">O que faz algo "ler como insight": ele se apresenta como uma leitura feita para você (não como dado), conta o porquê em uma frase e termina com o que fazer. As três versões têm as mesmas peças — manchete, por quê, motivos e uma sugestão com ação — e mudam a moldura.</p>
+
+<h2>I1 · Insight da marca</h2>
+<p class="sub">O cartão veste o <b>brilho da marca</b> (o arco-íris só na borda, como o <code>Card variant="brand"</code>; nunca sob o texto) e abre com ✦ "Leitura do mês". É a peça de marca da tela: diz "isto foi pensado por nós para você". Termina com uma conta útil e o botão para ver os lançamentos. <b>Minha escolha.</b></p>
+<div class="w brand">
+ <div class="kick"><span class="spark">✦</span>Leitura do mês</div>
+ <p class="hl serif">O que você controla subiu <span class="up">14%</span> este mês</p>
+ <p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+ <div class="reasons">
+  <span><span class="dot" style="background:var(--c)"></span>Abastecimento</span><span class="tr"><i style="width:100%;background:var(--c)"></i></span><span class="m up">+R$ 340</span>
+  <span><span class="dot" style="background:var(--g)"></span>Seguro carro<span class="tag">novo desde set</span></span><span class="tr"><i style="width:87%;background:var(--g)"></i></span><span class="m up">+R$ 296</span>
+ </div>
+ <div class="tip"><span>Com o Abastecimento no seu normal, dezembro fecha perto de <b>R$ 3.240</b>.</span><button class="btn">Ver Abastecimento</button></div>
+</div>
+
+<h2>I2 · Destaque em tom de atenção</h2>
+<p class="sub">Sem marca: o cartão ganha um véu âmbar que desce do topo (o tom de "subiu") e uma lâmpada. Fica claro que é um aviso, e o tom troca para verde quando o mês caiu.</p>
+<div class="w tint">
+ <div class="kick"><span class="bulb">💡</span>Por que o mês mudou</div>
+ <p class="hl serif">O que você controla subiu <span class="up">14%</span> este mês</p>
+ <p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+ <div class="reasons">
+  <span><span class="dot" style="background:var(--c)"></span>Abastecimento</span><span class="tr"><i style="width:100%;background:var(--c)"></i></span><span class="m up">+R$ 340</span>
+  <span><span class="dot" style="background:var(--g)"></span>Seguro carro<span class="tag">novo desde set</span></span><span class="tr"><i style="width:87%;background:var(--g)"></i></span><span class="m up">+R$ 296</span>
+ </div>
+ <div class="tip"><span>Com o Abastecimento no seu normal, dezembro fecha perto de <b>R$ 3.240</b>.</span><button class="btn">Ver Abastecimento</button></div>
+</div>
+
+<h2>I3 · Citação, sem cartão</h2>
+<p class="sub">Sem moldura: um fio de arco-íris à esquerda, como uma citação, e a leitura ao lado. Mais leve e editorial; a ação fica num link discreto.</p>
+<div class="w q"><span class="bar"></span><div>
+ <div class="kick">✦ Leitura do mês</div>
+ <p class="hl serif">O que você controla subiu <span class="up">14%</span> este mês</p>
+ <p class="p">São <b>R$ 380 acima</b> do seu normal, puxados por <b>Abastecimento</b> (+R$ 340) e pelo <b>Seguro carro</b>, novo desde setembro (+R$ 296). Com o Abastecimento no normal, dezembro fecha perto de <b>R$ 3.240</b>. <span style="text-decoration:underline;text-underline-offset:3px;color:#ddd">Ver Abastecimento</span></p>
+</div></div>
+</body></html>

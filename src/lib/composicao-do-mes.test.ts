@@ -5,7 +5,6 @@ import {
     chaveDoGrupo,
     composicaoDoMes,
     fixoEmLinhas,
-    fraseDaComposicao,
     leituraDoMes,
     tomDoInsight,
     quemGastou,
@@ -116,9 +115,6 @@ describe("composicaoDoMes", () => {
         ])
         expect(c.variavel.grupos[0].ultimaYmd).toBe("2026-11-12")
         expect(c.puxouOVariavel).toEqual({ nome: "Posto Shell", valor: 500, variacao: 0.25, aMais: 100 })
-        expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram com Consórcio Mãe, que começou em setembro.",
-        )
     })
 
     it("sem fixo: o caso vem do variável", () => {
@@ -128,10 +124,6 @@ describe("composicaoDoMes", () => {
         expect(c.fixo.itens).toEqual([])
         expect(c.caso).toBe("variavelPuxou")
         expect(c.destaque).toMatchObject({ nome: "Posto Shell", aMais: 100 })
-        const partes = fraseDaComposicao(c, true)
-        expect(texto(partes)).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%).",
-        )
     })
 
     it("um grupo só deste mês é novo, sem variação", () => {
@@ -154,17 +146,12 @@ describe("composicaoDoMes", () => {
         expect(c.caso).toBe("semMedia")
         expect(c.variacaoTotal).toBeNull()
         expect(c.normais).toEqual({ fixo: null, variavel: null })
-        expect(texto(fraseDaComposicao(c, true))).toBe("R$ 2.443 fixos e R$ 620 do dia a dia neste mês.")
     })
 
     it("dentro de ±2%: o caso é normal", () => {
         const c = composicaoDoMes({ ...base, txsDoMes: carroMes, historico: carroHistorico, parcelas: carroParcelas, media: 3050 })
         expect(c.caso).toBe("normal")
         expect(c.direcao).toBeNull()
-        // O total está no normal, mas o variável não: a frase começa por ele.
-        expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 24%: R$ 620, R$ 120 acima do seu normal, puxado por Posto Shell (↑ 25%). As parcelas subiram.",
-        )
     })
 
     it("o fixo puxou: o variável fica abaixo do normal", () => {
@@ -177,11 +164,6 @@ describe("composicaoDoMes", () => {
         const c = composicaoDoMes({ ...base, txsDoMes: mes, historico: hist, parcelas: carroParcelas, media: 942.54 })
         expect(c.caso).toBe("fixoPuxou")
         expect(c.direcao).toBe("acima")
-        const partes = fraseDaComposicao(c, true)
-        expect(texto(partes)).toBe(
-            "O que você controla caiu 10%: R$ 450, R$ 50 abaixo do seu normal, puxado por Estacionamento (↓ 100%). As parcelas subiram.",
-        )
-        expect(partes.find((p) => p.texto === "caiu 10%")?.tom).toBe("success")
     })
 
     it("abaixo da média: o grupo que mais caiu, mesmo sumido", () => {
@@ -190,72 +172,6 @@ describe("composicaoDoMes", () => {
         expect(c.caso).toBe("variavelPuxou")
         expect(c.direcao).toBe("abaixo")
         expect(c.destaque).toMatchObject({ nome: "Estacionamento", aMais: -100, variacao: -1 })
-        const partes = fraseDaComposicao(c, true)
-        expect(texto(partes)).toBe(
-            "O que você controla caiu 20%: R$ 400, R$ 100 abaixo do seu normal, puxado por Estacionamento (↓ 100%).",
-        )
-    })
-})
-
-describe("fraseDaComposicao", () => {
-    const vazia: ComposicaoDoMes = {
-        fixo: { total: 0, itens: [], proximoMes: 0 },
-        variavel: { total: 300, grupos: [], outros: null },
-        normais: { fixo: null, variavel: null },
-        caso: "normal",
-        direcao: null,
-        variacaoTotal: 0.01,
-    }
-    it("normal sem fixo não fala de parcela", () => {
-        expect(texto(fraseDaComposicao(vazia, true))).toBe("O mês está dentro do seu normal.")
-    })
-    // A Renata em novembro: o variável subiu com um grupo novo, o fixo caiu e o total ficou abaixo.
-    const renata: ComposicaoDoMes = {
-        fixo: { total: 1418, itens: [], proximoMes: 1418 },
-        variavel: { total: 776, grupos: [], outros: null },
-        normais: { fixo: 1820, variavel: 464 },
-        caso: "variavelPuxou",
-        direcao: "abaixo",
-        variacaoTotal: -0.04,
-        puxouOVariavel: { nome: "Corte e hidratação", valor: 480, variacao: null, aMais: 480 },
-    }
-    it("a Renata: começa pelo que ela controla", () => {
-        const partes = fraseDaComposicao(renata, true)
-        expect(texto(partes)).toBe(
-            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480). As parcelas caíram.",
-        )
-        expect(partes.find((p) => p.texto === "subiu 67%")?.tom).toBe("warning")
-    })
-    it("a receita inverte o tom e diz avulsas", () => {
-        const partes = fraseDaComposicao(renata, false)
-        expect(texto(partes)).toBe(
-            "As avulsas subiram 67%: R$ 776, R$ 312 acima do seu normal, puxadas por Corte e hidratação (novo, R$ 480). As entradas fixas caíram.",
-        )
-        expect(partes.find((p) => p.texto === "subiram 67%")?.tom).toBe("success")
-    })
-    it("o fixo dentro de ±5% não entra na frase", () => {
-        const c: ComposicaoDoMes = { ...renata, normais: { fixo: 1400, variavel: 464 } }
-        expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O que você controla subiu 67%: R$ 776, R$ 312 acima do seu normal, puxado por Corte e hidratação (novo, R$ 480).",
-        )
-    })
-    it("o variável dentro de ±5%: o caso de hoje, sem o \"só por causa\"", () => {
-        const c: ComposicaoDoMes = {
-            ...renata,
-            fixo: { total: 3000, itens: [], proximoMes: 0 },
-            variavel: { total: 470, grupos: [], outros: null },
-            caso: "fixoPuxou",
-            direcao: "acima",
-            variacaoTotal: 0.54,
-            destaque: { nome: "parcelas", variacao: 470 / 464 - 1 },
-        }
-        expect(texto(fraseDaComposicao(c, true))).toBe(
-            "O mês está 54% acima da média por causa das parcelas. O que você controla, R$ 470, está dentro do seu normal.",
-        )
-    })
-    it("um grupo novo puxando o mês", () => {
-        const c: ComposicaoDoMes = { ...vazia, caso: "variavelPuxou", direcao: "acima", variacaoTotal: 0.3, destaque: { nome: "Lava Rápido", aMais: 80 } }
-        expect(texto(fraseDaComposicao(c, true))).toBe("O mês está 30% acima da média: Lava Rápido é novo neste mês (R$ 80).")
     })
 })
 

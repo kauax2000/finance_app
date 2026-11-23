@@ -40,12 +40,12 @@ import { UltimosSeisMeses } from "@/components/categories/detail/resumo/ultimos-
 import { InsightDaCategoria } from "@/components/categories/detail/resumo/insight-da-categoria"
 import { DoQueEFeitoOMes } from "@/components/categories/detail/do-que-e-feito-o-mes"
 import { QuemGastou } from "@/components/categories/detail/quem-gastou"
-import { composicaoDoMes, fraseDaComposicao, quemGastou } from "@/lib/composicao-do-mes"
+import { composicaoDoMes, leituraDoMes, quemGastou } from "@/lib/composicao-do-mes"
 import { useAdultos } from "@/lib/divisao/use-adultos"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { useHistoricoDaComposicaoQuery } from "@/lib/queries/use-historico-da-composicao"
 import { PARA_ONDE_VAI_ID } from "@/components/dashboard/dashboard-para-onde-vai"
-import { CategoryEmbeddedTransactions } from "@/components/categories/detail/category-embedded-transactions"
+import { CategoryEmbeddedTransactions, LANCAMENTOS_DO_MES_ID } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
 import { MonthNav, useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
@@ -477,7 +477,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             : null
         return {
             composicao,
-            frase: composicao ? fraseDaComposicao(composicao, tipo === "expense") : [],
+            leitura: composicao ? leituraDoMes(composicao, tipo === "expense", yearMonth, aberto) : null,
             quem: quemGastou(txs, tipo),
             comparacao: comparacaoComMesAnterior({ rows: seriesSource, tipo, yearMonth, hojeYmd, lookup }),
             media,
@@ -487,6 +487,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             insight: insight?.acao === "limite" && !podeEscrever ? { ...insight, acao: undefined } : insight,
         }
     }, [
+        aberto,
         category,
         categoryId,
         historico,
@@ -653,16 +654,20 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     )
                 }
                 composicao={
-                    comComposicao && analise?.composicao ? (
+                    comComposicao && analise?.composicao && analise.leitura ? (
                         <DoQueEFeitoOMes
                             composicao={analise.composicao}
-                            frase={analise.frase}
+                            leitura={analise.leitura}
                             despesa={tipo === "expense"}
                             yearMonth={yearMonth}
                             corDaSerie={tileVividColor(
                                 tileColorFor(category.color) ?? (tipo === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT),
                             )}
                             aoLado={mesesNode}
+                            onVer={(nome) => {
+                                txController.setFilterDescriptionQuery(nome)
+                                document.getElementById(LANCAMENTOS_DO_MES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                            }}
                         />
                     ) : null
                 }

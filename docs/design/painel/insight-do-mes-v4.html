@@ -1,0 +1,125 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Insight do mês · v4</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&family=Ledger&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--card2:#191919;--line:rgba(255,255,255,.1);--fg:#ededed;--mut:#8f8f8f;--up:#f0c27a;--down:#7fdca6;--c:#f58a5c;--g:#a7a2a0;
+--conic:conic-gradient(from 200deg,#ff6b6b,#ffb84d,#d9f05b,#4fd6a0,#4fb8ff,#8f7bff,#e879c9,#ff6b6b);--rb:linear-gradient(90deg,#ff6b6b,#ffb84d,#d9f05b,#4fd6a0,#4fb8ff,#8f7bff,#e879c9)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:#9a9a9a;margin:0 0 6px;max-width:960px}
+h2{font:600 17px Inter;margin:42px 0 4px}.sub{color:#9a9a9a;margin:0 0 14px;max-width:960px;font-size:13px}.sub b{color:#ddd;font-weight:500}
+.w{max-width:980px}
+.serif{font-family:Ledger,Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.up{color:var(--up)}.m{font:600 12.5px "Geist Mono",monospace}
+.kick{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin-bottom:10px}
+.hl{font-size:23px;line-height:1.25;margin:0 0 6px}
+.p{color:#bdbdbd;font-size:14px;margin:0}.p b{color:var(--fg);font-weight:600}
+.reasons{display:grid;grid-template-columns:max-content minmax(80px,220px) auto;column-gap:14px;row-gap:8px;margin-top:14px;align-items:center;font-size:13.5px}
+.dot{width:8px;height:8px;border-radius:9px;display:inline-block;margin-right:8px}
+.tr{height:6px;border-radius:99px;background:rgba(255,255,255,.05);position:relative}.tr i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.tag{font-size:11.5px;color:var(--mut);margin-left:6px}
+.tip{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;border-top:1px solid var(--line)}
+.tip span{color:#cfcfcf;font-size:13.5px}.tip b{color:var(--fg);font-weight:600}
+.btn{font:500 13px Inter;color:var(--fg);background:rgba(255,255,255,.07);border:0;border-radius:99px;padding:7px 14px;white-space:nowrap}
+.brand{position:relative;background:var(--card);border-radius:22px;padding:20px 22px;isolation:isolate}
+.brand:before{content:"";position:absolute;inset:0;border-radius:22px;padding:1px;background:var(--conic);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;z-index:-1}
+.brand:after{content:"";position:absolute;left:30px;right:30px;top:-1px;height:40px;background:var(--rb);filter:blur(28px);opacity:.14;z-index:-2}
+.spark{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:#fff;font-size:12px}
+
+/* ===== J1 ===== */
+.j1{padding:24px 26px 22px}
+.j1:before{opacity:.55}
+.j1 .glow{position:absolute;inset:-1px;border-radius:22px;background:radial-gradient(60% 120% at 12% -10%,rgba(255,184,77,.16),transparent 60%),radial-gradient(50% 100% at 88% -20%,rgba(143,123,255,.14),transparent 60%);z-index:-1;pointer-events:none}
+.j1 .kick{color:#bdbdbd}
+.j1 .spark2{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--conic);color:#111;font-size:12px;font-weight:700}
+.big{font-size:32px;line-height:1.15;margin:2px 0 8px;letter-spacing:-.015em}
+.big em{font-style:normal;color:var(--up)}
+.contrib{margin-top:18px}
+.cbar{display:flex;height:10px;gap:3px;border-radius:99px;overflow:hidden}
+.cbar span{border-radius:99px}
+.clist{display:flex;gap:22px;margin-top:10px;flex-wrap:wrap}
+.citem{display:flex;flex-direction:column}
+.citem .n{display:flex;align-items:center;font-size:13.5px;color:#ddd}
+.citem .v{font:600 16px "Geist Mono",monospace;color:var(--up);margin-left:16px}
+.citem .s{font-size:12px;color:var(--mut);margin-left:16px}
+.tipbox{margin-top:18px;background:rgba(255,255,255,.035);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.tipbox .t{font-size:13.5px;color:#cfcfcf}.tipbox b{color:var(--fg);font-weight:600}
+.arrow{width:28px;height:28px;border-radius:99px;display:grid;place-items:center;background:rgba(127,220,166,.12);color:var(--down);font-size:13px;flex-shrink:0;margin-right:10px}
+.btn2{font:500 13px Inter;color:var(--fg);background:var(--fg);color:#111;border:0;border-radius:99px;padding:8px 15px;white-space:nowrap}
+
+/* ===== J2 ===== */
+.j2{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;padding:24px 26px}
+.j2 .vis{background:rgba(255,255,255,.03);border-radius:16px;padding:16px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.step{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;font-size:12.5px;color:#aaa}
+.step .b{height:20px;border-radius:6px}
+.step .m{color:#ddd}
+
+/* ===== J3 ===== */
+.j3{padding:0;overflow:hidden}
+.j3 .top{padding:22px 24px 18px;position:relative}
+.j3 .top:before{content:"";position:absolute;inset:0;background:radial-gradient(70% 140% at 0% 0%,rgba(255,107,107,.10),transparent 55%),radial-gradient(60% 140% at 100% 0%,rgba(79,184,255,.10),transparent 55%);pointer-events:none}
+.j3 .rows{padding:6px 24px 6px}
+.r3{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+.r3:first-child{border-top:0}
+.tile{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:15px}
+.r3 .nm{font-size:14px}.r3 .ds{font-size:12.5px;color:var(--mut)}
+.j3 .foot{padding:14px 24px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:13.5px;color:#cfcfcf}
+.j3 .foot b{color:var(--fg);font-weight:600}
+</style></head><body>
+<h1>I1, mais bonito</h1>
+<p class="lead">Em cima, o I1 de antes, para comparar. Embaixo, três evoluções. As três continuam com uma peça de marca só (o arco-íris na borda) e nunca põem cor da marca sob o texto.</p>
+
+<h2>I1 · Como estava</h2>
+<div class="w brand">
+ <div class="kick"><span class="spark">✦</span>Leitura do mês</div>
+ <p class="hl serif">O que você controla subiu <span class="up">14%</span> este mês</p>
+ <p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+ <div class="reasons">
+  <span><span class="dot" style="background:var(--c)"></span>Abastecimento</span><span class="tr"><i style="width:100%;background:var(--c)"></i></span><span class="m up">+R$ 340</span>
+  <span><span class="dot" style="background:var(--g)"></span>Seguro carro<span class="tag">novo desde set</span></span><span class="tr"><i style="width:87%;background:var(--g)"></i></span><span class="m up">+R$ 296</span>
+ </div>
+ <div class="tip"><span>Com o Abastecimento no seu normal, dezembro fecha perto de <b>R$ 3.240</b>.</span><button class="btn">Ver Abastecimento</button></div>
+</div>
+
+<h2>J1 · Manchete maior, motivos numa barra só, a dica em destaque</h2>
+<p class="sub">A manchete sobe a 32px e respira; um brilho morno e frio nasce dos cantos de cima (luz, não cor sob texto). Os motivos viram <b>uma barra dividida</b> (de quanto cada um explica a alta) com os nomes e valores embaixo, em vez de duas réguas soltas. A sugestão ganha uma caixa própria, com a seta verde e o botão cheio. <b>Minha escolha.</b></p>
+<div class="w brand j1"><span class="glow"></span>
+ <div class="kick"><span class="spark2">✦</span>Leitura do mês</div>
+ <p class="big serif">O que você controla subiu <em>14%</em> este mês</p>
+ <p class="p">São <b>R$ 380 acima</b> do seu normal. Quase tudo veio de dois lugares.</p>
+ <div class="contrib">
+  <div class="cbar"><span style="flex:340;background:var(--c)"></span><span style="flex:296;background:var(--g)"></span></div>
+  <div class="clist">
+   <div class="citem"><span class="n"><span class="dot" style="background:var(--c)"></span>Abastecimento</span><span class="v">+R$ 340</span><span class="s">5 vezes, costuma ser R$ 500</span></div>
+   <div class="citem"><span class="n"><span class="dot" style="background:var(--g)"></span>Seguro carro</span><span class="v">+R$ 296</span><span class="s">parcela nova desde setembro</span></div>
+  </div>
+ </div>
+ <div class="tipbox"><span class="t" style="display:flex;align-items:center"><span class="arrow">↓</span>Com o Abastecimento no seu normal, dezembro fecha perto de&nbsp;<b>R$ 3.240</b>.</span><button class="btn2">Ver Abastecimento</button></div>
+</div>
+
+<h2>J2 · A leitura à esquerda, a conta à direita</h2>
+<p class="sub">O texto fica de um lado e, do outro, a conta desenhada: do normal ao mês, degrau por degrau. Mais "análise", ocupa a largura toda sem parede de texto.</p>
+<div class="w brand j2">
+ <div>
+  <div class="kick"><span class="spark">✦</span>Leitura do mês</div>
+  <p class="hl serif" style="font-size:27px">O que você controla subiu <span class="up">14%</span> este mês</p>
+  <p class="p" style="margin-top:8px">Abastecimento veio <b>R$ 340</b> acima do normal, e o <b>Seguro carro</b> começou em setembro.</p>
+  <div class="tip" style="border:0;padding-top:16px;margin-top:6px"><span>Dezembro deve fechar perto de <b>R$ 3.240</b>.</span><button class="btn">Ver Abastecimento</button></div>
+ </div>
+ <div class="vis">
+  <div class="step"><span>seu normal</span><span style="display:block;position:relative;height:20px"><span class="b" style="position:absolute;top:0;left:0;width:81%;background:repeating-linear-gradient(135deg,#2a2a2a 0 6px,#1e1e1e 6px 12px)"></span></span><span class="m">R$ 2.907</span></div>
+  <div class="step"><span>Abastecimento</span><span style="display:block;position:relative;height:20px"><span class="b" style="position:absolute;top:0;left:0;width:10%;left:81%;background:var(--c)"></span></span><span class="m up">+340</span></div>
+  <div class="step"><span>Seguro carro</span><span style="display:block;position:relative;height:20px"><span class="b" style="position:absolute;top:0;left:0;width:8%;left:89%;background:var(--g)"></span></span><span class="m up">+296</span></div>
+  <div class="step"><span style="color:#ddd">novembro</span><span style="display:block;position:relative;height:20px"><span class="b" style="position:absolute;top:0;left:0;width:100%;background:#d9d9d9"></span></span><span class="m">R$ 3.583</span></div>
+ </div>
+</div>
+
+<h2>J3 · Manchete em cima, motivos como linhas, a dica no rodapé</h2>
+<p class="sub">Três faixas no mesmo cartão: a manchete com uma luz de cor nos cantos, os motivos como linhas com o ladrilho da categoria (ícone e cor, como no resto do app) e a sugestão num rodapé mais escuro. Organizado como uma notificação rica.</p>
+<div class="w brand j3">
+ <div class="top"><div class="kick"><span class="spark">✦</span>Leitura do mês</div>
+  <p class="hl serif" style="font-size:27px;margin:0">O que você controla subiu <span class="up">14%</span> este mês</p>
+  <p class="p" style="margin-top:6px">São <b>R$ 380 acima</b> do seu normal.</p></div>
+ <div class="rows">
+  <div class="r3"><span class="tile" style="background:rgba(245,138,92,.18);color:var(--c)">⛽</span><div><div class="nm">Abastecimento</div><div class="ds">5 vezes · costuma ser R$ 500</div></div><span class="m up">+R$ 340</span></div>
+  <div class="r3"><span class="tile" style="background:rgba(167,162,160,.16);color:var(--g)">🛡</span><div><div class="nm">Seguro carro</div><div class="ds">parcela nova desde setembro</div></div><span class="m up">+R$ 296</span></div>
+ </div>
+ <div class="foot"><span>Com o Abastecimento no normal, dezembro fecha perto de <b>R$ 3.240</b>.</span><button class="btn">Ver Abastecimento</button></div>
+</div>
+</body></html>

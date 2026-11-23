@@ -3,26 +3,22 @@
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
 import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircleIcon, ExclamationTriangleIcon, LightBulbIcon } from "@heroicons/react/16/solid"
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
-import { Item, ItemContent, ItemDescription, ItemMedia } from "@/components/ui/item"
+import { ItemContent } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { fixoEmLinhas, foraDoNormal, tomDoInsight, type ComposicaoDoMes, type GrupoVariavel, type ParteDaFrase } from "@/lib/composicao-do-mes"
+import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type LeituraDoMes as Leitura } from "@/lib/composicao-do-mes"
 import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { LeituraDoMes } from "./leitura-do-mes"
 import { nomeDoMes, reaisInteiros } from "./regua-do-mes-contas"
 
 /** "ago/27", a partir de `YYYY-MM`. */
 const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
 
-const ICONE = { success: CheckCircleIcon, warning: ExclamationTriangleIcon, info: LightBulbIcon } as const
-
 /** Até 12 parcelas o progresso vai em pontinhos; acima, só o "N/T". */
 const MAX_PONTINHOS = 12
-
-const TOM: Record<NonNullable<ParteDaFrase["tom"]>, string> = { success: "text-success", warning: "text-warning" }
 
 /** A variação do grupo contra o normal, em reais e em %: "= normal" dentro de ±5%; o tom diz se é bom. */
 function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean) {
@@ -36,25 +32,28 @@ function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean) {
 }
 
 /**
- * "Do que é feito o mês" em três cartões: o resumo (frase, barra e os dois totais) em cima e, embaixo, as duas
+ * "Do que é feito o mês" em três cartões: a leitura do mês (`LeituraDoMes`) em cima e, embaixo, as duas
  * listas lado a lado — o que você controla primeiro, mais largo; o já decidido com o rodapé no pé. Some sem lançamento.
  */
 export function DoQueEFeitoOMes({
     composicao,
-    frase,
+    leitura,
     despesa,
     yearMonth,
     corDaSerie,
     aoLado,
+    onVer,
 }: {
     composicao: ComposicaoDoMes
-    frase: ParteDaFrase[]
+    leitura: Leitura
     despesa: boolean
     yearMonth: string
     /** A cor que o ladrilho da categoria desenha: o variável na barra, no cabeçalho e os pontinhos das parcelas. */
     corDaSerie: string
     /** Um cartão ao lado do gráfico (os Últimos 6 meses), na mesma linha quando há largura. */
     aoLado?: React.ReactNode
+    /** O "Ver <grupo>" da leitura: filtra a lista da página. */
+    onVer?: (nome: string) => void
 }) {
     const { fixo, variavel } = composicao
     // Sem nada a compor, o cartão ao lado (os 6 meses) continua.
@@ -66,7 +65,6 @@ export function DoQueEFeitoOMes({
         variavel: { label: despesa ? "O que você controla" : "Avulsas", color: corDaSerie },
         fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
     } satisfies ChartConfig
-    const IconeDoInsight = ICONE[tomDoInsight(composicao, despesa)]
     const nomeMes = nomeDoMes(yearMonth)
     const { normais, variacaoTotal, direcao } = composicao
     // Variação do pedaço contra o normal: some dentro de ±5%, quando não há normal ou quando o normal é zero.
@@ -121,20 +119,7 @@ export function DoQueEFeitoOMes({
 
     return (
         <div className="grid gap-(--space-block)">
-            <Item variant="outline" className="items-start">
-                <ItemMedia variant="tile" tone={tomDoInsight(composicao, despesa)}>
-                    <IconeDoInsight aria-hidden />
-                </ItemMedia>
-                <ItemContent>
-                    <ItemDescription className="line-clamp-none text-base text-foreground">
-                        {frase.map((p, i) => (
-                            <span key={i} className={cn(p.forte && "nums font-semibold", p.tom && TOM[p.tom])}>
-                                {p.texto}
-                            </span>
-                        ))}
-                    </ItemDescription>
-                </ItemContent>
-            </Item>
+            <LeituraDoMes leitura={leitura} despesa={despesa} corDaSerie={corDaSerie} onVer={onVer} />
 
             {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; os 6 meses à esquerda e mais largos; abaixo de 42rem da área, empilham. */}
             <div className="@container">

@@ -655,7 +655,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
     `.map()` no mesmo arquivo e o corpo cravado ali, vale a régua do tamanho.
     `components.json` declara `heroicons`.
 - **Fonts**: [`src/app/layout.tsx`](src/app/layout.tsx) define `--font-sans`
-  (Inter), `--font-display` (Ledger, só em `.page-title`, `.wordmark`, na frase do resumo da categoria (`FraseDoResumo`, 21/11/2026) e no
+  (Inter), `--font-display` (Ledger, só em `.page-title`, `.wordmark`, na frase do resumo da categoria (`FraseDoResumo`, 21/11/2026), na manchete da leitura do mês do detalhe da categoria (`LeituraDoMes`, 23/11/2026) e no
   numeral do `EmptyStateCode`), `--font-heading` (aponta para a sans),
   `--font-mono` (Geist Mono).
 - **Utilitários**: `.nums` (tabular figures) e `.page-title`.

@@ -49,6 +49,9 @@ import { Button } from "@/components/ui/button"
 
 const PAGE_SIZE = 100
 
+/** O alvo do "Ver <grupo>" da leitura do mês, que filtra a lista e rola até ela. */
+export const LANCAMENTOS_DO_MES_ID = "lancamentos-do-mes"
+
 export function CategoryEmbeddedTransactions({
     categoryType,
     controller,
@@ -277,7 +280,7 @@ export function CategoryEmbeddedTransactions({
     }
 
     return (
-        <section className="min-w-0 max-w-full space-y-3" aria-label="Lançamentos do mês">
+        <section id={LANCAMENTOS_DO_MES_ID} className="min-w-0 max-w-full scroll-mt-(--top-bar-bottom) space-y-3" aria-label="Lançamentos do mês">
             <div className="min-w-0 max-w-full space-y-3">
                     {forma === "tabela" ? (
                     <TransactionsToolbar
