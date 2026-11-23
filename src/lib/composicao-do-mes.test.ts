@@ -320,8 +320,19 @@ describe("leituraDoMes", () => {
         expect(texto(l.manchete)).toBe("O que você controla subiu 67% este mês")
         expect(l.motivos).toEqual([
             { chave: "corte", nome: "Corte e hidratação", detalhe: "novo", delta: 480, parte: "variavel" },
-            { chave: "escova", nome: "Escova", delta: 20, parte: "variavel" },
         ])
+        // A Escova (+20) explica menos de 10% dos R$ 312: não entra.
+        expect(texto(l.apoio)).toBe("São R$ 312 acima do seu normal, e veio de um lugar:")
+    })
+    it("mês fechado nomeia o mês", () => {
+        expect(texto(leituraDoMes(renata, true, "2026-11", false).manchete)).toBe("O que você controla subiu 67% em novembro")
+    })
+    it("motivos que cobrem pouco da diferença: o que mais pesou", () => {
+        const c: ComposicaoDoMes = {
+            ...renata,
+            variavel: { ...renata.variavel, grupos: renata.variavel.grupos.map((g) => (g.chave === "corte" ? { ...g, valor: 120, normal: 0 } : g)) },
+        }
+        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("São R$ 312 acima do seu normal. O que mais pesou:")
     })
     it("a receita diz avulsas e inverte o tom", () => {
         const l = leituraDoMes(renata, false, "2026-11", true)

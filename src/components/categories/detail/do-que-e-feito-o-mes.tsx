@@ -141,7 +141,7 @@ export function DoQueEFeitoOMes({
                                 ]
                                     .filter((l) => l.valor > 0)
                                     .map((l) => (
-                                        <span key={l.key} className="flex items-center justify-between gap-3">
+                                        <span key={l.key} className="flex min-w-0 items-center justify-between gap-3">
                                             <span className="inline-flex min-w-0 items-center gap-2 text-muted-foreground">
                                                 <ChartSwatch color={l.cor} />
                                                 <span className="truncate">

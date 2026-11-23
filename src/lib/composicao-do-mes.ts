@@ -350,16 +350,18 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
             ? { mes: nomeDoMes(shiftYearMonth(yearMonth, 1)), valor: Math.round((c.fixo.proximoMes + normalVar) * 100) / 100 }
             : null
 
+    // Num mês fechado a manchete nomeia o mês: "este mês" leria como o mês de hoje.
+    const quando = aberto ? " este mês" : ` em ${nomeDoMes(yearMonth)}`
     if (c.caso === "semMedia") {
+        const noMes = aberto ? " neste mês" : quando
+        const doDia = [forte(reaisInteiros(c.variavel.total)), { texto: despesa ? ` do dia a dia${noMes}.` : ` avulsas${noMes}.` }]
         return {
             tom,
-            manchete: [{ texto: "Ainda não dá para comparar este mês" }],
-            apoio: [
-                forte(reaisInteiros(c.fixo.total)),
-                { texto: despesa ? " fixos e " : " de entradas fixas e " },
-                forte(reaisInteiros(c.variavel.total)),
-                { texto: despesa ? " do dia a dia neste mês." : " avulsas neste mês." },
-            ],
+            manchete: [{ texto: `Ainda não dá para comparar${quando}` }],
+            apoio:
+                c.fixo.total > 0
+                    ? [forte(reaisInteiros(c.fixo.total)), { texto: despesa ? " fixos e " : " de entradas fixas e " }, ...doDia]
+                    : doDia,
             motivos: [],
             sugestao: null,
         }
@@ -375,7 +377,7 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
         manchete = [
             { texto: `${despesa ? "O que você controla" : "As avulsas"} ${verbo} ` },
             { texto: porcento(vVar), tom: tomDe(subiu) },
-            { texto: " este mês" },
+            { texto: quando },
         ]
         diferenca = c.variavel.total - normalVar
     } else if (c.caso !== "normal" && c.variacaoTotal != null && c.direcao != null) {
@@ -410,8 +412,9 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
             parte: "fixo",
         })
     }
+    // Motivo que explica menos de 10% da diferença não é motivo: só faria a frase exagerar.
     const motivos = candidatos
-        .filter((m) => m.delta * sinal > 0)
+        .filter((m) => m.delta * sinal > 0 && Math.abs(m.delta) >= Math.abs(diferenca) * 0.1)
         .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
         .slice(0, MOTIVOS)
 
@@ -422,9 +425,12 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
             texto:
                 motivos.length === 0
                     ? " do seu normal."
-                    : motivos.length === 1
-                      ? " do seu normal, e veio de um lugar:"
-                      : " do seu normal, e quase tudo veio de dois lugares:",
+                    : // "quase tudo" só quando os motivos cobrem ao menos 70% da diferença.
+                      motivos.reduce((a, m) => a + Math.abs(m.delta), 0) < Math.abs(diferenca) * 0.7
+                      ? " do seu normal. O que mais pesou:"
+                      : motivos.length === 1
+                        ? " do seu normal, e veio de um lugar:"
+                        : " do seu normal, e quase tudo veio de dois lugares:",
         },
     ]
     const principal = motivos[0]
