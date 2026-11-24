@@ -221,8 +221,8 @@ describe("quemGastou", () => {
             "expense",
         )
         expect(r).toEqual([
-            { userId: "ana", valor: 120 },
-            { userId: "bia", valor: 50 },
+            { userId: "ana", valor: 120, compras: 2 },
+            { userId: "bia", valor: 50, compras: 1 },
         ])
     })
 })
