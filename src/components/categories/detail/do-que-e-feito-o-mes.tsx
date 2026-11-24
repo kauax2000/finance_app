@@ -119,7 +119,7 @@ export function DoQueEFeitoOMes({
             </Badge>
         ) : null
     const maiuscula = (t: string) => `${t[0].toUpperCase()}${t.slice(1)}`
-    const titulo = nomeAnterior ? `${maiuscula(nomeMes)} comparado com ${nomeAnterior}` : maiuscula(nomeMes)
+    const titulo = nomeAnterior ? "Comparação com o mês anterior" : maiuscula(nomeMes)
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
