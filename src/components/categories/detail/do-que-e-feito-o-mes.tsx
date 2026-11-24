@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
 import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type LeituraDoMes as Leitura } from "@/lib/composicao-do-mes"
+import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { LeituraDoMes } from "./leitura-do-mes"
@@ -122,13 +123,6 @@ export function DoQueEFeitoOMes({
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
-    // O rodapé do fixo fica só quando a última parcela acaba.
-    const comRodape = comFixo && fixo.ultimaTerminaYm != null
-    // O que ainda falta das parcelas, contando a deste mês como paga: o valor vezes as que restam.
-    const faltam = fixo.itens.reduce(
-        (a, i) => (i.tipo === "parcela" && i.atual != null && i.total != null ? a + i.valor * Math.max(0, i.total - i.atual) : a),
-        0
-    )
 
     return (
         <div className="grid gap-(--space-block)">
@@ -226,32 +220,47 @@ export function DoQueEFeitoOMes({
                             apoio={`${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
                             className={cn(!comVariavel && "@xl:col-span-2")}
                         >
-                        {/* Como as compras (C2): uma linha por item, separadas por fio; a contagem em cinza ao lado do nome, os pontinhos e o valor. Embaixo, quanto ainda falta e quando a última acaba. */}
+                        {/* R4 (24/11/2026): o nome (com o "novo") e o valor em cima; embaixo, os pontinhos e "3 pagas · faltam 9 · até ago/27". Uma parcela por bloco, separadas por fio. */}
                         <ul className="grid grid-cols-1 divide-y divide-border">
                             {linhas.map((item) => {
                                 const parcela = item.tipo === "parcela" && item.atual != null && item.total != null
+                                const restam = parcela ? Math.max(0, item.total! - item.atual!) : 0
+                                const fim = parcela ? mesEAno(shiftYearMonth(item.diaYmd.slice(0, 7), restam)) : null
                                 return (
-                                    <li key={item.id} className="flex items-center gap-2.5 py-2.5 text-sm first:pt-0">
-                                        <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
-                                            <span className="truncate">{item.nome}</span>
-                                            <span className="nums shrink-0 text-xs text-muted-foreground">
-                                                {parcela ? `${item.atual}/${item.total}` : "todo mês"}
+                                    <li key={item.id} className="grid gap-1.5 py-2.5 text-sm first:pt-0">
+                                        <span className="flex items-center gap-2.5">
+                                            <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                <span className="truncate">{item.nome}</span>
+                                                {item.novoDesdeYm ? (
+                                                    <Badge tone="warning" size="xs" className="shrink-0" title={`Começou em ${mesEAno(item.novoDesdeYm)}`}>
+                                                        novo
+                                                    </Badge>
+                                                ) : null}
+                                            </span>
+                                            <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(item.valor)}</span>
+                                        </span>
+                                        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                            {parcela && item.total! <= MAX_PONTINHOS ? (
+                                                // Cada casa com 8px e 2px de fresta: o pontinho grande.
+                                                <span className="shrink-0" style={{ width: `calc(${item.total} * 0.625rem - 0.125rem)` }}>
+                                                    <Progress
+                                                        size="md"
+                                                        value={item.atual}
+                                                        max={item.total}
+                                                        segments={item.total}
+                                                        fillColor={corDaSerie}
+                                                        aria-label={`Parcela ${item.atual} de ${item.total}`}
+                                                    />
+                                                </span>
+                                            ) : null}
+                                            <span className="nums truncate">
+                                                {parcela
+                                                    ? restam > 0
+                                                        ? `${item.atual} ${item.atual === 1 ? "paga" : "pagas"} · ${restam === 1 ? "falta 1" : `faltam ${restam}`} · até ${fim}`
+                                                        : `última · ${item.atual} de ${item.total}`
+                                                    : "todo mês"}
                                             </span>
                                         </span>
-                                        {parcela && item.total! <= MAX_PONTINHOS ? (
-                                            // Cada casa com 6px e 2px de fresta: lê como pontinho, qualquer que seja o total.
-                                            <span className="shrink-0" style={{ width: `calc(${item.total} * 0.5rem - 0.125rem)` }}>
-                                                <Progress
-                                                    size="sm"
-                                                    value={item.atual}
-                                                    max={item.total}
-                                                    segments={item.total}
-                                                    fillColor={corDaSerie}
-                                                    aria-label={`Parcela ${item.atual} de ${item.total}`}
-                                                />
-                                            </span>
-                                        ) : null}
-                                        <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(item.valor)}</span>
                                     </li>
                                 )
                             })}
@@ -263,20 +272,6 @@ export function DoQueEFeitoOMes({
                                         <span className="text-muted-foreground"> · {resto.nomes.join(", ")}</span>
                                     </span>
                                     <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(resto.valor)}</span>
-                                </li>
-                            ) : null}
-                            {faltam > 0 ? (
-                                <li className="flex items-center gap-2.5 py-2.5 text-sm">
-                                    <span className="min-w-0 flex-1 text-muted-foreground">Ainda faltam pagar</span>
-                                    <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(faltam)}</span>
-                                </li>
-                            ) : null}
-                            {comRodape && fixo.ultimaTerminaYm ? (
-                                <li className="flex items-center gap-2.5 py-2.5 text-sm last:pb-0">
-                                    <span className="min-w-0 flex-1 text-muted-foreground">
-                                        {despesa ? "A última parcela acaba em" : "A última entrada fixa acaba em"}
-                                    </span>
-                                    <span className="nums shrink-0 text-right font-mono font-semibold">{mesEAno(fixo.ultimaTerminaYm)}</span>
                                 </li>
                             ) : null}
                         </ul>
