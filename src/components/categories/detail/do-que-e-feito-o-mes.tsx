@@ -134,14 +134,17 @@ export function DoQueEFeitoOMes({
                     {aoLado}
                     {comFixo || comVariavel ? (
                         <CartaoDoGrafico titulo={titulo} apoio={selo}>
-                            <ChartSplitCompare
-                                label={`${despesa ? "Gasto" : "Recebido"} de ${nomeMes}${nomeAnterior ? ` comparado com ${nomeAnterior}` : ""}`}
-                                config={config}
-                                rows={linhasDoGrafico}
-                                size="lg"
-                            />
+                            {/* As barras ficam no meio da sobra que o cartão ao lado (mais alto) deixa, sem um vão só embaixo. */}
+                            <div className="flex flex-1 flex-col justify-center">
+                                <ChartSplitCompare
+                                    label={`${despesa ? "Gasto" : "Recebido"} de ${nomeMes}${nomeAnterior ? ` comparado com ${nomeAnterior}` : ""}`}
+                                    config={config}
+                                    rows={linhasDoGrafico}
+                                    size="lg"
+                                />
+                            </div>
                             {/* A legenda no pé, com o valor de cada parte: o fixo, estreito na barra, ganha o número aqui. */}
-                            <div className="mt-auto grid gap-1 pt-4 text-sm">
+                            <div className="grid gap-1 pt-4 text-sm">
                                 {[
                                     { key: "variavel", cor: corDaSerie, valor: variavel.total, novo: false },
                                     { key: "fixo", cor: config.fixo.color, valor: fixo.total, novo: composicao.caso === "novo" },
