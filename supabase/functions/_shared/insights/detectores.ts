@@ -345,7 +345,7 @@ export function detectarSazonais(
   lancs: Lanc[],
   hojeYmd: string,
   contasAtivas: string[],
-): Array<{ chave: string; termo: string; mesAnterior: string; valor: number; category_id: string | null }> {
+): Array<{ chave: string; termo: string; mesAnterior: string; valor: number; category_id: string | null; dataYmd: string }> {
   const ano = Number(hojeYmd.slice(0, 4))
   if (hojeYmd.slice(5) > '02-15') return []
   const de = `${ano - 1}-01-01`
@@ -358,14 +358,16 @@ export function detectarSazonais(
     const achados = passados.filter((l) => contem(normalizarDescricao(l.description), termo))
     if (!achados.length) continue
     const mesAnterior = achados.map((l) => ym(l.dateYmd)).sort()[0]
-    const valor = soma(achados.filter((l) => ym(l.dateYmd) === mesAnterior).map((l) => centavos(l.amount))) / 100
+    const doMes = achados.filter((l) => ym(l.dateYmd) === mesAnterior)
+    const valor = soma(doMes.map((l) => centavos(l.amount))) / 100
+    const dataYmd = doMes.map((l) => l.dateYmd).sort()[0]
     // Categoria mais frequente; no empate, a do lançamento mais antigo (a ordem estável do sort).
     const contagem = new Map<string, number>()
     const antigos = [...achados].sort((a, b) => a.dateYmd.localeCompare(b.dateYmd))
     for (const l of antigos) if (l.category_id) contagem.set(l.category_id, (contagem.get(l.category_id) ?? 0) + 1)
     let category_id: string | null = null
     for (const [id, n] of contagem) if (category_id === null || n > contagem.get(category_id)!) category_id = id
-    saida.push({ chave: `saz:${termo}:${ano}`, termo, mesAnterior, valor, category_id })
+    saida.push({ chave: `saz:${termo}:${ano}`, termo, mesAnterior, valor, category_id, dataYmd })
   }
   return saida
 }
