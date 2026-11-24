@@ -329,7 +329,7 @@ export type LeituraDoMes = {
     manchete: ParteDaFrase[]
     apoio: ParteDaFrase[]
     motivos: MotivoDoMes[]
-    /** "Com o dia a dia no seu normal, <mes> fecha perto de R$ <valor>"; `grupo` é o motivo principal do variável. */
+    /** "Com as compras no ritmo de sempre, <mes> fecha perto de R$ <valor>"; `grupo` é o motivo principal do variável. */
     sugestao: { mes: string; valor: number; grupo?: { chave: string; nome: string } } | null
 }
 
@@ -354,13 +354,13 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
     const quando = aberto ? " este mês" : ` em ${nomeDoMes(yearMonth)}`
     if (c.caso === "semMedia") {
         const noMes = aberto ? " neste mês" : quando
-        const doDia = [forte(reaisInteiros(c.variavel.total)), { texto: despesa ? ` do dia a dia${noMes}.` : ` avulsas${noMes}.` }]
+        const doDia = [forte(reaisInteiros(c.variavel.total)), { texto: despesa ? ` em compras${noMes}.` : ` em entradas avulsas${noMes}.` }]
         return {
             tom,
             manchete: [{ texto: `Ainda não dá para comparar${quando}` }],
             apoio:
                 c.fixo.total > 0
-                    ? [forte(reaisInteiros(c.fixo.total)), { texto: despesa ? " fixos e " : " de entradas fixas e " }, ...doDia]
+                    ? [forte(reaisInteiros(c.fixo.total)), { texto: despesa ? " em parcelas e assinaturas, " : " de entradas fixas, " }, ...doDia]
                     : doDia,
             motivos: [],
             sugestao: null,
@@ -373,12 +373,10 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
     let diferenca: number
     if (normalVar != null && vVar != null && foraDoNormal(vVar)) {
         const subiu = vVar > 0
-        const verbo = despesa ? (subiu ? "subiu" : "caiu") : subiu ? "subiram" : "caíram"
-        manchete = [
-            { texto: `${despesa ? "O que você controla" : "As avulsas"} ${verbo} ` },
-            { texto: porcento(vVar), tom: tomDe(subiu) },
-            { texto: quando },
-        ]
+        const verbo = subiu ? "subiram" : "caíram"
+        // "Suas compras do mês subiram 14%"; num mês fechado, "Suas compras subiram 14% em novembro".
+        const quem = despesa ? (aberto ? "Suas compras do mês" : "Suas compras") : aberto ? "As entradas avulsas do mês" : "As entradas avulsas"
+        manchete = [{ texto: `${quem} ${verbo} ` }, { texto: porcento(vVar), tom: tomDe(subiu) }, ...(aberto ? [] : [{ texto: quando }])]
         diferenca = c.variavel.total - normalVar
     } else if (c.caso !== "normal" && c.variacaoTotal != null && c.direcao != null) {
         manchete = [

@@ -930,8 +930,8 @@ describe("Chart: faixa, previsto, ticks e posições de rótulo no gráfico de l
 
 describe("ChartSplitCompare", () => {
   const config = {
-    variavel: { label: "O que você controla", color: "var(--chart-2)" },
-    fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
+    variavel: { label: "Compras do mês", color: "var(--chart-2)" },
+    fixo: { label: "Parcelas e assinaturas", color: "var(--color-muted-foreground)" },
   }
   const html = renderToStaticMarkup(
     h(ChartSplitCompare, {
@@ -988,7 +988,7 @@ describe("ChartSplitCompare", () => {
   it("o nome acessível lista as linhas e os pedaços com valor", () => {
     expect(html).toContain('role="img"')
     expect(html).toMatch(
-      /aria-label="Do que é feito o mês: seu normal R\$\s2\.760,00 \(O que você controla R\$\s2\.760,00\); novembro R\$\s3\.583,00 \(O que você controla R\$\s3\.140,00, Já decidido R\$\s443,00\)"/
+      /aria-label="Do que é feito o mês: seu normal R\$\s2\.760,00 \(Compras do mês R\$\s2\.760,00\); novembro R\$\s3\.583,00 \(Compras do mês R\$\s3\.140,00, Parcelas e assinaturas R\$\s443,00\)"/
     )
   })
   it("a referência é listrada em tokens, e o sólido pinta a cor e a tinta de cada pedaço", () => {

@@ -33,7 +33,7 @@ function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean) {
 
 /**
  * "Do que é feito o mês" em três cartões: a leitura do mês (`LeituraDoMes`) em cima e, embaixo, as duas
- * listas lado a lado — o que você controla primeiro, mais largo; o já decidido com o rodapé no pé. Some sem lançamento.
+ * listas lado a lado — as compras do mês primeiro, mais largas; as parcelas e assinaturas com o rodapé no pé. Some sem lançamento.
  */
 export function DoQueEFeitoOMes({
     composicao,
@@ -61,9 +61,15 @@ export function DoQueEFeitoOMes({
 
     const comFixo = fixo.itens.length > 0
     const comVariavel = variavel.grupos.length > 0
+    // Os nomes dizem o que tem em cada lado (23/11/2026; era "O que você controla" × "Já decidido").
+    const tituloDoFixo = despesa
+        ? fixo.itens.some((i) => i.tipo === "assinatura")
+            ? "Parcelas e assinaturas"
+            : "Parcelas"
+        : "Entradas fixas"
     const config = {
-        variavel: { label: despesa ? "O que você controla" : "Avulsas", color: corDaSerie },
-        fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
+        variavel: { label: despesa ? "Compras do mês" : "Entradas avulsas", color: corDaSerie },
+        fixo: { label: tituloDoFixo, color: "var(--color-muted-foreground)" },
     } satisfies ChartConfig
     const nomeMes = nomeDoMes(yearMonth)
     const { normais, variacaoTotal, direcao } = composicao
@@ -107,11 +113,6 @@ export function DoQueEFeitoOMes({
             </Badge>
         ) : null
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
-    const tituloDoFixo = despesa
-        ? fixo.itens.some((i) => i.tipo === "assinatura")
-            ? "Já decidido · parcelas e assinaturas"
-            : "Já decidido · parcelas"
-        : "Já decidido · entradas fixas"
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
     // O "Em <mês> já entram" mora no pé do gráfico; aqui fica só quando a última parcela acaba.
@@ -172,7 +173,7 @@ export function DoQueEFeitoOMes({
                 </div>
             </div>
 
-            {/* O que se controla vem primeiro e mais largo; abaixo de 36rem da área, empilha nessa ordem. */}
+            {/* As compras do mês vêm primeiro e mais largo; abaixo de 36rem da área, empilha nessa ordem. */}
             <div className="@container">
                 <div className="grid gap-(--space-block) @xl:grid-cols-[5fr_4fr]">
                     {comVariavel ? (

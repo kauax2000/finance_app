@@ -87,7 +87,7 @@ export function LeituraDoMes({
                         <Separator className="mt-2" />
                         <div className="flex flex-col gap-3 pt-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                             <p>
-                                Com o dia a dia no seu normal, {sugestao.mes} {despesa ? "fecha" : "deve entrar"} perto de{" "}
+                                {despesa ? "Com as compras no ritmo de sempre" : "Com as entradas avulsas no ritmo de sempre"}, {sugestao.mes} {despesa ? "fecha" : "deve entrar"} perto de{" "}
                                 <span className="nums font-semibold text-foreground">{reaisInteiros(sugestao.valor)}</span>
                             </p>
                             {sugestao.grupo && onVer ? (

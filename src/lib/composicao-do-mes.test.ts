@@ -284,7 +284,7 @@ describe("leituraDoMes", () => {
     it("a Carro: manchete do variável, dois motivos em reais e a sugestão", () => {
         const l = leituraDoMes(carro, true, "2026-11", true)
         expect(l.tom).toBe("warning")
-        expect(texto(l.manchete)).toBe("O que você controla subiu 14% este mês")
+        expect(texto(l.manchete)).toBe("Suas compras do mês subiram 14%")
         expect(l.manchete.find((p) => p.texto === "14%")?.tom).toBe("warning")
         expect(texto(l.apoio)).toBe("São R$ 380 acima do seu normal, e quase tudo veio de dois lugares:")
         expect(l.motivos).toEqual([
@@ -317,7 +317,7 @@ describe("leituraDoMes", () => {
     }
     it("a Renata: só os motivos que subiram", () => {
         const l = leituraDoMes(renata, true, "2026-11", true)
-        expect(texto(l.manchete)).toBe("O que você controla subiu 67% este mês")
+        expect(texto(l.manchete)).toBe("Suas compras do mês subiram 67%")
         expect(l.motivos).toEqual([
             { chave: "corte", nome: "Corte e hidratação", detalhe: "novo", delta: 480, parte: "variavel" },
         ])
@@ -325,7 +325,7 @@ describe("leituraDoMes", () => {
         expect(texto(l.apoio)).toBe("São R$ 312 acima do seu normal, e veio de um lugar:")
     })
     it("mês fechado nomeia o mês", () => {
-        expect(texto(leituraDoMes(renata, true, "2026-11", false).manchete)).toBe("O que você controla subiu 67% em novembro")
+        expect(texto(leituraDoMes(renata, true, "2026-11", false).manchete)).toBe("Suas compras subiram 67% em novembro")
     })
     it("motivos que cobrem pouco da diferença: o que mais pesou", () => {
         const c: ComposicaoDoMes = {
@@ -334,16 +334,16 @@ describe("leituraDoMes", () => {
         }
         expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("São R$ 312 acima do seu normal. O que mais pesou:")
     })
-    it("a receita diz avulsas e inverte o tom", () => {
+    it("a receita diz entradas avulsas e inverte o tom", () => {
         const l = leituraDoMes(renata, false, "2026-11", true)
-        expect(texto(l.manchete)).toBe("As avulsas subiram 67% este mês")
+        expect(texto(l.manchete)).toBe("As entradas avulsas do mês subiram 67%")
         expect(l.manchete.find((p) => p.texto === "67%")?.tom).toBe("success")
         expect(l.tom).toBe("success")
     })
     it("a receita chama o fixo de entradas fixas", () => {
         const c: ComposicaoDoMes = { ...renata, variavel: { ...renata.variavel, total: 300 } }
         const l = leituraDoMes(c, false, "2026-11", true)
-        expect(texto(l.manchete)).toBe("As avulsas caíram 35% este mês")
+        expect(texto(l.manchete)).toBe("As entradas avulsas do mês caíram 35%")
         expect(l.motivos.map((m) => [m.nome, m.delta])).toEqual([
             ["Entradas fixas", -402],
             ["Manicure", -188],
@@ -393,7 +393,7 @@ describe("leituraDoMes", () => {
         const c: ComposicaoDoMes = { ...carro, normais: { fixo: null, variavel: null }, caso: "semMedia", direcao: null, variacaoTotal: null }
         const l = leituraDoMes(c, true, "2026-11", true)
         expect(texto(l.manchete)).toBe("Ainda não dá para comparar este mês")
-        expect(texto(l.apoio)).toBe("R$ 739 fixos e R$ 3.139 do dia a dia neste mês.")
+        expect(texto(l.apoio)).toBe("R$ 739 em parcelas e assinaturas, R$ 3.139 em compras neste mês.")
         expect(l.motivos).toEqual([])
         expect(l.sugestao).toBeNull()
     })

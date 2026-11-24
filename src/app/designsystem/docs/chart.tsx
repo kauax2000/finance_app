@@ -556,8 +556,8 @@ function DemoDivisaoComLista() {
 
 // A Carro de novembro: o normal (média dos meses) contra o mês, na mesma escala.
 const CONFIG_COMPARADAS = {
-  variavel: { label: "O que você controla", color: "var(--chart-2)" },
-  fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" },
+  variavel: { label: "Compras do mês", color: "var(--chart-2)" },
+  fixo: { label: "Parcelas e assinaturas", color: "var(--color-muted-foreground)" },
 } satisfies ChartConfig
 
 function DemoComparadas() {
@@ -1671,8 +1671,8 @@ const config = {
           </>
         }
         code={`<ChartSplitCompare
-  config={{ variavel: { label: "O que você controla", color: corDaCategoria },
-            fixo: { label: "Já decidido", color: "var(--color-muted-foreground)" } }}
+  config={{ variavel: { label: "Compras do mês", color: corDaCategoria },
+            fixo: { label: "Parcelas e assinaturas", color: "var(--color-muted-foreground)" } }}
   label="Do que é feito o mês"
   rows={[
     { label: "seu normal", variant: "ghost",

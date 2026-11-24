@@ -115,8 +115,8 @@ export default function CardDoc() {
       >
         {(
           [
-            ["warm", "O que você controla subiu 14% este mês."],
-            ["cool", "O que você controla caiu 9% este mês."],
+            ["warm", "Suas compras do mês subiram 14%."],
+            ["cool", "Suas compras do mês caíram 9%."],
             ["neutral", "O mês está dentro do seu normal."],
           ] as const
         ).map(([mood, frase]) => (

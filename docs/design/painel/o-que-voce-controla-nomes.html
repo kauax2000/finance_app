@@ -1,0 +1,105 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Nome da divisão</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@600&family=Ledger&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#9a9a9a;--border:rgba(255,255,255,.1);--warn:oklch(0.82 0.13 78);
+--violet:oklch(0.66 0.2 288);--blue:oklch(0.8 0.14 220);--magenta:oklch(0.72 0.28 335);--coral:oklch(0.75 0.18 38);--amber:oklch(0.88 0.17 90);--teal:oklch(0.82 0.12 195);--indigo:oklch(0.66 0.19 262);--green:oklch(0.88 0.18 130);
+--rb:linear-gradient(135deg in oklch,var(--teal),var(--blue) 14%,var(--indigo) 32%,var(--violet) 46%,var(--magenta) 60%,var(--coral) 74%,var(--amber) 88%,var(--green));
+--l:var(--magenta);--c:var(--coral);--r:var(--amber)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 10px;max-width:900px}
+h2{font:600 17px Inter;margin:36px 0 4px}.sub{color:var(--mut);margin:0 0 14px;max-width:820px;font-size:13px}
+.card{position:relative;isolation:isolate;max-width:800px;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:16px;overflow:clip}
+.k{display:flex;align-items:center;gap:8px;color:var(--mut)}
+.s{width:22px;height:22px;border-radius:99px;background:#262626;display:grid;place-items:center}.star{background:var(--rb);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:12px}
+.hl{font:400 24px/1.25 Ledger,serif;margin:8px 0 6px}.w{color:var(--warn)}
+.p{color:var(--mut);margin:0}.p b{color:var(--fg)}
+.rows{display:grid;grid-template-columns:240px 280px 1fr;row-gap:10px;column-gap:16px;margin-top:14px;align-items:center;font-size:15px}
+.dot{width:8px;height:8px;border-radius:9px;display:inline-block;margin-right:10px}.tag{font-size:12.5px;color:var(--mut);margin-left:6px}
+.tr{height:6px;border-radius:99px;background:rgba(255,255,255,.08);position:relative}.tr i{position:absolute;inset:0 auto 0 0;border-radius:99px}
+.v{text-align:right;font:600 15px "Geist Mono";color:var(--warn)}
+.ft{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);color:var(--mut);font-size:15px}.ft b{color:var(--fg)}
+.btn{background:rgba(255,255,255,.08);border-radius:99px;padding:8px 16px;color:var(--fg)}
+.aur{position:absolute;z-index:-2;pointer-events:none;filter:blur(30px);inset:-30% -12% 35% -12%;background:radial-gradient(40% 70% at 12% 0%,color-mix(in oklch,var(--l) 65%,transparent),transparent 70%),radial-gradient(35% 70% at 55% -10%,color-mix(in oklch,var(--c) 55%,transparent),transparent 70%),radial-gradient(30% 60% at 92% 0%,color-mix(in oklch,var(--r) 45%,transparent),transparent 70%)}
+.edge{position:absolute;inset:-1px;border-radius:22px;border:1.5px solid transparent;z-index:-1;pointer-events:none;background:linear-gradient(90deg in oklch,var(--l),var(--c) 50%,var(--r)) border-box;-webkit-mask:var(--fade,linear-gradient(#000 20%,rgb(0 0 0/.12))) border-box,linear-gradient(#000 0 0) padding-box;-webkit-mask-composite:source-out;mask-composite:subtract}
+.inner{position:absolute;inset:0;border-radius:22px;pointer-events:none;box-shadow:inset 0 1px 18px -4px color-mix(in oklch,var(--c) 45%,transparent),inset 18px 0 30px -22px color-mix(in oklch,var(--l) 60%,transparent),inset -18px 0 30px -22px color-mix(in oklch,var(--r) 50%,transparent)}
+/* atual: borda sem borda neutra */
+.now{border-color:transparent}
+/* M1 borda some no meio, aurora a 55% */
+.m1{border-color:var(--border)}.m1 .edge{--fade:linear-gradient(#000 0%,rgb(0 0 0/.35) 22%,transparent 50%);opacity:.8}.m1 .aur{opacity:.55}
+/* M2 só um fio de luz no topo */
+.m2 .aur{opacity:.4;inset:-40% 5% 50% 5%}
+.m2 .line{position:absolute;top:-1px;left:12%;right:12%;height:1px;background:linear-gradient(90deg in oklch,transparent,var(--l) 25%,var(--c) 50%,var(--r) 75%,transparent);opacity:.85}
+/* M3 véu de uma cor */
+.m3 .aur{opacity:.32;background:radial-gradient(60% 90% at 20% 0%,color-mix(in oklch,var(--c) 70%,transparent),transparent 70%)}
+.m3 .ln{position:absolute;inset:0;border-radius:22px;pointer-events:none;box-shadow:inset 0 1px 0 color-mix(in oklch,var(--c) 30%,transparent)}
+/* M4 a luz nasce do selo */
+.m4 .glow{position:absolute;left:-60px;top:-70px;width:260px;height:200px;border-radius:50%;z-index:-1;filter:blur(36px);opacity:.5;background:radial-gradient(circle at 40% 45%,var(--c),color-mix(in oklch,var(--l) 60%,transparent) 40%,transparent 70%)}
+.m4 .s{background:radial-gradient(100% 75% at 50% 118%,var(--c),transparent 62%),#0b0b0d;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 12px -2px color-mix(in oklch,var(--c) 70%,transparent)}
+.m4 .line{position:absolute;top:-1px;left:4%;width:30%;height:1px;background:linear-gradient(90deg,transparent,color-mix(in oklch,var(--c) 80%,#fff),transparent);opacity:.7}
+
+.card{border-color:var(--border);margin-bottom:14px}
+.edge{--fade:linear-gradient(#000 0%,rgb(0 0 0/.35) 22%,transparent 50%);opacity:.8}.aur{opacity:.55}
+.s{width:28px;height:28px;background:radial-gradient(100% 75% at 50% 118%,var(--c),transparent 62%),radial-gradient(55% 55% at 10% 105%,var(--l),transparent 70%),radial-gradient(55% 55% at 90% 105%,var(--r),transparent 70%),#0b0b0d}
+.opt{display:grid;grid-template-columns:1fr;gap:0;max-width:800px}
+.blk h3{font:600 16px Inter;margin:0 0 12px;display:flex;justify-content:space-between}.pill{font:500 12px Inter;background:oklch(0.35 0.07 78);color:var(--warn);padding:2px 9px;border-radius:99px}
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.col{background:rgba(255,255,255,.03);border-radius:16px;padding:12px}
+.ct{display:flex;justify-content:space-between;align-items:baseline;font-weight:500;margin-bottom:2px}.ct span{color:var(--mut);font-weight:400;font-size:12.5px}
+.help{color:var(--mut);font-size:12.5px;margin:0 0 10px}
+.ln{display:grid;grid-template-columns:1fr auto;padding:6px 0;border-top:1px solid var(--border);font-size:13.5px}.ln small{display:block;color:var(--mut);font-size:12px}.ln .u{color:var(--warn);font-size:12px}.ln .d{color:oklch(0.75 0.14 152);font-size:12px}
+.bar{display:flex;gap:2px;height:28px;margin:6px 0 12px}.bar i{border-radius:7px;display:flex;align-items:center;padding:0 10px;font:600 12px "Geist Mono";color:#111}
+.leg{display:flex;gap:16px;font-size:12.5px;color:var(--mut);margin-bottom:14px}
+</style></head><body>
+<h1>Como chamar "o que você controla"</h1>
+<p class="lead">Os mesmos dados do Carro em novembro, com a mesma conta. Só mudam as palavras: a manchete da Leitura, os nomes das duas colunas e a frase do rodapé. A, B e C lado a lado com o de hoje.</p>
+<h2>Hoje</h2><p class='sub'>O nome abstrato: a pessoa precisa entender a ideia de controle antes de saber do que se trata.</p><div class='opt'><div class="card"><div class="aur"></div><div class="edge"></div><div class="k"><span class="s"><span class="star">✦</span></span>Leitura do mês</div>
+<div class="hl">O que você controla subiu <span class="w">14%</span> este mês</div><p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+<div class="rows"><div><span class="dot" style="background:#f08a5d"></span>Abastecimento</div><div class="tr"><i style="width:100%;background:#f08a5d"></i></div><div class="v">+R$ 340</div>
+<div><span class="dot" style="background:#9a9a9a"></span>Seguro carro<span class="tag">novo desde set</span></div><div class="tr"><i style="width:87%;background:#aaa"></i></div><div class="v">+R$ 295</div></div>
+<div class="ft"><span>Com o dia a dia no seu normal, dezembro fecha perto de <b>R$ 3.202</b></span><span class="btn">Ver Abastecimento</span></div></div><div class="card blk"><h3>Do que é feito o mês <span class="pill">+23%</span></h3>
+<div class="bar"><i style="flex:3140;background:#f08a5d">R$ 3.140</i><i style="flex:443;background:#666;color:#ddd">443</i></div>
+<div class="leg"><span>● O que você controla · R$ 3.140 · 88%</span><span>● Já decidido · parcelas · R$ 443 · 12%</span></div>
+<div class="cols"><div class="col"><div class="ct">O que você controla<span>vs seu normal</span></div>
+<div class="ln"><div>Consórcio Mãe<small>9 nov</small></div><div style="text-align:right">R$ 2.000<small class="d">R$ 371 abaixo · ↓ 16%</small></div></div>
+<div class="ln"><div>Abastecimento<small>5 vezes · última 22 nov</small></div><div style="text-align:right">R$ 840<small class="u">R$ 340 acima · ↑ 68%</small></div></div>
+<div class="ln"><div>Gasolina<small>22 nov</small></div><div style="text-align:right">R$ 240<small class="u">R$ 107 acima · ↑ 81%</small></div></div></div>
+<div class="col"><div class="ct">Já decidido · parcelas<span>1 ativa</span></div>
+<div class="ln"><div>Seguro carro<small>3/12</small></div><div>R$ 443</div></div>
+<div class="ln"><div style="color:var(--mut)">A última parcela acaba em</div><div>ago/27</div></div></div></div></div></div><h2>A · Compras do mês × Parcelas e assinaturas (minha escolha)</h2><p class='sub'>Diz o que tem em cada lado. A pessoa reconhece as próprias compras e as parcelas sem precisar de explicação.</p><div class='opt'><div class="card"><div class="aur"></div><div class="edge"></div><div class="k"><span class="s"><span class="star">✦</span></span>Leitura do mês</div>
+<div class="hl">Suas compras do mês subiram <span class="w">14%</span></div><p class="p">São <b>R$ 380 a mais</b> do que você costuma gastar em compras aqui, e quase tudo veio de dois lugares:</p>
+<div class="rows"><div><span class="dot" style="background:#f08a5d"></span>Abastecimento</div><div class="tr"><i style="width:100%;background:#f08a5d"></i></div><div class="v">+R$ 340</div>
+<div><span class="dot" style="background:#9a9a9a"></span>Seguro carro<span class="tag">novo desde set</span></div><div class="tr"><i style="width:87%;background:#aaa"></i></div><div class="v">+R$ 295</div></div>
+<div class="ft"><span>Com as compras no ritmo de sempre, dezembro fecha perto de <b>R$ 3.202</b></span><span class="btn">Ver Abastecimento</span></div></div><div class="card blk"><h3>Do que é feito o mês <span class="pill">+23%</span></h3>
+<div class="bar"><i style="flex:3140;background:#f08a5d">R$ 3.140</i><i style="flex:443;background:#666;color:#ddd">443</i></div>
+<div class="leg"><span>● Compras do mês · R$ 3.140 · 88%</span><span>● Parcelas e assinaturas · R$ 443 · 12%</span></div>
+<div class="cols"><div class="col"><div class="ct">Compras do mês<span>vs o de costume</span></div>
+<div class="ln"><div>Consórcio Mãe<small>9 nov</small></div><div style="text-align:right">R$ 2.000<small class="d">R$ 371 abaixo · ↓ 16%</small></div></div>
+<div class="ln"><div>Abastecimento<small>5 vezes · última 22 nov</small></div><div style="text-align:right">R$ 840<small class="u">R$ 340 acima · ↑ 68%</small></div></div>
+<div class="ln"><div>Gasolina<small>22 nov</small></div><div style="text-align:right">R$ 240<small class="u">R$ 107 acima · ↑ 81%</small></div></div></div>
+<div class="col"><div class="ct">Parcelas e assinaturas<span>1 ativa</span></div>
+<div class="ln"><div>Seguro carro<small>3/12</small></div><div>R$ 443</div></div>
+<div class="ln"><div style="color:var(--mut)">A última parcela acaba em</div><div>ago/27</div></div></div></div></div></div><h2>B · Dia a dia × Contas fixas</h2><p class='sub'>Uma palavra só para cada lado, e o rodapé de hoje já fala em "dia a dia". Mais curto, um pouco mais vago que o A.</p><div class='opt'><div class="card"><div class="aur"></div><div class="edge"></div><div class="k"><span class="s"><span class="star">✦</span></span>Leitura do mês</div>
+<div class="hl">Seu gasto do dia a dia subiu <span class="w">14%</span></div><p class="p">São <b>R$ 380 acima</b> do seu normal, e quase tudo veio de dois lugares:</p>
+<div class="rows"><div><span class="dot" style="background:#f08a5d"></span>Abastecimento</div><div class="tr"><i style="width:100%;background:#f08a5d"></i></div><div class="v">+R$ 340</div>
+<div><span class="dot" style="background:#9a9a9a"></span>Seguro carro<span class="tag">novo desde set</span></div><div class="tr"><i style="width:87%;background:#aaa"></i></div><div class="v">+R$ 295</div></div>
+<div class="ft"><span>Com o dia a dia no seu normal, dezembro fecha perto de <b>R$ 3.202</b></span><span class="btn">Ver Abastecimento</span></div></div><div class="card blk"><h3>Do que é feito o mês <span class="pill">+23%</span></h3>
+<div class="bar"><i style="flex:3140;background:#f08a5d">R$ 3.140</i><i style="flex:443;background:#666;color:#ddd">443</i></div>
+<div class="leg"><span>● Dia a dia · R$ 3.140 · 88%</span><span>● Contas fixas · R$ 443 · 12%</span></div>
+<div class="cols"><div class="col"><div class="ct">Dia a dia<span>vs seu normal</span></div>
+<div class="ln"><div>Consórcio Mãe<small>9 nov</small></div><div style="text-align:right">R$ 2.000<small class="d">R$ 371 abaixo · ↓ 16%</small></div></div>
+<div class="ln"><div>Abastecimento<small>5 vezes · última 22 nov</small></div><div style="text-align:right">R$ 840<small class="u">R$ 340 acima · ↑ 68%</small></div></div>
+<div class="ln"><div>Gasolina<small>22 nov</small></div><div style="text-align:right">R$ 240<small class="u">R$ 107 acima · ↑ 81%</small></div></div></div>
+<div class="col"><div class="ct">Contas fixas<span>1 ativa</span></div>
+<div class="ln"><div>Seguro carro<small>3/12</small></div><div>R$ 443</div></div>
+<div class="ln"><div style="color:var(--mut)">A última parcela acaba em</div><div>ago/27</div></div></div></div></div></div><h2>C · O motivo primeiro, com a regra dita</h2><p class='sub'>A manchete começa pelo que puxou, não pela divisão. As colunas ganham uma linha que explica a regra: o que muda de mês a mês e o que já tem valor certo.</p><div class='opt'><div class="card"><div class="aur"></div><div class="edge"></div><div class="k"><span class="s"><span class="star">✦</span></span>Leitura do mês</div>
+<div class="hl">Abastecimento puxou o mês: <span class="w">R$ 340</span> acima do normal</div><p class="p">Junto com o Seguro carro, que começou em setembro, explica quase todo o aumento de <b>R$ 380</b>:</p>
+<div class="rows"><div><span class="dot" style="background:#f08a5d"></span>Abastecimento</div><div class="tr"><i style="width:100%;background:#f08a5d"></i></div><div class="v">+R$ 340</div>
+<div><span class="dot" style="background:#9a9a9a"></span>Seguro carro<span class="tag">novo desde set</span></div><div class="tr"><i style="width:87%;background:#aaa"></i></div><div class="v">+R$ 295</div></div>
+<div class="ft"><span>Se o abastecimento voltar ao normal, dezembro fecha perto de <b>R$ 3.202</b></span><span class="btn">Ver Abastecimento</span></div></div><div class="card blk"><h3>Do que é feito o mês <span class="pill">+23%</span></h3>
+<div class="bar"><i style="flex:3140;background:#f08a5d">R$ 3.140</i><i style="flex:443;background:#666;color:#ddd">443</i></div>
+<div class="leg"><span>● Gastos que variam · R$ 3.140 · 88%</span><span>● Valores fixos · R$ 443 · 12%</span></div>
+<div class="cols"><div class="col"><div class="ct">Gastos que variam<span>vs seu normal</span></div><p class="help">Muda de um mês para o outro, conforme você usa.</p>
+<div class="ln"><div>Consórcio Mãe<small>9 nov</small></div><div style="text-align:right">R$ 2.000<small class="d">R$ 371 abaixo · ↓ 16%</small></div></div>
+<div class="ln"><div>Abastecimento<small>5 vezes · última 22 nov</small></div><div style="text-align:right">R$ 840<small class="u">R$ 340 acima · ↑ 68%</small></div></div>
+<div class="ln"><div>Gasolina<small>22 nov</small></div><div style="text-align:right">R$ 240<small class="u">R$ 107 acima · ↑ 81%</small></div></div></div>
+<div class="col"><div class="ct">Valores fixos<span>1 ativa</span></div><p class="help">Parcelas e assinaturas: o valor já é certo todo mês.</p>
+<div class="ln"><div>Seguro carro<small>3/12</small></div><div>R$ 443</div></div>
+<div class="ln"><div style="color:var(--mut)">A última parcela acaba em</div><div>ago/27</div></div></div></div></div></div></body></html>
