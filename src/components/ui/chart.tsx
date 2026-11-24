@@ -2876,7 +2876,7 @@ function ChartSplitCompareSegmentBox({
   segment: ChartSplitCompareSegment
   variant: "solid" | "ghost"
   color: string
-  size: "md" | "lg"
+  size: "md" | "lg" | "xl"
 }) {
   const caixaRef = React.useRef<HTMLDivElement>(null)
   const longoRef = React.useRef<HTMLSpanElement>(null)
@@ -2911,7 +2911,7 @@ function ChartSplitCompareSegmentBox({
       data-fit={segment.text ? cabe : undefined}
       className={cn(
         "relative flex min-w-1.5 items-center overflow-hidden rounded-lg px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
-        size === "lg" ? "h-12" : "h-8",
+        size === "xl" ? "h-14" : size === "lg" ? "h-12" : "h-8",
         chartSplitGrowClassName,
         variant === "ghost" && chartSplitCompareGhostClassName
       )}
@@ -2942,7 +2942,8 @@ function ChartSplitCompareSegmentBox({
  * `ghost` em cima, o mês `solid` embaixo. O texto de dentro cai para o curto, ou
  * some, quando o pedaço não o comporta (medido por `ResizeObserver`). O rótulo
  * fica numa coluna à esquerda, compartilhada pelas linhas, e sobe acima da barra
- * abaixo de 18rem da própria largura (container query). Pedaço de valor 0 não
+ * abaixo de 18rem da própria largura (container query); `labelPosition="top"` o põe
+ * sempre acima. Pedaço de valor 0 não
  * se desenha. O nome acessível lista as linhas e os pedaços com o valor.
  */
 function ChartSplitCompare({
@@ -2952,6 +2953,7 @@ function ChartSplitCompare({
   description,
   format = "currency",
   size = "md",
+  labelPosition = "side",
   className,
 }: {
   rows: ChartSplitCompareRow[]
@@ -2959,8 +2961,10 @@ function ChartSplitCompare({
   label: string
   description?: string
   format?: ChartFormat
-  /** A altura do pedaço: `md` 32px, `lg` 48px (o cartão que divide a linha com um gráfico mais alto). */
-  size?: "md" | "lg"
+  /** A altura do pedaço: `md` 32px, `lg` 48px (o cartão que divide a linha com um gráfico mais alto), `xl` 56px. */
+  size?: "md" | "lg" | "xl"
+  /** Onde mora o rótulo: `side`, a coluna à esquerda (sobe abaixo de 18rem); `top`, sempre acima da barra. */
+  labelPosition?: "side" | "top"
   className?: string
 }) {
   const valor = (s: ChartSplitCompareSegment) =>
@@ -2987,7 +2991,11 @@ function ChartSplitCompare({
     >
       <div
         data-slot="chart-split-compare"
-        className="grid grid-cols-[minmax(0,1fr)] gap-y-3 @2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)] @2xs/chart-split-compare:gap-x-2.5"
+        data-label-position={labelPosition}
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] gap-y-3",
+          labelPosition === "side" && "@2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)] @2xs/chart-split-compare:gap-x-2.5"
+        )}
       >
         {rows.map((r, i) => {
           const variant = r.variant ?? "solid"
@@ -2996,7 +3004,11 @@ function ChartSplitCompare({
               key={`${r.label}-${i}`}
               data-slot="chart-split-compare-row"
               data-variant={variant}
-              className="flex flex-col gap-1 @2xs/chart-split-compare:col-span-2 @2xs/chart-split-compare:grid @2xs/chart-split-compare:grid-cols-subgrid @2xs/chart-split-compare:items-center"
+              className={cn(
+                "flex flex-col gap-1",
+                labelPosition === "side" &&
+                  "@2xs/chart-split-compare:col-span-2 @2xs/chart-split-compare:grid @2xs/chart-split-compare:grid-cols-subgrid @2xs/chart-split-compare:items-center"
+              )}
             >
               <span
                 aria-hidden

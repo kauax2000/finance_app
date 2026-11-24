@@ -140,7 +140,8 @@ export function DoQueEFeitoOMes({
                                     label={`${despesa ? "Gasto" : "Recebido"} de ${nomeMes}${nomeAnterior ? ` comparado com ${nomeAnterior}` : ""}`}
                                     config={config}
                                     rows={linhasDoGrafico}
-                                    size="lg"
+                                    size="xl"
+                                    labelPosition="top"
                                 />
                             </div>
                             {/* A legenda no pé, com o valor de cada parte: o fixo, estreito na barra, ganha o número aqui. */}

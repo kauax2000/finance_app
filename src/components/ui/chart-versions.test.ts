@@ -972,6 +972,15 @@ describe("ChartSplitCompare", () => {
     expect(lg).toContain("h-12")
     expect(lg).not.toContain("h-8")
   })
+  it("xl mede 56px, e labelPosition top tira a coluna do rótulo", () => {
+    const xl = renderToStaticMarkup(
+      h(ChartSplitCompare, { config, label: "x", size: "xl", labelPosition: "top", rows: [{ label: "a", segments: [{ key: "variavel", value: 1 }] }] })
+    )
+    expect(xl).toContain("h-14")
+    expect(xl).toContain('data-label-position="top"')
+    expect(xl).not.toContain("@2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)]")
+    expect(html).toContain("@2xs/chart-split-compare:grid-cols-[auto_minmax(0,1fr)]")
+  })
   it("não desenha o pedaço de valor 0", () => {
     expect(html.match(/data-slot="chart-split-compare-segment"/g)).toHaveLength(3)
     expect(html).not.toContain("flex:0 1 0")
