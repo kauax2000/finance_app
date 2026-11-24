@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Quem gastou — opções</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&family=Ledger&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#9a9a9a;--faint:#6f6f6f;--border:rgba(255,255,255,.08);--muted:#262626;--hov:rgba(237,237,237,.07);
+--p1:oklch(0.78 0.14 320);--p1i:#2a1030;--p2:oklch(0.80 0.15 100);--p2i:#2a2405;--warn:oklch(0.82 0.13 78);--ok:oklch(0.8 0.14 152)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 6px;max-width:860px}
+h2{font:600 17px Inter;margin:44px 0 4px}.sub{color:var(--mut);margin:0 0 14px;max-width:820px;font-size:13px}
+.m{font-family:"Geist Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border)}
+.t{font-weight:600;margin:0 0 14px}
+.av{width:32px;height:32px;border-radius:99px;display:grid;place-items:center;font:600 12px Inter;flex:none}
+.a1{background:var(--p1);color:var(--p1i)}.a2{background:var(--p2);color:var(--p2i)}
+.row{display:flex;align-items:center;gap:12px}
+.tr{height:8px;border-radius:99px;background:var(--muted);position:relative;flex:1;min-width:0}.tr i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:#eee}
+.mut{color:var(--mut)}.sm{font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:820px}
+.wrap{max-width:820px}
+.split{display:flex;gap:2px;height:12px}.split i{border-radius:99px}
+.dot{width:8px;height:8px;border-radius:99px;flex:none}
+.it{display:flex;align-items:center;gap:12px;padding:6px 8px;margin:0 -8px;border-radius:12px;cursor:pointer}.it:hover{background:var(--hov)}
+.chev{color:var(--faint)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--muted);border-radius:99px;padding:3px 10px;font-size:12px}
+.disp{font:20px/1.35 Ledger,serif}
+.tag{display:inline-block;font:600 11px Inter;letter-spacing:.02em;color:var(--mut);border:1px solid var(--border);border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.alt{background:var(--card);border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border);color:var(--mut);display:grid;place-items:center;min-height:100%;font-size:13px}
+</style></head><body>
+<h1>Quem gastou — opções</h1>
+<p class="lead">Carro, novembro de 2026. Hoje o cartão ocupa a largura toda com duas linhas: a barra corre ~640px entre o nome e o valor, não diz a fatia de cada um e não leva a lugar nenhum.</p>
+
+<h2>Hoje</h2>
+<div class="wrap card"><p class="t">Quem gastou</p>
+<div style="display:grid;gap:12px">
+<div class="row"><span class="av a1">KL</span><span style="width:112px">Kauã Leandro</span><span class="tr"><i style="width:93%"></i></span><span class="m" style="width:80px;text-align:right">R$ 3.342</span></div>
+<div class="row"><span class="av a2">RR</span><span style="width:112px">Renata Raab</span><span class="tr"><i style="width:7%"></i></span><span class="m" style="width:80px;text-align:right">R$ 240</span></div>
+</div></div>
+
+<h2>A · Barra dividida + lista <span class="tag">recomendo</span></h2>
+<p class="sub">Uma barra só diz "quem fez quanto do mês" (as partes somam 100%, na cor de cada pessoa). Embaixo, cada pessoa com a fatia, as compras e o valor. Meia largura, ao lado do insight (ou de outro cartão), e não esticado na página.</p>
+<div class="grid2">
+<div class="card"><p class="t">Quem gastou</p>
+<div class="split" style="margin-bottom:14px"><i style="flex:93;background:var(--p1)"></i><i style="flex:7;background:var(--p2)"></i></div>
+<div style="display:grid;gap:10px">
+<div class="row"><span class="av a1">KL</span><div style="flex:1;min-width:0"><div>Kauã Leandro</div><div class="sm mut">93% · 14 compras</div></div><span class="m">R$ 3.342</span></div>
+<div class="row"><span class="av a2">RR</span><div style="flex:1;min-width:0"><div>Renata Raab</div><div class="sm mut">7% · 2 compras</div></div><span class="m">R$ 240</span></div>
+</div></div>
+<div class="alt">insight / outro cartão ao lado</div>
+</div>
+
+<h2>B · Linhas que abrem as compras da pessoa</h2>
+<p class="sub">A mesma lista, mas cada linha é um toque: filtra "Principais gastos" e a lista do mês por quem lançou (pede um filtro por pessoa, que Transações ainda não tem). Diz também a variação de cada um contra outubro.</p>
+<div class="grid2">
+<div class="card"><p class="t">Quem gastou</p>
+<div style="display:grid;gap:2px">
+<div class="it"><span class="av a1">KL</span><div style="flex:1;min-width:0"><div>Kauã Leandro</div><div class="sm mut">93% · <span style="color:var(--warn)">+R$ 284</span> vs outubro</div></div><span class="m">R$ 3.342</span><span class="chev">›</span></div>
+<div class="it" style="background:var(--hov)"><span class="av a2">RR</span><div style="flex:1;min-width:0"><div>Renata Raab</div><div class="sm mut">7% · igual a outubro</div></div><span class="m">R$ 240</span><span class="chev">›</span></div>
+</div></div>
+<div class="card"><p class="t" style="margin-bottom:10px">Lançamentos do mês</p><span class="pill"><span class="av a2" style="width:16px;height:16px;font-size:8px">RR</span>Renata Raab ×</span><p class="sm mut" style="margin:10px 0 0">2 lançamentos · R$ 240</p></div>
+</div>
+
+<h2>C · Uma frase, com a barra</h2>
+<p class="sub">Na voz da Leitura do mês: a frase diz o que importa ("quase tudo foi do Kauã"), a barra dividida confirma, e o detalhe fica nos pontos. Mais leve, mas uma segunda frase em Ledger compete com a Leitura no topo.</p>
+<div class="wrap card"><p class="t">Quem gastou</p>
+<p class="disp" style="margin:0 0 12px">Kauã fez <span class="m" style="font-family:Ledger">93%</span> dos gastos com Carro; Renata, os outros <span style="font-family:Ledger">R$ 240</span>.</p>
+<div class="split" style="margin-bottom:10px"><i style="flex:93;background:var(--p1)"></i><i style="flex:7;background:var(--p2)"></i></div>
+<div class="row sm mut" style="gap:16px"><span class="row" style="gap:6px"><span class="dot" style="background:var(--p1)"></span>Kauã <span class="m" style="color:var(--fg)">R$ 3.342</span></span><span class="row" style="gap:6px"><span class="dot" style="background:var(--p2)"></span>Renata <span class="m" style="color:var(--fg)">R$ 240</span></span></div>
+</div>
+
+<h2>Refinos que valem para qualquer uma</h2>
+<ul class="sub" style="max-width:820px">
+<li>Meia largura no desktop, em par com o insight (hoje cada um ocupa a linha inteira com pouco dentro).</li>
+<li>A fatia em % ao lado do valor: a barra sozinha não diz "93%".</li>
+<li>Pessoa na cor de identidade (a mesma do avatar), em vez da barra branca igual para todos.</li>
+<li>Linha vira <code>Item</code> do design system (hoje é <code>&lt;li&gt;</code> à mão com larguras fixas: nome em 112px corta "Renata Raab Oliveira").</li>
+</ul>
+</body></html>
