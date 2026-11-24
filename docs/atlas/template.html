@@ -1381,7 +1381,7 @@
         <table>
           <thead><tr><th>Era</th><th>Lacuna</th><th>O que fechou</th></tr></thead>
           <tbody>
-            <tr><td>112</td><td>O Apple Pay não lançou nenhuma compra de 3 a 23 nov 2026: o atalho mandava a transação da Carteira só como <code>text</code>, e a Edge <code>capture</code> só trata o pedido como Apple Pay quando <code>amount</code> vem ("Não lançado: Não entendi o valor")</td><td>Fechada no código em 23 nov 2026, ainda não publicada: o atalho (versão 3) manda <code>amount</code>, <code>merchant</code>, <code>card</code>, <code>text</code> e <code>source: apple_pay</code>; a Edge responde 422 <code>sem_valor</code> com o eco do que chegou e o Apple Pay não chama a IA</td></tr>
+            <tr><td>112</td><td>O Apple Pay não lançou nenhuma compra de 3 a 23 nov 2026: o atalho mandava a transação da Carteira só como <code>text</code>, e a Edge <code>capture</code> só trata o pedido como Apple Pay quando <code>amount</code> vem ("Não lançado: Não entendi o valor")</td><td>Fechada e publicada em 23 nov 2026 (Edge <code>capture</code>): o atalho (versão 3) manda <code>amount</code>, <code>merchant</code>, <code>card</code>, <code>text</code> e <code>source: apple_pay</code>; a Edge responde 422 <code>sem_valor</code> com o eco do que chegou e o Apple Pay não chama a IA</td></tr>
             <tr><td>106</td><td>A Edge <code>capture</code> dividia o parser melhorado (fala, categoria aprendida, IA de categoria) só no repositório; o Atalho do iPhone e o Apple Pay seguiam com o parser antigo</td><td>A migração <code>20261123120000_historico_da_frase.sql</code> subiu primeiro, a RPC foi testada, e a Edge <code>capture</code> foi publicada em 23 nov 2026</td></tr>
           </tbody>
         </table>
