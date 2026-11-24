@@ -31,13 +31,14 @@ import { formatYearMonth, parseYearMonthParam, periodBoundsFromYearMonth } from 
 import { upsertCategoryBudget, deleteCategoryBudgetById, definirRepeticao } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
-import { toastError } from "@/lib/toast"
+import { toastError, toastSuccess } from "@/lib/toast"
 import { CategoryDetailSkeleton } from "@/components/categories/detail/category-detail-skeleton"
 import { CategoryDetailLayout } from "@/components/categories/detail/category-detail-layout"
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
 import { FaixaDoMes } from "@/components/categories/detail/faixa-do-mes"
 import { UltimosSeisMeses } from "@/components/categories/detail/resumo/ultimos-seis-meses"
-import { InsightDaCategoria } from "@/components/categories/detail/resumo/insight-da-categoria"
+import { InsightsDaCategoria } from "@/components/categories/detail/resumo/insights-da-categoria"
+import { DialogoDaRecorrencia } from "@/components/insights/dialogo-da-recorrencia"
 import { DoQueEFeitoOMes } from "@/components/categories/detail/do-que-e-feito-o-mes"
 import { QuemGastou } from "@/components/categories/detail/quem-gastou"
 import { composicaoDoMes, leituraDoMes, quemGastou } from "@/lib/composicao-do-mes"
@@ -58,7 +59,15 @@ import {
     serieDosMeses,
 } from "@/lib/categoria-detalhe"
 import { compromissos } from "@/lib/categoria-resumo"
-import { insightsLocais, paraQuemLe } from "@/lib/insights-da-categoria"
+import {
+    insightsDaCaixa,
+    insightsLocais,
+    ordenarInsights,
+    paraQuemLe,
+    type InsightDaCategoria,
+} from "@/lib/insights-da-categoria"
+import { atualizarPrecoDaAssinatura, marcarInsight, statusAoTocarOLink, type Insight } from "@/lib/insights/acoes"
+import { useInsightsDaCaixa } from "@/lib/insights/use-insights-da-categoria"
 import { receitasDoMesPorCategoria } from "@/lib/categoria-receitas-do-mes"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
@@ -455,16 +464,23 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const totalDaCarteira = tipo === "income" ? workspaceMonthSums.income : workspaceMonthSums.expense
     const pesoNoTotal = totalDaCarteira > 0 ? mes.lancado / totalDaCarteira : null
 
+    const caixa = useInsightsDaCaixa(currentWorkspaceId)
+    const [recorrencia, setRecorrencia] = React.useState<Insight | null>(null)
+
     const analise = React.useMemo(() => {
         if (!category) return null
         const media = mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at })
         const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
-        // Um insight só, por ora (a Tarefa 4 liga o carrossel): o primeiro que o leitor pode usar.
-        const insight =
+        // Os locais e os da caixa da carteira, só os desta categoria e só os que o leitor pode usar.
+        const insights = ordenarInsights(
             paraQuemLe(
-                insightsLocais({ tipo, categoryId, yearMonth, aberto, lancado: mes.lancado, previsto: mes.previsto, media, limite, txs, compromissos: c }),
+                [
+                    ...insightsLocais({ tipo, categoryId, yearMonth, aberto, lancado: mes.lancado, previsto: mes.previsto, media, limite, txs, compromissos: c }),
+                    ...insightsDaCaixa(caixa.linhas, { categoryId, assinaturas: subscriptions, categoriaDoLancamento: caixa.categoriaDoLancamento }),
+                ],
                 podeEscrever,
-            )[0] ?? null
+            ),
+        )
         // Sem o histórico (carregando ou falhou), o bloco espera: a frase sairia sem o normal.
         const composicao = historico
             ? composicaoDoMes({
@@ -488,10 +504,12 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             media,
             maior: maioresLancamentos(txs, tipo, 1)[0] ?? null,
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
-            insight,
+            insights,
         }
     }, [
         aberto,
+        caixa.categoriaDoLancamento,
+        caixa.linhas,
         category,
         categoryId,
         historico,
@@ -513,6 +531,57 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const adultos = useAdultos(isAdulto && currentWorkspaceId ? currentWorkspaceId : "")
     const comVariosAdultos = adultos.lista.length >= 2
     const diretorio = useMemberDirectoryQuery(comVariosAdultos ? currentWorkspaceId : null).data ?? []
+
+    const rolarParaLancamentos = React.useCallback(() => {
+        document.getElementById(LANCAMENTOS_DO_MES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, [])
+    const { setFilterDescriptionQuery, setSortKey, setSortDir } = txController
+    const { linhas: linhasDaCaixa, recarregar: recarregarCaixa } = caixa
+    // Cada ação liga ao que a página já tem; os links (Previsão, conferir) o cartão resolve sozinho.
+    const onAcaoDoInsight = React.useCallback(
+        async (i: InsightDaCategoria) => {
+            const a = i.acao
+            const daCaixa = "insightId" in a ? linhasDaCaixa.find((l) => l.id === a.insightId) : undefined
+            switch (a.tipo) {
+                case "limite":
+                    openLimitDialog()
+                    return
+                case "filtrar":
+                    setFilterDescriptionQuery(a.descricao)
+                    rolarParaLancamentos()
+                    return
+                case "ordenar-por-valor":
+                    setSortKey("amount")
+                    setSortDir("desc")
+                    rolarParaLancamentos()
+                    return
+                case "conta-a-pagar":
+                    if (daCaixa) void marcarInsight(daCaixa.id, statusAoTocarOLink(daCaixa.kind))
+                    router.push("/bills?new=1")
+                    return
+                case "recorrencia":
+                    if (daCaixa) setRecorrencia(daCaixa)
+                    return
+                case "atualizar-preco": {
+                    if (!daCaixa) return
+                    // `atualizarPrecoDaAssinatura` já marca o insight `acted` depois de gravar.
+                    const r = await atualizarPrecoDaAssinatura(daCaixa)
+                    if (!r.ok) {
+                        if (r.erro) toastError(r.erro, { id: "insight-preco" })
+                        return
+                    }
+                    toastSuccess("Valor da assinatura atualizado", { id: "insight-preco" })
+                    await recarregarCaixa()
+                    return
+                }
+            }
+        },
+        [linhasDaCaixa, openLimitDialog, recarregarCaixa, rolarParaLancamentos, router, setFilterDescriptionQuery, setSortDir, setSortKey],
+    )
+    const categoriasDaRecorrencia = React.useMemo(
+        () => txController.categories.filter((c) => c.type === "expense").map((c) => ({ id: c.id, name: c.name })),
+        [txController.categories],
+    )
 
     if (workspaceError) {
         return (
@@ -671,7 +740,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             aoLado={mesesNode}
                             onVer={(nome) => {
                                 txController.setFilterDescriptionQuery(nome)
-                                document.getElementById(LANCAMENTOS_DO_MES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                                rolarParaLancamentos()
                             }}
                         />
                     ) : null
@@ -689,8 +758,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
                 meses={comComposicao ? null : mesesNode}
                 insight={
-                    analise?.insight ? (
-                        <InsightDaCategoria insight={analise.insight} onDefinirLimite={openLimitDialog} />
+                    analise && analise.insights.length > 0 ? (
+                        <InsightsDaCategoria insights={analise.insights} onAcao={onAcaoDoInsight} />
                     ) : null
                 }
                 lancamentos={
@@ -744,6 +813,15 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 onDeleteDialogOpenChange={handleDeleteDialogOpenChange}
                 deleteDeleting={deleteDeleting}
                 onDeleteConfirm={handleDeleteConfirmed}
+            />
+            <DialogoDaRecorrencia
+                insight={recorrencia}
+                categorias={categoriasDaRecorrencia}
+                onFechar={() => setRecorrencia(null)}
+                onFeito={() => {
+                    setRecorrencia(null)
+                    void recarregarCaixa()
+                }}
             />
         </div>
     )
