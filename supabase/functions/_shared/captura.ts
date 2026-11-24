@@ -160,13 +160,35 @@ function temAmount(amount: unknown): boolean {
   return amount != null && !(typeof amount === 'string' && !amount.trim())
 }
 
-/** O `amount` do Atalho: 42.9 ou "R$ 42,90" (regras brasileiras); só positivo. */
+/**
+ * O `amount` do Atalho: 42.9 ou "R$ 42,90" (regras brasileiras); só positivo.
+ * O valor da Wallet pode vir com a sigla da moeda ("BRL 42,90", "$42.90") ou no
+ * formato americano ("1,234.56"): só aqui, porque na frase "1,234" é ambíguo.
+ */
 function valorDoAmount(amount: unknown): number | null {
   let n: number | null = null
   if (typeof amount === 'number') n = Number.isFinite(amount) ? Math.round(amount * 100) / 100 : null
-  else if (typeof amount === 'string') n = lerNumero(amount.toLowerCase().replace(/\s+/g, ''))
+  else if (typeof amount === 'string') {
+    const t = amount.toLowerCase().replace(/\s+/g, '').replace(/^(r\$|us\$|brl|\$)/, '').replace(/(brl|reais)$/, '')
+    n = /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(t) ? Number(t.replace(/,/g, '')) : lerNumero(t)
+  }
   return n != null && n > 0 ? n : null
 }
+
+const MINUSCULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e'])
+
+/** "PADARIA REAL" → "Padaria Real": o nome da Wallet todo em maiúsculas vira nome próprio; o resto fica como veio. */
+function nomeDaLoja(s: string): string {
+  if (s !== s.toUpperCase() || s === s.toLowerCase()) return s
+  return s
+    .toLowerCase()
+    .split(' ')
+    .map((p, i) => (i > 0 && MINUSCULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(' ')
+}
+
+/** O cartão da Wallet de débito ("Itaú Débito", "Nubank Debit"). */
+const CARTAO_DE_DEBITO = /\bd[eé]bit(o)?\b/i
 
 /** Com foto (multipart), o texto é opcional: o valor pode vir da imagem. */
 export function validarPedido(
@@ -318,13 +340,17 @@ export function montarLancamento(
     // Apple Pay: o estabelecimento é a descrição e o cartão da Wallet, o cartão.
     valor = valorDoAmount(pedido.amount)
     duvidas = []
-    descricao = pedido.merchant?.trim() || DESCRICAO_PADRAO
+    descricao = nomeDaLoja(pedido.merchant?.trim() || DESCRICAO_PADRAO)
     if (descricao === DESCRICAO_PADRAO) duvidas.push('descricao')
     data = dataValida(pedido.date) ?? ctx.hoje
     // Ilegível ou depois de hoje: fica hoje, ou a data dada, mas a conferir.
     if (pedido.date && (data !== pedido.date || data > ctx.hoje)) duvidas.push('data')
     cartaoTexto = pedido.card?.trim() || null
-    forma = cartaoTexto ? 'credit_card' : null
+    // O débito não tem cartão no app: a forma é débito, e o nome da Wallet não casa cartão.
+    if (cartaoTexto && CARTAO_DE_DEBITO.test(cartaoTexto)) {
+      cartaoTexto = null
+      forma = 'debit'
+    } else forma = cartaoTexto ? 'credit_card' : null
   } else {
     const f = interpretarFrase(pedido.text ?? '', ctx.hoje, palavrasDosCartoes(ctx.cartoes))
     ;({ valor, data, tipo, descricao, forma, cartaoTexto, cartaoPalavra, parcelas, estorno } = f)

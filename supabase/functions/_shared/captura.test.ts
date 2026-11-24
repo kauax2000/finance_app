@@ -1093,6 +1093,41 @@ Deno.test('Apple Pay com milhar no valor', () => {
   assertEquals(l.linha.amount, 1234.56)
 })
 
+Deno.test('Apple Pay: o valor com a sigla da moeda ou no formato americano', () => {
+  for (const [amount, esperado] of [
+    ['BRL 42,90', 42.9],
+    ['42,90 BRL', 42.9],
+    ['$42.90', 42.9],
+    ['US$ 42.90', 42.9],
+    ['1,234.56', 1234.56],
+    ['R$ 42,90', 42.9],
+  ] as const) {
+    const l = ok(montarLancamento({ amount, merchant: 'Loja', source: 'apple_pay' }, ctx()))
+    assertEquals(l.linha.amount, esperado, amount)
+  }
+  assertEquals(validarPedido({ amount: '-BRL 10,00', merchant: 'Loja', source: 'apple_pay' }).ok, false)
+})
+
+Deno.test('Apple Pay: o nome da loja em maiúsculas vira nome próprio', () => {
+  const caixa = (merchant: string) =>
+    ok(montarLancamento({ amount: 10, merchant, card: 'Visa', source: 'apple_pay' }, ctx())).linha.description
+  assertEquals(caixa('PADARIA REAL'), 'Padaria Real')
+  assertEquals(caixa('POSTO DE GASOLINA DA ESQUINA'), 'Posto de Gasolina da Esquina')
+  assertEquals(caixa('DROGARIA SÃO PAULO'), 'Drogaria São Paulo')
+  assertEquals(caixa('iFood'), 'iFood')
+  assertEquals(caixa('Outback Steakhouse'), 'Outback Steakhouse')
+})
+
+Deno.test('Apple Pay: cartão de débito é débito, sem cartão de crédito', () => {
+  const c = ctx({ cartoes: [cartao('k-itau', 'Itaú', PADRAO)] })
+  for (const card of ['Itaú Débito', 'Itau debito', 'Nubank Debit']) {
+    const l = ok(montarLancamento({ amount: 30, merchant: 'Drogasil', card, source: 'apple_pay' }, c))
+    assertEquals([l.linha.payment_method, l.linha.payment_credit_card_id, l.linha.capture_meta?.walletCard], ['debit_card', null, undefined], card)
+  }
+  const cred = ok(montarLancamento({ amount: 30, merchant: 'Drogasil', card: 'Itaú', source: 'apple_pay' }, c))
+  assertEquals([cred.linha.payment_method, cred.linha.payment_credit_card_id], ['credit_card', 'k-itau'])
+})
+
 Deno.test('Apple Pay: estorno não lança', () => {
   const v = validarPedido({ amount: '-R$ 10,00', merchant: 'Loja', source: 'apple_pay' })
   assertEquals(v, { ok: false, erro: ERRO_VALOR, codigo: 'sem_valor' })

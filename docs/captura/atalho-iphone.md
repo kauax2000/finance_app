@@ -240,6 +240,9 @@ o valor da compra, a do nome da loja e a do cartão usado.
 
 ### O app aprende o cartão
 
+Um cartão da Wallet com "débito" no nome ("Itaú Débito") lança no débito, sem
+cartão. O nome da loja todo em maiúsculas ("PADARIA REAL") vira "Padaria Real".
+
 O nome que a Wallet dá ao cartão nem sempre é o nome que ele tem no app. O gasto
 vai para "A conferir", com o nome da Wallet guardado, nestes dois casos:
 
