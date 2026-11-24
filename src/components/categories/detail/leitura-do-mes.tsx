@@ -52,7 +52,7 @@ export function LeituraDoMes({
                     </span>
                     Leitura do mês
                 </h2>
-                <p className="max-w-140 font-display text-xl text-pretty">
+                <p className="font-display text-xl text-pretty">
                     <Partes partes={manchete} />
                     {apoio.length ? (
                         <span className="text-muted-foreground">
