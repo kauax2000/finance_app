@@ -6,9 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
 import { ItemContent } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type LeituraDoMes as Leitura } from "@/lib/composicao-do-mes"
-import { shiftYearMonth } from "@/lib/budget-month"
 import { percentBR } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { LeituraDoMes } from "./leitura-do-mes"
@@ -123,7 +121,7 @@ export function DoQueEFeitoOMes({
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
-    // O "Em <mês> já entram" mora no pé do gráfico; aqui fica só quando a última parcela acaba.
+    // O rodapé do fixo fica só quando a última parcela acaba.
     const comRodape = comFixo && fixo.ultimaTerminaYm != null
 
     return (
@@ -167,15 +165,6 @@ export function DoQueEFeitoOMes({
                                         </span>
                                     ))}
                             </div>
-                            {fixo.proximoMes > 0 ? (
-                                <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
-                                    <Separator />
-                                    <span className="flex justify-between gap-3">
-                                        Em {nomeDoMes(shiftYearMonth(yearMonth, 1))} já entram
-                                        <span className="nums font-mono font-semibold text-foreground">{reaisInteiros(fixo.proximoMes)}</span>
-                                    </span>
-                                </div>
-                            ) : null}
                         </CartaoDoGrafico>
                     ) : null}
                 </div>
