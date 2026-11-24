@@ -117,6 +117,16 @@ describe("composicaoDoMes", () => {
         expect(c.puxouOVariavel).toEqual({ nome: "Posto Shell", valor: 500, variacao: 0.25, aMais: 100 })
     })
 
+    it("o mês anterior, com fixo e variável, para o gráfico comparar", () => {
+        const c = composicaoDoMes({ ...base, txsDoMes: [tx({ date: "2026-11-02", amount: 50, description: "Posto" })], historico: [tx({ date: "2026-10-05", amount: 300, description: "Posto" })], media: 300 })
+        expect(c.anterior).toEqual({ ym: "2026-10", fixo: 0, variavel: 300 })
+    })
+
+    it("sem mês anterior inteiro (categoria criada no mês passado), não há anterior", () => {
+        const c = composicaoDoMes({ ...base, criadaEm: "2026-10-20T12:00:00Z", txsDoMes: [tx({ date: "2026-11-02", amount: 50, description: "Posto" })], historico: [], media: null })
+        expect(c.anterior).toBeNull()
+    })
+
     it("sem fixo: o caso vem do variável", () => {
         const mes = carroMes.slice(2)
         const c = composicaoDoMes({ ...base, txsDoMes: mes, historico: carroHistorico.filter((t) => !t.installment_plan_id), media: 500 })
@@ -219,6 +229,7 @@ describe("foraDoNormal", () => {
 
 describe("tomDoInsight", () => {
     const base: ComposicaoDoMes = {
+        anterior: null,
         fixo: { total: 1000, itens: [], proximoMes: 1000 },
         variavel: { total: 500, grupos: [], outros: null },
         normais: { fixo: 1000, variavel: 500 },
@@ -266,6 +277,7 @@ describe("leituraDoMes", () => {
     })
     // A Carro em novembro: o variável subiu 14% (R$ 380), puxado pelo Abastecimento; o Seguro carro é o fixo novo.
     const carro: ComposicaoDoMes = {
+        anterior: null,
         fixo: { total: 739, itens: [item("consorcio", "Consórcio", 443), item("seguro", "Seguro carro", 296, "2026-09")], proximoMes: 443 },
         variavel: {
             total: 3139,
@@ -304,6 +316,7 @@ describe("leituraDoMes", () => {
     })
     // A Renata: o variável subiu com um grupo novo; as parcelas caíram e ficam fora (não vão na direção da manchete).
     const renata: ComposicaoDoMes = {
+        anterior: null,
         fixo: { total: 1418, itens: [item("a", "Escova progressiva", 1418)], proximoMes: 1418 },
         variavel: {
             total: 776,

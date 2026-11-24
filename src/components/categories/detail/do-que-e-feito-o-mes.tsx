@@ -72,30 +72,32 @@ export function DoQueEFeitoOMes({
         fixo: { label: tituloDoFixo, color: "var(--color-muted-foreground)" },
     } satisfies ChartConfig
     const nomeMes = nomeDoMes(yearMonth)
-    const { normais, variacaoTotal, direcao } = composicao
-    // Variação do pedaço contra o normal: some dentro de ±5%, quando não há normal ou quando o normal é zero.
-    const quanto = (valor: number, normal: number | null) => {
-        if (!normal) return ""
-        const v = (valor - normal) / normal
+    // O gráfico compara com o mês anterior (24/11/2026; era a média, "seu normal"). A leitura segue contra a média.
+    const { anterior } = composicao
+    const nomeAnterior = anterior ? nomeDoMes(anterior.ym) : null
+    // Variação do pedaço contra o mês anterior: some dentro de ±5% ou com o anterior zerado.
+    const quanto = (valor: number, antes: number | undefined) => {
+        if (!antes) return ""
+        const v = (valor - antes) / antes
         return foraDoNormal(v) ? ` ${v > 0 ? "↑" : "↓"} ${percentBR(Math.abs(v), { maximumFractionDigits: 0 })}` : ""
     }
     const parte = (key: "variavel" | "fixo", valor: number, ink?: string) => ({
         key,
         value: valor,
-        text: `${reaisInteiros(valor)}${quanto(valor, normais[key])}`,
+        text: `${reaisInteiros(valor)}${quanto(valor, anterior?.[key])}`,
         shortText: reaisInteiros(valor),
         ...(ink ? { ink } : null),
     })
     const linhasDoGrafico: ChartSplitCompareRow[] = [
-        ...(normais.variavel != null || normais.fixo != null
+        ...(anterior && nomeAnterior
             ? [
                   {
-                      label: "seu normal",
+                      label: nomeAnterior,
                       variant: "ghost" as const,
                       segments: (["variavel", "fixo"] as const).map((k) => ({
                           key: k,
-                          value: normais[k] ?? 0,
-                          text: reaisInteiros(normais[k] ?? 0),
+                          value: anterior[k],
+                          text: reaisInteiros(anterior[k]),
                       })),
                   },
               ]
@@ -105,13 +107,19 @@ export function DoQueEFeitoOMes({
             segments: [parte("variavel", Math.max(0, variavel.total)), parte("fixo", fixo.total, "var(--card)")],
         },
     ]
+    // O selo é a variação do total contra o mês anterior, no tom pela régua da despesa.
+    const totalAntes = anterior ? anterior.fixo + anterior.variavel : 0
+    const totalAgora = Math.max(0, variavel.total) + fixo.total
+    const vsAnterior = totalAntes > 0 ? (totalAgora - totalAntes) / totalAntes : null
     const selo =
-        variacaoTotal != null && direcao != null ? (
-            <Badge tone={(direcao === "acima") === despesa ? "warning" : "success"} size="sm">
-                {direcao === "acima" ? "+" : "−"}
-                {percentBR(Math.abs(variacaoTotal), { maximumFractionDigits: 0 })}
+        vsAnterior != null && foraDoNormal(vsAnterior) ? (
+            <Badge tone={(vsAnterior > 0) === despesa ? "warning" : "success"} size="sm">
+                {vsAnterior > 0 ? "+" : "−"}
+                {percentBR(Math.abs(vsAnterior), { maximumFractionDigits: 0 })}
             </Badge>
         ) : null
+    const maiuscula = (t: string) => `${t[0].toUpperCase()}${t.slice(1)}`
+    const titulo = nomeAnterior ? `${maiuscula(nomeMes)} comparado com ${nomeAnterior}` : maiuscula(nomeMes)
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
@@ -127,9 +135,9 @@ export function DoQueEFeitoOMes({
                 <div className="grid gap-(--space-block) @2xl:grid-cols-[3fr_2fr]">
                     {aoLado}
                     {comFixo || comVariavel ? (
-                        <CartaoDoGrafico titulo={`${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} contra o seu normal`} apoio={selo}>
+                        <CartaoDoGrafico titulo={titulo} apoio={selo}>
                             <ChartSplitCompare
-                                label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
+                                label={`${despesa ? "Gasto" : "Recebido"} de ${nomeMes}${nomeAnterior ? ` comparado com ${nomeAnterior}` : ""}`}
                                 config={config}
                                 rows={linhasDoGrafico}
                                 size="lg"

@@ -46,6 +46,8 @@ export type ComposicaoDoMes = {
     /** Os 3 maiores grupos; o resto vai para `outros`. */
     variavel: { total: number; grupos: GrupoVariavel[]; outros: { vezes: number; valor: number } | null }
     normais: { fixo: number | null; variavel: number | null }
+    /** O mês anterior inteiro (fixo e variável), com que o gráfico compara; null sem ele no histórico. */
+    anterior: { ym: string; fixo: number; variavel: number } | null
     caso: CasoDaComposicao
     direcao: "acima" | "abaixo" | null
     variacaoTotal: number | null
@@ -277,6 +279,10 @@ export function composicaoDoMes(args: {
                 : null,
         },
         normais,
+        anterior:
+            meses[0] === shiftYearMonth(yearMonth, -1)
+                ? { ym: meses[0], fixo: doHistorico[0].fixo / 100, variavel: Math.max(0, doHistorico[0].variavel) / 100 }
+                : null,
         caso: "semMedia",
         direcao: null,
         variacaoTotal: null,
