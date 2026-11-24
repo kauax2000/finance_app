@@ -328,9 +328,24 @@ Deno.test('sazonal: no começo do ano, o termo do ano anterior sem conta ativa p
   ]
   const r = detectarSazonais(ls, '2027-01-10', ['IPTU da casa'])
   assertEquals(r, [
-    { chave: 'saz:ipva:2027', termo: 'ipva', mesAnterior: '2026-01', valor: 1000 },
-    { chave: 'saz:material escolar:2027', termo: 'material escolar', mesAnterior: '2026-02', valor: 800 },
+    { chave: 'saz:ipva:2027', termo: 'ipva', mesAnterior: '2026-01', valor: 1000, category_id: null },
+    { chave: 'saz:material escolar:2027', termo: 'material escolar', mesAnterior: '2026-02', valor: 800, category_id: null },
   ])
+})
+
+Deno.test('sazonal: guarda a categoria mais frequente do ano passado, ou null', () => {
+  const com = [
+    l({ dateYmd: '2026-01-10', description: 'IPVA 1/3', category_id: 'carro' }),
+    l({ dateYmd: '2026-01-12', description: 'IPVA 2/3', category_id: 'carro' }),
+  ]
+  assertEquals(detectarSazonais(com, '2027-01-10', [])[0].category_id, 'carro')
+  const empate = [
+    l({ dateYmd: '2026-01-12', description: 'IPVA', category_id: 'b' }),
+    l({ dateYmd: '2026-01-10', description: 'IPVA', category_id: 'a' }),
+  ]
+  assertEquals(detectarSazonais(empate, '2027-01-10', [])[0].category_id, 'a')
+  const sem = [l({ dateYmd: '2026-01-10', description: 'IPVA' })]
+  assertEquals(detectarSazonais(sem, '2027-01-10', [])[0].category_id, null)
 })
 
 Deno.test('sazonal: fora de 1/jan–15/fev não dispara', () => {
