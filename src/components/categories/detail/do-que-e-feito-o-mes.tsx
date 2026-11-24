@@ -179,7 +179,7 @@ export function DoQueEFeitoOMes({
                 <div className="grid gap-(--space-block) @xl:grid-cols-[5fr_4fr]">
                     {comVariavel ? (
                         <CartaoDoGrafico
-                            titulo={config.variavel.label}
+                            titulo={despesa ? "Principais gastos" : "Principais entradas"}
                             apoio="vs seu normal"
                             className={cn(!comFixo && "@xl:col-span-2")}
                         >
