@@ -156,7 +156,7 @@ describe("Progress fillColor", () => {
     )
     expect(html).toContain("h-3")
     const cs = casas(html)
-    expect(cs[0]).toContain("rounded-xs")
+    expect(cs[0]).toContain("rounded-tile")
     expect(cs[0]).not.toContain("rounded-full")
     expect(casas(renderToStaticMarkup(createElement(Progress, { value: 3, max: 12, segments: 12 })))[0]).toContain("rounded-full")
   })

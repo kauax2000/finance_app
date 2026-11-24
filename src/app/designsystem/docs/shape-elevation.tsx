@@ -75,6 +75,7 @@ function useEscalaAoVivo() {
 /** A forma fixa pequena: a escada t-shirt, derivada de `--radius` (10px). */
 const RADII = [
   { cls: "rounded-xs", calc: "0,2 ×", px: "2px", use: "o menor marcador", who: ["legenda do Chart"] },
+  { cls: "rounded-tile", calc: "0,4 ×", px: "4px", use: "o ladrilho de 12px, onde os 6px já viram bolinha", who: ["Progress tile"] },
   { cls: "rounded-sm", calc: "0,6 ×", px: "6px", use: "a peça miúda dentro de texto", who: ["Checkbox"] },
   { cls: "rounded-md", calc: "0,8 ×", px: "8px", use: "o ladrilho pequeno e a miniatura", who: ["ColorTile xs", "Kbd", "Code chip", "Skeleton", "Carousel thumb"] },
   { cls: "rounded-lg", calc: "1 ×", px: "10px", use: "o ícone do StatCard, a amostra do Toggle e a dica sm", who: ["Tooltip sm", "StatCard icon", "amostra do Toggle"] },

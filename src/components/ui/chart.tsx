@@ -2910,8 +2910,10 @@ function ChartSplitCompareSegmentBox({
       data-slot="chart-split-compare-segment"
       data-fit={segment.text ? cabe : undefined}
       className={cn(
-        "relative flex min-w-1.5 items-center overflow-hidden rounded-lg px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
-        size === "xl" ? "h-14" : size === "lg" ? "h-12" : "h-8",
+        "relative flex min-w-1.5 items-center overflow-hidden px-2.5 font-mono text-xs font-semibold whitespace-nowrap nums",
+        // O raio pela escala de linha (24/11/2026): a barra de 48–56px é uma linha alta (`rounded-row-lg`, 16px),
+        // a de 32px uma linha (`rounded-row`, 12px); o `rounded-lg` de 10px ficava fora dela.
+        size === "xl" ? "h-14 rounded-row-lg" : size === "lg" ? "h-12 rounded-row-lg" : "h-8 rounded-row",
         chartSplitGrowClassName,
         variant === "ghost" && chartSplitCompareGhostClassName
       )}

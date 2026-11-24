@@ -158,6 +158,9 @@
   --shadow-xl: var(--shadow-xl-value);
   /* O menor degrau: o quadradinho da legenda e o marcador do tooltip do gráfico. */
   --radius-xs: calc(var(--radius) * 0.2);
+  /* 4px: o ladrilho de 12px (as casas `tile` do `Progress`, as parcelas), onde os 6px do `sm`
+     já leem como bolinha (24/11/2026). */
+  --radius-tile: calc(var(--radius) * 0.4);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

@@ -127,7 +127,7 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
     segments?: number
     /**
      * A forma da casa (só com `segments`): `pill`, a cápsula (o padrão), ou `tile`,
-     * o ladrilho de cantos arredondados (`rounded-xs`), que lê como bloco.
+     * o ladrilho de cantos arredondados (`rounded-tile`, 4px), que lê como bloco.
      */
     segmentShape?: "pill" | "tile"
     /**
@@ -362,7 +362,7 @@ function Progress({
               data-highlight={realce ? "" : undefined}
               className={cn(
                 "h-full flex-1 bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
-                segmentShape === "tile" ? "rounded-xs" : "rounded-full",
+                segmentShape === "tile" ? "rounded-tile" : "rounded-full",
                 acesa && variant !== "brand" && !realce && (corPropria ? "bg-(--progress-fill)" : TOM_FUNDO[tomFinal ?? "default"]),
                 realce && "bg-(--progress-highlight,var(--primary-accent))",
                 // Na marca cada casa mostra a sua fatia do arco-íris: o degradê tem a largura

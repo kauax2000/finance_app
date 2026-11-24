@@ -453,7 +453,7 @@ export default function ProgressDoc() {
             prop: "segmentShape",
             type: '"pill" | "tile"',
             default: '"pill"',
-            description: "A forma da casa, só com segments: a cápsula ou o ladrilho de cantos arredondados (rounded-xs), que lê como bloco.",
+            description: "A forma da casa, só com segments: a cápsula ou o ladrilho de cantos arredondados (rounded-tile, 4px), que lê como bloco.",
           },
           {
             prop: "header / footer",
