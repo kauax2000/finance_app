@@ -147,7 +147,7 @@ const cardVariants = cva(
     compoundVariants: [
       // O brilho que segue o ponteiro, com 4px de folga no recorte para o anel e o borrão.
       { variant: "brand", glow: "pointer", class: "brand-glow [overflow-clip-margin:var(--spacing)]" },
-      // A aurora (`@utility brand-aurora`): a borda em degradê só no topo e a luz parada, com o
+      // A aurora (`@utility brand-aurora`): o tom que desce do topo e a luz atrás do selo, com o
       // anel neutro dos quatro lados no `box-shadow` dela; o recorte fica rente à caixa.
       { variant: "brand", glow: "static", class: "brand-aurora border-transparent" },
     ],
@@ -183,9 +183,9 @@ function Card({
     asChild?: boolean
     /**
      * Só no `brand`: `pointer` (o padrão) acende o arco conforme o ponteiro chega;
-     * `static` é a aurora — três luzes paradas que nascem do topo e a borda da mesma
-     * cor, sumindo para baixo —, sem ponteiro e também no toque, para o cartão que é
-     * a leitura da marca.
+     * `static` é a aurora — um tom da cor do humor descendo do topo e uma luz borrada
+     * no canto de cima à esquerda —, sem ponteiro e também no toque, para o cartão
+     * que é a leitura da marca.
      */
     glow?: "pointer" | "static"
     /**

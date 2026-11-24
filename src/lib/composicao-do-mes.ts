@@ -329,7 +329,7 @@ export type LeituraDoMes = {
     manchete: ParteDaFrase[]
     apoio: ParteDaFrase[]
     motivos: MotivoDoMes[]
-    /** "Com as compras no ritmo de sempre, <mes> fecha perto de R$ <valor>"; `grupo` é o motivo principal do variável. */
+    /** O mês seguinte no ritmo de sempre ("dezembro, no ritmo de sempre: R$ <valor>"); `grupo` é o motivo principal do variável. */
     sugestao: { mes: string; valor: number; grupo?: { chave: string; nome: string } } | null
 }
 
@@ -416,19 +416,16 @@ export function leituraDoMes(c: ComposicaoDoMes, despesa: boolean, yearMonth: st
         .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
         .slice(0, MOTIVOS)
 
+    // O apoio continua a manchete depois do " — ": "R$ 380 acima do normal, quase tudo de A e de B."
+    const nomes = motivos.map((m) => m.nome)
+    // "quase tudo" só quando os motivos cobrem ao menos 70% da diferença.
+    const quaseTudo = motivos.reduce((a, m) => a + Math.abs(m.delta), 0) >= Math.abs(diferenca) * 0.7
     const apoio: ParteDaFrase[] = [
-        { texto: "São " },
-        forte(`${reaisInteiros(Math.abs(diferenca))} ${diferenca > 0 ? "acima" : "abaixo"}`),
+        forte(reaisInteiros(Math.abs(diferenca))),
         {
-            texto:
-                motivos.length === 0
-                    ? " do seu normal."
-                    : // "quase tudo" só quando os motivos cobrem ao menos 70% da diferença.
-                      motivos.reduce((a, m) => a + Math.abs(m.delta), 0) < Math.abs(diferenca) * 0.7
-                      ? " do seu normal. O que mais pesou:"
-                      : motivos.length === 1
-                        ? " do seu normal, e veio de um lugar:"
-                        : " do seu normal, e quase tudo veio de dois lugares:",
+            texto: `${diferenca > 0 ? " acima" : " abaixo"} do normal${
+                nomes.length === 0 ? "" : quaseTudo ? `, quase tudo de ${nomes.join(" e de ")}` : `, mais por ${nomes.join(" e ")}`
+            }.`,
         },
     ]
     const principal = motivos[0]

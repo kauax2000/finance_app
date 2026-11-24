@@ -40,6 +40,7 @@ const TAMANHOS = [
   { size: "xs", px: 14, uso: "dentro de outro controle" },
   { size: "sm", px: 18, uso: "numa linha densa" },
   { size: "md", px: 22, uso: "o padrão" },
+  { size: "lg", px: 30, uso: "a pílula de uma frase curta" },
 ] as const
 
 const FORMAS = ["soft", "outline", "contrast"] as const
@@ -75,10 +76,11 @@ export default function BadgeDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="Três degraus: 14, 18 e 22 de altura. Quem manda na altura é a entrelinha, e cada degrau declara a sua — senão xs e sm saem idênticos."
+        description="Quatro degraus: 14, 18, 22 e 30 de altura. Quem manda na altura é a entrelinha, e cada degrau declara a sua — senão xs e sm saem idênticos. O lg está no corpo do texto (14px) e carrega ponto, nome e valor, como os motivos da Leitura do mês."
         code={`<Badge size="xs">xs</Badge>
 <Badge size="sm">sm</Badge>
-<Badge>md</Badge>`}
+<Badge>md</Badge>
+<Badge size="lg">lg</Badge>`}
         previewClassName="flex-wrap items-end gap-6"
       >
         {TAMANHOS.map((t) => (

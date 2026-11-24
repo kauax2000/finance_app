@@ -29520,3 +29520,29 @@ degradê dava a volta e lia como moldura. Escolhido o M1 (a cor só em cima) de
 - Contraste (`scripts/tone-contrast.mjs`, claro / escuro): tinta cheia 18,91 / 19,29 / 19,05 e
   16,31 / 15,71 / 16,21; `--muted-foreground` 5,92 / 5,96 / 5,91 e 6,83 / 6,82 / 6,85 (warm / cool /
   neutral). Antes: pior 5,27.
+
+### Rodada 415 — a Leitura do mês numa frase, com dezembro ao lado (N2)
+
+Pedido do dono (23/11/2026): o cartão ainda chamava atenção e tinha visual velho (moldura colorida,
+manchete grande, réguas longas, uma linha separando o rodapé). Escolhido o N2 de
+`docs/design/painel/leitura-repaginada.html`. Spec: `docs/superpowers/specs/2026-11-23-leitura-n2-design.md`.
+
+- `@utility brand-aurora`: saem a borda em degradê (`::before` com máscara) e as três luzes do topo.
+  Ficam o anel neutro de `--border` e entram o tom que desce do topo (`::before`, a cor do meio do
+  humor a 9% sumindo aos 70% da altura) e uma luz de 260×160 borrada em 40px atrás do selo (`::after`,
+  `left: -60px; top: -90px`, a cor do meio a 30%). Os três humores seguem trocando `--aurora-l/c/r`;
+  os alfas por luz (`--aurora-*-a`) saíram. O volume dos dois é `--brand-aurora-opacity`: 0,7 no
+  claro e 0,6 no escuro (cheio, 1, o texto apagado perto do selo media 3,8:1 no escuro).
+- Contraste (`scripts/tone-contrast.mjs`, claro / escuro): tinta cheia 15,02 / 17,06 / 15,89 e
+  12,34 / 10,3 / 11,36; `--muted-foreground` 4,88 / 5,38 / 5,13 e 5,53 / 4,96 / 5,29 (warm / cool /
+  neutral). O piso de 4,5 vale; a folga caiu (antes, pior 5,91).
+- `Badge size="lg"` (30 de altura, `text-sm`, `gap-2 px-3 py-1`): a pílula dos motivos (ponto, nome,
+  detalhe e delta). Entrou na tabela do `escadas.test.ts`.
+- A Leitura: a manchete e o porquê numa frase (`text-xl` na Ledger, o porquê em `--muted-foreground`
+  depois de " — "); `leituraDoMes` devolve o apoio como continuação ("R$ 380 acima do normal, quase
+  tudo de A e de B.", "mais por A e B." abaixo de 70%, só a diferença sem motivos). O mês seguinte é
+  um número à direita ("dezembro, no ritmo de sempre"), que desce abaixo de 28rem do cartão
+  (`@container/leitura`). Os motivos são pílulas, sem as réguas; o delta veste a tinta
+  `-muted-foreground` do tom (o `--warning` cheio sobre `--muted` media 1,6:1 no claro). O "Ver
+  <grupo>" vai à linha das pílulas, à direita, e ocupa a largura no telefone. Saem o `Separator` e a
+  frase do rodapé. O selo cai a 22px.

@@ -286,7 +286,7 @@ describe("leituraDoMes", () => {
         expect(l.tom).toBe("warning")
         expect(texto(l.manchete)).toBe("Suas compras do mês subiram 14%")
         expect(l.manchete.find((p) => p.texto === "14%")?.tom).toBe("warning")
-        expect(texto(l.apoio)).toBe("São R$ 380 acima do seu normal, e quase tudo veio de dois lugares:")
+        expect(texto(l.apoio)).toBe("R$ 380 acima do normal, quase tudo de Abastecimento e de Seguro carro.")
         expect(l.motivos).toEqual([
             { chave: "abastecimento", nome: "Abastecimento", delta: 340, parte: "variavel" },
             { nome: "Seguro carro", detalhe: "novo desde set", delta: 296, parte: "fixo" },
@@ -322,7 +322,7 @@ describe("leituraDoMes", () => {
             { chave: "corte", nome: "Corte e hidratação", detalhe: "novo", delta: 480, parte: "variavel" },
         ])
         // A Escova (+20) explica menos de 10% dos R$ 312: não entra.
-        expect(texto(l.apoio)).toBe("São R$ 312 acima do seu normal, e veio de um lugar:")
+        expect(texto(l.apoio)).toBe("R$ 312 acima do normal, quase tudo de Corte e hidratação.")
     })
     it("mês fechado nomeia o mês", () => {
         expect(texto(leituraDoMes(renata, true, "2026-11", false).manchete)).toBe("Suas compras subiram 67% em novembro")
@@ -332,7 +332,7 @@ describe("leituraDoMes", () => {
             ...renata,
             variavel: { ...renata.variavel, grupos: renata.variavel.grupos.map((g) => (g.chave === "corte" ? { ...g, valor: 120, normal: 0 } : g)) },
         }
-        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("São R$ 312 acima do seu normal. O que mais pesou:")
+        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("R$ 312 acima do normal, mais por Corte e hidratação.")
     })
     it("a receita diz entradas avulsas e inverte o tom", () => {
         const l = leituraDoMes(renata, false, "2026-11", true)
@@ -350,9 +350,16 @@ describe("leituraDoMes", () => {
         ])
         expect(l.manchete.find((p) => p.texto === "35%")?.tom).toBe("warning")
     })
-    it("um motivo só: veio de um lugar", () => {
+    it("um motivo só: quase tudo de um lugar", () => {
         const c: ComposicaoDoMes = { ...renata, variavel: { ...renata.variavel, grupos: [renata.variavel.grupos[0]] } }
-        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("São R$ 312 acima do seu normal, e veio de um lugar:")
+        expect(texto(leituraDoMes(c, true, "2026-11", true).apoio)).toBe("R$ 312 acima do normal, quase tudo de Corte e hidratação.")
+    })
+    it("sem motivos: só a diferença", () => {
+        const c: ComposicaoDoMes = { ...carro, variavel: { ...carro.variavel, grupos: [] }, normais: { fixo: null, variavel: 2759 } }
+        const l = leituraDoMes(c, true, "2026-11", true)
+        expect(l.motivos).toEqual([])
+        expect(texto(l.apoio)).toBe("R$ 380 acima do normal.")
+        expect(texto(l.apoio.filter((p) => p.forte))).toBe("R$ 380")
     })
     it("variável no normal e total fora: a manchete do total, com a diferença contra a média", () => {
         const c: ComposicaoDoMes = {
@@ -366,7 +373,7 @@ describe("leituraDoMes", () => {
         const l = leituraDoMes(c, true, "2026-11", true)
         expect(texto(l.manchete)).toBe("O mês está 10% acima da média")
         // Total 3.843 contra a média 3.493,64.
-        expect(texto(l.apoio)).toBe("São R$ 349 acima do seu normal, e quase tudo veio de dois lugares:")
+        expect(texto(l.apoio)).toBe("R$ 349 acima do normal, quase tudo de Seguro carro e de Abastecimento.")
         expect(l.motivos.map((m) => m.nome)).toEqual(["Seguro carro", "Abastecimento"])
     })
     it("normal: sem motivos, o apoio diz as parcelas", () => {

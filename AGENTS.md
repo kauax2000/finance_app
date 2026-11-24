@@ -440,7 +440,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   (`--brand-flow-alpha` por tema, medido em `scripts/tone-contrast.mjs`) , o
   `brandColorful` (`--button-colorful-opacity`) e o véu do `brandTertiary`
   (`--button-veil-opacity`, 0,4 no claro e 0,3 no escuro; no escuro o rótulo
-  mede de 8,7 a 12,5:1 sobre as paradas puras) a aurora do `Card glow="static"` (`@utility brand-aurora`, a Leitura do mês: três luzes de uma paleta de três paradas por humor — `mood` `warm`, `cool` ou `neutral` — nascendo do topo, sob o texto, com o volume em `--brand-aurora-opacity`, 0,3 no claro e 0,55 no escuro; contraste medido na rodada 414 por `scripts/tone-contrast.mjs`: pior 5,91:1 no claro e 6,82:1 no escuro, na tinta apagada) e a aurora da troca de tema
+  mede de 8,7 a 12,5:1 sobre as paradas puras) a aurora do `Card glow="static"` (`@utility brand-aurora`, a Leitura do mês na forma N2: a cor do meio de uma paleta de três paradas por humor — `mood` `warm`, `cool` ou `neutral` — num tom que desce do topo e some aos 70% e numa luz borrada atrás do selo, no canto de cima à esquerda, sob o texto, com o volume em `--brand-aurora-opacity`, 0,7 no claro e 0,6 no escuro; contraste medido na rodada 415 por `scripts/tone-contrast.mjs`: pior 4,88:1 no claro e 4,96:1 no escuro, na tinta apagada) e a aurora da troca de tema
   (passa por cima do texto por ~1s e não é lida; o volume da faixa mora em
   `AURORA.opacidade`, e o aro e o brilho da parada, traços finos que não cobrem texto, ficam fora dela).
 - **As famílias de peça de marca**:
@@ -1101,7 +1101,7 @@ declaração de `background-color` no trilho).
 
 - **`Badge`**: `variant` (`soft`, `outline`, `contrast` — a pílula grave, o
   `tone` só no ponto —, `brand`, uma por tela) + `tone` (oito, com `info`) +
-  `size` (`xs` | `sm` | `md`). As classes de chip moram no `badge.tsx`. **O
+  `size` (`xs` | `sm` | `md` | `lg` — 30, no corpo do texto, a pílula de uma frase curta com ponto, nome e valor: os motivos da Leitura do mês, rodada 415). As classes de chip moram no `badge.tsx`. **O
   respiro e o corpo do ícone são do componente** (nada de `gap`, `mr-1` ou
   `size-*` no ícone; sempre `16/solid`). `BadgeDot` é o ponto de estado (`pulse`
   para o que acontece agora, cor em `--badge-dot`), `animate-ping` e **não**
@@ -1117,7 +1117,7 @@ declaração de `background-color` no trilho).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `tinted` — o destaque sutil, um véu de `--muted` que desce do topo
   (a frase do resumo da categoria) —, `plain`, `dashed` — o vazio ou o
-  "adicionar" —, `brand`, uma por tela, com `glow="static"` para a aurora parada (`brand-aurora`: três luzes fracas do topo, a borda neutra e o degradê das três cores só no topo, que some antes do meio, sem ponteiro; o selo ✦ da Leitura veste a `@utility aurora-orb`, o círculo escuro com a luz do humor nascendo do pé, que lê as três cores do `brand-aurora` e é parte da mesma peça) e `mood` (`warm` | `cool` | **`neutral`**) para a paleta pelo humor da notícia — a Leitura do mês passa o tom da manchete, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
+  "adicionar" —, `brand`, uma por tela, com `glow="static"` para a aurora parada (`brand-aurora`, a forma N2 da rodada 415: sem borda colorida, a borda neutra nos quatro lados, um tom da cor do humor descendo do topo e uma luz borrada atrás do selo, sem ponteiro; o selo ✦ da Leitura veste a `@utility aurora-orb`, o círculo escuro com a luz do humor nascendo do pé, que lê as três cores do `brand-aurora` e é parte da mesma peça) e `mood` (`warm` | `cool` | **`neutral`**) para a paleta pelo humor da notícia — a Leitura do mês passa o tom da manchete, 23/11/2026); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
   é o painel** (sob ele o `CardContent` não precisa de `p-0`). **Não existe
   `size`, e `tone` é só `"info"`: o cartão que pede ação** — só a borda vai ao
   `--info` a 45%, fundo, raio e sombra seguem a `variant`, e sem `tone` nada

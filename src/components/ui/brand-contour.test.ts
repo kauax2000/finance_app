@@ -401,18 +401,22 @@ describe("contorno de marca", () => {
     expect(aurora).not.toContain("brand-glow")
     expect(aurora).not.toContain("[overflow-clip-margin:var(--spacing)]")
 
-    // A aurora calma (rodada 414): o anel neutro nos quatro lados é o único `box-shadow` (sem brilho colorido de lateral), o degradê da borda só desce até os 50% do topo e o volume é 0,3 (claro) e 0,55 (escuro).
+    // A aurora N2 (rodada 415): o anel neutro nos quatro lados é o único `box-shadow`, sem borda em degradê; o tom desce
+    // do topo na cor do meio e some aos 70%, e a luz borrada fica atrás do selo; os dois no volume do token.
     const css = semComentarios(lerFonte("src/app/globals.css"))
     const util = css.slice(css.indexOf("@utility brand-aurora"), css.indexOf("@utility aurora-orb"))
     expect(util.match(/box-shadow:[^;]*;/g)).toEqual(["box-shadow: inset 0 0 0 1px var(--border);"])
-    expect(util).not.toMatch(/inset\s+-?\d+px\s+-?\d+px\s+\d+px/)
-    expect(util.match(/linear-gradient\(#000 0%, rgb\(0 0 0 \/ 0\.35\) 22%, transparent 50%\)/g)).toHaveLength(2)
-    expect(util).toMatch(/opacity:\s*0\.8;/)
+    expect(util).not.toMatch(/mask|border:\s*1\.5px/)
+    expect(util).toContain("linear-gradient(180deg, color-mix(in oklch, var(--aurora-c) 9%, transparent), transparent 70%)")
+    expect(util).toContain("background: color-mix(in oklch, var(--aurora-c) 30%, transparent);")
+    expect(util).toMatch(/filter:\s*blur\(40px\);/)
+    expect(util.match(/opacity:\s*var\(--brand-aurora-opacity\);/g)).toHaveLength(2)
+    for (const humor of ["warm", "cool"]) expect(util).toContain(`&[data-mood="${humor}"]`)
     // O selo da Leitura (G5) lê as três cores da aurora que o contém, com a paleta neutra de reserva.
     const orb = css.slice(css.indexOf("@utility aurora-orb"), css.indexOf("@utility brand-rainbow-image"))
     expect(orb).toMatch(/--orb-c:\s*var\(--aurora-c, var\(--brand-blue\)\)/)
     expect(lerFonte("src/components/categories/detail/leitura-do-mes.tsx")).toContain("aurora-orb")
-    expect([...css.matchAll(/--brand-aurora-opacity:\s*([\d.]+);/g)].map((m) => m[1])).toEqual(["0.3", "0.55"])
+    expect([...css.matchAll(/--brand-aurora-opacity:\s*([\d.]+);/g)].map((m) => m[1])).toEqual(["0.7", "0.6"])
 
     // O `Badge` em repouso é um chip `muted`; o núcleo do anel é a mesma cor, e o halo do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)

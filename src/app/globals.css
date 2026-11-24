@@ -266,10 +266,11 @@
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.75;
-  /* A força da aurora do `Card glow="static"` (`@utility brand-aurora`). Fica embaixo do
-     texto, então é por tema e mais baixa no claro; mexe-se aqui, nunca nas paradas.
-     Pior contraste do texto apagado por cima: 5,91:1 no claro, 6,82:1 no escuro (rodada 414). */
-  --brand-aurora-opacity: 0.3;
+  /* A força da aurora do `Card glow="static"` (`@utility brand-aurora`): o tom do topo e a
+     luz do selo. Fica embaixo do texto, então é por tema e mais baixa no claro; mexe-se
+     aqui, nunca nas paradas. Pior contraste do texto apagado por cima (`scripts/tone-contrast.mjs`,
+     rodada 415): 4,88:1 no claro, 4,96:1 no escuro. */
+  --brand-aurora-opacity: 0.7;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   /* A vinheta do campo de marca escurece os cantos em direção ao preto, que dá ao
@@ -642,8 +643,9 @@
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.45;
-  /* No escuro a aurora cai a 0,55 (era cheia, P1c); no claro, 0,3. */
-  --brand-aurora-opacity: 0.55;
+  /* No escuro a aurora cai a 0,6 do mockup N2 (cheia, o texto apagado perto do selo
+     ficava abaixo de 4,5:1); no claro, 0,7. */
+  --brand-aurora-opacity: 0.6;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   --brand-field-vignette: radial-gradient(
@@ -1782,86 +1784,64 @@
    `brand-rainbow` é só o degradê, sem grão, e serve a máscara do wordmark e o
    `::before` do `Button variant="brand"`: num traço de 2 a 4px o grão é sujeira. O
    grão é do campo (`brand-field`), onde há área para ler como material. */
-/* A aurora de marca do `Card glow="static"` (a Leitura do mês): três luzes borradas
-   nascendo do topo (esquerda, centro e direita) e sumindo antes do meio, a borda de
-   1,5px no degradê das mesmas três cores só no topo (some antes do meio, rodada 414),
-   sobre o anel neutro de `--border` dos quatro lados. O brilho das laterais saiu.
-   O humor (`data-mood`) troca só as três cores e os alfas do mockup
-   (`docs/design/painel/leitura-do-mes-v4.html`, P1c; o `neutral` é o P1a): `warm`
-   magenta, coral e âmbar; `cool` teal, verde e azul; o padrão violeta, azul e magenta.
+/* A aurora de marca do `Card glow="static"` (a Leitura do mês), na forma N2 (23/11/2026,
+   `docs/design/painel/leitura-repaginada.html`): sem borda colorida, um tom que desce
+   do topo e some aos 70% e uma luz borrada atrás do selo, no canto de cima à esquerda,
+   sobre o anel neutro de `--border` dos quatro lados. O humor (`data-mood`) troca as
+   três cores, que o selo `aurora-orb` lê; o tom e a luz usam a do meio (`--aurora-c`):
+   `warm` coral, `cool` verde, o padrão azul.
    É a exceção nomeada ao "arco-íris sob texto": o volume mora num token só,
    `--brand-aurora-opacity`, por tema, e as paradas não se mexem. Pede `isolate`,
    `overflow: clip` rente à caixa e o fio do casco transparente (o `Card brand` os dá).
-   Camadas: o anel neutro é `box-shadow` do casco (pinta com o fundo), a aurora o
-   `::after` (z -2) e a borda o `::before` (z -1), tudo sob os filhos. */
+   Camadas: o anel neutro é `box-shadow` do casco, o tom o `::before` e a luz o
+   `::after` (z -1), sob os filhos. */
 @utility brand-aurora {
   --aurora-l: var(--brand-violet);
   --aurora-c: var(--brand-blue);
   --aurora-r: var(--brand-magenta);
-  --aurora-l-a: 70%;
-  --aurora-c-a: 60%;
-  --aurora-r-a: 55%;
 
   &[data-mood="warm"] {
     --aurora-l: var(--brand-magenta);
     --aurora-c: var(--brand-coral);
     --aurora-r: var(--brand-amber);
-    --aurora-l-a: 65%;
-    --aurora-c-a: 55%;
-    --aurora-r-a: 45%;
-    --aurora-edge-r-a: 50%;
   }
 
   &[data-mood="cool"] {
     --aurora-l: var(--brand-teal);
     --aurora-c: var(--brand-green);
     --aurora-r: var(--brand-blue);
-    --aurora-l-a: 60%;
-    --aurora-c-a: 45%;
-    --aurora-r-a: 55%;
   }
 
   /* O anel neutro: o casco tem o fio transparente, e este `box-shadow` inset é o fio de
-     `--border` nos quatro lados, no mesmo anel de 1px que o degradê do `::before` cobre
-     no topo (pinta sob o pseudo de `z` negativo): um anel só, sem linha dupla. */
+     `--border` nos quatro lados. */
   box-shadow: inset 0 0 0 1px var(--border);
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -30% -12% 35% -12%;
-    z-index: -2;
-    pointer-events: none;
-    background:
-      radial-gradient(40% 70% at 12% 0%, color-mix(in oklch, var(--aurora-l) var(--aurora-l-a), transparent), transparent 70%),
-      radial-gradient(35% 70% at 55% -10%, color-mix(in oklch, var(--aurora-c) var(--aurora-c-a), transparent), transparent 70%),
-      radial-gradient(30% 60% at 92% 0%, color-mix(in oklch, var(--aurora-r) var(--aurora-r-a), transparent), transparent 70%);
-    filter: blur(30px);
-    opacity: var(--brand-aurora-opacity);
-  }
-
-  /* A borda: o degradê na `border-box` menos a `padding-box` (a mesma máscara de duas
-     camadas do `brand-glow`), com a primeira camada descendo de opaco no topo a 35% aos 22% e a transparente aos 50%. O sRGB
-     vem antes e o `in oklch` por `@supports`, como no `brand-rainbow-image`. */
+  /* O tom: a cor do meio a 9% no topo, sumindo na superfície aos 70% da altura. */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
     border-radius: inherit;
-    border: 1.5px solid transparent;
     pointer-events: none;
-    opacity: 0.8;
-    background: linear-gradient(90deg, var(--aurora-l), var(--aurora-c) 50%, var(--aurora-r)) border-box;
-    @supports (background-image: linear-gradient(in oklch, red, blue)) {
-      background: linear-gradient(90deg in oklch, var(--aurora-l), var(--aurora-c) 50%, var(--aurora-r)) border-box;
-    }
-    -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 22%, transparent 50%), linear-gradient(#000 0 0);
-    -webkit-mask-clip: border-box, padding-box;
-    -webkit-mask-composite: source-out;
-    mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 22%, transparent 50%), linear-gradient(#000 0 0);
-    mask-clip: border-box, padding-box;
-    mask-composite: subtract;
+    background: linear-gradient(180deg, color-mix(in oklch, var(--aurora-c) 9%, transparent), transparent 70%);
+    opacity: var(--brand-aurora-opacity);
+  }
+
+  /* A luz atrás do selo: uma elipse de 260×160 meio fora do canto, borrada em 40px. */
+  &::after {
+    content: "";
+    position: absolute;
+    left: -60px;
+    top: -90px;
+    width: 260px;
+    height: 160px;
+    z-index: -1;
+    border-radius: 50%;
+    pointer-events: none;
+    background: color-mix(in oklch, var(--aurora-c) 30%, transparent);
+    filter: blur(40px);
+    opacity: var(--brand-aurora-opacity);
   }
 }
 

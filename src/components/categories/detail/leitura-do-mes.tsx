@@ -1,10 +1,9 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChartSwatch } from "@/components/ui/chart"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import type { LeituraDoMes as Leitura, ParteDaFrase } from "@/lib/composicao-do-mes"
 import { cn } from "@/lib/utils"
 import { reaisInteiros } from "./regua-do-mes-contas"
@@ -24,8 +23,9 @@ function Partes({ partes }: { partes: ParteDaFrase[] }) {
 }
 
 /**
- * A "Leitura do mês": o cartão de insight do detalhe da categoria. É a peça de marca da tela (a aurora, no humor do tom);
- * a manchete na Ledger, até 2 motivos com régua e a sugestão do mês seguinte com o botão que filtra a lista.
+ * A "Leitura do mês": o cartão de insight do detalhe da categoria. É a peça de marca da tela (a aurora, no humor do tom).
+ * A forma N2 (`docs/design/painel/leitura-repaginada.html`): a manchete e o porquê numa frase, o mês seguinte como
+ * número ao lado, e os motivos em pílulas com o botão que filtra a lista na mesma linha.
  */
 export function LeituraDoMes({
     leitura,
@@ -35,68 +35,60 @@ export function LeituraDoMes({
 }: {
     leitura: Leitura
     despesa: boolean
-    /** A cor da categoria: a bolinha e a régua dos motivos do variável. */
+    /** A cor da categoria: o ponto dos motivos do variável. */
     corDaSerie: string
     /** Filtra a lista de lançamentos da página pelo nome do grupo. */
     onVer?: (nome: string) => void
 }) {
     const { manchete, apoio, motivos, sugestao } = leitura
-    const maior = Math.abs(motivos[0]?.delta ?? 0)
+    const grupo = sugestao?.grupo
+    const ver = grupo && onVer ? () => onVer(grupo.nome) : null
     return (
-        <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
-            <CardContent className="grid gap-2">
+        <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]} className="@container/leitura">
+            <CardContent className="grid gap-3.5">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span aria-hidden className="aurora-orb grid size-7 place-items-center text-sm">
+                    <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
                         <span className="brand-rainbow bg-clip-text text-transparent">✦</span>
                     </span>
                     Leitura do mês
                 </h2>
-                <p className="font-display text-2xl text-balance">
-                    <Partes partes={manchete} />
-                </p>
-                {apoio.length ? (
-                    <p className="text-sm text-muted-foreground">
-                        <Partes partes={apoio} />
+                <div className="grid gap-x-6 gap-y-3 @md/leitura:grid-cols-[minmax(0,1fr)_auto] @md/leitura:items-end">
+                    <p className="max-w-140 font-display text-xl text-pretty">
+                        <Partes partes={manchete} />
+                        {apoio.length ? (
+                            <span className="text-muted-foreground">
+                                {" — "}
+                                <Partes partes={apoio} />
+                            </span>
+                        ) : null}
                     </p>
-                ) : null}
-                {motivos.length ? (
-                    <ul className="mt-2 grid grid-cols-[minmax(0,max-content)_minmax(3rem,1fr)_auto] items-center gap-x-3.5 gap-y-2 text-sm sm:grid-cols-[max-content_minmax(5rem,13.75rem)_auto]">
-                        {motivos.map((m) => {
-                            const cor = m.parte === "variavel" ? corDaSerie : "var(--color-muted-foreground)"
-                            return (
-                                <li key={`${m.parte}-${m.chave ?? m.nome}`} className="contents">
-                                    <span className="flex min-w-0 items-center gap-2">
-                                        <ChartSwatch color={cor} />
-                                        <span className="truncate">{m.nome}</span>
-                                        {m.detalhe ? <span className="shrink-0 text-xs text-muted-foreground">{m.detalhe}</span> : null}
-                                    </span>
-                                    <span aria-hidden>
-                                        <Progress size="sm" value={Math.abs(m.delta)} max={maior} fillColor={cor} aria-label={m.nome} />
-                                    </span>
-                                    <span className={cn("nums text-right font-mono font-semibold", (m.delta > 0) === despesa ? "text-warning" : "text-success")}>
-                                        {m.delta > 0 ? "+" : "−"}
-                                        {reaisInteiros(Math.abs(m.delta))}
-                                    </span>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                ) : null}
-                {sugestao ? (
-                    <>
-                        <Separator className="mt-2" />
-                        <div className="flex flex-col gap-3 pt-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                            <p>
-                                {despesa ? "Com as compras no ritmo de sempre" : "Com as entradas avulsas no ritmo de sempre"}, {sugestao.mes} {despesa ? "fecha" : "deve entrar"} perto de{" "}
-                                <span className="nums font-semibold text-foreground">{reaisInteiros(sugestao.valor)}</span>
-                            </p>
-                            {sugestao.grupo && onVer ? (
-                                <Button variant="secondary" size="sm" className="max-sm:w-full" onClick={() => onVer(sugestao.grupo!.nome)}>
-                                    Ver {sugestao.grupo.nome}
-                                </Button>
-                            ) : null}
-                        </div>
-                    </>
+                    {sugestao ? (
+                        <p className="@md/leitura:text-right">
+                            <span className="block text-xs text-muted-foreground">{sugestao.mes}, no ritmo de sempre</span>
+                            <span className="nums text-xl font-semibold">{reaisInteiros(sugestao.valor)}</span>
+                        </p>
+                    ) : null}
+                </div>
+                {motivos.length || ver ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* O delta na tinta `-muted-foreground` do tom: o `--warning` cheio sobre a pílula `muted` mede 1,6:1 no claro. */}
+                        {motivos.map((m) => (
+                            <Badge key={`${m.parte}-${m.chave ?? m.nome}`} tone="neutral" size="lg" className="max-w-full font-normal text-foreground">
+                                <ChartSwatch color={m.parte === "variavel" ? corDaSerie : "var(--color-muted-foreground)"} />
+                                <span className="min-w-0 truncate">{m.nome}</span>
+                                {m.detalhe ? <span className="shrink-0 text-xs text-muted-foreground">{m.detalhe}</span> : null}
+                                <span className={cn("nums shrink-0 font-mono font-semibold", (m.delta > 0) === despesa ? "text-warning-muted-foreground" : "text-success-muted-foreground")}>
+                                    {m.delta > 0 ? "+" : "−"}
+                                    {reaisInteiros(Math.abs(m.delta))}
+                                </span>
+                            </Badge>
+                        ))}
+                        {grupo && ver ? (
+                            <Button variant="secondary" size="sm" className="ms-auto max-sm:w-full" onClick={ver}>
+                                Ver {grupo.nome}
+                            </Button>
+                        ) : null}
+                    </div>
                 ) : null}
             </CardContent>
         </Card>

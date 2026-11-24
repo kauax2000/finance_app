@@ -135,6 +135,9 @@ const badgeVariants = cva(
         xs: "px-1.5 py-0 text-2xs leading-3 [&_svg:not([class*='size-'])]:size-2.5",
         sm: "px-2 py-0 text-xs leading-4 [&_svg:not([class*='size-'])]:size-3",
         md: "px-2.5 py-0.5 text-xs leading-4 [&_svg:not([class*='size-'])]:size-3",
+        // A pílula que carrega uma frase curta com ponto, nome e valor (os motivos da
+        // Leitura do mês): 30 de altura, no corpo do texto corrido.
+        lg: "gap-2 px-3 py-1 text-sm leading-5 [&_svg:not([class*='size-'])]:size-4",
       },
     },
     /**

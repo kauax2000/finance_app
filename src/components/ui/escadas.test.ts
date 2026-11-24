@@ -10,6 +10,7 @@ import {
 
 import { DISCLOSURE_ROW_HEIGHTS } from "@/lib/disclosure-classes"
 import { FIELD_CONTROL_HEIGHTS, fieldControlHeightClassName } from "@/lib/field-classes"
+import { badgeVariants } from "./badge"
 import { carouselGapClasses } from "./carousel"
 import { chartContainerVariants } from "./chart"
 import { containerSizes } from "./container"
@@ -93,6 +94,7 @@ const ESCADAS: Escada[] = [
   // iOS 26), e o eixo `labels` deixou de ser escada de altura.
   calha("horizontal"),
   calha("vertical"),
+  { nome: "Badge", classes: () => (["xs", "sm", "md", "lg"] as const).map((size) => badgeVariants({ size, tone: "neutral" })) },
   {
     nome: "Chart",
     classes: () =>
