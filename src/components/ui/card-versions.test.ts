@@ -70,6 +70,13 @@ describe("as versões do Card", () => {
     expect(cabecalho).toMatch(/group-has-data-\[slot=card-description\]\/card-header:row-span-2/)
   })
 
+  it("sem descrição, o título e a ação se centram na mesma linha", () => {
+    const cab = lerFonte("src/components/ui/card.tsx")
+    expect(cab).toContain("[&:not(:has(>[data-slot=card-description]))]:items-center")
+    expect(cab).toContain("[&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:self-center")
+    expect(cab).toContain("[&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:row-span-1")
+  })
+
   it("o link esticado cobre o cartão, e o casco ergue os outros botões", () => {
     expect(html(h(CardLink, { href: "/x" }, "ir"))).toMatch(/data-slot="card-link"[^>]*after:absolute after:inset-0/)
     expect(casco({})).toMatch(/has-\[\[data-slot=card-link\]\]:\[&amp;_:is\(button,a,\[role=button\]\):not\(\[data-slot=card-link\]\)\]:z-10/)
