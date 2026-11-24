@@ -271,6 +271,11 @@
      aqui, nunca nas paradas. Pior contraste do texto apagado por cima (`scripts/tone-contrast.mjs`,
      rodada 415): 4,88:1 no claro, 4,96:1 no escuro. */
   --brand-aurora-opacity: 0.7;
+  /* O selo ✦ da Leitura (`@utility aurora-orb`) por tema: no claro, a malha das paradas
+     na luz delas sobre o branco, com o ✦ escuro; no escuro, escurecida, com o ✦ branco. */
+  --aurora-orb-base: oklch(1 0 0);
+  --aurora-orb-l: 1;
+  --aurora-orb-ink: oklch(0.2 0 0);
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   /* A vinheta do campo de marca escurece os cantos em direção ao preto, que dá ao
@@ -646,6 +651,9 @@
   /* No escuro a aurora cai a 0,6 do mockup N2 (cheia, o texto apagado perto do selo
      ficava abaixo de 4,5:1); no claro, 0,7. */
   --brand-aurora-opacity: 0.6;
+  --aurora-orb-base: oklch(0.25 0.06 290);
+  --aurora-orb-l: 0.68;
+  --aurora-orb-ink: oklch(1 0 0);
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   --brand-field-vignette: radial-gradient(
@@ -1846,7 +1854,7 @@
 }
 
 /* O selo da Leitura do mês (R3, 23/11/2026): plano, a malha das oito paradas da marca em
-   roda (cada uma uma mancha, escurecidas a 68% da claridade para o ✦ branco ler), borrada
+   roda (cada uma uma mancha; no escuro, escurecidas a 68% da claridade para o ✦ branco ler, e no claro sobre o branco, com o ✦ escuro: os tokens `--aurora-orb-*`), borrada
    para as cores se fundirem como tinta, sem volume, reflexo nem halo. Igual nos três humores:
    é o símbolo do app, parte da peça de marca da aurora. Mockup:
    `docs/design/painel/leitura-selo-malha-marca.html` (R3). */
@@ -1855,8 +1863,8 @@
   isolation: isolate;
   overflow: hidden;
   border-radius: 9999px;
-  background: oklch(0.25 0.06 290);
-  color: oklch(1 0 0);
+  background: var(--aurora-orb-base);
+  color: var(--aurora-orb-ink);
 
   &::before {
     content: "";
@@ -1865,20 +1873,20 @@
     z-index: -1;
     pointer-events: none;
     background:
-    radial-gradient(34% 34% at 15% 30%, oklch(from var(--brand-teal) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 35% 12%, oklch(from var(--brand-blue) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 62% 10%, oklch(from var(--brand-indigo) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 85% 30%, oklch(from var(--brand-violet) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 88% 62%, oklch(from var(--brand-magenta) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 65% 88%, oklch(from var(--brand-coral) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 38% 90%, oklch(from var(--brand-amber) calc(l * 0.68) c h), transparent 72%),
-    radial-gradient(34% 34% at 12% 68%, oklch(from var(--brand-green) calc(l * 0.68) c h), transparent 72%),
-      oklch(0.25 0.06 290);
+    radial-gradient(34% 34% at 15% 30%, oklch(from var(--brand-teal) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 35% 12%, oklch(from var(--brand-blue) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 62% 10%, oklch(from var(--brand-indigo) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 85% 30%, oklch(from var(--brand-violet) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 88% 62%, oklch(from var(--brand-magenta) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 65% 88%, oklch(from var(--brand-coral) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 38% 90%, oklch(from var(--brand-amber) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+    radial-gradient(34% 34% at 12% 68%, oklch(from var(--brand-green) calc(l * var(--aurora-orb-l)) c h), transparent 72%),
+      var(--aurora-orb-base);
     filter: blur(2.5px);
   }
 
   & > * {
-    text-shadow: 0 0 3px oklch(0 0 0 / 0.3);
+    text-shadow: 0 0 3px color-mix(in oklch, var(--aurora-orb-base) 60%, transparent);
   }
 }
 
