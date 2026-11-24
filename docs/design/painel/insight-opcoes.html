@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Insight — opções</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#9a9a9a;--faint:#6f6f6f;--border:rgba(255,255,255,.08);--muted:#262626;
+--cat:oklch(0.72 0.16 45);--ok:oklch(0.8 0.14 152);--okm:oklch(0.35 0.08 152 / .55);--p1:oklch(0.78 0.14 320);--p2:oklch(0.80 0.15 100)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 6px;max-width:860px}
+h2{font:600 17px Inter;margin:44px 0 4px}.sub{color:var(--mut);margin:0 0 14px;max-width:820px;font-size:13px}
+.m{font-family:"Geist Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border);display:flex;flex-direction:column}
+.ghost{border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border)}
+.hd{display:flex;justify-content:space-between;align-items:center;height:20px;margin-bottom:16px}.t{font-weight:600}
+.btn{font:500 13px Inter;color:var(--fg)}
+.row{display:grid;grid-template-columns:5fr 4fr;gap:16px;max-width:790px}
+.mut{color:var(--mut)}.sm{font-size:12px}.xs{font-size:12px}
+.av{width:32px;height:32px;border-radius:99px;display:grid;place-items:center;font:600 12px Inter;flex:none}
+.split{display:flex;gap:2px;height:12px}.split i{border-radius:99px}
+.li{display:flex;align-items:center;gap:12px}
+.ic{width:32px;height:32px;border-radius:99px;display:grid;place-items:center;background:var(--okm);color:var(--ok);flex:none;font-size:15px}
+.tiles{display:flex;gap:3px}.tiles i{width:12px;height:12px;border-radius:4px;background:#333}.tiles i.on{background:var(--cat)}
+.badge{display:inline-block;font:600 11px Inter;border-radius:99px;padding:1px 7px;background:oklch(0.4 0.08 78 / .5);color:oklch(0.85 0.12 78)}
+.badgeok{background:var(--okm);color:var(--ok)}
+.tag{display:inline-block;font:600 11px Inter;color:var(--mut);border:1px solid var(--border);border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.bars{display:flex;align-items:flex-end;gap:6px;height:64px}.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}.bars b{width:100%;border-radius:6px 6px 2px 2px;background:#3a3a3a}.bars b.cut{background:var(--ok)}
+hr{border:0;border-top:1px solid var(--border);margin:12px 0}
+</style></head><body>
+<h1>Insight do detalhe da categoria: opções</h1>
+<p class="lead">Categoria Compras, novembro de 2026. O insight sai ao lado do Quem gastou, na coluna de 4/9. Cada opção mostra o caso da parcela que termina e o da sugestão de limite.</p>
+
+<script>
+const quem=`<div class="card"><div class="hd"><span class="t">Quem gastou</span><span class="btn">Ver em Transações</span></div>
+<div class="split" style="margin-bottom:14px"><i style="flex:83;background:var(--p1)"></i><i style="flex:17;background:var(--p2)"></i></div>
+<div style="display:grid;gap:10px"><div class="li"><span class="av" style="background:var(--p1);color:#2a1030">KL</span><div style="flex:1"><div>Kauã Leandro</div><div class="sm mut">83% · 12 compras</div></div><span class="m">R$ 1.820</span></div>
+<div class="li"><span class="av" style="background:var(--p2);color:#2a2405">RR</span><div style="flex:1"><div>Renata Raab</div><div class="sm mut">17% · 3 compras</div></div><span class="m">R$ 374</span></div></div></div>`;
+document.write('')
+</script>
+
+<h2>Hoje</h2>
+<div class="row"><div id="q0"></div>
+<div class="ghost" style="display:flex;gap:10px;align-items:flex-start"><span class="ic">✓</span><div><div>Lentes termina em dezembro de 2026: libera <b>R$ 109,95/mês</b> a partir de janeiro de 2027.</div><div class="btn" style="margin-top:8px">Ver na Previsão</div></div></div></div>
+
+<h2>A · Cartão com título e número <span class="tag">recomendo</span></h2>
+<p class="sub">O insight vira um Card como os vizinhos: título que diz o assunto, a ação no canto (o mesmo lugar do "Ver em Transações"), o número grande e a frase curta embaixo. Preenche a altura, e o ícone de "concluído" sai.</p>
+<div class="row"><div id="q1"></div>
+<div class="card"><div class="hd"><span class="t">Sobra em janeiro</span><span class="btn">Ver na Previsão</span></div>
+<div style="margin-top:auto"><div class="m" style="font-size:26px;color:var(--ok)">+R$ 110<span class="mut" style="font-size:14px">/mês</span></div>
+<div class="mut" style="margin-top:4px">Lentes termina em dezembro (12/12)</div></div></div></div>
+<div class="row" style="margin-top:16px"><div></div>
+<div class="card"><div class="hd"><span class="t">Sugestão de limite</span><span class="btn">Definir limite</span></div>
+<div style="margin-top:auto"><div class="m" style="font-size:26px">R$ 2.200<span class="mut" style="font-size:14px">/mês</span></div>
+<div class="mut" style="margin-top:4px">Pela média dos últimos 6 meses</div></div></div></div>
+
+<h2>B · Os próximos meses</h2>
+<p class="sub">O mesmo assunto, mas mostrando o efeito: as parcelas que já vencem nos próximos 4 meses, com o mês em que uma termina em verde. Diz mais que a frase, mas precisa das parcelas por mês (a Previsão já calcula). O limite segue como em A.</p>
+<div class="row"><div id="q2"></div>
+<div class="card"><div class="hd"><span class="t">Parcelas nos próximos meses</span><span class="btn">Ver na Previsão</span></div>
+<div class="bars"><div><b style="height:56px"></b><span class="xs mut">dez</span></div><div><b class="cut" style="height:40px"></b><span class="xs mut">jan</span></div><div><b style="height:40px"></b><span class="xs mut">fev</span></div><div><b style="height:24px"></b><span class="xs mut">mar</span></div></div>
+<div class="sm mut" style="margin-top:10px"><span style="color:var(--ok)">−R$ 110 em janeiro</span>: Lentes termina</div></div></div>
+
+<h2>C · Dentro do cartão Parcelas</h2>
+<p class="sub">Sem cartão de insight: a parcela que termina ganha o selo "acaba em dez" na linha dela, e o pé do cartão Parcelas diz "Em janeiro, R$ 110/mês a menos · Ver na Previsão". Tira a repetição. O limite sugerido vai para a faixa do mês, ao lado da barra ("Sem limite · definir R$ 2.200"). O Quem gastou fica sozinho na linha.</p>
+<div class="row" style="grid-template-columns:5fr 4fr"><div class="card"><div class="hd"><span class="t">Parcelas · 4 ativas</span><span class="btn">Ver todas</span></div>
+<div style="display:grid;gap:12px">
+<div><div class="li"><span style="flex:1">Lentes <span class="badge badgeok">acaba em dez</span></span><span class="m">R$ 110</span></div><div class="li" style="margin-top:6px"><span class="tiles"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="xs mut">12/12 · última</span></div></div>
+<div><div class="li"><span style="flex:1">Zara Kaua e Renata <span class="badge">novo</span></span><span class="m">R$ 214</span></div><div class="li" style="margin-top:6px"><span class="tiles"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span><span class="xs mut">1/6 · até abr/27</span></div></div>
+</div><hr><div class="sm mut">Em janeiro, <span style="color:var(--ok)">R$ 110/mês a menos</span> · <span class="btn">Ver na Previsão</span></div></div>
+<div class="ghost mut" style="display:grid;place-items:center;font-size:13px">(Quem gastou aqui, ou sozinho)</div></div>
+
+<script>for(const id of ['q0','q1','q2'])document.getElementById(id).innerHTML=quem</script>
+</body></html>

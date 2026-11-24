@@ -1,0 +1,102 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Insights da categoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#9a9a9a;--faint:#6f6f6f;--border:rgba(255,255,255,.08);--muted:#262626;--hov:rgba(237,237,237,.07);
+--ok:oklch(0.8 0.14 152);--okm:oklch(0.35 0.08 152 / .5);--warn:oklch(0.82 0.13 78);--warnm:oklch(0.4 0.08 78 / .5);--info:oklch(0.78 0.11 240);--infom:oklch(0.38 0.08 240 / .5);--cat:oklch(0.72 0.16 45)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 6px;max-width:900px}
+h2{font:600 18px Inter;margin:48px 0 4px}h3{font:600 14px Inter;margin:0 0 2px}.sub{color:var(--mut);margin:0 0 16px;max-width:860px;font-size:13px}
+.m{font-family:"Geist Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border);display:flex;flex-direction:column;min-height:178px}
+.hd{display:flex;justify-content:space-between;align-items:center;height:20px;margin-bottom:16px;gap:12px}.t{font-weight:600}
+.btn{font:500 13px Inter;color:var(--fg);white-space:nowrap}
+.big{font-size:26px;line-height:1.1}.mut{color:var(--mut)}.sm{font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;max-width:1080px}
+.meta{font-size:12px;color:var(--mut);margin:8px 2px 0}.meta b{color:var(--fg);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 11px Inter;border-radius:99px;padding:2px 8px}
+.ok{background:var(--okm);color:var(--ok)}.wa{background:var(--warnm);color:var(--warn)}.in{background:var(--infom);color:var(--info)}
+.tag{display:inline-block;font:600 11px Inter;color:var(--mut);border:1px solid var(--border);border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.row{display:grid;grid-template-columns:5fr 4fr;gap:16px;max-width:790px}
+.ghost{border-radius:22px;box-shadow:inset 0 0 0 1px var(--border);display:grid;place-items:center;color:var(--faint);font-size:13px;min-height:178px}
+.dots{display:flex;gap:6px;align-items:center}.dots i{width:6px;height:6px;border-radius:99px;background:#444}.dots i.on{background:var(--fg)}
+.arrow{width:28px;height:28px;border-radius:99px;display:grid;place-items:center;background:rgba(255,255,255,.07);font-size:13px}
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)}.li:first-child{border-top:0;padding-top:0}
+.ic{width:28px;height:28px;border-radius:99px;display:grid;place-items:center;flex:none;font-size:13px}
+.minibar{display:flex;align-items:flex-end;gap:5px;height:44px;margin-top:10px}.minibar b{flex:1;border-radius:4px 4px 2px 2px;background:#3a3a3a}.minibar b.hi{background:var(--warn)}
+table{border-collapse:collapse;max-width:1080px;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:500}
+</style></head><body>
+<h1>Insights do detalhe da categoria</h1>
+<p class="lead">Hoje o detalhe mostra 1 insight: o primeiro de 3 que tem ação (2 aparecem). A carteira já tem 10 detectores (o Painel, em <code>supabase/functions/_shared/insights</code>), e 6 deles fazem sentido recortados por categoria. Abaixo: o catálogo com cada um desenhado na forma A (cartão com título, número e ação no canto) e, no fim, três jeitos de mostrar mais de um.</p>
+
+<h2>1 · Catálogo</h2>
+<p class="sub">Exemplo: Carro e Compras, novembro de 2026. "Fonte" diz de onde sai o dado: <b>já existe</b> na tela, <b>detector</b> da carteira (filtrar pela categoria) ou <b>novo</b> (conta nova).</p>
+<div class="grid">
+
+<div><div class="card"><div class="hd"><span class="t">Sobra em janeiro</span><span class="btn">Ver na Previsão</span></div>
+<div style="margin-top:auto"><div class="m big" style="color:var(--ok)">+R$ 110<span class="mut" style="font-size:14px">/mês</span></div><div class="mut" style="margin-top:4px">Lentes termina em dezembro (12/12)</div></div></div>
+<p class="meta"><b>1 · Parcela que termina</b>. Fonte: já existe (<code>parcela-termina</code>). Hoje aparece.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Sugestão de limite</span><span class="btn">Definir limite</span></div>
+<div style="margin-top:auto"><div class="m big">R$ 2.200<span class="mut" style="font-size:14px">/mês</span></div><div class="mut" style="margin-top:4px">Pela média dos últimos 6 meses</div></div></div>
+<p class="meta"><b>2 · Sugestão de limite</b>. Fonte: já existe (<code>limite</code>). Hoje aparece. Some para o convidado.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">IPVA chega em janeiro</span><span class="btn">Criar conta a pagar</span></div>
+<div style="margin-top:auto"><div class="m big">R$ 1.240</div><div class="mut" style="margin-top:4px">Foi o que você pagou em janeiro de 2026</div></div></div>
+<p class="meta"><b>3 · Gasto do ano que volta</b> (IPVA, IPTU, matrícula, seguro anual). Fonte: detector <code>sazonal</code>, filtrado pela categoria. Avisa com 1 a 2 meses de antecedência.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Estacionamento todo mês</span><span class="btn">Virar conta a pagar</span></div>
+<div style="margin-top:auto"><div class="m big">~R$ 60<span class="mut" style="font-size:14px">/mês</span></div><div class="mut" style="margin-top:4px">Há 5 meses seguidos, sem cadastro</div></div></div>
+<p class="meta"><b>4 · Gasto que se repete</b>. Fonte: detector <code>recorrencia</code> (vira assinatura ou conta a pagar), filtrado pela categoria.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Spotify mudou de preço</span><span class="btn">Atualizar valor</span></div>
+<div style="margin-top:auto"><div class="m big">R$ 21,90 <span class="mut" style="font-size:16px">→</span> R$ 23,90</div><div class="mut" style="margin-top:4px">+R$ 24 por ano</div></div></div>
+<p class="meta"><b>5 · Assinatura mais cara</b>. Fonte: detector <code>preco_assinatura</code>, nas assinaturas da categoria.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Lançamento repetido?</span><span class="btn">Ver os dois</span></div>
+<div style="margin-top:auto"><div class="m big">R$ 240</div><div class="mut" style="margin-top:4px">Gasolina, duas vezes em 22/11</div></div></div>
+<p class="meta"><b>6 · Possível duplicado</b>. Fonte: detector <code>duplicidade</code>, na categoria. A ação filtra a lista da página nos dois.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">3 para conferir</span><span class="btn">Conferir agora</span></div>
+<div style="margin-top:auto"><div class="m big">R$ 412</div><div class="mut" style="margin-top:4px">Lançados pelo app e ainda não vistos</div></div></div>
+<p class="meta"><b>7 · A conferir</b>. Fonte: detector <code>a_conferir</code>, contado na categoria. Leva a Transações com <code>conferir</code> e a categoria.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Dois gastos fizeram o mês</span><span class="btn">Ver os dois</span></div>
+<div style="margin-top:auto"><div class="m big">72%</div><div class="mut" style="margin-top:4px">Sem Consórcio Mãe e Seguro carro, o mês ficaria em R$ 1.140</div></div></div>
+<p class="meta"><b>8 · Concentração</b>. Fonte: já existe (<code>concentracao</code>), mas hoje não aparece por não ter ação. Ganha "Ver os dois", que filtra a lista.</p></div>
+
+<div><div class="card"><div class="hd"><span class="t">Vai passar do limite</span><span class="btn">Ajustar limite</span></div>
+<div class="minibar"><b style="height:30%"></b><b style="height:45%"></b><b style="height:55%"></b><b class="hi" style="height:100%"></b></div>
+<div class="mut" style="margin-top:8px">No ritmo de hoje fecha em <span class="m" style="color:var(--fg)">R$ 3.900</span>, R$ 400 acima</div></div>
+<p class="meta"><b>9 · Ritmo contra o limite</b>. Fonte: já existe na faixa do mês ("Deve fechar em"). O insight só aparece no mês aberto, quando passa do limite. ⚠️ Repete a faixa; entra só se a faixa sair.</p></div>
+
+</div>
+
+<h2>2 · Quantos mostrar, e como</h2>
+<p class="sub">Com mais tipos, a categoria vai ter 2 ou 3 ao mesmo tempo. Ordem sugerida: o que pede ação já (duplicado, a conferir), depois o que tem data (IPVA, parcela que termina), depois o que melhora o controle (repete, preço, limite, concentração).</p>
+
+<h3>A · Um só, o mais importante <span class="tag">mais simples</span></h3>
+<p class="sub">Como hoje: o primeiro da ordem. Os outros não aparecem, mas cada um volta quando o primeiro é resolvido.</p>
+<div class="row"><div class="ghost">Quem gastou</div>
+<div class="card"><div class="hd"><span class="t">Lançamento repetido?</span><span class="btn">Ver os dois</span></div><div style="margin-top:auto"><div class="m big">R$ 240</div><div class="mut" style="margin-top:4px">Gasolina, duas vezes em 22/11</div></div></div></div>
+
+<h3 style="margin-top:28px">B · Um por vez, com "1 de 3" <span class="tag">recomendo</span></h3>
+<p class="sub">O mesmo cartão, com os pontinhos e as setas no pé para passar ao próximo (o Carousel do design system). Mostra que há mais, sem crescer a página.</p>
+<div class="row"><div class="ghost">Quem gastou</div>
+<div class="card"><div class="hd"><span class="t">Lançamento repetido?</span><span class="btn">Ver os dois</span></div><div style="margin-top:auto"><div class="m big">R$ 240</div><div class="mut" style="margin-top:4px">Gasolina, duas vezes em 22/11</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><span class="dots"><i class="on"></i><i></i><i></i></span><span style="display:flex;gap:6px"><span class="arrow">‹</span><span class="arrow">›</span></span></div></div></div>
+
+<h3 style="margin-top:28px">C · Lista "Para olhar"</h3>
+<p class="sub">Até 3 numa lista: ícone no tom, título, uma linha e a ação à direita. Cabem todos de uma vez, mas perde o número em destaque e fica mais denso.</p>
+<div class="row"><div class="ghost">Quem gastou</div>
+<div class="card"><div class="hd"><span class="t">Para olhar · 3</span></div>
+<div class="li"><span class="ic wa">!</span><div style="flex:1;min-width:0"><div>Lançamento repetido?</div><div class="sm mut">Gasolina · R$ 240, 2× em 22/11</div></div><span class="btn">Ver</span></div>
+<div class="li"><span class="ic in">◷</span><div style="flex:1;min-width:0"><div>IPVA chega em janeiro</div><div class="sm mut">R$ 1.240 no ano passado</div></div><span class="btn">Criar</span></div>
+<div class="li"><span class="ic ok">↓</span><div style="flex:1;min-width:0"><div>Sobra em janeiro</div><div class="sm mut">+R$ 110/mês · Lentes termina</div></div><span class="btn">Ver</span></div>
+</div></div>
+
+<h2>3 · O que eu deixaria de fora</h2>
+<table><tr><th>Detector</th><th>Por quê</th></tr>
+<tr><td><code>gasto_atipico</code></td><td>A Leitura do mês já diz o que subiu, com o valor contra o normal.</td></tr>
+<tr><td><code>fatura_fechou</code>, <code>relatorio_mes</code>, <code>seguro_baixo</code></td><td>São da carteira ou do cartão, não de uma categoria.</td></tr>
+<tr><td><code>limite_pessoa</code></td><td>É o limite de uma pessoa, não da categoria.</td></tr>
+</table>
+</body></html>
