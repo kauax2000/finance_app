@@ -124,6 +124,11 @@ export function DoQueEFeitoOMes({
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
     // O rodapé do fixo fica só quando a última parcela acaba.
     const comRodape = comFixo && fixo.ultimaTerminaYm != null
+    // O que ainda falta das parcelas, contando a deste mês como paga: o valor vezes as que restam.
+    const faltam = fixo.itens.reduce(
+        (a, i) => (i.tipo === "parcela" && i.atual != null && i.total != null ? a + i.valor * Math.max(0, i.total - i.atual) : a),
+        0
+    )
 
     return (
         <div className="grid gap-(--space-block)">
@@ -221,7 +226,7 @@ export function DoQueEFeitoOMes({
                             apoio={`${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
                             className={cn(!comVariavel && "@xl:col-span-2")}
                         >
-                        {/* Como as compras (C2): uma linha por item, separadas por fio; a contagem em cinza ao lado do nome, os pontinhos no meio e o valor. O fim da última parcela é a última linha. */}
+                        {/* Como as compras (C2): uma linha por item, separadas por fio; a contagem em cinza ao lado do nome, os pontinhos e o valor. Embaixo, quanto ainda falta e quando a última acaba. */}
                         <ul className="grid grid-cols-1 divide-y divide-border">
                             {linhas.map((item) => {
                                 const parcela = item.tipo === "parcela" && item.atual != null && item.total != null
@@ -257,7 +262,13 @@ export function DoQueEFeitoOMes({
                                         {resto.todosNovos ? (resto.n === 1 ? " nova este mês" : " novas este mês") : null}
                                         <span className="text-muted-foreground"> · {resto.nomes.join(", ")}</span>
                                     </span>
-                                    <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(resto.valor)}</span>
+                                    <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(resto.valor)}</span>
+                                </li>
+                            ) : null}
+                            {faltam > 0 ? (
+                                <li className="flex items-center gap-2.5 py-2.5 text-sm">
+                                    <span className="min-w-0 flex-1 text-muted-foreground">Ainda faltam pagar</span>
+                                    <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(faltam)}</span>
                                 </li>
                             ) : null}
                             {comRodape && fixo.ultimaTerminaYm ? (
@@ -265,7 +276,7 @@ export function DoQueEFeitoOMes({
                                     <span className="min-w-0 flex-1 text-muted-foreground">
                                         {despesa ? "A última parcela acaba em" : "A última entrada fixa acaba em"}
                                     </span>
-                                    <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{mesEAno(fixo.ultimaTerminaYm)}</span>
+                                    <span className="nums shrink-0 text-right font-mono font-semibold">{mesEAno(fixo.ultimaTerminaYm)}</span>
                                 </li>
                             ) : null}
                         </ul>
