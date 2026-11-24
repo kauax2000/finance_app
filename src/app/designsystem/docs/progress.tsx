@@ -154,7 +154,7 @@ export default function ProgressDoc() {
 
       <DocSection
         title="Segmentada"
-        description="segments divide a barra em casas, e cada uma acende quando o valor a cobre inteira: 7 de 12 parcelas são sete casas, nunca sete e meia. Para o que se conta em unidades — parcelas, etapas de um fluxo. Na marca, cada casa mostra a sua fatia do arco-íris. segmentShape=\"tile\" com size=\"lg\" faz das casas ladrilhos de 12px (as parcelas do detalhe da categoria)."
+        description="segments divide a barra em casas, e cada uma acende quando o valor a cobre inteira: 7 de 12 parcelas são sete casas, nunca sete e meia. Para o que se conta em unidades — parcelas, etapas de um fluxo. Na marca, cada casa mostra a sua fatia do arco-íris. segmentShape tile com size lg faz das casas ladrilhos de 12px (as parcelas do detalhe da categoria)."
         code={`<Progress value={7} max={12} segments={12} tone="success"
   header={
     <ProgressHeader>
