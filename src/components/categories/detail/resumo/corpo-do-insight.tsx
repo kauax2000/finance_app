@@ -184,6 +184,8 @@ function ColunasDaRecorrencia({ insight, cor }: { insight: Insight; cor: string 
                     .sort(([x], [y]) => x.localeCompare(y))
                     .map(([ym, valor]) => ({ mes: formatMonthShortPtBr(new Date(`${ym}-15T12:00:00`)), valor })),
             )
+        }).catch(() => {
+            if (vivo) setMeses(null)
         })
         return () => {
             vivo = false
