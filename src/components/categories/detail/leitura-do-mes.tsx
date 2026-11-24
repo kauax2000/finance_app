@@ -44,7 +44,7 @@ export function LeituraDoMes({
     const grupo = sugestao?.grupo
     const ver = grupo && onVer ? () => onVer(grupo.nome) : null
     return (
-        <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]} className="@container/leitura">
+        <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
             <CardContent className="grid gap-3.5">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
@@ -52,23 +52,15 @@ export function LeituraDoMes({
                     </span>
                     Leitura do mês
                 </h2>
-                <div className="grid gap-x-6 gap-y-3 @md/leitura:grid-cols-[minmax(0,1fr)_auto] @md/leitura:items-end">
-                    <p className="max-w-140 font-display text-xl text-pretty">
-                        <Partes partes={manchete} />
-                        {apoio.length ? (
-                            <span className="text-muted-foreground">
-                                {" — "}
-                                <Partes partes={apoio} />
-                            </span>
-                        ) : null}
-                    </p>
-                    {sugestao ? (
-                        <p className="@md/leitura:text-right">
-                            <span className="block text-xs text-muted-foreground">{sugestao.mes}, no ritmo de sempre</span>
-                            <span className="nums text-xl font-semibold">{reaisInteiros(sugestao.valor)}</span>
-                        </p>
+                <p className="max-w-140 font-display text-xl text-pretty">
+                    <Partes partes={manchete} />
+                    {apoio.length ? (
+                        <span className="text-muted-foreground">
+                            {" — "}
+                            <Partes partes={apoio} />
+                        </span>
                     ) : null}
-                </div>
+                </p>
                 {motivos.length || ver ? (
                     <div className="flex flex-wrap items-center gap-2">
                         {/* O delta na tinta `-muted-foreground` do tom: o `--warning` cheio sobre a pílula `muted` mede 1,6:1 no claro. */}
