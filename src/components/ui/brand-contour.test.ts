@@ -412,9 +412,10 @@ describe("contorno de marca", () => {
     expect(util).toMatch(/filter:\s*blur\(40px\);/)
     expect(util.match(/opacity:\s*var\(--brand-aurora-opacity\);/g)).toHaveLength(2)
     for (const humor of ["warm", "cool"]) expect(util).toContain(`&[data-mood="${humor}"]`)
-    // O selo da Leitura (G5) lê as três cores da aurora que o contém, com a paleta neutra de reserva.
+    // O selo da Leitura (R3) é a malha das oito paradas da marca, plana.
     const orb = css.slice(css.indexOf("@utility aurora-orb"), css.indexOf("@utility brand-rainbow-image"))
-    expect(orb).toMatch(/--orb-c:\s*var\(--aurora-c, var\(--brand-blue\)\)/)
+    for (const cor of ["teal", "blue", "indigo", "violet", "magenta", "coral", "amber", "green"]) expect(orb).toContain(`var(--brand-${cor})`)
+    expect(orb).not.toMatch(/box-shadow/)
     expect(lerFonte("src/components/categories/detail/leitura-do-mes.tsx")).toContain("aurora-orb")
     expect([...css.matchAll(/--brand-aurora-opacity:\s*([\d.]+);/g)].map((m) => m[1])).toEqual(["0.7", "0.6"])
 

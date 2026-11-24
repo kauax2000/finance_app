@@ -1845,54 +1845,43 @@
   }
 }
 
-/* O selo da aurora (G5, 23/11/2026): o círculo escuro onde a luz do humor nasce do pé,
-   com o fio claro em cima e aceso embaixo e um halo das três cores em volta. Lê
-   `--aurora-l/c/r` do `brand-aurora` que o contém (sem ele, a paleta neutra) e faz parte
-   da mesma peça de marca. O miolo é físico, escuro nos dois temas, como o `Seal`; o ✦
-   de dentro ganha um brilho na cor do meio. Mockup: `docs/design/painel/leitura-selo-vidro-v2.html`. */
+/* O selo da Leitura do mês (R3, 23/11/2026): plano, a malha das oito paradas da marca em
+   roda (cada uma uma mancha, escurecidas a 68% da claridade para o ✦ branco ler), borrada
+   para as cores se fundirem como tinta, sem volume, reflexo nem halo. Igual nos três humores:
+   é o símbolo do app, parte da peça de marca da aurora. Mockup:
+   `docs/design/painel/leitura-selo-malha-marca.html` (R3). */
 @utility aurora-orb {
-  --orb-l: var(--aurora-l, var(--brand-violet));
-  --orb-c: var(--aurora-c, var(--brand-blue));
-  --orb-r: var(--aurora-r, var(--brand-magenta));
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border-radius: 9999px;
-  background:
-    radial-gradient(100% 75% at 50% 118%, var(--orb-c), transparent 62%),
-    radial-gradient(55% 55% at 10% 105%, var(--orb-l), transparent 70%),
-    radial-gradient(55% 55% at 90% 105%, var(--orb-r), transparent 70%),
-    oklch(0.16 0 0);
-  box-shadow: 0 8px 18px -6px color-mix(in oklch, var(--orb-c) 70%, transparent);
+  background: oklch(0.25 0.06 290);
+  color: oklch(1 0 0);
 
   &::before {
     content: "";
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    pointer-events: none;
-    background: linear-gradient(180deg, oklch(1 0 0 / 0.5), oklch(1 0 0 / 0.05) 45%, color-mix(in oklch, var(--orb-c) 60%, white));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -4px;
+    inset: -25%;
     z-index: -1;
-    border-radius: inherit;
     pointer-events: none;
-    background: conic-gradient(from 180deg, var(--orb-l), var(--orb-c), var(--orb-r), var(--orb-c), var(--orb-l));
-    filter: blur(8px);
-    opacity: 0.35;
+    background:
+    radial-gradient(34% 34% at 15% 30%, oklch(from var(--brand-teal) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 35% 12%, oklch(from var(--brand-blue) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 62% 10%, oklch(from var(--brand-indigo) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 85% 30%, oklch(from var(--brand-violet) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 88% 62%, oklch(from var(--brand-magenta) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 65% 88%, oklch(from var(--brand-coral) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 38% 90%, oklch(from var(--brand-amber) calc(l * 0.68) c h), transparent 72%),
+    radial-gradient(34% 34% at 12% 68%, oklch(from var(--brand-green) calc(l * 0.68) c h), transparent 72%),
+      oklch(0.25 0.06 290);
+    filter: blur(2.5px);
   }
 
   & > * {
-    position: relative;
-    filter: drop-shadow(0 0 3px color-mix(in oklch, var(--orb-c) 70%, transparent));
+    text-shadow: 0 0 3px oklch(0 0 0 / 0.3);
   }
 }
+
 
 @utility brand-rainbow-image {
   /* O sRGB primeiro, e o `@supports` por cima. O degradê mora numa propriedade

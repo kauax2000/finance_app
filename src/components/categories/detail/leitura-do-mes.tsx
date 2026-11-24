@@ -48,7 +48,7 @@ export function LeituraDoMes({
             <CardContent className="grid gap-3.5">
                 <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
-                        <span className="brand-rainbow bg-clip-text text-transparent">✦</span>
+                        <span>✦</span>
                     </span>
                     Leitura do mês
                 </h2>
