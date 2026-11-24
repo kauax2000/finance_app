@@ -46,12 +46,19 @@ export function LeituraDoMes({
     return (
         <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
             <CardContent className="grid gap-3.5">
-                <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
-                        <span>✦</span>
-                    </span>
-                    Leitura do mês
-                </h2>
+                <div className="flex items-center justify-between gap-2">
+                    <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
+                            <span>✦</span>
+                        </span>
+                        Leitura do mês
+                    </h2>
+                    {grupo && ver ? (
+                        <Button variant="tertiary" size="sm" className="-me-2" onClick={ver}>
+                            Ver {grupo.nome}
+                        </Button>
+                    ) : null}
+                </div>
                 <p className="font-display text-xl text-pretty">
                     <Partes partes={manchete} />
                     {apoio.length ? (
@@ -61,7 +68,7 @@ export function LeituraDoMes({
                         </span>
                     ) : null}
                 </p>
-                {motivos.length || ver ? (
+                {motivos.length ? (
                     <div className="flex flex-wrap items-center gap-2">
                         {/* O delta na tinta `-muted-foreground` do tom: o `--warning` cheio sobre a pílula `muted` mede 1,6:1 no claro. */}
                         {motivos.map((m) => (
@@ -75,11 +82,6 @@ export function LeituraDoMes({
                                 </span>
                             </Badge>
                         ))}
-                        {grupo && ver ? (
-                            <Button variant="secondary" size="sm" className="ms-auto max-sm:w-full" onClick={ver}>
-                                Ver {grupo.nome}
-                            </Button>
-                        ) : null}
                     </div>
                 ) : null}
             </CardContent>
