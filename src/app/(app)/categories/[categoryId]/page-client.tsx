@@ -476,7 +476,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             paraQuemLe(
                 [
                     ...insightsLocais({ tipo, categoryId, yearMonth, aberto, lancado: mes.lancado, previsto: mes.previsto, media, limite, txs, compromissos: c }),
-                    ...insightsDaCaixa(caixa.linhas, { categoryId, assinaturas: subscriptions, idsDoMes: new Set(txs.map((t) => t.id)) }),
+                    ...insightsDaCaixa(caixa.linhas, { categoryId, assinaturas: subscriptions, txs }),
                 ],
                 podeEscrever,
             ),

@@ -72,35 +72,50 @@ describe("insightsLocais", () => {
             acao: { tipo: "previsao" },
         })
         expect(r[0].titulo.startsWith("Sobra em ")).toBe(true)
+        expect(r[0]).toMatchObject({ foco: "dado", rotulo: "Ver na Previsão", corpo: { tipo: "parcela", atual: 3, total: 6 } })
+        expect(r[0].linha).toMatch(/^Consórcio · 3 de 6 · termina em /)
     })
     it("a parcela que termina no ano do mês visto não diz o ano", () => {
         const c = { itens: [{ id: "p", nome: "Seguro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2026-11" }], porMes: 300, ateAcabar: 300 }
         const [r] = insightsLocais({ ...base, yearMonth: "2026-03", limite: null, compromissos: c })
         expect(r.titulo).toBe("Sobra em dezembro")
-        expect(r.linha).toBe("Seguro termina em novembro (12/12)")
+        expect(r.linha).toBe("Seguro · 12 de 12 · termina em novembro")
     })
     it("a parcela que termina em outro ano diz o ano curto", () => {
         const c = { itens: [{ id: "p", nome: "Seguro carro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2027-08" }], porMes: 300, ateAcabar: 300 }
         const [r] = insightsLocais({ ...base, limite: null, compromissos: c })
         expect(r.titulo).toBe("Sobra em set/27")
-        expect(r.linha).toBe("Seguro carro termina em ago/27 (12/12)")
+        expect(r.linha).toBe("Seguro carro · 12 de 12 · termina em ago/27")
     })
     it("a parcela que termina em dezembro sobra em janeiro do ano seguinte", () => {
         const c = { itens: [{ id: "p", nome: "Seguro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2026-12" }], porMes: 300, ateAcabar: 300 }
         const [r] = insightsLocais({ ...base, limite: null, compromissos: c })
         expect(r.titulo).toBe("Sobra em jan/27")
-        expect(r.linha).toBe("Seguro termina em dezembro (12/12)")
+        expect(r.linha).toBe("Seguro · 12 de 12 · termina em dezembro")
     })
     it("sugere limite em centenas para despesa sem limite", () => {
         const r = insightsLocais({ ...base, lancado: 10, media: 2342.5, limite: null })
         expect(r).toHaveLength(1)
-        expect(r[0]).toMatchObject({ ordem: 8, numero: `${reaisInteiros(2400)}/mês`, acao: { tipo: "limite" } })
+        expect(r[0]).toMatchObject({
+            ordem: 8,
+            numero: `${reaisInteiros(2400)}/mês`,
+            foco: "acao",
+            rotulo: `Definir ${reaisInteiros(2400)}`,
+            linha: `Este mês: ${reaisInteiros(10)} · pela média de 6 meses`,
+            corpo: { tipo: "limite", lancado: 10, sugerido: 2400 },
+            acao: { tipo: "limite", valor: 2400 },
+        })
     })
     it("concentração: 2 maiores > 70%", () => {
         const r = insightsLocais({ ...base, lancado: 2910, txs: carro })
         const c = r.find((i) => i.ordem === 9)
-        expect(c).toMatchObject({ numero: "84%", acao: { tipo: "ordenar-por-valor" } })
-        expect(c?.linha).toContain(reaisInteiros(2910 - 2442.54))
+        expect(c).toMatchObject({
+            numero: "84%",
+            foco: "dado",
+            acao: { tipo: "ordenar-por-valor" },
+            linha: `Consórcio e Seguro · resto ${reaisInteiros(2910 - 2442.54)}`,
+            corpo: { tipo: "concentracao", partes: [{ nome: "Consórcio", valor: 2000 }, { nome: "Seguro", valor: 442.54 }], resto: 2910 - 2442.54 },
+        })
     })
     it("concentração não aparece se os 2 maiores passam do lançado", () => {
         expect(insightsLocais({ ...base, lancado: 1000, txs: carro }).find((i) => i.ordem === 9)).toBeUndefined()
@@ -117,13 +132,30 @@ describe("insightsLocais", () => {
             ordem: 2,
             titulo: "2 para conferir",
             numero: reaisInteiros(50),
+            foco: "acao",
+            rotulo: "Conferir agora",
+            corpo: { tipo: "conferir", resto: 0, total: 50 },
             acao: { tipo: "link", href: "/transactions?conferir=1&cats=cat" },
+        })
+    })
+    it("a conferir: 1 lançamento sem resto; 5 mostram 2 linhas, as mais recentes, e resto 3", () => {
+        const um = insightsLocais({ ...base, txs: [tx({ id: "a", needs_review: true })] })[0].corpo
+        expect(um).toMatchObject({ tipo: "conferir", resto: 0 })
+        expect((um as { linhas: unknown[] }).linhas).toHaveLength(1)
+        const cinco = ["01", "02", "03", "04", "05"].map((d) =>
+            tx({ id: d, description: `d${d}`, amount: 10, date: `2026-11-${d}`, needs_review: true }),
+        )
+        const c = insightsLocais({ ...base, txs: cinco })[0].corpo
+        expect(c).toMatchObject({
+            resto: 3,
+            total: 50,
+            linhas: [{ dia: "05/11", descricao: "d05", valor: 10 }, { dia: "04/11", descricao: "d04", valor: 10 }],
         })
     })
     it("ritmo: passa do limite no mês aberto", () => {
         const r = insightsLocais({ ...base, lancado: 3500, previsto: 400, limite: 3500 })
         expect(r).toHaveLength(1)
-        expect(r[0]).toMatchObject({ ordem: 3, numero: `${reaisInteiros(400)} acima`, tom: "warning", acao: { tipo: "limite" } })
+        expect(r[0]).toMatchObject({ ordem: 3, numero: `${reaisInteiros(400)} acima`, tom: "warning", foco: "dado", rotulo: "Ajustar limite", linha: `Fecha em ${reaisInteiros(3900)} · limite ${reaisInteiros(3500)}`, corpo: { tipo: "ritmo", lancado: 3500, previsto: 400, limite: 3500 }, acao: { tipo: "limite" } })
     })
     it("ritmo some com o mês fechado, sem limite ou dentro dele", () => {
         expect(insightsLocais({ ...base, aberto: false, lancado: 3500, previsto: 400, limite: 3500 })).toEqual([])
@@ -146,7 +178,10 @@ const ctx = {
         { id: "s1", category_id: "cat" },
         { id: "s2", category_id: "outra" },
     ],
-    idsDoMes: new Set(["t1", "t2"]),
+    txs: [
+        tx({ id: "t1", description: "Netflix", amount: 23.9, date: "2026-11-05", payment_method: "credit_card" }),
+        tx({ id: "t2", description: "Netflix", amount: 23.9, date: "2026-11-05", payment_method: "pix" }),
+    ],
 }
 
 describe("insightsDaCaixa", () => {
@@ -160,6 +195,15 @@ describe("insightsDaCaixa", () => {
                 ordem: 1,
                 titulo: "Lançamento repetido?",
                 linha: "Netflix, duas vezes em 05/11",
+                rotulo: "Ver os dois na lista",
+                foco: "acao",
+                corpo: {
+                    tipo: "duplicado",
+                    lancamentos: [
+                        { descricao: "Netflix", dataYmd: "2026-11-05", forma: "Cartão de crédito", valor: 23.9 },
+                        { descricao: "Netflix", dataYmd: "2026-11-05", forma: "PIX", valor: 23.9 },
+                    ],
+                },
                 acao: { tipo: "filtrar", descricao: "Netflix" },
             }),
         ])
@@ -181,9 +225,14 @@ describe("insightsDaCaixa", () => {
             ordem: 4,
             titulo: "IPVA chega em janeiro",
             numero: reaisInteiros(1800),
-            linha: "Foi o que você pagou em janeiro de 2026",
+            linha: "Foi o que você pagou em jan/26",
+            rotulo: "Criar conta do IPVA",
+            foco: "acao",
+            corpo: { tipo: "sazonal", dataYmd: null, valor: 1800 },
             acao: { tipo: "conta-a-pagar", insightId: "sz" },
         })
+        const [com] = insightsDaCaixa([linha("sazonal", { ...p, category_id: "cat", dataYmd: "2026-01-20" })], ctx)
+        expect(com.corpo).toEqual({ tipo: "sazonal", dataYmd: "2026-01-20", valor: 1800 })
         expect(insightsDaCaixa([linha("sazonal", p)], ctx)).toEqual([])
     })
     it("recorrência: rótulo pelo destino; sem nome some", () => {
@@ -195,6 +244,8 @@ describe("insightsDaCaixa", () => {
             numero: `~${reaisInteiros(120)}/mês`,
             linha: "Há 3 meses seguidos, sem cadastro",
             rotulo: "Virar assinatura",
+            foco: "acao",
+            corpo: { tipo: "recorrencia", insightId: "r1", valorMedio: 120 },
             acao: { tipo: "recorrencia", insightId: "r1" },
         })
         expect(insightsDaCaixa([linha("recorrencia", { ...p, destino: "conta" })], ctx)[0].rotulo).toBe("Virar conta a pagar")
@@ -207,6 +258,9 @@ describe("insightsDaCaixa", () => {
             titulo: "Streaming mudou de preço",
             numero: `${currencyBRL(21.9)} → ${currencyBRL(23.9)}`,
             linha: `+${reaisInteiros(24)} por ano`,
+            rotulo: `Atualizar para ${currencyBRL(23.9)}`,
+            foco: "acao",
+            corpo: { tipo: "preco", de: 21.9, para: 23.9 },
         })
     })
     it("nenhum tipo de outra categoria aparece", () => {
@@ -229,6 +283,8 @@ describe("ordem e leitor", () => {
         numero: "",
         linha: "",
         rotulo: "",
+        foco: "dado",
+        corpo: { tipo: "parcela", atual: 1, total: 1 },
         acao,
     })
     it("ordenarInsights põe pela ordem", () => {
