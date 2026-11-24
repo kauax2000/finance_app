@@ -73,6 +73,24 @@ describe("insightsLocais", () => {
         })
         expect(r[0].titulo.startsWith("Sobra em ")).toBe(true)
     })
+    it("a parcela que termina no ano do mês visto não diz o ano", () => {
+        const c = { itens: [{ id: "p", nome: "Seguro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2026-11" }], porMes: 300, ateAcabar: 300 }
+        const [r] = insightsLocais({ ...base, yearMonth: "2026-03", limite: null, compromissos: c })
+        expect(r.titulo).toBe("Sobra em dezembro")
+        expect(r.linha).toBe("Seguro termina em novembro (12/12)")
+    })
+    it("a parcela que termina em outro ano diz o ano", () => {
+        const c = { itens: [{ id: "p", nome: "Seguro carro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2027-08" }], porMes: 300, ateAcabar: 300 }
+        const [r] = insightsLocais({ ...base, limite: null, compromissos: c })
+        expect(r.titulo).toBe("Sobra em setembro de 2027")
+        expect(r.linha).toBe("Seguro carro termina em agosto de 2027 (12/12)")
+    })
+    it("a parcela que termina em dezembro sobra em janeiro do ano seguinte", () => {
+        const c = { itens: [{ id: "p", nome: "Seguro", tipo: "parcela" as const, valor: 300, proximaYmd: null, total: 12, terminaYm: "2026-12" }], porMes: 300, ateAcabar: 300 }
+        const [r] = insightsLocais({ ...base, limite: null, compromissos: c })
+        expect(r.titulo).toBe("Sobra em janeiro de 2027")
+        expect(r.linha).toBe("Seguro termina em dezembro (12/12)")
+    })
     it("sugere limite em centenas para despesa sem limite", () => {
         const r = insightsLocais({ ...base, lancado: 10, media: 2342.5, limite: null })
         expect(r).toHaveLength(1)

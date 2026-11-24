@@ -52,10 +52,11 @@ export function InsightsDaCategoria({
                 aria-label="Insights da categoria"
                 controls="none"
                 fade={false}
-                className="flex flex-col gap-(--card-gap)"
+                className="flex flex-1 flex-col gap-(--card-gap)"
             >
-                {/* O viewport recorta: o respiro de 8px deixa o botão (que transborda a linha do título) e o anel de foco à vista. */}
-                <CarouselContent viewportClassName="-my-2 py-2">
+                {/* O viewport recorta: o respiro de 8px deixa o botão (que transborda a linha do título) e o anel de foco à vista.
+                    A sobra do cartão esticado pela grade desce até o slide, para o número assentar no pé. */}
+                <CarouselContent viewportClassName="-my-2 flex flex-1 flex-col py-2" className="flex-1">
                     {insights.map((i) => {
                         const parado = ocupado === i.id
                         const link = i.acao.tipo === "previsao" ? "/previsao" : i.acao.tipo === "link" ? i.acao.href : null

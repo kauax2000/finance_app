@@ -33,6 +33,9 @@ const str = (v: unknown) => (typeof v === "string" ? v : "")
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0))
 /** "2026-03" → "março". */
 const soMes = (ym: string) => labelYearMonthPt(ym).toLocaleLowerCase("pt-BR").split(" ")[0]
+/** "2027-08" visto em 2026 → "agosto de 2027"; no mesmo ano do mês visto, só "agosto". */
+const mesComAno = (ym: string, vistoYm: string) =>
+    ym.slice(0, 4) === vistoYm.slice(0, 4) ? soMes(ym) : `${soMes(ym)} de ${ym.slice(0, 4)}`
 
 /** Os insights que a página calcula sozinha (ordens 2, 3, 5, 8 e 9). */
 export function insightsLocais(a: {
@@ -84,10 +87,10 @@ export function insightsLocais(a: {
         r.push({
             id: "parcela-termina",
             ordem: 5,
-            titulo: `Sobra em ${soMes(shiftYearMonth(termina.terminaYm!, 1))}`,
+            titulo: `Sobra em ${mesComAno(shiftYearMonth(termina.terminaYm!, 1), a.yearMonth)}`,
             numero: `+${reaisInteiros(termina.valor)}/mês`,
             tom: "success",
-            linha: `${termina.nome} termina em ${soMes(termina.terminaYm!)} (${termina.total}/${termina.total})`,
+            linha: `${termina.nome} termina em ${mesComAno(termina.terminaYm!, a.yearMonth)} (${termina.total}/${termina.total})`,
             rotulo: "Ver na Previsão",
             acao: { tipo: "previsao" },
         })
