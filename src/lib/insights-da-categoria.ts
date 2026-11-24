@@ -1,3 +1,4 @@
+import { mesEAno } from "@/components/analise-do-mes/rotulos"
 import { labelYearMonthPt, shiftYearMonth } from "@/lib/budget-month"
 import { maioresLancamentos, peso, type TipoDaCategoria } from "@/lib/categoria-detalhe"
 import type { Compromissos } from "@/lib/categoria-resumo"
@@ -33,9 +34,8 @@ const str = (v: unknown) => (typeof v === "string" ? v : "")
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0))
 /** "2026-03" → "março". */
 const soMes = (ym: string) => labelYearMonthPt(ym).toLocaleLowerCase("pt-BR").split(" ")[0]
-/** "2027-08" visto em 2026 → "agosto de 2027"; no mesmo ano do mês visto, só "agosto". */
-const mesComAno = (ym: string, vistoYm: string) =>
-    ym.slice(0, 4) === vistoYm.slice(0, 4) ? soMes(ym) : `${soMes(ym)} de ${ym.slice(0, 4)}`
+/** "2027-08" visto em 2026 → "ago/27" (a forma do cartão Parcelas, que cabe numa linha); no mesmo ano, "agosto". */
+const mesComAno = (ym: string, vistoYm: string) => (ym.slice(0, 4) === vistoYm.slice(0, 4) ? soMes(ym) : mesEAno(ym))
 
 /** Os insights que a página calcula sozinha (ordens 2, 3, 5, 8 e 9). */
 export function insightsLocais(a: {

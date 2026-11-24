@@ -25,6 +25,9 @@ export function mesCurto(ym: string): string {
     return formatMonthShortPtBr(new Date(y, m - 1, 1))
 }
 
+/** "ago/27", a partir de `YYYY-MM`: o mês com o ano curto (o fim de uma parcela). */
+export const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
+
 const DIAS_POR_EXTENSO: Record<string, string> = {
     Seg: "segunda",
     Ter: "terça",

@@ -1,7 +1,7 @@
 "use client"
 
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
-import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
+import { dataDoGrupo, mesEAno } from "@/components/analise-do-mes/rotulos"
 import Link from "next/link"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
@@ -16,7 +16,6 @@ import { LeituraDoMes } from "./leitura-do-mes"
 import { nomeDoMes, reaisInteiros } from "./regua-do-mes-contas"
 
 /** "ago/27", a partir de `YYYY-MM`. */
-const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
 
 /** Até 12 parcelas o progresso vai em pontinhos; acima, só o "N/T". */
 const MAX_PONTINHOS = 12
