@@ -656,6 +656,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 composicao={
                     comComposicao && analise?.composicao && analise.leitura ? (
                         <DoQueEFeitoOMes
+                            categoryId={categoryId}
                             composicao={analise.composicao}
                             leitura={analise.leitura}
                             despesa={tipo === "expense"}

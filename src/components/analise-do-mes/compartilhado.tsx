@@ -21,11 +21,14 @@ export function diferencaDaForma(diferenca: number | null, despesa: boolean) {
 export function CartaoDoGrafico({
     titulo,
     apoio,
+    acao,
     className,
     children,
 }: {
     titulo: string
     apoio?: React.ReactNode
+    /** Uma ação no canto do cabeçalho (o "Ver todas" das parcelas); no lugar do `apoio`. */
+    acao?: React.ReactNode
     className?: string
     children: React.ReactNode
 }) {
@@ -33,7 +36,9 @@ export function CartaoDoGrafico({
         <Card className={cn("min-w-0", className)}>
             <CardHeader>
                 <CardTitle size="sm">{titulo}</CardTitle>
-                {apoio ? (
+                {acao ? (
+                    <CardAction>{acao}</CardAction>
+                ) : apoio ? (
                     <CardAction>
                         <Caption>{apoio}</Caption>
                     </CardAction>

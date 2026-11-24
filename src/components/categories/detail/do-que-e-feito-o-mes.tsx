@@ -2,7 +2,10 @@
 
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
 import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
+import Link from "next/link"
+import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
 import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type LeituraDoMes as Leitura } from "@/lib/composicao-do-mes"
@@ -57,8 +60,11 @@ export function DoQueEFeitoOMes({
     corDaSerie,
     aoLado,
     onVer,
+    categoryId,
 }: {
     composicao: ComposicaoDoMes
+    /** A categoria da tela: os links das parcelas abrem Transações filtrada por ela. */
+    categoryId: string
     leitura: Leitura
     despesa: boolean
     yearMonth: string
@@ -135,6 +141,12 @@ export function DoQueEFeitoOMes({
     const maiuscula = (t: string) => `${t[0].toUpperCase()}${t.slice(1)}`
     const titulo = nomeAnterior ? "Comparação com o mês anterior" : maiuscula(nomeMes)
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
+    // As parcelas em Transações (24/11/2026), em todo o período: todas as da categoria ("Ver todas") ou as
+    // de uma compra (a linha); a assinatura abre pelos lançamentos dela.
+    const transacoes = (filtro: string) =>
+        `/transactions?type=${despesa ? "expense" : "income"}&cats=${encodeURIComponent(categoryId)}&${filtro}`
+    const hrefDoItem = (item: (typeof linhas)[number]) =>
+        transacoes(item.tipo === "parcela" ? `plan=${encodeURIComponent(item.id)}` : `sub=${encodeURIComponent(item.id)}`)
     // A lista continua (24/11/2026): lado a lado com as parcelas, os grupos que foram para "Outros" se abrem
     // até a altura do cartão vizinho. Cada parcela ocupa ~1,4 linha de gasto (duas linhas de texto).
     const restoDoVariavel = variavel.resto ?? []
@@ -240,8 +252,12 @@ export function DoQueEFeitoOMes({
 
                     {comFixo ? (
                         <CartaoDoGrafico
-                            titulo={tituloDoFixo}
-                            apoio={`${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
+                            titulo={`${tituloDoFixo} · ${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
+                            acao={
+                                <Button asChild variant="tertiary" size="sm" className="-me-2">
+                                    <Link href={transacoes("inst=1")}>Ver todas</Link>
+                                </Button>
+                            }
                             className={cn(!comVariavel && "@xl:col-span-2")}
                         >
                         {/* R4 (24/11/2026): o nome (com o "novo") e o valor em cima; embaixo, as casas na largura da linha e "3/12 · até ago/27". Uma parcela por bloco, separadas por fio. */}
@@ -251,7 +267,12 @@ export function DoQueEFeitoOMes({
                                 const restam = parcela ? Math.max(0, item.total! - item.atual!) : 0
                                 const fim = parcela ? mesEAno(shiftYearMonth(item.diaYmd.slice(0, 7), restam)) : null
                                 return (
-                                    <li key={item.id} className="grid gap-1.5 py-2.5 text-sm first:pt-0">
+                                    <li key={item.id} className="py-1 text-sm first:pt-0">
+                                        {/* A linha é o link para as parcelas desta compra: o realce cobre a linha em `rounded-row`. */}
+                                        <Link
+                                            href={hrefDoItem(item)}
+                                            className="-mx-2 grid gap-1.5 rounded-row px-2 py-1.5 outline-none transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/45 hover:bg-muted active:bg-muted"
+                                        >
                                         <span className="flex items-center gap-2.5">
                                             <span className="flex min-w-0 flex-1 items-center gap-1.5">
                                                 <span className="truncate">{item.nome}</span>
@@ -262,6 +283,7 @@ export function DoQueEFeitoOMes({
                                                 ) : null}
                                             </span>
                                             <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(item.valor)}</span>
+                                            <ChevronRightIcon aria-hidden className="-me-1 size-4 shrink-0 text-muted-foreground" />
                                         </span>
                                         <span className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
                                             {parcela && item.total! <= MAX_PONTINHOS ? (
@@ -285,6 +307,7 @@ export function DoQueEFeitoOMes({
                                                     : "todo mês"}
                                             </span>
                                         </span>
+                                        </Link>
                                     </li>
                                 )
                             })}
