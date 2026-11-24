@@ -116,7 +116,8 @@ export function UltimosSeisMeses({
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <CardTitle size="sm">Últimos 6 meses</CardTitle>
                     {selo ? (
-                        <Badge tone={selo.tom}>
+                        // O selo (22) transborda 1px de cada lado: a linha fica com a altura do título (20), como a dos cartões vizinhos.
+                        <Badge tone={selo.tom} className="-my-px">
                             {mesCurto(yearMonth)} {selo.texto}
                         </Badge>
                     ) : null}

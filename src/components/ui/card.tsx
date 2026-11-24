@@ -241,9 +241,10 @@ function CardHeader({
         "group/card-header @container/card-header grid auto-rows-min items-start gap-1 px-(--card-px)",
         "has-data-[slot=card-action]:grid-cols-[1fr_auto]",
         "has-data-[slot=card-description]:grid-rows-[auto_auto]",
-        // Sem descrição, o título e a ação dividem uma linha: centrados nela, o título (20) alinha com
-        // o rótulo do botão (28), e a ação ocupa só essa linha. Com descrição, fica no topo das duas.
-        "[&:not(:has(>[data-slot=card-description]))]:items-center [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:self-center [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:row-span-1",
+        // Sem descrição, a ação mora na linha do título sem crescê-la: uma caixa de altura 0, centrada
+        // nela, de onde o botão transborda igual para cima e para baixo. O rótulo alinha com o título e o
+        // cabeçalho tem a altura do título, com ou sem ação (os títulos de cartões vizinhos ficam na mesma linha).
+        "[&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:row-span-1 [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:flex [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:h-0 [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:items-center [&:not(:has(>[data-slot=card-description]))>[data-slot=card-action]]:self-center",
         // Com mídia, a grade ganha uma coluna à esquerda; o título e a
         // descrição vão para a segunda, a ação para a terceira.
         "has-[>[data-slot=card-header-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot=card-header-media]]:gap-x-3",

@@ -29,8 +29,9 @@ export function InsightDaCategoria({
 }) {
     const { tone, Icone } = MIDIA[insight.tom]
     return (
-        // O insight é uma caixa solta entre cartões `rounded-surface`, e peças irmãs vestem o mesmo degrau.
-        <Item variant="outline" className="items-start rounded-surface">
+        // O insight é uma caixa solta entre cartões: o raio (`rounded-surface`) e o recuo (16, o do `Card`) são
+        // os deles, para o texto começar na linha do título do cartão ao lado.
+        <Item variant="outline" className="items-start rounded-surface p-4">
             <ItemMedia variant="tile" tone={tone}>
                 <Icone aria-hidden />
             </ItemMedia>
