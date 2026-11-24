@@ -127,6 +127,14 @@ describe("composicaoDoMes", () => {
         expect(c.anterior).toBeNull()
     })
 
+    it("o resto guarda os grupos que foram para outros, do maior para o menor", () => {
+        const mes = ["A", "B", "C", "D", "E"].map((d, i) => tx({ date: "2026-11-0" + (i + 1), amount: 100 - i * 10, description: d }))
+        const c = composicaoDoMes({ ...base, txsDoMes: mes, historico: [], media: null })
+        expect(c.variavel.grupos.map((g) => g.nome)).toEqual(["A", "B", "C"])
+        expect(c.variavel.resto?.map((g) => [g.nome, g.valor])).toEqual([["D", 70], ["E", 60]])
+        expect(c.variavel.outros).toEqual({ vezes: 2, valor: 130 })
+    })
+
     it("sem fixo: o caso vem do variável", () => {
         const mes = carroMes.slice(2)
         const c = composicaoDoMes({ ...base, txsDoMes: mes, historico: carroHistorico.filter((t) => !t.installment_plan_id), media: 500 })

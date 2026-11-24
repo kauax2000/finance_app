@@ -17,6 +17,8 @@ const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
 
 /** Até 12 parcelas o progresso vai em pontinhos; acima, só o "N/T". */
 const MAX_PONTINHOS = 12
+/** Os grupos que a lista mostra antes do "Outros" (o `GRUPOS_A_MOSTRAR` da conta). */
+const GRUPOS_VISIVEIS = 3
 
 /** A variação do grupo contra o normal, em reais e em %: "= normal" dentro de ±5%; o tom diz se é bom. */
 /** A pílula do grupo contra o normal (C2, 24/11/2026): "↑ 68%" no tom pela régua da despesa, "novo" ou "= normal". */
@@ -29,6 +31,18 @@ function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean): { texto: string; t
         tone: subiu === despesa ? "warning" : "success",
         titulo: `${reaisInteiros(Math.abs(g.valor - g.normal))} ${subiu ? "acima" : "abaixo"} do seu normal`,
     }
+}
+
+/** A linha "Outros N lançamentos" da lista de gastos. */
+function LinhaDeOutros({ outros, className }: { outros: { vezes: number; valor: number }; className?: string }) {
+    return (
+        <li className={cn("flex items-center gap-2.5 py-2.5 text-sm last:pb-0", className)}>
+            <span className="min-w-0 flex-1 text-muted-foreground">
+                Outros {outros.vezes} {outros.vezes === 1 ? "lançamento" : "lançamentos"}
+            </span>
+            <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(outros.valor)}</span>
+        </li>
+    )
 }
 
 /**
@@ -121,6 +135,16 @@ export function DoQueEFeitoOMes({
     const maiuscula = (t: string) => `${t[0].toUpperCase()}${t.slice(1)}`
     const titulo = nomeAnterior ? "Comparação com o mês anterior" : maiuscula(nomeMes)
     const { linhas, resto } = fixoEmLinhas(fixo.itens, yearMonth)
+    // A lista continua (24/11/2026): lado a lado com as parcelas, os grupos que foram para "Outros" se abrem
+    // até a altura do cartão vizinho. Cada parcela ocupa ~1,4 linha de gasto (duas linhas de texto).
+    const restoDoVariavel = variavel.resto ?? []
+    const vagas = comFixo ? Math.round((linhas.length + (resto ? 1 : 0)) * 1.4) - GRUPOS_VISIVEIS : 0
+    const abertos =
+        restoDoVariavel.length <= Math.max(0, vagas) ? restoDoVariavel : restoDoVariavel.slice(0, Math.max(0, vagas - 1))
+    const fechados = restoDoVariavel.slice(abertos.length)
+    const outrosLado = fechados.length
+        ? { vezes: fechados.reduce((a, g) => a + g.vezes, 0), valor: Math.round(fechados.reduce((a, g) => a + g.valor * 100, 0)) / 100 }
+        : null
     const nomeDoResto = (n: number, soParcelas: boolean) =>
         despesa && soParcelas ? (n === 1 ? "parcela" : "parcelas") : despesa ? (n === 1 ? "fixo" : "fixos") : n === 1 ? "entrada fixa" : "entradas fixas"
 
@@ -185,10 +209,14 @@ export function DoQueEFeitoOMes({
                         >
                         {/* Uma linha por grupo (C2): o nome com a data ou as vezes em cinza, a pílula contra o normal e o valor. */}
                         <ul className="grid grid-cols-1 divide-y divide-border">
-                            {variavel.grupos.map((g) => {
+                            {[...variavel.grupos, ...abertos].map((g, i) => {
                                 const v = variacaoDoGrupo(g, despesa)
                                 return (
-                                    <li key={g.chave} className="flex items-center gap-2.5 py-2.5 text-sm first:pt-0">
+                                    <li
+                                        key={g.chave}
+                                        // Os abertos só aparecem lado a lado com as parcelas; empilhado, ficam no "Outros".
+                                        className={cn("flex items-center gap-2.5 py-2.5 text-sm first:pt-0", i >= variavel.grupos.length && "hidden @xl:flex")}
+                                    >
                                         <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
                                             <span className="truncate">{g.nome}</span>
                                             <span className="nums shrink-0 text-xs text-muted-foreground">
@@ -203,13 +231,9 @@ export function DoQueEFeitoOMes({
                                 )
                             })}
                             {variavel.outros ? (
-                                <li className="flex items-center gap-2.5 py-2.5 text-sm last:pb-0">
-                                    <span className="min-w-0 flex-1 text-muted-foreground">
-                                        Outros {variavel.outros.vezes} {variavel.outros.vezes === 1 ? "lançamento" : "lançamentos"}
-                                    </span>
-                                    <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(variavel.outros.valor)}</span>
-                                </li>
+                                <LinhaDeOutros outros={variavel.outros} className={abertos.length ? "@xl:hidden" : undefined} />
                             ) : null}
+                            {abertos.length && outrosLado ? <LinhaDeOutros outros={outrosLado} className="hidden @xl:flex" /> : null}
                         </ul>
                         </CartaoDoGrafico>
                     ) : null}

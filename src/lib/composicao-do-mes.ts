@@ -44,7 +44,13 @@ export type CasoDaComposicao = "semMedia" | "normal" | "novo" | "fixoPuxou" | "v
 export type ComposicaoDoMes = {
     fixo: { total: number; itens: ItemFixo[]; ultimaTerminaYm?: string; proximoMes: number }
     /** Os 3 maiores grupos; o resto vai para `outros`. */
-    variavel: { total: number; grupos: GrupoVariavel[]; outros: { vezes: number; valor: number } | null }
+    variavel: {
+        total: number
+        grupos: GrupoVariavel[]
+        outros: { vezes: number; valor: number } | null
+        /** Os grupos que caíram em `outros`, do maior para o menor: a lista os abre quando sobra altura ao lado. */
+        resto?: GrupoVariavel[]
+    }
     normais: { fixo: number | null; variavel: number | null }
     /** O mês anterior inteiro (fixo e variável), com que o gráfico compara; null sem ele no histórico. */
     anterior: { ym: string; fixo: number; variavel: number } | null
@@ -274,6 +280,7 @@ export function composicaoDoMes(args: {
         variavel: {
             total: variavelTotal,
             grupos: todos.slice(0, GRUPOS_A_MOSTRAR),
+            resto,
             outros: resto.length
                 ? { vezes: resto.reduce((a, g) => a + g.vezes, 0), valor: Math.round(resto.reduce((a, g) => a + g.valor * 100, 0)) / 100 }
                 : null,
