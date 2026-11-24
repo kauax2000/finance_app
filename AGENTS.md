@@ -1205,12 +1205,12 @@ declaração de `background-color` no trilho).
   sangra com `-mx-*` e `w-[calc(…)]` — `separator.test.ts`.
 - **`Progress` — entregue os cortes, não o tom**: `bands={[aviso, perigo]}`
   deriva a cor e o limiar; `tone` é para o que não tem escada de risco; `size`
-  `sm` | `md`. `marker` (0–100) é o traço do ritmo: onde o período está. **`tone`, `bands` e `variant="brand"` são excludentes.** Os
+  `sm` | `md` | `lg` (12px). `marker` (0–100) é o traço do ritmo: onde o período está. **`tone`, `bands` e `variant="brand"` são excludentes.** Os
   cortes do app moram em [`lib/budget-bands`](src/lib/budget-bands.ts)
   (orçamento `[85, 100]`, limite de cartão `[30, 70]`). **O excesso vira uma
   pastilha fora do trilho**, que vale sempre o total. Peças `ProgressHeader` /
   `ProgressLabel` / `ProgressValue` / `ProgressFooter` (pelas props `header` e
-  `footer`), `segments`, `zones`, `ProgressRing`. `projected` é o trecho tracejado do previsto, depois do cheio, e o tom e a pastilha contam o total; `projected` não vale com `zones`, `segments` nem `variant="brand"`, e o `ProgressValue` lê só o lançado. `fillColor` é a cor da pessoa no preenchimento (as parcelas na cor da categoria), só no tom padrão. `brand` é para progresso sem
+  `footer`), `segments` (com `segmentShape` `pill` | `tile`: o ladrilho de cantos arredondados, as parcelas do detalhe da categoria em `size="lg"`, 24/11/2026), `zones`, `ProgressRing`. `projected` é o trecho tracejado do previsto, depois do cheio, e o tom e a pastilha contam o total; `projected` não vale com `zones`, `segments` nem `variant="brand"`, e o `ProgressValue` lê só o lançado. `fillColor` é a cor da pessoa no preenchimento (as parcelas na cor da categoria), só no tom padrão. `brand` é para progresso sem
   limiar (o degradê é do trilho). Passos com data são `Timeline`; um total
   dividido, `ChartSplit`.
 - **`Timeline`**: o fim é CSS (`:last-child`; `isLast={false}` é a exceção),

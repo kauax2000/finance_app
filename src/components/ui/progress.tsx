@@ -24,6 +24,8 @@ const progressVariants = cva(
       size: {
         sm: "h-1.5",
         md: "h-2",
+        // As casas grandes (as parcelas do detalhe da categoria, 24/11/2026).
+        lg: "h-3",
       },
     },
     defaultVariants: {
@@ -88,6 +90,7 @@ const progressIndicatorVariants = cva(
       size: {
         sm: "data-filled:min-w-1.5",
         md: "data-filled:min-w-2",
+        lg: "data-filled:min-w-3",
       },
     },
     defaultVariants: {
@@ -122,6 +125,11 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
      * etapas de um fluxo. A casa acende quando o valor a cobre inteira.
      */
     segments?: number
+    /**
+     * A forma da casa (só com `segments`): `pill`, a cápsula (o padrão), ou `tile`,
+     * o ladrilho de cantos arredondados (`rounded-xs`), que lê como bloco.
+     */
+    segmentShape?: "pill" | "tile"
     /**
      * A linha de cima (`ProgressHeader`) e a de baixo (`ProgressFooter`) são props, e
      * não filhos reconhecidos pelo tipo: o Fast Refresh troca a função a cada edição
@@ -223,6 +231,7 @@ function Progress({
   max = 100,
   size,
   segments,
+  segmentShape = "pill",
   header,
   footer,
   marker,
@@ -348,10 +357,12 @@ function Progress({
             <span
               key={i}
               data-slot="progress-segment"
+              data-shape={segmentShape}
               data-filled={acesa ? "" : undefined}
               data-highlight={realce ? "" : undefined}
               className={cn(
-                "h-full flex-1 rounded-full bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
+                "h-full flex-1 bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
+                segmentShape === "tile" ? "rounded-xs" : "rounded-full",
                 acesa && variant !== "brand" && !realce && (corPropria ? "bg-(--progress-fill)" : TOM_FUNDO[tomFinal ?? "default"]),
                 realce && "bg-(--progress-highlight,var(--primary-accent))",
                 // Na marca cada casa mostra a sua fatia do arco-íris: o degradê tem a largura

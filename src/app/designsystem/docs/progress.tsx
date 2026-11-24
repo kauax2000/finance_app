@@ -154,7 +154,7 @@ export default function ProgressDoc() {
 
       <DocSection
         title="Segmentada"
-        description="segments divide a barra em casas, e cada uma acende quando o valor a cobre inteira: 7 de 12 parcelas são sete casas, nunca sete e meia. Para o que se conta em unidades — parcelas, etapas de um fluxo. Na marca, cada casa mostra a sua fatia do arco-íris."
+        description="segments divide a barra em casas, e cada uma acende quando o valor a cobre inteira: 7 de 12 parcelas são sete casas, nunca sete e meia. Para o que se conta em unidades — parcelas, etapas de um fluxo. Na marca, cada casa mostra a sua fatia do arco-íris. segmentShape=\"tile\" com size=\"lg\" faz das casas ladrilhos de 12px (as parcelas do detalhe da categoria)."
         code={`<Progress value={7} max={12} segments={12} tone="success"
   header={
     <ProgressHeader>
@@ -164,6 +164,7 @@ export default function ProgressDoc() {
   }
 />
 <Progress value={4} max={12} segments={12} fillColor={corDaCategoria} />
+<Progress value={3} max={12} segments={12} size="lg" segmentShape="tile" fillColor={corDaCategoria} />
 <Progress variant="brand" value={2} max={4} segments={4} />`}
         previewClassName="flex-col items-stretch gap-5"
       >
@@ -176,6 +177,7 @@ export default function ProgressDoc() {
           }
         />
         <Progress value={4} max={12} segments={12} fillColor={TILE_EXPENSE_DEFAULT} className="max-w-md" aria-label="4 de 12 parcelas pagas, na cor da categoria" />
+        <Progress value={3} max={12} segments={12} size="lg" segmentShape="tile" fillColor={TILE_EXPENSE_DEFAULT} className="max-w-md" aria-label="3 de 12 parcelas pagas, em ladrilhos" />
         <Progress variant="brand" value={2} max={4} segments={4} className="max-w-md"
           header={
             <ProgressHeader>
@@ -443,9 +445,15 @@ export default function ProgressDoc() {
           },
           {
             prop: "size",
-            type: '"sm" | "md"',
+            type: '"sm" | "md" | "lg"',
             default: '"md"',
-            description: "A altura do trilho: 6px e 8px. Também escala o texto do cabeçalho.",
+            description: "A altura do trilho: 6px, 8px e 12px (lg, as casas grandes das parcelas). Também escala o texto do cabeçalho.",
+          },
+          {
+            prop: "segmentShape",
+            type: '"pill" | "tile"',
+            default: '"pill"',
+            description: "A forma da casa, só com segments: a cápsula ou o ladrilho de cantos arredondados (rounded-xs), que lê como bloco.",
           },
           {
             prop: "header / footer",

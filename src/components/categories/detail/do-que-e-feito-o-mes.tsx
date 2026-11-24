@@ -220,7 +220,7 @@ export function DoQueEFeitoOMes({
                             apoio={`${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
                             className={cn(!comVariavel && "@xl:col-span-2")}
                         >
-                        {/* R4 (24/11/2026): o nome (com o "novo") e o valor em cima; embaixo, os pontinhos e "3 pagas · faltam 9 · até ago/27". Uma parcela por bloco, separadas por fio. */}
+                        {/* R4 (24/11/2026): o nome (com o "novo") e o valor em cima; embaixo, as casas na largura da linha e "3/12 · até ago/27". Uma parcela por bloco, separadas por fio. */}
                         <ul className="grid grid-cols-1 divide-y divide-border">
                             {linhas.map((item) => {
                                 const parcela = item.tipo === "parcela" && item.atual != null && item.total != null
@@ -239,25 +239,25 @@ export function DoQueEFeitoOMes({
                                             </span>
                                             <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(item.valor)}</span>
                                         </span>
-                                        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
                                             {parcela && item.total! <= MAX_PONTINHOS ? (
-                                                // Cada casa com 8px e 2px de fresta: o pontinho grande.
-                                                <span className="shrink-0" style={{ width: `calc(${item.total} * 0.625rem - 0.125rem)` }}>
-                                                    <Progress
-                                                        size="md"
-                                                        value={item.atual}
-                                                        max={item.total}
-                                                        segments={item.total}
-                                                        fillColor={corDaSerie}
-                                                        aria-label={`Parcela ${item.atual} de ${item.total}`}
-                                                    />
-                                                </span>
+                                                // As casas ocupam a sobra da linha: ladrilhos de 12px de altura, de cantos arredondados.
+                                                <Progress
+                                                    className="min-w-0 flex-1"
+                                                    size="lg"
+                                                    segmentShape="tile"
+                                                    value={item.atual}
+                                                    max={item.total}
+                                                    segments={item.total}
+                                                    fillColor={corDaSerie}
+                                                    aria-label={`Parcela ${item.atual} de ${item.total}`}
+                                                />
                                             ) : null}
-                                            <span className="nums truncate">
+                                            <span className={cn("nums shrink-0", !(parcela && item.total! <= MAX_PONTINHOS) && "flex-1")}>
                                                 {parcela
                                                     ? restam > 0
-                                                        ? `${item.atual} ${item.atual === 1 ? "paga" : "pagas"} · ${restam === 1 ? "falta 1" : `faltam ${restam}`} · até ${fim}`
-                                                        : `última · ${item.atual} de ${item.total}`
+                                                        ? `${item.atual}/${item.total} · até ${fim}`
+                                                        : `${item.atual}/${item.total} · última`
                                                     : "todo mês"}
                                             </span>
                                         </span>

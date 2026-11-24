@@ -149,4 +149,15 @@ describe("Progress fillColor", () => {
     expect(html).not.toContain("--progress-fill")
     expect(html).toContain("bg-success")
   })
+
+  it("segmentShape tile e size lg: ladrilhos de 12px de cantos arredondados", () => {
+    const html = renderToStaticMarkup(
+      createElement(Progress, { value: 3, max: 12, segments: 12, size: "lg", segmentShape: "tile" })
+    )
+    expect(html).toContain("h-3")
+    const cs = casas(html)
+    expect(cs[0]).toContain("rounded-xs")
+    expect(cs[0]).not.toContain("rounded-full")
+    expect(casas(renderToStaticMarkup(createElement(Progress, { value: 3, max: 12, segments: 12 })))[0]).toContain("rounded-full")
+  })
 })
