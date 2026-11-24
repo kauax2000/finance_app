@@ -674,7 +674,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
                 quem={
                     analise && comVariosAdultos ? (
-                        <QuemGastou pessoas={analise.quem} diretorio={diretorio} despesa={tipo === "expense"} />
+                        <QuemGastou
+                            pessoas={analise.quem}
+                            diretorio={diretorio}
+                            despesa={tipo === "expense"}
+                            categoryId={categoryId}
+                            yearMonth={yearMonth}
+                        />
                     ) : null
                 }
                 meses={comComposicao ? null : mesesNode}
