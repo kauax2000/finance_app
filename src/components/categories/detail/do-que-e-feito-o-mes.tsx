@@ -127,7 +127,7 @@ export function DoQueEFeitoOMes({
                 <div className="grid gap-(--space-block) @2xl:grid-cols-[3fr_2fr]">
                     {aoLado}
                     {comFixo || comVariavel ? (
-                        <CartaoDoGrafico titulo="Do que é feito o mês" apoio={selo}>
+                        <CartaoDoGrafico titulo={`${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} contra o seu normal`} apoio={selo}>
                             <ChartSplitCompare
                                 label={`${despesa ? "Gasto" : "Recebido"} do mês contra o seu normal`}
                                 config={config}
