@@ -169,7 +169,8 @@ function valorDoAmount(amount: unknown): number | null {
   let n: number | null = null
   if (typeof amount === 'number') n = Number.isFinite(amount) ? Math.round(amount * 100) / 100 : null
   else if (typeof amount === 'string') {
-    const t = amount.toLowerCase().replace(/\s+/g, '').replace(/^(r\$|us\$|brl|\$)/, '').replace(/(brl|reais)$/, '')
+    // Moeda, sigla e espaços (o iOS usa o fino, U+202F) saem de qualquer lado; o sinal fica, e o estorno não lança.
+    const t = amount.replace(/[^\d.,\-−]/g, '')
     n = /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(t) ? Number(t.replace(/,/g, '')) : lerNumero(t)
   }
   return n != null && n > 0 ? n : null

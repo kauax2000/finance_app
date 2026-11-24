@@ -243,6 +243,13 @@ escolha a propriedade. Os nomes mudam um pouco entre versões do iOS e entre
 idiomas (em inglês: Amount, Merchant, Card or Pass). Escolha a propriedade com
 o valor da compra, a do nome da loja e a do cartão usado.
 
+O atalho baixado já declara a transação da Carteira (`WFWalletTransactionContentItem`)
+entre os tipos de entrada que aceita, e lê cada propriedade da Entrada vista
+como transação. Sem isso o iOS converte a transação em texto antes de entregar
+ao atalho, e o valor chega vazio: foi o que aconteceu no teste do iPhone em
+24/nov/2026 ("A compra chegou sem o valor"). Num atalho montado à mão, em
+**Detalhes › Recebe**, marque o tipo da transação da Carteira.
+
 ### O app aprende o cartão
 
 Um cartão da Wallet com "débito" no nome ("Itaú Débito") lança no débito, sem

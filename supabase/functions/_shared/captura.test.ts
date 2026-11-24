@@ -1101,11 +1101,27 @@ Deno.test('Apple Pay: o valor com a sigla da moeda ou no formato americano', () 
     ['US$ 42.90', 42.9],
     ['1,234.56', 1234.56],
     ['R$ 42,90', 42.9],
+    ['R$\u00a042,90', 42.9],
+    ['R$\u202f42,90', 42.9],
+    ['42,90 R$', 42.9],
+    ['R$ 42', 42],
+    ['42.90', 42.9],
   ] as const) {
     const l = ok(montarLancamento({ amount, merchant: 'Loja', source: 'apple_pay' }, ctx()))
     assertEquals(l.linha.amount, esperado, amount)
   }
   assertEquals(validarPedido({ amount: '-BRL 10,00', merchant: 'Loja', source: 'apple_pay' }).ok, false)
+  assertEquals(validarPedido({ amount: '−R$ 10,00', merchant: 'Loja', source: 'apple_pay' }).ok, false)
+})
+
+Deno.test('Apple Pay: o pedido do atalho v4, com o valor da transação em texto, lança', () => {
+  const l = ok(
+    montarLancamento(
+      { amount: 'R$ 42,90', merchant: 'PADARIA REAL', card: 'Nubank', text: 'Padaria Real', source: 'apple_pay' },
+      ctx(),
+    ),
+  )
+  assertEquals([l.linha.amount, l.linha.description, l.linha.payment_method], [42.9, 'Padaria Real', 'credit_card'])
 })
 
 Deno.test('Apple Pay: o nome da loja em maiúsculas vira nome próprio', () => {

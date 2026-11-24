@@ -79,9 +79,20 @@ def saida(uid: str, nome: str) -> dict:
 ENTRADA = {"Type": "ExtensionInput"}
 
 
+# A transação da Carteira. Sem ela entre os tipos aceitos, o iOS converte a Entrada em texto antes
+# de entregar, e `Amount`, `Merchant` e `Card or Pass` chegam vazios (o teste no iPhone de 24/nov/2026).
+TRANSACAO = "WFWalletTransactionContentItem"
+
+
 def propriedade(nome: str) -> dict:
-    """Uma propriedade da Entrada (a transação da Carteira): valor, estabelecimento, cartão."""
-    return {"Type": "ExtensionInput", "Aggrandizements": [{"Type": "WFPropertyVariableAggrandizement", "PropertyName": nome}]}
+    """Uma propriedade da Entrada vista como transação da Carteira: valor, estabelecimento, cartão."""
+    return {
+        "Type": "ExtensionInput",
+        "Aggrandizements": [
+            {"Type": "WFCoercionVariableAggrandizement", "CoercionItemClass": TRANSACAO},
+            {"Type": "WFPropertyVariableAggrandizement", "PropertyName": nome},
+        ],
+    }
 
 
 def dicionario(pares: list[tuple[str, dict]]) -> dict:
@@ -209,7 +220,7 @@ def atalho(url: str, frase_de_teste: str | None = None) -> dict:
         "WFWorkflowMinimumClientVersion": 900,
         "WFWorkflowIcon": {"WFWorkflowIconStartColor": 4282601983, "WFWorkflowIconGlyphNumber": 59511},
         "WFWorkflowTypes": ["Watch"],
-        "WFWorkflowInputContentItemClasses": ["WFStringContentItem", "WFGenericFileContentItem"],
+        "WFWorkflowInputContentItemClasses": [TRANSACAO, "WFStringContentItem", "WFGenericFileContentItem"],
         "WFWorkflowImportQuestions": [
             {
                 "ActionIndex": 0,
@@ -254,8 +265,10 @@ def verificar() -> None:
     assert corpos == [["amount", "merchant", "card", "text", "source"], ["text", "source"], ["amount", "merchant", "category", "payment", "source"]], corpos
     pay = next(p for p in pedidos if p["WFHTTPMethod"] == "POST")
     campos = {i["WFKey"]["Value"]["string"]: i["WFValue"]["Value"] for i in pay["WFJSONValues"]["Value"]["WFDictionaryFieldValueItems"]}
-    nomes = {k: [a["PropertyName"] for a in v["attachmentsByRange"]["{0, 1}"].get("Aggrandizements", [])] for k, v in campos.items() if k in ("amount", "merchant", "card")}
-    assert nomes == {"amount": ["Amount"], "merchant": ["Merchant"], "card": ["Card or Pass"]}, nomes
+    agr = {k: v["attachmentsByRange"]["{0, 1}"].get("Aggrandizements", []) for k, v in campos.items() if k in ("amount", "merchant", "card")}
+    nomes = {k: [a.get("PropertyName") or a.get("CoercionItemClass") for a in v] for k, v in agr.items()}
+    assert nomes == {"amount": [TRANSACAO, "Amount"], "merchant": [TRANSACAO, "Merchant"], "card": [TRANSACAO, "Card or Pass"]}, nomes
+    assert dados["WFWorkflowInputContentItemClasses"][0] == TRANSACAO, dados["WFWorkflowInputContentItemClasses"]
     assert campos["text"]["attachmentsByRange"]["{0, 1}"] == ENTRADA
 
     ids = [_id(a) for a in acoes]
