@@ -1031,8 +1031,9 @@ function CarouselControl({
         appearance === "glass" &&
           cn(menuPanelTintClassName, "rounded-full shadow-sm ring-1 ring-foreground/10"),
         appearance === "solid" && "rounded-full shadow-xs",
-        // Redonda, apagada em vez de sumir: numa foto ou barra a seta que some faz a moldura piscar.
-        appearance !== "tertiary" && "disabled:opacity-30",
+        // Apagada em vez de sumir: numa foto ou barra a seta que some faz a moldura piscar.
+        // Só a tertiary sobreposta (`inside`) foge à regra: ela some, logo abaixo.
+        (appearance !== "tertiary" || !sobreposta) && "disabled:opacity-30",
         // Em `inside` a seta pousa sobre o conteúdo, e desabilitada tapava o
         // primeiro item inteiro; `invisible` (e não `hidden`) mantém a caixa e a
         // medição do alvo. Em `outside` fica visível, na calha reservada.

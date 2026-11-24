@@ -95,7 +95,7 @@ export function InsightsDaCategoria({
                 </CarouselContent>
                 {insights.length > 1 ? (
                     <CarouselToolbar className="justify-between px-(--card-px)">
-                        <CarouselDots />
+                        <CarouselDots variant="pill" />
                         <div className="flex items-center gap-1.5">
                             <CarouselPrevious placement="inline" />
                             <CarouselNext placement="inline" />

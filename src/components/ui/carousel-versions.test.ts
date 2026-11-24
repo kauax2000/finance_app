@@ -9,6 +9,7 @@ import {
   CarouselDots,
   CarouselItem,
   CarouselMore,
+  CarouselPrevious,
   CarouselProgress,
   CarouselSkeleton,
   CarouselStatus,
@@ -77,6 +78,19 @@ describe("as versões do Carousel", () => {
     const html = carrossel({}, itens(3), h(CarouselStatus, { placement: "overlay" }))
     expect(html).toMatch(/data-slot="carousel-status"[^>]*data-placement="overlay"/)
     expect(html).toContain("rounded-full")
+  })
+
+  it("a seta tertiary na barra apaga a 30% quando não tem para onde ir", () => {
+    const seta = (props: Record<string, unknown>) =>
+      carrossel({}, itens(3), h(CarouselPrevious, props))
+    const barra = seta({ placement: "inline", appearance: "tertiary" })
+    expect(barra).toMatch(/data-slot="carousel-previous"[^>]*disabled/)
+    expect(barra).toContain("disabled:opacity-30")
+    expect(barra).not.toContain("disabled:invisible")
+    // Sobreposta em `inside`, a tertiary segue sumindo; o glass segue a 30%.
+    const dentro = seta({ appearance: "tertiary", controls: "inside" })
+    expect(dentro).toContain("disabled:invisible")
+    expect(seta({ appearance: "glass" })).toContain("disabled:opacity-30")
   })
 
   it("CarouselMore é um item, e o link recebe a superfície do lugar vazio", () => {
