@@ -100,3 +100,19 @@ export function identityToneFor(
     }
     return IDENTITY_TONES[hashIndex(fallbackSeed, IDENTITY_TONES.length)]
 }
+
+/** O número da identidade (1 a 6) de uma pessoa, o mesmo tom de `identityToneFor`. */
+export function identityIndexFor(
+    stored: string | null | undefined,
+    fallbackSeed: string
+): number {
+    return IDENTITY_TONES.indexOf(identityToneFor(stored, fallbackSeed)) + 1
+}
+
+/** A cor de cada pessoa num gráfico; com índice repetido, a rampa neutra de série. */
+export function coresDasPessoas(indices: number[]): string[] {
+    if (new Set(indices).size !== indices.length) {
+        return indices.map((_, i) => `var(--chart-${(i % 5) + 1})`)
+    }
+    return indices.map((n) => `var(--identity-${n})`)
+}
