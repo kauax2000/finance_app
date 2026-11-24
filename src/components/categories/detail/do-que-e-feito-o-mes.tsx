@@ -221,55 +221,54 @@ export function DoQueEFeitoOMes({
                             apoio={`${fixo.itens.length} ${fixo.itens.length === 1 ? "ativa" : "ativas"}`}
                             className={cn(!comVariavel && "@xl:col-span-2")}
                         >
-                        <ul className="grid grid-cols-1 gap-2.5">
+                        {/* Como as compras (C2): uma linha por item, separadas por fio; a contagem em cinza ao lado do nome, os pontinhos no meio e o valor. O fim da última parcela é a última linha. */}
+                        <ul className="grid grid-cols-1 divide-y divide-border">
                             {linhas.map((item) => {
                                 const parcela = item.tipo === "parcela" && item.atual != null && item.total != null
                                 return (
-                                    <li key={item.id} className="flex items-center gap-3 text-sm">
-                                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                                    <li key={item.id} className="flex items-center gap-2.5 py-2.5 text-sm first:pt-0">
+                                        <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
                                             <span className="truncate">{item.nome}</span>
-                                            <span className="nums shrink-0 text-muted-foreground">
+                                            <span className="nums shrink-0 text-xs text-muted-foreground">
                                                 {parcela ? `${item.atual}/${item.total}` : "todo mês"}
                                             </span>
-                                            {parcela && item.total! <= MAX_PONTINHOS ? (
-                                                // Cada casa com 6px e 2px de fresta: lê como pontinho, qualquer que seja o total.
-                                                <span className="shrink-0" style={{ width: `calc(${item.total} * 0.5rem - 0.125rem)` }}>
-                                                    <Progress
-                                                        size="sm"
-                                                        value={item.atual}
-                                                        max={item.total}
-                                                        segments={item.total}
-                                                        fillColor={corDaSerie}
-                                                        aria-label={`Parcela ${item.atual} de ${item.total}`}
-                                                    />
-                                                </span>
-                                            ) : null}
                                         </span>
-                                        <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(item.valor)}</span>
+                                        {parcela && item.total! <= MAX_PONTINHOS ? (
+                                            // Cada casa com 6px e 2px de fresta: lê como pontinho, qualquer que seja o total.
+                                            <span className="shrink-0" style={{ width: `calc(${item.total} * 0.5rem - 0.125rem)` }}>
+                                                <Progress
+                                                    size="sm"
+                                                    value={item.atual}
+                                                    max={item.total}
+                                                    segments={item.total}
+                                                    fillColor={corDaSerie}
+                                                    aria-label={`Parcela ${item.atual} de ${item.total}`}
+                                                />
+                                            </span>
+                                        ) : null}
+                                        <span className="nums shrink-0 text-right font-mono font-semibold">{reaisInteiros(item.valor)}</span>
                                     </li>
                                 )
                             })}
                             {resto ? (
-                                <li className="flex items-baseline gap-3 text-sm">
+                                <li className="flex items-baseline gap-2.5 py-2.5 text-sm">
                                     <span className="min-w-0 flex-1">
                                         + {resto.n} {nomeDoResto(resto.n, resto.soParcelas)}
                                         {resto.todosNovos ? (resto.n === 1 ? " nova este mês" : " novas este mês") : null}
                                         <span className="text-muted-foreground"> · {resto.nomes.join(", ")}</span>
                                     </span>
-                                    <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(resto.valor)}</span>
+                                    <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(resto.valor)}</span>
+                                </li>
+                            ) : null}
+                            {comRodape && fixo.ultimaTerminaYm ? (
+                                <li className="flex items-center gap-2.5 py-2.5 text-sm last:pb-0">
+                                    <span className="min-w-0 flex-1 text-muted-foreground">
+                                        {despesa ? "A última parcela acaba em" : "A última entrada fixa acaba em"}
+                                    </span>
+                                    <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{mesEAno(fixo.ultimaTerminaYm)}</span>
                                 </li>
                             ) : null}
                         </ul>
-                            {comRodape ? (
-                                <div className="mt-auto grid gap-1 pt-4 text-sm text-muted-foreground">
-                                    {fixo.ultimaTerminaYm ? (
-                                        <span className="flex justify-between gap-3">
-                                            {despesa ? "A última parcela acaba em" : "A última entrada fixa acaba em"}
-                                            <span className="nums font-semibold text-foreground">{mesEAno(fixo.ultimaTerminaYm)}</span>
-                                        </span>
-                                    ) : null}
-                                </div>
-                            ) : null}
                         </CartaoDoGrafico>
                     ) : null}
                 </div>
