@@ -62,7 +62,7 @@ export function QuemGastou({
                                 <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
                                     <ChartSwatch color={cores[i]} />
                                     <span>
-                                        {pcts[i]}% · {l.compras} {unidade}
+                                        {pcts[i] === 0 && l.valor > 0 ? "<1" : pcts[i]}% · {l.compras} {unidade}
                                         {l.compras === 1 ? "" : "s"}
                                     </span>
                                 </span>

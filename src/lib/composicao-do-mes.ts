@@ -479,17 +479,17 @@ export function fixoEmLinhas(itens: ItemFixo[], yearMonth: string) {
 
 /** Quem lançou quanto no mês (`user_id`), com o peso da categoria, e em quantas compras (`peso > 0`; o estorno abate o valor e não conta); do maior para o menor, sem quem fica em zero ou abaixo. */
 export function quemGastou(txsDoMes: Transaction[], tipo: TipoDaCategoria): { userId: string; valor: number; compras: number }[] {
-    const porPessoa = new Map<string, { c: number; compras: number }>()
+    const porPessoa = new Map<string, { centavos: number; compras: number }>()
     for (const t of txsDoMes) {
         const p = peso(t, tipo)
         if (p === 0) continue
-        const acc = porPessoa.get(t.user_id) ?? { c: 0, compras: 0 }
-        acc.c += p * centavos(t)
+        const acc = porPessoa.get(t.user_id) ?? { centavos: 0, compras: 0 }
+        acc.centavos += p * centavos(t)
         if (p > 0) acc.compras++
         porPessoa.set(t.user_id, acc)
     }
     return [...porPessoa]
-        .filter(([, { c }]) => c > 0)
-        .map(([userId, { c, compras }]) => ({ userId, valor: c / 100, compras }))
+        .filter(([, { centavos: c }]) => c > 0)
+        .map(([userId, { centavos: c, compras }]) => ({ userId, valor: c / 100, compras }))
         .sort((a, b) => b.valor - a.valor)
 }

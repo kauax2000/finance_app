@@ -225,6 +225,11 @@ describe("quemGastou", () => {
             { userId: "bia", valor: 50, compras: 1 },
         ])
     })
+
+    it("quem só tem estorno não aparece", () => {
+        const r = quemGastou([tx({ date: "2026-11-05", amount: 30, user_id: "caio", type: "income" })], "expense")
+        expect(r).toEqual([])
+    })
 })
 
 describe("foraDoNormal", () => {
