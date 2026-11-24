@@ -15,22 +15,30 @@ import {
     CarouselToolbar,
 } from "@/components/ui/carousel"
 import { Spinner } from "@/components/ui/spinner"
+import { Caption } from "@/components/ui/typography"
+import { reaisInteiros } from "@/components/categories/detail/regua-do-mes-contas"
+import { CorpoDoInsight } from "@/components/categories/detail/resumo/corpo-do-insight"
 import type { InsightDaCategoria } from "@/lib/insights-da-categoria"
-import { cn } from "@/lib/utils"
-
-const TOM = { success: "text-success", warning: "text-warning" } as const
+import type { Insight } from "@/lib/insights/acoes"
 
 /**
  * Os insights do mês num cartão só, um por vez: os pontos e as setas no pé. Os slides ficam da
  * altura do maior (o trilho estica os itens), e quando um insight resolvido sai o embla mantém o
- * índice dentro da lista nova. Sem insight, nada.
+ * índice dentro da lista nova. Sem insight, nada. O de dado leva a ação no canto; o de ação, o
+ * botão de largura toda no pé, abaixo do corpo.
  */
 export function InsightsDaCategoria({
     insights,
     onAcao,
+    corDaSerie,
+    linhasDaCaixa,
 }: {
     insights: InsightDaCategoria[]
     onAcao: (i: InsightDaCategoria) => void | Promise<void>
+    /** A cor que o ladrilho da categoria desenha: o destaque dos mini visuais. */
+    corDaSerie: string
+    /** As linhas da caixa: a recorrência lê os lançamentos dela. */
+    linhasDaCaixa?: Insight[]
 }) {
     const [ocupado, setOcupado] = React.useState<string | null>(null)
     if (insights.length === 0) return null
@@ -60,34 +68,54 @@ export function InsightsDaCategoria({
                     {insights.map((i) => {
                         const parado = ocupado === i.id
                         const link = i.acao.tipo === "previsao" ? "/previsao" : i.acao.tipo === "link" ? i.acao.href : null
+                        // Dado: o link discreto no canto; ação: o botão secundário de largura toda, no pé.
+                        const peso =
+                            i.foco === "dado"
+                                ? ({ variant: "tertiary", size: "sm" } as const)
+                                : ({ variant: "secondary", className: "w-full" } as const)
+                        const botao = link ? (
+                            <Button asChild {...peso}>
+                                <Link href={link}>{i.rotulo}</Link>
+                            </Button>
+                        ) : (
+                            <Button {...peso} disabled={parado} aria-busy={parado || undefined} onClick={() => void agir(i)}>
+                                {parado ? <Spinner /> : null}
+                                {i.rotulo}
+                            </Button>
+                        )
+                        // O canto do insight de ação: só o número de apoio, onde a tabela pede (o total do 2, a média do 6).
+                        const canto =
+                            i.corpo.tipo === "conferir"
+                                ? i.numero
+                                : i.corpo.tipo === "recorrencia"
+                                  ? `~${reaisInteiros(i.corpo.valorMedio)}`
+                                  : null
+                        const c = i.corpo
+                        const daCaixa = c.tipo === "recorrencia" ? linhasDaCaixa?.find((l) => l.id === c.insightId) : undefined
                         return (
                             <CarouselItem key={i.id} className="flex">
                                 <div className="flex flex-1 flex-col gap-3">
                                     <CardHeader>
                                         <CardTitle size="sm">{i.titulo}</CardTitle>
-                                        <CardAction>
-                                            {link ? (
-                                                <Button asChild variant="tertiary" size="sm">
-                                                    <Link href={link}>{i.rotulo}</Link>
-                                                </Button>
-                                            ) : (
-                                                <Button
-                                                    variant="tertiary"
-                                                    size="sm"
-                                                    disabled={parado}
-                                                    aria-busy={parado || undefined}
-                                                    onClick={() => void agir(i)}
-                                                >
-                                                    {parado ? <Spinner /> : null}
-                                                    {i.rotulo}
-                                                </Button>
-                                            )}
-                                        </CardAction>
+                                        {i.foco === "dado" ? (
+                                            <CardAction>{botao}</CardAction>
+                                        ) : canto ? (
+                                            <CardAction>
+                                                <Caption className="nums font-mono">{canto}</Caption>
+                                            </CardAction>
+                                        ) : null}
                                     </CardHeader>
                                     <div className="mt-auto px-(--card-px)">
-                                        <p className={cn("nums font-mono text-2xl font-semibold", i.tom && TOM[i.tom])}>{i.numero}</p>
-                                        <p className="text-sm text-muted-foreground">{i.linha}</p>
+                                        <CorpoDoInsight
+                                            corpo={i.corpo}
+                                            corDaSerie={corDaSerie}
+                                            linhaDaCaixa={daCaixa}
+                                            numero={i.numero}
+                                            linha={i.linha}
+                                            tom={i.tom}
+                                        />
                                     </div>
+                                    {i.foco === "acao" ? <div className="px-(--card-px)">{botao}</div> : null}
                                 </div>
                             </CarouselItem>
                         )

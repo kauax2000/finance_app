@@ -197,10 +197,15 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         )
         setEditBudgetRepeats(budget?.repeats ?? true)
     }, [category?.type, budget])
-    const openLimitDialog = React.useCallback(() => {
-        preencherLimite()
-        setLimitDialogOpen(true)
-    }, [preencherLimite])
+    // Com valor (a sugestão de limite do insight), o campo abre já preenchido com ele.
+    const openLimitDialog = React.useCallback(
+        (valorInicial?: number) => {
+            preencherLimite()
+            if (valorInicial != null) setEditBudgetAmount(formatMoneyBrlInput(valorInicial))
+            setLimitDialogOpen(true)
+        },
+        [preencherLimite],
+    )
     const openEditDialog = React.useCallback(() => {
         if (!category) return
         preencherLimite()
@@ -543,7 +548,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             const daCaixa = "insightId" in a ? linhasDaCaixa.find((l) => l.id === a.insightId) : undefined
             switch (a.tipo) {
                 case "limite":
-                    openLimitDialog()
+                    openLimitDialog(a.valor)
                     return
                 case "filtrar":
                     setFilterDescriptionQuery(a.descricao)
@@ -640,7 +645,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     Editar
                 </DropdownMenuItem>
                 {category.type === "expense" ? (
-                    <DropdownMenuItem onSelect={openLimitDialog}>
+                    <DropdownMenuItem onSelect={() => openLimitDialog()}>
                         <BanknotesIcon aria-hidden />
                         {budget ? "Editar limite" : "Definir limite"}
                     </DropdownMenuItem>
@@ -759,7 +764,14 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 meses={comComposicao ? null : mesesNode}
                 insight={
                     analise && analise.insights.length > 0 ? (
-                        <InsightsDaCategoria insights={analise.insights} onAcao={onAcaoDoInsight} />
+                        <InsightsDaCategoria
+                            insights={analise.insights}
+                            onAcao={onAcaoDoInsight}
+                            linhasDaCaixa={linhasDaCaixa}
+                            corDaSerie={tileVividColor(
+                                tileColorFor(category.color) ?? (tipo === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT),
+                            )}
+                        />
                     ) : null
                 }
                 lancamentos={
