@@ -2,51 +2,76 @@
 
 import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { identityToneFor } from "@/lib/avatar"
-import { currencyBRL } from "@/lib/formatters"
+import { ChartSplit, ChartSwatch, splitPercents, type ChartConfig } from "@/components/ui/chart"
+import { ItemContent } from "@/components/ui/item"
+import { coresDasPessoas, identityIndexFor, identityToneFor } from "@/lib/avatar"
 import type { MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 import { cn, getInitials } from "@/lib/utils"
 import { reaisInteiros } from "./regua-do-mes-contas"
 
-/** "Quem gastou": uma linha por pessoa que lançou no mês, com a barra pelo valor. Quem decide se aparece é a tela. */
+/**
+ * "Quem gastou": a barra dividida por pessoa, na cor do avatar, e a lista com a
+ * fatia, a contagem e o valor, no desenho do "Como foi pago". Quem decide se aparece é a tela.
+ */
 export function QuemGastou({
     pessoas,
     diretorio,
     despesa,
 }: {
-    pessoas: { userId: string; valor: number }[]
+    pessoas: { userId: string; valor: number; compras: number }[]
     diretorio: MemberDirectoryRow[]
     despesa: boolean
 }) {
     const total = pessoas.reduce((a, p) => a + p.valor, 0)
     if (pessoas.length < 2 || total <= 0) return null
+
+    const linhas = pessoas.map((p) => {
+        const membro = diretorio.find((d) => d.user_id === p.userId)
+        const nome = membro?.full_name || membro?.email?.split("@")[0] || "Ex-membro"
+        const seed = membro?.email || nome
+        return { ...p, membro, nome, tom: identityToneFor(membro?.avatar_color, seed), indice: identityIndexFor(membro?.avatar_color, seed) }
+    })
+    // Duas pessoas na mesma identidade: o cartão todo vai à rampa de série, para a barra separar as duas.
+    const cores = coresDasPessoas(linhas.map((l) => l.indice))
+    const config = Object.fromEntries(linhas.map((l, i) => [l.userId, { label: l.nome, color: cores[i] }])) satisfies ChartConfig
+    // O mesmo arredondamento da barra, para a lista somar 100 com ela.
+    const pcts = splitPercents(linhas.map((l) => l.valor))
+    const unidade = despesa ? "compra" : "entrada"
+
     return (
         <CartaoDoGrafico titulo={despesa ? "Quem gastou" : "Quem recebeu"}>
-            <ul className="grid gap-3">
-                {pessoas.map((p) => {
-                    const membro = diretorio.find((d) => d.user_id === p.userId)
-                    const nome = membro?.full_name || membro?.email?.split("@")[0] || "Ex-membro"
-                    const tom = identityToneFor(membro?.avatar_color, membro?.email || nome)
-                    return (
-                        <li key={p.userId} className="flex items-center gap-3 text-sm">
+            <div className="flex min-w-0 flex-col gap-2">
+                <ChartSplit
+                    labels="none"
+                    config={config}
+                    data={pessoas}
+                    nameKey="userId"
+                    dataKey="valor"
+                    label={despesa ? "Gastos do mês por pessoa" : "Entradas do mês por pessoa"}
+                />
+                <ul className="mt-2 grid grid-cols-1 gap-3">
+                    {linhas.map((l, i) => (
+                        <li key={l.userId} className="flex items-center gap-3 text-sm">
                             <Avatar size="sm" className="shrink-0" aria-hidden>
-                                {membro?.avatar_url ? <AvatarImage src={membro.avatar_url} alt="" /> : null}
-                                <AvatarFallback className={cn("font-semibold", tom.surface, tom.ink)}>{getInitials(nome)}</AvatarFallback>
+                                {l.membro?.avatar_url ? <AvatarImage src={l.membro.avatar_url} alt="" /> : null}
+                                <AvatarFallback className={cn("font-semibold", l.tom.surface, l.tom.ink)}>{getInitials(l.nome)}</AvatarFallback>
                             </Avatar>
-                            <span className="w-28 min-w-0 truncate">{nome}</span>
-                            <Progress
-                                size="sm"
-                                value={p.valor}
-                                max={total}
-                                aria-label={`${nome}: ${currencyBRL(p.valor)} de ${currencyBRL(total)}`}
-                                className="min-w-0 flex-1"
-                            />
-                            <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(p.valor)}</span>
+                            {/* Nome e linha miúda são o mesmo dado em duas linhas: sem `gap`. */}
+                            <ItemContent>
+                                <span className="truncate">{l.nome}</span>
+                                <span className="nums flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <ChartSwatch color={cores[i]} />
+                                    <span>
+                                        {pcts[i]}% · {l.compras} {unidade}
+                                        {l.compras === 1 ? "" : "s"}
+                                    </span>
+                                </span>
+                            </ItemContent>
+                            <span className="nums shrink-0 font-mono font-semibold">{reaisInteiros(l.valor)}</span>
                         </li>
-                    )
-                })}
-            </ul>
+                    ))}
+                </ul>
+            </div>
         </CartaoDoGrafico>
     )
 }

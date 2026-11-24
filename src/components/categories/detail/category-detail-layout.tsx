@@ -22,7 +22,10 @@ export function CategoryDetailLayout({
     /** "Do que é feito o mês"; null sem lançamento. */
     composicao: ReactNode
     meses: ReactNode
-    /** "Quem gastou"; null fora da carteira de adultos ou com uma pessoa só. */
+    /**
+     * "Quem gastou"; null fora da carteira de adultos. Com o insight, os dois
+     * dividem a linha no desktop; sozinho, ocupa a linha inteira.
+     */
     quem: ReactNode
     insight: ReactNode
     lancamentos: ReactNode
@@ -34,8 +37,18 @@ export function CategoryDetailLayout({
             {resumo}
             {composicao}
             {meses}
-            {quem}
-            {insight}
+            {quem && insight ? (
+                // Colunas pelo que de fato desenha: com uma pessoa só o cartão some, e o insight volta à linha inteira.
+                <div className="grid gap-(--space-block) md:auto-cols-fr md:grid-flow-col">
+                    {quem}
+                    {insight}
+                </div>
+            ) : (
+                <>
+                    {quem}
+                    {insight}
+                </>
+            )}
             {lancamentos}
             {analise ? <div className="flex justify-center">{analise}</div> : null}
         </div>
