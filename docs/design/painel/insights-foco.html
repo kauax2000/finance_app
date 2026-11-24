@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Insights com foco</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
+:root{--bg:#0a0a0a;--card:#141414;--fg:#ededed;--mut:#9a9a9a;--faint:#5c5c5c;--border:rgba(255,255,255,.08);--muted:#262626;--sec:#2a2a2a;
+--ok:oklch(0.8 0.14 152);--okm:oklch(0.35 0.08 152 / .5);--warn:oklch(0.82 0.13 78);--warnm:oklch(0.4 0.08 78 / .5);--cat:oklch(0.72 0.16 45);--info:oklch(0.78 0.11 240)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 Inter,system-ui;padding:28px 36px 90px}
+h1{font:500 22px Inter;margin:0 0 6px}.lead{color:var(--mut);margin:0 0 8px;max-width:900px}
+h2{font:600 18px Inter;margin:44px 0 4px}.sub{color:var(--mut);margin:0 0 16px;max-width:880px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,344px);gap:28px 24px}
+.lbl{font:600 13px Inter;margin:0 0 2px}.why{color:var(--mut);font-size:12px;margin:0 0 10px;min-height:34px;max-width:344px}
+.tagd,.taga{display:inline-block;font:600 10.5px Inter;border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.tagd{background:rgba(120,160,255,.15);color:var(--info)}.taga{background:var(--warnm);color:var(--warn)}
+.tag{display:inline-block;font:600 11px Inter;color:var(--mut);border:1px solid var(--border);border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.card{width:344px;min-height:200px;background:var(--card);border-radius:22px;padding:16px;box-shadow:inset 0 0 0 1px var(--border);display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;justify-content:space-between;align-items:center;height:20px}.t{font-weight:600}.lk{font:500 13px Inter}
+.m{font-family:"Geist Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}.big{font-size:24px;line-height:1.1}
+.mut{color:var(--mut)}.sm{font-size:12px}.xs{font-size:11px}.ok{color:var(--ok)}.wa{color:var(--warn)}
+.body{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.foot{display:flex;align-items:center;justify-content:space-between;height:24px}
+.dots{display:flex;gap:12px;align-items:center}.dots i{width:8px;height:8px;border-radius:99px;background:rgba(237,237,237,.45)}.dots i.on{width:24px;background:var(--fg)}
+.ar{display:flex;gap:6px;color:var(--fg)}.ar span:first-child{opacity:.3}
+.btn2{display:flex;justify-content:center;align-items:center;height:36px;border-radius:99px;background:var(--sec);font:500 14px Inter}
+.btn2.s{height:32px;font-size:13px;padding:0 14px;display:inline-flex}
+.row{display:flex;align-items:center;gap:10px;font-size:13px}.row .m{margin-left:auto;font-size:13px}
+.chip{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--muted);font-size:11px;color:var(--mut);flex:none}
+.prog{position:relative;height:8px;border-radius:99px;background:var(--muted)}.prog i{position:absolute;inset:0 auto 0 0;border-radius:99px}
+.mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:2px}
+.tiles{display:flex;gap:3px}.tiles i{flex:1;height:12px;border-radius:4px;background:#333}.tiles i.on{background:var(--cat)}.tiles i.end{background:var(--ok)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:44px}.bars b{flex:1;border-radius:4px 4px 2px 2px;background:#3a3a3a}
+.split{display:flex;gap:2px;height:12px}.split i{border-radius:4px}
+.date{width:44px;height:48px;border-radius:16px;background:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.date b{font:700 10px Inter;color:var(--warn);letter-spacing:.04em}.date span{font:600 17px Inter;line-height:1}
+.strike{text-decoration:line-through;color:var(--mut)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp div{background:var(--muted);border-radius:12px;padding:8px 10px}
+</style></head><body>
+<h1>Insights do detalhe da categoria: dado ou ação</h1>
+<p class="lead">Hoje todo insight tem a mesma forma: título, número grande, uma linha e um link no canto. A proposta: cada insight escolhe o que lidera.</p>
+<ul class="lead" style="margin-top:0">
+<li><span class="tagd">dado</span>: quando o valor é entender algo, ele ganha um mini visual (barra, ladrilhos, colunas) no lugar do número solto, e a ação continua discreta no canto.</li>
+<li><span class="taga">ação</span>: quando o valor é fazer algo, o insight ganha um botão de verdade no pé, com o verbo e o objeto ("Criar conta do IPVA"), e o canto fica vazio.</li>
+</ul>
+
+<h2>1 · Onde mora a ação (um insight de ação, três jeitos)</h2>
+<p class="sub">Exemplo: o IPVA que volta em janeiro.</p>
+<div class="grid">
+<div><p class="lbl">A · Link no canto (hoje)</p><p class="why">Discreto demais para o que pede ação; o canto é o mesmo lugar de "Ver em Transações" ao lado.</p>
+<div class="card"><div class="hd"><span class="t">IPVA chega em janeiro</span><span class="lk">Criar conta a pagar</span></div><div class="body"><div class="m big">R$ 1.240</div><div class="mut sm">Foi o que você pagou em janeiro de 2026</div></div><div class="foot"><div class="dots"><i class="on"></i><i></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">B · Botão no pé, largura toda <span class="tag">recomendo</span></p><p class="why">A ação vira o fim natural da leitura (como o "Ver lançamentos" do cartão de categoria no telefone), com o verbo e o objeto. Secundário: a tela já tem o seu primário.</p>
+<div class="card"><div class="hd"><span class="t">IPVA chega em janeiro</span></div><div class="body" style="flex-direction:row;align-items:center;gap:12px"><div class="date"><b>JAN</b><span>15</span></div><div><div class="m big">R$ 1.240</div><div class="mut sm">Foi o que você pagou em jan/26</div></div></div><div class="btn2">Criar conta do IPVA</div><div class="foot"><div class="dots"><i class="on"></i><i></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">C · Botão compacto ao lado dos pontos</p><p class="why">Uma linha a menos, mas o botão disputa espaço com os pontos e as setas, e no telefone fica apertado.</p>
+<div class="card"><div class="hd"><span class="t">IPVA chega em janeiro</span></div><div class="body" style="flex-direction:row;align-items:center;gap:12px"><div class="date"><b>JAN</b><span>15</span></div><div><div class="m big">R$ 1.240</div><div class="mut sm">Foi o que você pagou em jan/26</div></div></div><div class="foot"><div class="dots"><i class="on"></i><i></i><i></i></div><span class="btn2 s">Criar conta</span></div></div></div>
+</div>
+
+<h2>2 · Os 9, cada um com o seu foco (na forma B)</h2>
+<p class="sub">Todos no Card de sempre, com pílula e setas no pé. Os números são de exemplo.</p>
+<div class="grid">
+
+<div><p class="lbl">1 · Duplicado <span class="taga">ação</span></p><p class="why">Mostra os dois lado a lado (data, valor, forma), para a pessoa reconhecer na hora; o botão leva aos dois na lista.</p>
+<div class="card"><div class="hd"><span class="t">Lançamento repetido?</span></div><div class="body"><div class="cmp"><div><div class="sm">Gasolina</div><div class="xs mut">22/11 · Visa</div><div class="m sm" style="margin-top:2px">R$ 240,00</div></div><div><div class="sm">Gasolina</div><div class="xs mut">22/11 · Visa</div><div class="m sm" style="margin-top:2px">R$ 240,00</div></div></div></div><div class="btn2">Ver os dois na lista</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">2 · A conferir <span class="taga">ação</span></p><p class="why">As até 3 primeiras linhas, como na lista, para a pessoa já ver o que é; o botão abre a conferência.</p>
+<div class="card"><div class="hd"><span class="t">3 para conferir</span><span class="mut sm m">R$ 412</span></div><div class="body"><div class="row"><span class="chip">22</span>Posto Shell<span class="m">R$ 180</span></div><div class="row"><span class="chip">19</span>Estacionamento<span class="m">R$ 32</span></div><div class="row mut"><span class="chip">+1</span>e mais 1</div></div><div class="btn2">Conferir agora</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">3 · Ritmo contra o limite <span class="tagd">dado</span></p><p class="why">A barra do mês: o lançado, o previsto tracejado e o traço do limite. O "quanto passa" fica no número, em âmbar.</p>
+<div class="card"><div class="hd"><span class="t">Vai passar do limite</span><span class="lk">Ajustar limite</span></div><div class="body"><div class="m big wa">R$ 400 acima</div><div class="prog"><i style="width:78%;background:var(--fg)"></i><i style="left:78%;width:22%;background:repeating-linear-gradient(90deg,var(--warn) 0 4px,transparent 4px 7px);opacity:.8"></i><span class="mk" style="left:89%"></span></div><div class="mut sm">Fecha em R$ 3.900 · limite R$ 3.500</div></div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">4 · Gasto do ano que volta <span class="taga">ação</span></p><p class="why">A folhinha do mês (o DateTile do design system) e o valor do ano passado; o botão já diz o nome da conta.</p>
+<div class="card"><div class="hd"><span class="t">IPVA chega em janeiro</span></div><div class="body" style="flex-direction:row;align-items:center;gap:12px"><div class="date"><b>JAN</b><span>15</span></div><div><div class="m big">R$ 1.240</div><div class="mut sm">Foi o que você pagou em jan/26</div></div></div><div class="btn2">Criar conta do IPVA</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">5 · Parcela que termina <span class="tagd">dado</span></p><p class="why">Os ladrilhos da compra até o fim, com a casa seguinte em verde: dá para ver quanto falta. O número é o que sobra.</p>
+<div class="card"><div class="hd"><span class="t">Sobra em set/27</span><span class="lk">Ver na Previsão</span></div><div class="body"><div class="m big ok">+R$ 443<span class="mut" style="font-size:14px">/mês</span></div><div class="tiles"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="end"></i></div><div class="mut sm">Seguro carro · 3 de 12 · termina em ago/27</div></div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">6 · Gasto que se repete <span class="taga">ação</span></p><p class="why">As colunas dos últimos meses quase iguais provam o "todo mês"; o botão cria de uma vez.</p>
+<div class="card"><div class="hd"><span class="t">Estacionamento todo mês</span><span class="mut sm m">~R$ 60</span></div><div class="body"><div class="bars"><b style="height:70%"></b><b style="height:80%"></b><b style="height:72%"></b><b style="height:76%"></b><b style="height:74%;background:var(--cat)"></b></div><div class="mut xs" style="display:flex;justify-content:space-between"><span>jul</span><span>ago</span><span>set</span><span>out</span><span>nov</span></div></div><div class="btn2">Virar conta a pagar</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">7 · Assinatura mais cara <span class="taga">ação</span></p><p class="why">O preço antigo riscado e o novo; o custo do ano em âmbar. O botão atualiza o cadastro.</p>
+<div class="card"><div class="hd"><span class="t">Spotify mudou de preço</span></div><div class="body"><div class="m big"><span class="strike" style="font-size:16px">R$ 21,90</span> R$ 23,90</div><div class="sm wa">+R$ 24 por ano</div></div><div class="btn2">Atualizar para R$ 23,90</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">8 · Sugestão de limite <span class="taga">ação</span></p><p class="why">A barra do mês contra o limite sugerido mostra se ele cabe; o botão já traz o valor (o diálogo abre preenchido).</p>
+<div class="card"><div class="hd"><span class="t">Sugestão de limite</span></div><div class="body"><div class="m big">R$ 3.000<span class="mut" style="font-size:14px">/mês</span></div><div class="prog"><i style="width:86%;background:var(--cat)"></i></div><div class="mut sm">Este mês: R$ 2.582 · pela média de 6 meses</div></div><div class="btn2">Definir R$ 3.000</div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+<div><p class="lbl">9 · Concentração <span class="tagd">dado</span></p><p class="why">A barra dividida: os 2 maiores na cor da categoria e o resto em cinza, com o nome de cada. O link ordena a lista.</p>
+<div class="card"><div class="hd"><span class="t">Dois gastos fizeram o mês</span><span class="lk">Ver os dois</span></div><div class="body"><div class="m big">72%</div><div class="split"><i style="flex:56;background:var(--cat)"></i><i style="flex:16;background:oklch(0.62 0.13 45)"></i><i style="flex:28;background:var(--muted)"></i></div><div class="mut sm">Consórcio Mãe e Seguro carro · resto R$ 1.140</div></div><div class="foot"><div class="dots"><i class="on"></i><i></i></div><div class="ar"><span>‹</span><span>›</span></div></div></div></div>
+
+</div></body></html>
