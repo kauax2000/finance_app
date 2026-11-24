@@ -4,9 +4,7 @@ import Link from "next/link"
 import { CheckCircleIcon, ExclamationTriangleIcon, LightBulbIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Item, ItemContent, ItemDescription, ItemMedia } from "@/components/ui/item"
-import type { insights } from "@/lib/categoria-resumo"
-
-type Insight = ReturnType<typeof insights>[number]
+import type { InsightDaCategoria as Insight } from "@/lib/insights-da-categoria"
 
 // Verde a boa notícia, âmbar a atenção, azul a informação.
 const MIDIA = {
@@ -27,7 +25,7 @@ export function InsightDaCategoria({
     insight: Insight
     onDefinirLimite: () => void
 }) {
-    const { tone, Icone } = MIDIA[insight.tom]
+    const { tone, Icone } = MIDIA[insight.tom ?? "info"]
     return (
         // O insight é uma caixa solta entre cartões: o raio (`rounded-surface`) e o recuo (16, o do `Card`) são
         // os deles, para o texto começar na linha do título do cartão ao lado.
@@ -37,25 +35,17 @@ export function InsightDaCategoria({
             </ItemMedia>
             <ItemContent>
                 <ItemDescription className="line-clamp-none text-foreground">
-                    {insight.texto.map((p, n) =>
-                        p.forte ? (
-                            <strong key={n} className="nums font-semibold">
-                                {p.texto}
-                            </strong>
-                        ) : (
-                            <span key={n}>{p.texto}</span>
-                        ),
-                    )}
+                    <strong className="nums font-semibold">{insight.numero}</strong> {insight.titulo}. {insight.linha}
                 </ItemDescription>
-                {insight.acao ? (
+                {insight.acao.tipo === "previsao" || insight.acao.tipo === "limite" ? (
                     <div className="mt-1">
-                        {insight.acao === "previsao" ? (
+                        {insight.acao.tipo === "previsao" ? (
                             <Button asChild variant="link" size="sm" className="px-0">
-                                <Link href="/previsao">ver na Previsão</Link>
+                                <Link href="/previsao">{insight.rotulo}</Link>
                             </Button>
                         ) : (
                             <Button variant="link" size="sm" className="px-0" onClick={onDefinirLimite}>
-                                definir limite
+                                {insight.rotulo}
                             </Button>
                         )}
                     </div>

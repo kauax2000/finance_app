@@ -57,7 +57,8 @@ import {
     mediaDosMeses,
     serieDosMeses,
 } from "@/lib/categoria-detalhe"
-import { compromissos, insights } from "@/lib/categoria-resumo"
+import { compromissos } from "@/lib/categoria-resumo"
+import { insightsLocais, paraQuemLe } from "@/lib/insights-da-categoria"
 import { receitasDoMesPorCategoria } from "@/lib/categoria-receitas-do-mes"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
@@ -458,8 +459,12 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         if (!category) return null
         const media = mediaDosMeses({ rows: seriesSource, tipo, yearMonth, lookup, criadaEm: category.created_at })
         const c = compromissos({ categoryId, parcelas: installmentPlans, assinaturas: subscriptions, hojeYmd })
-        // Um insight só: o primeiro que leva a uma ação (definir limite, ou a parcela que termina).
-        const insight = insights({ tipo, lancado: mes.lancado, media, limite, txs, compromissos: c }).find((i) => i.acao) ?? null
+        // Um insight só, por ora (a Tarefa 4 liga o carrossel): o primeiro que o leitor pode usar.
+        const insight =
+            paraQuemLe(
+                insightsLocais({ tipo, categoryId, yearMonth, aberto, lancado: mes.lancado, previsto: mes.previsto, media, limite, txs, compromissos: c }),
+                podeEscrever,
+            )[0] ?? null
         // Sem o histórico (carregando ou falhou), o bloco espera: a frase sairia sem o normal.
         const composicao = historico
             ? composicaoDoMes({
@@ -483,8 +488,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             media,
             maior: maioresLancamentos(txs, tipo, 1)[0] ?? null,
             serie: serieDosMeses(seriesSource, tipo, yearMonth, lookup),
-            // O convidado não mexe no limite: a sugestão fica, sem o botão.
-            insight: insight?.acao === "limite" && !podeEscrever ? { ...insight, acao: undefined } : insight,
+            insight,
         }
     }, [
         aberto,

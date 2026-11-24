@@ -4,7 +4,6 @@ import {
     compromissos,
     diaDeMaisGasto,
     diasUteisEFimDeSemana,
-    insights,
     maisFrequente,
     porDiaDaSemana,
     concentracaoDasCompras,
@@ -302,43 +301,6 @@ describe("compromissos", () => {
         ])
         expect(r.porMes).toBe(30)
         expect(r.ateAcabar).toBe(0)
-    })
-})
-
-const semCompromisso = { itens: [], porMes: 0, ateAcabar: 0 }
-
-describe("insights", () => {
-    it("parcela que termina libera valor/mês", () => {
-        const c = compromissos({ categoryId: "cat", parcelas: [plano({})], assinaturas: [], hojeYmd: "2026-11-21" })
-        const r = insights({ tipo: "expense", lancado: 3000, media: null, limite: 500, txs: [], compromissos: c })
-        expect(r).toHaveLength(1)
-        expect(r[0]).toMatchObject({ id: "parcela-termina", tom: "success", acao: "previsao" })
-        expect(r[0].texto.map((p) => p.texto).join("")).toContain(currencyBRL(2000))
-    })
-    it("concentração: 2 maiores > 70%", () => {
-        const r = insights({ tipo: "expense", lancado: 2910, media: null, limite: 100, txs: carro.slice(0, 3), compromissos: semCompromisso })
-        const c = r.find((i) => i.id === "concentracao")
-        expect(c?.tom).toBe("warning")
-        expect(c?.texto.map((p) => p.texto).join("")).toContain(currencyBRL(2910 - 2442.54))
-    })
-    it("concentração não aparece se os 2 maiores passam do lançado", () => {
-        const r = insights({ tipo: "expense", lancado: 1000, media: null, limite: 100, txs: carro.slice(0, 3), compromissos: semCompromisso })
-        expect(r.find((i) => i.id === "concentracao")).toBeUndefined()
-    })
-    it("sugere limite em centenas para despesa sem limite", () => {
-        const r = insights({ tipo: "expense", lancado: 10, media: 2342.5, limite: null, txs: [], compromissos: semCompromisso })
-        expect(r).toHaveLength(1)
-        expect(r[0]).toMatchObject({ id: "limite", tom: "info", acao: "limite" })
-        expect(r[0].texto.map((p) => p.texto).join("")).toContain(currencyBRL(2400))
-    })
-    it("receita não sugere limite; vazio não dá NaN", () => {
-        expect(insights({ tipo: "income", lancado: 0, media: 1000, limite: null, txs: [], compromissos: semCompromisso })).toEqual([])
-        expect(insights({ tipo: "expense", lancado: 0, media: null, limite: null, txs: [], compromissos: semCompromisso })).toEqual([])
-    })
-    it("no máximo 3, parcela antes de limite", () => {
-        const c = compromissos({ categoryId: "cat", parcelas: [plano({})], assinaturas: [], hojeYmd: "2026-11-21" })
-        const r = insights({ tipo: "expense", lancado: 2910, media: 3000, limite: null, txs: carro.slice(0, 3), compromissos: c })
-        expect(r.map((i) => i.id)).toEqual(["parcela-termina", "concentracao", "limite"])
     })
 })
 

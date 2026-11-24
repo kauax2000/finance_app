@@ -274,61 +274,6 @@ export function compromissos(args: {
     return { itens, porMes: reais(porMes), ateAcabar: reais(ateAcabar) }
 }
 
-/** Até 3 insights, na ordem de utilidade. */
-export function insights(args: {
-    tipo: TipoDaCategoria
-    lancado: number
-    media: number | null
-    limite: number | null
-    txs: Transaction[]
-    compromissos: Compromissos
-}): { id: string; tom: "success" | "warning" | "info"; texto: Parte[]; acao?: "previsao" | "limite" }[] {
-    const { tipo, lancado, media, limite, txs, compromissos: c } = args
-    const r: ReturnType<typeof insights> = []
-    const termina = c.itens
-        .filter((i) => i.tipo === "parcela" && i.terminaYm)
-        .sort((a, b) => a.terminaYm!.localeCompare(b.terminaYm!))[0]
-    if (termina) {
-        const apos = labelYearMonthPt(shiftYearMonth(termina.terminaYm!, 1)).toLocaleLowerCase("pt-BR")
-        r.push({
-            id: "parcela-termina",
-            tom: "success",
-            acao: "previsao",
-            texto: [
-                { texto: `${termina.nome} termina em ${labelYearMonthPt(termina.terminaYm!).toLocaleLowerCase("pt-BR")}: libera ` },
-                { texto: `${currencyBRL(termina.valor)}/mês`, forte: true },
-                { texto: ` a partir de ${apos}.` },
-            ],
-        })
-    }
-    const maiores = maioresLancamentos(txs, tipo, 2)
-    const dois = maiores.reduce((s, t) => s + Number(t.amount || 0), 0)
-    if (lancado > 0 && txs.filter((t) => peso(t, tipo) === 1).length >= 3 && maiores.length === 2 && dois <= lancado && dois / lancado > 0.7) {
-        r.push({
-            id: "concentracao",
-            tom: "warning",
-            texto: [
-                { texto: `Os 2 maiores lançamentos são ${Math.round((dois / lancado) * 100)}% do mês; sem eles ficaria em ` },
-                { texto: currencyBRL(lancado - dois), forte: true },
-                { texto: "." },
-            ],
-        })
-    }
-    if (tipo === "expense" && limite == null && media != null && media > 0) {
-        r.push({
-            id: "limite",
-            tom: "info",
-            acao: "limite",
-            texto: [
-                { texto: "Sem limite definido. Pela média, " },
-                { texto: currencyBRL(Math.ceil(media / 100) * 100), forte: true },
-                { texto: " por mês seria um bom limite." },
-            ],
-        })
-    }
-    return r.slice(0, 3)
-}
-
 /**
  * Para onde a categoria está indo: do primeiro ao último mês inteiro da série.
  * Fica de fora o mês aberto (ainda vai crescer) e o primeiro quando é pela

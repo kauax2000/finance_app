@@ -45,7 +45,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v : '')
 const strs = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
 const transacoes = (p: Record<string, string>) => `/transactions?${new URLSearchParams(p)}`
 
-const SAZONAL: Record<string, string> = {
+export const SAZONAL: Record<string, string> = {
   ipva: 'IPVA',
   iptu: 'IPTU',
   'material escolar': 'Material escolar',
