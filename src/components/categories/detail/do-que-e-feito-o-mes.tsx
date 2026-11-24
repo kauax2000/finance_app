@@ -130,9 +130,9 @@ export function DoQueEFeitoOMes({
         <div className="grid gap-(--space-block)">
             <LeituraDoMes leitura={leitura} despesa={despesa} corDaSerie={corDaSerie} onVer={onVer} />
 
-            {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; os 6 meses à esquerda e mais largos; abaixo de 42rem da área, empilham. */}
+            {/* O gráfico do mês e o dos últimos 6 meses dividem a linha; os 6 meses à esquerda e mais largos; na mesma divisão da linha de baixo (5:4); abaixo de 36rem da área, empilham. */}
             <div className="@container">
-                <div className="grid gap-(--space-block) @2xl:grid-cols-[3fr_2fr]">
+                <div className="grid gap-(--space-block) @xl:grid-cols-[5fr_4fr]">
                     {aoLado}
                     {comFixo || comVariavel ? (
                         <CartaoDoGrafico titulo={titulo} apoio={selo}>
