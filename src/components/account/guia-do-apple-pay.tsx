@@ -31,9 +31,12 @@ import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "@/components
 import { Muted, P } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/use-mobile"
 
-/** A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela. */
+/**
+ * A frase que a pessoa cola em "Descrever um atalho" (iOS 27): a automação sai dela.
+ * A transação tem de ir junto: sem ela, o Lançar gasto pergunta "Qual foi o gasto?", que ninguém responde.
+ */
 export const DESCRICAO_DA_AUTOMACAO =
-    "Quando eu pagar com a Carteira, executar o atalho Lançar gasto na hora, sem pedir confirmação."
+    "Quando eu pagar com a Carteira, executar na hora o atalho Lançar gasto, passando a transação como entrada, sem pedir confirmação."
 
 const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela }[] = [
     {
@@ -66,7 +69,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
                 <CampoDeCopiar rotulo="Descrição da automação" valor={DESCRICAO_DA_AUTOMACAO} multilinha />
                 <Muted>
                     Sem essa caixa? Toque em <strong>Transação</strong>, marque <strong>Executar Imediatamente</strong>{" "}
-                    e escolha <strong>Lançar gasto</strong>.
+                    e escolha <strong>Lançar gasto</strong>, recebendo a transação.
                 </Muted>
             </>
         ),
@@ -88,7 +91,7 @@ const PASSOS: { titulo: string; texto: ReactNode; extra?: ReactNode; tela?: Tela
                                 <strong>Executar Imediatamente</strong> ligado
                             </>,
                             <>
-                                Ação: <strong>Lançar gasto</strong>
+                                Ação: <strong>Lançar gasto</strong>, recebendo a transação
                             </>,
                         ].map((linha, i) => (
                             <Item key={i} variant="flush">

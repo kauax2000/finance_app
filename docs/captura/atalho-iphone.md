@@ -204,8 +204,13 @@ No app, ela aparece em **Configurações** › "Lançar pelo iPhone", no cartão
 colar a frase pronta em **Descrever um atalho** (iOS 27), que o guia mostra com o
 botão Copiar; conferir e salvar; e a notificação depois de pagar. A frase é:
 
-> Quando eu pagar com qualquer cartão da Carteira, executar na hora o atalho
-> Lançar gasto com a compra, sem pedir confirmação.
+> Quando eu pagar com a Carteira, executar na hora o atalho Lançar gasto,
+> passando a transação como entrada, sem pedir confirmação.
+
+A transação tem de ir como entrada do atalho. Sem ela, o Lançar gasto roda como
+pela Siri, pergunta "Qual foi o gasto?" sem ninguém para responder, e a
+notificação diz "Não lançado: Não entendi o valor". Na automação salva, a ação
+deve aparecer como **Executar Lançar gasto** com a **Entrada do atalho**.
 
 Sem a caixa de descrever (iOS 26 ou anterior), o caminho é à mão, como abaixo. Os
 passos são a referência de quem monta a automação **sem** o atalho pronto: o atalho

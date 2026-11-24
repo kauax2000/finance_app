@@ -387,6 +387,8 @@ describe("Guia do Apple Pay", () => {
     it("a descrição nomeia a Carteira, o Lançar gasto e o sem confirmação", async () => {
         const { DESCRICAO_DA_AUTOMACAO } = await import("./guia-do-apple-pay")
         for (const t of ["Carteira", "Lançar gasto", "sem pedir confirmação"]) expect(DESCRICAO_DA_AUTOMACAO).toContain(t)
+        // Sem a transação, o Lançar gasto roda como pela Siri e pergunta "Qual foi o gasto?", que ninguém responde.
+        expect(DESCRICAO_DA_AUTOMACAO).toContain("passando a transação como entrada")
     })
     it("o texto nomeia os botões, guarda o caminho antigo e não fala difícil", () => {
         const s = semComentarios(g)
