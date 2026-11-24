@@ -38,10 +38,13 @@ export function CategoryDetailLayout({
             {composicao}
             {meses}
             {quem && insight ? (
-                // Colunas pelo que de fato desenha: com uma pessoa só o cartão some, e o insight volta à linha inteira.
-                <div className="grid gap-(--space-block) md:auto-cols-fr md:grid-flow-col">
-                    {quem}
-                    {insight}
+                // A divisão das linhas de cima (5:4, pela largura da área); com uma pessoa só o cartão some, e o
+                // insight, filho único, volta à linha inteira.
+                <div className="@container">
+                    <div className="grid gap-(--space-block) @xl:grid-cols-[5fr_4fr] @xl:[&>*:only-child]:col-span-2">
+                        {quem}
+                        {insight}
+                    </div>
                 </div>
             ) : (
                 <>
