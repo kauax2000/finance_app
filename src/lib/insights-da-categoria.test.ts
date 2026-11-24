@@ -146,7 +146,7 @@ const ctx = {
         { id: "s1", category_id: "cat" },
         { id: "s2", category_id: "outra" },
     ],
-    categoriaDoLancamento: { t1: "cat", t2: "cat", t3: "outra", t4: "outra" } as Record<string, string | null>,
+    idsDoMes: new Set(["t1", "t2"]),
 }
 
 describe("insightsDaCaixa", () => {
@@ -163,6 +163,16 @@ describe("insightsDaCaixa", () => {
                 acao: { tipo: "filtrar", descricao: "Netflix" },
             }),
         ])
+    })
+    it("duplicidade só aparece com os dois lançamentos no mês da página", () => {
+        const l = (ids: string[]) => linha("duplicidade", { ids, valor: 1, descricao: "Netflix", dataYmd: "2026-11-05" })
+        expect(insightsDaCaixa([l(["t1", "t2"])], ctx)).toHaveLength(1)
+        expect(insightsDaCaixa([l(["t1", "t3"])], ctx)).toEqual([])
+        expect(insightsDaCaixa([l(["t3", "t4"])], ctx)).toEqual([])
+    })
+    it("preço que cai mostra a economia com o menos", () => {
+        const r = insightsDaCaixa([linha("preco_assinatura", { assinaturaId: "s1", nome: "Streaming", de: 21.9, para: 19.9 })], ctx)
+        expect(r[0].linha).toBe(`−${reaisInteiros(24)} por ano`)
     })
     it("sazonal: título, número e conta a pagar; sem category_id não aparece", () => {
         const p = { termo: "ipva", mesAnterior: "2026-01", valor: 1800 }

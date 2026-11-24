@@ -133,7 +133,7 @@ export function insightsDaCaixa(
     c: {
         categoryId: string
         assinaturas: { id: string; category_id: string | null }[]
-        categoriaDoLancamento: Record<string, string | null>
+        idsDoMes: Set<string>
     },
 ): InsightDaCategoria[] {
     const r: InsightDaCategoria[] = []
@@ -143,7 +143,7 @@ export function insightsDaCaixa(
             case "duplicidade": {
                 const ids = Array.isArray(p.ids) ? p.ids.filter((x): x is string => typeof x === "string") : []
                 const descricao = str(p.descricao)
-                if (!descricao || !ids.some((id) => c.categoriaDoLancamento[id] === c.categoryId)) break
+                if (!descricao || !(ids.length === 2 && ids.every((id) => c.idsDoMes.has(id)))) break
                 const data = str(p.dataYmd)
                 r.push({
                     id: l.id,
@@ -197,7 +197,7 @@ export function insightsDaCaixa(
                     ordem: 7,
                     titulo: `${nome} mudou de preço`,
                     numero: `${currencyBRL(de)} → ${currencyBRL(para)}`,
-                    linha: `+${reaisInteiros((para - de) * 12)} por ano`,
+                    linha: `${para >= de ? "+" : "−"}${reaisInteiros(Math.abs((para - de) * 12))} por ano`,
                     rotulo: "Atualizar valor",
                     acao: { tipo: "atualizar-preco", insightId: l.id },
                 })

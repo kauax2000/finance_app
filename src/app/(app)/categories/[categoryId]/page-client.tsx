@@ -476,7 +476,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             paraQuemLe(
                 [
                     ...insightsLocais({ tipo, categoryId, yearMonth, aberto, lancado: mes.lancado, previsto: mes.previsto, media, limite, txs, compromissos: c }),
-                    ...insightsDaCaixa(caixa.linhas, { categoryId, assinaturas: subscriptions, categoriaDoLancamento: caixa.categoriaDoLancamento }),
+                    ...insightsDaCaixa(caixa.linhas, { categoryId, assinaturas: subscriptions, idsDoMes: new Set(txs.map((t) => t.id)) }),
                 ],
                 podeEscrever,
             ),
@@ -508,7 +508,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         }
     }, [
         aberto,
-        caixa.categoriaDoLancamento,
         caixa.linhas,
         category,
         categoryId,
@@ -535,11 +534,11 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const rolarParaLancamentos = React.useCallback(() => {
         document.getElementById(LANCAMENTOS_DO_MES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
     }, [])
-    const { setFilterDescriptionQuery, setSortKey, setSortDir } = txController
+    const { setFilterDescriptionQuery, setSortKey, setSortDir, setPage } = txController
     const { linhas: linhasDaCaixa, recarregar: recarregarCaixa } = caixa
     // Cada ação liga ao que a página já tem; os links (Previsão, conferir) o cartão resolve sozinho.
     const onAcaoDoInsight = React.useCallback(
-        async (i: InsightDaCategoria) => {
+        (i: InsightDaCategoria): Promise<void> | void => {
             const a = i.acao
             const daCaixa = "insightId" in a ? linhasDaCaixa.find((l) => l.id === a.insightId) : undefined
             switch (a.tipo) {
@@ -553,6 +552,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 case "ordenar-por-valor":
                     setSortKey("amount")
                     setSortDir("desc")
+                    setPage(0)
                     rolarParaLancamentos()
                     return
                 case "conta-a-pagar":
@@ -565,18 +565,18 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 case "atualizar-preco": {
                     if (!daCaixa) return
                     // `atualizarPrecoDaAssinatura` já marca o insight `acted` depois de gravar.
-                    const r = await atualizarPrecoDaAssinatura(daCaixa)
-                    if (!r.ok) {
-                        if (r.erro) toastError(r.erro, { id: "insight-preco" })
-                        return
-                    }
-                    toastSuccess("Valor da assinatura atualizado", { id: "insight-preco" })
-                    await recarregarCaixa()
-                    return
+                    return atualizarPrecoDaAssinatura(daCaixa).then(async (r) => {
+                        if (!r.ok) {
+                            if (r.erro) toastError(r.erro, { id: "insight-preco" })
+                            return
+                        }
+                        toastSuccess("Valor da assinatura atualizado", { id: "insight-preco" })
+                        await recarregarCaixa()
+                    })
                 }
             }
         },
-        [linhasDaCaixa, openLimitDialog, recarregarCaixa, rolarParaLancamentos, router, setFilterDescriptionQuery, setSortDir, setSortKey],
+        [linhasDaCaixa, openLimitDialog, recarregarCaixa, rolarParaLancamentos, router, setFilterDescriptionQuery, setPage, setSortDir, setSortKey],
     )
     const categoriasDaRecorrencia = React.useMemo(
         () => txController.categories.filter((c) => c.type === "expense").map((c) => ({ id: c.id, name: c.name })),

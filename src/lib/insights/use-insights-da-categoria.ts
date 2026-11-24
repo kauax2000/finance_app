@@ -9,18 +9,8 @@ import type { Insight } from "./acoes"
 
 export const KINDS_DA_CATEGORIA = ["duplicidade", "sazonal", "recorrencia", "preco_assinatura"] as const
 
-/** Os ids dos lançamentos que as duplicidades citam, sem repetir. */
-export function idsDosLancamentos(linhas: Insight[]): string[] {
-    const ids = new Set<string>()
-    for (const l of linhas) {
-        if (l.kind !== "duplicidade" || !Array.isArray(l.payload.ids)) continue
-        for (const id of l.payload.ids) if (typeof id === "string") ids.add(id)
-    }
-    return [...ids]
-}
-
-type Dados = { linhas: Insight[]; categoriaDoLancamento: Record<string, string | null> }
-const VAZIO: Dados = { linhas: [], categoriaDoLancamento: {} }
+type Dados = { linhas: Insight[] }
+const VAZIO: Dados = { linhas: [] }
 
 /**
  * A caixa de insights da carteira, lida para o detalhe da categoria cortar por categoria. Só lê:
@@ -44,19 +34,7 @@ export function useInsightsDaCaixa(workspaceId: string | null) {
                 if (!isPostgrestRelationMissingError(error)) console.warn(formatSupabasePostgrestError(error))
                 return VAZIO
             }
-            const linhas = (data as Insight[]) ?? []
-            const ids = idsDosLancamentos(linhas)
-            if (ids.length === 0) return { linhas, categoriaDoLancamento: {} }
-            const { data: lancs, error: erroLancs } = await supabase
-                .from("transactions")
-                .select("id,category_id")
-                .in("id", ids)
-            if (erroLancs) return { linhas, categoriaDoLancamento: {} }
-            const categoriaDoLancamento: Record<string, string | null> = {}
-            for (const t of (lancs as { id: string; category_id: string | null }[]) ?? []) {
-                categoriaDoLancamento[t.id] = t.category_id
-            }
-            return { linhas, categoriaDoLancamento }
+            return { linhas: (data as Insight[]) ?? [] }
         },
     })
 
@@ -68,5 +46,5 @@ export function useInsightsDaCaixa(workspaceId: string | null) {
     }, [qc, workspaceId])
 
     const d = q.data ?? VAZIO
-    return { linhas: d.linhas, categoriaDoLancamento: d.categoriaDoLancamento, recarregar }
+    return { linhas: d.linhas, recarregar }
 }

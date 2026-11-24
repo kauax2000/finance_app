@@ -15,8 +15,6 @@ import { cn } from "@/lib/utils"
 import { LeituraDoMes } from "./leitura-do-mes"
 import { nomeDoMes, reaisInteiros } from "./regua-do-mes-contas"
 
-/** "ago/27", a partir de `YYYY-MM`. */
-
 /** Até 12 parcelas o progresso vai em pontinhos; acima, só o "N/T". */
 const MAX_PONTINHOS = 12
 /** Os grupos que a lista mostra antes do "Outros" (o `GRUPOS_A_MOSTRAR` da conta). */
