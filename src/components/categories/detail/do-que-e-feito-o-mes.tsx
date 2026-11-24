@@ -4,7 +4,6 @@ import { CartaoDoGrafico } from "@/components/analise-do-mes/compartilhado"
 import { dataDoGrupo, mesCurto } from "@/components/analise-do-mes/rotulos"
 import { Badge } from "@/components/ui/badge"
 import { ChartSplitCompare, ChartSwatch, type ChartConfig, type ChartSplitCompareRow } from "@/components/ui/chart"
-import { ItemContent } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
 import { fixoEmLinhas, foraDoNormal, type ComposicaoDoMes, type GrupoVariavel, type LeituraDoMes as Leitura } from "@/lib/composicao-do-mes"
 import { percentBR } from "@/lib/formatters"
@@ -19,13 +18,15 @@ const mesEAno = (ym: string) => `${mesCurto(ym)}/${ym.slice(2, 4)}`
 const MAX_PONTINHOS = 12
 
 /** A variação do grupo contra o normal, em reais e em %: "= normal" dentro de ±5%; o tom diz se é bom. */
-function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean) {
-    if (g.novo || g.variacao == null || g.normal == null) return { texto: "não tinha antes", classe: "text-muted-foreground" }
-    if (!foraDoNormal(g.variacao)) return { texto: "= normal", classe: "text-muted-foreground" }
+/** A pílula do grupo contra o normal (C2, 24/11/2026): "↑ 68%" no tom pela régua da despesa, "novo" ou "= normal". */
+function variacaoDoGrupo(g: GrupoVariavel, despesa: boolean): { texto: string; tone: "warning" | "success" | "neutral"; titulo?: string } {
+    if (g.novo || g.variacao == null || g.normal == null) return { texto: "novo", tone: "warning" }
+    if (!foraDoNormal(g.variacao)) return { texto: "= normal", tone: "neutral" }
     const subiu = g.variacao > 0
     return {
-        texto: `${reaisInteiros(Math.abs(g.valor - g.normal))} ${subiu ? "acima" : "abaixo"} · ${subiu ? "↑" : "↓"} ${percentBR(Math.abs(g.variacao), { maximumFractionDigits: 0 })}`,
-        classe: subiu === despesa ? "text-warning" : "text-success",
+        texto: `${subiu ? "↑" : "↓"} ${percentBR(Math.abs(g.variacao), { maximumFractionDigits: 0 })}`,
+        tone: subiu === despesa ? "warning" : "success",
+        titulo: `${reaisInteiros(Math.abs(g.valor - g.normal))} ${subiu ? "acima" : "abaixo"} do seu normal`,
     }
 }
 
@@ -183,36 +184,27 @@ export function DoQueEFeitoOMes({
                             apoio="vs seu normal"
                             className={cn(!comFixo && "@xl:col-span-2")}
                         >
-                        <ul className="grid grid-cols-1 gap-3">
+                        {/* Uma linha por grupo (C2): o nome com a data ou as vezes em cinza, a pílula contra o normal e o valor. */}
+                        <ul className="grid grid-cols-1 divide-y divide-border">
                             {variavel.grupos.map((g) => {
                                 const v = variacaoDoGrupo(g, despesa)
                                 return (
-                                    <li key={g.chave} className="flex items-center gap-3 text-sm">
-                                        <ItemContent>
-                                            <span className="flex min-w-0 items-center gap-1.5">
-                                                <span className="truncate">{g.nome}</span>
-                                                {g.novo ? (
-                                                    <Badge tone="warning" size="xs" className="shrink-0">
-                                                        novo
-                                                    </Badge>
-                                                ) : null}
+                                    <li key={g.chave} className="flex items-center gap-2.5 py-2.5 text-sm first:pt-0">
+                                        <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+                                            <span className="truncate">{g.nome}</span>
+                                            <span className="nums shrink-0 text-xs text-muted-foreground">
+                                                {g.vezes > 1 ? `${g.vezes}×` : g.ultimaYmd ? dataDoGrupo(g.ultimaYmd, g.vezes, yearMonth) : null}
                                             </span>
-                                            <span className="nums text-muted-foreground">
-                                                {g.ultimaYmd ? dataDoGrupo(g.ultimaYmd, g.vezes, yearMonth) : null}
-                                                {/* Empilhado (telefone), a variação desce para a linha da data; lado a lado, tem coluna. */}
-                                                <span className="@xl:hidden">
-                                                    {g.ultimaYmd ? " · " : null}
-                                                    <span className={v.classe}>{v.texto}</span>
-                                                </span>
-                                            </span>
-                                        </ItemContent>
-                                        <span className={cn("nums hidden shrink-0 whitespace-nowrap text-right text-xs @xl:inline", v.classe)}>{v.texto}</span>
+                                        </span>
+                                        <Badge tone={v.tone} size="sm" className="nums shrink-0" title={v.titulo}>
+                                            {v.texto}
+                                        </Badge>
                                         <span className="nums w-20 shrink-0 text-right font-mono font-semibold">{reaisInteiros(g.valor)}</span>
                                     </li>
                                 )
                             })}
                             {variavel.outros ? (
-                                <li className="flex items-center gap-3 text-sm">
+                                <li className="flex items-center gap-2.5 py-2.5 text-sm last:pb-0">
                                     <span className="min-w-0 flex-1 text-muted-foreground">
                                         Outros {variavel.outros.vezes} {variavel.outros.vezes === 1 ? "lançamento" : "lançamentos"}
                                     </span>
