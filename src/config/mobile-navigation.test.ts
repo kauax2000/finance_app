@@ -105,8 +105,7 @@ describe("o filtro do cabeçalho pela rota", () => {
             const lista =
                 fonte.includes("<BillsToolbar") ||
                 // A barra nova de Transações publica o filtro sempre (`usePageChromeFilter`).
-                fonte.includes("<TransacoesToolbar") ||
-                (fonte.includes("<TransactionsToolbar") && !fonte.includes("headerFilter={false}"))
+                fonte.includes("<TransacoesToolbar")
             // Dois filtros numa tela só: o cabeçalho tem um botão.
             expect(mes && lista, `${arquivo} publica mês e lista`).toBe(false)
             if (!mes && !lista) continue
