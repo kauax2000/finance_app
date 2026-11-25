@@ -365,7 +365,9 @@ describe("as ações numa cápsula", () => {
       expect(fonteDaTela, tela).not.toContain("mobileTriggerFullWidth")
     }
     // No detalhe da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra.
-    expect(fonte("src/components/categories/detail/category-embedded-transactions.tsx")).toContain("headerFilter={false}")
+    const lancamentosDaCategoria = fonte("src/components/categories/detail/category-embedded-transactions.tsx")
+    expect(lancamentosDaCategoria).toContain("<FilterBar")
+    expect(lancamentosDaCategoria).not.toContain("usePageChromeFilter(")
     // O filtro sai do cabeçalho quando a tela sai.
     expect(fonte("src/components/layout/page-chrome-provider.tsx")).toContain("return () => setFilter(null)")
   })

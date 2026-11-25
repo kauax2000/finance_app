@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
-import { supabase } from "@/lib/supabase"
+import { supabase, type Transaction } from "@/lib/supabase"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardMessage } from "@/components/ui/card"
@@ -77,6 +77,8 @@ import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
+import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
+import { useLancamentosDaCategoria } from "@/components/categories/detail/use-lancamentos-da-categoria"
 import {
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
@@ -227,7 +229,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             to: periodEnd,
         },
         initialFilterType: category?.type ?? "all",
-        skipListQuery: category == null || category.type === "expense",
+        // A lista é a fonte em memória (useLancamentosDaCategoria); o controlador fica com os diálogos.
+        skipListQuery: true,
         onWorkspaceDataChanged: () => {
             if (!currentWorkspaceId) return
             void invalidateWorkspaceData(queryClient, currentWorkspaceId, {
@@ -256,6 +259,25 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         txController.creditCards,
         yearMonth,
     ])
+
+    // Mesma chave do controlador: o cache já tem as faturas pagas, nada é buscado a mais.
+    const auxQuery = useTransactionsWorkspaceAuxQuery(currentWorkspaceId, Boolean(currentWorkspaceId))
+    const invoicePayments = React.useMemo(() => auxQuery.data?.invoicePayments ?? [], [auxQuery.data?.invoicePayments])
+    const linhasDoMes = React.useMemo(() => expenseMonthRows ?? txs, [expenseMonthRows, txs])
+    const { openTransactionDetail } = txController
+    const abrirDetalhe = React.useCallback(
+        (t: Transaction, o?: { editar?: boolean }) => openTransactionDetail(t, { edit: o?.editar }),
+        [openTransactionDetail],
+    )
+    const lancamentos = useLancamentosDaCategoria({
+        linhas: linhasDoMes,
+        tipo: category?.type ?? "expense",
+        yearMonth,
+        carregando: detailQuery.isPending,
+        categories: txController.categories,
+        invoicePayments,
+        abrirDetalhe,
+    })
 
     /** O orçamento do mês, o mesmo no editar e no diálogo do limite. Falhou: avisa e devolve `false`. */
     const salvarLimite = React.useCallback(async (): Promise<boolean> => {
@@ -539,7 +561,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const rolarParaLancamentos = React.useCallback(() => {
         document.getElementById(LANCAMENTOS_DO_MES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
     }, [])
-    const { setFilterDescriptionQuery, setSortKey, setSortDir, setPage } = txController
+    const { filtrarPorDescricao, ordenarPorValor } = lancamentos
     const { linhas: linhasDaCaixa, recarregar: recarregarCaixa } = caixa
     // Cada ação liga ao que a página já tem; os links (Previsão, conferir) o cartão resolve sozinho.
     const onAcaoDoInsight = React.useCallback(
@@ -551,13 +573,11 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     openLimitDialog(a.valor)
                     return
                 case "filtrar":
-                    setFilterDescriptionQuery(a.descricao)
+                    filtrarPorDescricao(a.descricao)
                     rolarParaLancamentos()
                     return
                 case "ordenar-por-valor":
-                    setSortKey("amount")
-                    setSortDir("desc")
-                    setPage(0)
+                    ordenarPorValor()
                     rolarParaLancamentos()
                     return
                 case "conta-a-pagar":
@@ -581,7 +601,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
             }
         },
-        [linhasDaCaixa, openLimitDialog, recarregarCaixa, rolarParaLancamentos, router, setFilterDescriptionQuery, setPage, setSortDir, setSortKey],
+        [linhasDaCaixa, openLimitDialog, recarregarCaixa, rolarParaLancamentos, router, filtrarPorDescricao, ordenarPorValor],
     )
     const categoriasDaRecorrencia = React.useMemo(
         () => txController.categories.filter((c) => c.type === "expense").map((c) => ({ id: c.id, name: c.name })),
@@ -744,7 +764,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             )}
                             aoLado={mesesNode}
                             onVer={(nome) => {
-                                txController.setFilterDescriptionQuery(nome)
+                                filtrarPorDescricao(nome)
                                 rolarParaLancamentos()
                             }}
                         />
@@ -776,11 +796,14 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
                 lancamentos={
                     <CategoryEmbeddedTransactions
+                        categoryId={categoryId}
+                        categoryName={category.name}
                         categoryType={category.type}
-                        controller={txController}
-                        expenseMonthRows={expenseMonthRows}
                         yearMonth={yearMonth}
-                        forma="tabela"
+                        linhas={linhasDoMes}
+                        carregando={detailQuery.isPending}
+                        controller={txController}
+                        lancamentos={lancamentos}
                     />
                 }
                 analise={
