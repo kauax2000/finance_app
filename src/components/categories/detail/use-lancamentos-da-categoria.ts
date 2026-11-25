@@ -2,21 +2,18 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
-import { useCamposDeFiltro } from "@/components/transactions/use-campos-de-filtro"
 import type { FonteDaTabela } from "@/components/transactions/transacoes-tabela"
-import type { FilterField } from "@/components/ui/filter-bar"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import type { Category, Transaction } from "@/lib/supabase"
 import { filtrarNaMemoria, ordenarNaMemoria, paginarNaMemoria } from "@/lib/transactions/filtrar-na-memoria"
 import type { EstadoDaLista } from "@/lib/transactions/filtros"
 import { PAGE_SIZE } from "@/lib/queries/fetch-transactions-list-page"
-import { camposDaCategoria, comDescricao, estadoDoMes, paginaValida } from "./lancamentos-da-categoria-regras"
+import { comDescricao, estadoDoMes, paginaValida } from "./lancamentos-da-categoria-regras"
 
 /** A fonte em memória da lista de lançamentos do mês da categoria (as linhas já vieram no pacote). */
 export function useLancamentosDaCategoria(o: {
     linhas: Transaction[]
-    tipo: "income" | "expense"
     yearMonth: string
     carregando: boolean
     categories: Category[]
@@ -24,15 +21,12 @@ export function useLancamentosDaCategoria(o: {
     abrirDetalhe: (t: Transaction, o?: { editar?: boolean }) => void
 }): {
     fonte: FonteDaTabela
-    campos: FilterField[]
     filtrarPorDescricao: (nome: string) => void
     ordenarPorValor: () => void
 } {
-    const { linhas, tipo, yearMonth, carregando, categories, invoicePayments, abrirDetalhe } = o
+    const { linhas, yearMonth, carregando, categories, invoicePayments, abrirDetalhe } = o
     const queryClient = useQueryClient()
     const { currentWorkspaceId } = useWorkspace()
-    const { campos: todos } = useCamposDeFiltro(tipo)
-    const campos = useMemo(() => camposDaCategoria(todos), [todos])
 
     // Troca de mês volta ao estado limpo (ajuste no render, sem efeito).
     const [estado, setEstadoBruto] = useState<{ mes: string; e: EstadoDaLista }>({ mes: yearMonth, e: estadoDoMes() })
@@ -86,5 +80,5 @@ export function useLancamentosDaCategoria(o: {
     )
     const ordenarPorValor = useCallback(() => setEstado({ sort: { key: "amount", dir: "desc" }, page: 1 }), [setEstado])
 
-    return { fonte, campos, filtrarPorDescricao, ordenarPorValor }
+    return { fonte, filtrarPorDescricao, ordenarPorValor }
 }

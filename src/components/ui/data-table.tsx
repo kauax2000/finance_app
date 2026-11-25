@@ -256,7 +256,7 @@ function TablePanelToolbar({
   return (
     <CardToolbar
       data-slot="table-panel-toolbar"
-      // A barra fica fora da moldura e ocupa a largura dela inteira, sem o recuo do cartão (pedido do dono, 07/11/2026).
+      // A barra fica fora da moldura e ocupa a largura dela inteira, sem o recuo do cartão (pedido do dono, 07/11/2026; reafirmado em 25/11/2026).
       // A barra e a tabela são blocos diferentes: o `mb` soma ao `gap` do grupo (inline) e dá `--space-block`, como em Categorias (21/11/2026).
       className={cn("mb-(--space-inline) min-h-7 px-0 py-0", className)}
       {...props}
@@ -2274,7 +2274,8 @@ function BarraDaTabela({ config }: { config: DataTableToolbarConfig }) {
       {config.facets?.map((cid) => (
         <DataTableFacetFilter key={cid} column={cid} />
       ))}
-      <div className="ms-auto flex items-center gap-1">
+      {/* Vazio, some: senão o `gap` dele empurra a barra 8px para dentro só na direita. */}
+      <div className="ms-auto flex items-center gap-1 empty:hidden">
         {config.end}
         {config.export ? <DataTableExport /> : null}
         {config.view ? <DataTableViewOptions /> : null}

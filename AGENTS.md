@@ -800,8 +800,8 @@ declaração de `background-color` no trilho).
   telas que o têm (Painel, Categorias, detalhe da categoria) mora no cabeçalho do
   telefone, o calendário colado à lupa que abre a grade de meses
   (`useMonthInHeader`, rodada 334); no desktop fica na barra da tela: o mês é uma pílula só (`MonthNavPicker`), com ‹ e › terciárias dentro dela (o fundo só no cursor) e o nome no centro, sem chevron, que abre a grade (19/11/2026). No detalhe
-  da categoria o mês leva o cabeçalho, e o filtro dos lançamentos é o `FilterBar` do próprio bloco, na barra dele
-  (`filtroNaBarra` na `TransacoesTabela`), e não vai ao cabeçalho.
+  da categoria o mês leva o cabeçalho, e os lançamentos não têm filtro (25/11/2026): a barra do bloco é uma linha só, o
+  `PageSectionTitle` "Lançamentos" com a contagem em cinza (o `count`, sem `Badge`) e "Ver em Transações"; só o "Ver <grupo>" da leitura filtra, com "Ver todos" para tirar.
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
   `CardToolbar`, `CardHeader`, `CardContent`, `CardFooter`, `CardNote`. O
   painel do app é `<Card padding="none">`; nada de `border-b bg-muted/30`
@@ -1681,7 +1681,7 @@ declaração de `background-color` no trilho).
   do telefone** (`meta.mobile`; abaixo do `md`, sem linhas, o vazio sai do cartão e da tabela; `emptyPhone` troca o conteúdo do telefone; `mobileRow="compact"` tira a caixa e o ⋯ da linha
   até haver seleção, e as ações vão ao toque longo — Transações usa; `mobileRow="flush"` é o `full` raso: sem a caixa de `selected` e no degrau `sm`, para a lista em que marcar é "esta entra" — o Ver todos do Importar; `mobileGroups="inset"` é a lista agrupada do iOS: um cartão por grupo do `groupBy`, com o `label` e o `aside` dele por fora, acima do cartão e preso sob a barra do topo: o dia de cima não sobe, gira no próprio eixo e some de uma vez (transição de 200ms, sem seguir a rolagem) quando o próximo encosta, e o próximo passa por cima (`useTrocaDoDia` marca `data-saindo`; 24px de vão entre os dias), o fio começando no texto e, abaixo do `md`, sem a moldura do `TablePanel`; sem grupo, um cartão só — Transações usa; o padrão `band` é a faixa dentro da lista; `mobileSwipe` (desligado por padrão) faz a linha do gêmeo deslizar para a esquerda e revelar as `rowActions` visíveis atrás, à direita (círculos de 44 só com ícone, 8px entre eles e da borda — `larguraDaFaixa` —, sobre o fundo da página (a linha solta anda com os cantos retos, e o fio fica parado, como no Mail do iOS 26), com elástico além da faixa e o balanço do app ao abrir, o `swipeIcon` de `20/solid` (sem ele, o `icon` nos 16), o nome só no `aria-label`, crescendo e aparecendo com o arraste por `--deslize` (`progressoDoDeslize`); Excluir em `bg-destructive` cheio com `text-destructive-foreground`, as outras em `bg-secondary`): só o dedo (`pointerType === "touch"`), trava de direção de 8px (`travarDirecao`, `lib/deslize`), abre passada a metade das ações (`assentarDeslize`) e assenta na `MOLA`; uma aberta por vez, e o toque fora ou a rolagem fecha; sem deslize total, e o toque e o toque longo seguem — Transações usa; `meta.mobileWhen(row)` tira a célula da legenda do gêmeo naquela linha, com o " · " antes dela — a receita sem forma de pagar, rodada 408; `meta.desktop: false` é a coluna só do gêmeo, que a tabela não desenha nem conta no `colSpan` do grupo — nunca `cellClassName: "hidden"`, rodada 409), teclado, URL, virtualização, CSV e edição
   (`role="grid"`); dados do servidor, `manual`. A barra e o rodapé ficam **fora**
-  da moldura (`toolbar`, `footer`). `revealKey` (a chave dos filtros de quem
+  da moldura (`toolbar`, `footer`). A barra fica **rente dos dois lados** da moldura (`TablePanelToolbar px-0`; o grupo da direita vazio some, para não sobrar o `gap` dele): **botão se alinha pela caixa, não pelo texto** (o terciário também). `revealKey` (a chave dos filtros de quem
   chama) refaz a lista em cascata quando muda depois da montagem e a busca assenta:
   o `<tbody>` remonta com a `table-reveal`, o gêmeo veste a `list-reveal` uma vez
   (rodada 407, `filtro-refaz.test.ts`). Peça de lugar certo entra por prop, nunca
@@ -1880,7 +1880,7 @@ declaração de `background-color` no trilho).
   iOS: 34 no telefone, qualquer que seja o degrau, 8px mais perto da barra, e
   entra nela subindo 6px, do desfoque (rodada 357). `PageHeaderMedia`,
   `PageHeaderStat` (**nenhuma tela escreve `dt`/`dd` à mão**), `PageHeaderNav`,
-  `PageHeaderSkeleton`; `collapse`, `PageHeaderActions overflow="menu"`, o
+  `PageHeaderSkeleton` (`back`, `media` e `actions` por forma: `icon`, `sm` 112, `md` 160, `lg` 216 — o osso tem a largura do botão real, 25/11/2026); `collapse`, `PageHeaderActions overflow="menu"`, o
   voltar pelo histórico (`history={false}`; ligá-lo no `app-header` é mudança
   de jornada), `PageHeaderTitle truncate`. No desktop, o `back` e a `media` do `PageHeaderTitleRow` sobem com o título para a barra (`[‹] [mídia a 24] nome`; o voltar inerte até subir), e no telefone não. O telefone dele é um primeiro
   desenho.

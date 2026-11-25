@@ -1,4 +1,4 @@
-import type { FilterField, FilterValue } from "@/components/ui/filter-bar"
+import type { FilterValue } from "@/components/ui/filter-bar"
 import { monthRangeYmd } from "@/lib/period-range"
 import { escreverFiltrosNaUrl, type EstadoDaLista } from "@/lib/transactions/filtros"
 import type { Category, Transaction } from "@/lib/supabase"
@@ -11,11 +11,6 @@ export function estadoDoMes(): EstadoDaLista {
 /** "Ver compras" de uma descrição: troca o filtro de descrição e mantém os outros. */
 export function comDescricao(filtros: FilterValue[], nome: string): FilterValue[] {
     return [...filtros.filter((f) => f.field !== "descricao"), { field: "descricao", operator: "is", values: [nome] }]
-}
-
-/** A categoria e o período já são da tela: os dois campos não se oferecem. */
-export function camposDaCategoria(campos: FilterField[]): FilterField[] {
-    return campos.filter((c) => c.id !== "categoria" && c.id !== "periodo")
 }
 
 /** O "Ver em Transações": o mesmo formato do link de "Quem gastou" (JORNADAS, seção 9). */

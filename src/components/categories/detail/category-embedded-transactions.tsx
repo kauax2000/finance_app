@@ -1,11 +1,10 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { EmptyState, EmptyStateActions, EmptyStateGhost, EmptyStateTitle } from "@/components/ui/empty-state"
 import { Button } from "@/components/ui/button"
-import { FilterBar } from "@/components/ui/filter-bar"
+import { PageSection, PageSectionTitle } from "@/components/ui/page-section"
 import { useWorkspace } from "@/components/workspace-provider"
 import type { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
 import { TransacoesTabela } from "@/components/transactions/transacoes-tabela"
@@ -13,6 +12,7 @@ import { TransactionFormDialog } from "@/components/transactions/transaction-for
 import { ExcluirLancamentosDialog } from "@/components/transactions/excluir-lancamentos-dialog"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { ROUTES } from "@/config/navigation"
+import { numberBR } from "@/lib/formatters"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import type { Transaction } from "@/lib/supabase"
 import type { useLancamentosDaCategoria } from "./use-lancamentos-da-categoria"
@@ -45,28 +45,22 @@ export function CategoryEmbeddedTransactions({
     lancamentos: ReturnType<typeof useLancamentosDaCategoria>
 }) {
     const c = controller
-    const { fonte, campos } = lancamentos
+    const { fonte } = lancamentos
     const { currentWorkspaceId, currentWorkspace } = useWorkspace()
     const membros = useMemberDirectoryQuery(currentWorkspaceId).data ?? []
-    const raizDosFiltros = React.useRef<HTMLDivElement>(null)
     const { pendingDelete } = c
+    const total = fonte.pagina.totalCount
+    const porNome = fonte.estado.filtros.find((f) => f.field === "descricao")?.values[0]
 
     return (
-        <section
-            id={LANCAMENTOS_DO_MES_ID}
-            className="min-w-0 max-w-full scroll-mt-(--top-bar-bottom)"
-            aria-label="Lançamentos do mês"
-        >
+        // A seção é nomeada pelo título ("Lançamentos"), como os outros blocos da página.
+        <PageSection id={LANCAMENTOS_DO_MES_ID} className="min-w-0 max-w-full scroll-mt-(--top-bar-bottom)">
             <TransacoesTabela
                 tela={fonte}
                 id="lancamentos-da-categoria"
                 ariaLabel={`Lançamentos de ${categoryName}`}
                 semCategoria
                 filtroNaBarra
-                onEditarFiltros={() =>
-                    // shortcut: clica no "+ Filtro" pelo data-slot (o mesmo da barra de Transações); trocar por uma prop open quando o FilterBar ganhar uma
-                    raizDosFiltros.current?.querySelector<HTMLButtonElement>("[data-slot=filter-bar-add]")?.click()
-                }
                 membros={membros}
                 divide={currentWorkspace?.split_mode === "split"}
                 onEditar={(t) => c.openTransactionDetail(t, { edit: true })}
@@ -75,36 +69,42 @@ export function CategoryEmbeddedTransactions({
                     c.setPendingDelete(uma ? { mode: "single", transaction: uma } : { mode: "bulk", ids, rows: linhas })
                 }}
                 barra={
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Lançamentos do mês
-                        </p>
-                        <div className="flex min-w-0 items-center gap-2">
-                            <div ref={raizDosFiltros} className="min-w-0 flex-1">
-                                <FilterBar
-                                    fields={campos}
-                                    value={fonte.estado.filtros}
-                                    onValueChange={(filtros) => fonte.setEstado({ filtros })}
-                                    count={carregando ? undefined : fonte.pagina.totalCount}
-                                    noun={["lançamento", "lançamentos"]}
-                                    overflow="menu"
-                                    disabled={carregando}
-                                />
-                            </div>
-                            <Button asChild variant="secondary" className="shrink-0">
-                                <Link
-                                    href={hrefDeTransacoes({
-                                        categoryId,
-                                        yearMonth,
-                                        tipo: categoryType,
-                                        filtros: fonte.estado.filtros,
-                                    })}
-                                >
-                                    <ArrowTopRightOnSquareIcon aria-hidden />
-                                    Ver em Transações
-                                </Link>
+                    // Uma linha, como "Últimos 6 meses" e "Quem gastou": o título com a contagem, e a ação na ponta.
+                    // Sem barra de filtro: a página já fixa categoria e mês. O filtro por nome só chega pelo
+                    // "Ver <grupo>" da leitura, e o "Ver todos" o desfaz.
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <PageSectionTitle
+                            className="min-w-0 flex-1 truncate"
+                            count={
+                                carregando ? null : (
+                                    // O número em cinza, a forma padrão do título de seção (o selo cheio pesava como botão).
+                                    <span role="status" aria-label={`${numberBR(total)} ${total === 1 ? "lançamento" : "lançamentos"}`}>
+                                        {numberBR(total)}
+                                    </span>
+                                )
+                            }
+                        >
+                            Lançamentos
+                            {porNome ? <span className="font-normal text-muted-foreground"> de &quot;{porNome}&quot;</span> : null}
+                        </PageSectionTitle>
+                        {fonte.estado.filtros.length > 0 ? (
+                            <Button type="button" variant="tertiary" className="shrink-0" onClick={() => fonte.setEstado({ filtros: [] })}>
+                                Ver todos
                             </Button>
-                        </div>
+                        ) : null}
+                        <Button asChild variant="tertiary" className="shrink-0">
+                            <Link
+                                href={hrefDeTransacoes({
+                                    categoryId,
+                                    yearMonth,
+                                    tipo: categoryType,
+                                    filtros: fonte.estado.filtros,
+                                })}
+                            >
+                                <ArrowTopRightOnSquareIcon aria-hidden />
+                                Ver em Transações
+                            </Link>
+                        </Button>
                     </div>
                 }
                 vazio={
@@ -179,6 +179,6 @@ export function CategoryEmbeddedTransactions({
                 }}
                 onConfirm={() => void c.confirmDelete()}
             />
-        </section>
+        </PageSection>
     )
 }

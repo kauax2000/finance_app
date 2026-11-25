@@ -718,6 +718,11 @@ describe("escada do Table", () => {
     // A barra ocupa a largura inteira da moldura, sem recuo lateral; tinta, não.
     // Sem recuo vertical, e a altura do botão de ação (`sm`): a seleção não faz a barra pular.
     expect(barra).toContain('cn("mb-(--space-inline) min-h-7 px-0 py-0", className)')
+    // O grupo da direita vazio não soma `gap` (a barra fica rente dos dois lados); o botão se alinha pela caixa.
+    const dt = semComentarios(DT_SRC)
+    const barraDaTabela = dt.slice(dt.indexOf("function BarraDaTabela"), dt.indexOf("function DataTableSearch"))
+    expect(barraDaTabela).toContain("empty:hidden")
+    expect(barraDaTabela).not.toContain(":last-child]:-me-")
     expect(barra).not.toMatch(/\bbg-/)
     expect(barra).not.toMatch(/border-border|border-b(?:\s|")/)
   })

@@ -275,7 +275,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     )
     const lancamentos = useLancamentosDaCategoria({
         linhas: linhasDoMes,
-        tipo: category?.type ?? "expense",
         yearMonth,
         carregando: detailQuery.isPending,
         categories: txController.categories,

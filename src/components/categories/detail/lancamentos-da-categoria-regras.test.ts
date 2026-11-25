@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import type { FilterField, FilterValue } from "@/components/ui/filter-bar"
+import type { FilterValue } from "@/components/ui/filter-bar"
 import type { Category, Transaction } from "@/lib/supabase"
-import { camposDaCategoria, comACategoria, comDescricao, estadoDoMes, hrefDeTransacoes, paginaValida } from "./lancamentos-da-categoria-regras"
+import { comACategoria, comDescricao, estadoDoMes, hrefDeTransacoes, paginaValida } from "./lancamentos-da-categoria-regras"
 
 describe("estadoDoMes", () => {
     it("abre limpo, da data mais recente", () => {
@@ -14,13 +14,6 @@ describe("comDescricao", () => {
         const valor: FilterValue = { field: "valor", operator: "gte", values: ["10"] }
         const antes: FilterValue[] = [{ field: "descricao", operator: "is", values: ["Velha"] }, valor]
         expect(comDescricao(antes, "Mercado")).toEqual([valor, { field: "descricao", operator: "is", values: ["Mercado"] }])
-    })
-})
-
-describe("camposDaCategoria", () => {
-    it("tira categoria e período", () => {
-        const campos = [{ id: "categoria" }, { id: "periodo" }, { id: "valor" }] as FilterField[]
-        expect(camposDaCategoria(campos).map((c) => c.id)).toEqual(["valor"])
     })
 })
 
