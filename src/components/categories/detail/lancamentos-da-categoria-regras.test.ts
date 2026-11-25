@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { FilterField, FilterValue } from "@/components/ui/filter-bar"
-import { camposDaCategoria, comDescricao, estadoDoMes, hrefDeTransacoes } from "./lancamentos-da-categoria-regras"
+import { camposDaCategoria, comDescricao, estadoDoMes, hrefDeTransacoes, paginaValida } from "./lancamentos-da-categoria-regras"
 
 describe("estadoDoMes", () => {
     it("abre limpo, da data mais recente", () => {
@@ -36,5 +36,13 @@ describe("hrefDeTransacoes", () => {
             hrefDeTransacoes({ ...base, tipo: "income", yearMonth: "2026-11", filtros: [{ field: "descricao", operator: "is", values: ["X"] }] }),
         )
         expect(href).toMatch(/^\/transactions\?type=income&f=periodo:.*,categoria:is:c1,descricao:is:X$/)
+    })
+})
+
+describe("paginaValida", () => {
+    it("mantém a página que existe e volta à última quando a lista encolhe", () => {
+        expect(paginaValida(2, 60, 50)).toBe(2)
+        expect(paginaValida(2, 50, 50)).toBe(1)
+        expect(paginaValida(3, 0, 50)).toBe(1)
     })
 })

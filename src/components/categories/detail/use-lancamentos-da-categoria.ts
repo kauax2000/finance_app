@@ -10,7 +10,8 @@ import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data
 import type { Category, Transaction } from "@/lib/supabase"
 import { filtrarNaMemoria, ordenarNaMemoria, paginarNaMemoria } from "@/lib/transactions/filtrar-na-memoria"
 import type { EstadoDaLista } from "@/lib/transactions/filtros"
-import { camposDaCategoria, comDescricao, estadoDoMes } from "./lancamentos-da-categoria-regras"
+import { PAGE_SIZE } from "@/lib/queries/fetch-transactions-list-page"
+import { camposDaCategoria, comDescricao, estadoDoMes, paginaValida } from "./lancamentos-da-categoria-regras"
 
 /** A fonte em memória da lista de lançamentos do mês da categoria (as linhas já vieram no pacote). */
 export function useLancamentosDaCategoria(o: {
@@ -35,6 +36,8 @@ export function useLancamentosDaCategoria(o: {
 
     // Troca de mês volta ao estado limpo (ajuste no render, sem efeito).
     const [estado, setEstadoBruto] = useState<{ mes: string; e: EstadoDaLista }>({ mes: yearMonth, e: estadoDoMes() })
+    // Ajuste no render: voltar a um mês (A -> B -> A) não traz os filtros antigos de volta.
+    if (estado.mes !== yearMonth) setEstadoBruto({ mes: yearMonth, e: estadoDoMes() })
     const atual = estado.mes === yearMonth ? estado.e : estadoDoMes()
     const setEstado = useCallback(
         (parcial: Partial<EstadoDaLista>) =>
@@ -48,35 +51,40 @@ export function useLancamentosDaCategoria(o: {
     )
 
     const filtradas = useMemo(() => ordenarNaMemoria(filtrarNaMemoria(linhas, atual), atual.sort), [linhas, atual])
-    const transactions = useMemo(() => paginarNaMemoria(filtradas, atual.page), [filtradas, atual.page])
+    const page = paginaValida(atual.page, filtradas.length, PAGE_SIZE)
+    const transactions = useMemo(() => paginarNaMemoria(filtradas, page), [filtradas, page])
 
     const invalidar = useCallback(async () => {
         if (!currentWorkspaceId) return
         await invalidateWorkspaceData(queryClient, currentWorkspaceId, { domains: ["transactions"] })
     }, [queryClient, currentWorkspaceId])
 
-    const fonte: FonteDaTabela = {
-        estado: atual,
-        setEstado,
-        pagina: {
-            transactions,
-            totalCount: filtradas.length,
-            isLoading: carregando,
-            isFetching: false,
-            error: null,
-            refetch: invalidar as unknown as FonteDaTabela["pagina"]["refetch"],
-        },
-        // O vazio do mês é do bloco, não da tabela.
-        workspaceAux: { invoicePayments, workspaceHasTransactions: true },
-        categories,
-        detalhe: { abrir: abrirDetalhe },
-        invalidar,
-    }
+    const fonte = useMemo<FonteDaTabela>(
+        () => ({
+            estado: page === atual.page ? atual : { ...atual, page },
+            setEstado,
+            pagina: {
+                transactions,
+                totalCount: filtradas.length,
+                isLoading: carregando,
+                isFetching: false,
+                error: null,
+                refetch: invalidar as unknown as FonteDaTabela["pagina"]["refetch"],
+            },
+            // O vazio do mês é do bloco, não da tabela.
+            workspaceAux: { invoicePayments, workspaceHasTransactions: true },
+            categories,
+            detalhe: { abrir: abrirDetalhe },
+            invalidar,
+        }),
+        [atual, page, setEstado, transactions, filtradas.length, carregando, invalidar, invoicePayments, categories, abrirDetalhe],
+    )
 
-    return {
-        fonte,
-        campos,
-        filtrarPorDescricao: (nome) => setEstado({ filtros: comDescricao(atual.filtros, nome), page: 1 }),
-        ordenarPorValor: () => setEstado({ sort: { key: "amount", dir: "desc" }, page: 1 }),
-    }
+    const filtrarPorDescricao = useCallback(
+        (nome: string) => setEstado({ filtros: comDescricao(atual.filtros, nome), page: 1 }),
+        [setEstado, atual.filtros],
+    )
+    const ordenarPorValor = useCallback(() => setEstado({ sort: { key: "amount", dir: "desc" }, page: 1 }), [setEstado])
+
+    return { fonte, campos, filtrarPorDescricao, ordenarPorValor }
 }

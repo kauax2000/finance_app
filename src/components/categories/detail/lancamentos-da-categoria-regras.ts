@@ -34,3 +34,8 @@ export function hrefDeTransacoes(o: {
     const qs = escreverFiltrosNaUrl({ ...estadoDoMes(), type: o.tipo, filtros }, new URLSearchParams())
     return `/transactions?${qs.toString()}`
 }
+
+/** A página que existe: com menos linhas (excluiu a última da página 2), volta à última. */
+export function paginaValida(page: number, total: number, tamanho: number): number {
+    return Math.min(page, Math.max(1, Math.ceil(total / tamanho)))
+}
