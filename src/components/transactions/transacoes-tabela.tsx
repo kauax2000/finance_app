@@ -109,6 +109,11 @@ export type TransacoesTabelaProps = {
     filtroNaBarra?: boolean
     /** O "Editar filtros" do vazio; vence o filtro que o cabeçalho publicou. */
     onEditarFiltros?: () => void
+    /**
+     * A contagem no rodapé ("N lançamentos", com uma página só). `false` quando a barra
+     * de cima já a mostra (o título do detalhe da categoria); a paginação fica.
+     */
+    contagemNoRodape?: boolean
     /** O vazio de quem não tem filtro nem busca. */
     vazio?: React.ReactNode
     membros: MemberDirectoryRow[]
@@ -431,6 +436,7 @@ export function TransacoesTabela({
     semCategoria = false,
     filtroNaBarra = false,
     onEditarFiltros,
+    contagemNoRodape = true,
     vazio: vazioDeFora,
     membros,
     divide = false,
@@ -696,7 +702,7 @@ export function TransacoesTabela({
                         ? { message: "Não foi possível carregar os lançamentos.", onRetry: () => pagina.refetch() }
                         : null
                 }
-                countLabel={(n) => lancamentos(n)}
+                countLabel={contagemNoRodape ? (n) => lancamentos(n) : undefined}
                 stickyHeader
                 empty={vazio}
                 emptyPhone={emptyPhone}

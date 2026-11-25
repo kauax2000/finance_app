@@ -61,6 +61,8 @@ export function CategoryEmbeddedTransactions({
                 ariaLabel={`Lançamentos de ${categoryName}`}
                 semCategoria
                 filtroNaBarra
+                // A contagem já está no título "Lançamentos".
+                contagemNoRodape={false}
                 membros={membros}
                 divide={currentWorkspace?.split_mode === "split"}
                 onEditar={(t) => c.openTransactionDetail(t, { edit: true })}
