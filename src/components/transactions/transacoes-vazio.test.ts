@@ -15,7 +15,7 @@ describe("o vazio de Transações no telefone", () => {
         expect(src).toMatch(/variant="primary"[\s\S]{0,200}Limpar filtros/)
     })
     it("sem resultado por filtro, a barra das abas some no telefone", () => {
-        expect(src).toMatch(/"contents", vazioPorFiltro && "max-md:hidden"/)
+        expect(src).toMatch(/"contents", vazioPorFiltro && !filtroNaBarra && "max-md:hidden"/)
     })
     it("o embrulho da barra é sempre o mesmo nó: trocá-lo remontava o FilterBar e fechava a gaveta a cada letra", () => {
         expect(src).not.toMatch(/vazioPorFiltro \? <div/)

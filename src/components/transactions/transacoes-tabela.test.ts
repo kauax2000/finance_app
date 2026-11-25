@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import { PROJECTED_TRANSACTION_ID_PREFIX } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
 import { signedCurrencyBRL } from "@/lib/formatters"
+import type { FonteDaTabela } from "./transacoes-tabela"
+import type { TelaDeTransacoes } from "./use-transacoes-da-tela"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     diaLocalDe,
@@ -70,7 +72,7 @@ describe("fonte da tabela", () => {
     it("o lote tem Categorizar e Marcar conferidos; a linha, Confirmar", () => {
         expect(fonte).toMatch(/bulkActions[\s\S]*"Categorizar"[\s\S]*"Marcar conferidos"/)
         expect(fonte).toContain('label: "Confirmar"')
-        expect(fonte).toContain('id="transactions"')
+        expect(fonte).toContain('id = "transactions"')
         expect(fonte).toContain("{barra}")
         expect(fonte).toMatch(/toolbar=\{\{ start: .*\{barra\}.* \}\}/)
         expect(fonte).toContain("Selecione só despesas ou só receitas")
@@ -95,5 +97,27 @@ describe("o total do dia de um dia só de previstas", () => {
     it("não existe", async () => {
         const { totalDoDiaEmTexto } = await import("./transacoes-tabela-regras")
         expect(totalDoDiaEmTexto([])).toBeNull()
+    })
+})
+
+describe("o contrato estreito da tabela", () => {
+    const fonte = () => semComentarios(lerFonte("src/components/transactions/transacoes-tabela.tsx"))
+    it("a tabela lê a FonteDaTabela, não a TelaDeTransacoes", () => {
+        expect(fonte()).toMatch(/export type FonteDaTabela/)
+        expect(fonte()).not.toMatch(/tela:\s*TelaDeTransacoes/)
+        expectTypeOf<TelaDeTransacoes>().toMatchTypeOf<FonteDaTabela>()
+    })
+    it("filtroNaBarra segura a barra à vista no vazio por filtro", () => {
+        expect(fonte()).toMatch(/vazioPorFiltro && !filtroNaBarra && "max-md:hidden"/)
+    })
+    it("onEditarFiltros vence o filtro publicado no cabeçalho", () => {
+        expect(fonte()).toMatch(/onEditarFiltros \?\? \(\(\) => filtroPublicado\?\.onOpen\?\.\(\)\)/)
+    })
+    it("vazio, semCategoria, id e ariaLabel entram por prop", () => {
+        expect(fonte()).toMatch(/id=\{id\}/)
+        expect(fonte()).toMatch(/aria-label=\{ariaLabel\}/)
+        expect(fonte()).toMatch(/semCategoria/)
+        expect(fonte()).toMatch(/estado\.filtros\.length === 0 && !estado\.q && vazioDeFora/)
+        expect(fonte()).toMatch(/tela\.pedidosDeAbertura \?/)
     })
 })

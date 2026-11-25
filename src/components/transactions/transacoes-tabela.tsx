@@ -81,8 +81,35 @@ import { formatDayHeadingPtBr, formatTransactionDayPtBr, groupByLocalDay } from 
 import { marcarConferidos } from "@/lib/transactions/mutations"
 import { cn, getInitials } from "@/lib/utils"
 
+/**
+ * O que a tabela lê de quem a alimenta. A página de Transações passa a `TelaDeTransacoes` inteira (serve sem
+ * cast); outra tela monta isto de linhas em memória. Os tipos saem do controlador, para não divergirem.
+ */
+export type FonteDaTabela = {
+    estado: TelaDeTransacoes["estado"]
+    setEstado: TelaDeTransacoes["setEstado"]
+    pagina: TelaDeTransacoes["pagina"]
+    workspaceAux?: Pick<NonNullable<TelaDeTransacoes["workspaceAux"]>, "invoicePayments" | "workspaceHasTransactions"> | null
+    categories: TelaDeTransacoes["categories"]
+    detalhe: Pick<TelaDeTransacoes["detalhe"], "abrir">
+    invalidar: TelaDeTransacoes["invalidar"]
+    /** Sem ele, o vazio "Seu primeiro lançamento" não oferece o "Importar extrato". */
+    pedidosDeAbertura?: Pick<TelaDeTransacoes["pedidosDeAbertura"], "setImportar">
+}
+
 export type TransacoesTabelaProps = {
-    tela: TelaDeTransacoes
+    tela: FonteDaTabela
+    /** O `id` e o nome acessível da tabela (padrão: a de Transações). */
+    id?: string
+    ariaLabel?: string
+    /** Tira a coluna só-telefone da categoria (a tela já é de uma categoria). */
+    semCategoria?: boolean
+    /** A barra fica à vista no vazio por filtro (no padrão ela some no telefone). */
+    filtroNaBarra?: boolean
+    /** O "Editar filtros" do vazio; vence o filtro que o cabeçalho publicou. */
+    onEditarFiltros?: () => void
+    /** O vazio de quem não tem filtro nem busca. */
+    vazio?: React.ReactNode
     membros: MemberDirectoryRow[]
     /** Carteira `split`: o avatar é de quem pagou. */
     divide?: boolean
@@ -396,6 +423,12 @@ function MenuDaLinha({
 /** A tabela da página de Transações (spec §6): por dia, com as ações da linha e do lote. */
 export function TransacoesTabela({
     tela,
+    id = "transactions",
+    ariaLabel = "Transações",
+    semCategoria = false,
+    filtroNaBarra = false,
+    onEditarFiltros,
+    vazio: vazioDeFora,
     membros,
     divide = false,
     onEditar,
@@ -425,8 +458,8 @@ export function TransacoesTabela({
         [transacoes],
     )
     const columns = React.useMemo(
-        () => colunas(membros, divide, faturasPagas, pagamentoUnico),
-        [membros, divide, faturasPagas, pagamentoUnico],
+        () => colunas(membros, divide, faturasPagas, pagamentoUnico).filter((c) => !(semCategoria && c.id === "category")),
+        [membros, divide, faturasPagas, pagamentoUnico, semCategoria],
     )
 
     // Só conta o que está na tela: uma seleção de antes do filtro não leva linhas
@@ -571,7 +604,7 @@ export function TransacoesTabela({
                 <Button type="button" variant="primary" onClick={() => setEstado({ filtros: [], q: "" })}>
                     Limpar filtros
                 </Button>
-                <Button type="button" variant="tertiary" onClick={() => filtroPublicado?.onOpen?.()}>
+                <Button type="button" variant="tertiary" onClick={onEditarFiltros ?? (() => filtroPublicado?.onOpen?.())}>
                     Editar filtros
                 </Button>
             </EmptyStateActions>
@@ -588,8 +621,8 @@ export function TransacoesTabela({
                         Nova transação
                     </Button>
                     {/* O convidado não importa (spec §12). */}
-                    {convidado ? null : (
-                        <Button type="button" variant="tertiary" onClick={() => tela.pedidosDeAbertura.setImportar(true)}>
+                    {convidado || !tela.pedidosDeAbertura ? null : (
+                        <Button type="button" variant="tertiary" onClick={() => tela.pedidosDeAbertura?.setImportar(true)}>
                             Importar extrato
                         </Button>
                     )}
@@ -609,6 +642,8 @@ export function TransacoesTabela({
                     </Button>
                 </EmptyStateActions>
             </EmptyState>
+        ) : estado.filtros.length === 0 && !estado.q && vazioDeFora ? (
+            vazioDeFora
         ) : (
             <EmptyState variant="plain">
                 <EmptyStateIcon variant="stack">
@@ -629,8 +664,8 @@ export function TransacoesTabela({
         // Uma prévia aberta aquece as outras: descer pelos chips abre a próxima sem esperar.
         <HoverCardGroup>
             <DataTable
-                id="transactions"
-                aria-label="Transações"
+                id={id}
+                aria-label={ariaLabel}
                 columns={columns}
                 data={transacoes}
                 getRowId={(t) => t.id}
@@ -639,7 +674,7 @@ export function TransacoesTabela({
                 // Sem o "Exibir": as colunas são uma só, a padrão.
                 // O embrulho é sempre o mesmo nó (só a classe liga): trocar `barra` por `<div>{barra}</div>` remontava o
                 // FilterBar a cada busca (carregando ↔ vazio) e fechava a gaveta do filtro a cada letra.
-                toolbar={{ start: <div className={cn("contents", vazioPorFiltro && "max-md:hidden")}>{barra}</div> }}
+                toolbar={{ start: <div className={cn("contents", vazioPorFiltro && !filtroNaBarra && "max-md:hidden")}>{barra}</div> }}
                 manual={{ rowCount: pagina.totalCount, sorting: true, pagination: true }}
                 sorting={[{ id: estado.sort.key, desc: estado.sort.dir === "desc" }]}
                 onSortingChange={(next) => {

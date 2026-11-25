@@ -65,7 +65,7 @@ describe("a página de Transações (redesenho, Tarefa 12)", () => {
         const tabela = fonte("src/components/transactions/transacoes-tabela.tsx")
         expect(tabela).toContain("const { papel, currentWorkspaceId } = useWorkspace()")
         expect(tabela).toContain('const convidado = papel === "guest"')
-        expect(tabela).toMatch(/\{convidado \? null : \(\s*<Button[\s\S]{0,140}?setImportar\(true\)\}>\s*Importar extrato/)
+        expect(tabela).toMatch(/\{convidado \|\| !tela\.pedidosDeAbertura \? null : \(\s*<Button[\s\S]{0,140}?setImportar\(true\)\}>\s*Importar extrato/)
         const aviso = fonte("src/components/transactions/aviso-a-conferir.tsx")
         expect(aviso).toContain("podeConfirmarTodos = true")
         expect(aviso).toMatch(/\{ativo && !podeConfirmarTodos \? null : \(\s*<AlertActions/)
