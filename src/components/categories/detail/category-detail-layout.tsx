@@ -29,7 +29,7 @@ export function CategoryDetailLayout({
     quem: ReactNode
     insight: ReactNode
     lancamentos: ReactNode
-    /** O link "Ver a análise de … no Painel"; null sem ele. */
+    /** O cartão "Entenda … em <mês>", que abre a análise no Painel; null sem ele. */
     analise: ReactNode
 }) {
     return (
@@ -53,7 +53,7 @@ export function CategoryDetailLayout({
                 </>
             )}
             {lancamentos}
-            {analise ? <div className="flex justify-center">{analise}</div> : null}
+            {analise}
         </div>
     )
 }

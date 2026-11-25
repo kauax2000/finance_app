@@ -71,7 +71,8 @@ export function CategoryDetailSkeleton() {
                     <TransacoesTabelaSkeleton dias={[2, 3]} />
                 </div>
 
-                <Skeleton shape="text" className="mx-auto w-60" />
+                {/* O cartão "Entenda … em <mês>", uma linha só: 58 no desktop, 70 no telefone (botão de 44). */}
+                <Skeleton shape="surface" className="h-14.5 max-md:h-17.5" />
             </div>
         </SkeletonGroup>
     )

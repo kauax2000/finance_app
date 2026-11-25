@@ -19,7 +19,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
-import { BanknotesIcon, ChevronRightIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { BanknotesIcon, ChevronRightIcon, EllipsisHorizontalIcon, PencilIcon, PresentationChartLineIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -81,11 +81,13 @@ import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions
 import { useLancamentosDaCategoria } from "@/components/categories/detail/use-lancamentos-da-categoria"
 import { comACategoria } from "@/components/categories/detail/lancamentos-da-categoria-regras"
 import {
+    corDaCategoria,
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
     tileColorFor,
     tileVividColor,
 } from "@/lib/tile-palette"
+import { nomeDoMes } from "@/components/categories/detail/regua-do-mes-contas"
 
 export default function CategoryDetailPageClient({ categoryId }: { categoryId: string }) {
     const queryClient = useQueryClient()
@@ -808,13 +810,39 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 }
                 analise={
                     // A análise da carteira mora no Painel: a ponte abre a seção já filtrada. Só despesa, só o adulto.
+                    // O cartão diz o que tem do outro lado, para a pessoa saber por que abrir (25/11/2026; era um link solto).
                     tipo === "expense" && isAdulto ? (
-                        <Button asChild variant="link">
-                            <Link href={`${ROUTES.DASHBOARD}?categoria=${encodeURIComponent(categoryId)}&month=${yearMonth}#${PARA_ONDE_VAI_ID}`}>
-                                <span>Ver a análise de {category.name} no Painel</span>
-                                <ChevronRightIcon aria-hidden />
-                            </Link>
-                        </Button>
+                        <Card padding="sm">
+                            {/* Uma linha só (25/11/2026): o título e, em cinza, o que tem lá; no telefone o cinza some
+                                e o botão encurta para "Abrir", para a linha caber. */}
+                            <div className="flex items-center gap-3 px-(--card-px)">
+                                <ColorTile size="md" tint="tonal" color={corDaCategoria(category)}>
+                                    <PresentationChartLineIcon aria-hidden />
+                                </ColorTile>
+                                <p className="min-w-0 flex-1 truncate text-sm">
+                                    <span className="font-semibold text-foreground">
+                                        Entenda {category.name}
+                                        {/* No telefone o mês já está no cabeçalho, e a linha não cabia. */}
+                                        <span className="max-md:hidden"> em {nomeDoMes(yearMonth)}</span>
+                                    </span>
+                                    <span className="text-muted-foreground max-md:hidden">
+                                        {" "}
+                                        · ritmo, pagamento, dias e tamanho das compras
+                                    </span>
+                                </p>
+                                <Button asChild variant="secondary" size="md" className="shrink-0">
+                                    <Link
+                                        href={`${ROUTES.DASHBOARD}?categoria=${encodeURIComponent(categoryId)}&month=${yearMonth}#${PARA_ONDE_VAI_ID}`}
+                                        aria-label={`Abrir a análise de ${category.name} no Painel`}
+                                    >
+                                        <span>
+                                            Abrir<span className="max-md:hidden"> análise</span>
+                                        </span>
+                                        <ChevronRightIcon aria-hidden data-icon="inline-end" />
+                                    </Link>
+                                </Button>
+                            </div>
+                        </Card>
                     ) : null
                 }
             />
