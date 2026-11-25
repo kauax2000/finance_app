@@ -13,9 +13,10 @@ function LinhaEsqueleto() {
 }
 
 /**
- * A espera da página Você, na forma dela: o avatar de 56 com o nome e o
- * e-mail, e os dois grupos, cada um com a barra do título acima do cartão —
- * a carteira (5, o telefone comum, sem abas fora da barra) e a conta (3).
+ * A espera da página Você, na forma dela: o avatar de 56 com o nome, o
+ * e-mail e o selo de "Membro desde", e os três grupos, cada um com a barra do
+ * título acima do cartão — a carteira (6: Previsão, Cartões, Contas a pagar,
+ * Assinaturas, Projetos, Membros), Neste celular (3) e a conta (4).
  */
 export function MePageSkeleton() {
     return (
@@ -26,9 +27,14 @@ export function MePageSkeleton() {
                     <Skeleton className="h-6 w-40 max-w-full" />
                     <Skeleton shape="text" className="w-48 max-w-full text-sm" />
                 </div>
+                {/* O `SeloDeMembro`: o selo de 40 e "Membro desde …". */}
+                <div className="flex items-center gap-2">
+                    <Skeleton shape="circle" size="md" />
+                    <Skeleton shape="text" className="w-44 text-sm" />
+                </div>
             </div>
-            {[5, 4].map((linhas) => (
-                <div key={linhas} className="space-y-3">
+            {[6, 3, 4].map((linhas, grupo) => (
+                <div key={grupo} className="space-y-3">
                     <Skeleton className="h-4 w-20" />
                     <Card padding="none" className="divide-y divide-border">
                         {Array.from({ length: linhas }, (_, i) => (

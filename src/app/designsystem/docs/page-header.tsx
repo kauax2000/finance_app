@@ -403,8 +403,9 @@ export default function PageHeaderDoc() {
           },
           {
             prop: "PageHeaderSkeleton",
-            type: "{ size?, description?, actions?, stats? }",
-            description: "O esqueleto com a forma do cabeçalho.",
+            type: "{ size?, description?, actions?, stats?, back?, media? }",
+            description:
+              "O esqueleto com a forma do cabeçalho. actions é a quantidade (a última pílula, as outras círculo) ou a forma de cada uma: icon, sm 112, md 160, lg 216 (a pílula do mês). back e media põem o ‹ e o ladrilho de 32 antes do título.",
           },
         ]}
       />

@@ -534,7 +534,7 @@ export default function TableDoc() {
         rows={[
           { prop: "TableGroupRow", type: "{ label, total, colSpan, trailing, selection, collapsible, open, onOpenChange }", description: "A faixa de grupo completa." },
           { prop: "TableRowDetail / TableExpandButton", type: "{ open, colSpan, id } / { expanded, label }", description: "O detalhe que abre na mola e a seta que gira." },
-          { prop: "TableSkeleton", type: "{ columns, rows, header, label, delay }", description: "A tabela que espera, no SkeletonGroup." },
+          { prop: "TableSkeleton", type: "{ columns, rows, header, label, delay }", description: "A tabela que espera, no SkeletonGroup. A coluna com caption: true ganha a segunda linha menor da célula de identidade, para a linha ter a altura real." },
           { prop: "TableError / TableEmpty", type: "{ colSpan, title, children, onRetry } / { colSpan }", description: "A falha (o ícone no tom de erro, o título e o porquê; um onRetry com Promise mostra a roda) e o vazio, de largura total." },
           { prop: "TableCellIdentity", type: "{ media, title, description }", description: "O ladrilho e o par nome/legenda, sem gap." },
           { prop: "TableCellMoney", type: '{ value, flash, signed, tone: "sign" | "none" }', description: "O valor pelo sinal; flash acende ao mudar." },

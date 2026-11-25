@@ -305,10 +305,14 @@ export function CategoryCardSkeleton() {
                     <Skeleton className="h-1.5 w-full rounded-full" />
                     <Skeleton shape="text" className="w-48 max-w-full text-xs" />
                 </div>
-                <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
+                <div aria-hidden data-osso="faisca" className="relative -mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
                     {/* O osso da faísca de área: a faixa preenchida do pé (a linha mora nos 45% de
                         cima, e a área enche o resto), e não barras. */}
                     <Skeleton className="h-3/5 w-full rounded-none" />
+                    {/* O "Ver lançamentos" do telefone, por cima da faísca, como no cartão real. */}
+                    <div className="absolute inset-x-(--card-px) bottom-2.5 flex h-8 items-center justify-center md:hidden">
+                        <Skeleton shape="text" className="w-32 bg-muted-foreground/20" />
+                    </div>
                 </div>
             </CardContent>
         </Card>

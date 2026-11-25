@@ -40,16 +40,14 @@ export type TransactionsPageSkeletonProps = {
  * parte do texto e corre até a borda).
  */
 export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkeletonProps) {
-    // Onde cada dia começa na contagem das linhas: `[3, 1, 4]` vira `[0, 3, 4]`.
-    const comeco = dias.map((_, d) => dias.slice(0, d).reduce((a, b) => a + b, 0))
     return (
         <SkeletonGroup className="flex min-w-0 max-w-full flex-col gap-4" label="Carregando transações…" delay>
-            <PageHeaderSkeleton description={false} actions={2} className="max-md:hidden" />
+            <PageHeaderSkeleton description={false} actions={["sm", "sm"]} className="max-md:hidden" />
 
             {/* A mesma quebra da barra real: abaixo de 48rem da linha, as abas esticam em cima e os filtros descem. */}
             <div className="@container/transacoes min-w-0">
                 <div className="flex items-center gap-2 @max-3xl/transacoes:flex-wrap">
-                    <Skeleton shape="control" className="w-60 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
+                    <Skeleton shape="control" className="w-62 @max-3xl/transacoes:min-w-0 @max-3xl/transacoes:flex-1" />
                     <Skeleton shape="control" size="md" className="hidden aspect-square max-md:block" />
                     <div className="min-w-0 flex-1 @max-3xl/transacoes:basis-full max-md:hidden">
                         <FilterBarSkeleton tokens={0} group={false} />
@@ -57,6 +55,21 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
                 </div>
             </div>
 
+            <TransacoesTabelaSkeleton dias={dias} />
+        </SkeletonGroup>
+    )
+}
+
+/**
+ * Só a tabela de lançamentos que espera, na forma da `TransacoesTabela`: no desktop a
+ * tabela agrupada por dia, no telefone a lista agrupada do iOS. Transações e o detalhe
+ * da categoria (que usa a mesma tabela) a vestem; vai dentro de um `SkeletonGroup`.
+ */
+export function TransacoesTabelaSkeleton({ dias = DIAS }: { dias?: number[] }) {
+    // Onde cada dia começa na contagem das linhas: `[3, 1, 4]` vira `[0, 3, 4]`.
+    const comeco = dias.map((_, d) => dias.slice(0, d).reduce((a, b) => a + b, 0))
+    return (
+        <>
             <div className="max-md:hidden">
                 <TablePanel>
                     <Table data-slot="table-skeleton">
@@ -86,13 +99,14 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
                                             <TableCell selection>
                                                 <Skeleton className="size-4 rounded-sm" />
                                             </TableCell>
-                                            <TableCell>
+                                            {/* As medidas da coluna real: a Descrição de ~384 (o `w-80` dela mais o conteúdo), o Pagamento até `max-w-48`. */}
+                                            <TableCell className="w-96 min-w-60">
                                                 <div className="flex items-center gap-3">
                                                     <Skeleton shape="tile" size="xs" className="shrink-0" />
                                                     <Skeleton shape="text" className={LARGURAS[(comeco[dia] + i) % LARGURAS.length]} />
                                                 </div>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="max-w-48">
                                                 <Skeleton shape="text" className="w-36" />
                                             </TableCell>
                                             <TableCell>
@@ -147,6 +161,6 @@ export function TransactionsPageSkeleton({ dias = DIAS }: TransactionsPageSkelet
                     </div>
                 ))}
             </div>
-        </SkeletonGroup>
+        </>
     )
 }

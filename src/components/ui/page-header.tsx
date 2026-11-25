@@ -617,19 +617,45 @@ function PageHeaderBack({
  * O esqueleto com a forma do cabeçalho, para os `loading.tsx`: título na altura
  * do degrau, descrição, ações e faixa de pares.
  */
+type PageHeaderSkeletonAction = "icon" | "sm" | "md" | "lg"
+
+const LARGURA_DA_ACAO: Record<PageHeaderSkeletonAction | "auto", string> = {
+  icon: "aspect-square",
+  // A forma do número: no telefone estreito a última vira círculo.
+  auto: "aspect-square sm:aspect-auto sm:w-32",
+  sm: "w-28",
+  md: "w-40",
+  lg: "w-54",
+}
+
 function PageHeaderSkeleton({
   size = "md",
   description = true,
   actions = 1,
   stats = 0,
+  back = false,
+  media = false,
   className,
 }: {
   size?: "sm" | "md" | "lg"
   description?: boolean
-  actions?: number
+  /**
+   * Quantas ações (a última é pílula, as outras círculo) ou a forma de cada uma, na
+   * largura do botão real: `icon` o círculo, `sm` 112 (Exportar), `md` 160 (Nova
+   * categoria), `lg` 216 (a pílula do mês).
+   */
+  actions?: number | readonly PageHeaderSkeletonAction[]
   stats?: number
+  /** O ‹ de voltar antes do título, como o `back` do `PageHeaderTitleRow`. */
+  back?: boolean
+  /** O ladrilho de 32 antes do título, como a `media` do `PageHeaderTitleRow`. */
+  media?: boolean
   className?: string
 }) {
+  const formas: readonly (PageHeaderSkeletonAction | "auto")[] =
+    typeof actions === "number"
+      ? Array.from({ length: actions }, (_, i) => (i === actions - 1 ? "auto" : "icon"))
+      : actions
   return (
     <SkeletonGroup
       data-slot="page-header-skeleton"
@@ -641,19 +667,17 @@ function PageHeaderSkeleton({
       )}
     >
       <div className="flex min-w-0 flex-col gap-1.5">
-        <div className="flex h-(--page-title-line) items-center">
+        <div className="flex h-(--page-title-line) min-w-0 items-center gap-3">
+          {back ? <Skeleton shape="control" className="-ms-2 aspect-square shrink-0" /> : null}
+          {media ? <Skeleton shape="tile" size="md" className="shrink-0" /> : null}
           <Skeleton className="h-[calc(var(--page-title)*0.8)] w-56 max-w-full" />
         </div>
         {description ? <Skeleton shape="text" className="w-80 max-w-full" /> : null}
       </div>
-      {actions > 0 ? (
+      {formas.length > 0 ? (
         <div className="flex min-h-(--page-title-line) items-center gap-2 self-start">
-          {Array.from({ length: actions }, (_, i) => (
-            <Skeleton
-              key={i}
-              shape="control"
-              className={i === actions - 1 ? "aspect-square sm:aspect-auto sm:w-32" : "aspect-square"}
-            />
+          {formas.map((forma, i) => (
+            <Skeleton key={i} shape="control" className={LARGURA_DA_ACAO[forma]} />
           ))}
         </div>
       ) : null}

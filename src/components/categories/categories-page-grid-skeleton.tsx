@@ -61,7 +61,7 @@ export function CategoriesPageGridSkeleton({
 }: Props) {
     return (
         <SkeletonGroup className="flex min-w-0 max-w-full flex-col gap-4" label={screenReaderLabel} delay>
-            <PageHeaderSkeleton description={false} actions={1} className="max-md:hidden" />
+            <PageHeaderSkeleton description={false} actions={["md"]} className="max-md:hidden" />
             <CategoriesToolbarSkeleton variant={variant} />
 
             <CategoryGridSkeleton />

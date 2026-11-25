@@ -146,7 +146,12 @@ describe("o esqueleto da página (spec §6.5)", () => {
         // Agrupado por dia, como a tela: a faixa do dia na tabela e um cartão por dia no telefone.
         expect(esqueleto).toContain("<TableGroupRow")
         expect(esqueleto).toContain("rounded-surface bg-card")
-        expect([...esqueleto.matchAll(/function\s+([A-Z]\w*)/g)].map((m) => m[1])).toEqual(["TransactionsPageSkeleton"])
+        // A tabela que espera é peça à parte: o detalhe da categoria, que usa a mesma tabela, a veste.
+        expect([...esqueleto.matchAll(/function\s+([A-Z]\w*)/g)].map((m) => m[1])).toEqual([
+            "TransactionsPageSkeleton",
+            "TransacoesTabelaSkeleton",
+        ])
+        expect(fonte("src/components/categories/detail/category-detail-skeleton.tsx")).toContain("<TransacoesTabelaSkeleton")
     })
 
     it("o osso da linha de filtros some no telefone", () => {

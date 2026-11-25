@@ -2595,8 +2595,9 @@ function FilterBarSkeleton({
           className={cn(i % 2 ? "w-36" : "w-52", compacto)}
         />
       ))}
-      <Skeleton shape="control" size={size} className={cn("w-20", compacto)} />
-      {count ? <Skeleton shape="text" className="ms-auto w-28" /> : null}
+      <Skeleton shape="control" size={size} className={cn("w-22", compacto)} />
+      {/* A contagem real assenta no pé da linha (`self-end`). */}
+      {count ? <Skeleton shape="text" className="ms-auto mb-1 w-28 self-end" /> : null}
     </div>
   )
   return group ? (

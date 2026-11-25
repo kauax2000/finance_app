@@ -1033,6 +1033,8 @@ type TableSkeletonColumn = {
   width?: string
   /** Classe da célula — `hidden md:table-cell`, para casar com a tabela real. */
   className?: string
+  /** Uma segunda linha menor sob o osso (a legenda da célula de identidade), para a linha ter a altura real. */
+  caption?: boolean
 }
 
 /**
@@ -1103,6 +1105,14 @@ function TableSkeleton({
                     <Skeleton className="size-4 rounded-sm" />
                   ) : c.actions ? (
                     <Skeleton shape="control" size="md" className="ms-auto aspect-square" />
+                  ) : c.caption ? (
+                    <div className="flex flex-col">
+                      <Skeleton
+                        shape="text"
+                        style={{ width: c.width ?? larguras[(r + i) % larguras.length] }}
+                      />
+                      <Skeleton shape="text" className="h-3 w-4/5" />
+                    </div>
                   ) : (
                     <Skeleton
                       shape="text"
