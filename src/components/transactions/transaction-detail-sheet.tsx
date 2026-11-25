@@ -72,7 +72,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption } from "@/components/ui/typography"
 import { useWorkspace } from "@/components/workspace-provider"
-import { tileColorFor } from "@/lib/tile-palette"
+import { corDaCategoria, tileColorFor } from "@/lib/tile-palette"
 import { projetoDetailPath } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { formatYearMonth } from "@/lib/budget-month"
@@ -399,7 +399,7 @@ export function TransactionDetailSheet({
                     centerShown={nomeSubiu}
                     center={
                         <>
-                            <ColorTile size="xs" color={t.category?.color}>
+                            <ColorTile size="xs" color={corDaCategoria(t.category, t.type)}>
                                 <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                             </ColorTile>
                             <span className="min-w-0 truncate text-sm font-medium">{descricao}</span>
@@ -447,7 +447,7 @@ export function TransactionDetailSheet({
             <DialogBody className="flex flex-col gap-6 max-md:[--dialog-body-pt:0px]">
                 {/* O topo (C1 + D4 + E2/E5, 11/nov/2026): o ladrilho, o nome sobre o valor grande, a data relativa embaixo dele e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
-                    <ColorTile size="2xl" color={t.category?.color}>
+                    <ColorTile size="2xl" color={corDaCategoria(t.category, t.type)}>
                         <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                     </ColorTile>
                     <div className="flex min-w-0 flex-col items-center gap-1">

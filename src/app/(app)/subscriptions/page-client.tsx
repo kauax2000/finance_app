@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import {
     EmptyState,
     EmptyStateActions,
@@ -120,7 +121,7 @@ function subscriptionColumns(
                         {formatSubscriptionTxSummary(s.id, billingStats)}
                     </>
                 ),
-                media: (s) => <ColorTile size="xs" color={s.category?.color} />,
+                media: (s) => <ColorTile size="xs" color={corDaCategoria(s.category, s.kind)} />,
             }),
             sortFn: (a, b) =>
                 a.original.name.localeCompare(b.original.name, "pt-BR"),

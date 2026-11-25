@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import {
     ChartDonut,
     ChartDonutCenter,
@@ -132,7 +133,7 @@ export function CreditCardInvoiceCategorySpendSection({
                             )
                             const rowBody = (
                                 <div className="flex min-w-0 items-center gap-2">
-                                        <ColorTile color={c.color} className="sm:size-9">
+                                        <ColorTile color={corDaCategoria(c, "expense")} className="sm:size-9">
                                             <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
                                         </ColorTile>
                                         <div className="min-w-0 flex-1">

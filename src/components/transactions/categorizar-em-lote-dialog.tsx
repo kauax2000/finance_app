@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { useState } from "react"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -94,7 +95,7 @@ export function CategorizarEmLoteDialog({ ids, workspaceId, tipo, categorias, on
                                             <ComboboxValue
                                                 placeholder="Escolha uma categoria"
                                                 media={
-                                                    escolhida ? <ColorTile size="xs" color={escolhida.color} /> : undefined
+                                                    escolhida ? <ColorTile size="xs" color={corDaCategoria(escolhida)} /> : undefined
                                                 }
                                             >
                                                 {escolhida?.name ?? (escolha === SEM_CATEGORIA ? "Sem categoria" : undefined)}
@@ -111,7 +112,7 @@ export function CategorizarEmLoteDialog({ ids, workspaceId, tipo, categorias, on
                                                 <ComboboxItem
                                                     key={c.id}
                                                     value={c.id}
-                                                    media={<ColorTile size="xs" color={c.color} />}
+                                                    media={<ColorTile size="xs" color={corDaCategoria(c)} />}
                                                 >
                                                     {c.name}
                                                 </ComboboxItem>

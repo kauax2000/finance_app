@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import * as React from "react"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import {
@@ -62,7 +63,7 @@ export function ExcluirLancamentosDialog({
             <ItemGroup variant="divided">
               {visiveis.map((item) => (
                 <Item key={item.chave} variant="flush" size="md">
-                  <ColorTile size="md" color={item.linha.category?.color}>
+                  <ColorTile size="md" color={corDaCategoria(item.linha.category)}>
                     <CategoryIconPreview name={normalizeCategoryIcon(item.linha.category?.icon)} />
                   </ColorTile>
                   <ItemContent className="min-w-0">

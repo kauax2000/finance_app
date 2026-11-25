@@ -86,6 +86,21 @@ export function tileColorFor(
 }
 
 /**
+ * A cor do ladrilho de uma categoria, em toda tela: a gravada, dobrada por
+ * `tileColorFor`, ou, sem cor (o cinza legado `#6B7280` vira `null`), a padrão do
+ * tipo — coral na despesa, lima na receita. Sem categoria, `null` (o neutro).
+ * `tipo` vale quando o objeto não traz `type` (o join de uma transação).
+ */
+export function corDaCategoria(
+    categoria: { color?: string | null; type?: string | null } | null | undefined,
+    tipo?: string | null
+): string | null {
+    if (!categoria) return null
+    const receita = (categoria.type ?? tipo) === "income"
+    return tileColorFor(categoria.color) ?? (receita ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)
+}
+
+/**
  * A cor que o ladrilho vivo desenha, como valor CSS: a superfície do
  * `@utility tile-vivid` (`globals.css`) aplicada a uma cor. O gráfico da
  * categoria pinta com ela, para a série ter a cor do ladrilho, e não a parada

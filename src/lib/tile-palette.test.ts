@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
 import {
+    corDaCategoria,
     corExataDaCarteira,
     TILE_COLORS,
     TILE_EXPENSE_DEFAULT,
@@ -107,5 +108,22 @@ describe("tileVividColor", () => {
         const superficie = css.match(/@utility tile-vivid \{\s*--tile-surface: oklch\(from var\(--tile-color\) (.+?)\);/)?.[1]
         expect(superficie).toBeTruthy()
         expect(tileVividColor("#FFB49B")).toBe(`oklch(from #FFB49B ${superficie})`)
+    })
+})
+
+describe("corDaCategoria", () => {
+    it("a cor gravada atravessa, dobrada como no tileColorFor", () => {
+        expect(corDaCategoria({ color: "#FFB49B", type: "expense" })).toBe("#FFB49B")
+        expect(corDaCategoria({ color: "#EF4444", type: "expense" })).toBe(tileColorFor("#EF4444"))
+    })
+    it("sem cor, ou com o cinza legado, cai na padrão do tipo", () => {
+        expect(corDaCategoria({ color: "#6B7280", type: "expense" })).toBe(TILE_EXPENSE_DEFAULT)
+        expect(corDaCategoria({ color: null, type: "income" })).toBe(TILE_INCOME_DEFAULT)
+        expect(corDaCategoria({ color: "#6B7280" }, "income")).toBe(TILE_INCOME_DEFAULT)
+        expect(corDaCategoria({ color: "" })).toBe(TILE_EXPENSE_DEFAULT)
+    })
+    it("sem categoria, o neutro", () => {
+        expect(corDaCategoria(null)).toBeNull()
+        expect(corDaCategoria(undefined, "income")).toBeNull()
     })
 })

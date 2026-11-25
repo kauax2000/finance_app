@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -709,7 +710,7 @@ function PaletteBody({ close }: { close: () => void }) {
                                 onSelect={() => ir(categoryDetailPath(c.id))}
                             >
                                 <CommandItemIcon>
-                                    <ColorTile size="xs" color={c.color} />
+                                    <ColorTile size="xs" color={corDaCategoria(c)} />
                                 </CommandItemIcon>
                                 <CommandItemTitle>
                                     <CommandHighlight>{c.name}</CommandHighlight>

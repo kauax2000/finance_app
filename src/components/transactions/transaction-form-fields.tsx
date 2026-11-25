@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CreditCardIcon, MinusIcon, PlusIcon } from "@heroicons/react/16/solid"
 import {
@@ -131,7 +132,7 @@ function CategoryRows({
                             selected={selected}
                             onClick={() => onPick(c.id)}
                         >
-                            <ColorTile size="xs" color={c.color} className="shrink-0">
+                            <ColorTile size="xs" color={corDaCategoria(c)} className="shrink-0">
                                 <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
                             </ColorTile>
                             <span className="min-w-0 truncate">{c.name}</span>
@@ -723,7 +724,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     <FormPickerPopoverTrigger id="tx-category">
                         {selectedCategory ? (
                             <>
-                                <ColorTile size="xs" color={selectedCategory.color} className="shrink-0">
+                                <ColorTile size="xs" color={corDaCategoria(selectedCategory)} className="shrink-0">
                                     <CategoryIconPreview
                                         name={normalizeCategoryIcon(selectedCategory.icon)}
                                     />

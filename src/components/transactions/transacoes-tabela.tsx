@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -138,7 +139,7 @@ const MISTURADO = "Selecione só despesas ou só receitas"
 
 function LadrilhoDaCategoria({ t }: { t: Transaction }) {
     return (
-        <ColorTile size="xs" color={t.category?.color}>
+        <ColorTile size="xs" color={corDaCategoria(t.category, t.type)}>
             <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
         </ColorTile>
     )

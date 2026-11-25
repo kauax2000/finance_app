@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { paymentMethodOptions } from "@/lib/payment-methods"
 import {
     FormInput,
@@ -186,7 +187,7 @@ export function BillFormFields({
                                     none={categoryId === BILL_CATEGORY_NONE}
                                     media={
                                         categoriaEscolhida ? (
-                                            <ColorTile size="xs" color={categoriaEscolhida.color} />
+                                            <ColorTile size="xs" color={corDaCategoria(categoriaEscolhida)} />
                                         ) : undefined
                                     }
                                 >
@@ -214,7 +215,7 @@ export function BillFormFields({
                                     <ComboboxItem
                                         key={c.id}
                                         value={c.id}
-                                        media={<ColorTile size="xs" color={c.color} />}
+                                        media={<ColorTile size="xs" color={corDaCategoria(c)} />}
                                     >
                                         {c.name}
                                     </ComboboxItem>

@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { useState } from "react"
 import { EllipsisHorizontalIcon, PencilIcon, StopCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
@@ -170,7 +171,7 @@ export function FolhaDoPlano({
 
         <DialogBody className="flex flex-col gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <ColorTile size="xl" color={t.category?.color}>
+            <ColorTile size="xl" color={corDaCategoria(t.category, t.type)}>
               <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
             </ColorTile>
             <div className="min-w-0">

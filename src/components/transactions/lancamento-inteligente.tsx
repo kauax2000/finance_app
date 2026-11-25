@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react"
 import {
     animate,
@@ -1307,7 +1308,7 @@ function Revisao({
                                 <ComboboxTrigger className="w-full">
                                     <ComboboxValue
                                         placeholder="Escolher categoria"
-                                        media={categoria ? <ColorTile size="xs" color={categoria.color} /> : undefined}
+                                        media={categoria ? <ColorTile size="xs" color={corDaCategoria(categoria)} /> : undefined}
                                     >
                                         {categoria?.name}
                                     </ComboboxValue>
@@ -1331,7 +1332,7 @@ function Revisao({
                                         <ComboboxItem
                                             key={c.id}
                                             value={c.id}
-                                            media={<ColorTile size="xs" color={c.color} />}
+                                            media={<ColorTile size="xs" color={corDaCategoria(c)} />}
                                         >
                                             {c.name}
                                         </ComboboxItem>
@@ -1534,7 +1535,7 @@ function Revisao({
                                                                             transition={MOLA}
                                                                             className="flex"
                                                                         >
-                                                                            <ColorTile size="xs" color={categoria.color} />
+                                                                            <ColorTile size="xs" color={corDaCategoria(categoria)} />
                                                                         </motion.span>
                                                                     ) : null}
                                                                     <motion.span

@@ -1,5 +1,6 @@
 "use client"
 
+import { corDaCategoria } from "@/lib/tile-palette"
 import { useEffect, useMemo, useState } from "react"
 import {
     Field,
@@ -286,7 +287,7 @@ export function PayBillDialog({
                                                 placeholder="Escolha uma categoria"
                                                 media={
                                                     categoriaEscolhida ? (
-                                                        <ColorTile size="xs" color={categoriaEscolhida.color} />
+                                                        <ColorTile size="xs" color={corDaCategoria(categoriaEscolhida)} />
                                                     ) : undefined
                                                 }
                                             >
@@ -306,7 +307,7 @@ export function PayBillDialog({
                                                 <ComboboxItem
                                                     key={c.id}
                                                     value={c.id}
-                                                    media={<ColorTile size="xs" color={c.color} />}
+                                                    media={<ColorTile size="xs" color={corDaCategoria(c)} />}
                                                 >
                                                     {c.name}
                                                 </ComboboxItem>
