@@ -50,14 +50,21 @@ describe("paginaValida", () => {
 
 describe("comACategoria", () => {
     const cat = { id: "c1", name: "Carro", color: "#f00", icon: "car" } as Category
-    it("põe a categoria da tela nas linhas que vêm sem ela e mantém a que já veio", () => {
+    it("põe a categoria da tela nas linhas que vêm sem ela e mantém a de outra categoria", () => {
         const outra = { id: "c2", name: "Outra" } as Category
         const [a, b] = comACategoria(
-            [{ id: "a" } as Transaction, { id: "b", category: outra } as Transaction],
+            [{ id: "a", category_id: "c1" } as Transaction, { id: "b", category_id: "c2", category: outra } as Transaction],
             cat,
         )
-        expect(a.category).toBe(cat)
+        expect(a.category).toEqual(cat)
         expect(b.category).toBe(outra)
+    })
+    it("a linha desta categoria com nome mas sem cor nem ícone ganha os da tela", () => {
+        const [a] = comACategoria(
+            [{ id: "a", category_id: "c1", category: { id: "c1", name: "Carro" } } as Transaction],
+            cat,
+        )
+        expect(a.category).toMatchObject({ id: "c1", name: "Carro", color: "#f00", icon: "car" })
     })
     it("sem categoria carregada, devolve as linhas como vieram", () => {
         const linhas = [{ id: "a" } as Transaction]

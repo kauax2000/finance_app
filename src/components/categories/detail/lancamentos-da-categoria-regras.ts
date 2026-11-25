@@ -41,8 +41,13 @@ export function paginaValida(page: number, total: number, tamanho: number): numb
     return Math.min(page, Math.max(1, Math.ceil(total / tamanho)))
 }
 
-/** As linhas do pacote não trazem a categoria: a da tela entra nelas, para o ladrilho ter a cor e o ícone dela. */
+/**
+ * As linhas do pacote trazem a categoria pela metade (o join pede `id,name,color`, e o RPC pode vir sem cor nem
+ * ícone): nas linhas desta categoria, e nas que vêm sem nenhuma, a da tela vence, para o ladrilho ter a cor e o ícone dela.
+ */
 export function comACategoria(linhas: Transaction[], category: Category | null): Transaction[] {
     if (!category) return linhas
-    return linhas.map((t) => (t.category ? t : { ...t, category }))
+    return linhas.map((t) =>
+        !t.category || t.category_id === category.id ? { ...t, category: { ...t.category, ...category } } : t,
+    )
 }
