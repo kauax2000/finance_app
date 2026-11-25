@@ -105,7 +105,6 @@ describe("as versões do Sheet", () => {
     // Pedido do dono (2026-11-08): soltas das bordas, no `floating` padrão.
     for (const arquivo of [
       "src/components/transactions/transaction-detail-sheet.tsx",
-      "src/components/transactions/transactions-toolbar.tsx",
     ]) {
       const f = lerFonte(arquivo)
       expect(f, arquivo).not.toContain('variant="flush"')

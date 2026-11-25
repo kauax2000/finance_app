@@ -348,9 +348,6 @@ describe("as ações numa cápsula", () => {
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
     // As barras com filtro o publicam, e não desenham o próprio no telefone.
-    const transacoes = fonte("src/components/transactions/transactions-toolbar.tsx")
-    expect(transacoes).toContain("usePageChromeFilter(")
-    expect(transacoes).toMatch(/<ToolbarFilterButton[\s\S]*?className=\{cn\(headerFilter && "max-md:hidden"\)\}/)
     const contas = fonte("src/components/bills/bills-toolbar.tsx")
     expect(contas).toContain("usePageChromeFilter(")
     expect(contas).not.toContain("<ToolbarFilterButton")

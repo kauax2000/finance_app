@@ -90,9 +90,4 @@ describe("Limpar tudo fecha a gaveta", () => {
     expect(filtro).toContain("onLimparTudo={limpar}")
     expect(filtro).toMatch(/const limpar = \(\) => \{[\s\S]{0,120}emitir\(\[\]\)\s*if \(aberto\) fechar\(false\)/)
   })
-
-  it("na folha antiga de Transações, também fecha", () => {
-    const folha = semComentarios(lerFonte("src/components/transactions/transactions-toolbar.tsx"))
-    expect(folha).toMatch(/resetAllFilters\(\)\s*setFiltersSheetOpen\(false\)/)
-  })
 })

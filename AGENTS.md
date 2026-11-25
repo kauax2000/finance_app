@@ -800,8 +800,8 @@ declaração de `background-color` no trilho).
   telas que o têm (Painel, Categorias, detalhe da categoria) mora no cabeçalho do
   telefone, o calendário colado à lupa que abre a grade de meses
   (`useMonthInHeader`, rodada 334); no desktop fica na barra da tela: o mês é uma pílula só (`MonthNavPicker`), com ‹ e › terciárias dentro dela (o fundo só no cursor) e o nome no centro, sem chevron, que abre a grade (19/11/2026). No detalhe
-  da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra
-  (`TransactionsToolbar headerFilter={false}`).
+  da categoria o mês leva o cabeçalho, e o filtro dos lançamentos é o `FilterBar` do próprio bloco, na barra dele
+  (`filtroNaBarra` na `TransacoesTabela`), e não vai ao cabeçalho.
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
   `CardToolbar`, `CardHeader`, `CardContent`, `CardFooter`, `CardNote`. O
   painel do app é `<Card padding="none">`; nada de `border-b bg-muted/30`
