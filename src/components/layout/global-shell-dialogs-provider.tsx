@@ -11,7 +11,7 @@ import type {
     TransactionSaveResult,
     InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-types"
-import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { NewTransactionMode } from "@/lib/transactions/new-transaction-mode"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import { SubscriptionFormDialog } from "@/components/subscriptions/subscription-form-dialog"
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"

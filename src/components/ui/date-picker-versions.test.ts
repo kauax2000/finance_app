@@ -75,7 +75,6 @@ describe("as versões do DatePicker", () => {
   it("as telas migradas usam as peças, e os formulários à mão saíram", () => {
     expect(existsSync(join(process.cwd(), "src/components/transactions/transactions-date-range-form.tsx"))).toBe(false)
     expect(existsSync(join(process.cwd(), "src/components/categories/budget-month-selects.tsx"))).toBe(false)
-    expect(lerFonte("src/components/transactions/transactions-filters-panel.tsx")).toMatch(/mode="range"\s*confirm/)
     expect(lerFonte("src/components/categories/categories-toolbar.tsx")).toContain("<MonthGrid")
     for (const arquivo of [
       "src/components/transactions/transaction-form-fields.tsx",

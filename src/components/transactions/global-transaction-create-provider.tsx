@@ -1,7 +1,7 @@
 "use client"
 
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { NewTransactionMode } from "@/lib/transactions/new-transaction-mode"
 
 type GlobalTransactionCreateContextValue = {
     openCreate: (mode: NewTransactionMode) => void

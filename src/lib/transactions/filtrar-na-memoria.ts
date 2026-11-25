@@ -17,6 +17,7 @@ const numero = (v: string | undefined) => (v && Number.isFinite(Number(v)) ? Num
 /**
  * A mesma regra do `aplicarFiltros` (queries/transacoes-filtradas), sobre linhas já em memória.
  * `periodo` e `categoria` ficam de fora: a página da categoria fixa os dois.
+ * Diferença deliberada: "não é" numa coluna de lista mantém as linhas com a coluna nula (o NOT IN do SQL as descarta).
  */
 export function filtrarNaMemoria(linhas: Transaction[], estado: Pick<EstadoDaLista, "type" | "q" | "filtros">): Transaction[] {
     // shortcut: sem remoção de acento, como o ilike do servidor

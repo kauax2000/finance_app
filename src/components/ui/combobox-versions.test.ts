@@ -67,10 +67,6 @@ describe("as versões do Combobox", () => {
   })
 
   it("as telas migradas não montam mais o seletor à mão", () => {
-    const filtros = lerFonte("src/components/transactions/transactions-filters-panel.tsx")
-    expect(filtros).toMatch(/<Combobox\s+multiple/)
-    expect(filtros).not.toContain("categoryQuery")
-    expect(filtros).not.toContain("cardQuery")
     for (const arquivo of [
       "src/components/bills/pay-bill-dialog.tsx",
       "src/components/bills/bill-form-fields.tsx",

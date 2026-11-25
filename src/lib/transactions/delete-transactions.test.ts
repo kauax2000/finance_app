@@ -48,6 +48,15 @@ describe("linhasConhecidas", () => {
         ])
     })
 
+    it("com as linhas dadas somadas às da lista, resolve sem o banco", () => {
+        const dadas = [{ id: "a", installment_plan_id: "plan-1" }]
+        const lista = [{ id: "b", installment_plan_id: null }]
+        expect(linhasConhecidas(["a", "b"], [...dadas, ...lista])).toEqual([
+            { id: "a", installment_plan_id: "plan-1" },
+            { id: "b", installment_plan_id: null },
+        ])
+    })
+
     it("sem uma das linhas devolve undefined, para o banco resolver o plano", () => {
         // A lista vazia é o controlador com skipListQuery (o detalhe da categoria).
         expect(linhasConhecidas(["a"], [])).toBeUndefined()

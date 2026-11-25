@@ -7,7 +7,7 @@ import { useAuth } from "@/components/providers"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { NewTransactionMode } from "@/lib/transactions/new-transaction-mode"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { supabase, type Transaction } from "@/lib/supabase"
 import type {

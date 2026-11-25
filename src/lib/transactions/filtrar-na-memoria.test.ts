@@ -102,6 +102,6 @@ describe("paginarNaMemoria", () => {
     it("fatia PAGE_SIZE na página 1-based", () => {
         const l = Array.from({ length: PAGE_SIZE + 5 }, (_, i) => tx({ id: String(i) }))
         expect(paginarNaMemoria(l, 1)).toHaveLength(PAGE_SIZE)
-        expect(ids(paginarNaMemoria(l, 2))).toEqual(["100", "101", "102", "103", "104"])
+        expect(ids(paginarNaMemoria(l, 2))).toEqual(Array.from({ length: 5 }, (_, i) => String(PAGE_SIZE + i)))
     })
 })

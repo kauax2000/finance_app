@@ -64,9 +64,6 @@ describe("as versões do Popover", () => {
   })
 
   it("as telas: sem largura nem rolagem à mão, e os seletores de mês com nome", () => {
-    const filtros = lerFonte("src/components/transactions/transactions-filters-panel.tsx")
-    expect(filtros).toContain('size="trigger"')
-    expect(filtros).not.toContain("w-[var(--radix-popover-trigger-width)]")
     expect(lerFonte("src/components/categories/categories-toolbar.tsx")).toContain('label="Escolher mês"')
     const calendario = lerFonte("src/components/dashboard/dashboard-payments-calendar.tsx")
     expect(calendario).toContain("<PopoverArrow")

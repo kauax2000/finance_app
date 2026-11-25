@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/config/navigation"
 import { BottomBarAction } from "@/components/ui/bottom-bar"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { NewTransactionMode } from "@/lib/transactions/new-transaction-mode"
 import type { SubscriptionKind } from "@/lib/supabase"
 
 /**

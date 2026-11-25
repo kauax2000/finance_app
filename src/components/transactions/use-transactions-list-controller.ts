@@ -47,8 +47,7 @@ import {
     getTransactionsPresetRange,
     type TransactionsDatePresetKey,
 } from "@/components/transactions/transactions-date-presets"
-import type { TransactionsFiltersPanelBaseProps } from "@/components/transactions/transactions-filters-panel"
-import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
+import type { NewTransactionMode } from "@/lib/transactions/new-transaction-mode"
 import { persistInstallmentPlanCreate } from "@/components/transactions/transaction-form-persistence"
 import { useGlobalTransactionCreateOptional } from "@/components/transactions/global-transaction-create-provider"
 import { ROUTES } from "@/config/navigation"
@@ -60,7 +59,7 @@ import { transactionsKeys } from "@/lib/queries/keys"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
-import { linhasConhecidas } from "@/lib/transactions/delete-transactions"
+import { linhasConhecidas, type TransactionDeleteRow } from "@/lib/transactions/delete-transactions"
 
 type SortKey = "date" | "amount"
 type SortDir = "asc" | "desc"
@@ -73,7 +72,7 @@ const URL_WRITE_KEYS = [...TRANSACTIONS_URL_MANAGED_KEYS, ...TRANSACTIONS_URL_LI
 
 type PendingDelete =
     | { mode: "single"; transaction: Transaction }
-    | { mode: "bulk"; ids: string[] }
+    | { mode: "bulk"; ids: string[]; rows?: TransactionDeleteRow[] }
 
 const CARD_QUERY_UUID_RE =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -969,7 +968,10 @@ export function useTransactionsListController(
                           },
                       ]
                     : // Fora da página carregada (ou sem lista, como no detalhe da categoria), o banco resolve o plano.
-                      linhasConhecidas(pendingDelete.ids, transactions)
+                      linhasConhecidas(pendingDelete.ids, [
+                          ...(pendingDelete.rows ?? []),
+                          ...transactions,
+                      ])
 
             const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId, {
                 rows,
@@ -1159,103 +1161,6 @@ export function useTransactionsListController(
         ]
     )
 
-    const filtersPanelProps = useMemo(
-        (): TransactionsFiltersPanelBaseProps => ({
-            datePreset,
-            periodDraftFrom,
-            periodDraftTo,
-            onPeriodDraftFromChange: handlePeriodDraftFromChange,
-            onPeriodDraftToChange: handlePeriodDraftToChange,
-            onPresetChange: ({ preset, from, to }) => {
-                suppressPeriodDraftDirtyRef.current = true
-                setDatePreset(preset)
-                setFilterDateFrom(from)
-                setFilterDateTo(to)
-                setFullPeriod(false)
-                setPeriodDraftFrom(from)
-                setPeriodDraftTo(to)
-                setPeriodDraftDirty(false)
-                requestAnimationFrame(() => {
-                    suppressPeriodDraftDirtyRef.current = false
-                })
-            },
-            onDateRangeApply: ({ from, to }) => {
-                suppressPeriodDraftDirtyRef.current = true
-                setDatePreset(null)
-                setFilterDateFrom(from)
-                setFilterDateTo(to)
-                setFullPeriod(false)
-                setPeriodDraftFrom(from)
-                setPeriodDraftTo(to)
-                setPeriodDraftDirty(false)
-                requestAnimationFrame(() => {
-                    suppressPeriodDraftDirtyRef.current = false
-                })
-            },
-            onClearPeriodFilter: clearPeriodFilter,
-            periodIdPrefix: "tx-range-mobile",
-            paymentMethods: filterPaymentMethods,
-            onTogglePaymentMethod: (method) => {
-                setFilterPaymentMethods((prev) =>
-                    prev.includes(method)
-                        ? prev.filter((x) => x !== method)
-                        : [...prev, method]
-                )
-            },
-            creditCardIds: filterCreditCardIds,
-            onToggleCreditCardId: (id) => {
-                setFilterCreditCardIds((prev) =>
-                    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-                )
-            },
-            creditCards,
-            categoryIds: filterCategoryIds,
-            onToggleCategory: toggleFilterCategory,
-            onClearAllCategories: clearAllCategoryFilters,
-            uncategorizedOnly: filterUncategorizedOnly,
-            onUncategorizedOnlyChange: handleUncategorizedOnlyChange,
-            categories,
-            amountMin: filterAmountMin,
-            amountMax: filterAmountMax,
-            onAmountMinChange: setFilterAmountMin,
-            onAmountMaxChange: setFilterAmountMax,
-            descriptionQuery: filterDescriptionQuery,
-            onDescriptionQueryChange: setFilterDescriptionQuery,
-            installmentPlanId: filterInstallmentPlanId,
-            onInstallmentPlanIdChange: setFilterInstallmentPlanId,
-            installmentPlans,
-            subscriptionId: filterSubscriptionId,
-            onSubscriptionIdChange: setFilterSubscriptionId,
-            subscriptions,
-            lockedCategoryId: lockedId ?? undefined,
-        }),
-        [
-            datePreset,
-            periodDraftFrom,
-            periodDraftTo,
-            clearPeriodFilter,
-            handlePeriodDraftFromChange,
-            handlePeriodDraftToChange,
-            filterPaymentMethods,
-            filterCreditCardIds,
-            creditCards,
-            filterCategoryIds,
-            toggleFilterCategory,
-            clearAllCategoryFilters,
-            filterUncategorizedOnly,
-            handleUncategorizedOnlyChange,
-            categories,
-            filterAmountMin,
-            filterAmountMax,
-            filterDescriptionQuery,
-            filterInstallmentPlanId,
-            installmentPlans,
-            filterSubscriptionId,
-            subscriptions,
-            lockedId,
-        ]
-    )
-
     useEffect(() => {
         if (!filtersSheetOpen) {
             syncPeriodDraftToApplied()
@@ -1387,7 +1292,6 @@ export function useTransactionsListController(
     advancedFiltersActive,
     anyFiltersActive,
     lockPeriodToDefault,
-    filtersPanelProps,
     hasNoTransactions,
     hasNoMatches,
   }

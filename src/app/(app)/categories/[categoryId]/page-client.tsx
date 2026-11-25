@@ -264,7 +264,10 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     // Mesma chave do controlador: o cache já tem as faturas pagas, nada é buscado a mais.
     const auxQuery = useTransactionsWorkspaceAuxQuery(currentWorkspaceId, Boolean(currentWorkspaceId))
     const invoicePayments = React.useMemo(() => auxQuery.data?.invoicePayments ?? [], [auxQuery.data?.invoicePayments])
-    const linhasDoMes = React.useMemo(() => comACategoria(expenseMonthRows ?? txs, category), [expenseMonthRows, txs, category])
+    const linhasDoMes = React.useMemo(
+        () => comACategoria(expenseMonthRows ?? attachPaymentCards(txs, txController.creditCards), category),
+        [expenseMonthRows, txs, txController.creditCards, category],
+    )
     const { openTransactionDetail } = txController
     const abrirDetalhe = React.useCallback(
         (t: Transaction, o?: { editar?: boolean }) => openTransactionDetail(t, { edit: o?.editar }),

@@ -64,7 +64,7 @@ export function CategoryEmbeddedTransactions({
                 semCategoria
                 filtroNaBarra
                 onEditarFiltros={() =>
-                    // shortcut: clica no "+ Filtro" pelo data-slot (o mesmo do transacoes-toolbar); trocar por uma prop open quando o FilterBar ganhar uma
+                    // shortcut: clica no "+ Filtro" pelo data-slot (o mesmo da barra de Transações); trocar por uma prop open quando o FilterBar ganhar uma
                     raizDosFiltros.current?.querySelector<HTMLButtonElement>("[data-slot=filter-bar-add]")?.click()
                 }
                 membros={membros}
@@ -72,7 +72,7 @@ export function CategoryEmbeddedTransactions({
                 onEditar={(t) => c.openTransactionDetail(t, { edit: true })}
                 onExcluir={(ids) => {
                     const uma = ids.length === 1 ? linhas.find((t) => t.id === ids[0]) : undefined
-                    c.setPendingDelete(uma ? { mode: "single", transaction: uma } : { mode: "bulk", ids })
+                    c.setPendingDelete(uma ? { mode: "single", transaction: uma } : { mode: "bulk", ids, rows: linhas })
                 }}
                 barra={
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
