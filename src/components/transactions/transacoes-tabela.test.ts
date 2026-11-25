@@ -113,10 +113,13 @@ describe("o contrato estreito da tabela", () => {
     it("onEditarFiltros vence o filtro publicado no cabeçalho", () => {
         expect(fonte()).toMatch(/onEditarFiltros \?\? \(\(\) => filtroPublicado\?\.onOpen\?\.\(\)\)/)
     })
-    it("vazio, semCategoria, id e ariaLabel entram por prop", () => {
+    it("semCategoria tira a coluna da categoria e o nome dela ao lado da descrição", () => {
+        expect(fonte()).toMatch(/colunas\([^)]*semCategoria\)\.filter\(\(c\) => !\(semCategoria && c\.id === "category"\)\)/)
+        expect(fonte()).toMatch(/!semCategoria && t\.category && t\.description \?/)
+    })
+    it("vazio, id e ariaLabel entram por prop", () => {
         expect(fonte()).toMatch(/id=\{id\}/)
         expect(fonte()).toMatch(/aria-label=\{ariaLabel\}/)
-        expect(fonte()).toMatch(/semCategoria/)
         expect(fonte()).toMatch(/estado\.filtros\.length === 0 && !estado\.q && vazioDeFora/)
         expect(fonte()).toMatch(/tela\.pedidosDeAbertura \?/)
     })

@@ -24,7 +24,6 @@ export type FaixaDoMesProps = {
     pesoNoTotal: number | null
     comparacao: Comparacao
     media: number | null
-    quantidade: number
     /** O maior lançamento do mês. */
     maior: Transaction | null
 }

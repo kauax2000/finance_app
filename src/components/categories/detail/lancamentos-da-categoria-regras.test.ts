@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { FilterField, FilterValue } from "@/components/ui/filter-bar"
-import { camposDaCategoria, comDescricao, estadoDoMes, hrefDeTransacoes, paginaValida } from "./lancamentos-da-categoria-regras"
+import type { Category, Transaction } from "@/lib/supabase"
+import { camposDaCategoria, comACategoria, comDescricao, estadoDoMes, hrefDeTransacoes, paginaValida } from "./lancamentos-da-categoria-regras"
 
 describe("estadoDoMes", () => {
     it("abre limpo, da data mais recente", () => {
@@ -44,5 +45,22 @@ describe("paginaValida", () => {
         expect(paginaValida(2, 60, 50)).toBe(2)
         expect(paginaValida(2, 50, 50)).toBe(1)
         expect(paginaValida(3, 0, 50)).toBe(1)
+    })
+})
+
+describe("comACategoria", () => {
+    const cat = { id: "c1", name: "Carro", color: "#f00", icon: "car" } as Category
+    it("põe a categoria da tela nas linhas que vêm sem ela e mantém a que já veio", () => {
+        const outra = { id: "c2", name: "Outra" } as Category
+        const [a, b] = comACategoria(
+            [{ id: "a" } as Transaction, { id: "b", category: outra } as Transaction],
+            cat,
+        )
+        expect(a.category).toBe(cat)
+        expect(b.category).toBe(outra)
+    })
+    it("sem categoria carregada, devolve as linhas como vieram", () => {
+        const linhas = [{ id: "a" } as Transaction]
+        expect(comACategoria(linhas, null)).toBe(linhas)
     })
 })

@@ -1,6 +1,7 @@
 import type { FilterField, FilterValue } from "@/components/ui/filter-bar"
 import { monthRangeYmd } from "@/lib/period-range"
 import { escreverFiltrosNaUrl, type EstadoDaLista } from "@/lib/transactions/filtros"
+import type { Category, Transaction } from "@/lib/supabase"
 
 /** A lista do mês abre limpa: tudo, da data mais recente para trás, na primeira página. */
 export function estadoDoMes(): EstadoDaLista {
@@ -38,4 +39,10 @@ export function hrefDeTransacoes(o: {
 /** A página que existe: com menos linhas (excluiu a última da página 2), volta à última. */
 export function paginaValida(page: number, total: number, tamanho: number): number {
     return Math.min(page, Math.max(1, Math.ceil(total / tamanho)))
+}
+
+/** As linhas do pacote não trazem a categoria: a da tela entra nelas, para o ladrilho ter a cor e o ícone dela. */
+export function comACategoria(linhas: Transaction[], category: Category | null): Transaction[] {
+    if (!category) return linhas
+    return linhas.map((t) => (t.category ? t : { ...t, category }))
 }

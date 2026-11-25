@@ -79,6 +79,7 @@ import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { useLancamentosDaCategoria } from "@/components/categories/detail/use-lancamentos-da-categoria"
+import { comACategoria } from "@/components/categories/detail/lancamentos-da-categoria-regras"
 import {
     TILE_EXPENSE_DEFAULT,
     TILE_INCOME_DEFAULT,
@@ -263,7 +264,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     // Mesma chave do controlador: o cache já tem as faturas pagas, nada é buscado a mais.
     const auxQuery = useTransactionsWorkspaceAuxQuery(currentWorkspaceId, Boolean(currentWorkspaceId))
     const invoicePayments = React.useMemo(() => auxQuery.data?.invoicePayments ?? [], [auxQuery.data?.invoicePayments])
-    const linhasDoMes = React.useMemo(() => expenseMonthRows ?? txs, [expenseMonthRows, txs])
+    const linhasDoMes = React.useMemo(() => comACategoria(expenseMonthRows ?? txs, category), [expenseMonthRows, txs, category])
     const { openTransactionDetail } = txController
     const abrirDetalhe = React.useCallback(
         (t: Transaction, o?: { editar?: boolean }) => openTransactionDetail(t, { edit: o?.editar }),
@@ -678,8 +679,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         </DropdownMenu>
     ) : null
 
-    const totalLancamentos = expenseMonthRows?.length ?? txController.totalCount ?? 0
-
     const comComposicao = Boolean(analise?.composicao) && txs.length > 0
     const mesesNode = analise ? (
         <UltimosSeisMeses
@@ -746,7 +745,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             pesoNoTotal={pesoNoTotal}
                             comparacao={analise.comparacao}
                             media={analise.media}
-                            quantidade={totalLancamentos}
                             maior={analise.maior}
                         />
                     )

@@ -177,6 +177,8 @@ function colunas(
     divide: boolean,
     faturasPagas: ReadonlySet<string>,
     pagamentoUnico: boolean,
+    /** A tela já é de uma categoria: sai o nome dela ao lado da descrição. */
+    semCategoria = false,
 ) {
     const lista: DataTableColumnDef<Transaction>[] = [
         {
@@ -196,7 +198,7 @@ function colunas(
                             {descricaoNaTabela(t)}
                         </span>
                         {/* A categoria pelo nome, apagada, ao lado (sem descrição o nome dela já é o título). */}
-                        {t.category && t.description ? (
+                        {!semCategoria && t.category && t.description ? (
                             <span className="min-w-0 truncate text-muted-foreground">· {t.category.name}</span>
                         ) : null}
                         <span className="flex shrink-0 items-center gap-1">
@@ -458,7 +460,7 @@ export function TransacoesTabela({
         [transacoes],
     )
     const columns = React.useMemo(
-        () => colunas(membros, divide, faturasPagas, pagamentoUnico).filter((c) => !(semCategoria && c.id === "category")),
+        () => colunas(membros, divide, faturasPagas, pagamentoUnico, semCategoria).filter((c) => !(semCategoria && c.id === "category")),
         [membros, divide, faturasPagas, pagamentoUnico, semCategoria],
     )
 

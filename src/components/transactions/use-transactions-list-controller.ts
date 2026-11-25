@@ -60,6 +60,7 @@ import { transactionsKeys } from "@/lib/queries/keys"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
+import { linhasConhecidas } from "@/lib/transactions/delete-transactions"
 
 type SortKey = "date" | "amount"
 type SortDir = "asc" | "desc"
@@ -967,13 +968,8 @@ export function useTransactionsListController(
                                   pendingDelete.transaction.installment_plan_id,
                           },
                       ]
-                    : pendingDelete.ids.map((id) => {
-                          const t = transactions.find((x) => x.id === id)
-                          return {
-                              id,
-                              installment_plan_id: t?.installment_plan_id ?? null,
-                          }
-                      })
+                    : // Fora da página carregada (ou sem lista, como no detalhe da categoria), o banco resolve o plano.
+                      linhasConhecidas(pendingDelete.ids, transactions)
 
             const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId, {
                 rows,
