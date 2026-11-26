@@ -78,17 +78,19 @@ export function CategoryDetailSkeleton() {
             <PageHeaderSkeleton description={false} back media actions={["lg", "icon"]} className="max-md:hidden" />
             <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
                 {/* A faixa do mês: o rótulo, o valor com a variação, o "Deve fechar", as legendas e a barra.
-                    No telefone, o título "Este mês" com o ⋯ em cima, o "Deve fechar" em duas linhas e o
+                    No telefone, o topo centrado (ladrilho, nome, valor e legenda) em cima, o "Deve fechar" em duas linhas e o
                     selo do peso na carteira embaixo da barra, no lugar das legendas. */}
                 <div className="flex flex-col">
-                    <div className="mb-4 flex items-center justify-between md:hidden">
-                        <Skeleton shape="text" className="h-4 w-20" />
-                        <Skeleton shape="circle" size="sm" />
+                    <div className="flex flex-col items-center gap-2 pb-4 md:hidden">
+                        <Skeleton shape="tile" size="2xl" />
+                        <Skeleton shape="text" className="w-28" />
+                        <Skeleton className="h-10 w-40" />
+                        <Skeleton shape="text" className="w-56 max-w-full" />
                     </div>
-                    <Skeleton shape="text" className="w-32 max-md:w-12" />
-                    <div className="mt-2 flex items-end gap-3">
+                    <Skeleton shape="text" className="w-32 max-md:hidden" />
+                    <div className="mt-2 flex items-end gap-3 max-md:hidden">
                         <Skeleton className="h-10 w-56" />
-                        <Skeleton shape="text" className="mb-1 w-10 max-md:hidden" />
+                        <Skeleton shape="text" className="mb-1 w-10" />
                     </div>
                     <Skeleton shape="text" className="mt-2 w-96 max-w-full max-md:mt-0" />
                     <Skeleton shape="text" className="w-20 md:hidden" />
