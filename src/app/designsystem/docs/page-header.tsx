@@ -304,8 +304,8 @@ export default function PageHeaderDoc() {
     <>
       <Usage>
         O topo de uma tela que tem um título grande: de onde ela veio, como se chama, o que é, os números que a pessoa
-        veio conferir e a ação que oferece. Nenhuma tela do app o usa hoje — o título mora na barra do topo e as listas
-        abrem direto na <code>Toolbar</code>; ele serve a tela de detalhe e o próprio catálogo. O bloco dentro da tela é{" "}
+        veio conferir e a ação que oferece. As listas abrem direto na <code>Toolbar</code>; ele serve a tela de detalhe — o
+        detalhe da categoria o usa, e no telefone na forma hero — e o próprio catálogo. O bloco dentro da tela é{" "}
         <code>PageSection</code>; a barra da janela é <code>TopBar</code>.
       </Usage>
 

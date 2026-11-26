@@ -18,7 +18,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PageHeader, PageHeaderActions, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { PageHeader, PageHeaderActions, PageHeaderHero, PageHeaderTitle, PageHeaderTitleRow } from "@/components/ui/page-header"
+import { TopBarAction } from "@/components/ui/top-bar"
 import { BanknotesIcon, ChevronRightIcon, EllipsisHorizontalIcon, PencilIcon, PresentationChartLineIcon, TrashIcon } from "@heroicons/react/16/solid"
 import {
     CATEGORY_COLORS,
@@ -35,6 +36,7 @@ import { toastError, toastSuccess } from "@/lib/toast"
 import { CategoryDetailSkeleton } from "@/components/categories/detail/category-detail-skeleton"
 import { CategoryDetailLayout } from "@/components/categories/detail/category-detail-layout"
 import { ResumoDoMes } from "@/components/categories/detail/resumo-do-mes"
+import { TopoDaCategoria, valorCurto } from "@/components/categories/detail/topo-da-categoria"
 import { FaixaDoMes } from "@/components/categories/detail/faixa-do-mes"
 import { UltimosSeisMeses } from "@/components/categories/detail/resumo/ultimos-seis-meses"
 import { InsightsDaCategoria } from "@/components/categories/detail/resumo/insights-da-categoria"
@@ -49,7 +51,7 @@ import { PARA_ONDE_VAI_ID } from "@/components/dashboard/dashboard-para-onde-vai
 import { CategoryEmbeddedTransactions, LANCAMENTOS_DO_MES_ID } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
 import { MonthNav, useMonthInHeader } from "@/components/categories/categories-toolbar"
-import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
+import { usePageChromeMenu, usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ROUTES } from "@/config/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -613,6 +615,46 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         [txController.categories],
     )
 
+    // Memorizado: a loja do cabeçalho compara por identidade, e um nó novo a cada render republicaria.
+    const abrirMenu = React.useMemo(() => {
+        if (!podeEscrever || !category) return null
+        const rotulo = `Opções da categoria ${category.name}`
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    {/* No telefone o ⋯ mora na cápsula da barra, ao lado da lupa e do mês, como o filtro.
+                        No desktop, ao lado da pílula do mês (36): a mesma altura, sem fundo, para alinhar sem competir com ela. */}
+                    {isMobile ? (
+                        <TopBarAction type="button" label={rotulo} plate tooltip={false}>
+                            <EllipsisHorizontalIcon className="size-4" aria-hidden />
+                        </TopBarAction>
+                    ) : (
+                        <Button type="button" variant="tertiary" size="icon-lg" aria-label={rotulo}>
+                            <EllipsisHorizontalIcon aria-hidden />
+                        </Button>
+                    )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" size="sm">
+                    <DropdownMenuItem onSelect={openEditDialog}>
+                        <PencilIcon aria-hidden />
+                        Editar
+                    </DropdownMenuItem>
+                    {category.type === "expense" ? (
+                        <DropdownMenuItem onSelect={() => openLimitDialog()}>
+                            <BanknotesIcon aria-hidden />
+                            {budget ? "Editar limite" : "Definir limite"}
+                        </DropdownMenuItem>
+                    ) : null}
+                    <DropdownMenuItem variant="destructive" onSelect={() => setDeleteDialogOpen(true)}>
+                        <TrashIcon aria-hidden />
+                        Excluir
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+    }, [podeEscrever, category, isMobile, openEditDialog, openLimitDialog, budget])
+    usePageChromeMenu(isMobile ? abrirMenu : null)
+
     if (workspaceError) {
         return (
             <Card>
@@ -651,38 +693,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         return null
     }
 
-    const abrirMenu = podeEscrever ? (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                {/* No desktop o ⋯ mora ao lado da pílula do mês (36): a mesma altura, sem fundo, para alinhar sem competir com ela. */}
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    size={isMobile ? "icon-md" : "icon-lg"}
-                    aria-label={`Opções da categoria ${category.name}`}
-                >
-                    <EllipsisHorizontalIcon aria-hidden />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" size="sm">
-                <DropdownMenuItem onSelect={openEditDialog}>
-                    <PencilIcon aria-hidden />
-                    Editar
-                </DropdownMenuItem>
-                {category.type === "expense" ? (
-                    <DropdownMenuItem onSelect={() => openLimitDialog()}>
-                        <BanknotesIcon aria-hidden />
-                        {budget ? "Editar limite" : "Definir limite"}
-                    </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem variant="destructive" onSelect={() => setDeleteDialogOpen(true)}>
-                    <TrashIcon aria-hidden />
-                    Excluir
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    ) : null
-
     const comComposicao = Boolean(analise?.composicao) && txs.length > 0
     const mesesNode = analise ? (
         <UltimosSeisMeses
@@ -700,28 +710,31 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     return (
         <div className="flex min-w-0 max-w-full flex-col gap-6">
             {confirmDialog}
-            {isMobile ? null : (
-                <PageHeader collapse>
-                    <PageHeaderTitleRow
-                        back={`${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`}
-                        backLabel="Voltar para Categorias"
-                        media={
-                            <ColorTile color={tileColorFor(category.color) || (category.type === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)}>
-                                <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
-                            </ColorTile>
-                        }
-                    >
-                        <PageHeaderTitle asChild>
-                            {/* O `<h1>` da página é o da barra do topo. */}
-                            <p aria-hidden="true">{category.name}</p>
-                        </PageHeaderTitle>
-                    </PageHeaderTitleRow>
-                    <PageHeaderActions>
-                        <MonthNav budgetMonthYm={yearMonth} onBudgetMonthYmChange={handleMonthChange} dense />
-                        {abrirMenu}
-                    </PageHeaderActions>
-                </PageHeader>
-            )}
+            {/* No telefone é o topo da gaveta (ladrilho, nome, valor e legenda), que sobe à barra ao rolar;
+                o voltar, o mês e o ⋯ moram na barra. No desktop, o cabeçalho de sempre. */}
+            <PageHeader phone="hero" collapse>
+                <PageHeaderTitleRow
+                    back={`${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`}
+                    backLabel="Voltar para Categorias"
+                    media={
+                        <ColorTile color={tileColorFor(category.color) || (category.type === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)}>
+                            <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
+                        </ColorTile>
+                    }
+                >
+                    <PageHeaderTitle asChild>
+                        {/* O `<h1>` da página é o da barra do topo. */}
+                        <p aria-hidden="true">{category.name}</p>
+                    </PageHeaderTitle>
+                </PageHeaderTitleRow>
+                <PageHeaderActions>
+                    <MonthNav budgetMonthYm={yearMonth} onBudgetMonthYmChange={handleMonthChange} dense />
+                    {isMobile ? null : abrirMenu}
+                </PageHeaderActions>
+                <PageHeaderHero trailing={valorCurto(mes.lancado)}>
+                    <TopoDaCategoria tipo={tipo} yearMonth={yearMonth} lancado={mes.lancado} comparacao={analise?.comparacao ?? null} />
+                </PageHeaderHero>
+            </PageHeader>
 
             <CategoryDetailLayout
                 resumo={
@@ -734,7 +747,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             limite={limite}
                             pesoNoTotal={pesoNoTotal}
                             aberto={aberto}
-                            acoes={isMobile ? abrirMenu : undefined}
                             destaque={!isMobile}
                         />
                     ) : (

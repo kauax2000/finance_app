@@ -1,11 +1,10 @@
 "use client"
 
-import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { PageSection, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
+import { PageSection } from "@/components/ui/page-section"
 import { Progress } from "@/components/ui/progress"
-import { Caption, Muted, P } from "@/components/ui/typography"
+import { Muted, P } from "@/components/ui/typography"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
 import type { TipoDaCategoria } from "@/lib/categoria-detalhe"
@@ -89,7 +88,7 @@ export function BarraDoMes({
     )
 }
 
-/** O topo do detalhe: quanto foi no mês, o limite com o previsto e o peso na carteira. */
+/** O resumo do mês: o limite com o previsto e o peso na carteira (e, no desktop, o valor; no telefone ele mora no topo). */
 export function ResumoDoMes({
     tipo,
     yearMonth,
@@ -98,7 +97,6 @@ export function ResumoDoMes({
     limite,
     pesoNoTotal,
     aberto,
-    acoes,
     destaque = false,
 }: {
     tipo: TipoDaCategoria
@@ -110,8 +108,6 @@ export function ResumoDoMes({
     pesoNoTotal: number | null
     /** O mês corrente: desenha o traço do ritmo. */
     aberto: boolean
-    /** O ⋯ da categoria, quando não há `PageHeader` (o telefone). */
-    acoes?: ReactNode
     /** A faixa do desktop, sob o `PageHeader`: sem título, a legenda ao lado do valor. */
     destaque?: boolean
 }) {
@@ -153,17 +149,11 @@ export function ResumoDoMes({
         )
     }
 
+    // No telefone o valor e o mês moram no topo da tela (`TopoDaCategoria`); aqui fica o que vem depois dele.
     return (
-        <PageSection>
-            <PageSectionHeader actions={acoes}>
-                <PageSectionTitle>{aberto ? "Este mês" : labelYearMonthPt(yearMonth)}</PageSectionTitle>
-            </PageSectionHeader>
+        <PageSection aria-label={`Resumo de ${labelYearMonthPt(yearMonth).toLowerCase()}`}>
             <div className="grid gap-3">
-                <div>
-                    <Caption>{despesa ? "Gasto" : "Entrou"}</Caption>
-                    <MoneyDisplay value={lancado} size="3xl" />
-                    {fechamento}
-                </div>
+                {fechamento}
                 {barra}
                 {frases || (aindaVem && !fechamento) ? (
                     <div>
