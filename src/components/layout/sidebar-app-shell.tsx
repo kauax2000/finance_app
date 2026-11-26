@@ -106,7 +106,7 @@ export function SidebarAppShell({
                                 <AppSidebar />
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
-                                    <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
+                                    <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:px-6 md:pt-2 md:pb-6">
                                         <TituloDaTela
                                             pathname={pathname}
                                             titleMode={titleMode}

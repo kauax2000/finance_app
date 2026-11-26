@@ -803,8 +803,12 @@
     color: oklch(0.145 0 0);
   }
 
+  /* Sem ancoragem de rolagem no documento: a troca de tela leva o esqueleto
+     curto ao topo, e quando a página de verdade crescia por cima do nó âncora o
+     navegador a empurrava para baixo (Transações rolada → Categorias abria no pé). */
   html {
     @apply font-sans;
+    overflow-anchor: none;
   }
 
   /* No app instalado do iOS 26/27 (WebKit 301994), com a página mais curta que a
