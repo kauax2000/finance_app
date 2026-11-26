@@ -343,7 +343,7 @@ describe("as ações numa cápsula", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
     // A cápsula é a mesma com ou sem filtro: ele pinga da lupa.
-    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
+    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}\s*(?:\{\/\*[\s\S]*?\*\/\}\s*|\{\}\s*)?\{menuDaTela \? \(\s*filtroNoCabecalho \? \([\s\S]*?\{filtroNoCabecalho\}/)
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
