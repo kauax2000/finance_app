@@ -55,8 +55,11 @@ export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaPro
         if (!isMobile || !subpagina) return
         // As telas de configuração da Você e Membros: o nome já nasce no centro da barra.
         const fixo = ROTAS_COM_TITULO_NA_BARRA.includes(pathname)
-        const publicar = () =>
+        // O hero do telefone publica o título da barra sozinho (com ladrilho e valor): o texto se cala.
+        const publicar = () => {
+            if (document.querySelector('[data-slot="page-header"][data-phone="hero"]')) return
             publishPageTitle(document, { text: titulo, docked: fixo || window.scrollY > ROLAGEM_MINIMA })
+        }
         publicar()
         window.addEventListener("scroll", publicar, { passive: true })
         return () => {

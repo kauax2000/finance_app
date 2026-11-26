@@ -46,6 +46,8 @@ type PageChromeContextValue = {
     setSlot: (next: PageChromeSlotPatch | null) => void
     filter: PageChromeFilterEntry | null
     setFilter: (next: PageChromeFilterEntry | null) => void
+    menu: React.ReactNode | null
+    setMenu: (next: React.ReactNode | null) => void
 }
 
 /**
@@ -62,9 +64,10 @@ const PageChromeContext = React.createContext<PageChromeContextValue | null>(
 export function PageChromeProvider({ children }: { children: React.ReactNode }) {
     const [slot, setSlot] = React.useState<PageChromeSlotPatch | null>(null)
     const [filter, setFilter] = React.useState<PageChromeFilterEntry | null>(null)
+    const [menu, setMenu] = React.useState<React.ReactNode | null>(null)
     const value = React.useMemo(
-        () => ({ slot, setSlot, filter, setFilter }),
-        [slot, filter],
+        () => ({ slot, setSlot, filter, setFilter, menu, setMenu }),
+        [slot, filter, menu],
     )
     return (
         <PageChromeContext.Provider value={value}>
@@ -170,4 +173,27 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
         })
         return () => setFilter(null)
     }, [setFilter, pathname, enabled, label, active, count, disabled, icon, month, temPopover])
+}
+
+/** O ⋯ que a tela publicou para a cápsula do cabeçalho do telefone. */
+export function usePageChromeMenuState(): React.ReactNode | null {
+    const ctx = React.useContext(PageChromeContext)
+    if (!ctx) {
+        throw new Error("usePageChromeMenuState must be used within PageChromeProvider")
+    }
+    return ctx.menu
+}
+
+/**
+ * Publica o ⋯ da tela na cápsula do cabeçalho do telefone, ao lado da lupa e do
+ * filtro; ao desmontar, limpa. Quem chama memoriza o nó (`useMemo`), senão cada
+ * render republica. Fora do provider (o catálogo), não faz nada.
+ */
+export function usePageChromeMenu(menu: React.ReactNode | null, enabled = true) {
+    const setMenu = React.useContext(PageChromeContext)?.setMenu
+    React.useLayoutEffect(() => {
+        if (!setMenu || !enabled) return
+        setMenu(menu)
+        return () => setMenu(null)
+    }, [setMenu, menu, enabled])
 }

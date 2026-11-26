@@ -27,7 +27,7 @@ import {
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { defaultMobileTitle } from "@/components/layout/titulo-da-tela"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
-import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeState } from "@/components/layout/page-chrome-provider"
+import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeMenuState, usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import { ROUTES } from "@/config/navigation"
 import { isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
@@ -88,6 +88,7 @@ function assinarLg(avisar: () => void) {
 
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
+    const menuDaTela = usePageChromeMenuState()
     const filtro = filtroDoCabecalho(mobileHeaderFilterFor(pathname), usePageChromeFilterFor(pathname))
     // Uma sondagem só: o sino aparece no telefone (esquerda) e no desktop (direita).
     useUnreadBellCount()
@@ -323,7 +324,19 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // troca o ícone no lugar.
                     <TopBarActionGroup trailingKey={filtro?.icon}>
                         {lupa(true)}
-                        {filtroNoCabecalho}
+                        {/* A cápsula estica até o primeiro elemento do segundo filho: o ⋯ vai junto do filtro num span. */}
+                        {menuDaTela ? (
+                            filtroNoCabecalho ? (
+                                <span className="flex">
+                                    {filtroNoCabecalho}
+                                    {menuDaTela}
+                                </span>
+                            ) : (
+                                menuDaTela
+                            )
+                        ) : (
+                            filtroNoCabecalho
+                        )}
                     </TopBarActionGroup>
                 }
             >
