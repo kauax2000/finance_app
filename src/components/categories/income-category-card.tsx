@@ -218,9 +218,11 @@ export function IncomeCategoryCard({
                     </div>
 
                     {historico === undefined ? (
-                        <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
-                    {/* O osso da faísca de área: a faixa preenchida do pé, e não barras. */}
-                    <Skeleton className="h-10 w-full rounded-none" />
+                        <div aria-hidden data-osso="faisca" className="relative -mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
+                    {/* A faísca que espera, leve como a real: a linha tracejada da média (só no desktop, como a
+                        real) e a área embaixo, e não uma faixa cheia. */}
+                    <span className="absolute inset-x-0 top-2/5 border-t border-dashed border-muted-foreground/30 max-md:hidden" />
+                    <Skeleton className="h-1/2 w-full rounded-none opacity-50" />
                 </div>
                     ) : (
                         <div className="pointer-events-none relative -mx-(--card-px) -mb-(--card-py) mt-auto">

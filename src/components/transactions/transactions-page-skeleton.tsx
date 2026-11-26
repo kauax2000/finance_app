@@ -99,27 +99,32 @@ export function TransacoesTabelaSkeleton({ dias = DIAS }: { dias?: number[] }) {
                                             <TableCell selection>
                                                 <Skeleton className="size-4 rounded-sm" />
                                             </TableCell>
-                                            {/* As medidas da coluna real: a Descrição de ~384 (o `w-80` dela mais o conteúdo), o Pagamento até `max-w-48`. */}
-                                            <TableCell className="w-96 min-w-60">
+                                            {/* As medidas da coluna real (`transacoes-tabela.tsx`): a Descrição pede 320, corta abaixo de 1280 e
+                                                não desce de 240; o Pagamento vai até `max-w-48`. */}
+                                            <TableCell className="w-80 min-w-60 max-xl:max-w-0">
                                                 <div className="flex items-center gap-3">
                                                     <Skeleton shape="tile" size="xs" className="shrink-0" />
                                                     <Skeleton shape="text" className={LARGURAS[(comeco[dia] + i) % LARGURAS.length]} />
                                                 </div>
                                             </TableCell>
                                             <TableCell className="max-w-48">
-                                                <Skeleton shape="text" className="w-36" />
+                                                <Skeleton shape="text" className="w-40" />
                                             </TableCell>
                                             <TableCell>
                                                 <Skeleton shape="circle" size="xs" />
                                             </TableCell>
+                                            {/* A Data real é tão larga quanto o cabeçalho com a seta de ordenar. */}
                                             <TableCell>
-                                                <Skeleton shape="text" className="w-10" />
+                                                <Skeleton shape="text" className="w-12" />
                                             </TableCell>
                                             <TableCell numeric>
-                                                <Skeleton shape="text" className="ms-auto w-18" />
+                                                <Skeleton shape="text" className="ms-auto w-20" />
                                             </TableCell>
+                                            {/* As ações reais guardam o lugar do ✓ de conferir ao lado do ⋯: 68 em toda linha. */}
                                             <TableCell actions>
-                                                <Skeleton shape="control" size="md" className="ms-auto aspect-square" />
+                                                <div className="ms-auto flex w-17 justify-end">
+                                                    <Skeleton shape="control" size="md" className="aspect-square" />
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -133,8 +138,8 @@ export function TransacoesTabelaSkeleton({ dias = DIAS }: { dias?: number[] }) {
             <div aria-hidden className="flex flex-col px-px md:hidden">
                 {dias.map((linhas, dia) => (
                     <div key={dia}>
-                        {/* O dia real: 28 de altura (o texto de 11 com 4 em cima e 8 embaixo), a 20 da barra e a 24 do cartão de cima. */}
-                        <div className={dia === 0 ? "mt-1 flex h-7 items-start justify-between px-4 pt-2" : "mt-5 flex h-7 items-start justify-between px-4 pt-2"}>
+                        {/* O dia real: 28 de altura (o texto de 11 com 4 em cima e 8 embaixo), a 29 da barra (medido a 375px) e a 24 do cartão de cima. */}
+                        <div className={dia === 0 ? "mt-3 flex h-7 items-start justify-between px-4 pt-2" : "mt-5 flex h-7 items-start justify-between px-4 pt-2"}>
                             <Skeleton shape="text" className="h-2.5 w-14" />
                             <Skeleton shape="text" className="h-2.5 w-16" />
                         </div>

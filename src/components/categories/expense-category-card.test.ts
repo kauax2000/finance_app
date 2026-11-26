@@ -142,7 +142,9 @@ describe("o esqueleto da página Categorias na forma da tela (20/11/2026)", () =
         expect(osso).toContain('<div className="flex items-end justify-between gap-2">')
         expect(osso).toContain('className="w-14 shrink-0 text-xs"')
         expect(osso).toContain('className="w-48 max-w-full text-xs"')
-        expect(osso).toContain('<Skeleton className="h-3/5 w-full rounded-none" />')
+        // A faísca que espera é leve como a real: a linha tracejada da média e a área a meia tinta.
+        expect(osso).toContain("border-dashed border-muted-foreground/30 max-md:hidden")
+        expect(osso).toContain('<Skeleton className="h-1/2 w-full rounded-none opacity-50" />')
     })
 
     it("a barra: abas, a cápsula de dois ícones no telefone, ordenar e mês no desktop", () => {

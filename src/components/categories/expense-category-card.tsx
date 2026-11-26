@@ -242,9 +242,11 @@ export function ExpenseCategoryCard({
                     </div>
 
                     {historico === undefined ? (
-                        <div aria-hidden data-osso="faisca" className="-mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
-                    {/* O osso da faísca de área: a faixa preenchida do pé, e não barras. */}
-                    <Skeleton className="h-10 w-full rounded-none" />
+                        <div aria-hidden data-osso="faisca" className="relative -mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
+                    {/* A faísca que espera, leve como a real: a linha tracejada da média (só no desktop, como a
+                        real) e a área embaixo, e não uma faixa cheia. */}
+                    <span className="absolute inset-x-0 top-2/5 border-t border-dashed border-muted-foreground/30 max-md:hidden" />
+                    <Skeleton className="h-1/2 w-full rounded-none opacity-50" />
                 </div>
                     ) : (
                         <div className="pointer-events-none relative -mx-(--card-px) -mb-(--card-py) mt-auto">
@@ -306,9 +308,10 @@ export function CategoryCardSkeleton() {
                     <Skeleton shape="text" className="w-48 max-w-full text-xs" />
                 </div>
                 <div aria-hidden data-osso="faisca" className="relative -mx-(--card-px) -mb-(--card-py) mt-auto flex items-end max-md:h-26 md:h-16">
-                    {/* O osso da faísca de área: a faixa preenchida do pé (a linha mora nos 45% de
-                        cima, e a área enche o resto), e não barras. */}
-                    <Skeleton className="h-3/5 w-full rounded-none" />
+                    {/* A faísca que espera, leve como a real: a linha tracejada da média (só no desktop, como a
+                        real) e a área embaixo, e não uma faixa cheia. */}
+                    <span className="absolute inset-x-0 top-2/5 border-t border-dashed border-muted-foreground/30 max-md:hidden" />
+                    <Skeleton className="h-1/2 w-full rounded-none opacity-50" />
                     {/* O "Ver lançamentos" do telefone, por cima da faísca, como no cartão real. */}
                     <div className="absolute inset-x-(--card-px) bottom-2.5 flex h-8 items-center justify-center md:hidden">
                         <Skeleton shape="text" className="w-32 bg-muted-foreground/20" />
