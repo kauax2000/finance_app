@@ -56,8 +56,10 @@ export function TituloDaTela({ pathname, titleMode, subpagina }: TituloDaTelaPro
         // As telas de configuração da Você e Membros: o nome já nasce no centro da barra.
         const fixo = ROTAS_COM_TITULO_NA_BARRA.includes(pathname)
         // O hero do telefone publica o título da barra sozinho (com ladrilho e valor): o texto se cala.
+        // Só o da tela de agora: a cópia da `TransicaoDeSubpagina` perde o `data-workspace-content`.
+        // Pelo DOM e não pela loja: a limpeza da troca de rota zera a loja antes de o hero republicar.
         const publicar = () => {
-            if (document.querySelector('[data-slot="page-header"][data-phone="hero"]')) return
+            if (document.querySelector('[data-workspace-content] [data-slot="page-header"][data-phone="hero"]')) return
             publishPageTitle(document, { text: titulo, docked: fixo || window.scrollY > ROLAGEM_MINIMA })
         }
         publicar()

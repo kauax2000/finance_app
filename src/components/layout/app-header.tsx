@@ -3,7 +3,7 @@
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellButton, useUnreadBellCount } from "@/components/layout/notification-bell-link"
-import { CalendarIcon, ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { CalendarIcon, ChevronDownIcon, EllipsisHorizontalIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { usePageTitleDock } from "@/hooks/use-page-title-dock"
 import { labelYearMonthPt, shortLabelYearMonthPt } from "@/lib/budget-month"
@@ -27,10 +27,10 @@ import {
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { defaultMobileTitle } from "@/components/layout/titulo-da-tela"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
-import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeMenuState, usePageChromeState } from "@/components/layout/page-chrome-provider"
+import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeMenuFor, usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import { ROUTES } from "@/config/navigation"
-import { isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { isVoceTabActive, mobileHeaderFilterFor, mobileHeaderMenuFor, voceBackHref } from "@/config/mobile-navigation"
 
 export function defaultMobileBackHref(pathname: string): string | undefined {
     const sub = resolveAppSubPageMeta(pathname)
@@ -88,7 +88,7 @@ function assinarLg(avisar: () => void) {
 
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
-    const menuDaTela = usePageChromeMenuState()
+    const menuPublicado = usePageChromeMenuFor(pathname)
     const filtro = filtroDoCabecalho(mobileHeaderFilterFor(pathname), usePageChromeFilterFor(pathname))
     // Uma sondagem só: o sino aparece no telefone (esquerda) e no desktop (direita).
     useUnreadBellCount()
@@ -212,6 +212,17 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 </Popover>
             </span>
         ) : null
+    // O ⋯ da tela, na ponta parada da cápsula. Como o filtro, a publicação da
+    // página vence (o `null` do convidado o tira); antes dela, a rota declara o
+    // ⋯ inerte na mesma forma, que não abre nada e não esmaece.
+    const menu =
+        menuPublicado !== undefined ? (
+            menuPublicado
+        ) : mobileHeaderMenuFor(pathname) ? (
+            <TopBarAction type="button" label="Opções" plate tooltip={false} aria-disabled>
+                <EllipsisHorizontalIcon className="size-4" aria-hidden />
+            </TopBarAction>
+        ) : null
     const filtroNoCabecalho =
         filtro?.popover && botaoDoFiltro ? (
             <Popover open={filtroAberto} onOpenChange={setFiltroAberto}>
@@ -265,12 +276,14 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
                             lado com uma ação em cada ponta; 7rem quando a direita
-                            tem a lupa e o filtro. Ao rolar, o título sobe e toma o
-                            lugar dela; no Painel, a tela da carteira, ela fica. */}
+                            tem a lupa e o filtro; com o ⋯ a cápsula tem três (16 +
+                            3×44 + 12 = 10rem à direita), e a caixa fica assimétrica.
+                            Ao rolar, o título sobe e toma o lugar dela; no Painel,
+                            a tela da carteira, ela fica. */}
                         <div
                             className={cn(
                                 "absolute flex justify-center",
-                                filtro ? "inset-x-28" : "inset-x-16"
+                                menu ? "start-16 end-40" : filtro ? "inset-x-28" : "inset-x-16"
                             )}
                         >
                             {pathname === ROUTES.DASHBOARD ? (
@@ -321,22 +334,11 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // dois colam numa cápsula, a lupa primeiro. O grupo é o
                     // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
                     // volta a ela ao sair, e a identidade (`month`, `filter`)
-                    // troca o ícone no lugar.
-                    <TopBarActionGroup trailingKey={filtro?.icon}>
+                    // troca o ícone no lugar. O ⋯ da tela é a ponta parada
+                    // (`end`), fora do esticar: a forma é a mesma com ou sem ele.
+                    <TopBarActionGroup trailingKey={filtro?.icon} end={menu}>
                         {lupa(true)}
-                        {/* A cápsula estica até o primeiro elemento do segundo filho: o ⋯ vai junto do filtro num span. */}
-                        {menuDaTela ? (
-                            filtroNoCabecalho ? (
-                                <span className="flex">
-                                    {filtroNoCabecalho}
-                                    {menuDaTela}
-                                </span>
-                            ) : (
-                                menuDaTela
-                            )
-                        ) : (
-                            filtroNoCabecalho
-                        )}
+                        {filtroNoCabecalho}
                     </TopBarActionGroup>
                 }
             >

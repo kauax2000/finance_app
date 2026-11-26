@@ -370,3 +370,12 @@ export function mobileHeaderFilterFor(pathname: string): MobileHeaderFilterIcon 
     if (pathname === ROUTES.TRANSACTIONS || pathname === ROUTES.BILLS) return "filter"
     return null
 }
+
+/**
+ * A rota cujo cabeçalho do telefone leva o ⋯ da tela na cápsula: o detalhe da
+ * categoria. Como o filtro, ele nasce com a rota (inerte até a tela publicar),
+ * para a cápsula não crescer de 88 para 132 ~700ms depois do clique.
+ */
+export function mobileHeaderMenuFor(pathname: string): boolean {
+    return /^\/categories\/[^/]+$/.test(pathname) && pathname !== `${ROUTES.DASHBOARD_CATEGORIES}/new`
+}

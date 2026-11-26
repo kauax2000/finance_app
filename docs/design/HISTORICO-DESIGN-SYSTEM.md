@@ -29576,3 +29576,12 @@ categoria era; o topo deve ser o da gaveta do lançamento e subir para a barra a
 - Achado na prévia, anterior a esta rodada: dentro do iframe do `IphoneFrame` o `--top-bar-bottom`
   ainda vale 0 quando o observador do título nasce, e o título só sobe depois de sair inteiro da
   janela (não ao passar por baixo da barra). No documento do app o CSS já chegou e a conta é a certa.
+- Revisão final da rodada: `TopBarActionGroup end` é a ponta parada da cápsula (o ⋯ da tela), depois
+  do segundo filho, no mesmo vidro e fora do esticar (o `desenharVidro` só soma a largura dela no
+  vidro e no anel, e a lupa não passa do lugar do filtro quando ela existe); ao sair, esmaece em
+  150ms no lugar. O cabeçalho passa `end={menu}`, e o segundo filho volta a ser só o filtro: o
+  calendário não remonta sob outro pai. A rota declara o ⋯ inerte (`mobileHeaderMenuFor`) até a
+  tela publicar (`usePageChromeMenu`, agora com a rota, como o filtro), e a cápsula não cresce de
+  88 para 132 ~700ms depois do clique. A caixa do título do telefone fica `start-16 end-40` com o
+  ⋯ (16 + 3×44 + 12 = 160 à direita), e o lado hero da barra é contêiner no telefone
+  (`max-md:@container/top-bar-hero`): mais estreito que 9rem (320px), o valor sai.

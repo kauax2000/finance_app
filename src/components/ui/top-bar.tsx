@@ -457,7 +457,10 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
           className={cn(
             TROCA_DO_TITULO,
             "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none",
-            "flex items-center gap-2 max-md:justify-center md:overflow-visible"
+            "flex items-center gap-2 max-md:justify-center md:overflow-visible",
+            // No telefone a caixa mede a própria largura: estreita, o valor sai, e nada passa sob a
+            // cápsula. Só lá: no desktop a contenção zeraria a largura do título entre o `md` e o `lg`.
+            "max-md:@container/top-bar-hero"
           )}
         >
           {dock.back ? (
@@ -475,7 +478,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
           </span>
           {dock.trailing ? (
             // Do `md` para cima o valor mora na faixa da tela: a barra do desktop não muda.
-            <span aria-hidden className="nums shrink-0 text-muted-foreground md:hidden">
+            <span aria-hidden className="nums shrink-0 text-muted-foreground md:hidden @max-[9rem]/top-bar-hero:hidden">
               {dock.trailing}
             </span>
           ) : null}
@@ -882,18 +885,23 @@ function MioloQueTroca({
  * no cursor e no toque. `trailingKey` é a identidade do segundo (`"month"`,
  * `"filter"`): mudá-la com os dois presentes troca o miolo no lugar, sem mexer
  * na forma. Na troca o segundo filho de antes e o de agora ficam montados
- * juntos: um ref passado a ele precisa tolerar duas instâncias. A busca compacta
- * do app (lupa e sino) a veste.
+ * juntos: um ref passado a ele precisa tolerar duas instâncias. `end` é a ação
+ * parada da ponta direita (o ⋯ da tela), no mesmo vidro: fora do esticar, nasce
+ * com a cápsula e, ao sair, esmaece no lugar. A busca compacta do app (lupa e
+ * sino) a veste.
  */
 function TopBarActionGroup({
   trailingKey,
+  end,
   className,
   ...props
 }: ButtonGroupProps & {
   /** A identidade do segundo filho; trocá-la troca o miolo dele no lugar. */
   trailingKey?: string
+  /** A ação da ponta direita, depois do segundo, no mesmo vidro e fora do esticar. */
+  end?: React.ReactNode
 }) {
-  return <CapsulaQueEstica trailingKey={trailingKey} className={cn("*:before:hidden *:ml-0!", className)} {...props} />
+  return <CapsulaQueEstica trailingKey={trailingKey} end={end} className={cn("*:before:hidden *:ml-0!", className)} {...props} />
 }
 
 /**
@@ -917,20 +925,24 @@ function desenharVidro(grupo: HTMLElement, lupa: HTMLElement, miolo: HTMLElement
   const R = VIDRO_R * k
   const H = VIDRO_H * k
   const px = (v: number) => Math.round(v * k * dpr) / dpr
-  const lupaDx = px(f.lupaDx)
+  // Com a ponta parada à direita, a lupa não passa do lugar do filtro: além dele ela a cobriria.
+  const temFim = Boolean(grupo.querySelector(":scope > [data-slot=top-bar-action-end]"))
+  const lupaDx = temFim ? Math.min(px(f.lupaDx), H) : px(f.lupaDx)
   const alem = Math.max(0, -lupaDx)
   const aquem = Math.max(0, lupaDx - H)
   // A origem das contas é a caixa de repouso da cápsula (`[0, 2H]`); no
   // balanço além dela o grupo cresce `alem` para a esquerda.
   const esquerda = lupaDx + alem - aquem
+  // A ponta parada (`end`) fica à direita da conta: o vidro e o anel a somam, e ela não anda.
+  const fim = grupo.querySelector<HTMLElement>(":scope > [data-slot=top-bar-action-end]")?.offsetWidth ?? 0
   grupo.dataset.voo = ""
   grupo.style.boxShadow = "none"
-  grupo.style.width = alem > 0 ? 2 * H + alem + "px" : ""
+  grupo.style.width = alem > 0 ? 2 * H + alem + fim + "px" : ""
   grupo.style.justifyContent = alem > 0 ? "flex-end" : ""
   grupo.style.transform = aquem > 0 ? "translateX(" + aquem + "px)" : ""
   grupo.style.clipPath = "inset(-1px -1px -1px " + (esquerda - 1) + "px round " + (R + 1) + "px)"
   grupo.style.setProperty("--vidro-esquerda", esquerda + "px")
-  grupo.style.setProperty("--vidro-largura", f.largura * k + "px")
+  grupo.style.setProperty("--vidro-largura", f.largura * k + fim + "px")
   lupa.style.transform = "translateX(" + (lupaDx - aquem) + "px)"
   pintarMiolo(miolo, f.icone)
 }
@@ -961,9 +973,10 @@ function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, miolo: HTMLElemen
  */
 function CapsulaQueEstica({
   trailingKey,
+  end,
   children,
   ...props
-}: ButtonGroupProps & { trailingKey?: string }) {
+}: ButtonGroupProps & { trailingKey?: string; end?: React.ReactNode }) {
   const reduzido = useReducedMotion()
   const grupo = React.useRef<HTMLDivElement>(null)
   // Os filhos como vieram (`toArray` clonaria, e a identidade do segundo é o que diz se ele mudou).
@@ -978,6 +991,32 @@ function CapsulaQueEstica({
     setSegundo({ chave, filho: filtro })
   }
   const alvo = temFiltro ? 1 : 0
+  // A ponta parada: a de agora, ou a que saiu, segurada enquanto esmaece.
+  const temFim = end != null && end !== false
+  const [fim, setFim] = React.useState<React.ReactNode>(temFim ? end : null)
+  if (temFim && fim !== end) setFim(end)
+  const fimRef = React.useRef<HTMLSpanElement>(null)
+  React.useLayoutEffect(() => {
+    const el = fimRef.current
+    if (!el) return
+    if (temFim) {
+      el.style.opacity = ""
+      return
+    }
+    if (reduzido || el.offsetWidth === 0) {
+      setFim(null)
+      return
+    }
+    // `--duration-fast`: a ponta sai como o resto da casca, sem esticar nada.
+    let ativa = true
+    const saindo = animate(el, { opacity: 0 }, { duration: 0.15, ease: "easeOut" })
+    // Parado porque a ponta voltou: ela fica.
+    saindo.then(() => ativa && setFim(null))
+    return () => {
+      ativa = false
+      saindo.stop()
+    }
+  }, [temFim, reduzido])
 
   React.useLayoutEffect(() => {
     const el = grupo.current
@@ -1062,6 +1101,17 @@ function CapsulaQueEstica({
           <MioloQueTroca swapKey={segundo.chave} afundar={false} className="grid place-items-center">
             {segundo.filho}
           </MioloQueTroca>
+        </span>
+      ) : null}
+      {fim ? (
+        <span
+          ref={fimRef}
+          data-slot="top-bar-action-end"
+          inert={!temFim || undefined}
+          aria-hidden={!temFim || undefined}
+          className={cn("relative grid shrink-0 place-items-center rounded-full", !temFim && "pointer-events-none", REALCE_DO_VIDRO_NO_MIOLO)}
+        >
+          <TopBarSwapContext value>{fim}</TopBarSwapContext>
         </span>
       ) : null}
     </ButtonGroup>

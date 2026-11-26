@@ -46,8 +46,8 @@ type PageChromeContextValue = {
     setSlot: (next: PageChromeSlotPatch | null) => void
     filter: PageChromeFilterEntry | null
     setFilter: (next: PageChromeFilterEntry | null) => void
-    menu: React.ReactNode | null
-    setMenu: (next: React.ReactNode | null) => void
+    menu: PageChromeMenuEntry | null
+    setMenu: (next: PageChromeMenuEntry | null) => void
 }
 
 /**
@@ -57,6 +57,9 @@ type PageChromeContextValue = {
  */
 type PageChromeFilterEntry = { pathname: string; filter: PageChromeFilter | null }
 
+/** O ⋯ publicado e a rota de quem o publicou, no molde do filtro: `null` na entrada é "não quer ⋯". */
+type PageChromeMenuEntry = { pathname: string; menu: React.ReactNode | null }
+
 const PageChromeContext = React.createContext<PageChromeContextValue | null>(
     null,
 )
@@ -64,7 +67,7 @@ const PageChromeContext = React.createContext<PageChromeContextValue | null>(
 export function PageChromeProvider({ children }: { children: React.ReactNode }) {
     const [slot, setSlot] = React.useState<PageChromeSlotPatch | null>(null)
     const [filter, setFilter] = React.useState<PageChromeFilterEntry | null>(null)
-    const [menu, setMenu] = React.useState<React.ReactNode | null>(null)
+    const [menu, setMenu] = React.useState<PageChromeMenuEntry | null>(null)
     const value = React.useMemo(
         () => ({ slot, setSlot, filter, setFilter, menu, setMenu }),
         [slot, filter, menu],
@@ -175,25 +178,31 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
     }, [setFilter, pathname, enabled, label, active, count, disabled, icon, month, temPopover])
 }
 
-/** O ⋯ que a tela publicou para a cápsula do cabeçalho do telefone. */
-export function usePageChromeMenuState(): React.ReactNode | null {
+/**
+ * O ⋯ que a página de `pathname` publicou para a cápsula do cabeçalho do
+ * telefone; `undefined` enquanto ela não falou (aí a rota declara o ⋯ inerte,
+ * `mobileHeaderMenuFor`). `null` é uma resposta: a página não quer ⋯ (o convidado).
+ */
+export function usePageChromeMenuFor(pathname: string): React.ReactNode | null | undefined {
     const ctx = React.useContext(PageChromeContext)
     if (!ctx) {
-        throw new Error("usePageChromeMenuState must be used within PageChromeProvider")
+        throw new Error("usePageChromeMenuFor must be used within PageChromeProvider")
     }
-    return ctx.menu
+    return ctx.menu?.pathname === pathname ? ctx.menu.menu : undefined
 }
 
 /**
- * Publica o ⋯ da tela na cápsula do cabeçalho do telefone, ao lado da lupa e do
- * filtro; ao desmontar, limpa. Quem chama memoriza o nó (`useMemo`), senão cada
- * render republica. Fora do provider (o catálogo), não faz nada.
+ * Publica o ⋯ da tela na cápsula do cabeçalho do telefone, depois da lupa e do
+ * filtro; ao desmontar, devolve o estado a "não falou". Quem chama memoriza o nó
+ * (`useMemo`), senão cada render republica. Com `enabled` falso não fala: a rota
+ * segue com o ⋯ inerte (enquanto a tela carrega). Fora do provider (o catálogo), não faz nada.
  */
 export function usePageChromeMenu(menu: React.ReactNode | null, enabled = true) {
     const setMenu = React.useContext(PageChromeContext)?.setMenu
+    const pathname = usePathname()
     React.useLayoutEffect(() => {
         if (!setMenu || !enabled) return
-        setMenu(menu)
+        setMenu({ pathname, menu })
         return () => setMenu(null)
-    }, [setMenu, menu, enabled])
+    }, [setMenu, pathname, menu, enabled])
 }

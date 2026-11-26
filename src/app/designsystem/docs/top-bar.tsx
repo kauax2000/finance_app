@@ -309,17 +309,35 @@ function DemoTroca() {
 
 const SEGUNDOS = ["nenhum", "mês", "ajustes"] as const
 
-/** A cápsula do telefone: a lupa sozinha, ou com o mês ou os ajustes da tela, o vidro esticando dela. O eixo troca a tela. */
+/**
+ * A cápsula do telefone: a lupa sozinha, ou com o mês ou os ajustes da tela, o vidro esticando dela. O eixo troca a
+ * tela; o interruptor põe o ⋯ da tela na ponta parada (`end`), como no detalhe da categoria.
+ */
 function DemoVidroQueEstica() {
   const [segundo, setSegundo] = React.useState<(typeof SEGUNDOS)[number]>("nenhum")
+  const [menu, setMenu] = React.useState(false)
   return (
     <div className="flex w-full flex-col items-center gap-6 p-4">
       <Controles
         inicio={<Eixo rotulo="segundo" valores={SEGUNDOS} valor={segundo} onChange={setSegundo} />}
+        fim={
+          <Interruptores>
+            <Interruptor id="tb-capsula-menu" rotulo="⋯" valor={menu} onChange={setMenu} />
+          </Interruptores>
+        }
       />
       {/* A ponta direita fica parada, como na barra do app: o grupo encosta à direita. */}
       <div className="flex w-56 justify-end">
-        <TopBarActionGroup trailingKey={segundo === "nenhum" ? undefined : segundo}>
+        <TopBarActionGroup
+          trailingKey={segundo === "nenhum" ? undefined : segundo}
+          end={
+            menu ? (
+              <TopBarAction label="Opções" plate tooltip={false}>
+                <EllipsisHorizontalIcon className="size-4" />
+              </TopBarAction>
+            ) : null
+          }
+        >
           <TopBarAction label="Buscar" plate tooltip={false}>
             <MagnifyingGlassIcon className="size-4" />
           </TopBarAction>
@@ -478,8 +496,8 @@ export default function TopBarDoc() {
 
       <DocSection
         title="O vidro estica da lupa"
-        description="A cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
-        code={`<TopBarActionGroup trailingKey={filtro?.icon}>
+        description="A cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. end é a ação parada da ponta direita, depois do segundo (o ⋯ da tela): mora no mesmo vidro e conta no anel, fica fora do esticar e, ao sair, esmaece no lugar. Troque a tela no eixo, e ligue o ⋯."
+        code={`<TopBarActionGroup trailingKey={filtro?.icon} end={menu}>
   <TopBarAction label="Buscar" plate onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
   </TopBarAction>
@@ -555,7 +573,7 @@ export default function TopBarDoc() {
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader (do md para cima, com o voltar e a mídia da linha do título: o voltar é clicável e fica inerte até subir); tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
           { prop: "TopBarActionSwap", type: "{ swapKey, className?, children }", description: "O círculo de vidro que fica enquanto o miolo troca: mudar swapKey afunda o vidro na mola e cruza os ícones no desfoque. O filho não desenha o próprio vidro." },
-          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { trailingKey? }", description: "Ações com plate numa cápsula: um vidro no grupo, com o anel nele, e cada ação num círculo, com o realce em círculo nos dois apontadores. Aceita um ou dois filhos: o vidro estica da lupa ao entrar o segundo e encolhe ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { trailingKey?, end? }", description: "Ações com plate numa cápsula: um vidro no grupo, com o anel nele, e cada ação num círculo, com o realce em círculo nos dois apontadores. Aceita um ou dois filhos: o vidro estica da lupa ao entrar o segundo e encolhe ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda. end é a ação parada da ponta direita, depois do segundo e no mesmo vidro, fora do esticar; ao sair, esmaece no lugar." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },

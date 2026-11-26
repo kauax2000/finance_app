@@ -9,7 +9,7 @@ import { TopoDaCategoria, valorCurto } from "./topo-da-categoria"
 const texto = (props: Parameters<typeof TopoDaCategoria>[0]) =>
     renderToStaticMarkup(h(TopoDaCategoria, props))
         .replace(/<[^>]+>/g, "")
-        .replace(/ /g, " ")
+        .replace(/\u00a0/g, " ")
 
 const comparacao: Comparacao = { mesAnterior: "2026-10", anterior: 3734, atual: 4114.39, variacao: -0.18, mesmoPonto: true }
 
@@ -33,7 +33,7 @@ describe("TopoDaCategoria", () => {
     })
 
     it("valorCurto: reais sem centavos, o que sobe à barra", () => {
-        expect(valorCurto(4114.39).replace(/ /g, " ")).toBe("R$ 4.114")
+        expect(valorCurto(4114.39).replace(/\u00a0/g, " ")).toBe("R$ 4.114")
     })
 })
 

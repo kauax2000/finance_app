@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ArrowTrendingUpIcon } from "@heroicons/react/24/outline"
 import { MAIN_NAVIGATION, ROUTES } from "@/config/navigation"
-import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, mobileHeaderMenuFor, voceBackHref } from "@/config/mobile-navigation"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
@@ -120,5 +120,15 @@ describe("o filtro do cabeçalho pela rota", () => {
         for (const [rota, icone] of achados) {
             expect(mobileHeaderFilterFor(rota), rota).toBe(icone)
         }
+    })
+})
+
+describe("o ⋯ do cabeçalho pela rota", () => {
+    it("só o detalhe da categoria declara o ⋯, e é a tela que o publica", () => {
+        expect(mobileHeaderMenuFor(`${ROUTES.DASHBOARD_CATEGORIES}/abc`)).toBe(true)
+        expect(mobileHeaderMenuFor(`${ROUTES.DASHBOARD_CATEGORIES}/new`)).toBe(false)
+        expect(mobileHeaderMenuFor(ROUTES.DASHBOARD_CATEGORIES)).toBe(false)
+        expect(mobileHeaderMenuFor(ROUTES.TRANSACTIONS)).toBe(false)
+        expect(lerFonte("src/app/(app)/categories/[categoryId]/page-client.tsx")).toContain("usePageChromeMenu(")
     })
 })

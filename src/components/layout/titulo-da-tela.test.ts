@@ -28,7 +28,7 @@ describe("o nome da tela no telefone", () => {
     })
 
     it("sob um hero do telefone o título em texto se cala", () => {
-        const guarda = TITULO.indexOf('[data-slot="page-header"][data-phone="hero"]')
+        const guarda = TITULO.indexOf('[data-workspace-content] [data-slot="page-header"][data-phone="hero"]')
         expect(guarda).toBeGreaterThan(-1)
         expect(guarda).toBeLessThan(TITULO.indexOf("publishPageTitle(document, { text: titulo"))
     })

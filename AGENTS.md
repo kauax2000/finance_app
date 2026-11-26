@@ -1819,7 +1819,11 @@ declaração de `background-color` no trilho).
   a lupa e o filtro transparentes por dentro, o anel no `::after`, o calendário
   acendendo do desfoque, na mola `BALANCO` com o balanço à vista nos dois
   sentidos — e `trailingKey` troca o miolo com os dois presentes — rodadas
-  349 e 351) — a busca compacta
+  349 e 351; **`TopBarActionGroup end`** é a ação parada da ponta direita,
+  depois do segundo, no mesmo vidro e fora do esticar, que esmaece ao sair: o
+  ⋯ do detalhe da categoria, que a rota declara inerte, `mobileHeaderMenuFor`,
+  até a tela o publicar, `usePageChromeMenu`; com ele a caixa do título do
+  telefone fica assimétrica, `start-16 end-40`, 26/11/2026) — a busca compacta
   do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve

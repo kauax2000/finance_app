@@ -343,7 +343,9 @@ describe("as ações numa cápsula", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
     // A cápsula é a mesma com ou sem filtro: ele pinga da lupa.
-    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}>\s*\{lupa\(true\)\}\s*(?:\{\/\*[\s\S]*?\*\/\}\s*|\{\}\s*)?\{menuDaTela \? \(\s*filtroNoCabecalho \? \([\s\S]*?\{filtroNoCabecalho\}/)
+    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}\s+end=\{menu\}>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}\s*<\/TopBarActionGroup>/)
+    // Com o ⋯ a cápsula tem três: a caixa do título fica assimétrica, longe dela (16 + 3×44 + 12).
+    expect(cabecalho).toContain('menu ? "start-16 end-40" : filtro ? "inset-x-28" : "inset-x-16"')
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
@@ -446,6 +448,24 @@ describe("TopBarActionGroup", () => {
     for (const parte of ["trailingKey", "quadroDoVidroQueEstica(", "BALANCO"]) {
       expect(grupo).toContain(parte)
     }
+  })
+
+  it("a ponta parada (`end`) mora no mesmo vidro, depois do segundo, fora do esticar", () => {
+    expect(grupo).toContain("end?: React.ReactNode")
+    // Depois da gota, na mesma placa, sem o vidro próprio.
+    expect(grupo).toMatch(/data-slot="top-bar-action-drop"[\s\S]*data-slot="top-bar-action-end"[\s\S]*<TopBarSwapContext value>\{fim\}<\/TopBarSwapContext>[\s\S]*<\/ButtonGroup>/)
+    // O esticar não a conta: o vidro e o anel só somam a largura dela.
+    expect(grupo).toContain('grupo.style.width = alem > 0 ? 2 * H + alem + fim + "px" : ""')
+    expect(grupo).toContain('grupo.style.setProperty("--vidro-largura", f.largura * k + fim + "px")')
+    expect(grupo).toContain("const lupaDx = temFim ? Math.min(px(f.lupaDx), H) : px(f.lupaDx)")
+    // Ao sair ela esmaece no lugar, inerte, e só então desmonta.
+    expect(grupo).toContain("animate(el, { opacity: 0 }")
+    expect(grupo).toContain("saindo.then(() => ativa && setFim(null))")
+  })
+
+  it("no telefone a caixa do título-hero mede a si mesma, e o valor sai quando ela é estreita", () => {
+    expect(CODIGO).toContain('"max-md:@container/top-bar-hero"')
+    expect(CODIGO).toContain("md:hidden @max-[9rem]/top-bar-hero:hidden")
   })
 
   it("o segundo que sai fica montado, inerte e escondido do leitor, até o gesto acabar", () => {

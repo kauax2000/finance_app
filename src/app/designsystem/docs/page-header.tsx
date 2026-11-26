@@ -365,7 +365,7 @@ export default function PageHeaderDoc() {
 
       <DocSection
         title="No telefone, hero"
-        description="phone=&quot;hero&quot; é o topo centrado da gaveta do lançamento: a mídia no degrau 2xl (44) sobre o nome, que veste o título da folha (a sans de 16, e não a serifa), e o PageHeaderHero embaixo, com o valor e a legenda que a tela passa. O voltar e as ações não aparecem no telefone — moram na barra. Ao rolar, o nome sobe com a mídia a 24 e o valor curto (trailing): [ladrilho] nome R$ 1.285, no centro da barra, cortando o nome em … antes de empurrar os botões. Do md para cima nada muda: o cabeçalho de sempre, e o PageHeaderHero some (o dado mora na faixa da tela)."
+        description="phone=&quot;hero&quot; é o topo centrado da gaveta do lançamento: a mídia no degrau 2xl (44) sobre o nome, que veste o título da folha (a sans de 16, e não a serifa), e o PageHeaderHero embaixo, com o valor e a legenda que a tela passa. O voltar e as ações não aparecem no telefone — moram na barra. Ao rolar, o nome sobe com a mídia a 24 e o valor curto (trailing): [ladrilho] nome R$ 1.285, no centro da caixa do título da barra, que deixa a cápsula livre (com o ⋯ na cápsula, a caixa fica assimétrica). O nome corta em … primeiro, e numa caixa mais estreita que 9rem (o telefone de 320) o valor sai; nada passa sob os botões. Do md para cima nada muda: o cabeçalho de sempre, e o PageHeaderHero some (o dado mora na faixa da tela)."
         code={`<PageHeader phone="hero" collapse>
   <PageHeaderTitleRow back="/categories" media={<ColorTile color={cor}>…</ColorTile>}>
     <PageHeaderTitle>Alimentação</PageHeaderTitle>

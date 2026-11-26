@@ -6,8 +6,7 @@ const fonte = semComentarios(lerFonte("src/components/categories/detail/category
 describe("CategoryDetailSkeleton no telefone", () => {
     it("abre com o topo centrado: ladrilho, nome, valor e legenda, só no telefone", () => {
         expect(fonte).toContain('shape="tile" size="2xl"')
-        expect(fonte).toContain("items-center")
-        expect(fonte).toContain("md:hidden")
+        expect(fonte).toContain('"flex flex-col items-center gap-2 pb-4 md:hidden"')
         expect(fonte).toContain("h-10")
     })
 

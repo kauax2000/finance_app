@@ -653,7 +653,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             </DropdownMenu>
         )
     }, [podeEscrever, category, isMobile, openEditDialog, openLimitDialog, budget])
-    usePageChromeMenu(isMobile ? abrirMenu : null)
+    // Só no telefone, e só com a categoria e o papel lidos: até lá a rota segura o ⋯ inerte
+    // (`mobileHeaderMenuFor`); o convidado publica `null`, e o ⋯ sai.
+    usePageChromeMenu(abrirMenu, isMobile && Boolean(category) && !workspaceLoading)
 
     if (workspaceError) {
         return (
