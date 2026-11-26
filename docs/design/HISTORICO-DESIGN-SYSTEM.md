@@ -29546,3 +29546,33 @@ manchete grande, réguas longas, uma linha separando o rodapé). Escolhido o N2 
   `-muted-foreground` do tom (o `--warning` cheio sobre `--muted` media 1,6:1 no claro). O "Ver
   <grupo>" vai à linha das pílulas, à direita, e ocupa a largura no telefone. Saem o `Separator` e a
   frase do rodapé. O selo cai a 22px.
+
+### Rodada 416 — o `PageHeader` hero do telefone, que sobe à barra com ladrilho e valor
+
+Pedido do dono (26/11/2026): o detalhe da categoria no telefone abria em "Este mês", sem dizer qual
+categoria era; o topo deve ser o da gaveta do lançamento e subir para a barra ao rolar (opção A de
+`public/topo-da-categoria.html`). Spec: `docs/superpowers/specs/2026-11-26-topo-da-categoria-no-telefone-design.md`.
+
+- `PageHeader phone?: "default" | "hero"` (padrão `"default"`). Com `"hero"`, abaixo do `md`: a grade
+  vira uma coluna (`max-md:grid-cols-1`, `gap-y-1`, o valor colado ao nome); a linha do título vira
+  coluna centrada (`max-md:flex-col items-center gap-3 text-center`) com a mídia em cima, forçada ao
+  degrau `2xl` do `ColorTile` (`[&>*]:size-11`, ícone de 20) pelo slot `page-header-media`; o voltar
+  e o `PageHeaderActions` ficam `max-md:hidden`. O título veste o `DialogTitle` do corpo da gaveta
+  (`font-heading`, 16, `leading-snug`, `font-medium`, `tracking-normal`), com `!` porque o
+  `.page-title` mora fora de `@layer`; o `TITULO_GRANDE` do `collapse` não vale no hero.
+- `PageHeaderHero` (`data-slot="page-header-hero"`, `md:hidden`, coluna centrada com `gap-1`): o
+  valor e a legenda, que a tela passa. `trailing` (texto) é o valor curto que sobe; ela o entrega ao
+  cabeçalho por contexto. Fora de um hero, não desenha.
+- `PageTitleDock` ganha `trailing?: string` e `form?: "hero"`, e o `mesmoTitulo` compara os dois. O
+  `useTituloQueSobe` publica a forma e o valor (`publicarTitulo`); um valor que muda com o título já
+  na barra republica sem esperar o observador. O hero sobe mesmo sem `collapse`.
+- `TopBarPageTitle`: com `form === "hero"`, o lado que sobe é `[mídia 24] nome [valor]` também no
+  telefone (`flex items-center gap-2`, centrado abaixo do `md`; nome `min-w-0 truncate`, mídia e valor
+  `shrink-0`, o valor em `text-muted-foreground` e `md:hidden`: a barra do desktop não muda). Sem
+  `form`, o ramo antigo segue igual (a mídia só do `md` para cima).
+- Catálogo: a seção "No telefone, hero" no `IphoneFrame`, as linhas de `phone` e `PageHeaderHero`
+  nas tabelas; `registry.ts` lista a peça; `page-header-versions.test.ts` ganhou o bloco
+  `phone=hero`.
+- Achado na prévia, anterior a esta rodada: dentro do iframe do `IphoneFrame` o `--top-bar-bottom`
+  ainda vale 0 quando o observador do título nasce, e o título só sobe depois de sair inteiro da
+  janela (não ao passar por baixo da barra). No documento do app o CSS já chegou e a conta é a certa.

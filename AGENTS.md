@@ -1883,7 +1883,16 @@ declaração de `background-color` no trilho).
   `PageHeaderSkeleton` (`back`, `media` e `actions` por forma: `icon`, `sm` 112, `md` 160, `lg` 216 — o osso tem a largura do botão real, 25/11/2026); `collapse`, `PageHeaderActions overflow="menu"`, o
   voltar pelo histórico (`history={false}`; ligá-lo no `app-header` é mudança
   de jornada), `PageHeaderTitle truncate`. No desktop, o `back` e a `media` do `PageHeaderTitleRow` sobem com o título para a barra (`[‹] [mídia a 24] nome`; o voltar inerte até subir), e no telefone não. O telefone dele é um primeiro
-  desenho.
+  desenho. **`phone="hero"`** (rodada 416, 26/11/2026): abaixo do `md` o topo centrado da gaveta do
+  lançamento — a `media` no degrau `2xl` (44, a peça força o tamanho pelo `page-header-media`) sobre o
+  nome, que veste o título da folha (`font-heading` 16, `font-medium`, e não a serifa do `collapse`), e
+  a **`PageHeaderHero`** embaixo (`md:hidden`, o `MoneyDisplay` e a legenda que a tela passa;
+  `trailing` é o valor curto); o `back` e o `PageHeaderActions` somem no telefone (moram na barra), e
+  o `<header>` leva `data-phone="hero"`. O hero sobe à barra mesmo sem `collapse`, publicando
+  `form: "hero"` e o `trailing` na loja do `PageTitleDock`: o `TopBarPageTitle` mostra então
+  `[mídia 24] nome [valor]` **também no telefone**, com o nome cortando em "…" e a mídia e o valor
+  inteiros; do `md` para cima o valor não sobe (o dado mora na faixa da tela). É a exceção nomeada à
+  subpágina sem título no telefone.
 - **`PageSection`**: **a ação não declara `size`** (nenhuma tela escreve `h-8
   text-xs pointer-coarse:h-10` num botão de seção). `reveal` (desligado por
   padrão), `PageSectionTitle icon count`, `PageSectionLink`,

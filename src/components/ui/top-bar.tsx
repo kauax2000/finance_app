@@ -426,6 +426,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
   const dock = usePageTitleDock(doc)
   const subiu = Boolean(dock?.docked)
   const linha = Boolean(dock?.back || dock?.media)
+  const hero = dock?.form === "hero"
   return (
     <div
       ref={medir}
@@ -449,7 +450,37 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
           {children}
         </span>
       ) : null}
-      {linha ? (
+      {hero ? (
+        // O `PageHeader phone="hero"`: [mídia] nome [valor] também no telefone, como a barra da
+        // gaveta do lançamento; o nome longo corta em "…" e a mídia e o valor ficam inteiros.
+        <span
+          className={cn(
+            TROCA_DO_TITULO,
+            "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none",
+            "flex items-center gap-2 max-md:justify-center md:overflow-visible"
+          )}
+        >
+          {dock.back ? (
+            <span inert={!subiu || undefined} className="flex shrink-0 group-data-docked/top-bar-title:pointer-events-auto max-md:hidden">
+              {dock.back}
+            </span>
+          ) : null}
+          {dock.media ? (
+            <span aria-hidden className="flex size-6 shrink-0 items-center justify-center [&>*]:scale-75">
+              {dock.media}
+            </span>
+          ) : null}
+          <span aria-hidden className="min-w-0 truncate">
+            {dock.text}
+          </span>
+          {dock.trailing ? (
+            // Do `md` para cima o valor mora na faixa da tela: a barra do desktop não muda.
+            <span aria-hidden className="nums shrink-0 text-muted-foreground md:hidden">
+              {dock.trailing}
+            </span>
+          ) : null}
+        </span>
+      ) : linha ? (
         <span
           className={cn(
             TROCA_DO_TITULO,

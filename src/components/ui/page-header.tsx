@@ -59,13 +59,35 @@ const pageHeaderVariants = cva(
  */
 const TITULO_GRANDE = "max-sm:-mt-2 max-sm:[--page-title:2.125rem]"
 
-const PageHeaderContext = React.createContext<{ collapse: boolean }>({ collapse: false })
+/**
+ * O título do hero no telefone é o da folha (`DialogTitle` no corpo da gaveta): a
+ * sans de título a 16, e não a serifa. `!` porque o `.page-title` mora fora de
+ * `@layer` e venceria a utility.
+ */
+const TITULO_DA_FOLHA =
+  "max-md:font-heading! max-md:text-base! max-md:leading-snug! max-md:font-medium! max-md:tracking-normal!"
+
+type PageHeaderContexto = {
+  collapse: boolean
+  hero: boolean
+  /** O valor curto do `PageHeaderHero`, que sobe à barra com o nome. */
+  trailing: string | undefined
+  setTrailing: (valor: string | undefined) => void
+}
+
+const PageHeaderContext = React.createContext<PageHeaderContexto>({
+  collapse: false,
+  hero: false,
+  trailing: undefined,
+  setTrailing: () => {},
+})
 
 function PageHeader({
   className,
   size,
   reveal,
   collapse = false,
+  phone = "default",
   ...props
 }: React.ComponentProps<"header"> &
   VariantProps<typeof pageHeaderVariants> & {
@@ -74,8 +96,20 @@ function PageHeader({
      * com `TopBarTitle pageTitle`.
      */
     collapse?: boolean
+    /**
+     * A forma abaixo do `md`. `hero` é o topo centrado da gaveta do lançamento: a
+     * mídia a 44 sobre o nome, o `PageHeaderHero` (valor e legenda) embaixo, sem o
+     * voltar nem as ações (moram na barra). O título sobe à barra com a mídia e o
+     * valor curto, também no telefone — o hero sobe mesmo sem `collapse`.
+     */
+    phone?: "default" | "hero"
   }) {
-  const contexto = React.useMemo(() => ({ collapse }), [collapse])
+  const hero = phone === "hero"
+  const [trailing, setTrailing] = React.useState<string | undefined>(undefined)
+  const contexto = React.useMemo(
+    () => ({ collapse: collapse || hero, hero, trailing, setTrailing }),
+    [collapse, hero, trailing]
+  )
   const ref = React.useRef<HTMLElement>(null)
   useRecuoDoTexto(ref)
   return (
@@ -84,6 +118,7 @@ function PageHeader({
         ref={ref}
         data-slot="page-header"
         data-size={size ?? "md"}
+        data-phone={hero ? "hero" : undefined}
         className={cn(
           pageHeaderVariants({ size, reveal }),
           // A caixa de linha do título, derivada uma vez. É o que o voltar, a
@@ -92,7 +127,9 @@ function PageHeader({
           // A linha do título é o eixo: com sobrancelha ela desce 28px (16 de linha + 12
           // de respiro), e quem se alinha ao título desce junto.
           "has-[[data-slot=page-header-eyebrow]]:[--page-header-lead:1.75rem]",
-          collapse && TITULO_GRANDE,
+          collapse && !hero && TITULO_GRANDE,
+          // Uma coluna só (as ações saem), e o valor colado ao nome, como na gaveta.
+          hero && "max-md:grid-cols-1 max-md:gap-y-1",
           className
         )}
         {...props}
@@ -171,11 +208,15 @@ function PageHeaderEyebrow({ className, ...props }: React.ComponentProps<"p">) {
  * 16), porque ela pertence ao nome.
  */
 function PageHeaderMedia({ className, ...props }: React.ComponentProps<"span">) {
+  const { hero } = React.useContext(PageHeaderContext)
   return (
     <span
       data-slot="page-header-media"
       className={cn(
         "-me-1 mt-[var(--page-header-lead,0px)] flex h-(--page-title-line) shrink-0 items-center self-start",
+        // No hero do telefone, o ladrilho da gaveta: o degrau `2xl` (44, ícone de 20), qualquer que seja o da tela.
+        hero &&
+          "max-md:me-0 max-md:mt-0 max-md:h-auto max-md:self-center max-md:[&>*]:size-11 max-md:[&>*>svg]:size-5",
         className
       )}
       {...props}
@@ -227,17 +268,29 @@ function PageHeaderTitleRow({
   React.useLayoutEffect(() => {
     linha.current = { back: voltar, media: media ?? null }
   })
+  const { hero } = React.useContext(PageHeaderContext)
   return (
     <LinhaDoTituloContext.Provider value={linha}>
     <div
       data-slot="page-header-title-row"
-      className={cn("flex min-w-0 items-baseline gap-4", className)}
+      className={cn(
+        "flex min-w-0 items-baseline gap-4",
+        // O hero do telefone: a mídia sobre o nome, no eixo, a 12 dele (o topo da gaveta).
+        hero && "max-md:flex-col max-md:items-center max-md:gap-3 max-md:text-center",
+        className
+      )}
       {...props}
     >
       {back ? (
         // O `-me-1.5` não é gosto: o `gap` é a distância mínima entre caixas, e a caixa
-        // do voltar (32) é 8px mais larga que o glifo desse lado.
-        <span className="-me-1.5 mt-[var(--page-header-lead,0px)] flex h-(--page-title-line) shrink-0 items-center self-start">
+        // do voltar (32) é 8px mais larga que o glifo desse lado. No hero do telefone o
+        // voltar é o da barra.
+        <span
+          className={cn(
+            "-me-1.5 mt-[var(--page-header-lead,0px)] flex h-(--page-title-line) shrink-0 items-center self-start",
+            hero && "max-md:hidden"
+          )}
+        >
           <PageHeaderBack href={back} label={backLabel} history={backHistory} />
         </span>
       ) : null}
@@ -254,7 +307,9 @@ function PageHeaderTitleRow({
           "max-sm:[&>[data-slot=page-header-badge]]:col-span-full",
           // A sobrancelha é a única que abre um bloco: o contêiner diz qual
           // filho muda de assunto, como o `StatCard` faz com a variação.
-          "[&>[data-slot=page-header-eyebrow]]:mb-3"
+          "[&>[data-slot=page-header-eyebrow]]:mb-3",
+          // No hero do telefone a coluna do texto é centrada: a grade vira pilha.
+          hero && "max-md:flex max-md:max-w-full max-md:flex-col max-md:items-center"
         )}
       >
         {children}
@@ -315,6 +370,14 @@ function useCortado(el: HTMLElement | null, ativo: boolean) {
  */
 function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
   const linha = React.useContext(LinhaDoTituloContext)
+  const { hero, trailing } = React.useContext(PageHeaderContext)
+  // O hero publica a forma e o valor curto; lidos na hora de publicar.
+  const forma = React.useRef({ hero, trailing })
+  // O último `docked` publicado: o valor que muda com o título já na barra republica sem esperar o observador.
+  const subiu = React.useRef<boolean | null>(null)
+  React.useLayoutEffect(() => {
+    forma.current = { hero, trailing }
+  })
   React.useEffect(() => {
     if (!ativo || !el) return
     // O documento é o do título — no iframe da prévia, o dele.
@@ -326,21 +389,38 @@ function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
     const io = new janela.IntersectionObserver(
       ([e]) => {
         const acima = e.boundingClientRect.top < (e.rootBounds?.top ?? base)
-        publishPageTitle(doc, {
-          text: el.textContent ?? "",
-          docked: !e.isIntersecting && acima,
-          back: linha?.current.back,
-          media: linha?.current.media,
-        })
+        subiu.current = !e.isIntersecting && acima
+        publicarTitulo(doc, el, subiu.current, linha?.current, forma.current)
       },
       { root: doc, rootMargin: `-${base}px 0px 0px 0px` }
     )
     io.observe(el)
     return () => {
       io.disconnect()
+      subiu.current = null
       publishPageTitle(doc, null)
     }
   }, [el, ativo, linha])
+  React.useEffect(() => {
+    if (!ativo || !el || subiu.current === null) return
+    publicarTitulo(el.ownerDocument, el, subiu.current, linha?.current, { hero, trailing })
+  }, [el, ativo, linha, hero, trailing])
+}
+
+function publicarTitulo(
+  doc: Document,
+  alvo: HTMLElement,
+  docked: boolean,
+  linha: LinhaDoTitulo | undefined,
+  forma: { hero: boolean; trailing: string | undefined }
+) {
+  publishPageTitle(doc, {
+    text: alvo.textContent ?? "",
+    docked,
+    back: linha?.back,
+    media: linha?.media,
+    ...(forma.hero ? { form: "hero" as const, trailing: forma.trailing } : null),
+  })
 }
 
 function PageHeaderTitle({
@@ -357,7 +437,7 @@ function PageHeaderTitle({
    */
   truncate?: boolean
 }) {
-  const { collapse } = React.useContext(PageHeaderContext)
+  const { collapse, hero } = React.useContext(PageHeaderContext)
   const [el, setEl] = React.useState<HTMLHeadingElement | null>(null)
   const cortado = useCortado(el, truncate)
   useTituloQueSobe(el, collapse)
@@ -374,6 +454,7 @@ function PageHeaderTitle({
       // o corpo vem do degrau declarado pelo `PageHeader`.
       className={cn(
         "text-(length:--page-title)",
+        hero && TITULO_DA_FOLHA,
         // `text-nowrap!` porque o `.page-title` declara `text-wrap: balance` fora de
         // `@layer`, e isso religa a quebra que o `truncate` desliga.
         truncate && "truncate text-nowrap!",
@@ -465,6 +546,32 @@ function PageHeaderStat({
 }
 
 /**
+ * O valor e a legenda do hero do telefone, logo abaixo do nome — o `MoneyDisplay
+ * size="3xl"` e a `Caption` da gaveta, que a tela passa. Só existe abaixo do `md`
+ * (do `md` para cima o dado mora na faixa da tela) e só com `phone="hero"`.
+ * `trailing` é o valor curto ("R$ 4.114") que sobe à barra depois do nome.
+ */
+function PageHeaderHero({
+  className,
+  trailing,
+  ...props
+}: React.ComponentProps<"div"> & { trailing?: string }) {
+  const { hero, setTrailing } = React.useContext(PageHeaderContext)
+  React.useLayoutEffect(() => {
+    setTrailing(trailing)
+    return () => setTrailing(undefined)
+  }, [trailing, setTrailing])
+  if (!hero) return null
+  return (
+    <div
+      data-slot="page-header-hero"
+      className={cn("col-span-full flex min-w-0 flex-col items-center gap-1 text-center md:hidden", className)}
+      {...props}
+    />
+  )
+}
+
+/**
  * A linha de navegação sob o título: abas de rota (`TabsNav`) ou um segmento.
  * Atravessa as duas colunas e encosta na base do cabeçalho.
  */
@@ -499,12 +606,15 @@ function PageHeaderActions({
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const fora = useOverflowActions(ref, overflow === "menu", CASA_DO_CABECALHO)
+  const { hero } = React.useContext(PageHeaderContext)
   return (
     <div
       ref={ref}
       data-slot="page-header-actions"
       data-overflow={overflow}
       className={cn(
+        // No hero do telefone as ações moram na barra.
+        hero && "max-md:hidden",
         // Na linha do título, descendo com a sobrancelha como o resto.
         "mt-[var(--page-header-lead,0px)] flex min-h-(--page-title-line) shrink-0 items-center justify-end gap-2 self-start",
         overflow ? "flex-nowrap" : "flex-wrap",
@@ -702,6 +812,7 @@ export {
   PageHeaderBreadcrumb,
   PageHeaderDescription,
   PageHeaderEyebrow,
+  PageHeaderHero,
   PageHeaderMedia,
   PageHeaderMeta,
   PageHeaderNav,

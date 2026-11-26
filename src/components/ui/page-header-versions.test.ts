@@ -1,8 +1,11 @@
+import { createElement as h } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { mesmoTitulo } from "@/hooks/use-page-title-dock"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
-import { pageHeaderVariants } from "./page-header"
+import { PageHeader, PageHeaderHero, PageHeaderTitle, PageHeaderTitleRow, pageHeaderVariants } from "./page-header"
 
 /** O redesenho, as peças e os comportamentos do `PageHeader`. */
 
@@ -94,13 +97,13 @@ describe("o alinhamento", () => {
 
 describe("os comportamentos", () => {
   it("o título sobe para a barra, medido contra o documento dele", () => {
-    expect(CODIGO).toContain("docked: !e.isIntersecting && acima,")
+    expect(CODIGO).toContain("subiu.current = !e.isIntersecting && acima")
     expect(CODIGO).toContain("{ root: doc, rootMargin: `-${base}px 0px 0px 0px` }")
   })
 
   it("o voltar e a mídia da linha do título sobem com ele, e só do md para cima", () => {
-    expect(CODIGO).toContain("back: linha?.current.back,")
-    expect(CODIGO).toContain("media: linha?.current.media,")
+    expect(CODIGO).toContain("back: linha?.back,")
+    expect(CODIGO).toContain("media: linha?.media,")
     const barra = lerFonte("src/components/ui/top-bar.tsx")
     expect(barra).toContain("inert={!subiu || undefined}")
     expect(barra).toContain("group-data-docked/top-bar-title:pointer-events-auto max-md:hidden")
@@ -110,7 +113,7 @@ describe("os comportamentos", () => {
 
   it("com collapse, o telefone tem o título grande", () => {
     expect(CODIGO).toContain('TITULO_GRANDE = "max-sm:-mt-2 max-sm:[--page-title:2.125rem]"')
-    expect(CODIGO).toContain("collapse && TITULO_GRANDE")
+    expect(CODIGO).toContain("collapse && !hero && TITULO_GRANDE")
   })
 
   it("o ⋯ é o da Toolbar, com a conta do cabeçalho", () => {
@@ -177,5 +180,57 @@ describe("PageHeader", () => {
     const cls = pageHeaderVariants({})
     expect(cls).toMatch(/(?:^|\s)grid(?:\s|$)/)
     expect(cls).not.toMatch(/flex-row/)
+  })
+})
+
+describe("PageHeader phone=hero (26/11/2026)", () => {
+  const BARRA = semComentarios(lerFonte("src/components/ui/top-bar.tsx"), "linha-inteira")
+
+  it("abaixo do md, o topo centrado da gaveta: a linha vira coluna e o valor mora no PageHeaderHero", () => {
+    const html = renderToStaticMarkup(
+      h(
+        PageHeader,
+        { phone: "hero" },
+        h(PageHeaderTitleRow, { media: h("span", { "data-x": "tile" }) }, h(PageHeaderTitle, null, "Carro")),
+        h(PageHeaderHero, { trailing: "R$ 4.114" }, "R$ 4.114,39")
+      )
+    )
+    expect(html).toContain('data-phone="hero"')
+    expect(html).toMatch(/data-slot="page-header-hero"[^>]*class="[^"]*md:hidden/)
+    expect(html).toMatch(/data-slot="page-header-title-row"[^>]*class="[^"]*max-md:flex-col/)
+    expect(html).toContain("R$ 4.114,39")
+  })
+
+  it("sem phone, o cabeçalho não marca a forma", () => {
+    const html = renderToStaticMarkup(
+      h(PageHeader, null, h(PageHeaderTitleRow, null, h(PageHeaderTitle, null, "Carro")))
+    )
+    expect(html).not.toContain("data-phone")
+  })
+
+  it("a loja compara o valor curto e a forma", () => {
+    expect(mesmoTitulo({ text: "a", docked: true, trailing: "R$ 1" }, { text: "a", docked: true, trailing: "R$ 2" })).toBe(false)
+    expect(mesmoTitulo({ text: "a", docked: true, form: "hero" }, { text: "a", docked: true })).toBe(false)
+    expect(mesmoTitulo({ text: "a", docked: true, trailing: "R$ 1", form: "hero" }, { text: "a", docked: true, trailing: "R$ 1", form: "hero" })).toBe(true)
+  })
+
+  it("na barra, o hero sobe [mídia] nome [valor] também no telefone; o ramo antigo segue só do md para cima", () => {
+    const inicio = BARRA.indexOf('dock?.form === "hero"')
+    expect(inicio).toBeGreaterThan(-1)
+    const hero = BARRA.slice(inicio, BARRA.indexOf(") : linha ?", inicio))
+    expect(hero).toContain("min-w-0 truncate")
+    expect(hero).toMatch(/flex size-6 shrink-0/)
+    expect(hero).toMatch(/shrink-0 text-muted-foreground/)
+    const antigo = BARRA.slice(BARRA.indexOf(") : linha ?"))
+    expect(antigo).toContain("[&>*]:scale-75 max-md:hidden")
+  })
+
+  it("o título publica a forma e o valor, e some da barra ao desmontar", () => {
+    const hook = CODIGO.slice(CODIGO.indexOf("function useTituloQueSobe"), CODIGO.indexOf("function PageHeaderTitle("))
+    expect(hook).toContain('form: "hero"')
+    expect(hook).toContain("trailing: forma.trailing")
+    expect(hook).toContain("publishPageTitle(doc, null)")
+    // O valor que muda com o título já na barra republica sem esperar o observador.
+    expect(hook).toContain("[el, ativo, linha, hero, trailing]")
   })
 })

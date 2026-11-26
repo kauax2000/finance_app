@@ -31,6 +31,7 @@ import {
   PageHeaderBreadcrumb,
   PageHeaderDescription,
   PageHeaderEyebrow,
+  PageHeaderHero,
   PageHeaderMeta,
   PageHeaderNav,
   PageHeaderSkeleton,
@@ -39,6 +40,7 @@ import {
   PageHeaderTitleRow,
 } from "@/components/ui/page-header"
 import { StatCardDelta } from "@/components/ui/stat-card"
+import { Caption } from "@/components/ui/typography"
 import { TabsNav, TabsNavLink } from "@/components/ui/tabs"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
@@ -241,6 +243,52 @@ function DemoTelefone() {
   )
 }
 
+/**
+ * O hero do telefone: o topo centrado da gaveta do lançamento — ladrilho, nome, valor e
+ * legenda — e, ao rolar, [ladrilho] nome valor no centro da barra. Do `md` para cima é
+ * o cabeçalho de sempre.
+ */
+function DemoTelefoneHero() {
+  return (
+    <IphoneFrame title="Cabeçalho hero num iPhone">
+      <div className="h-full overflow-y-auto bg-background">
+        <TopBar surface="scroll" titleAlign="center">
+          <TopBarTitle pageTitle />
+        </TopBar>
+        <div className="flex flex-col gap-6 px-4 pt-4 pb-10">
+          <PageHeader phone="hero" collapse>
+            <PageHeaderTitleRow
+              media={
+                <ColorTile color={COR}>
+                  <ShoppingCartIcon aria-hidden />
+                </ColorTile>
+              }
+            >
+              <PageHeaderTitle>Alimentação</PageHeaderTitle>
+            </PageHeaderTitleRow>
+            <Acoes quantas="uma" />
+            <PageHeaderHero trailing="R$ 1.285">
+              <MoneyDisplay size="3xl" value={1284.6} />
+              <Caption>Gasto em março · 12% a mais que em fevereiro</Caption>
+            </PageHeaderHero>
+          </PageHeader>
+          <ItemGroup variant="divided">
+            {[...LANCAMENTOS, ...LANCAMENTOS].map(([nome, legenda, valor], i) => (
+              <Item key={i} variant="flush" className="px-0">
+                <ItemContent>
+                  <ItemTitle>{nome}</ItemTitle>
+                  <ItemDescription className="text-xs">{legenda}</ItemDescription>
+                </ItemContent>
+                <MoneyDisplay value={valor} signed tone="expense" className="text-sm" />
+              </Item>
+            ))}
+          </ItemGroup>
+        </div>
+      </div>
+    </IphoneFrame>
+  )
+}
+
 function DemoEsqueleto() {
   const [faixa, setFaixa] = React.useState<"0" | "3">("3")
   return (
@@ -315,6 +363,24 @@ export default function PageHeaderDoc() {
         <DemoTelefone />
       </DocSection>
 
+      <DocSection
+        title="No telefone, hero"
+        description="phone=&quot;hero&quot; é o topo centrado da gaveta do lançamento: a mídia no degrau 2xl (44) sobre o nome, que veste o título da folha (a sans de 16, e não a serifa), e o PageHeaderHero embaixo, com o valor e a legenda que a tela passa. O voltar e as ações não aparecem no telefone — moram na barra. Ao rolar, o nome sobe com a mídia a 24 e o valor curto (trailing): [ladrilho] nome R$ 1.285, no centro da barra, cortando o nome em … antes de empurrar os botões. Do md para cima nada muda: o cabeçalho de sempre, e o PageHeaderHero some (o dado mora na faixa da tela)."
+        code={`<PageHeader phone="hero" collapse>
+  <PageHeaderTitleRow back="/categories" media={<ColorTile color={cor}>…</ColorTile>}>
+    <PageHeaderTitle>Alimentação</PageHeaderTitle>
+  </PageHeaderTitleRow>
+  <PageHeaderActions>…</PageHeaderActions>
+  <PageHeaderHero trailing="R$ 1.285">
+    <MoneyDisplay size="3xl" value={1284.6} />
+    <Caption>Gasto em março · 12% a mais que em fevereiro</Caption>
+  </PageHeaderHero>
+</PageHeader>`}
+        previewClassName="items-center"
+      >
+        <DemoTelefoneHero />
+      </DocSection>
+
       <DocNote title="O voltar volta pelo histórico">
         Quando a pessoa veio de dentro do app, o voltar é <code>router.back()</code>: a lista de onde ela saiu volta com o
         filtro e a rolagem em que estava. O <code>href</code> fica como saída — o link aberto direto, a nova aba, o
@@ -363,6 +429,13 @@ export default function PageHeaderDoc() {
             default: "false",
             description: "O título sobe para a barra do topo ao rolar para baixo dela — a barra o mostra com TopBarTitle pageTitle. Do md para cima, o back e a media do PageHeaderTitleRow sobem junto (a mídia a 24px). No telefone, ele mede 34px, e a barra tem o próprio voltar.",
           },
+          {
+            prop: "phone",
+            type: '"default" | "hero"',
+            default: '"default"',
+            description:
+              "A forma abaixo do md. hero é o topo centrado da gaveta: mídia a 44 sobre o nome (título da folha, 16), o PageHeaderHero embaixo, sem voltar nem ações. Sobe à barra mesmo sem collapse, com a mídia e o trailing também no telefone. Marca data-phone=\"hero\".",
+          },
         ]}
       />
 
@@ -389,6 +462,12 @@ export default function PageHeaderDoc() {
             prop: "PageHeaderStat",
             type: "{ label, delta?, children }",
             description: "Um par da faixa: o rótulo, o valor em destaque (o MoneyDisplay herda o corpo) e a variação ao lado — o StatCardDelta.",
+          },
+          {
+            prop: "PageHeaderHero",
+            type: "ComponentProps<'div'> & { trailing?: string }",
+            description:
+              "O valor e a legenda do hero, sob o nome — só com phone=\"hero\" e só abaixo do md. trailing é o valor curto que sobe à barra depois do nome.",
           },
           { prop: "PageHeaderNav", type: "ComponentProps<'div'>", description: "A navegação sob o título — TabsNav ou segmento — encostada na base." },
           {

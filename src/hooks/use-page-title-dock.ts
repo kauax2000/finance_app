@@ -15,19 +15,32 @@ import * as React from "react"
  * `back` e `media` são o voltar e a identidade da linha do título
  * (`PageHeaderTitleRow`), já renderizados: sobem junto com o nome, só do `md`
  * para cima. Comparados por identidade — quem publica os memoriza.
+ *
+ * `form: "hero"` é o `PageHeader phone="hero"`: aí a mídia sobe também no
+ * telefone, com `trailing` (o valor curto, texto para a comparação por
+ * igualdade não republicar a cada render) depois do nome.
  */
 export type PageTitleDock = {
   text: string
   docked: boolean
   back?: React.ReactNode
   media?: React.ReactNode
+  trailing?: string
+  form?: "hero"
 } | null
 
 /** Mesmo valor, nenhum aviso: evita o laço de render com o `useSyncExternalStore`. */
 export function mesmoTitulo(a: PageTitleDock, b: PageTitleDock) {
   if (a === b) return true
   if (!a || !b) return false
-  return a.text === b.text && a.docked === b.docked && a.back === b.back && a.media === b.media
+  return (
+    a.text === b.text &&
+    a.docked === b.docked &&
+    a.back === b.back &&
+    a.media === b.media &&
+    a.trailing === b.trailing &&
+    a.form === b.form
+  )
 }
 
 type Loja = { valor: PageTitleDock; ouvintes: Set<() => void> }
