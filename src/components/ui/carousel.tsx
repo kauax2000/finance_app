@@ -1063,9 +1063,11 @@ function CarouselNext(
 }
 
 /**
- * O indicador de posição. O alvo cresce de verdade e não por pseudo-elemento
- * (como no `pagination.tsx`): alvos adjacentes se sobreporiam. O ativo é
- * `bg-primary-accent`, a marca sobre o fundo.
+ * O indicador de posição. O ativo é `bg-primary-accent`, a marca sobre o fundo.
+ * No mouse cada ponto é um botão de 24px. No toque ele só indica (decisão do
+ * dono, 27/11/2026): quem troca de item é o arraste e as setas, e um ponto de
+ * 8px não é alvo — sem toque (`pointer-events-none`) e sem o alvo de 44, os
+ * pontos ficam juntos, a 8px um do outro.
  */
 function CarouselDots({
   className,
@@ -1129,10 +1131,10 @@ function CarouselDots({
             data-active={ativo || undefined}
             className={cn(
               "group/dot flex shrink-0 cursor-pointer items-center justify-center",
-              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
+              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:pointer-events-none",
               barra
-                ? "min-w-0 flex-1 py-2 pointer-coarse:py-5"
-                : cn("h-6 pointer-coarse:h-11", pilula && ativo ? "px-1" : "w-6 pointer-coarse:w-11")
+                ? "min-w-0 flex-1 py-2 pointer-coarse:py-0"
+                : cn("h-6 pointer-coarse:h-auto", pilula && ativo ? "px-1" : "w-6 pointer-coarse:w-auto pointer-coarse:px-1")
             )}
           >
             <span

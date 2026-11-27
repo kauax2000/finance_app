@@ -306,13 +306,15 @@ describe("escada e caixa do Carousel", () => {
     expect(fonte).toMatch(/fade: fadeProp = true/)
   })
 
-  it("9. o ponto ativo é `primary-accent`, e o alvo cresce de verdade", () => {
+  it("9. o ponto ativo é `primary-accent`; no toque o ponto só indica", () => {
     // `--primary` preenche e carrega texto por cima; um ponto de 8px é marca
     // sobre o fundo, e a régua da casa para isso é o acento.
     expect(fonte).toContain("bg-primary-accent")
-    // O `pagination.tsx` já recusou o `-inset` para alvos adjacentes: um
-    // `::after` de 44px em cada ponto engoliria o vizinho.
-    expect(fonte).toMatch(/pointer-coarse:h-11|pointer-coarse:py-5/)
+    // No toque os pontos não são alvo (27/11/2026): sem toque e sem o alvo de 44,
+    // a 8px um do outro. Quem troca de item é o arraste e as setas.
+    expect(fonte).toContain("focus-visible:ring-ring/45 pointer-coarse:pointer-events-none")
+    expect(fonte).toContain('"w-6 pointer-coarse:w-auto pointer-coarse:px-1"')
+    expect(fonte).toContain('"min-w-0 flex-1 py-2 pointer-coarse:py-0"')
     expect(fonte).not.toMatch(/carousel-dot[\s\S]{0,600}?after:-inset/)
 
     // O ponto apagado é controle, e a 1.4.11 pede 3:1. Varridos os degraus
