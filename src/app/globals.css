@@ -543,6 +543,17 @@
     1.0175, 1.0143, 1.0113, 1.0087, 1.0064, 1.0045, 1.0029, 1.0016, 1.0006,
     0.9999, 0.9993, 0.999, 1
   );
+  /* A abertura da folha do telefone, no tempo do iOS: a mola criticamente amortecida
+     (sem passar do alvo) de resposta 0,5s, amostrada a cada 20ms em 600ms — 36% aos
+     100ms, 89% aos 300ms, assentada aos 600ms. A curva do vaul (0,5s em
+     `--ease-emphasized`) chegava a 60% nos primeiros 100ms, e a gaveta parecia só
+     aparecer na tela (27/11/2026). */
+  --duration-sheet: 600ms;
+  --ease-sheet: linear(
+    0, 0.0268, 0.091, 0.1748, 0.2662, 0.3577, 0.4448, 0.5249, 0.5969, 0.6603, 0.7154,
+    0.7628, 0.8032, 0.8374, 0.8661, 0.89, 0.91, 0.9265, 0.9401, 0.9513, 0.9605, 0.968,
+    0.9741, 0.9791, 0.9831, 0.9864, 0.9891, 0.9912, 0.9929, 0.9943, 1
+  );
 
   /* A dissolução das bordas de uma região rolável: o quanto ela tem para se
      dissolver e quanto dela sobra no fim. `--scroll-fade-x-h` é menor de propósito
@@ -4740,8 +4751,11 @@ html[data-subtela] :is([data-subtela-conteudo], [data-subtela-copia]) [data-slot
   }
 }
 
-
-
-
-
-
+/* A gaveta abre na mola do iOS (`--ease-sheet`). Fora de camada de propósito: o vaul
+   injeta o CSS dele sem camada no `<head>`, e uma regra em `@layer` perderia para ele
+   qualquer que fosse a especificidade. Só a abertura: fechar segue a curva curta do
+   vaul. O movimento reduzido zera a duração pelo bloco de `@layer base` (`!important`). */
+[data-vaul-drawer][data-state="open"] {
+  animation-duration: var(--duration-sheet);
+  animation-timing-function: var(--ease-sheet);
+}
