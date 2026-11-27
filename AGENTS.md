@@ -1370,7 +1370,7 @@ declaração de `background-color` no trilho).
   - `Dialog`, `Sheet` e o `vaul` são a mesma primitiva
     (`@radix-ui/react-dialog`), **numa instância só** em `node_modules`: olhe
     isso antes de mexer em dependência.
-- **`Drawer`** é a gaveta que não muda com a largura (o gesto é a afordância).
+- **`Drawer`** é a gaveta que não muda com a largura (o gesto é a afordância). **Abre na mola do iOS** (`--duration-sheet` 600ms, `--ease-sheet`: mola criticamente amortecida de resposta 0,5s, em `linear()`; regra fora de camada no fim do `globals.css`, porque o CSS do vaul não tem camada); fechar segue o vaul (27/11/2026).
   `direction` só `bottom` | `top`. A superfície é o vidro modal
   (`modalSurfaceClassName`) em `--z-sheet`.
   - **A alça é da superfície** (`DrawerPrimitive.Handle`, o `DragHandle`): uma
@@ -1771,8 +1771,9 @@ declaração de `background-color` no trilho).
   sino e a 16px da placa nos dois estados (a distância do sino até a borda
   direita). O encosto de 8px (`SIDEBAR_TRIGGER_GAP`) é só do `topbar`. No `AppHeader`, do `lg` para cima, a ponta do botão pesa o mesmo
   que a do sino, para a busca seguir no centro. `edge`, `footer` e `footerBar`
-  ficam no `/laboratorio/barra`. O gatilho do topo não tem dica;
-  dentro da barra recolhida, tem.
+  ficam no `/laboratorio/barra`. O gatilho do `header` tem dica ao lado, curta, com o
+  atalho ("Recolher ⌘B"), e a lupa do cabeçalho do desktop a dela à esquerda ("Buscar ⌘K", `TopBarAction tooltipSide`) (27/11/2026); o do `topbar`
+  não tem; dentro da barra recolhida, a dica abre ao lado.
   A dica do item e a do gatilho na barra abrem a 6px do botão
   (`SIDEBAR_TOOLTIP_OFFSET`), como qualquer dica — somar o recuo da placa as
   afastava do gatilho; um
