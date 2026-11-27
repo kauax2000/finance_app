@@ -131,8 +131,11 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const mobileBackHref =
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
     // Na página Você e nas telas dela não há seletor: a aba que saiu da barra segue
-    // sendo aba, por isso a lista vazia, como no `voceBackHref`.
-    const seletor = isVoceTabActive(pathname, []) ? null : <WorkspaceSwitcher appearance="header" />
+    // sendo aba, por isso a lista vazia, como no `voceBackHref`. No detalhe da
+    // categoria também não: o topo da tela (ladrilho, nome e valor) já diz onde
+    // se está, e o centro fica vazio até o título subir.
+    const semSeletor = isVoceTabActive(pathname, []) || mobileHeaderMenuFor(pathname)
+    const seletor = semSeletor ? null : <WorkspaceSwitcher appearance="header" />
     // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
     // `origem`: é a do telefone, de onde a busca nasce.
     const lupa = (origem = false) => (
@@ -223,6 +226,10 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 <EllipsisHorizontalIcon className="size-4" aria-hidden />
             </TopBarAction>
         ) : null
+    // A identidade do miolo da cápsula: o ícone que o botão desenha. Sem `icon`, o botão é o funil,
+    // como o que a rota declara ("filter"); comparar `icon` cru trocava "filter" por `undefined`
+    // quando a página publicava, e o funil piscava no fim do carregamento (27/11/2026).
+    const chaveDoFiltro = filtro ? (filtro.icon ?? "filter") : undefined
     const filtroNoCabecalho =
         filtro?.popover && botaoDoFiltro ? (
             <Popover open={filtroAberto} onOpenChange={setFiltroAberto}>
@@ -276,14 +283,15 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
                             lado com uma ação em cada ponta; 7rem quando a direita
-                            tem a lupa e o filtro; com o ⋯ a cápsula tem três (16 +
-                            3×44 + 12 = 10rem à direita), e a caixa fica assimétrica.
+                            tem duas ações (a lupa e o filtro, ou o filtro e o ⋯).
+                            A caixa é sempre simétrica: o que mora no centro fica
+                            no centro da barra inteira, nunca no espaço que sobra.
                             Ao rolar, o título sobe e toma o lugar dela; no Painel,
                             a tela da carteira, ela fica. */}
                         <div
                             className={cn(
                                 "absolute flex justify-center",
-                                menu ? "start-16 end-40" : filtro ? "inset-x-28" : "inset-x-16"
+                                !(menu || filtro) ? "inset-x-16" : "inset-x-28"
                             )}
                         >
                             {pathname === ROUTES.DASHBOARD ? (
@@ -335,10 +343,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
                     // volta a ela ao sair, e a identidade (`month`, `filter`)
                     // troca o ícone no lugar. O ⋯ da tela é a ponta parada
-                    // (`end`), fora do esticar: a forma é a mesma com ou sem ele.
-                    <TopBarActionGroup trailingKey={filtro?.icon} end={menu}>
-                        {lupa(true)}
-                        {filtroNoCabecalho}
+                    // (`end`), fora do esticar. A cápsula leva no máximo duas
+                    // ações: com o ⋯ e o filtro, a lupa sai (a busca segue no ⌘K
+                    // e na lupa das outras telas) e fica `[filtro | ⋯]`.
+                    <TopBarActionGroup trailingKey={menu ? undefined : chaveDoFiltro} end={menu}>
+                        {menu && filtroNoCabecalho ? filtroNoCabecalho : lupa(true)}
+                        {menu ? null : filtroNoCabecalho}
                     </TopBarActionGroup>
                 }
             >

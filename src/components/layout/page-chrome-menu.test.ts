@@ -19,6 +19,6 @@ describe("o ⋯ da tela na cápsula do telefone", () => {
         expect(CABECALHO).toContain("usePageChromeMenuFor(pathname)")
         // Antes de a tela falar, a rota declara o ⋯ inerte na mesma forma (sem esmaecer).
         expect(CABECALHO).toMatch(/menuPublicado !== undefined \? \(\s*menuPublicado\s*\) : mobileHeaderMenuFor\(pathname\) \? \(\s*<TopBarAction type="button" label="Opções" plate tooltip=\{false\} aria-disabled>/)
-        expect(CABECALHO).toMatch(/<TopBarActionGroup trailingKey=\{filtro\?\.icon\} end=\{menu\}>/)
+        expect(CABECALHO).toMatch(/<TopBarActionGroup trailingKey=\{menu \? undefined : chaveDoFiltro\} end=\{menu\}>/)
     })
 })

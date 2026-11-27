@@ -278,7 +278,15 @@ function TopBar({
                 key={i}
                 aria-hidden
                 data-slot="top-bar-edge"
-                className={cn(barEdgeLayerBaseClassName, camada, surface === "adaptive" && "md:hidden")}
+                className={cn(
+                  barEdgeLayerBaseClassName,
+                  camada,
+                  // Na do app o borrão só acende quando algo rola por baixo, como a placa das
+                  // folhas: em repouso ele desfocava o topo da tela (o ladrilho do detalhe da
+                  // categoria, 27/11/2026).
+                  surface === "adaptive" &&
+                    "transition-opacity duration-(--duration-slow) ease-(--ease-out) md:hidden [[data-scrolled=false]>&]:opacity-0"
+                )}
               />
             ))
           : null}
@@ -458,9 +466,10 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
             TROCA_DO_TITULO,
             "pointer-events-none translate-y-1.5 opacity-0 blur-xs group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100 group-data-docked/top-bar-title:blur-none",
             "flex items-center gap-2 max-md:justify-center md:overflow-visible",
-            // No telefone a caixa mede a própria largura: estreita, o valor sai, e nada passa sob a
-            // cápsula. Só lá: no desktop a contenção zeraria a largura do título entre o `md` e o `lg`.
-            "max-md:@container/top-bar-hero"
+            // No telefone o conjunto fica no centro da barra, e o nome vem antes do valor: o que
+            // não cabe inteiro na linha (o valor) quebra para uma segunda linha recortada e some.
+            // A linha mede 24, a do texto e a do ladrilho.
+            "max-md:h-6 max-md:flex-wrap max-md:content-start max-md:overflow-hidden"
           )}
         >
           {dock.back ? (
@@ -478,7 +487,7 @@ function TopBarPageTitle({ className, children, ...props }: React.ComponentProps
           </span>
           {dock.trailing ? (
             // Do `md` para cima o valor mora na faixa da tela: a barra do desktop não muda.
-            <span aria-hidden className="nums shrink-0 text-muted-foreground md:hidden @max-[9rem]/top-bar-hero:hidden">
+            <span aria-hidden className="nums shrink-0 text-muted-foreground md:hidden">
               {dock.trailing}
             </span>
           ) : null}

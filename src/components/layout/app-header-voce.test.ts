@@ -15,8 +15,9 @@ describe("o voltar do telefone nas telas da página Você", () => {
         expect(corpo).not.toContain("ROUTES.ACCOUNT")
     })
 
-    it("a página Você e as telas dela não têm seletor de carteira", () => {
-        expect(HEADER).toContain('const seletor = isVoceTabActive(pathname, []) ? null : <WorkspaceSwitcher appearance="header" />')
+    it("a página Você, as telas dela e o detalhe da categoria não têm seletor de carteira", () => {
+        expect(HEADER).toContain("const semSeletor = isVoceTabActive(pathname, []) || mobileHeaderMenuFor(pathname)")
+        expect(HEADER).toContain('const seletor = semSeletor ? null : <WorkspaceSwitcher appearance="header" />')
     })
 
     it("o título que sobe toma o lugar do seletor, menos no Painel", () => {

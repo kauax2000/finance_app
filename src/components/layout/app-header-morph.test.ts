@@ -14,7 +14,7 @@ describe("o cabeçalho do telefone consome as peças da troca", () => {
     })
 
     it("a ponta direita é sempre a cápsula que pinga, com a identidade do filtro", () => {
-        expect(HEADER).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}\s+end=\{menu\}>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}\s*<\/TopBarActionGroup>/)
+        expect(HEADER).toMatch(/<TopBarActionGroup\s+trailingKey=\{menu \? undefined : chaveDoFiltro\}\s+end=\{menu\}>\s*\{menu && filtroNoCabecalho \? filtroNoCabecalho : lupa\(true\)\}\s*\{menu \? null : filtroNoCabecalho\}\s*<\/TopBarActionGroup>/)
         // A lupa sozinha fora do grupo saiu: o grupo segura um ou dois filhos.
         expect(HEADER).not.toMatch(/filtroNoCabecalho \? \(\s*<TopBarActionGroup>/)
     })
@@ -37,7 +37,12 @@ describe("o cabeçalho do telefone consome as peças da troca", () => {
         expect(HEADER).toContain("closeOrigin={filtroRef}")
     })
 
+    it("o funil declarado e o publicado sem ícone têm a mesma chave: nada troca no fim do carregamento", () => {
+        expect(HEADER).toContain('const chaveDoFiltro = filtro ? (filtro.icon ?? "filter") : undefined')
+        expect(HEADER).not.toContain("trailingKey={filtro?.icon}")
+    })
+
     it("a largura do título lê o filtro efetivo", () => {
-        expect(HEADER).toContain('filtro ? "inset-x-28" : "inset-x-16"')
+        expect(HEADER).toMatch(/!\(menu \|\| filtro\)\s*\? "inset-x-16"/)
     })
 })

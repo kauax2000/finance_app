@@ -343,9 +343,13 @@ describe("as ações numa cápsula", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
     // A cápsula é a mesma com ou sem filtro: ele pinga da lupa.
-    expect(cabecalho).toMatch(/<TopBarActionGroup\s+trailingKey=\{filtro\?\.icon\}\s+end=\{menu\}>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}\s*<\/TopBarActionGroup>/)
-    // Com o ⋯ a cápsula tem três: a caixa do título fica assimétrica, longe dela (16 + 3×44 + 12).
-    expect(cabecalho).toContain('menu ? "start-16 end-40" : filtro ? "inset-x-28" : "inset-x-16"')
+    expect(cabecalho).toContain("<TopBarActionGroup trailingKey={menu ? undefined : chaveDoFiltro} end={menu}>")
+    // A cápsula leva no máximo duas ações: com o ⋯ e o filtro a lupa sai (`[filtro | ⋯]`).
+    expect(cabecalho).toContain("{menu && filtroNoCabecalho ? filtroNoCabecalho : lupa(true)}")
+    expect(cabecalho).toContain("{menu ? null : filtroNoCabecalho}")
+    // A caixa do título é sempre simétrica: o centro da barra é o centro da tela.
+    expect(cabecalho).toContain('!(menu || filtro) ? "inset-x-16" : "inset-x-28"')
+    expect(cabecalho).not.toMatch(/start-\d+ end-\d+/)
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
@@ -463,9 +467,11 @@ describe("TopBarActionGroup", () => {
     expect(grupo).toContain("saindo.then(() => ativa && setFim(null))")
   })
 
-  it("no telefone a caixa do título-hero mede a si mesma, e o valor sai quando ela é estreita", () => {
-    expect(CODIGO).toContain('"max-md:@container/top-bar-hero"')
-    expect(CODIGO).toContain("md:hidden @max-[9rem]/top-bar-hero:hidden")
+  it("no telefone o título-hero fica no centro da barra, e o valor sai quando não cabe ao lado do nome", () => {
+    // O que não cabe na linha quebra para uma segunda linha recortada: o nome vem antes do valor.
+    expect(CODIGO).toContain('"max-md:h-6 max-md:flex-wrap max-md:content-start max-md:overflow-hidden"')
+    expect(CODIGO).toContain('className="nums shrink-0 text-muted-foreground md:hidden"')
+    expect(CODIGO).not.toContain("@container/top-bar-hero")
   })
 
   it("o segundo que sai fica montado, inerte e escondido do leitor, até o gesto acabar", () => {

@@ -497,7 +497,7 @@ export default function TopBarDoc() {
       <DocSection
         title="O vidro estica da lupa"
         description="A cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. end é a ação parada da ponta direita, depois do segundo (o ⋯ da tela): mora no mesmo vidro e conta no anel, fica fora do esticar e, ao sair, esmaece no lugar. Troque a tela no eixo, e ligue o ⋯."
-        code={`<TopBarActionGroup trailingKey={filtro?.icon} end={menu}>
+        code={`<TopBarActionGroup trailingKey={filtro ? (filtro.icon ?? "filter") : undefined} end={menu}>
   <TopBarAction label="Buscar" plate onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
   </TopBarAction>
