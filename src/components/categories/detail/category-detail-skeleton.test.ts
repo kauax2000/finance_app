@@ -17,6 +17,6 @@ describe("CategoryDetailSkeleton no telefone", () => {
 
     it("no telefone, o topo espera o chip e o resumo espera num cartão", () => {
         expect(fonte).toMatch(/<Skeleton shape="pill"[^>]*h-6/)
-        expect(fonte).toMatch(/<Card aria-hidden[^>]*md:hidden/)
+        expect(fonte).toMatch(/<Card aria-hidden className="h-30\.5 md:hidden"/)
     })
 })

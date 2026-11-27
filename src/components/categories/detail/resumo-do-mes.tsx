@@ -135,7 +135,7 @@ export function ResumoDoMes({
                 <span className="font-semibold">{frases.forte}</span>
                 <span className="text-muted-foreground">{frases.resto}</span>
             </span>
-            {aberto ? <span className="text-muted-foreground">{diaDoMes(yearMonth, hojeYmd)}</span> : null}
+            {aberto ? <span className="nums shrink-0 text-muted-foreground">{diaDoMes(yearMonth, hojeYmd)}</span> : null}
         </ProgressHeader>
     ) : temBarra && pesoNoTotal ? (
         <ProgressHeader>
@@ -143,7 +143,7 @@ export function ResumoDoMes({
                 <span className="font-semibold">{percentBR(pesoNoTotal, { maximumFractionDigits: 0 })}</span>
                 <span className="text-muted-foreground">{` ${doTotal}`}</span>
             </span>
-            <span className="nums text-muted-foreground">{`de ${reaisInteiros(lancado / pesoNoTotal)}`}</span>
+            <span className="nums shrink-0 text-muted-foreground">{`de ${reaisInteiros(lancado / pesoNoTotal)}`}</span>
         </ProgressHeader>
     ) : null
     const barra = (

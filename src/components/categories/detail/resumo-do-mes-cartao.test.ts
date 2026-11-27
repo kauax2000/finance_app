@@ -62,5 +62,6 @@ describe("ResumoDoMes no telefone, num cartão", () => {
         const telefone = fonte.slice(fonte.lastIndexOf("return ("))
         expect(telefone).toContain("<Card")
         expect(fonte).toContain("<ProgressHeader")
+        expect(fonte.split("nums shrink-0 text-muted-foreground").length - 1).toBeGreaterThanOrEqual(2)
     })
 })
