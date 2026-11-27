@@ -20,6 +20,7 @@ import { reaisInteiros } from "@/components/categories/detail/regua-do-mes-conta
 import { CorpoDoInsight } from "@/components/categories/detail/resumo/corpo-do-insight"
 import type { InsightDaCategoria } from "@/lib/insights-da-categoria"
 import type { Insight } from "@/lib/insights/acoes"
+import { cn } from "@/lib/utils"
 
 /**
  * Os insights do mês num cartão só, um por vez: os pontos e as setas no pé. Os slides ficam da
@@ -83,13 +84,8 @@ export function InsightsDaCategoria({
                                 {i.rotulo}
                             </Button>
                         )
-                        // O canto do insight de ação: só o número de apoio, onde a tabela pede (o total do 2, a média do 6).
-                        const canto =
-                            i.corpo.tipo === "conferir"
-                                ? i.numero
-                                : i.corpo.tipo === "recorrencia"
-                                  ? `~${reaisInteiros(i.corpo.valorMedio)}`
-                                  : null
+                        // O canto do insight de ação: só o número de apoio, onde a tabela pede (a média do 6).
+                        const canto = i.corpo.tipo === "recorrencia" ? `~${reaisInteiros(i.corpo.valorMedio)}` : null
                         const c = i.corpo
                         const daCaixa = c.tipo === "recorrencia" ? linhasDaCaixa?.find((l) => l.id === c.insightId) : undefined
                         return (
@@ -105,7 +101,8 @@ export function InsightsDaCategoria({
                                             </CardAction>
                                         ) : null}
                                     </CardHeader>
-                                    <div className="mt-auto px-(--card-px)">
+                                    {/* A lista do "para conferir" fica no alto, logo abaixo do título: a sobra vai para antes do botão. */}
+                                    <div className={cn(i.corpo.tipo !== "conferir" && "mt-auto", "px-(--card-px)")}>
                                         <CorpoDoInsight
                                             corpo={i.corpo}
                                             corDaSerie={corDaSerie}
@@ -115,7 +112,9 @@ export function InsightsDaCategoria({
                                             tom={i.tom}
                                         />
                                     </div>
-                                    {i.foco === "acao" ? <div className="px-(--card-px)">{botao}</div> : null}
+                                    {i.foco === "acao" ? (
+                                        <div className={cn(i.corpo.tipo === "conferir" && "mt-auto", "px-(--card-px)")}>{botao}</div>
+                                    ) : null}
                                 </div>
                             </CarouselItem>
                         )

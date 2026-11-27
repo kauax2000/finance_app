@@ -1,17 +1,26 @@
 "use client"
 
 import * as React from "react"
+import {
+    ArrowPathIcon,
+    ChatBubbleLeftEllipsisIcon,
+    DevicePhoneMobileIcon,
+    DocumentTextIcon,
+    SparklesIcon,
+} from "@heroicons/react/16/solid"
 
 import { reaisInteiros } from "@/components/categories/detail/regua-do-mes-contas"
 import { ChartBars, ChartSplit, type ChartConfig } from "@/components/ui/chart"
 import { DateTile } from "@/components/ui/date-tile"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Caption } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 import type { CorpoDoInsight as Corpo } from "@/lib/insights-da-categoria"
 import { lancamentosDaRecorrencia, type Insight } from "@/lib/insights/acoes"
-import { formatMonthShortPtBr } from "@/lib/transaction-date"
+import { ROTULO_DA_ORIGEM } from "@/lib/piloto/piloto"
+import { formatMonthShortPtBr, parseYmdLocal } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 
 const TOM = { success: "text-success", warning: "text-warning" } as const
@@ -48,17 +57,34 @@ export function CorpoDoInsight({ corpo, corDaSerie, linhaDaCaixa, numero, linha,
                 </ul>
             )
         case "conferir":
+            // A linha das notificações, sem caixa: o ladrilho da origem, a descrição sobre o dia e a origem, o valor no fim.
             return (
-                <ul aria-label="Lançamentos para conferir" className="grid gap-2 text-sm">
-                    {corpo.linhas.map((l, n) => (
-                        <li key={n} className="flex items-center gap-3">
-                            <span className="nums shrink-0 text-muted-foreground">{dm(l.dataYmd)}</span>
-                            <span className="min-w-0 truncate">{l.descricao}</span>
-                            <span className="nums ml-auto shrink-0 font-mono">{reaisInteiros(l.valor)}</span>
-                        </li>
-                    ))}
-                    {corpo.resto > 0 ? <li className="text-muted-foreground">e mais {corpo.resto}</li> : null}
-                </ul>
+                <div className="grid gap-2.5">
+                    <ItemGroup role="list" aria-label="Lançamentos para conferir">
+                        {corpo.linhas.map((l, n) => {
+                            const Icone = ICONE_DA_ORIGEM[l.origem] ?? SparklesIcon
+                            return (
+                                <Item key={n} role="listitem" size="sm" className="p-0">
+                                    <ItemMedia variant="tile" tone="info">
+                                        <Icone />
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle className="w-auto min-w-0">
+                                            <span className="min-w-0 truncate">{l.descricao || "Sem descrição"}</span>
+                                        </ItemTitle>
+                                        <ItemDescription className="nums">
+                                            {`${diaDoMes(l.dataYmd)} · ${ROTULO_DA_ORIGEM[l.origem] ?? "pelo app"}`}
+                                        </ItemDescription>
+                                    </ItemContent>
+                                    <ItemActions>
+                                        <span className="nums font-mono text-sm">{reaisInteiros(l.valor)}</span>
+                                    </ItemActions>
+                                </Item>
+                            )
+                        })}
+                    </ItemGroup>
+                    {corpo.resto > 0 ? <p className="text-sm text-muted-foreground">e mais {corpo.resto}</p> : null}
+                </div>
             )
         case "ritmo":
             return (
@@ -163,6 +189,24 @@ export function CorpoDoInsight({ corpo, corDaSerie, linhaDaCaixa, numero, linha,
 
 /** "2026-11-22" → "22/11". */
 const dm = (ymd: string) => `${ymd.slice(8, 10)}/${ymd.slice(5, 7)}`
+
+/** "2026-11-25" → "25 de nov". */
+function diaDoMes(ymd: string) {
+    const d = parseYmdLocal(ymd)
+    return d ? `${d.getDate()} de ${formatMonthShortPtBr(d)}` : dm(ymd)
+}
+
+/** O ícone do ladrilho pela origem do lançamento; o resto cai no ✦. */
+const ICONE_DA_ORIGEM: Record<string, typeof SparklesIcon> = {
+    shortcut: DevicePhoneMobileIcon,
+    apple_pay: DevicePhoneMobileIcon,
+    quick_text: ChatBubbleLeftEllipsisIcon,
+    whatsapp: ChatBubbleLeftEllipsisIcon,
+    import_pdf: DocumentTextIcon,
+    import_sheet: DocumentTextIcon,
+    import_statement: DocumentTextIcon,
+    recurring: ArrowPathIcon,
+}
 
 const CONFIG_DA_RECORRENCIA = { valor: { label: "Valor", color: "var(--muted)" } } satisfies ChartConfig
 
