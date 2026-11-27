@@ -46,6 +46,12 @@ export function fraseDaComparacao({ tipo, comparacao }: { tipo: TipoDaCategoria;
     }
 }
 
+/** "dia 27 de 30": onde hoje está no mês (`hojeYmd` é `YYYY-MM-DD`). */
+export function diaDoMes(yearMonth: string, hojeYmd: string): string {
+    const { y, m } = parseYearMonth(yearMonth)
+    return `dia ${Number(hojeYmd.slice(8, 10))} de ${new Date(y, m, 0).getDate()}`
+}
+
 /**
  * "deve fechar em R$ X" do mês aberto: o lançado mais o previsto, e o fim (sem previsto, "nada mais
  * previsto até o dia N"; com limite, "R$ Y acima do limite" ou "cabe no limite"). O mês fechado não chama.

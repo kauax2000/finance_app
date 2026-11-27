@@ -749,6 +749,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                             limite={limite}
                             pesoNoTotal={pesoNoTotal}
                             aberto={aberto}
+                            hojeYmd={hojeYmd}
                             destaque={!isMobile}
                         />
                     ) : (

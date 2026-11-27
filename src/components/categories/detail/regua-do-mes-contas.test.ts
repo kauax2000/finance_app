@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { escalaDaRegua, fraseDaComparacao, fraseDoFechamento, vereditoDaMedia } from "./regua-do-mes-contas"
+import { diaDoMes, escalaDaRegua, fraseDaComparacao, fraseDoFechamento, vereditoDaMedia } from "./regua-do-mes-contas"
 
 const comparacao = (over: Partial<Parameters<typeof fraseDaComparacao>[0]["comparacao"]> = {}) => ({
     mesAnterior: "2026-10",
@@ -83,5 +83,12 @@ describe("fraseDoFechamento", () => {
             "nada mais previsto até o dia 28",
             "cabe no limite",
         ])
+    })
+})
+
+describe("diaDoMes", () => {
+    it("o dia de hoje contra os dias do mês", () => {
+        expect(diaDoMes("2026-11", "2026-11-27")).toBe("dia 27 de 30")
+        expect(diaDoMes("2026-02", "2026-02-03")).toBe("dia 3 de 28")
     })
 })
