@@ -14,4 +14,9 @@ describe("CategoryDetailSkeleton no telefone", () => {
         expect(fonte).not.toContain("h-4 w-20")
         expect(fonte).not.toContain("justify-between md:hidden")
     })
+
+    it("no telefone, o topo espera o chip e o resumo espera num cartão", () => {
+        expect(fonte).toMatch(/<Skeleton shape="pill"[^>]*h-6/)
+        expect(fonte).toMatch(/<Card aria-hidden[^>]*md:hidden/)
+    })
 })
