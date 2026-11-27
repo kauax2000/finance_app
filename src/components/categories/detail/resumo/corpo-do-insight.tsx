@@ -52,7 +52,7 @@ export function CorpoDoInsight({ corpo, corDaSerie, linhaDaCaixa, numero, linha,
                 <ul aria-label="Lançamentos para conferir" className="grid gap-2 text-sm">
                     {corpo.linhas.map((l, n) => (
                         <li key={n} className="flex items-center gap-3">
-                            <span className="nums shrink-0 text-muted-foreground">{l.dia}</span>
+                            <span className="nums shrink-0 text-muted-foreground">{dm(l.dataYmd)}</span>
                             <span className="min-w-0 truncate">{l.descricao}</span>
                             <span className="nums ml-auto shrink-0 font-mono">{reaisInteiros(l.valor)}</span>
                         </li>

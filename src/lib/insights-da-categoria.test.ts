@@ -138,18 +138,22 @@ describe("insightsLocais", () => {
             acao: { tipo: "link", href: "/transactions?conferir=1&cats=cat" },
         })
     })
-    it("a conferir: 1 lançamento sem resto; 5 mostram 2 linhas, as mais recentes, e resto 3", () => {
+    it("a conferir: 1 lançamento sem resto; 5 mostram 3 linhas, as mais recentes, e resto 2", () => {
         const um = insightsLocais({ ...base, txs: [tx({ id: "a", needs_review: true })] })[0].corpo
         expect(um).toMatchObject({ tipo: "conferir", resto: 0 })
         expect((um as { linhas: unknown[] }).linhas).toHaveLength(1)
         const cinco = ["01", "02", "03", "04", "05"].map((d) =>
-            tx({ id: d, description: `d${d}`, amount: 10, date: `2026-11-${d}`, needs_review: true }),
+            tx({ id: d, description: `d${d}`, amount: 10, date: `2026-11-${d}`, source: "app", needs_review: true }),
         )
         const c = insightsLocais({ ...base, txs: cinco })[0].corpo
         expect(c).toMatchObject({
-            resto: 3,
+            resto: 2,
             total: 50,
-            linhas: [{ dia: "05/11", descricao: "d05", valor: 10 }, { dia: "04/11", descricao: "d04", valor: 10 }],
+            linhas: [
+                { dataYmd: "2026-11-05", origem: "app", descricao: "d05", valor: 10 },
+                { dataYmd: "2026-11-04", origem: "app", descricao: "d04", valor: 10 },
+                { dataYmd: "2026-11-03", origem: "app", descricao: "d03", valor: 10 },
+            ],
         })
     })
     it("ritmo: passa do limite no mês aberto", () => {

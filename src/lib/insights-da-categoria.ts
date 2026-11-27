@@ -23,7 +23,7 @@ export type AcaoDoInsight =
 /** O dado que o corpo do slide desenha; um tipo por insight, para a tela não reler o payload. */
 export type CorpoDoInsight =
     | { tipo: "duplicado"; lancamentos: { descricao: string; dataYmd: string; forma: string; valor: number }[] }
-    | { tipo: "conferir"; linhas: { dia: string; descricao: string; valor: number }[]; resto: number; total: number }
+    | { tipo: "conferir"; linhas: { dataYmd: string; origem: Transaction["source"]; descricao: string; valor: number }[]; resto: number; total: number }
     | { tipo: "ritmo"; lancado: number; previsto: number; limite: number }
     | { tipo: "sazonal"; dataYmd: string | null; valor: number }
     | { tipo: "parcela"; atual: number; total: number }
@@ -73,7 +73,7 @@ export function insightsLocais(a: {
     const conferir = txs.filter((t) => t.needs_review)
     if (conferir.length > 0) {
         const total = conferir.reduce((s, t) => s + Number(t.amount || 0), 0)
-        const recentes = [...conferir].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 2)
+        const recentes = [...conferir].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 3)
         r.push({
             id: "a-conferir",
             ordem: 2,
@@ -84,7 +84,7 @@ export function insightsLocais(a: {
             foco: "acao",
             corpo: {
                 tipo: "conferir",
-                linhas: recentes.map((t) => ({ dia: dmy(t.date), descricao: t.description ?? "", valor: Number(t.amount || 0) })),
+                linhas: recentes.map((t) => ({ dataYmd: t.date.slice(0, 10), origem: t.source, descricao: t.description ?? "", valor: Number(t.amount || 0) })),
                 resto: conferir.length - recentes.length,
                 total,
             },
