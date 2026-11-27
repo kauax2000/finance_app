@@ -589,6 +589,7 @@ function TopBarAction({
   countLabel,
   shortcut,
   tooltip = true,
+  tooltipSide,
   plate = false,
   className,
   children,
@@ -602,6 +603,8 @@ function TopBarAction({
   /** A tecla (`"mod+k"`), na dica e no `aria-keyshortcuts`. Só mostra — quem escuta é a tela. */
   shortcut?: string
   tooltip?: boolean
+  /** De que lado a dica abre; sem ele, embaixo. A lupa do cabeçalho abre à esquerda, no vão da barra (27/11/2026). */
+  tooltipSide?: "top" | "right" | "bottom" | "left"
   /** O vidro da busca do cabeçalho, como o botão de recolher (em todo tamanho). */
   plate?: boolean
 }) {
@@ -657,7 +660,9 @@ function TopBarAction({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{botao}</TooltipTrigger>
-      <TooltipContent shortcut={shortcut}>{label}</TooltipContent>
+      <TooltipContent side={tooltipSide} shortcut={shortcut}>
+        {label}
+      </TooltipContent>
     </Tooltip>
   )
 }

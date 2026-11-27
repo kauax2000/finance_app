@@ -142,8 +142,8 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })
 
-  it("o gatilho do topo não tem dica; dentro da barra recolhida, tem", () => {
-    expect(CODIGO).toMatch(/\) : naBarra \? \(\s*<Tooltip>/)
+  it("o gatilho tem dica com o atalho na barra recolhida (ao lado) e no `header` do desktop, as duas ao lado; o `topbar`, não", () => {
+    expect(CODIGO).toMatch(/\) : naBarra \|\| \(toggle === "header" && !isMobile\) \? \(\s*<Tooltip>/)
     expect(CODIGO).toMatch(/\) : \(\s*botao\s*\)\}/)
   })
 

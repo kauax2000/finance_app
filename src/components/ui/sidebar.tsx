@@ -692,6 +692,8 @@ function SidebarTriggerButton({
   // O rótulo diz o que o clique vai fazer. O ícone é um só nos dois estados.
   const aberta = isMobile ? openMobile : state === "expanded"
   const rotulo = aberta ? "Recolher barra lateral" : "Abrir barra lateral"
+  // A dica é a forma curta (o ícone já diz que é a barra); o nome acessível fica inteiro (27/11/2026).
+  const dica = aberta ? "Recolher" : "Abrir"
 
   const botao = (
     <Button
@@ -714,8 +716,10 @@ function SidebarTriggerButton({
     </Button>
   )
 
-  // No topo o gatilho não tem dica (o nome acessível é o `aria-label`). Dentro da barra
-  // recolhida ela fica, como a de todo ícone do trilho, e mostra o atalho (⌘B / Ctrl+B).
+  // A dica abre ao lado, dentro da barra recolhida (como a de todo ícone do trilho) e no
+  // `header`, onde à direita do botão a barra do topo está vazia (pedido do dono, 27/11/2026).
+  // As duas mostram o atalho
+  // (⌘B / Ctrl+B). O `topbar` segue sem dica: ele viaja, e a dica ficaria para trás.
   return (
     <motion.span
       // Só o `topbar` viaja. Nos outros lugares o botão não sai do lugar, e um
@@ -745,7 +749,7 @@ function SidebarTriggerButton({
             className="ml-auto pointer-coarse:hidden"
           />
         </SidebarMenuButton>
-      ) : naBarra ? (
+      ) : naBarra || (toggle === "header" && !isMobile) ? (
         <Tooltip>
           <TooltipTrigger asChild>{botao}</TooltipTrigger>
           <TooltipContent
@@ -753,7 +757,7 @@ function SidebarTriggerButton({
             sideOffset={SIDEBAR_TOOLTIP_OFFSET}
             shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
           >
-            {rotulo}
+            {dica}
           </TooltipContent>
         </Tooltip>
       ) : (
@@ -789,6 +793,7 @@ function SidebarToggleSimple({
 }) {
   const { toggleSidebar, state } = useSidebar()
   const rotulo = state === "expanded" ? "Recolher barra lateral" : "Abrir barra lateral"
+  const dica = state === "expanded" ? "Recolher" : "Abrir"
   const botao = (
     <Button
       type="button"
@@ -812,7 +817,7 @@ function SidebarToggleSimple({
         sideOffset={SIDEBAR_TOOLTIP_OFFSET}
         shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
       >
-        {rotulo}
+        {dica}
       </TooltipContent>
     </Tooltip>
   )

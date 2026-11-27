@@ -144,7 +144,10 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             type="button"
             label="Buscar"
             plate
-            tooltip={false}
+            // No desktop a dica diz o atalho (⌘K) e abre à esquerda, no vão da barra, como a do
+            // botão da barra lateral abre ao lado; a do telefone (`origem`) fica sem, o toque não a abre.
+            tooltip={!origem}
+            tooltipSide="left"
             shortcut="mod+k"
             aria-haspopup="dialog"
             aria-expanded={searchOpen}
