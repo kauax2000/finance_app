@@ -18,7 +18,8 @@ describe("TopoDaCategoria", () => {
         const t = texto({ tipo: "expense", yearMonth: "2026-11", lancado: 4114.39, comparacao })
         expect(t).toContain("R$ 4.114,39")
         expect(t).toContain("Gasto em novembro")
-        expect(t).toContain("↓ 18% que no mesmo dia de outubro (R$ 3.734)")
+        expect(t).toContain("↓ 18% que no mesmo dia de outubro · R$ 3.734")
+        expect(t).not.toContain("(R$ 3.734)")
     })
 
     it("sem comparação, a legenda fica sozinha, sem o ponto", () => {
@@ -26,6 +27,14 @@ describe("TopoDaCategoria", () => {
         expect(t).toContain("R$ 0,00")
         expect(t).toContain("Gasto em")
         expect(t).not.toContain(" · ")
+        expect(
+            renderToStaticMarkup(h(TopoDaCategoria, { tipo: "expense", yearMonth: "2026-11", lancado: 0, comparacao: null })),
+        ).not.toContain('data-slot="badge"')
+    })
+
+    it("a comparação mora num Badge", () => {
+        const fonte = semComentarios(lerFonte("src/components/categories/detail/topo-da-categoria.tsx"))
+        expect(fonte).toContain("<Badge")
     })
 
     it("receita diz Recebido", () => {

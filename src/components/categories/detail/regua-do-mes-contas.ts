@@ -34,11 +34,15 @@ export function fraseDaComparacao({ tipo, comparacao }: { tipo: TipoDaCategoria;
     const { variacao, mesmoPonto, mesAnterior, anterior } = comparacao
     if (variacao === null) return null
     const mes = nomeDoMes(mesAnterior)
+    const texto = mesmoPonto ? `que no mesmo dia de ${mes}` : `que em ${mes}`
+    const valorAnterior = reaisInteiros(anterior)
     return {
         seta: variacao < 0 ? ("↓" as const) : ("↑" as const),
         percentual: porcento(Math.abs(variacao)),
         bom: tipo === "expense" ? variacao <= 0 : variacao >= 0,
-        resto: `${mesmoPonto ? `que no mesmo dia de ${mes}` : `que em ${mes}`} (${reaisInteiros(anterior)})`,
+        resto: `${texto} (${valorAnterior})`,
+        texto,
+        anterior: valorAnterior,
     }
 }
 

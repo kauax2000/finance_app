@@ -41,7 +41,16 @@ describe("fraseDaComparacao", () => {
             percentual: "18%",
             bom: true,
             resto: "que no mesmo dia de outubro (R$\u00a03.734)",
+            texto: "que no mesmo dia de outubro",
+            anterior: "R$\u00a03.734",
         })
+    })
+    it("texto e anterior separam o chip do topo", () => {
+        const f = fraseDaComparacao({ tipo: "expense", comparacao: comparacao() })!
+        expect(f.texto).toBe("que no mesmo dia de outubro")
+        expect(f.anterior.replace(/\u00a0/g, " ")).toBe("R$ 3.734")
+        expect(f.resto.replace(/\u00a0/g, " ")).toBe("que no mesmo dia de outubro (R$ 3.734)")
+        expect(fraseDaComparacao({ tipo: "expense", comparacao: comparacao({ mesmoPonto: false }) })!.texto).toBe("que em outubro")
     })
     it("receita caindo não é bom", () => {
         expect(fraseDaComparacao({ tipo: "income", comparacao: comparacao() })?.bom).toBe(false)
