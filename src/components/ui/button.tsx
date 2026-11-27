@@ -35,6 +35,15 @@ const ACENDER_VEU =
 // acima do centro nos degraus pequenos (o "Ver os 19" do detalhe, 18/11/2026). Sem suporte, nada muda.
 // O afundar do clique é o `active:translate-y-px` mais o `afundar` (abaixo), que
 // cobre o gatilho de menu do Radix: lá o `:active` não chega a pintar.
+/**
+ * O alvo de toque dos degraus que moram dentro de outro controle (`xs` 24, `sm` 28): o
+ * desenho fica, e no toque um `::after` invisível de 44 cobre a altura, centrado, sem
+ * alargar (dois botões lado a lado não disputam o mesmo toque). Os `icon-*` pequenos
+ * ficam fora: o × de dentro de um campo roubaria o toque do próprio campo.
+ */
+const alvoDeToque =
+  "relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11 pointer-coarse:after:-translate-y-1/2 pointer-coarse:after:content-['']"
+
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-hover] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_[data-slot=button-label]]:[text-box:trim-both_cap_alphabetic] [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -121,15 +130,17 @@ const buttonVariants = cva(
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto. O padrão é `lg` (36), a altura do `Input` e do
       // `SelectTrigger` no desktop. No dedo `md`, `lg` e `xl` sobem a 44, o piso
-      // do campo e o alvo do iOS (rodada 332); `xs` e `sm` moram dentro de outro controle e ficam. A altura dos
+      // do campo e o alvo do iOS (rodada 332); `xs` e `sm` moram dentro de outro controle e ficam
+      // no desenho, mas no toque ganham o alvo de 44 por um `::after` invisível, centrado e só na
+      // altura (`alvoDeToque`, 27/11/2026), como as abas do `Tabs`. A altura dos
       // dois passa por `--button-h`: um `h-*`/`size-*` de quem chama troca a
       // utilidade inteira no `twMerge`, e um `pointer-coarse:h-11` solto
       // sobreviveria a ele (a célula do calendário, a linha do seletor). Todo botão é
       // cápsula (círculo nos `icon-*`), com meio degrau a mais de recuo lateral
       // para a curva não espremer o rótulo.
       size: {
-        xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 px-3 text-control-sm has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
+        xs: `${alvoDeToque} h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3`,
+        sm: `${alvoDeToque} h-7 gap-1 px-3 text-control-sm has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5`,
         md: "h-(--button-h) [--button-h:--spacing(8)] pointer-coarse:[--button-h:--spacing(11)] gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         lg: "h-(--button-h) [--button-h:--spacing(9)] pointer-coarse:[--button-h:--spacing(11)] gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         xl: "h-(--button-h) [--button-h:--spacing(10)] pointer-coarse:[--button-h:--spacing(11)] gap-1.5 px-4.5 has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5",

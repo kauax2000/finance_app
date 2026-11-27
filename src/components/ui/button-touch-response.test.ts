@@ -174,13 +174,25 @@ describe("o gatilho de menu também afunda, só no clique", () => {
 })
 
 describe("o degrau padrão e o piso do dedo", () => {
-  it("sem `size` o botão é `lg` (36); no dedo `md` e `lg` sobem a 40, `xs` e `sm` ficam", () => {
+  it("sem `size` o botão é `lg` (36); no dedo `md` e `lg` sobem a 44, `xs` e `sm` ficam no desenho", () => {
     expect(buttonVariants({})).toContain("[--button-h:--spacing(9)]")
     for (const size of ["md", "lg", "icon-md", "icon-lg"] as const) {
       expect(buttonVariants({ size }), size).toContain("pointer-coarse:[--button-h:--spacing(11)]")
     }
     for (const size of ["xs", "sm", "icon-xs", "icon-sm"] as const) {
-      expect(buttonVariants({ size }), size).not.toContain("pointer-coarse:")
+      expect(buttonVariants({ size }), size).not.toContain("pointer-coarse:[--button-h")
+    }
+  })
+
+  it("no toque `xs` e `sm` alcançam 44 por um `::after` invisível, só na altura; os `icon-*` pequenos não", () => {
+    for (const size of ["xs", "sm"] as const) {
+      const classes = buttonVariants({ size })
+      expect(classes, size).toContain("relative")
+      expect(classes, size).toContain("pointer-coarse:after:h-11")
+      expect(classes, size).toContain("pointer-coarse:after:inset-x-0")
+    }
+    for (const size of ["icon-xs", "icon-sm"] as const) {
+      expect(buttonVariants({ size }), size).not.toContain("after:h-11")
     }
   })
 

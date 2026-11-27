@@ -105,7 +105,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="De 24 a 40 em degraus de 4, a escada de controle do sistema. O padrão é lg (36), a altura do campo ao lado; no dedo md e lg sobem a 40. xs é para dentro de outro controle."
+        description="De 24 a 40 em degraus de 4, a escada de controle do sistema. O padrão é lg (36), a altura do campo ao lado; no dedo md, lg e xl sobem a 44. xs e sm são para dentro de outro controle: ficam no desenho, e no toque um alvo invisível de 44 cobre a altura."
         code={TAMANHOS.map((t) => `<Button size="${t.size}">${t.size}</Button>`).join("\n")}
         previewClassName="flex-wrap items-end gap-4"
       >
