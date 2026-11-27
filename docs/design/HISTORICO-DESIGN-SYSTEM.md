@@ -29585,3 +29585,25 @@ categoria era; o topo deve ser o da gaveta do lançamento e subir para a barra a
   88 para 132 ~700ms depois do clique. A caixa do título do telefone fica `start-16 end-40` com o
   ⋯ (16 + 3×44 + 12 = 160 à direita), e o lado hero da barra é contêiner no telefone
   (`max-md:@container/top-bar-hero`): mais estreito que 9rem (320px), o valor sai.
+
+## Rodada — alvo de toque nos botões `xs` e `sm` (27/11/2026)
+
+O "Ver Abastecimento" da Leitura do mês (`size="sm"`, 28px) tinha 28px de toque no telefone.
+Os degraus `xs` e `sm` continuam no desenho, mas ganham `alvoDeToque` no `button.tsx`: um
+`::after` invisível de 44px, centrado e só na altura (`inset-x-0`), sob `pointer-coarse:`,
+como as abas do `Tabs` e o `Toggle chip`. Só na altura para dois botões lado a lado (a
+`Pagination`, o rodapé do `DatePicker`) não disputarem o mesmo toque. `icon-xs` e `icon-sm`
+ficam fora: o × dentro de um campo cobriria o toque do campo. Medido a 375px: botão de 28,
+`::after` de 44, e um toque 6px acima do botão cai nele. `button-touch-response.test.ts` tranca.
+
+## Rodada — gráfico sem dica no toque (27/11/2026)
+
+Pedido do dono no "Últimos 6 meses" do detalhe da categoria: tirar o "hover" no telefone, e em
+todos os gráficos. Abaixo de 768px (`useIsMobile`, que lê a janela da moldura do catálogo) os sete
+gráficos do Recharts (`ChartArea`, `ChartLine`, `ChartBars`, `ChartDonut`, `ChartRadar`,
+`ChartWaterfall`, `ChartSparkline`) desligam a dica, o ponto ativo e o apagado das outras barras
+(`ChartActiveLabel` não monta); o `ChartHeatStrip`, o `ChartStrip` e o `ChartHeatmap` não abrem a
+dica nem a leitura no toque. Medido também: o clique focava `g.recharts-zIndex-layer_*`
+(`tabindex="-1"`) e o navegador desenhava um retângulo branco em volta do gráfico; a regra
+`[&_g[tabindex='-1']]:outline-none` no `ChartContainer` o tira em toda largura. No desktop a dica
+segue no cursor (conferido a 1280px).
