@@ -606,12 +606,14 @@ function DialogHeaderRow({
       ) : null}
       {center != null ? (
         // inset-x-19 (76px): folga igual dos dois lados (setas 32+4+32 = ⋯ × ), o centro é o da placa.
+        // No telefone o ⋯ e o × medem 44 cada: a folga vai a 96px (44+4+44 e o respiro), senão o
+        // resumo passava sob o ⋯ (27/11/2026). O centro segue o da placa, simétrico.
         <div
           data-slot="dialog-header-center"
           aria-hidden="true"
           inert={!centerShown || undefined}
           data-shown={centerShown || undefined}
-          className="pointer-events-none absolute inset-y-0 inset-x-19 flex min-w-0 items-center justify-center gap-2 transition-[opacity,translate,filter] duration-(--duration-base) ease-(--ease-out) translate-y-1.5 opacity-0 blur-xs data-shown:translate-y-0 data-shown:opacity-100 data-shown:blur-none motion-reduce:translate-y-0 motion-reduce:blur-none"
+          className="pointer-events-none absolute inset-y-0 inset-x-19 max-md:inset-x-24 flex min-w-0 items-center justify-center gap-2 transition-[opacity,translate,filter] duration-(--duration-base) ease-(--ease-out) translate-y-1.5 opacity-0 blur-xs data-shown:translate-y-0 data-shown:opacity-100 data-shown:blur-none motion-reduce:translate-y-0 motion-reduce:blur-none"
         >
           {center}
         </div>

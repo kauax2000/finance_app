@@ -128,8 +128,10 @@ function PageHeader({
           // de respiro), e quem se alinha ao título desce junto.
           "has-[[data-slot=page-header-eyebrow]]:[--page-header-lead:1.75rem]",
           collapse && !hero && TITULO_GRANDE,
-          // Uma coluna só (as ações saem), e o valor colado ao nome, como na gaveta.
-          hero && "max-md:grid-cols-1 max-md:gap-y-1",
+          // Uma coluna só (as ações saem), e o valor colado ao nome, como na gaveta. E sobe 14px:
+          // na gaveta o ladrilho fica 8px abaixo dos botões do topo; aqui o respiro de 16 da casca
+          // somado aos 6 da barra o deixava a 22 deles, e a tela parecia começar baixa (27/11/2026).
+          hero && "max-md:grid-cols-1 max-md:gap-y-1 max-md:-mt-3.5",
           className
         )}
         {...props}

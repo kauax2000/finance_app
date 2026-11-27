@@ -76,17 +76,17 @@ export function CategoryDetailSkeleton() {
     return (
         <SkeletonGroup label="Carregando a categoria…" className="flex min-w-0 flex-col gap-6">
             <PageHeaderSkeleton description={false} back media actions={["lg", "icon"]} className="max-md:hidden" />
-            <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
+            <div className="flex min-w-0 flex-col gap-6 max-md:gap-(--space-block) md:px-9.5">
                 {/* A faixa do mês: o rótulo, o valor com a variação, o "Deve fechar", as legendas e a barra.
                     No telefone, o topo centrado (ladrilho, nome, valor e legenda) em cima, o chip da comparação, e o resumo
-                    (linha, barra e "Deve fechar") num cartão de 122px (medido a 375px). */}
+                    (linha, barra e a frase de como o mês fecha) num cartão de 122px (medido a 375px, sem limite nem previsto: o fechamento quebra em duas linhas). */}
                 <div className="flex flex-col">
-                    <div className="flex flex-col items-center gap-2 pb-4 md:hidden">
+                    <div className="-mt-3.5 flex flex-col items-center gap-2 pb-4 md:hidden">
                         <Skeleton shape="tile" size="2xl" />
                         <Skeleton shape="text" className="w-28" />
                         <Skeleton className="h-10 w-40" />
                         <Skeleton shape="text" className="w-56 max-w-full" />
-                        <Skeleton shape="pill" className="h-6 w-72 max-w-full" />
+                        <Skeleton shape="pill" className="mt-1 h-5.5 w-72 max-w-full" />
                     </div>
                     <Card aria-hidden className="h-30.5 md:hidden">
                         <CardContent className="grid gap-3">
@@ -96,7 +96,7 @@ export function CategoryDetailSkeleton() {
                             </div>
                             <Skeleton className="h-2 w-full rounded-full" />
                             <Skeleton shape="text" className="w-full" />
-                            <Skeleton shape="text" className="w-3/4" />
+                            <Skeleton shape="text" className="w-24" />
                         </CardContent>
                     </Card>
                     <Skeleton shape="text" className="w-32 max-md:hidden" />

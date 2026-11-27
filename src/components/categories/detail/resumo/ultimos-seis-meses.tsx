@@ -117,18 +117,26 @@ export function UltimosSeisMeses({
                     <CardTitle size="sm">Últimos 6 meses</CardTitle>
                     {selo ? (
                         // O selo (22) transborda 1px de cada lado: a linha fica com a altura do título (20), como a dos cartões vizinhos.
-                        <Badge tone={selo.tom} className="-my-px">
+                        <Badge tone={selo.tom} className="-my-px max-md:hidden">
                             {mesCurto(yearMonth)} {selo.texto}
                         </Badge>
                     ) : null}
                 </div>
-                {/* A tendência, e não a média: a média já está rotulada na linha do gráfico. */}
-                {tendencia ? (
+                {/* No desktop a tendência, e não a média: a média já está rotulada na linha do gráfico. No telefone
+                    a tendência sai e o selo vai para a direita, como o "+10%" da Comparação (pedido do dono, 27/11/2026). */}
+                {tendencia || selo ? (
                     <CardAction>
-                        <Caption className="nums inline-flex items-center gap-1">
-                            <tendencia.Icone aria-hidden className="size-3.5" />
-                            {tendencia.texto}
-                        </Caption>
+                        {selo ? (
+                            <Badge tone={selo.tom} className="-my-px md:hidden">
+                                {mesCurto(yearMonth)} {selo.texto}
+                            </Badge>
+                        ) : null}
+                        {tendencia ? (
+                            <Caption className="nums inline-flex items-center gap-1 max-md:hidden">
+                                <tendencia.Icone aria-hidden className="size-3.5" />
+                                {tendencia.texto}
+                            </Caption>
+                        ) : null}
                     </CardAction>
                 ) : null}
             </CardHeader>

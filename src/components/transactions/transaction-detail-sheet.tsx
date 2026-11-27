@@ -145,6 +145,7 @@ export function TransactionDetailSheet({
     const marca = useRef<HTMLDivElement>(null)
     // H2a/A5 (11/nov/2026): ao rolar, o resumo entra no centro da barra.
     const [nomeRef, nomeSubiu] = useDialogHeaderDock<HTMLDivElement>()
+    const cabecalhoRef = useRef<HTMLDivElement>(null)
     // As fatias da manchete que os blocos mandam, só da chave atual dos blocos (a de outra é descartada).
     const [fatias, setFatias] = useState<{ chave: string; fatia: FatiaDaManchete }>({ chave: "", fatia: {} })
 
@@ -394,17 +395,30 @@ export function TransactionDetailSheet({
     // respiro): o título, que sobe à linha do ×, fica dentro da foto da transição e não é cortado.
     const viewBody = (
         <div ref={marca} data-subtela-conteudo="" className="flex min-h-0 flex-1 flex-col -mt-(--drawer-handle-h,0px) pt-(--drawer-handle-h,0px)">
-            <DialogHeader>
+            {/* Na gaveta o ícone começa rente à borda do cabeçalho (o corpo sem respiro, abaixo), e o
+                degradê de 56px passava dela e apagava a metade de cima do ladrilho (27/11/2026). Aqui a
+                placa cobre o cabeçalho inteiro e nasce apagada: com a rolagem ela acende e o degradê abaixo
+                dela cresce, de 0 a 56px (`--dialog-header-tint` e `--dialog-header-fade-h`, escritos no nó
+                a cada rolagem, sem render). Parado no topo não há fundo (acesa, a placa lia como uma faixa
+                sobre a gaveta); rolando, o que passa por baixo some aos poucos. Com o degradê subindo por
+                dentro da faixa, a placa ficava rala atrás do ⋯ e do resumo. */}
+            <DialogHeader
+                ref={cabecalhoRef}
+                className="[--dialog-header-solid:100%]!"
+                style={{ "--dialog-header-fade-h": "0px", "--dialog-header-tint": "transparent" } as CSSProperties}
+            >
                 <DialogHeaderRow
                     centerShown={nomeSubiu}
                     center={
-                        <>
+                        // Como o título que sobe à barra do app: o nome vem antes do valor, e o que não
+                        // cabe inteiro na linha (o valor) quebra para uma segunda linha recortada e some.
+                        <span className="flex h-6 min-w-0 max-w-full flex-wrap content-start items-center justify-center gap-x-2 overflow-hidden">
                             <ColorTile size="xs" color={corDaCategoria(t.category, t.type)}>
                                 <CategoryIconPreview name={normalizeCategoryIcon(t.category?.icon)} />
                             </ColorTile>
-                            <span className="min-w-0 truncate text-sm font-medium">{descricao}</span>
+                            <span className="min-w-0 max-w-full truncate text-sm font-medium">{descricao}</span>
                             <MoneyDisplay size="md" signed tone="muted" value={valorComSinal(t)} className="shrink-0" />
-                        </>
+                        </span>
                     }
                     endAdornment={
                         <>
@@ -444,7 +458,20 @@ export function TransactionDetailSheet({
 
             {/* Na gaveta o ícone começa logo abaixo da linha do ⋯ e do ×, sem o respiro de 16 do corpo
                 (pedido do dono, 18/11/2026: sobrava espaço entre o topo da gaveta e o ícone). */}
-            <DialogBody className="flex flex-col gap-6 max-md:[--dialog-body-pt:0px]">
+            <DialogBody
+                className="flex flex-col gap-6 max-md:[--dialog-body-pt:0px]"
+                onScroll={(e) => {
+                    const no = cabecalhoRef.current
+                    if (!no) return
+                    // Parado no topo, sem placa nem degradê; rolando, os dois acendem juntos até os 56px.
+                    const passo = Math.min(56, e.currentTarget.scrollTop)
+                    no.style.setProperty("--dialog-header-fade-h", `${passo}px`)
+                    no.style.setProperty(
+                        "--dialog-header-tint",
+                        `color-mix(in oklab, var(--background) ${Math.round((passo / 56) * 95)}%, transparent)`
+                    )
+                }}
+            >
                 {/* O topo (C1 + D4 + E2/E5, 11/nov/2026): o ladrilho, o nome sobre o valor grande, a data relativa embaixo dele e, embaixo, o pagamento e a categoria (com o ponto na cor dela) — tudo no mesmo eixo. */}
                 <div className="flex flex-col items-center text-center gap-3">
                     <ColorTile size="2xl" color={corDaCategoria(t.category, t.type)}>

@@ -67,7 +67,7 @@ describe("o detalhe da categoria usa o topo", () => {
         expect(telefone).not.toContain("PageSectionTitle")
         expect(telefone).not.toContain("Este mês")
         expect(telefone).not.toContain("MoneyDisplay")
-        expect(telefone).toContain("{fechamento}")
+        expect(telefone).toContain("{fecha}")
         expect(telefone).toContain("{barra}")
     })
 })

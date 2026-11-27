@@ -47,7 +47,7 @@ export function LeituraDoMes({
         <Card variant="brand" glow="static" mood={HUMOR[leitura.tom]}>
             <CardContent className="grid gap-3.5">
                 <div className="flex items-center justify-between gap-2">
-                    <h2 className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <h2 className="flex items-center gap-2 text-sm text-foreground">
                         <span aria-hidden className="aurora-orb grid size-5.5 place-items-center text-2xs">
                             <span>✦</span>
                         </span>
@@ -59,7 +59,7 @@ export function LeituraDoMes({
                         </Button>
                     ) : null}
                 </div>
-                <p className="font-display text-xl text-pretty">
+                <p className="font-display text-lg text-pretty md:text-xl">
                     <Partes partes={manchete} />
                     {apoio.length ? (
                         <span className="text-muted-foreground">

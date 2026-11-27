@@ -6,7 +6,7 @@ const fonte = semComentarios(lerFonte("src/components/categories/detail/category
 describe("CategoryDetailSkeleton no telefone", () => {
     it("abre com o topo centrado: ladrilho, nome, valor e legenda, só no telefone", () => {
         expect(fonte).toContain('shape="tile" size="2xl"')
-        expect(fonte).toContain('"flex flex-col items-center gap-2 pb-4 md:hidden"')
+        expect(fonte).toContain('"-mt-3.5 flex flex-col items-center gap-2 pb-4 md:hidden"')
         expect(fonte).toContain("h-10")
     })
 
@@ -16,7 +16,7 @@ describe("CategoryDetailSkeleton no telefone", () => {
     })
 
     it("no telefone, o topo espera o chip e o resumo espera num cartão", () => {
-        expect(fonte).toMatch(/<Skeleton shape="pill"[^>]*h-6/)
+        expect(fonte).toMatch(/<Skeleton shape="pill"[^>]*h-5\.5/)
         expect(fonte).toMatch(/<Card aria-hidden className="h-30\.5 md:hidden"/)
     })
 })

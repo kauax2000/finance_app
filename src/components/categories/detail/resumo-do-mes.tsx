@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageSection } from "@/components/ui/page-section"
-import { Progress, ProgressHeader } from "@/components/ui/progress"
+import { Progress, ProgressFooter, ProgressHeader } from "@/components/ui/progress"
 import { Muted } from "@/components/ui/typography"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
@@ -53,6 +53,7 @@ export function BarraDoMes({
     pesoNoTotal,
     aberto,
     header,
+    footer,
     className,
 }: {
     tipo: TipoDaCategoria
@@ -64,6 +65,8 @@ export function BarraDoMes({
     aberto: boolean
     /** A linha de cima do `Progress` (o que a barra mede). */
     header?: React.ReactNode
+    /** A linha de baixo da barra (a legenda do tracejado e do traço, no telefone). */
+    footer?: React.ReactNode
     className?: string
 }) {
     if (tipo === "expense" && limite != null && limite > 0) {
@@ -76,6 +79,7 @@ export function BarraDoMes({
                 marker={aberto ? ritmoDoMes(yearMonth) : undefined}
                 aria-label={`${currencyBRL(lancado)} de um limite de ${currencyBRL(limite)}`}
                 header={header}
+                footer={footer}
                 className={className}
             />
         )
@@ -90,6 +94,7 @@ export function BarraDoMes({
             projected={previsto}
             aria-label={`${currencyBRL(lancado)} de ${currencyBRL(totalDaCarteira)} da carteira no mês`}
             header={header}
+                footer={footer}
             className={className}
         />
     )
@@ -125,7 +130,6 @@ export function ResumoDoMes({
     const comLimite = despesa && limite != null && limite > 0
     const frases = comLimite ? frasesDoLimite(lancado, previsto, limite) : null
     const aindaVem = previsto > 0 && !frases?.aviso ? `Ainda vem ${currencyBRL(previsto)}` : null
-    const fechamento = aberto ? <LinhaDoFechamento yearMonth={yearMonth} lancado={lancado} previsto={previsto} limite={comLimite ? limite : null} /> : null
     const temBarra = comLimite || (!!pesoNoTotal && lancado > 0)
     const doTotal = despesa ? "do gasto da carteira" : "da receita da carteira"
     // A linha de cima da barra, só no telefone: a frase do limite e o dia, ou o peso e o total da carteira.
@@ -135,7 +139,6 @@ export function ResumoDoMes({
                 <span className="font-semibold">{frases.forte}</span>
                 <span className="text-muted-foreground">{frases.resto}</span>
             </span>
-            {aberto ? <span className="nums shrink-0 text-muted-foreground">{diaDoMes(yearMonth, hojeYmd)}</span> : null}
         </ProgressHeader>
     ) : temBarra && pesoNoTotal ? (
         <ProgressHeader>
@@ -146,6 +149,28 @@ export function ResumoDoMes({
             <span className="nums shrink-0 text-muted-foreground">{`de ${reaisInteiros(lancado / pesoNoTotal)}`}</span>
         </ProgressHeader>
     ) : null
+    // A legenda sob a barra, só no telefone: o que o tracejado (o previsto) e o traço (o dia) querem dizer.
+    // O tracejado existe com previsto; o traço, com limite no mês aberto (`BarraDoMes`).
+    const comTraco = comLimite && aberto
+    const legenda =
+        destaque || !temBarra || (previsto <= 0 && !comTraco) ? undefined : (
+            <ProgressFooter>
+                {previsto > 0 ? (
+                    <span className="flex items-center gap-1.5">
+                        <span aria-hidden className="progress-projected h-2 w-3 rounded-xs" />
+                        previsto
+                    </span>
+                ) : (
+                    <span />
+                )}
+                {comTraco ? (
+                    <span className="nums flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                        <span aria-hidden className="h-3 w-0.5 rounded-full bg-foreground/60" />
+                        {diaDoMes(yearMonth, hojeYmd)}
+                    </span>
+                ) : null}
+            </ProgressFooter>
+        )
     const barra = (
         <BarraDoMes
             tipo={tipo}
@@ -156,6 +181,7 @@ export function ResumoDoMes({
             pesoNoTotal={pesoNoTotal}
             aberto={aberto}
             header={cabecalho}
+            footer={legenda}
         />
     )
 
@@ -181,27 +207,45 @@ export function ResumoDoMes({
     }
 
     // No telefone o valor e o mês moram no topo da tela (`TopoDaCategoria`); aqui fica o que vem depois dele.
+    // A linha de baixo é uma só: como o mês fecha (a frase do B2) e, em cinza, o aviso, o que ainda vem e o peso.
+    // O fechamento de antes ("Deve fechar em R$ X · nada mais previsto / cabe no limite") com o
+    // dado do B2: quanto do fechamento é previsto ("com os R$ 260 previstos").
+    const fechamento = aberto
+        ? fraseDoFechamento({ yearMonth, lancado, previsto, limite: comLimite ? limite : null })
+        : null
+    const fecha = fechamento ? (
+        <>
+            {"Deve fechar em "}
+            <span className="nums font-semibold">{fechamento.valor}</span>
+            {previsto > 0 ? ` com os ${reaisInteiros(previsto)} previstos` : null}
+        </>
+    ) : null
     const partes = [
+        ...(fechamento?.fim ?? []),
         frases?.aviso ? <span className="text-warning">{frases.aviso}</span> : null,
-        aindaVem && !fechamento ? aindaVem : null,
+        aindaVem && !aberto ? aindaVem : null,
         comLimite && pesoNoTotal != null && lancado !== 0 ? `${percentBR(pesoNoTotal, { maximumFractionDigits: 0 })} ${doTotal}` : null,
     ].filter((p) => p != null)
-    if (!temBarra && !fechamento && !partes.length) return null
+    if (!temBarra && !fecha && !partes.length) return null
     return (
         <PageSection aria-label={`Resumo de ${labelYearMonthPt(yearMonth).toLowerCase()}`}>
             <Card>
                 <CardContent className="grid gap-3">
                     {barra}
-                    {fechamento}
-                    {partes.length ? (
-                        <Muted>
-                            {partes.map((p, i) => (
-                                <span key={i}>
-                                    {i > 0 ? " · " : null}
-                                    {p}
+                    {fecha || partes.length ? (
+                        <p className="text-sm">
+                            {fecha}
+                            {partes.length ? (
+                                <span className="text-muted-foreground">
+                                    {partes.map((p, i) => (
+                                        <span key={i}>
+                                            {fecha || i > 0 ? " · " : null}
+                                            {p}
+                                        </span>
+                                    ))}
                                 </span>
-                            ))}
-                        </Muted>
+                            ) : null}
+                        </p>
                     ) : null}
                 </CardContent>
             </Card>

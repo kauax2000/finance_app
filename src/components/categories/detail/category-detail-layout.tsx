@@ -33,7 +33,10 @@ export function CategoryDetailLayout({
     analise: ReactNode
 }) {
     return (
-        <div className="flex min-w-0 flex-col gap-6 md:px-9.5">
+        // No telefone tudo é cartão empilhado, e o vão é um só: os 16 (`--space-block`) que os blocos
+        // já usam por dentro (Leitura, meses, parcelas); com 24 entre as linhas, o resumo e o "Quem
+        // gastou" saíam mais longe que os outros (27/11/2026). No desktop as linhas seguem a 24.
+        <div className="flex min-w-0 flex-col gap-6 max-md:gap-(--space-block) md:px-9.5">
             {resumo}
             {composicao}
             {meses}
