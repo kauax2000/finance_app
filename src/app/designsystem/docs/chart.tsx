@@ -1760,7 +1760,7 @@ const config = {
         title="Calendário"
         description={
           <>
-            <code>ChartHeatmap</code> mostra o ritmo por dia: uma coluna por semana, domingo em cima. A intensidade é <strong>dinheiro</strong>, em cinco degraus do tom (<code>expense</code> ou <code>income</code>) sobre <code>--muted</code>, cortados nos quartis dos dias com valor, para o dia do aluguel não apagar o resto. O rodapé mostra o dia sob o ponteiro ou o toque.
+            <code>ChartHeatmap</code> mostra o ritmo por dia: uma coluna por semana, domingo em cima. A intensidade é <strong>dinheiro</strong>, em cinco degraus do tom (<code>expense</code> ou <code>income</code>) sobre <code>--muted</code>, cortados nos quartis dos dias com valor, para o dia do aluguel não apagar o resto. O rodapé mostra o dia sob o ponteiro; no telefone o toque não o muda.
           </>
         }
         code={`<ChartHeatmap
@@ -1782,7 +1782,7 @@ const config = {
         title="Fileira de calor"
         description={
           <>
-            <code>ChartHeatStrip</code> é uma fileira de N células iguais — os sete dias da semana de um gasto — com a intensidade do valor na <code>color</code> dada: o maior a 100%, o dia com valor no piso de 12% (<code>color-mix</code> com <code>transparent</code>) e o zerado só com o contorno tracejado em <code>--border</code>. O nome fica <strong>embaixo</strong>, fora da célula: a cor nunca fica sob texto. A dica é a enxuta (<code>variant=&quot;single&quot;</code>): o nome por extenso (<code>labelText</code>), o valor e a % do total, no cursor e no toque. O nome acessível lista as células com o valor. O calendário de semanas é o <code>ChartHeatmap</code>.
+            <code>ChartHeatStrip</code> é uma fileira de N células iguais — os sete dias da semana de um gasto — com a intensidade do valor na <code>color</code> dada: o maior a 100%, o dia com valor no piso de 12% (<code>color-mix</code> com <code>transparent</code>) e o zerado só com o contorno tracejado em <code>--border</code>. O nome fica <strong>embaixo</strong>, fora da célula: a cor nunca fica sob texto. A dica é a enxuta (<code>variant=&quot;single&quot;</code>): o nome por extenso (<code>labelText</code>), o valor e a % do total, só no cursor: no telefone o toque não abre a dica. O nome acessível lista as células com o valor. O calendário de semanas é o <code>ChartHeatmap</code>.
           </>
         }
         code={`<ChartHeatStrip
@@ -1802,7 +1802,7 @@ const config = {
         title="Fileira de concentração"
         description={
           <>
-            <code>ChartStrip</code> responde a &quot;o dinheiro vai em muitas compras pequenas ou em poucas grandes?&quot;: um bloco por item, na ordem dada (da maior para a menor), lado a lado com 2px de vão e 28px de altura, na largura do valor (<code>flex-grow</code>, piso de 2px), com o raio <code>rounded-sm</code> da escada pequena. As <code>highlight</code> primeiras vestem a <code>color</code>; as outras, o <code>--muted</code>. A dica é a enxuta (<code>variant=&quot;single&quot;</code>), por bloco, no cursor e no toque, com o rótulo do <code>labelText</code>, e fica dentro da largura da fileira. O nome acessível é o <code>label</code> como veio: com 40 blocos a lista não se ouve, e quem chama resume (a frase e as três maiores). Para duas a quatro partes de um total, o <code>ChartSplit</code>.
+            <code>ChartStrip</code> responde a &quot;o dinheiro vai em muitas compras pequenas ou em poucas grandes?&quot;: um bloco por item, na ordem dada (da maior para a menor), lado a lado com 2px de vão e 28px de altura, na largura do valor (<code>flex-grow</code>, piso de 2px), com o raio <code>rounded-sm</code> da escada pequena. As <code>highlight</code> primeiras vestem a <code>color</code>; as outras, o <code>--muted</code>. A dica é a enxuta (<code>variant=&quot;single&quot;</code>), por bloco, só no cursor (no telefone o toque não a abre), com o rótulo do <code>labelText</code>, e fica dentro da largura da fileira. O nome acessível é o <code>label</code> como veio: com 40 blocos a lista não se ouve, e quem chama resume (a frase e as três maiores). Para duas a quatro partes de um total, o <code>ChartSplit</code>.
           </>
         }
         code={`<ChartStrip

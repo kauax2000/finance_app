@@ -33,4 +33,18 @@ describe("Chart", () => {
     expect(CODIGO).toContain('"flex items-center gap-2 rounded-row px-2 py-1.5"')
     expect(CODIGO).not.toContain("size-(--heat-cell) rounded-xs")
   })
+
+  it("no telefone o toque não abre dica nem acende ponto, em todo gráfico (27/11/2026)", () => {
+    // Os sete do Recharts desligam a dica abaixo de 768px.
+    expect(CODIGO.match(/tooltip = tooltip && !noTelefone/g)?.length).toBe(7)
+    // As peças HTML não abrem a dica no toque.
+    expect(CODIGO.match(/!ehCursor\(e\) && !noTelefone\) setAtivo/g)?.length).toBe(2)
+    expect(CODIGO).toContain("if (!noTelefone) setLido(dia)")
+    // A camada focada pelo toque não desenha o retângulo do navegador.
+    expect(CODIGO).toContain(`"[&_g[tabindex='-1']]:outline-none"`)
+  })
+
+  it("sem régua, no telefone a área e a linha vão do zero ao maior valor (27/11/2026)", () => {
+    expect(CODIGO.match(/domain=\{!yAxis && noTelefone \? \[0, "dataMax"\] : undefined\}/g)?.length).toBe(2)
+  })
 })

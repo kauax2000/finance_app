@@ -36,6 +36,7 @@ import {
 
 
 import { useCountUp } from "@/hooks/use-count-up"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
@@ -134,6 +135,10 @@ const chartContainerVariants = cva(
     // com `Tab` de verdade.
     "[&_.recharts-sector]:outline-none",
     "[&_.recharts-surface]:outline-none",
+    // As camadas do Recharts 3 (`recharts-zIndex-layer_*`) são `tabindex="-1"`: o
+    // teclado não chega nelas, mas o clique ou o toque as foca, e o navegador
+    // desenhava um retângulo branco em volta do gráfico (27/11/2026).
+    "[&_g[tabindex='-1']]:outline-none",
     "[&_.recharts-sector:focus-visible]:outline-solid",
     "[&_.recharts-sector:focus-visible]:outline-2",
     "[&_.recharts-sector:focus-visible]:outline-offset-2",
@@ -1549,6 +1554,9 @@ function ChartArea({
   /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
   brush?: boolean | number
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const gradiente = variant === "gradient"
@@ -1604,7 +1612,8 @@ function ChartArea({
           {grid ? <ChartGrid /> : null}
           {/* Sem a calha do eixo Y o primeiro rótulo passava da borda e o Recharts o escondia: o recuo devolve o espaço. */}
           <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} {...xTicksProps(xTicks)} />
-          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
+          {/* Sem régua no telefone o teto é o maior valor, e não a dezena redonda do "auto": a curva usa a altura toda do cartão (27/11/2026). */}
+          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} domain={!yAxis && noTelefone ? [0, "dataMax"] : undefined} />
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
@@ -1648,11 +1657,15 @@ function ChartArea({
                     )
                   : false
               }
-              activeDot={{
-                r: 4,
-                strokeWidth: 2,
-                stroke: "var(--chart-surface)",
-              }}
+              activeDot={
+                noTelefone
+                  ? false
+                  : {
+                      r: 4,
+                      strokeWidth: 2,
+                      stroke: "var(--chart-surface)",
+                    }
+              }
             />
           ))}
           {chartBrush(data, x, xFormat, brush)}
@@ -1726,6 +1739,9 @@ function ChartLine({
   /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
   marker?: "last"
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
@@ -1753,7 +1769,8 @@ function ChartLine({
         <Grafico data={data} accessibilityLayer margin={yAxis ? undefined : CHART_AREA_HEADROOM}>
           {grid ? <ChartGrid /> : null}
           <ChartXAxis dataKey={x} format={xFormat} padding={yAxis ? undefined : CHART_X_INSET} {...xTicksProps(xTicks)} />
-          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} />
+          {/* Sem régua no telefone o teto é o maior valor, e não a dezena redonda do "auto": a curva usa a altura toda do cartão (27/11/2026). */}
+          <ChartYAxis hide={!yAxis} format={axisFormatFor(format)} domain={!yAxis && noTelefone ? [0, "dataMax"] : undefined} />
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
@@ -1817,7 +1834,7 @@ function ChartLine({
                     : false
               }
               activeDot={
-                dots === "none"
+                dots === "none" || noTelefone
                   ? false
                   : { r: 4, strokeWidth: 2, stroke: "var(--chart-surface)" }
               }
@@ -1939,6 +1956,9 @@ function ChartBars({
   /** O trilho: a coluna inteira em `--muted` atrás da barra, até o máximo do eixo; só a primeira série o desenha. */
   track?: boolean
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const horizontal = layout === "horizontal"
@@ -2062,7 +2082,7 @@ function ChartBars({
               <ChartReferenceLine y={0} tone="zero" ifOverflow="extendDomain" />
             )
           ) : null}
-          <ChartActiveLabel onChange={lerAtivo} />
+          {noTelefone ? null : <ChartActiveLabel onChange={lerAtivo} />}
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
@@ -2244,6 +2264,9 @@ function ChartDonut({
   /** O `ChartDonutCenter`. Ele é irmão do gráfico, nunca filho — ver abaixo. */
   center?: React.ReactNode
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const pizza = variant === "pie"
   const medidor = variant === "gauge"
@@ -3276,6 +3299,8 @@ function ChartHeatmap({
   className?: string
   dataTable?: boolean
 }) {
+  // No telefone o toque não abre a dica (decisão do dono, 27/11/2026).
+  const noTelefone = useIsMobile()
   const [lido, setLido] = React.useState<ChartHeatmapDay | null>(null)
   const semanas = CHART_HEAT_WEEKS[range]
 
@@ -3406,8 +3431,12 @@ function ChartHeatmap({
                           "--heat-delay": `${Math.round(Math.floor(i / 7) * (CHART_HEAT_SWEEP_MS / semanas))}ms`,
                         } as React.CSSProperties
                       }
-                      onPointerEnter={() => setLido(dia)}
-                      onPointerDown={() => setLido(dia)}
+                      onPointerEnter={() => {
+                        if (!noTelefone) setLido(dia)
+                      }}
+                      onPointerDown={() => {
+                        if (!noTelefone) setLido(dia)
+                      }}
                     />
                   ) : (
                     <span key={`vazio-${i}`} />
@@ -3477,6 +3506,8 @@ function ChartHeatStrip({
   className?: string
   dataTable?: boolean
 }) {
+  // No telefone o toque não abre a dica (decisão do dono, 27/11/2026).
+  const noTelefone = useIsMobile()
   const [ativo, setAtivo] = React.useState<number | null>(null)
   const nomes = data.map((d) => String(d[nameKey] ?? ""))
   const valores = data.map((d) => (typeof d[dataKey] === "number" ? Math.max(0, d[dataKey] as number) : 0))
@@ -3518,7 +3549,7 @@ function ChartHeatStrip({
                     if (ehCursor(e)) setAtivo(i)
                   }}
                   onPointerDown={(e) => {
-                    if (!ehCursor(e)) setAtivo((a) => (a === i ? null : i))
+                    if (!ehCursor(e) && !noTelefone) setAtivo((a) => (a === i ? null : i))
                   }}
                 />
                 {/* Sem `truncate`: "Seg" cortava em "S…" na célula de ~20px; o nome curto passa da célula, centrado, e cabe no vão. */}
@@ -3583,6 +3614,8 @@ function ChartStrip({
   labelText?: (label: unknown) => string
   className?: string
 }) {
+  // No telefone o toque não abre a dica (decisão do dono, 27/11/2026).
+  const noTelefone = useIsMobile()
   const [ativo, setAtivo] = React.useState<number | null>(null)
   const nomes = data.map((d) => String(d[nameKey] ?? ""))
   const valores = data.map((d) => (typeof d[dataKey] === "number" ? Math.max(0, d[dataKey] as number) : 0))
@@ -3620,7 +3653,7 @@ function ChartStrip({
                 if (ehCursor(e)) setAtivo(i)
               }}
               onPointerDown={(e) => {
-                if (!ehCursor(e)) setAtivo((a) => (a === i ? null : i))
+                if (!ehCursor(e) && !noTelefone) setAtivo((a) => (a === i ? null : i))
               }}
             />
           ))}
@@ -3666,6 +3699,9 @@ function ChartRadar({
   xFormat?: ChartFormat
   grid?: "polygon" | "circle"
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
@@ -3838,6 +3874,9 @@ function ChartWaterfall({
   dataTable?: boolean
   children?: React.ReactNode
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const entrando = useChartEntering()
   const degraus = React.useMemo(() => waterfallSteps(data), [data])
   const [emFoco, setEmFoco] = React.useState<string | null>(null)
@@ -3869,7 +3908,7 @@ function ChartWaterfall({
                 domain={[(min: number) => Math.min(0, min), "auto"] as never}
               />
               <ChartReferenceLine y={0} tone="zero" />
-              <ChartActiveLabel onChange={notarFoco} />
+              {noTelefone ? null : <ChartActiveLabel onChange={notarFoco} />}
               {tooltip ? (
                 <ChartTooltip
                   {...CHART_TOOLTIP_MOTION}
@@ -4050,6 +4089,9 @@ function ChartSparkline({
   /** 0..1, desligado por padrão: a linha fica na fração de cima da altura e a área cheia embaixo. Em `bars` é ignorada. */
   band?: number
 }) {
+  // No telefone o toque não abre dica nem acende ponto (decisão do dono, 27/11/2026): o dedo que rola a página passava pelo gráfico e o acendia.
+  const noTelefone = useIsMobile()
+  tooltip = tooltip && !noTelefone
   const cor = serieColor(y, 0, config)
   // A faísca não entra (dez numa lista seriam ruído): o primeiro quadro desenha parado e só a troca anima.
   const [montado, setMontado] = React.useState(false)
